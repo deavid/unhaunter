@@ -42,12 +42,3 @@ We will systematically analyze every crate in the workspace. For each crate, we 
   architecture.
 - **The Audit Report:** A final summary identifying "Architectural Debt" and providing a prioritized list of refactors.
 - **Engine Blueprint:** A clear plan for what needs to change to achieve a generic Entity-Orchestration map loader.
-
-## 5. Crate analysis list
-
-The analysis should cover all crates in the `crates/` directory, specifically focusing on the interactions between:
-
-- Foundation layer (`unfoundation-core`, `untypes-core`, `unspatial-core`).
-- Domain data layers (`unghost-core`, `unplayer-core`, `ungear-core`).
-- Logic plugins (`unghost-plugin`, `unplayer-plugin`, `unrender-plugin`).
-- Standard utilities (`unrender-std`).
