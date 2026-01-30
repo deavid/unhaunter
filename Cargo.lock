@@ -6079,9 +6079,7 @@ dependencies = [
  "unplayer-core",
  "unrender-std",
  "unsettings-core",
- "unsound-core",
  "unspatial-core",
- "unthermal-core",
  "untypes-core",
  "unui-core",
 ]

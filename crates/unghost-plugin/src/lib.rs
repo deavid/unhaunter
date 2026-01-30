@@ -1,5 +1,4 @@
 pub(crate) mod components;
-pub(crate) mod ghost;
 pub(crate) mod ghost_events;
 pub(crate) mod ghost_orb;
 pub(crate) mod metrics;

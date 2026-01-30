@@ -29,8 +29,6 @@ unfog-core = { path = "../unfog-core" }
 ungear-core = { path = "../ungear-core" }
 ungearitems-core = { path = "../ungearitems-core" }
 unsettings-core = { path = "../unsettings-core" }
-unthermal-core = { path = "../unthermal-core" }
-unsound-core = { path = "../unsound-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

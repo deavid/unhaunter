@@ -110,15 +110,15 @@ loop.
 
 ---
 
-## 4. Proposed Logical Map
+## 4. Current vs. Proposed Logical Map
 
-| Current Section                | Proposed Home                  | Type                            |
-| :----------------------------- | :----------------------------- | :------------------------------ |
-| Flashlight collection          | `unlight-plugin::emitters`     | System                          |
-| Hann-filter Exposure           | `unlight-plugin::perceptual`   | System                          |
-| Coordinate rotation/projection | `unspatial-core::projection`   | Pure Functions                  |
-| Spectral charge/decay          | `unlight-core::spectral`       | System                          |
-| **Material Update Loop**       | **`unlight-plugin::maplight`** | **The (new, thin) Main System** |
+| Section                        | Actual Home (Current)          | Proposed Ideal                 | Status          |
+| :----------------------------- | :----------------------------- | :----------------------------- | :-------------- |
+| Flashlight collection          | `unlight-plugin::maplight`     | `unlight-plugin::emitters`     | Split / Partial |
+| Hann-filter Exposure           | `unlight-plugin::maplight`     | `unlight-plugin::perceptual`   | Split / Partial |
+| Coordinate rotation/projection | `unrender-std::perspective`    | `unspatial-core::projection`   | Legacy location |
+| Spectral charge/decay          | `unlight-plugin::maplight`     | `unlight-core::spectral`       | Logic Shared    |
+| **Core Rendering Pipeline**    | **`unlight-plugin::maplight`** | **`unlight-plugin::maplight`** | **Complete**    |
 
 ---
 
@@ -249,6 +249,34 @@ The refactor is in the **early stages**. While some structural foundations have 
   (`apply_ethereal_visuals`, `apply_ecto_visuals`, `apply_uv_visuals`, etc.) used by both systems.
 - **Outcome**: The monolithic `apply_lighting` system is gone. The rendering pipeline is now modular, with dedicated
   systems for data gathering, auto-exposure, and distinct rendering paths for tiles (background) and sprites (entities).
+
+### 9. Phase 4: Modularization & File Weight Reduction
+
+To resolve the maintainability issue of `maplight.rs` (1750+ lines), we will decompose it into a subdirectory module
+`crates/unlight-plugin/src/maplight/`.
+
+#### Target Structure
+
+| New Module             | Content                                                                                    | Est. Lines |
+| :--------------------- | :----------------------------------------------------------------------------------------- | :--------- |
+| `definitions.rs`       | Shared structs (`FlashlightData`, `ActiveFlashlights`) and SystemParams (`GridResources`). | ~100       |
+| `visibility.rs`        | pure `compute_visibility` BFS algorithms.                                                  | ~100       |
+| `sampler.rs`           | `LightingSampler`, `SpectralParams`, and spectral modulation math.                         | ~300       |
+| `visuals.rs`           | Pure visual effect helpers (`apply_ethereal_visuals`, `apply_miasma_...`, etc).            | ~200       |
+| `systems/sprites.rs`   | `apply_lighting_to_sprites_system` and cursor highlighting.                                | ~300       |
+| `systems/tiles.rs`     | `apply_lighting_to_tiles_system`.                                                          | ~600       |
+| `systems/gathering.rs` | `gather_flashlights_system` and `update_exposure_system`.                                  | ~150       |
+| `mod.rs`               | Public exports and plugin registration.                                                    | ~50        |
+
+#### Execution Plan
+
+1.  **Create Directory**: `crates/unlight-plugin/src/maplight/` and `crates/unlight-plugin/src/maplight/systems/`.
+2.  **Extract Helpers**: Move non-system code first (`definitions.rs`, `visibility.rs`, `visuals.rs`, `sampler.rs`).
+    This establishes the dependency base.
+3.  **Extract Systems**: Move the system functions into `systems/*.rs`.
+4.  **Fix Imports**: Update `mod.rs` to re-export the necessary symbols so `plugin.rs` doesn't break.
+5.  **Verify**: Ensure all files are under or near the 500-line "sweet spot" (Tiles system might slightly exceed this
+    but is acceptable as a single cohesive unit).
 
 ### Structural Observations
 

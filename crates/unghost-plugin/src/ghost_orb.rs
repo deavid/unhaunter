@@ -45,21 +45,24 @@ pub(crate) fn spawn_ghost_orb_particles(
     // For each ghost breach
     for (breach_entity, breach_pos) in breach_query.iter() {
         // Find the ghost associated with this breach
-        let Some((ghost, dynamics)) = ghost_query.iter().find(|(g, _)| g.breach_id == Some(breach_entity)) else {
+        let Some((ghost, dynamics)) = ghost_query
+            .iter()
+            .find(|(g, _)| g.breach_id == Some(breach_entity))
+        else {
             continue;
         };
 
         // If the ghost doesn't have FloatingOrbs evidence, skip
-        if !ghost.class.evidences().contains(&unghost_core::types::evidence::Evidence::FloatingOrbs) {
+        if !ghost
+            .class
+            .evidences()
+            .contains(&unghost_core::types::evidence::Evidence::FloatingOrbs)
+        {
             continue;
         }
 
         // Random check based on clarity
-        if !rng.random_bool(
-            dynamics.floating_orbs_clarity
-                .clamp(0.0, 1.0)
-                .cbrt() as f64,
-        ) {
+        if !rng.random_bool(dynamics.floating_orbs_clarity.clamp(0.0, 1.0).cbrt() as f64) {
             continue;
         }
 
