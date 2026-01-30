@@ -32,7 +32,6 @@ fn check_player_stuck_at_start(
     mut stuck_timer: Local<Stopwatch>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
-    let mut min_time_secs: f32 = 7.0;
     if app_state.get() != &AppState::InGame {
         stuck_timer.reset();
         return;
@@ -41,45 +40,45 @@ fn check_player_stuck_at_start(
         stuck_timer.reset();
         return;
     }
-    let Ok((player_position, player_sprite)) = player_query.single() else {
-        return;
-    };
+    for (player_position, player_sprite) in player_query.iter() {
+        let mut min_time_secs: f32 = 7.0;
 
-    if player_profile.statistics.total_missions_completed > 1 {
-        min_time_secs = 15.0;
-    }
-    if player_profile.statistics.total_missions_completed > 3 {
-        min_time_secs = 30.0;
-    }
-    if player_profile.statistics.total_missions_completed > 6 {
-        min_time_secs = 60.0;
-    }
-    if player_profile.statistics.total_missions_completed > 9 {
-        min_time_secs = 90.0;
-    }
-    // If the player is already inside the location, reset the stuck time
-    if roomdb
-        .room_tiles
-        .get(&player_position.to_board_position())
-        .is_some()
-    {
-        stuck_timer.reset();
-        walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
-        return;
-    }
+        if player_profile.statistics.total_missions_completed > 1 {
+            min_time_secs = 15.0;
+        }
+        if player_profile.statistics.total_missions_completed > 3 {
+            min_time_secs = 30.0;
+        }
+        if player_profile.statistics.total_missions_completed > 6 {
+            min_time_secs = 60.0;
+        }
+        if player_profile.statistics.total_missions_completed > 9 {
+            min_time_secs = 90.0;
+        }
+        // If the player is already inside the location, reset the stuck time
+        if roomdb
+            .room_tiles
+            .get(&player_position.to_board_position())
+            .is_some()
+        {
+            stuck_timer.reset();
+            walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
+            continue;
+        }
 
-    let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
+        let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
 
-    if distance_from_spawn < PLAYER_STUCK_MAX_DISTANCE {
-        stuck_timer.tick(time.delta());
-    } else {
-        stuck_timer.reset();
-        walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
-    }
+        if distance_from_spawn < PLAYER_STUCK_MAX_DISTANCE {
+            stuck_timer.tick(time.delta());
+        } else {
+            stuck_timer.reset();
+            walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
+        }
 
-    if stuck_timer.elapsed_secs() > min_time_secs {
-        // warn!("Player stuck at start for {} seconds", stuck_timer.elapsed_secs());
-        walkie_play.set(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
+        if stuck_timer.elapsed_secs() > min_time_secs {
+            // warn!("Player stuck at start for {} seconds", stuck_timer.elapsed_secs());
+            walkie_play.set(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
+        }
     }
 }
 
@@ -112,42 +111,40 @@ fn check_erratic_movement_early(
         return;
     }
 
-    let Ok((player_position, player_sprite)) = player_query.single() else {
-        return;
-    };
+    for (player_position, player_sprite) in player_query.iter() {
+        let m_avg = avg_position.get_or_insert_with(|| *player_position);
+        *m_avg = m_avg.lerp(player_position, 0.5 * time.delta_secs());
 
-    let m_avg = avg_position.get_or_insert_with(|| *player_position);
-    *m_avg = m_avg.lerp(player_position, 0.5 * time.delta_secs());
+        // Check if player is inside any room
+        if roomdb
+            .room_tiles
+            .get(&player_position.to_board_position())
+            .is_some()
+        {
+            not_entered_timer.reset();
+            walkie_play.mark(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
+            continue;
+        }
 
-    // Check if player is inside any room
-    if roomdb
-        .room_tiles
-        .get(&player_position.to_board_position())
-        .is_some()
-    {
-        not_entered_timer.reset();
-        walkie_play.mark(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
-        return;
-    }
+        // If player is not in a room and in GameState::None, increment timer
+        let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
+        let distance_from_avg = player_position.distance(m_avg);
 
-    // If player is not in a room and in GameState::None, increment timer
-    let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
-    let distance_from_avg = player_position.distance(m_avg);
+        if distance_from_avg > 3.0 {
+            not_entered_timer.reset();
+            continue;
+        }
+        if distance_from_spawn > PLAYER_STUCK_MAX_DISTANCE
+            && distance_from_spawn < PLAYER_ERRATIC_MAX_DISTANCE
+            && player_sprite.movement.distance() > 60.0
+        {
+            // Ignore when the player is stuck or stopped.
+            not_entered_timer.tick(time.delta());
+        }
 
-    if distance_from_avg > 3.0 {
-        not_entered_timer.reset();
-        return;
-    }
-    if distance_from_spawn > PLAYER_STUCK_MAX_DISTANCE
-        && distance_from_spawn < PLAYER_ERRATIC_MAX_DISTANCE
-        && player_sprite.movement.distance() > 60.0
-    {
-        // Ignore when the player is stuck or stopped.
-        not_entered_timer.tick(time.delta());
-    }
-
-    if not_entered_timer.elapsed_secs() > ERRATIC_MOVEMENT_EARLY_SECONDS {
-        walkie_play.set(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
+        if not_entered_timer.elapsed_secs() > ERRATIC_MOVEMENT_EARLY_SECONDS {
+            walkie_play.set(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
+        }
     }
 }
 
@@ -174,48 +171,46 @@ fn check_door_interaction_hesitation(
         return;
     }
 
-    let Ok((player_position, _)) = player_query.single() else {
-        return;
-    };
+    for (player_position, _) in player_query.iter() {
+        // Check if the player is outside the location
+        let is_outside = roomdb
+            .room_tiles
+            .get(&player_position.to_board_position())
+            .is_none();
 
-    // Check if the player is outside the location
-    let is_outside = roomdb
-        .room_tiles
-        .get(&player_position.to_board_position())
-        .is_none();
+        if !is_outside {
+            hesitation_timer.reset();
+            return;
+        }
 
-    if !is_outside {
-        hesitation_timer.reset();
-        return;
-    }
+        // Find the closest door to the player
+        let closest_door = door_query.iter().min_by(|(pos_a, _), (pos_b, _)| {
+            player_position
+                .distance(pos_a)
+                .partial_cmp(&player_position.distance(pos_b))
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
-    // Find the closest door to the player
-    let closest_door = door_query.iter().min_by(|(pos_a, _), (pos_b, _)| {
-        player_position
-            .distance(pos_a)
-            .partial_cmp(&player_position.distance(pos_b))
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
+        let Some((door_position, door_behavior)) = closest_door else {
+            return;
+        };
 
-    let Some((door_position, door_behavior)) = closest_door else {
-        return;
-    };
+        let distance_to_door = player_position.distance(door_position);
+        if distance_to_door > 1.5 || door_behavior.state() != TileState::Closed {
+            hesitation_timer.reset();
+            continue;
+        }
 
-    let distance_to_door = player_position.distance(door_position);
-    if distance_to_door > 1.5 || door_behavior.state() != TileState::Closed {
-        hesitation_timer.reset();
-        return;
-    }
+        hesitation_timer.tick(time.delta());
 
-    hesitation_timer.tick(time.delta());
-
-    if hesitation_timer.elapsed_secs() > 3.0
-        && walkie_play.set(
-            WalkieEvent::DoorInteractionHesitation,
-            time.elapsed_secs_f64(),
-        )
-    {
-        hesitation_timer.reset();
+        if hesitation_timer.elapsed_secs() > 3.0
+            && walkie_play.set(
+                WalkieEvent::DoorInteractionHesitation,
+                time.elapsed_secs_f64(),
+            )
+        {
+            hesitation_timer.reset();
+        }
     }
 }
 
@@ -236,35 +231,29 @@ fn trigger_struggling_with_grab_drop(
         return;
     }
 
-    let Ok((player_gear, input_mapping)) = player_query.single() else {
-        *full_and_failed_grab_timer = None;
-        return;
-    };
-    if player_gear.held_item.is_some() {
-        // If the player is already grabbing something, just skip this hint.
-        *full_and_failed_grab_timer = None;
-        return;
-    }
-    // 2.b. Check Player Full State
-    let right_hand_full = player_gear.right_hand.is_some();
-    let inventory_full = player_gear.inventory.len() >= 2;
-    let player_is_completely_full = right_hand_full && inventory_full;
-
-    // 3.c. Detecting a Failed Grab Attempt to Start/Check Timer
-    if keyboard_input.just_pressed(input_mapping.controls.grab) && player_is_completely_full {
-        if full_and_failed_grab_timer.is_none() {
-            *full_and_failed_grab_timer = Some(Stopwatch::new());
-            // Timer starts, will be ticked below if it's Some.
+    // Iterate all players (First Responder)
+    for (player_gear, input_mapping) in player_query.iter() {
+        if player_gear.held_item.is_some() {
+            // If the player is already grabbing something, just skip this hint.
+            continue;
         }
-        // If timer was already Some (player pressed grab again while full and timer running), it just continues.
-    } else if !player_is_completely_full && full_and_failed_grab_timer.is_some() {
-        // Player is no longer full, so reset the timer.
-        *full_and_failed_grab_timer = None;
-    }
+        // 2.b. Check Player Full State
+        let right_hand_full = player_gear.right_hand.is_some();
+        let inventory_full = player_gear.inventory.len() >= 2;
+        let player_is_completely_full = right_hand_full && inventory_full;
 
-    // 3.d. Triggering Logic (if timer is Some)
-    if let Some(ref mut timer_ref) = *full_and_failed_grab_timer {
-        timer_ref.tick(time.delta()); // Tick the timer each frame it's Some
+        // 3.c. Detecting a Failed Grab Attempt to Start/Check Timer
+        if keyboard_input.just_pressed(input_mapping.controls.grab) && player_is_completely_full {
+            if full_and_failed_grab_timer.is_none() {
+                *full_and_failed_grab_timer = Some(Stopwatch::new());
+                // Timer starts, will be ticked below if it's Some.
+            }
+            // If timer was already Some (player pressed grab again while full and timer running), it just continues.
+        } else if !player_is_completely_full && full_and_failed_grab_timer.is_some() {
+            // Player is no longer full, so reset the timer.
+            *full_and_failed_grab_timer = None;
+        }
+
 
         // Re-check player_is_completely_full because they might have dropped/used an item
         // through a means other than the grab key (e.g., using a consumable from inventory directly)
@@ -274,11 +263,14 @@ fn trigger_struggling_with_grab_drop(
         let updated_player_is_completely_full = updated_right_hand_full && updated_inventory_full;
 
         if updated_player_is_completely_full {
-            if timer_ref.elapsed_secs() > 5.0 {
-                // Duration player struggles
-                // FIXME: Additional verification and tuning is needed for this trigger. It worked before, but it was too much.
-                if walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64()) {
-                    *full_and_failed_grab_timer = None; // Reset timer after successful trigger
+            if let Some(ref mut stopwatch) = *full_and_failed_grab_timer {
+                stopwatch.tick(time.delta());
+                if stopwatch.elapsed_secs() > 5.0 {
+                    // Duration player struggles
+                    // FIXME: Additional verification and tuning is needed for this trigger. It worked before, but it was too much.
+                    if walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64()) {
+                        *full_and_failed_grab_timer = None; // Reset timer after successful trigger
+                    }
                 }
             }
         } else {
@@ -310,39 +302,37 @@ fn trigger_struggling_with_hide_unhide(
         return;
     }
 
-    // Only proceed if player is not hiding
-    let Ok(input_mapping) = player_query.single() else {
-        *hide_key_timer = None;
-        return;
-    };
+    // Only proceed if player is not hiding - iterate all non-hiding players (First Responder)
+    for input_mapping in player_query.iter() {
+        // Check if the hide key (activate key, typically [E]) is currently pressed
+        let hide_key_pressed = keyboard_input.pressed(input_mapping.controls.activate);
 
-    // Check if the hide key (activate key, typically [E]) is currently pressed
-    let hide_key_pressed = keyboard_input.pressed(input_mapping.controls.activate);
-
-    if hide_key_pressed {
-        // Start or continue timer if key is pressed
-        if hide_key_timer.is_none() {
-            *hide_key_timer = Some(Stopwatch::new());
-        }
-
-        if let Some(ref mut timer) = *hide_key_timer {
-            timer.tick(time.delta());
-
-            // If player has been holding [E] for over 2 seconds while not hidden, trigger event
-            if timer.elapsed_secs() > 2.0
-                && walkie_play.set(
-                    WalkieEvent::StrugglingWithHideUnhide,
-                    time.elapsed_secs_f64(),
-                )
-            {
-                // FIXME: Additional verification and tuning is needed for this trigger.
-                // Reset timer after successful trigger to avoid spam
-                *hide_key_timer = None;
+        if hide_key_pressed {
+            // Start or continue timer if key is pressed
+            if hide_key_timer.is_none() {
+                *hide_key_timer = Some(Stopwatch::new());
             }
+
+            if let Some(ref mut timer) = *hide_key_timer {
+                timer.tick(time.delta());
+
+                // If player has been holding [E] for over 2 seconds while not hidden, trigger event
+                if timer.elapsed_secs() > 2.0
+                    && walkie_play.set(
+                        WalkieEvent::StrugglingWithHideUnhide,
+                        time.elapsed_secs_f64(),
+                    )
+                {
+                    // FIXME: Additional verification and tuning is needed for this trigger.
+                    // Reset timer after successful trigger to avoid spam
+                    *hide_key_timer = None;
+                    break;  // First responder wins - exit after first player triggers
+                }
+            }
+        } else {
+            // Reset timer if key is not pressed
+            *hide_key_timer = None;
         }
-    } else {
-        // Reset timer if key is not pressed
-        *hide_key_timer = None;
     }
 }
 
@@ -367,8 +357,9 @@ fn trigger_player_stays_hidden_too_long(
         *post_hunt_hidden_timer = None;
         return;
     }
-    // Only proceed if player is hiding
-    if hiding_query.single().is_err() {
+    // Only proceed if ANY player is hiding
+    let any_player_hiding = !hiding_query.is_empty();
+    if !any_player_hiding {
         *post_hunt_hidden_timer = None;
         return;
     }
@@ -402,8 +393,6 @@ fn trigger_player_stays_hidden_too_long(
     }
 }
 
-/// Triggers a walkie-talkie event if the player is near a hiding spot during a hunt but does not hide.
-/// Fires HuntActiveNearHidingSpotNoHide if ghost is hunting, player is not hiding, and a hiding spot is within 1.5 units for 2+ seconds.
 fn trigger_hunt_active_near_hiding_spot_no_hide(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
@@ -428,33 +417,32 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
         *near_hiding_timer = None;
         return;
     }
-    // Get player position (not hiding)
-    let Ok((player_pos, _)) = player_query.single() else {
-        *near_hiding_timer = None;
-        return;
-    };
-    // Find a hiding spot within 1.5 units
-    let near_hiding = hiding_spots
-        .iter()
-        .filter(|(_, behavior)| behavior.p.object.hidingspot)
-        .any(|(spot_pos, _)| player_pos.distance(spot_pos) < 1.5);
-    if near_hiding {
-        let now = time.elapsed_secs_f64() as f32;
-        if let Some(start) = *near_hiding_timer {
-            if now - start > 2.0 {
-                // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                walkie_play.set(
-                    WalkieEvent::HuntActiveNearHidingSpotNoHide,
-                    time.elapsed_secs_f64(),
-                );
-                // Only trigger once per hunt
-                *near_hiding_timer = None;
+    // Get player position (not hiding) - iterate all non-hiding players (First Responder)
+    for (player_pos, _) in player_query.iter() {
+        // Find a hiding spot within 1.5 units
+        let near_hiding = hiding_spots
+            .iter()
+            .filter(|(_, behavior)| behavior.p.object.hidingspot)
+            .any(|(spot_pos, _)| player_pos.distance(spot_pos) < 1.5);
+        if near_hiding {
+            let now = time.elapsed_secs_f64() as f32;
+            if let Some(start) = *near_hiding_timer {
+                if now - start > 2.0 {
+                    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+                    walkie_play.set(
+                        WalkieEvent::HuntActiveNearHidingSpotNoHide,
+                        time.elapsed_secs_f64(),
+                    );
+                    // Only trigger once per hunt
+                    *near_hiding_timer = None;
+                    break;  // First responder wins - exit after first player triggers
+                }
+            } else {
+                *near_hiding_timer = Some(now);
             }
         } else {
-            *near_hiding_timer = Some(now);
+            *near_hiding_timer = None;
         }
-    } else {
-        *near_hiding_timer = None;
     }
 }
 

@@ -38,21 +38,26 @@ fn player_forgot_equipment(
         return;
     }
     // Find the active player's position
-    let Ok((player_pos, player_gear)) = qp.single() else {
-        return;
-    };
-    let player_bpos = player_pos.to_board_position();
+    let mut any_player_inside_without_gear = false;
+    for (player_pos, player_gear) in qp.iter() {
+        let player_bpos = player_pos.to_board_position();
 
-    if roomdb.room_tiles.get(&player_bpos).is_none() {
-        // Player is not inside the location, no need to remind them.
+        if roomdb.room_tiles.get(&player_bpos).is_some() {
+            if player_gear.right_hand.is_some() {
+                // At least one player has an item, no need to remind anyone.
+                walkie_play.mark(WalkieEvent::GearInVan, time.elapsed_secs_f64());
+                stopwatch.reset();
+                return;
+            }
+            any_player_inside_without_gear = true;
+        }
+    }
+
+    if !any_player_inside_without_gear {
         stopwatch.reset();
         return;
     }
-    if player_gear.right_hand.is_some() {
-        // Player has an item, no need to remind them.
-        walkie_play.mark(WalkieEvent::GearInVan, time.elapsed_secs_f64());
-        return;
-    }
+
     stopwatch.tick(time.delta());
     if stopwatch.elapsed().as_secs_f32() < 1.0 {
         // Wait before reminding the player.
@@ -81,38 +86,38 @@ fn ghost_near_hunt(
         return;
     }
     // Find the active player's position and gear
-    let Ok((player_pos, player_gear)) = qp.single() else {
-        return;
-    };
+    for (player_pos, player_gear) in qp.iter() {
+        // If player has RepellentFlask, disable this system
+        let check_gear = |entity: Entity| -> bool {
+            if let Ok(kind) = q_gear.get(entity) {
+                *kind == GearKind::RepellentFlask
+            } else {
+                false
+            }
+        };
 
-    // If player has RepellentFlask, disable this system
-    let check_gear = |entity: Entity| -> bool {
-        if let Ok(kind) = q_gear.get(entity) {
-            *kind == GearKind::RepellentFlask
-        } else {
-            false
-        }
-    };
+        let has_repellent = player_gear.left_hand.map(check_gear).unwrap_or(false)
+            || player_gear.right_hand.map(check_gear).unwrap_or(false)
+            || player_gear.inventory.iter().any(|&e| check_gear(e));
 
-    let has_repellent = player_gear.left_hand.map(check_gear).unwrap_or(false)
-        || player_gear.right_hand.map(check_gear).unwrap_or(false)
-        || player_gear.inventory.iter().any(|&e| check_gear(e));
-
-    if has_repellent {
-        return;
-    }
-
-    let player_bpos = player_pos.to_board_position();
-
-    if roomdb.room_tiles.get(&player_bpos).is_none() {
-        // Player is not inside the location, no need to tell them.
-        return;
-    }
-    for ghost in q_ghost.iter() {
-        if (ghost.rage > ghost.rage_limit * 0.8) && !ghost.hunt_warning_active && !ghost.hunt_target
-        {
-            walkie_play.set(WalkieEvent::GhostNearHunt, time.elapsed_secs_f64());
+        if has_repellent {
             return;
+        }
+
+        let player_bpos = player_pos.to_board_position();
+
+        if roomdb.room_tiles.get(&player_bpos).is_none() {
+            // Player is not inside the location, no need to tell them.
+            continue;
+        }
+        for ghost in q_ghost.iter() {
+            if (ghost.rage > ghost.rage_limit * 0.8)
+                && !ghost.hunt_warning_active
+                && !ghost.hunt_target
+            {
+                walkie_play.set(WalkieEvent::GhostNearHunt, time.elapsed_secs_f64());
+                return;
+            }
         }
     }
 }

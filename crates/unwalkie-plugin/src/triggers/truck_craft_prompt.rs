@@ -31,7 +31,7 @@ fn trigger_almost_ready_to_craft_repellent_system(
         return;
     }
     // Check if player already has a repellent flask
-    if let Ok(player_gear) = player_query.single() {
+    for player_gear in player_query.iter() {
         let check_gear = |entity: Entity| -> bool {
             if let Ok(kind) = q_gear.get(entity) {
                 *kind == GearKind::RepellentFlask

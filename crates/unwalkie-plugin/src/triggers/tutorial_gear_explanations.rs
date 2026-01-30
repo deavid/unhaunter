@@ -41,7 +41,7 @@ fn trigger_evidence_gear_explanations(
         return;
     }
 
-    if let Ok(player_gear) = player_gear_query.single() {
+    for player_gear in player_gear_query.iter() {
         let mut check_gear = |entity: Entity| {
             if let Ok(kind) = q_gear.get(entity) {
                 match kind {
@@ -96,18 +96,19 @@ fn trigger_support_item_explanations(
         return;
     }
 
-    if let Ok(player_gear) = player_gear_query.single()
-        && let Some(entity) = player_gear.right_hand
-        && let Ok(kind) = q_gear.get(entity)
-        && matches!(
-            kind,
-            GearKind::Salt | GearKind::QuartzStone | GearKind::SageBundle
-        )
-        && walkie_play.set(WalkieEvent::GearExplanation(*kind), time.elapsed_secs_f64())
-    {
-        info!(
-            "Support item explanation triggered for {:?} because it's in an active hand.",
-            kind
-        );
+    for player_gear in player_gear_query.iter() {
+        if let Some(entity) = player_gear.right_hand
+            && let Ok(kind) = q_gear.get(entity)
+            && matches!(
+                kind,
+                GearKind::Salt | GearKind::QuartzStone | GearKind::SageBundle
+            )
+            && walkie_play.set(WalkieEvent::GearExplanation(*kind), time.elapsed_secs_f64())
+        {
+            info!(
+                "Support item explanation triggered for {:?} because it's in an active hand.",
+                kind
+            );
+        }
     }
 }

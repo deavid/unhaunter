@@ -202,69 +202,66 @@ fn trigger_clear_evidence_no_action_ckey_system(
         return;
     }
 
-    let Ok((_player_sprite, player_gear)) = player_query.single() else {
-        tracked_state.tracked_clear_evidence.clear();
-        return;
-    };
+    for (_player_sprite, player_gear) in player_query.iter() {
+        let current_time = time.elapsed_secs_f64();
+        let mut to_remove: Vec<Evidence> = Vec::new();
 
-    let current_time = time.elapsed_secs_f64();
-    let mut to_remove: Vec<Evidence> = Vec::new();
+        for evidence_type in all::<Evidence>() {
+            let mut is_evidence_clear_on_active_gear = false;
 
-    for evidence_type in all::<Evidence>() {
-        let mut is_evidence_clear_on_active_gear = false;
+            let is_sensor_for_evidence = |entity: Option<Entity>| {
+                entity
+                    .and_then(|e| q_evidence_sensor.get(e).ok())
+                    .map(|s| s.evidence == evidence_type)
+                    .unwrap_or(false)
+            };
 
-        let is_sensor_for_evidence = |entity: Option<Entity>| {
-            entity
-                .and_then(|e| q_evidence_sensor.get(e).ok())
-                .map(|s| s.evidence == evidence_type)
-                .unwrap_or(false)
-        };
+            if is_sensor_for_evidence(player_gear.right_hand)
+                && let Some(reading) = evidence_readings.get_reading(evidence_type)
+                && reading.clarity >= CLEAR_EVIDENCE_THRESHOLD_FOR_HINT
+            {
+                is_evidence_clear_on_active_gear = true;
+            }
 
-        if is_sensor_for_evidence(player_gear.right_hand)
-            && let Some(reading) = evidence_readings.get_reading(evidence_type)
-            && reading.clarity >= CLEAR_EVIDENCE_THRESHOLD_FOR_HINT
-        {
-            is_evidence_clear_on_active_gear = true;
-        }
+            if is_evidence_clear_on_active_gear {
+                let entry = tracked_state
+                    .tracked_clear_evidence
+                    .entry(evidence_type)
+                    .or_insert(current_time);
+                if current_time - *entry >= TIME_VISIBLE_FOR_CKEY_HINT_SECONDS {
+                    // Check if player pressed the journal assign key recently for *this* evidence type
+                    // This requires knowing which evidence is "targeted" by the key press,
+                    // which might be complex if not directly tied to active gear.
+                    // For now, assume if *any* assign key was pressed, it might be for this.
+                    // A more robust check would be needed.
+                    // The original diff for hint_acknowledge_system.rs was rejected, so we can't rely on that change.
+                    // Let's assume for now if the hint fires, it's valid.
+                    // A simple check: did the player recently press the "change evidence" key (C)?
+                    // This is not ideal as it's not "assign evidence".
+                    // This hint might be hard to implement correctly without better state tracking of journal interaction.
 
-        if is_evidence_clear_on_active_gear {
-            let entry = tracked_state
-                .tracked_clear_evidence
-                .entry(evidence_type)
-                .or_insert(current_time);
-            if current_time - *entry >= TIME_VISIBLE_FOR_CKEY_HINT_SECONDS {
-                // Check if player pressed the journal assign key recently for *this* evidence type
-                // This requires knowing which evidence is "targeted" by the key press,
-                // which might be complex if not directly tied to active gear.
-                // For now, assume if *any* assign key was pressed, it might be for this.
-                // A more robust check would be needed.
-                // The original diff for hint_acknowledge_system.rs was rejected, so we can't rely on that change.
-                // Let's assume for now if the hint fires, it's valid.
-                // A simple check: did the player recently press the "change evidence" key (C)?
-                // This is not ideal as it's not "assign evidence".
-                // This hint might be hard to implement correctly without better state tracking of journal interaction.
-
-                // If we assume the player *hasn't* acknowledged it via C_KEY (which is hard to check here without more context
-                // on how C_KEY interaction is recorded globally or against specific evidence), we'd fire the hint.
-                if walkie_play.set(WalkieEvent::ClearEvidenceFoundNoActionCKey, current_time) {
-                    // info!("[Walkie] Triggered ClearEvidenceFoundNoActionCKey for {:?}.", evidence_type);
-                    // Mark this specific evidence as hinted to avoid re-triggering immediately
-                    // This could be done by removing it or updating its timestamp
+                    // If we assume the player *hasn't* acknowledged it via C_KEY (which is hard to check here without more context
+                    // on how C_KEY interaction is recorded globally or against specific evidence), we'd fire the hint.
+                    if walkie_play.set(WalkieEvent::ClearEvidenceFoundNoActionCKey, current_time) {
+                        // info!("[Walkie] Triggered ClearEvidenceFoundNoActionCKey for {:?}.", evidence_type);
+                        // Mark this specific evidence as hinted to avoid re-triggering immediately
+                        // This could be done by removing it or updating its timestamp
+                        to_remove.push(evidence_type);
+                    }
+                }
+            } else {
+                // Evidence is no longer clear for this type, remove from tracking
+                if tracked_state
+                    .tracked_clear_evidence
+                    .contains_key(&evidence_type)
+                {
                     to_remove.push(evidence_type);
                 }
             }
-        } else {
-            // Evidence is no longer clear for this type, remove from tracking
-            if tracked_state
-                .tracked_clear_evidence
-                .contains_key(&evidence_type)
-            {
-                to_remove.push(evidence_type);
-            }
         }
-    }
-    for ev_type in to_remove {
-        tracked_state.tracked_clear_evidence.remove(&ev_type);
+        for to_remove in to_remove {
+            tracked_state.tracked_clear_evidence.remove(&to_remove);
+        }
     }
 }
 

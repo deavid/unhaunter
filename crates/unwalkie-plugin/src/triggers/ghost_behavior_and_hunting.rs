@@ -36,100 +36,93 @@ fn trigger_hunt_warning_no_player_evasion_system(
         return;
     }
 
-    let Ok((player_current_pos, maybe_hiding, player_gear)) = q_player.single() else {
-        if warning_timer.is_some() {
-            *warning_timer = None;
-            *player_pos_at_warning = None;
+    for (player_current_pos, maybe_hiding, player_gear) in q_player.iter() {
+        // Check if player is inside a room (must be inside location for hunt warnings)
+        let player_bpos = player_current_pos.to_board_position();
+        if roomdb.room_tiles.get(&player_bpos).is_none() {
+            // Player is outside the location, reset timer and don't trigger
+            if warning_timer.is_some() {
+                *warning_timer = None;
+                *player_pos_at_warning = None;
+            }
+            continue;
         }
-        return;
-    };
+        // Check if player has RepellentFlask in inventory (hands or general inventory)
+        let check_gear = |entity: Entity| -> bool {
+            if let Ok(kind) = q_gear.get(entity) {
+                *kind == GearKind::RepellentFlask
+            } else {
+                false
+            }
+        };
 
-    // Check if player is inside a room (must be inside location for hunt warnings)
-    let player_bpos = player_current_pos.to_board_position();
-    if roomdb.room_tiles.get(&player_bpos).is_none() {
-        // Player is outside the location, reset timer and don't trigger
-        if warning_timer.is_some() {
-            *warning_timer = None;
-            *player_pos_at_warning = None;
+        let has_repellent = player_gear.left_hand.map(check_gear).unwrap_or(false)
+            || player_gear.right_hand.map(check_gear).unwrap_or(false)
+            || player_gear.inventory.iter().any(|&e| check_gear(e));
+
+        if has_repellent {
+            if warning_timer.is_some() {
+                *warning_timer = None;
+                *player_pos_at_warning = None;
+            }
+            continue;
         }
-        return;
-    }
 
-    // Check if player has RepellentFlask in inventory (hands or general inventory)
-    let check_gear = |entity: Entity| -> bool {
-        if let Ok(kind) = q_gear.get(entity) {
-            *kind == GearKind::RepellentFlask
-        } else {
-            false
-        }
-    };
-
-    let has_repellent = player_gear.left_hand.map(check_gear).unwrap_or(false)
-        || player_gear.right_hand.map(check_gear).unwrap_or(false)
-        || player_gear.inventory.iter().any(|&e| check_gear(e));
-
-    if has_repellent {
-        if warning_timer.is_some() {
-            *warning_timer = None;
-            *player_pos_at_warning = None;
-        }
-        return;
-    }
-
-    let is_player_hiding = maybe_hiding.is_some();
-    let mut is_hunt_warning_active_for_any_ghost = false;
-    for ghost_sprite in q_ghost.iter() {
-        if ghost_sprite.hunt_warning_active {
-            // Only trigger warning if ghost health is above 30%
-            if ghost_sprite.get_health() > 0.3 {
-                is_hunt_warning_active_for_any_ghost = true;
-                break;
+        let is_player_hiding = maybe_hiding.is_some();
+        let mut is_hunt_warning_active_for_any_ghost = false;
+        for ghost_sprite in q_ghost.iter() {
+            if ghost_sprite.hunt_warning_active {
+                // Only trigger warning if ghost health is above 30%
+                if ghost_sprite.get_health() > 0.3 {
+                    is_hunt_warning_active_for_any_ghost = true;
+                    break;
+                }
             }
         }
-    }
 
-    // 3. Conditions for starting/resetting the timer
-    if is_hunt_warning_active_for_any_ghost && !is_player_hiding {
-        if warning_timer.is_none() {
-            *warning_timer = Some(Stopwatch::new());
-            *player_pos_at_warning = Some(*player_current_pos);
+        // 3. Conditions for starting/resetting the timer
+        if is_hunt_warning_active_for_any_ghost && !is_player_hiding {
+            if warning_timer.is_none() {
+                *warning_timer = Some(Stopwatch::new());
+                *player_pos_at_warning = Some(*player_current_pos);
+            }
+        } else if warning_timer.is_some() {
+            *warning_timer = None;
+            *player_pos_at_warning = None;
         }
-    } else if warning_timer.is_some() {
-        *warning_timer = None;
-        *player_pos_at_warning = None;
-    }
 
-    // 4. Conditions for triggering the event
-    if let Some(ref mut stopwatch) = *warning_timer {
-        stopwatch.tick(time.delta());
+        // 4. Conditions for triggering the event
+        if let Some(ref mut stopwatch) = *warning_timer {
+            stopwatch.tick(time.delta());
 
-        if stopwatch.elapsed_secs() > NO_EVASION_TIMER_SECONDS {
-            if !is_player_hiding {
-                // Re-check hiding status
-                if let Some(initial_pos) = *player_pos_at_warning {
-                    if player_current_pos.distance(&initial_pos) < NO_EVASION_MAX_DISTANCE {
-                        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                        if walkie_play.set(
-                            WalkieEvent::HuntWarningNoPlayerEvasion,
-                            time.elapsed_secs_f64(),
-                        ) {
+            if stopwatch.elapsed_secs() > NO_EVASION_TIMER_SECONDS {
+                if !is_player_hiding {
+                    // Re-check hiding status
+                    if let Some(initial_pos) = *player_pos_at_warning {
+                        if player_current_pos.distance(&initial_pos) < NO_EVASION_MAX_DISTANCE {
+                            // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+                            if walkie_play.set(
+                                WalkieEvent::HuntWarningNoPlayerEvasion,
+                                time.elapsed_secs_f64(),
+                            ) {
+                                *warning_timer = None;
+                                *player_pos_at_warning = None;
+                            }
+                        } else {
+                            // Player moved enough, reset timer
                             *warning_timer = None;
                             *player_pos_at_warning = None;
                         }
                     } else {
-                        // Player moved enough, reset timer
+                        // Should not happen if timer is Some, but good to reset
                         *warning_timer = None;
                         *player_pos_at_warning = None;
                     }
                 } else {
-                    // Should not happen if timer is Some, but good to reset
+                    // Player started hiding, reset timer
                     *warning_timer = None;
                     *player_pos_at_warning = None;
                 }
-            } else {
-                // Player started hiding, reset timer
-                *warning_timer = None;
-                *player_pos_at_warning = None;
             }
         }
     }

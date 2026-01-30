@@ -38,19 +38,18 @@ fn trigger_darkness_level_system(
         stopwatch.reset();
         return;
     }
-    let Ok((player_pos, _)) = qp.single() else {
-        return;
-    };
-    let player_bpos = player_pos.to_board_position();
-    let player_room = roomdb.room_tiles.get(&player_bpos);
+    let mut any_in_dark = false;
+    for (player_pos, _) in qp.iter() {
+        let player_bpos = player_pos.to_board_position();
+        let player_room = roomdb.room_tiles.get(&player_bpos);
 
-    if player_room.is_none() {
-        // Player is not inside the location, no need to remind them.
-        stopwatch.reset();
-        return;
+        if player_room.is_some() && light_grid.exposure.lux < 0.4 {
+            any_in_dark = true;
+            break;
+        }
     }
 
-    if light_grid.exposure.lux < 0.4 {
+    if any_in_dark {
         stopwatch.tick(time.delta()); // Changed from *seconds_dark += time.delta_secs();
         if stopwatch.elapsed_secs() > 2.0 {
             walkie_play.set(WalkieEvent::DarkRoomNoLightUsed, time.elapsed_secs_f64());
@@ -87,22 +86,21 @@ fn trigger_breach_showcase(
         }
     }
 
-    let Ok((player_pos, _)) = qp.single() else {
-        return;
-    };
-    let player_bpos = player_pos.to_board_position();
-    let player_room = roomdb.room_tiles.get(&player_bpos);
-    for breach_pos in q_breach.iter() {
-        let breach_bpos = breach_pos.to_board_position();
-        let breach_room = roomdb.room_tiles.get(&breach_bpos);
+    for (player_pos, _) in qp.iter() {
+        let player_bpos = player_pos.to_board_position();
+        let player_room = roomdb.room_tiles.get(&player_bpos);
+        for breach_pos in q_breach.iter() {
+            let breach_bpos = breach_pos.to_board_position();
+            let breach_room = roomdb.room_tiles.get(&breach_bpos);
 
-        if player_room.is_some()
-            && breach_room.is_some()
-            && player_room == breach_room
-            && breach_pos.distance(player_pos) < 3.0
-        {
-            walkie_play.set(WalkieEvent::BreachShowcase, time.elapsed_secs_f64());
-            break;
+            if player_room.is_some()
+                && breach_room.is_some()
+                && player_room == breach_room
+                && breach_pos.distance(player_pos) < 3.0
+                && walkie_play.set(WalkieEvent::BreachShowcase, time.elapsed_secs_f64())
+            {
+                return;
+            }
         }
     }
 }
@@ -134,17 +132,19 @@ fn trigger_ghost_showcase(
         }
     }
 
-    let Ok((player_pos, _)) = qp.single() else {
-        return;
-    };
-    let player_bpos = player_pos.to_board_position();
-    let player_room = roomdb.room_tiles.get(&player_bpos);
-    for ghost_pos in q_ghost.iter() {
-        let ghost_bpos = ghost_pos.to_board_position();
-        let ghost_room = roomdb.room_tiles.get(&ghost_bpos);
-        if player_room.is_some() && ghost_room.is_some() && player_room == ghost_room {
-            walkie_play.set(WalkieEvent::GhostShowcase, time.elapsed_secs_f64());
-            break;
+    for (player_pos, _) in qp.iter() {
+        let player_bpos = player_pos.to_board_position();
+        let player_room = roomdb.room_tiles.get(&player_bpos);
+        for ghost_pos in q_ghost.iter() {
+            let ghost_bpos = ghost_pos.to_board_position();
+            let ghost_room = roomdb.room_tiles.get(&ghost_bpos);
+            if player_room.is_some()
+                && ghost_room.is_some()
+                && player_room == ghost_room
+                && walkie_play.set(WalkieEvent::GhostShowcase, time.elapsed_secs_f64())
+            {
+                return;
+            }
         }
     }
 }
@@ -166,30 +166,31 @@ fn trigger_room_lights_on_gear_needs_dark(
     if *game_state.get() != GameState::None {
         return;
     }
-    let Ok((player_pos, _player, player_gear)) = qp.single() else {
-        return;
-    };
-    let player_bpos = player_pos.to_board_position();
-    let player_room = roomdb.room_tiles.get(&player_bpos);
+    for (player_pos, _player, player_gear) in qp.iter() {
+        let player_bpos = player_pos.to_board_position();
+        let player_room = roomdb.room_tiles.get(&player_bpos);
 
-    if player_room.is_none() {
-        return;
-    }
+        if player_room.is_none() {
+            continue;
+        }
 
-    // Use GearUsable::needs_darkness for the right hand gear
-    if let Some(hand_entity) = player_gear.right_hand
-        && let Ok((toggleable, kind)) = q_gear.get(hand_entity)
-    {
-        let needs_darkness = matches!(kind, GearKind::UVTorch | GearKind::Flashlight);
-        if needs_darkness
-            && toggleable.is_on
-            && light_grid.light_field[player_bpos.ndidx()].lux > 0.5
+        // Use GearUsable::needs_darkness for the right hand gear
+        if let Some(hand_entity) = player_gear.right_hand
+            && let Ok((toggleable, kind)) = q_gear.get(hand_entity)
         {
-            // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-            walkie_play.set(
-                WalkieEvent::RoomLightsOnGearNeedsDark,
-                time.elapsed_secs_f64(),
-            );
+            let needs_darkness = matches!(kind, GearKind::UVTorch | GearKind::Flashlight);
+            if needs_darkness
+                && toggleable.is_on
+                && light_grid.light_field[player_bpos.ndidx()].lux > 0.5
+            {
+                // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+                if walkie_play.set(
+                    WalkieEvent::RoomLightsOnGearNeedsDark,
+                    time.elapsed_secs_f64(),
+                ) {
+                    return;
+                }
+            }
         }
     }
 }
@@ -219,30 +220,34 @@ fn trigger_thermometer_non_freezing_fixation(
         stopwatch.reset();
         return;
     }
-    let Ok((player_gear, _)) = qp.single() else {
-        stopwatch.reset();
-        return;
-    };
-    // Check if right hand is a Thermometer and enabled
-    if let Some(hand_entity) = player_gear.right_hand
-        && let Ok((thermo, toggleable)) = q_thermometer.get(hand_entity)
-    {
-        let temp_c = unfoundation_core::utils::kelvin_to_celsius(thermo.temp);
-        if toggleable.is_on && (1.0..=10.0).contains(&temp_c) {
-            stopwatch.tick(time.delta());
-            if stopwatch.elapsed_secs() > REQUIRED_DURATION {
-                // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                walkie_play.set(
-                    WalkieEvent::ThermometerNonFreezingFixation,
-                    time.elapsed_secs_f64(),
-                );
-                *trigger_count += 1;
-                stopwatch.reset();
+    let mut any_player_fixing_on_cold = false;
+    for (player_gear, _) in qp.iter() {
+        // Check if right hand is a Thermometer and enabled
+        if let Some(hand_entity) = player_gear.right_hand
+            && let Ok((thermo, toggleable)) = q_thermometer.get(hand_entity)
+        {
+            let temp_c = unfoundation_core::utils::kelvin_to_celsius(thermo.temp);
+            if toggleable.is_on && (1.0..=10.0).contains(&temp_c) {
+                any_player_fixing_on_cold = true;
+                break;
             }
-            return; // Return to avoid resetting stopwatch if conditions are met
         }
     }
-    stopwatch.reset();
+
+    if any_player_fixing_on_cold {
+        stopwatch.tick(time.delta());
+        if stopwatch.elapsed_secs() > REQUIRED_DURATION {
+            // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+            walkie_play.set(
+                WalkieEvent::ThermometerNonFreezingFixation,
+                time.elapsed_secs_f64(),
+            );
+            *trigger_count += 1;
+            stopwatch.reset();
+        }
+    } else {
+        stopwatch.reset();
+    }
 }
 
 /// Registers the environmental awareness systems to the Bevy app.

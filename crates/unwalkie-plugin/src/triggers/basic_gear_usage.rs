@@ -12,7 +12,7 @@ use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
-use unspatial_core::boardposition::BoardPosition;
+
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::WalkieEvent;
@@ -50,62 +50,60 @@ fn trigger_gear_selected_not_activated_system(
         return;
     }
 
-    let Ok((input_mapping, player_gear, player_pos)) = player_query.single() else {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    };
+    let mut any_player_matches = false;
+    let mut current_gear_kind = GearKind::None;
+    let mut reset_timer_this_frame = false;
 
-    if roomdb
-        .room_tiles
-        .get(&player_pos.to_board_position())
-        .is_none()
-    {
-        if tracker.is_some() {
-            *tracker = None;
+    for (input_mapping, player_gear, player_pos) in player_query.iter() {
+        if roomdb
+            .room_tiles
+            .get(&player_pos.to_board_position())
+            .is_none()
+        {
+            continue;
         }
-        return;
+
+        // 2. Inspect Right-Hand Gear & Check if it's an Evidence Tool
+        let Some(right_hand_entity) = player_gear.right_hand else {
+            continue;
+        };
+
+        let Ok((gear_kind, toggle, battery_opt)) = q_gear.get(right_hand_entity) else {
+            continue;
+        };
+
+        if *gear_kind == GearKind::None {
+            continue;
+        }
+
+        if Evidence::try_from(gear_kind).is_err() {
+            // Not an evidence-gathering tool (e.g., Flashlight, Quartz, Salt, Sage)
+            continue;
+        }
+
+        // 3. Check Gear State Conditions (Can be enabled AND is not currently enabled)
+        let can_enable = if let Some(battery) = battery_opt {
+            battery.level > 0.0
+        } else {
+            true
+        };
+
+        if !can_enable || toggle.is_on {
+            continue;
+        }
+
+        any_player_matches = true;
+        current_gear_kind = *gear_kind;
+
+        if keyboard_input.just_pressed(input_mapping.controls.right_hand_trigger) {
+            // [R] key
+            reset_timer_this_frame = true;
+            *r_triggered += 1;
+        }
+        break;
     }
 
-    // 2. Inspect Right-Hand Gear & Check if it's an Evidence Tool
-    let Some(right_hand_entity) = player_gear.right_hand else {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    };
-
-    let Ok((gear_kind, toggle, battery_opt)) = q_gear.get(right_hand_entity) else {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    };
-
-    if *gear_kind == GearKind::None {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    }
-
-    if Evidence::try_from(gear_kind).is_err() {
-        // Not an evidence-gathering tool (e.g., Flashlight, Quartz, Salt, Sage)
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    }
-
-    // 3. Check Gear State Conditions (Can be enabled AND is not currently enabled)
-    let can_enable = if let Some(battery) = battery_opt {
-        battery.level > 0.0
-    } else {
-        true
-    };
-
-    if !can_enable || toggle.is_on {
+    if !any_player_matches {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -113,13 +111,9 @@ fn trigger_gear_selected_not_activated_system(
     }
 
     // 4. Manage Tracker State & Timer
-    let current_gear_kind = *gear_kind;
-    let mut reset_timer_this_frame = false;
-
-    if keyboard_input.just_pressed(input_mapping.controls.right_hand_trigger) {
-        // [R] key
-        reset_timer_this_frame = true;
-        *r_triggered += 1;
+    if keyboard_input.just_pressed(KeyCode::KeyR) {
+        // [R] key - This is redundant now but keeping it for context if needed,
+        // actually r_triggered is already updated.
     }
 
     match tracker.as_mut() {
@@ -205,127 +199,124 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
         return;
     }
 
-    // 2. Get Player & Ghost Info
-    let Ok((_player_sprite, player_gear, player_pos)) = player_query.single() else {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    };
+    // 2. Get Ghost Info
     // Ghost's current position (if available) and its definitive spawn_point (breach)
-    let (ghost_spawn_bpos, current_ghost_live_pos_opt): (BoardPosition, Option<Position>) =
-        match ghost_query.single() {
-            Ok((gs, g_pos)) => (gs.spawn_point.clone(), Some(*g_pos)),
-            Err(_) => (haunt_state.breach_pos.to_board_position(), None), // Fallback if no GhostSprite
-        };
-
-    // 3. Hotspot Check
-    let player_bpos = player_pos.to_board_position();
-    let player_room = roomdb.room_tiles.get(&player_bpos);
-    let breach_room = roomdb.room_tiles.get(&ghost_spawn_bpos);
-
-    let mut in_hotspot = false;
-    if player_room.is_some() {
-        if player_room == breach_room {
-            // In breach room
-            in_hotspot = true;
-        }
-        if let Some(ghost_live_pos) = current_ghost_live_pos_opt
-            && player_room == roomdb.room_tiles.get(&ghost_live_pos.to_board_position())
-        {
-            // In live ghost's current room
-            in_hotspot = true;
-        }
+    let mut ghost_targets = vec![];
+    for (gs, g_pos) in ghost_query.iter() {
+        ghost_targets.push((gs.spawn_point.clone(), Some(*g_pos)));
     }
-    if !in_hotspot {
-        // Proximity check if not in same room by definition
-        if let Some(ghost_live_pos) = current_ghost_live_pos_opt {
-            if player_pos.distance(&ghost_live_pos) < HOTSPOT_PROXIMITY_THRESHOLD {
-                in_hotspot = true;
+    if ghost_targets.is_empty() {
+        ghost_targets.push((haunt_state.breach_pos.to_board_position(), None));
+    }
+
+    let mut any_in_hotspot_with_ineffective_tool = false;
+    let mut current_tool_kind = GearKind::None;
+
+    for (_player_sprite, player_gear, player_pos) in player_query.iter() {
+        for (ghost_spawn_bpos, current_ghost_live_pos_opt) in &ghost_targets {
+            // 3. Hotspot Check
+            let player_bpos = player_pos.to_board_position();
+            let player_room = roomdb.room_tiles.get(&player_bpos);
+            let breach_room = roomdb.room_tiles.get(ghost_spawn_bpos);
+
+            let mut in_hotspot = false;
+            if player_room.is_some() {
+                if player_room == breach_room {
+                    // In breach room
+                    in_hotspot = true;
+                }
+                if let Some(ghost_live_pos) = current_ghost_live_pos_opt
+                    && player_room == roomdb.room_tiles.get(&ghost_live_pos.to_board_position())
+                {
+                    // In live ghost's current room
+                    in_hotspot = true;
+                }
             }
-        } else {
-            // If no live ghost, check proximity to breach
-            if player_pos.distance(&ghost_spawn_bpos.to_position_center())
-                < HOTSPOT_PROXIMITY_THRESHOLD
-            {
-                in_hotspot = true;
+            if !in_hotspot {
+                // Proximity check if not in same room by definition
+                if let Some(ghost_live_pos) = current_ghost_live_pos_opt {
+                    if player_pos.distance(ghost_live_pos) < HOTSPOT_PROXIMITY_THRESHOLD {
+                        in_hotspot = true;
+                    }
+                } else {
+                    // If no live ghost, check proximity to breach
+                    if player_pos.distance(&ghost_spawn_bpos.to_position_center())
+                        < HOTSPOT_PROXIMITY_THRESHOLD
+                    {
+                        in_hotspot = true;
+                    }
+                }
             }
-        }
-    }
 
-    if !in_hotspot {
-        return;
-    }
+            if !in_hotspot {
+                continue;
+            }
 
-    // 4. Inspect Right-Hand Gear
-    let Some(right_hand_entity) = player_gear.right_hand else {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    };
-    let Ok((gear_kind, toggle)) = q_gear.get(right_hand_entity) else {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    };
-    let current_tool_kind = *gear_kind;
+            // 4. Inspect Right-Hand Gear
+            let Some(right_hand_entity) = player_gear.right_hand else {
+                continue;
+            };
+            let Ok((gear_kind, toggle)) = q_gear.get(right_hand_entity) else {
+                continue;
+            };
+            let tool_kind = *gear_kind;
 
-    if current_tool_kind != GearKind::Thermometer && current_tool_kind != GearKind::EMFMeter {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    }
-    if !toggle.is_on {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    }
+            if tool_kind != GearKind::Thermometer && tool_kind != GearKind::EMFMeter {
+                continue;
+            }
+            if !toggle.is_on {
+                continue;
+            }
 
-    // 5. Check Tool Effectiveness
-    let evidence_from_current_tool = Evidence::try_from(&current_tool_kind).ok();
-    let tool_is_ineffective =
-        evidence_from_current_tool.is_none_or(|ev| !haunt_state.evidences.contains(&ev));
+            // 5. Check Tool Effectiveness
+            let evidence_from_current_tool = Evidence::try_from(&tool_kind).ok();
+            let tool_is_ineffective =
+                evidence_from_current_tool.is_none_or(|ev| !haunt_state.evidences.contains(&ev));
 
-    if !tool_is_ineffective {
-        // Tool *could* be useful for this ghost
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    }
+            if !tool_is_ineffective {
+                // Tool *could* be useful for this ghost
+                continue;
+            }
 
-    // 6. Check if Player Has the *Other* Starting Tool
-    let other_tool_kind = if current_tool_kind == GearKind::Thermometer {
-        GearKind::EMFMeter
-    } else {
-        GearKind::Thermometer
-    };
+            // 6. Check if Player Has the *Other* Starting Tool
+            let other_tool_kind = if tool_kind == GearKind::Thermometer {
+                GearKind::EMFMeter
+            } else {
+                GearKind::Thermometer
+            };
 
-    let mut player_has_other_tool = false;
-    // Check left hand
-    if let Some(e) = player_gear.left_hand
-        && let Ok((k, _)) = q_gear.get(e)
-        && *k == other_tool_kind
-    {
-        player_has_other_tool = true;
-    }
-    // Check inventory
-    if !player_has_other_tool {
-        for e in &player_gear.inventory {
-            if let Ok((k, _)) = q_gear.get(*e)
+            let mut player_has_other_tool = false;
+            // Check left hand
+            if let Some(e) = player_gear.left_hand
+                && let Ok((k, _)) = q_gear.get(e)
                 && *k == other_tool_kind
             {
                 player_has_other_tool = true;
+            }
+            // Check inventory
+            if !player_has_other_tool {
+                for e in &player_gear.inventory {
+                    if let Ok((k, _)) = q_gear.get(*e)
+                        && *k == other_tool_kind
+                    {
+                        player_has_other_tool = true;
+                        break;
+                    }
+                }
+            }
+
+            if player_has_other_tool {
+                any_in_hotspot_with_ineffective_tool = true;
+                current_tool_kind = tool_kind;
                 break;
             }
         }
+        if any_in_hotspot_with_ineffective_tool {
+            break;
+        }
     }
 
-    if !player_has_other_tool {
+    if !any_in_hotspot_with_ineffective_tool {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -409,17 +400,27 @@ fn trigger_did_not_cycle_to_other_gear_system(
     }
 
     // 2. Get Player Info & Location Check
-    let Ok((input_mapping, player_gear, player_pos)) = player_query.single() else {
+    let mut any_player_in_room = false;
+    let mut matched_player_info: Option<(&PlayerInputMapping, &PlayerGear)> = None;
+
+    for (input_mapping, player_gear, player_pos) in player_query.iter() {
+        if roomdb
+            .room_tiles
+            .get(&player_pos.to_board_position())
+            .is_some()
+        {
+            any_player_in_room = true;
+            matched_player_info = Some((input_mapping, player_gear));
+            break;
+        }
+    }
+
+    if !any_player_in_room {
         *tracker = GearCycleUsageTracker::default();
         return;
-    };
-    if roomdb
-        .room_tiles
-        .get(&player_pos.to_board_position())
-        .is_none()
-    {
-        return;
     }
+
+    let (input_mapping, player_gear) = matched_player_info.unwrap();
 
     // Check if any ghost is currently hunting - pause tracking if so
     let ghost_hunting = ghost_query.iter().any(|g| g.hunting > 0.0);

@@ -44,91 +44,88 @@ fn ghost_interaction_selection_system(
 ) {
     let mut rng = random_seed::rng();
 
-    // Find the ghost
-    let Ok((ghost_sprite, ghost_pos)) = q_ghost.single() else {
-        return;
-    };
+    for (ghost_sprite, ghost_pos) in q_ghost.iter() {
+        // Get ghost personality for this ghost type
+        let personality = ghost_sprite.class.personality();
 
-    // Get ghost personality for this ghost type
-    let personality = ghost_sprite.class.personality();
+        // Calculate current rage ratio (0.0 = calm, 1.0 = max rage)
+        let rage_ratio = (ghost_sprite.rage / ghost_sprite.rage_limit).clamp(0.0, 1.0);
 
-    // Calculate current rage ratio (0.0 = calm, 1.0 = max rage)
-    let rage_ratio = (ghost_sprite.rage / ghost_sprite.rage_limit).clamp(0.0, 1.0);
+        // Apply difficulty multiplier to interaction frequency
+        let difficulty_multiplier = difficulty.0.ghost_interaction_frequency;
 
-    // Apply difficulty multiplier to interaction frequency
-    let difficulty_multiplier = difficulty.0.ghost_interaction_frequency;
+        // Check each interaction type for probability
+        let interaction_types = [
+            (GhostInteractionType::Toggle, personality.toggle_rate),
+            (GhostInteractionType::DoorSlam, personality.door_slam_rate),
+            (GhostInteractionType::DoorCreak, personality.door_creak_rate),
+            (GhostInteractionType::Throw, personality.throw_rate),
+            (GhostInteractionType::Nudge, personality.nudge_rate),
+            (
+                GhostInteractionType::HauntedMove,
+                personality.haunted_move_rate,
+            ),
+            (GhostInteractionType::Lock, personality.lock_rate),
+            (
+                GhostInteractionType::TripBreaker,
+                personality.trip_breaker_rate,
+            ),
+        ];
 
-    // Check each interaction type for probability
-    let interaction_types = [
-        (GhostInteractionType::Toggle, personality.toggle_rate),
-        (GhostInteractionType::DoorSlam, personality.door_slam_rate),
-        (GhostInteractionType::DoorCreak, personality.door_creak_rate),
-        (GhostInteractionType::Throw, personality.throw_rate),
-        (GhostInteractionType::Nudge, personality.nudge_rate),
-        (
-            GhostInteractionType::HauntedMove,
-            personality.haunted_move_rate,
-        ),
-        (GhostInteractionType::Lock, personality.lock_rate),
-        (
-            GhostInteractionType::TripBreaker,
-            personality.trip_breaker_rate,
-        ),
-    ];
+        for (interaction_type, (calm_rate, angry_rate)) in interaction_types {
+            // Interpolate rate based on rage level
+            let current_rate = calm_rate + (angry_rate - calm_rate) * rage_ratio;
 
-    for (interaction_type, (calm_rate, angry_rate)) in interaction_types {
-        // Interpolate rate based on rage level
-        let current_rate = calm_rate + (angry_rate - calm_rate) * rage_ratio;
+            // Apply difficulty multiplier
+            let adjusted_rate = current_rate * difficulty_multiplier;
 
-        // Apply difficulty multiplier
-        let adjusted_rate = current_rate * difficulty_multiplier;
+            // Convert from per-hour to per-frame probability
+            let mut chance_this_frame = (adjusted_rate / 3600.0) * time.delta().as_secs_f32();
 
-        // Convert from per-hour to per-frame probability
-        let mut chance_this_frame = (adjusted_rate / 3600.0) * time.delta().as_secs_f32();
+            // When debugging, scale up the frequency aggressively to observe interactions
+            if GIS_DEBUG {
+                // Baseline: ~60x increases converts per-hour to per-minute behavior while running
+                chance_this_frame *= 60.0;
+            }
 
-        // When debugging, scale up the frequency aggressively to observe interactions
-        if GIS_DEBUG {
-            // Baseline: ~60x increases converts per-hour to per-minute behavior while running
-            chance_this_frame *= 60.0;
-        }
-
-        // Roll for this interaction type
-        if rng.random_range(0.0..1.0) < chance_this_frame {
-            // Try to find a suitable target for this interaction
-            if let Some((target, destination)) = find_interaction_target(
-                interaction_type,
-                ghost_pos,
-                &q_interactables,
-                &q_player,
-                &board_topology,
-                &board_collision,
-                &q_visibility,
-                &mut rng,
-            ) {
-                // Dispatch the interaction event
-                ev_ghost_interaction.write(GhostInteractionEvent {
-                    target,
+            // Roll for this interaction type
+            if rng.random_range(0.0..1.0) < chance_this_frame {
+                // Try to find a suitable target for this interaction
+                if let Some((target, destination)) = find_interaction_target(
                     interaction_type,
-                    destination,
-                });
+                    ghost_pos,
+                    &q_interactables,
+                    &q_player,
+                    &board_topology,
+                    &board_collision,
+                    &q_visibility,
+                    &mut rng,
+                ) {
+                    // Dispatch the interaction event
+                    ev_ghost_interaction.write(GhostInteractionEvent {
+                        target,
+                        interaction_type,
+                        destination,
+                    });
 
-                if GIS_DEBUG {
-                    // One-line log for emitted interaction
-                    if let Some(p) = destination {
-                        info!(
-                            "GIS selection -> emitted {:?} to {:?} with dest ({:.2}, {:.2}, {:.2})",
-                            interaction_type, target, p.x, p.y, p.z
-                        );
-                    } else {
-                        info!(
-                            "GIS selection -> emitted {:?} to {:?}",
-                            interaction_type, target
-                        );
+                    if GIS_DEBUG {
+                        // One-line log for emitted interaction
+                        if let Some(p) = destination {
+                            info!(
+                                "GIS selection -> emitted {:?} to {:?} with dest ({:.2}, {:.2}, {:.2})",
+                                interaction_type, target, p.x, p.y, p.z
+                            );
+                        } else {
+                            info!(
+                                "GIS selection -> emitted {:?} to {:?}",
+                                interaction_type, target
+                            );
+                        }
                     }
-                }
 
-                // Only trigger one interaction per frame to avoid spam
-                return;
+                    // Only trigger one interaction per frame to avoid spam
+                    return;
+                }
             }
         }
     }

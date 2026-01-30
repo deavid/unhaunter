@@ -25,7 +25,7 @@ pub(crate) fn manage_walk_target_indicator(
 
     if has_move_target && !indicator_exists {
         // Player has a move target but no indicator exists - spawn one
-        if let Ok(move_target) = player_query.single() {
+        if let Some(move_target) = player_query.iter().next() {
             let target_position = move_target.position;
 
             commands
@@ -48,8 +48,8 @@ pub(crate) fn manage_walk_target_indicator(
         }
     } else if has_move_target && indicator_exists {
         // Player has a move target and the indicator exists - update indicator's position
-        if let Ok(move_target) = move_target_exists_query.single()
-            && let Ok((_indicator_entity, mut indicator_position)) = indicator_query.single_mut()
+        if let Some(move_target) = move_target_exists_query.iter().next()
+            && let Some((_, mut indicator_position)) = indicator_query.iter_mut().next()
         {
             indicator_position.x = move_target.position.x;
             indicator_position.y = move_target.position.y;

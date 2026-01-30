@@ -129,64 +129,63 @@ fn trigger_quartz_unused_in_relevant_situation_system(
         return;
     }
 
-    let Ok((player_gear, player_pos)) = player_query.single() else {
-        return;
-    };
-    let Ok(ghost_sprite) = ghost_query.single() else {
-        return;
-    };
+    for (player_gear, player_pos) in player_query.iter() {
+        for ghost_sprite in ghost_query.iter() {
+            // 4. First Hunt Check
+            if ghost_sprite.times_hunted_this_mission == 0 {
+                continue; // Hint is for after experiencing at least one hunt
+            }
 
-    // 4. First Hunt Check
-    if ghost_sprite.times_hunted_this_mission == 0 {
-        return; // Hint is for after experiencing at least one hunt
-    }
+            // 5. Relevant Situation Check (Hunt Likely)
+            let is_hunt_likely = ghost_sprite.hunt_warning_active
+                || (ghost_sprite.rage > ghost_sprite.rage_limit * 0.70); // 70% rage threshold
+            if !is_hunt_likely {
+                continue;
+            }
 
-    // 5. Relevant Situation Check (Hunt Likely)
-    let is_hunt_likely =
-        ghost_sprite.hunt_warning_active || (ghost_sprite.rage > ghost_sprite.rage_limit * 0.70); // 70% rage threshold
-    if !is_hunt_likely {
-        return;
-    }
+            // 6. Check Player Inventory for Quartz
+            let check_gear = |entity: Entity| -> bool {
+                if let Ok(kind) = q_gear.get(entity) {
+                    *kind == GearKind::QuartzStone
+                } else {
+                    false
+                }
+            };
 
-    // 6. Check Player Inventory for Quartz
-    let check_gear = |entity: Entity| -> bool {
-        if let Ok(kind) = q_gear.get(entity) {
-            *kind == GearKind::QuartzStone
-        } else {
-            false
+            let player_has_quartz = player_gear.left_hand.map(check_gear).unwrap_or(false)
+                || player_gear.right_hand.map(check_gear).unwrap_or(false)
+                || player_gear.inventory.iter().any(|&e| check_gear(e));
+
+            if player_has_quartz {
+                continue; // Player already has quartz, no need for this hint
+            }
+
+            // 7. Check Truck Inventory for Quartz
+            // Only trigger truck hint if player is currently outside (near truck)
+            let player_bpos = player_pos.to_board_position();
+            let is_outside = roomdb.room_tiles.get(&player_bpos).is_none();
+            if !is_outside {
+                continue; // Don't nag about truck gear while inside
+            }
+
+            let truck_gear = match truck_gear.as_ref() {
+                Some(gear) => gear,
+                None => continue, // No truck gear available, exit early
+            };
+            let truck_has_quartz = truck_gear.inventory.iter().any(|&gear| check_gear(gear));
+            if !truck_has_quartz {
+                continue; // Quartz isn't even available in the truck
+            }
+
+            // 8. Trigger Event: All conditions met
+            if walkie_play.set(
+                WalkieEvent::QuartzUnusedInRelevantSituation,
+                time.elapsed_secs_f64(),
+            ) {
+                return;
+            }
         }
-    };
-
-    let player_has_quartz = player_gear.left_hand.map(check_gear).unwrap_or(false)
-        || player_gear.right_hand.map(check_gear).unwrap_or(false)
-        || player_gear.inventory.iter().any(|&e| check_gear(e));
-
-    if player_has_quartz {
-        return; // Player already has quartz, no need for this hint
     }
-
-    // 7. Check Truck Inventory for Quartz
-    // Only trigger truck hint if player is currently outside (near truck)
-    let player_bpos = player_pos.to_board_position();
-    let is_outside = roomdb.room_tiles.get(&player_bpos).is_none();
-    if !is_outside {
-        return; // Don't nag about truck gear while inside
-    }
-
-    let truck_gear = match truck_gear {
-        Some(gear) => gear,
-        None => return, // No truck gear available, exit early
-    };
-    let truck_has_quartz = truck_gear.inventory.iter().any(|&gear| check_gear(gear));
-    if !truck_has_quartz {
-        return; // Quartz isn't even available in the truck
-    }
-
-    // 8. Trigger Event: All conditions met
-    walkie_play.set(
-        WalkieEvent::QuartzUnusedInRelevantSituation,
-        time.elapsed_secs_f64(),
-    );
 }
 
 fn trigger_sage_unused_in_relevant_situation_system(
@@ -217,99 +216,100 @@ fn trigger_sage_unused_in_relevant_situation_system(
         return;
     }
 
-    let Ok((player_gear, player_pos)) = player_query.single() else {
-        return;
-    };
-    let Ok(ghost_sprite) = ghost_query.single() else {
-        return;
-    };
+    for (player_gear, player_pos) in player_query.iter() {
+        for ghost_sprite in ghost_query.iter() {
+            // 4. First Hunt Check
+            if ghost_sprite.times_hunted_this_mission == 0 {
+                continue;
+            }
 
-    // 4. First Hunt Check
-    if ghost_sprite.times_hunted_this_mission == 0 {
-        return;
-    }
+            // 5. Relevant Situation Check (Hunt Likely)
+            let is_hunt_likely = ghost_sprite.hunt_warning_active
+                || (ghost_sprite.rage > ghost_sprite.rage_limit * 0.70);
+            if !is_hunt_likely {
+                continue;
+            }
 
-    // 5. Relevant Situation Check (Hunt Likely)
-    let is_hunt_likely =
-        ghost_sprite.hunt_warning_active || (ghost_sprite.rage > ghost_sprite.rage_limit * 0.70);
-    if !is_hunt_likely {
-        return;
-    }
+            // 6. Check Player Inventory for Sage
+            let mut player_has_unlit_sage = false;
+            let mut player_has_active_sage = false;
 
-    // 6. Check Player Inventory for Sage
-    let mut player_has_unlit_sage = false;
-    let mut player_has_active_sage = false;
+            let mut check_gear_status = |entity: Entity| {
+                if let Ok(kind) = q_gear.get(entity)
+                    && *kind == GearKind::SageBundle
+                    && let Ok(sage_data) = q_sage.get(entity)
+                    && !sage_data.consumed
+                {
+                    if sage_data.is_active {
+                        player_has_active_sage = true;
+                    } else {
+                        player_has_unlit_sage = true;
+                    }
+                }
+            };
 
-    let mut check_gear_status = |entity: Entity| {
-        if let Ok(kind) = q_gear.get(entity)
-            && *kind == GearKind::SageBundle
-            && let Ok(sage_data) = q_sage.get(entity)
-            && !sage_data.consumed
-        {
-            if sage_data.is_active {
-                player_has_active_sage = true;
-            } else {
-                player_has_unlit_sage = true;
+            if let Some(e) = player_gear.left_hand {
+                check_gear_status(e);
+            }
+            if let Some(e) = player_gear.right_hand {
+                check_gear_status(e);
+            }
+            for &e in &player_gear.inventory {
+                check_gear_status(e);
+            }
+
+            if player_has_active_sage {
+                continue; // Already protected
+            }
+
+            if player_has_unlit_sage {
+                // Trigger hint to light it up!
+                if walkie_play.set(
+                    WalkieEvent::SageUnusedInRelevantSituation,
+                    time.elapsed_secs_f64(),
+                ) {
+                    return;
+                }
+                continue;
+            }
+
+            // 7. Player has no usable sage in inventory.
+            // Check if player is outside (near truck) to suggest picking it up.
+            let player_bpos = player_pos.to_board_position();
+            let is_outside = roomdb.room_tiles.get(&player_bpos).is_none();
+            if !is_outside {
+                continue; // Don't nag if they've already committed to being inside without it.
+            }
+
+            let truck_gear = match truck_gear.as_ref() {
+                Some(gear) => gear,
+                None => continue, // No truck gear available, exit early
+            };
+
+            let check_gear_kind = |entity: Entity| -> bool {
+                if let Ok(kind) = q_gear.get(entity) {
+                    *kind == GearKind::SageBundle
+                } else {
+                    false
+                }
+            };
+            let truck_has_sage = truck_gear
+                .inventory
+                .iter()
+                .any(|&gear| check_gear_kind(gear));
+            if !truck_has_sage {
+                continue; // Sage isn't even available in the truck
+            }
+
+            // 8. Trigger Event: All conditions met
+            if walkie_play.set(
+                WalkieEvent::SageUnusedInRelevantSituation,
+                time.elapsed_secs_f64(),
+            ) {
+                return;
             }
         }
-    };
-
-    if let Some(e) = player_gear.left_hand {
-        check_gear_status(e);
     }
-    if let Some(e) = player_gear.right_hand {
-        check_gear_status(e);
-    }
-    for &e in &player_gear.inventory {
-        check_gear_status(e);
-    }
-
-    if player_has_active_sage {
-        return; // Already protected
-    }
-
-    if player_has_unlit_sage {
-        // Trigger hint to light it up!
-        walkie_play.set(
-            WalkieEvent::SageUnusedInRelevantSituation,
-            time.elapsed_secs_f64(),
-        );
-        return;
-    }
-
-    // 7. Player has no usable sage in inventory.
-    // Check if player is outside (near truck) to suggest picking it up.
-    let player_bpos = player_pos.to_board_position();
-    let is_outside = roomdb.room_tiles.get(&player_bpos).is_none();
-    if !is_outside {
-        return; // Don't nag if they've already committed to being inside without it.
-    }
-
-    let truck_gear = match truck_gear {
-        Some(gear) => gear,
-        None => return, // No truck gear available, exit early
-    };
-
-    let check_gear_kind = |entity: Entity| -> bool {
-        if let Ok(kind) = q_gear.get(entity) {
-            *kind == GearKind::SageBundle
-        } else {
-            false
-        }
-    };
-    let truck_has_sage = truck_gear
-        .inventory
-        .iter()
-        .any(|&gear| check_gear_kind(gear));
-    if !truck_has_sage {
-        return; // Sage isn't even available in the truck
-    }
-
-    // 8. Trigger Event: All conditions met
-    walkie_play.set(
-        WalkieEvent::SageUnusedInRelevantSituation,
-        time.elapsed_secs_f64(),
-    );
 }
 
 const MIN_EFFECTIVE_SAGE_CALM_INCREASE: f32 = 5.0; // Seconds of calm_time added to be "effective"
@@ -355,50 +355,42 @@ fn trigger_sage_activated_ineffectively_system(
     }
 
     // 2. Get Player & Ghost Info
-    let Ok((player_entity, player_gear)) = player_query.single() else {
-        // Assuming single player
-        if tracker.is_tracking_this_sage_burn {
-            *tracker = SageEffectivenessTracker::default();
-        }
-        return;
-    };
-    let Ok(ghost_sprite) = ghost_query.single() else {
-        // Assuming single ghost
-        if tracker.is_tracking_this_sage_burn {
-            *tracker = SageEffectivenessTracker::default();
-        }
-        return;
-    };
+    let mut _any_player_handled = false;
+    for (player_entity, player_gear) in player_query.iter() {
+        for ghost_sprite in ghost_query.iter() {
+            _any_player_handled = true;
+            // 3. Find Sage in Player's Gear
+            let mut current_sage_data: Option<&SageBundleData> = None;
+            let gear_iter = player_gear
+                .left_hand
+                .iter()
+                .chain(player_gear.right_hand.iter())
+                .chain(player_gear.inventory.iter());
 
-    // 3. Find Sage in Player's Gear
-    let mut current_sage_data: Option<&SageBundleData> = None;
-    let gear_iter = player_gear
-        .left_hand
-        .iter()
-        .chain(player_gear.right_hand.iter())
-        .chain(player_gear.inventory.iter());
+            for entity in gear_iter {
+                if let Ok(kind) = q_gear.get(*entity)
+                    && *kind == GearKind::SageBundle
+                    && let Ok(sage_data) = q_sage.get(*entity)
+                {
+                    current_sage_data = Some(sage_data);
+                    break;
+                }
+            }
 
-    for entity in gear_iter {
-        if let Ok(kind) = q_gear.get(*entity)
-            && *kind == GearKind::SageBundle
-            && let Ok(sage_data) = q_sage.get(*entity)
-        {
-            current_sage_data = Some(sage_data);
-            break;
-        }
-    }
+            let Some(sage_data) = current_sage_data else {
+                // Player is not holding sage, or it's not the right type somehow.
+                // If we were tracking, and now they don't have sage (e.g. dropped), reset.
+                if tracker.is_tracking_this_sage_burn
+                    && tracker.player_entity_id == Some(player_entity)
+                {
+                    *tracker = SageEffectivenessTracker::default();
+                    return;
+                }
+                continue;
+            };
 
-    let Some(sage_data) = current_sage_data else {
-        // Player is not holding sage, or it's not the right type somehow.
-        // If we were tracking, and now they don't have sage (e.g. dropped), reset.
-        if tracker.is_tracking_this_sage_burn {
-            *tracker = SageEffectivenessTracker::default();
-        }
-        return;
-    };
-
-    // 4. Manage Tracker State
-    if sage_data.is_active && !sage_data.consumed {
+            // 4. Manage Tracker State
+            if sage_data.is_active && !sage_data.consumed {
         // Sage is currently burning
         if !tracker.is_tracking_this_sage_burn || tracker.player_entity_id != Some(player_entity) {
             // Start tracking this new burn, or re-track if player changed
@@ -441,6 +433,8 @@ fn trigger_sage_activated_ineffectively_system(
         // info!("Sage tracking timed out for player {:?}. Resetting.", tracker.player_entity_id);
         *tracker = SageEffectivenessTracker::default();
     }
+}
+}
 }
 
 #[derive(Default, Clone, Debug)]
@@ -508,83 +502,75 @@ fn trigger_sage_unused_defensively_during_hunt_system(
     }
 
     // 2. Get Player & Ghost Info
-    let Ok(player_gear) = player_query.single() else {
-        return;
-    };
-    let Ok(ghost_sprite) = ghost_query.single() else {
-        // If ghost is gone, and we were in a hunt, treat hunt as ended.
-        if matches!(tracker.phase, HuntPhaseForSageCheck::InHunt { .. }) {
-            // info!("Ghost despawned during tracked hunt, resetting HuntSageUsageTracker.");
-            *tracker = HuntSageUsageTracker::default();
-        }
-        return;
-    };
+    for player_gear in player_query.iter() {
+        for ghost_sprite in ghost_query.iter() {
+            // 4. Monitor Hunt State & Sage Usage
+            let current_ghost_is_hunting = ghost_sprite.hunting > 0.1; // Threshold for "actively hunting"
 
-    // 4. Monitor Hunt State & Sage Usage
-    let current_ghost_is_hunting = ghost_sprite.hunting > 0.1; // Threshold for "actively hunting"
-
-    match &mut tracker.phase {
-        HuntPhaseForSageCheck::NotInHunt => {
-            if current_ghost_is_hunting {
-                // Hunt just started
-                tracker.phase = HuntPhaseForSageCheck::InHunt {
-                    sage_was_activated_during_this_hunt: false,
-                };
-                // info!("Hunt started. Tracking sage usage.");
-            }
-        }
-        HuntPhaseForSageCheck::InHunt {
-            sage_was_activated_during_this_hunt,
-        } => {
-            if !current_ghost_is_hunting {
-                // Hunt just ended
-                // info!("Hunt ended. Sage activated during this hunt: {}", *sage_was_activated_during_this_hunt);
-                let mut player_has_unconsumed_sage_now = false;
-                let gear_iter = player_gear
-                    .left_hand
-                    .iter()
-                    .chain(player_gear.right_hand.iter())
-                    .chain(player_gear.inventory.iter());
-
-                for entity in gear_iter {
-                    if let Ok(kind) = q_gear.get(*entity)
-                        && *kind == GearKind::SageBundle
-                        && let Ok(sage_data) = q_sage.get(*entity)
-                        && !sage_data.consumed
-                    {
-                        player_has_unconsumed_sage_now = true;
-                        break;
+            match &mut tracker.phase {
+                HuntPhaseForSageCheck::NotInHunt => {
+                    if current_ghost_is_hunting {
+                        // Hunt just started
+                        tracker.phase = HuntPhaseForSageCheck::InHunt {
+                            sage_was_activated_during_this_hunt: false,
+                        };
+                        // info!("Hunt started. Tracking sage usage.");
                     }
                 }
+                HuntPhaseForSageCheck::InHunt {
+                    sage_was_activated_during_this_hunt,
+                } => {
+                    if !current_ghost_is_hunting {
+                        // Hunt just ended
+                        // info!("Hunt ended. Sage activated during this hunt: {}", *sage_was_activated_during_this_hunt);
+                        let mut player_has_unconsumed_sage_now = false;
+                        let gear_iter = player_gear
+                            .left_hand
+                            .iter()
+                            .chain(player_gear.right_hand.iter())
+                            .chain(player_gear.inventory.iter());
 
-                if player_has_unconsumed_sage_now && !*sage_was_activated_during_this_hunt {
-                    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                    walkie_play.set(
-                        WalkieEvent::SageUnusedDefensivelyDuringHunt,
-                        time.elapsed_secs_f64(),
-                    );
-                }
-                // Reset tracker for the next hunt
-                *tracker = HuntSageUsageTracker::default();
-            } else {
-                // Still hunting, check if player activates sage
-                if !*sage_was_activated_during_this_hunt {
-                    // Only check if not already flagged
-                    let gear_iter = player_gear
-                        .left_hand
-                        .iter()
-                        .chain(player_gear.right_hand.iter())
-                        .chain(player_gear.inventory.iter());
+                        for entity in gear_iter {
+                            if let Ok(kind) = q_gear.get(*entity)
+                                && *kind == GearKind::SageBundle
+                                && let Ok(sage_data) = q_sage.get(*entity)
+                                && !sage_data.consumed
+                            {
+                                player_has_unconsumed_sage_now = true;
+                                break;
+                            }
+                        }
 
-                    for entity in gear_iter {
-                        if let Ok(kind) = q_gear.get(*entity)
-                            && *kind == GearKind::SageBundle
-                            && let Ok(sage_data) = q_sage.get(*entity)
-                            && sage_data.is_active
-                        {
-                            *sage_was_activated_during_this_hunt = true;
-                            // info!("Sage activated by player during current hunt.");
-                            break;
+                        if player_has_unconsumed_sage_now && !*sage_was_activated_during_this_hunt {
+                            // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+                            walkie_play.set(
+                                WalkieEvent::SageUnusedDefensivelyDuringHunt,
+                                time.elapsed_secs_f64(),
+                            );
+                        }
+                        // Reset tracker for the next hunt
+                        *tracker = HuntSageUsageTracker::default();
+                    } else {
+                        // Still hunting, check if player activates sage
+                        if !*sage_was_activated_during_this_hunt {
+                            // Only check if not already flagged
+                            let gear_iter = player_gear
+                                .left_hand
+                                .iter()
+                                .chain(player_gear.right_hand.iter())
+                                .chain(player_gear.inventory.iter());
+
+                            for entity in gear_iter {
+                                if let Ok(kind) = q_gear.get(*entity)
+                                    && *kind == GearKind::SageBundle
+                                    && let Ok(sage_data) = q_sage.get(*entity)
+                                    && sage_data.is_active
+                                {
+                                    *sage_was_activated_during_this_hunt = true;
+                                    // info!("Sage activated by player during current hunt.");
+                                    break;
+                                }
+                            }
                         }
                     }
                 }

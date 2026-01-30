@@ -48,11 +48,11 @@ pub(crate) fn waypoint_creation_system(
         return;
     }
 
-    let Ok((player_entity, player_pos, visibility_data)) = q_player.single() else {
+    let Some((player_entity, player_pos, visibility_data)) = q_player.iter().next() else {
         return;
     };
 
-    let Ok(mut waypoint_queue) = q_player_queue.single_mut() else {
+    let Some(mut waypoint_queue) = q_player_queue.iter_mut().next() else {
         return;
     };
 
@@ -149,48 +149,45 @@ pub(crate) fn waypoint_creation_system(
             return;
         };
 
-        // Convert cursor position to world coordinates
-        if let Some(target) =
+        let Some(target) =
             perspective::screen_to_world(cursor_pos, player_pos.z, camera, camera_transform)
-        {
-            debug!("Ground click detected at {:?}", target);
+        else {
+            return;
+        };
 
-            // First check if the click is in a stairs area
-            if let Some((
-                _stair_entity,
-                _stair_pos,
-                _stair_component,
-                _behavior,
+        // Ground clicks should clear existing waypoints
+        clear_player_waypoints(
+            &mut commands,
+            &q_existing_waypoints,
+            player_entity,
+            &mut waypoint_queue,
+        );
+
+        // Check if there are stairs near the clicked point
+        if let Some((_stair_entity, _stair_pos, _stairs, _behavior, start_waypoint, end_waypoint)) =
+            detect_stair_area(target, &q_stairs)
+        {
+            // Found stairs - create stair waypoints for traversal
+            create_stair_waypoints(
+                &mut commands,
+                &q_existing_waypoints,
+                player_entity,
                 start_waypoint,
                 end_waypoint,
-            )) = detect_stair_area(target, &q_stairs)
-            {
-                debug!(
-                    "Stair area detected! Creating waypoints from {:?} to {:?}",
-                    start_waypoint, end_waypoint
-                );
-                // Create stair traversal waypoints
-                create_stair_waypoints(
-                    &mut commands,
-                    &q_existing_waypoints,
-                    player_entity,
-                    start_waypoint,
-                    end_waypoint,
-                    &mut waypoint_queue,
-                );
-            } else {
-                // Use pathfinding to create a sequence of waypoints
-                create_pathfinding_waypoints(
-                    &mut commands,
-                    &q_existing_waypoints,
-                    player_entity,
-                    *player_pos,
-                    target,
-                    &mut waypoint_queue,
-                    &pathfinder,
-                    visibility_data,
-                );
-            }
+                &mut waypoint_queue,
+            );
+        } else {
+            // Use pathfinding to create a sequence of waypoints
+            create_pathfinding_waypoints(
+                &mut commands,
+                &q_existing_waypoints,
+                player_entity,
+                *player_pos,
+                target,
+                &mut waypoint_queue,
+                &pathfinder,
+                visibility_data,
+            );
         }
     }
 }
