@@ -18,6 +18,7 @@ pub(crate) mod activity;
 pub(crate) mod components;
 pub(crate) mod craft_repellent;
 pub(crate) mod evidence;
+pub(crate) mod hydration;
 pub(crate) mod journal;
 pub(crate) mod journalui;
 pub(crate) mod loadoutui;

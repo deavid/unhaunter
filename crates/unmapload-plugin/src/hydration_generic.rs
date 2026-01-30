@@ -45,13 +45,6 @@ fn hydration_generic_logic_system(
                 "sounds/switch-on-2.ogg",
                 "sounds/switch-off-1.ogg",
             ));
-        } else if behavior.p.is_van_entry {
-            cmd.insert(Pickable::default())
-                .insert(Interactive::new(
-                    "sounds/door-open.ogg",
-                    "sounds/door-close.ogg",
-                ))
-                .insert(components::FloorItemCollidable);
         } else if behavior.p.is_wall_light {
             cmd.insert(components::RoomState::default())
                 .insert(components::Light);

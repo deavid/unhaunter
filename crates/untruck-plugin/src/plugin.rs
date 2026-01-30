@@ -18,6 +18,7 @@ impl Plugin for UnhaunterTruckPlugin {
             .add_message::<EventButtonClicked>()
             .init_resource::<GhostGuess>();
 
+        super::hydration::app_setup(app);
         super::evidence::app_setup(app);
         super::systems::setup::app_setup(app);
         super::ui::app_setup(app);
