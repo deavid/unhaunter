@@ -80,9 +80,9 @@ Low-level foundation shared across the project. Zero game logic (no systems or o
 
 High-level game flow and specific gameplay mechanics. Logic is contained in \`Plugin\` implementations.
 
-- **\`unroot-plugin\`**: Root application plugin, startup logic and framepace management.
-- **\`unui-plugin\`**: Centralized UI asset loading and theme management.
-- **\`unengine-plugin\`**: Core engine loops, generic state management, and cleanup.
+- **\`unui-plugin\`**: Centralized UI asset loading, theme management, and screen hints.
+- **\`unengine-plugin\`**: Core engine loops, generic state management (AppState/GameState), noise utilities and
+  cleanup.
 - **\`unclassic-mode-plugin\`**: Main "Classic" investigation game loop and mechanics.
 - **\`uncampaign-plugin\`**: Campaign progression, mission unlocking, persistent state.
 - **\`unprofile-plugin\`**: User profile management, save/load logic.

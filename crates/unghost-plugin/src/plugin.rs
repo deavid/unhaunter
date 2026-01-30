@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use untypes_core::states::AppState;
 
+use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 
@@ -22,6 +23,7 @@ impl Plugin for UnhaunterGhostPlugin {
         ghost_orb::app_setup(app);
         metrics::register_all(app);
         app.init_resource::<ObjectInteractionConfig>()
-            .init_resource::<HauntState>();
+            .init_resource::<HauntState>()
+            .init_resource::<CurrentEvidenceReadings>();
     }
 }

@@ -24,7 +24,6 @@ use unpicking_plugin::plugin::CustomSpritePickingPlugin;
 use unplayer_plugin::plugin::UnhaunterPlayerPlugin;
 use unprofile_plugin::plugin::UnhaunterProfilePlugin;
 use unrender_plugin::plugin::UnhaunterRenderPlugin;
-use unroot_plugin::plugin::UnhaunterRootPlugin;
 use unsettings_plugin::plugin::UnhaunterSettingsPlugin;
 use unsound_plugin::plugin::SoundPlugin;
 use unsummary_plugin::plugin::UnhaunterSummaryPlugin;
@@ -33,7 +32,9 @@ use untmxmap_plugin::plugin::UnhaunterTmxMapPlugin;
 use untruck_plugin::plugin::UnhaunterTruckPlugin;
 use untypes_core::cli::CliOptions;
 use untypes_core::platform::plt;
+use unui_plugin::plugin::UnhaunterUiPlugin;
 use unwalkie_plugin::plugin::UnhaunterWalkiePlugin;
+use undifficulty_core::plugin::UnhaunterDifficultyPlugin;
 
 pub fn app_run(cli_options: CliOptions) {
     let mut app = App::new();
@@ -69,7 +70,8 @@ pub fn app_run(cli_options: CliOptions) {
     app.add_plugins((
         UnhaunterFpsPlugin,
         UnhaunterSettingsPlugin,
-        UnhaunterRootPlugin,
+        UnhaunterDifficultyPlugin,
+        UnhaunterUiPlugin,
         UnhaunterEnginePlugin,
         UnmetricsPlugin,
         ThermalPlugin,

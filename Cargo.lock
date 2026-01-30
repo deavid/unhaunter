@@ -5716,11 +5716,14 @@ name = "unengine-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
+ "unassets-core",
  "unbehavior",
  "unboard-core",
  "unengine-core",
  "unevents-core",
  "unfoundation-core",
+ "unnoise-core",
  "unrender-std",
  "unspatial-core",
  "untypes-core",
@@ -5925,6 +5928,7 @@ dependencies = [
  "unassets-core",
  "uncampaign-plugin",
  "unclassic-mode-plugin",
+ "undifficulty-core",
  "unengine-plugin",
  "unfog-plugin",
  "unfps-plugin",
@@ -5945,7 +5949,6 @@ dependencies = [
  "unplayer-plugin",
  "unprofile-plugin",
  "unrender-plugin",
- "unroot-plugin",
  "unsettings-plugin",
  "unsound-plugin",
  "unsummary-plugin",
@@ -5953,6 +5956,7 @@ dependencies = [
  "untmxmap-plugin",
  "untruck-plugin",
  "untypes-core",
+ "unui-plugin",
  "unwalkie-plugin",
  "walkdir",
  "wasm-bindgen",
@@ -6371,23 +6375,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "unroot-plugin"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_asset_loader",
- "unassets-core",
- "undifficulty-core",
- "unevents-core",
- "unghost-core",
- "unmenu-core",
- "unnoise-core",
- "unplayer-core",
- "untypes-core",
- "unui-plugin",
-]
-
-[[package]]
 name = "unsafe-libyaml"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6597,6 +6584,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
+ "unevents-core",
  "untypes-core",
  "unui-core",
 ]

@@ -50,7 +50,6 @@ members = [
     "crates/unprofile-plugin",
     "crates/unrender-std",
     "crates/unrender-plugin",
-    "crates/unroot-plugin",
     "crates/unsettings-core",
     "crates/unsettings-plugin",
     "crates/unspatial-core",
@@ -177,10 +176,11 @@ unsound-plugin = { path = "crates/unsound-plugin" }
 unrender-plugin = { path = "crates/unrender-plugin" }
 unmanual-plugin = { path = "crates/unmanual-plugin" }
 unpicking-plugin = { path = "crates/unpicking-plugin" }
-unroot-plugin = { path = "crates/unroot-plugin" }
 untruck-plugin = { path = "crates/untruck-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
+unui-plugin = { path = "crates/unui-plugin" }
+undifficulty-core = { path = "crates/undifficulty-core" }
 
 [[bin]]
 name = "unhaunter_game"

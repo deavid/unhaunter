@@ -20,5 +20,8 @@ unboard-core = { path = "../unboard-core" }
 unbehavior = { path = "../unbehavior" }
 unevents-core = { path = "../unevents-core" }
 unspatial-core = { path = "../unspatial-core" }
+unassets-core = { path = "../unassets-core" }
+unnoise-core = { path = "../unnoise-core" }
 
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
