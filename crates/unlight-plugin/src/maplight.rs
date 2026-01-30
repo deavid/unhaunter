@@ -56,6 +56,7 @@ pub(crate) struct GridResources<'w> {
     miasma: Res<'w, MiasmaGrid>,
     miasma_config: Res<'w, MiasmaConfig>,
 }
+use undifficulty_core::difficulty_settings::DifficultyStruct;
 use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
@@ -275,6 +276,39 @@ pub(crate) struct LightingSampler<'a> {
     pub(crate) tutorial_light_factor: f32,
 }
 
+pub(crate) struct SpectralParams {
+    pub(crate) att_charge: f32,
+    pub(crate) rep_charge: f32,
+    pub(crate) uv_charge: f32,
+    pub(crate) red_charge: f32,
+    pub(crate) ir_charge: f32,
+}
+
+impl From<Option<&SpectralInfluence>> for SpectralParams {
+    fn from(si: Option<&SpectralInfluence>) -> Self {
+        si.map(|x| {
+            let (att, rep) = match x.influence_type {
+                SpectralInfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
+                SpectralInfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
+            };
+            Self {
+                att_charge: att,
+                rep_charge: rep,
+                uv_charge: x.uv_charge,
+                red_charge: x.red_charge,
+                ir_charge: x.ir_charge,
+            }
+        })
+        .unwrap_or(Self {
+            att_charge: 0.0,
+            rep_charge: 0.0,
+            uv_charge: 0.0,
+            red_charge: 0.0,
+            ir_charge: 0.0,
+        })
+    }
+}
+
 impl<'a> LightingSampler<'a> {
     pub(crate) fn new(
         flashlights: &'a [FlashlightData],
@@ -292,6 +326,32 @@ impl<'a> LightingSampler<'a> {
             exposure: lg.exposure.current,
             tutorial_light_factor,
         }
+    }
+
+    pub(crate) fn apply_spectral_modulation(
+        &self,
+        r: &mut f32,
+        g: &mut f32,
+        b: &mut f32,
+        ld: &LightData,
+        sp: &SpectralParams,
+    ) -> f32 {
+        let rgbl = (*r + *g + *b) / 3.0 + 1.0;
+
+        // Combine instant light with persistent charge
+        let u = ld.ultraviolet.max(sp.uv_charge);
+        let i = ld.infrared.max(sp.ir_charge);
+        let rd = ld.red.max(sp.red_charge);
+
+        *g += u * sp.att_charge * 2.5 * rgbl;
+        *b += i * (sp.att_charge + sp.rep_charge) * 2.5 * rgbl;
+        *b += rd * sp.rep_charge * 0.01 * rgbl;
+        *r /= 1.0 + rd * sp.rep_charge * 50.0 * rgbl + u * sp.att_charge * 12.0 * rgbl;
+        *g /= 1.0 + rd * sp.rep_charge * 10.0 * rgbl;
+        *b /= 1.0
+            + i * (sp.att_charge + sp.rep_charge) * 10.0 * rgbl
+            + u * sp.att_charge * 12.0 * rgbl;
+        (*r + *g + *b) / 3.0
     }
 
     pub(crate) fn fpos_gamma_color(
@@ -736,6 +796,147 @@ pub(crate) fn apply_lighting_to_sprites_system(
     }
 }
 
+fn update_spectral_influence(si: &mut SpectralInfluence, light_data: &LightData, dt: f32) {
+    let update_charge = |target: f32, current: &mut f32| {
+        let delta = target - *current;
+        let tau = if delta > 0.0 { 1.0 } else { 0.25 };
+        let alpha = 1.0 - (-dt / tau).exp();
+        *current += delta * alpha;
+    };
+    update_charge(light_data.ultraviolet, &mut si.uv_charge);
+    update_charge(light_data.red, &mut si.red_charge);
+    update_charge(light_data.infrared, &mut si.ir_charge);
+}
+
+fn apply_miasma_pressure(
+    pos: &Position,
+    miasma: &MiasmaGrid,
+    bf: &BoardTopology,
+    opacity: &mut f32,
+) {
+    let mut total_pressure = 0.0_f32;
+    let bpos_m = pos.to_board_position();
+    for npos in bpos_m.iter_xy_neighbors(1, bf.map_size) {
+        total_pressure += miasma.pressure_field[npos.ndidx()];
+    }
+    total_pressure /= 10.0;
+    *opacity *= (1.0_f32 - total_pressure).clamp(0.0_f32, 1.0_f32);
+}
+
+fn apply_ethereal_visuals(
+    ethereal: &Ethereal,
+    spectral_clarity: Option<&SpectralClarity>,
+    ld: &LightData,
+    difficulty: &DifficultyStruct,
+    elapsed: f32,
+    opacity: &mut f32,
+    dst_color: &mut Color,
+) {
+    let orig_opacity = *opacity;
+
+    // Make the ghost oscilate to increase visibility:
+    let osc1 = (elapsed * 1.0 * difficulty.evidence_visibility).sin() * 0.25 + 0.75;
+    let osc2 = (elapsed * 1.15 * difficulty.evidence_visibility).cos() * 0.5 + 0.5;
+    *opacity =
+        opacity.min(osc1 + 0.2) / (1.0 + ethereal.warp / 5.0) * difficulty.evidence_visibility;
+    let l = (dst_color.luminance() + osc2) / 2.0;
+    *dst_color = dst_color.with_luminance(l);
+    let r = dst_color.to_srgba().red;
+    let g = dst_color.to_srgba().green;
+    let clarity = spectral_clarity.cloned().unwrap_or_default();
+    let e_uv = ld.ultraviolet * 13.0 * clarity.uv.max(0.0);
+    let e_rl = (ld.red * 52.0 * clarity.rl.max(0.0)).clamp(0.0, 1.5);
+    let e_infra = (ld.infrared * 1.1 * difficulty.evidence_visibility).sqrt();
+    let f =
+        (ld.visible * difficulty.evidence_visibility * 0.5 + ld.infrared * 4.0).clamp(0.001, 0.999);
+    *opacity = *opacity * f + orig_opacity * (1.0 - f);
+    *opacity *= (clarity.alpha * 0.5
+        + 0.5
+        + e_uv
+        + e_rl
+        + ld.ultraviolet * 2.0
+        + ld.red * 10.0
+        + ld.infrared)
+        .clamp(difficulty.evidence_visibility * 0.1, 1.0);
+    let srgba = dst_color
+        .with_luminance((l * ld.visible - ld.infrared - ethereal.hit_delta * 3.0).clamp(0.0, 1.0))
+        .to_srgba();
+
+    let k_hit = (ethereal.hit_delta + ethereal.miss_delta)
+        .clamp(0.0, 1.0)
+        .cbrt();
+    *opacity = *opacity * (1.0 - k_hit) + orig_opacity.cbrt() * k_hit;
+
+    *dst_color = srgba
+        .with_red(r * ld.visible + e_rl * 1.1 + ethereal.miss_delta / 2.0)
+        .with_green(g * ld.visible + e_uv + e_rl + ethereal.miss_delta / 2.5)
+        .into();
+    *dst_color = dst_color.with_luminance((dst_color.luminance() - e_infra / 2.0).clamp(0.0, 1.0));
+}
+
+fn apply_ecto_visuals(
+    ld: &LightData,
+    difficulty: &DifficultyStruct,
+    elapsed: f32,
+    opacity: &mut f32,
+    dst_color: &mut Color,
+    visibility_at_pos: f32,
+    mut rng: impl Rng,
+) {
+    let e_nv = ld.ultraviolet.cbrt() / 10.0 * difficulty.evidence_visibility - ld.infrared * 3.0
+        + (difficulty.evidence_visibility / 7.0 + ld.visible * difficulty.evidence_visibility
+            - ld.infrared)
+            .powi(3);
+    *opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.9);
+    *opacity = opacity.min(visibility_at_pos).cbrt();
+    let l = dst_color.luminance();
+    let rnd_f = rng.random_range(-1.0..1.0_f32).powi(3);
+    // Make the breach oscilate to increase visibility:
+    let osc1 = ((elapsed * 0.92).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
+
+    *dst_color =
+        dst_color.with_luminance(((l * (ld.visible - ld.infrared) + e_nv) * osc1).clamp(0.0, 0.99));
+    let lin_dst_color = dst_color.to_linear();
+
+    *dst_color = lin_dst_color
+        .with_green(
+            lin_dst_color.green
+                + ld.ultraviolet * difficulty.evidence_visibility * (1.3 - osc1 + rnd_f / 14.0),
+        )
+        .with_red(
+            lin_dst_color.red
+                + ld.ultraviolet
+                    * difficulty.evidence_visibility
+                    * 1.2
+                    * (1.4 - osc1 + rnd_f / 24.0),
+        )
+        .into();
+}
+
+fn step_alpha_clamped(
+    opacity: f32,
+    prev_a: f32,
+    smooth_a: f32,
+    is_special: bool,
+    map_alpha: f32,
+) -> f32 {
+    const A_DELTA: f32 = 0.02;
+    let f_a = 1.0 / (1.0 + smooth_a);
+
+    let next_a = opacity * f_a + prev_a * (1.0 - f_a);
+    let mut new_a = if (next_a - opacity).abs() < A_DELTA {
+        opacity
+    } else {
+        next_a - A_DELTA * (next_a - opacity).signum()
+    };
+    if is_special {
+        // For special entities, avoid linear stepping and just use the exponential lerp
+        new_a = opacity;
+    }
+
+    (new_a * map_alpha).clamp(0.0, 1.0)
+}
+
 #[expect(clippy::type_complexity)]
 pub(crate) fn apply_lighting_to_tiles_system(
     mut qt2: Query<
@@ -1009,58 +1210,17 @@ pub(crate) fn apply_lighting_to_tiles_system(
 
             // Update spectral charges if the entity has SpectralInfluence
             if let Some(ref mut si) = o_spectral_influence {
-                let update_charge = |target: f32, current: &mut f32| {
-                    let delta = target - *current;
-                    let tau = if delta > 0.0 { 1.0 } else { 0.25 };
-                    let alpha = 1.0 - (-dt / tau).exp();
-                    *current += delta * alpha;
-                };
-                update_charge(light_data.ultraviolet, &mut si.uv_charge);
-                update_charge(light_data.red, &mut si.red_charge);
-                update_charge(light_data.infrared, &mut si.ir_charge);
+                update_spectral_influence(si, &light_data, dt);
             }
+            let sp = SpectralParams::from(o_spectral_influence.as_deref());
 
-            let (att_charge, rep_charge, uv_charge, red_charge, ir_charge) = o_spectral_influence
-                .as_ref()
-                .map(|x| {
-                    let (att, rep) = match x.influence_type {
-                        SpectralInfluenceType::Attractive => {
-                            (x.charge_value.abs().sqrt() + 0.01, 0.0)
-                        }
-                        SpectralInfluenceType::Repulsive => {
-                            (0.0, x.charge_value.abs().sqrt() + 0.01)
-                        }
-                    };
-                    (att, rep, x.uv_charge, x.red_charge, x.ir_charge)
-                })
-                .unwrap_or((0.0, 0.0, 0.0, 0.0, 0.0));
-
-            let process_spectral = |r: &mut f32, g: &mut f32, b: &mut f32, ld: &LightData| {
-                let rgbl = (*r + *g + *b) / 3.0 + 1.0;
-
-                // Combine instant light with persistent charge
-                let u = ld.ultraviolet.max(uv_charge);
-                let i = ld.infrared.max(ir_charge);
-                let rd = ld.red.max(red_charge);
-
-                *g += u * att_charge * 2.5 * rgbl;
-                *b += i * (att_charge + rep_charge) * 2.5 * rgbl;
-                *b += rd * rep_charge * 0.01 * rgbl;
-                *r /= 1.0 + rd * rep_charge * 50.0 * rgbl + u * att_charge * 12.0 * rgbl;
-                *g /= 1.0 + rd * rep_charge * 10.0 * rgbl;
-                *b /= 1.0
-                    + i * (att_charge + rep_charge) * 10.0 * rgbl
-                    + u * att_charge * 12.0 * rgbl;
-                (*r + *g + *b) / 3.0
-            };
-
-            let res = process_spectral(&mut r, &mut g, &mut b, &light_data);
+            let res = sampler.apply_spectral_modulation(&mut r, &mut g, &mut b, &light_data, &sp);
             lux_c = (res / 10.0).tanh() * 10.0;
 
             let process_corner = |lux: &mut f32, color: &mut Color, ld: &LightData| {
                 let srgba = color.to_srgba();
                 let (mut cr, mut cg, mut cb) = (srgba.red, srgba.green, srgba.blue);
-                *lux = process_spectral(&mut cr, &mut cg, &mut cb, ld);
+                *lux = sampler.apply_spectral_modulation(&mut cr, &mut cg, &mut cb, ld, &sp);
                 *color = Color::srgb(cr, cg, cb);
             };
 
@@ -1155,118 +1315,44 @@ pub(crate) fn apply_lighting_to_tiles_system(
 
             // remove brightness calculation for main tile:
             let mut dst_color = src_color_base;
+            let difficulty_val = &difficulty.0;
 
             if let Some(ethereal) = o_ethereal.filter(|e| !e.warning_active && !e.hunt_target) {
-                let orig_opacity = opacity;
-
-                // Make the ghost oscilate to increase visibility:
-                let osc1 = (elapsed * 1.0 * difficulty.0.evidence_visibility).sin() * 0.25 + 0.75;
-                let osc2 = (elapsed * 1.15 * difficulty.0.evidence_visibility).cos() * 0.5 + 0.5;
-                opacity = opacity.min(osc1 + 0.2) / (1.0 + ethereal.warp / 5.0)
-                    * difficulty.0.evidence_visibility;
-                let l = (dst_color.luminance() + osc2) / 2.0;
-                dst_color = dst_color.with_luminance(l);
-                let r = dst_color.to_srgba().red;
-                let g = dst_color.to_srgba().green;
-                let clarity = o_spectral_clarity.cloned().unwrap_or_default();
-                let e_uv = ld.ultraviolet * 13.0 * clarity.uv.max(0.0);
-                let e_rl = (ld.red * 52.0 * clarity.rl.max(0.0)).clamp(0.0, 1.5);
-                let e_infra = (ld.infrared * 1.1 * difficulty.0.evidence_visibility).sqrt();
-                let f = (ld.visible * difficulty.0.evidence_visibility * 0.5 + ld.infrared * 4.0)
-                    .clamp(0.001, 0.999);
-                opacity = opacity * f + orig_opacity * (1.0 - f);
-                opacity *= (clarity.alpha * 0.5
-                    + 0.5
-                    + e_uv
-                    + e_rl
-                    + ld.ultraviolet * 2.0
-                    + ld.red * 10.0
-                    + ld.infrared)
-                    .clamp(difficulty.0.evidence_visibility * 0.1, 1.0);
-                let srgba = dst_color
-                    .with_luminance(
-                        (l * ld.visible - ld.infrared - ethereal.hit_delta * 3.0).clamp(0.0, 1.0),
-                    )
-                    .to_srgba();
-
-                let k_hit = (ethereal.hit_delta + ethereal.miss_delta)
-                    .clamp(0.0, 1.0)
-                    .cbrt();
-                opacity = opacity * (1.0 - k_hit) + orig_opacity.cbrt() * k_hit;
-
-                dst_color = srgba
-                    .with_red(r * ld.visible + e_rl * 1.1 + ethereal.miss_delta / 2.0)
-                    .with_green(g * ld.visible + e_uv + e_rl + ethereal.miss_delta / 2.5)
-                    .into();
-                dst_color = dst_color
-                    .with_luminance((dst_color.luminance() - e_infra / 2.0).clamp(0.0, 1.0));
+                apply_ethereal_visuals(
+                    ethereal,
+                    o_spectral_clarity,
+                    &ld,
+                    difficulty_val,
+                    elapsed,
+                    &mut opacity,
+                    &mut dst_color,
+                );
             }
 
             if let Some(_ecto) = o_ecto_vis.filter(|e| e.use_breach_curve) {
-                let e_nv = ld.ultraviolet.cbrt() / 10.0 * difficulty.0.evidence_visibility
-                    - ld.infrared * 3.0
-                    + (difficulty.0.evidence_visibility / 7.0
-                        + ld.visible * difficulty.0.evidence_visibility
-                        - ld.infrared)
-                        .powi(3);
-                opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.9);
-                opacity = opacity.min(vf.visibility_field[bpos.ndidx()]).cbrt();
-                let l = dst_color.luminance();
-                let rnd_f = rng.random_range(-1.0..1.0_f32).powi(3);
-                // Make the breach oscilate to increase visibility:
-                let osc1 = ((elapsed * 0.92).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
-
-                dst_color = dst_color.with_luminance(
-                    ((l * (ld.visible - ld.infrared) + e_nv) * osc1).clamp(0.0, 0.99),
+                apply_ecto_visuals(
+                    &ld,
+                    difficulty_val,
+                    elapsed,
+                    &mut opacity,
+                    &mut dst_color,
+                    vf.visibility_field[bpos.ndidx()],
+                    &mut rng,
                 );
-                let lin_dst_color = dst_color.to_linear();
-
-                dst_color = lin_dst_color
-                    .with_green(
-                        lin_dst_color.green
-                            + ld.ultraviolet
-                                * difficulty.0.evidence_visibility
-                                * (1.3 - osc1 + rnd_f / 14.0),
-                    )
-                    .with_red(
-                        lin_dst_color.red
-                            + ld.ultraviolet
-                                * difficulty.0.evidence_visibility
-                                * 1.2
-                                * (1.4 - osc1 + rnd_f / 24.0),
-                    )
-                    .into();
             }
 
             if let Some(_miasma_sprite) = o_miasma {
-                let mut total_pressure = 0.0_f32;
-                let bpos_m = pos.to_board_position();
-                for npos in bpos_m.iter_xy_neighbors(1, bf.map_size) {
-                    total_pressure += miasma.pressure_field[npos.ndidx()];
-                }
-                total_pressure /= 10.0;
-                opacity *= (1.0_f32 - total_pressure).clamp(0.0_f32, 1.0_f32);
+                apply_miasma_pressure(pos, miasma, bf, &mut opacity);
             }
-
-            let opacity = opacity.clamp(0.000, 1.3);
-            const A_DELTA: f32 = 0.02;
 
             let prev_a = new_mat.data.color.alpha();
-            let f_a = 1.0 / (1.0 + smooth_a);
-
-            let next_a = opacity * f_a + prev_a * (1.0 - f_a);
-            let mut new_a = if (next_a - opacity).abs() < A_DELTA {
-                opacity
-            } else {
-                next_a - A_DELTA * (next_a - opacity).signum()
-            };
-            if o_behavior.is_none() {
-                // For special entities, avoid linear stepping and just use the exponential lerp
-                new_a = opacity;
-            }
-
-            new_a = (new_a * map_color.alpha()).clamp(0.0, 1.0);
-            dst_color.set_alpha(new_a);
+            dst_color.set_alpha(step_alpha_clamped(
+                opacity,
+                prev_a,
+                smooth_a,
+                o_behavior.is_none(),
+                map_color.alpha(),
+            ));
 
             new_mat.data.ambient_color = Color::NONE.into();
 
