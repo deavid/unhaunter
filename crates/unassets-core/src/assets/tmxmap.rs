@@ -218,7 +218,7 @@ pub enum TmxMapError {
 /// Bevy `AssetLoader` for `TmxMap` assets.
 /// It reads the raw bytes of a `.tmx` file and uses `TmxMap::from_bytes`
 /// for initial naive property parsing.
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub struct TmxMapLoader;
 
 impl AssetLoader for TmxMapLoader {

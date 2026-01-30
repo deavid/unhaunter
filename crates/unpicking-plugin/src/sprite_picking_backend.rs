@@ -47,6 +47,7 @@ pub(crate) fn custom_sprite_picking(
         &GlobalTransform,
         &Projection,
         Has<CustomSpritePickingCamera>,
+        &bevy::camera::RenderTarget,
     )>,
     primary_window: Query<Entity, With<PrimaryWindow>>,
     settings: Res<CustomSpritePickingSettings>,
@@ -109,15 +110,15 @@ pub(crate) fn custom_sprite_picking(
             cam_transform,
             Projection::Orthographic(cam_ortho),
             _cam_can_pick,
+            _cam_target,
         )) = cameras
             .iter()
-            .filter(|(_, camera, _, _, cam_can_pick)| {
+            .filter(|(_, camera, _, _, cam_can_pick, _)| {
                 let marker_requirement = !settings.require_markers || *cam_can_pick;
                 camera.is_active && marker_requirement
             })
-            .find(|(_, camera, _, _, _)| {
-                camera
-                    .target
+            .find(|(_, _, _, _, _, target)| {
+                target
                     .normalize(primary_window)
                     .is_some_and(|x| x == location.target)
             })

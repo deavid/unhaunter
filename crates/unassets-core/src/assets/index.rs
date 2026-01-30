@@ -22,7 +22,7 @@ impl AssetIdx {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub struct AssetIdxLoader;
 
 impl AssetLoader for AssetIdxLoader {

@@ -13,7 +13,7 @@ impl TsxSheet {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub struct TsxSheetLoader;
 
 impl AssetLoader for TsxSheetLoader {

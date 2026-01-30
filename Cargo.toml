@@ -113,13 +113,13 @@ csv = "1.4"
 dirs = "6.0"
 strum = { version = "0.27", features = ["derive"] }
 noise = { version = "0.9.0", features = ["std"] }
-bevy = { version = "0.17", features = ["jpeg", "serialize"] }
-bevy_asset_loader = { version = "0.24.0", features = ["2d"] }
-bevy_math = "0.17"
-bevy-persistent = { version = "0.9", features = ["all"] }
-bevy_platform = "0.17"
-bevy_dylib = "0.17"
-bevy_picking = "0.17"
+bevy = { version = "0.18", features = ["jpeg", "serialize"] }
+bevy_asset_loader = { version = "0.25.0", features = ["2d"] }
+bevy_math = "0.18"
+bevy-persistent = { version = "0.10", features = ["all"] }
+bevy_platform = "0.18"
+bevy_dylib = "0.18"
+bevy_picking = "0.18"
 ndarray = "0.17"
 sha2 = "0.10"
 rayon = "1.11"

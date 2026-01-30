@@ -61,10 +61,10 @@ fn setup_hint_ui_system(mut commands: Commands, ui_assets: Res<UiAssets>) {
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::FlexStart,
                 flex_wrap: FlexWrap::Wrap,
+                border_radius: BorderRadius::all(Val::Px(HINT_BOX_BORDER_RADIUS_VAL)),
                 ..default()
             },
             BackgroundColor(HINT_BOX_BACKGROUND_COLOR),
-            BorderRadius::all(Val::Px(HINT_BOX_BORDER_RADIUS_VAL)),
             Visibility::Hidden,
             ZIndex(100),
         ))

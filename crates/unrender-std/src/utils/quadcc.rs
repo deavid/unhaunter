@@ -48,10 +48,13 @@ impl From<QuadCC> for Mesh {
             bevy::render::render_resource::PrimitiveTopology::TriangleList,
             RenderAssetUsages::all(),
         );
-        mesh.insert_indices(indices);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+        mesh.try_insert_indices(indices).unwrap();
+        mesh.try_insert_attribute(Mesh::ATTRIBUTE_POSITION, positions)
+            .unwrap();
+        mesh.try_insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
+            .unwrap();
+        mesh.try_insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+            .unwrap();
         mesh
     }
 }
