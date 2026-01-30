@@ -1,6 +1,6 @@
+use crate::direction::Direction;
+use crate::position::Position;
 use bevy::prelude::*;
-use unspatial_core::direction::Direction;
-use unspatial_core::position::Position;
 
 // old perspective (9x20cm) const SUBTL: f32 = 9.0; new perspective (3x20cm)
 pub const SUBTL: f32 = 3.0;

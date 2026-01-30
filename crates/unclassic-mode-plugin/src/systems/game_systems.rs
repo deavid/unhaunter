@@ -3,7 +3,7 @@ use bevy_persistent::Persistent;
 use unengine_core::GCameraArena;
 use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unrender_std::utils::perspective;
+use unspatial_core::perspective;
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::direction::Direction;

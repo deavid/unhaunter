@@ -17,7 +17,7 @@ use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
-use unrender_std::utils::perspective;
+use unspatial_core::perspective;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;

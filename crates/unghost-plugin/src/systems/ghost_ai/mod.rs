@@ -10,7 +10,7 @@ use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::ResolutionFactor;
-use unrender_std::utils::perspective;
+use unspatial_core::perspective;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;

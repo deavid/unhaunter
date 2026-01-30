@@ -21,10 +21,10 @@ use unrender_std::components::visuals::{
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::light::lerp_color;
-use unrender_std::utils::perspective;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::orientation::Orientation;
+use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unui_core::resources::MouseVisibility;
 

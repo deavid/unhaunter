@@ -14,8 +14,8 @@ use unnavigation_core::collision_handler::CollisionHandler;
 use unplayer_core::components::PlayerInput;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
-use unrender_std::utils::perspective;
 use unspatial_core::direction::Direction;
+use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unui_core::resources::MouseVisibility;
 

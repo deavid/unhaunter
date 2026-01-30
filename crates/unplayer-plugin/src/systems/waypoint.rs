@@ -14,7 +14,7 @@ use unnavigation_core::pathfinding::Pathfinder;
 use unplayer_core::components::{MainPlayer, PlayerInput};
 use unrender_std::components::game::GameSprite;
 use unrender_std::resources::visibility_data::VisibilityData;
-use unrender_std::utils::perspective;
+use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unui_core::resources::MouseVisibility;
 
