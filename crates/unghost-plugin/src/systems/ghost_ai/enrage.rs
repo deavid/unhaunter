@@ -352,7 +352,7 @@ pub(crate) fn calculate_rage_update(
     let mut total_inv_sanity = 0.0;
 
     for (player_sprite, player_pos, _) in q_player.iter() {
-        let sanity = player_sprite.sanity();
+        let sanity = player_sprite.sanity;
         let inv_sanity = (120.0 - sanity) / 100.0;
 
         let dist2 = calculate_weighted_distance_squared(ghost_position, player_pos)

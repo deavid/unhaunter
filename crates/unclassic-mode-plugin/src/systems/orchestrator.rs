@@ -19,7 +19,9 @@ use unghost_core::components::GhostBehaviorDynamics;
 use unghost_core::components::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
-use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite, Stamina};
+use unplayer_core::components::{
+    MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite, Stamina,
+};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::{GameSound, GameSprite, MapTileSprite};
@@ -30,11 +32,11 @@ use unrender_std::components::visuals::{
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
-use unspatial_core::perspective;
 use unrender_std::utils::quadcc::QuadCC;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::direction::Direction;
+use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::{GhostTag, PlayerTag};
@@ -163,7 +165,10 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(GameSprite)
         .insert(MapTileSprite)
         .insert(SpriteLayer(0.00001))
-        .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
+        .insert(PlayerSprite::new(1, player_position))
+        .insert(PlayerInputMapping {
+            controls: **p.control_settings,
+        })
         .insert(MainPlayer)
         .insert(PlayerInput::default())
         .insert(VisibilityData::default())

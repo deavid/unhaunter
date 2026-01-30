@@ -40,7 +40,7 @@ fn very_low_sanity_no_truck_return(
     let Some((player, pos)) = qp.iter().next() else {
         return;
     };
-    if player.sanity() >= 45.0 {
+    if player.sanity >= 45.0 {
         stopwatch.reset();
         return;
     }
@@ -155,7 +155,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
                 // but rather the overall MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS implies a prolonged period.
                 // Let's assume the intent is: if they enter darkness, start tracking. If that period
                 // exceeds MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS, and other conditions met, fire.
-                *darkness_sanity_tracker = Some((player_sprite.sanity(), Stopwatch::new()));
+                *darkness_sanity_tracker = Some((player_sprite.sanity, Stopwatch::new()));
                 *hint_triggered_this_episode = false; // Reset hint flag for new darkness episode
             }
         }
@@ -172,8 +172,8 @@ fn trigger_sanity_dropped_due_to_darkness_system(
         }
         // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         if timer.elapsed_secs() >= MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS
-            && player_sprite.sanity() < MAX_SANITY_FOR_HINT_PERCENT_SHARED
-            && (*initial_sanity - player_sprite.sanity()) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
+            && player_sprite.sanity < MAX_SANITY_FOR_HINT_PERCENT_SHARED
+            && (*initial_sanity - player_sprite.sanity) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
             && walkie_play.set(
                 WalkieEvent::SanityDroppedBelowThresholdDarkness,
                 time.elapsed_secs_f64(),
@@ -261,7 +261,7 @@ fn trigger_sanity_dropped_due_to_ghost_system(
             _ => {
                 // New interaction or different ghost
                 *interaction_sanity_tracker = Some((
-                    player_sprite.sanity(),
+                    player_sprite.sanity,
                     Stopwatch::new(),
                     interacting_ghost_e,
                 ));
@@ -282,8 +282,8 @@ fn trigger_sanity_dropped_due_to_ghost_system(
         }
         // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         if timer.elapsed_secs() >= MIN_INTERACTION_DURATION_SECONDS
-            && player_sprite.sanity() < MAX_SANITY_FOR_HINT_PERCENT_SHARED
-            && (*initial_sanity - player_sprite.sanity()) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
+            && player_sprite.sanity < MAX_SANITY_FOR_HINT_PERCENT_SHARED
+            && (*initial_sanity - player_sprite.sanity) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
             && walkie_play.set(
                 WalkieEvent::SanityDroppedBelowThresholdGhost,
                 time.elapsed_secs_f64(),

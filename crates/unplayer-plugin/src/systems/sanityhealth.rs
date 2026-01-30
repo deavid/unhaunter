@@ -20,6 +20,12 @@ use unui_core::components::game_ui::DamageBackground;
 
 const DEBUG_PLAYER: bool = false;
 
+pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
+    const LINEAR: f32 = 30.0;
+    const SCALE: f32 = 100.0;
+    (SCALE * LINEAR) / ((crazyness + LINEAR * LINEAR).max(0.01).sqrt())
+}
+
 fn lose_sanity(
     time: Res<Time>,
     mut timer: Local<PrintingTimer>,
@@ -67,7 +73,7 @@ fn lose_sanity(
         }
         let crazy = lux.max(0.00001).recip() / f_temp * f_temp2 * ps.mean_sound * 10.0
             + ps.mean_sound / f_temp * f_temp2;
-        let sanity_recover: f32 = if ps.sanity() < difficulty.0.max_recoverable_sanity {
+        let sanity_recover: f32 = if ps.sanity < difficulty.0.max_recoverable_sanity {
             4.0 / 100.0 / difficulty.0.sanity_drain_rate
         } else {
             0.0
@@ -79,6 +85,7 @@ fn lose_sanity(
         if ps.crazyness < 0.0 {
             ps.crazyness = 0.0;
         }
+        ps.sanity = calculate_sanity(ps.crazyness);
         if ps.health < 100.0 && ps.health > 0.0 {
             ps.health += (0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0)
                 * difficulty.0.health_recovery_rate;
@@ -87,7 +94,7 @@ fn lose_sanity(
             ps.health = 100.0;
         }
         if timer.just_finished() && DEBUG_PLAYER {
-            dbg!(ps.sanity(), ps.mean_sound, ps.health);
+            dbg!(ps.sanity, ps.mean_sound, ps.health);
         }
     }
 }
@@ -111,13 +118,14 @@ fn recover_sanity(
             // Clamp health to a maximum of 100%
             ps.health = ps.health.min(100.0);
         }
-        if ps.sanity() < difficulty.0.max_recoverable_sanity {
+        if ps.sanity < difficulty.0.max_recoverable_sanity {
             ps.crazyness /= 1.07_f32.powf(dt);
         } else {
             ps.crazyness /= 1.005_f32.powf(dt);
         }
+        ps.sanity = calculate_sanity(ps.crazyness);
         if timer.just_finished() {
-            dbg!(ps.sanity());
+            dbg!(ps.sanity);
         }
     }
 }
@@ -132,7 +140,7 @@ fn visual_health(
 ) {
     for player in &qp {
         let health = (player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
-        let crazyness = (1.0 - player.sanity() / 100.0).clamp(0.0, 1.0);
+        let crazyness = (1.0 - player.sanity / 100.0).clamp(0.0, 1.0);
         for (mut o_uiimage, mut bgcolor, dmg) in &mut qb {
             let rhealth = (1.0 - health).powf(dmg.exp);
             let crazyness = crazyness.powf(dmg.exp);

@@ -63,7 +63,7 @@ fn update_sanity(
 ) {
     for player in &qp {
         for mut text in &mut qst {
-            let new_sanity_text = format!("Player 1:\n  {:.0}% Sanity", player.sanity());
+            let new_sanity_text = format!("Player 1:\n  {:.0}% Sanity", player.sanity);
             if new_sanity_text != text.0 {
                 text.0 = new_sanity_text;
             }

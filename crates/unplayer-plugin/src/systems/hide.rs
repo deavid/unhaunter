@@ -5,7 +5,7 @@ use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
 use unboard_core::components::mapcolor::MapColor;
 use ungear_core::components::playergear::PlayerGear;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{PlayerInputMapping, PlayerSprite};
 use unrender_std::components::animation::AnimationTimer;
 use unrender_std::components::visuals::ResolutionFactor;
 use unsound_core::emitter::SoundEmitter;
@@ -21,7 +21,7 @@ fn hide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
-        (Entity, &mut PlayerSprite, &mut Position, &PlayerGear),
+        (Entity, &PlayerInputMapping, &mut Position, &PlayerGear),
         (Without<Hiding>, Without<Behavior>),
     >,
     hiding_spots: Query<
@@ -31,12 +31,12 @@ fn hide_player(
     mut ga: SoundEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
-    for (player_entity, player, mut player_pos, player_gear) in players.iter_mut() {
+    for (player_entity, input_mapping, mut player_pos, player_gear) in players.iter_mut() {
         // Get the player's hold timer or create a new one
         let timer = hold_timers
             .entry(player_entity)
             .or_insert_with(|| Timer::from_seconds(0.3, TimerMode::Once));
-        if keyboard_input.pressed(player.controls.activate) {
+        if keyboard_input.pressed(input_mapping.controls.activate) {
             if player_gear.held_item.is_some() {
                 // Player cannot hide while carrying furniture.
                 continue;
@@ -104,14 +104,14 @@ fn unhide_player(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(
         Entity,
-        &mut PlayerSprite,
+        &PlayerInputMapping,
         &mut Transform,
         &mut Visibility,
         &Hiding,
     )>,
 ) {
-    for (player_entity, player, _, _visibility, hiding) in players.iter_mut() {
-        if keyboard_input.just_pressed(player.controls.activate) {
+    for (player_entity, input_mapping, _, _visibility, hiding) in players.iter_mut() {
+        if keyboard_input.just_pressed(input_mapping.controls.activate) {
             // Using 'activate' for unhiding Remove the Hiding component
             commands.entity(player_entity).remove::<Hiding>();
 

@@ -6,6 +6,6 @@ pub(crate) fn viewer_visual_sync(mut q: Query<(&PlayerSprite, &mut Viewer)>) {
     for (ps, mut viewer) in q.iter_mut() {
         viewer.id = ps.id;
         viewer.health = ps.health;
-        viewer.sanity = ps.sanity();
+        viewer.sanity = ps.sanity;
     }
 }

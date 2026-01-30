@@ -7,7 +7,7 @@ use unbehavior::components::Door;
 use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
 use ungear_core::components::playergear::PlayerGear;
-use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
+use unplayer_core::components::{Hiding, MainPlayer, PlayerInputMapping, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
@@ -227,7 +227,7 @@ fn trigger_struggling_with_grab_drop(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<(&PlayerGear, &PlayerSprite), With<MainPlayer>>,
+    player_query: Query<(&PlayerGear, &PlayerInputMapping), With<MainPlayer>>,
     mut full_and_failed_grab_timer: Local<Option<Stopwatch>>,
 ) {
     // 1. System Run Condition
@@ -236,7 +236,7 @@ fn trigger_struggling_with_grab_drop(
         return;
     }
 
-    let Ok((player_gear, player_sprite)) = player_query.single() else {
+    let Ok((player_gear, input_mapping)) = player_query.single() else {
         *full_and_failed_grab_timer = None;
         return;
     };
@@ -251,7 +251,7 @@ fn trigger_struggling_with_grab_drop(
     let player_is_completely_full = right_hand_full && inventory_full;
 
     // 3.c. Detecting a Failed Grab Attempt to Start/Check Timer
-    if keyboard_input.just_pressed(player_sprite.controls.grab) && player_is_completely_full {
+    if keyboard_input.just_pressed(input_mapping.controls.grab) && player_is_completely_full {
         if full_and_failed_grab_timer.is_none() {
             *full_and_failed_grab_timer = Some(Stopwatch::new());
             // Timer starts, will be ticked below if it's Some.
@@ -298,7 +298,7 @@ fn trigger_struggling_with_hide_unhide(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<&PlayerSprite, (With<MainPlayer>, Without<Hiding>)>,
+    player_query: Query<&PlayerInputMapping, (With<MainPlayer>, Without<Hiding>)>,
     mut hide_key_timer: Local<Option<Stopwatch>>,
 ) {
     if app_state.get() != &AppState::InGame {
@@ -311,13 +311,13 @@ fn trigger_struggling_with_hide_unhide(
     }
 
     // Only proceed if player is not hiding
-    let Ok(player_sprite) = player_query.single() else {
+    let Ok(input_mapping) = player_query.single() else {
         *hide_key_timer = None;
         return;
     };
 
     // Check if the hide key (activate key, typically [E]) is currently pressed
-    let hide_key_pressed = keyboard_input.pressed(player_sprite.controls.activate);
+    let hide_key_pressed = keyboard_input.pressed(input_mapping.controls.activate);
 
     if hide_key_pressed {
         // Start or continue timer if key is pressed

@@ -5,7 +5,7 @@ use bevy_persistent::Persistent;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use untypes_core::states::{AppState, GameState};
 use unui_core::components::game_ui::EvidenceUI;
@@ -59,13 +59,13 @@ pub(crate) fn update_evidence_ui(
 
 pub(crate) fn keyboard_evidence(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    players: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
+    players: Query<(&PlayerInputMapping, &PlayerGear), With<MainPlayer>>,
     q_sensor: Query<&EvidenceSensor>,
     mut interaction_query: Query<&mut TruckUIButton, With<Button>>,
     looking_gear: Res<LookingGear>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
 ) {
-    for (player, playergear) in &players {
+    for (input_mapping, playergear) in &players {
         let hand_entity = match looking_gear.hand() {
             unfoundation_core::types::gear::Hand::Left => playergear.left_hand,
             unfoundation_core::types::gear::Hand::Right => playergear.right_hand,
@@ -77,7 +77,7 @@ pub(crate) fn keyboard_evidence(
             continue;
         };
 
-        if keyboard_input.just_pressed(player.controls.change_evidence) {
+        if keyboard_input.just_pressed(input_mapping.controls.change_evidence) {
             for mut t in &mut interaction_query {
                 if t.class == TruckButtonType::Evidence(evidence) {
                     // Call pressed() first to change the button state

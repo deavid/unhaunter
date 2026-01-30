@@ -1,21 +1,21 @@
 use bevy::prelude::*;
 use ungear_core::resources::looking_gear::LookingGear;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerInputMapping};
 use untypes_core::states::AppState;
 
 fn system_update_looking_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut looking_gear: ResMut<LookingGear>,
-    players: Query<&PlayerSprite, With<MainPlayer>>,
+    players: Query<&PlayerInputMapping, With<MainPlayer>>,
 ) {
-    let Ok(player_sprite) = players.single() else {
+    let Ok(input_mapping) = players.single() else {
         return;
     };
-    if keyboard_input.just_pressed(player_sprite.controls.left_hand_toggle) {
+    if keyboard_input.just_pressed(input_mapping.controls.left_hand_toggle) {
         looking_gear.toggle();
     }
 
-    looking_gear.held = keyboard_input.pressed(player_sprite.controls.left_hand_look);
+    looking_gear.held = keyboard_input.pressed(input_mapping.controls.left_hand_look);
 }
 
 pub(crate) fn app_setup(app: &mut App) {

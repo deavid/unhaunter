@@ -1,4 +1,4 @@
-use crate::components::player_sprite::PlayerSprite;
+use crate::components::player_sprite::{PlayerInputMapping, PlayerSprite};
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::FloorItemCollidable;
@@ -54,7 +54,7 @@ fn update_held_object_position(
 
 fn grab_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerInputMapping)>,
     pickables: Query<
         (Entity, &Position, Option<&GearKind>, Option<&Behavior>),
         (Without<PlayerSprite>, With<FloorItemCollidable>),
@@ -62,8 +62,8 @@ fn grab_object(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    for (mut player_gear, player_pos, player_sprite) in players.iter_mut() {
-        if keyboard_input.just_pressed(player_sprite.controls.grab) {
+    for (mut player_gear, player_pos, input_mapping) in players.iter_mut() {
+        if keyboard_input.just_pressed(input_mapping.controls.grab) {
             let mut closest = None;
             let mut min_dist = 1.0;
 
@@ -124,14 +124,14 @@ fn grab_object(
 
 fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerInputMapping, &PlayerSprite)>,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
     pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,
     asset_server: Res<AssetServer>,
 ) {
-    for (mut player_gear, player_pos, player_sprite) in players.iter_mut() {
-        if keyboard_input.just_pressed(player_sprite.controls.drop) {
+    for (mut player_gear, player_pos, input_mapping, player_sprite) in players.iter_mut() {
+        if keyboard_input.just_pressed(input_mapping.controls.drop) {
             // Check if the tile is free
             let bpos = player_pos.to_board_position();
             let is_free = board_collision
@@ -184,11 +184,11 @@ fn drop_object(
 
 fn cycle_inventory(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &PlayerSprite)>,
+    mut players: Query<(&mut PlayerGear, &PlayerInputMapping)>,
     mut commands: Commands,
 ) {
-    for (mut player_gear, player_sprite) in players.iter_mut() {
-        if keyboard_input.just_pressed(player_sprite.controls.cycle) {
+    for (mut player_gear, input_mapping) in players.iter_mut() {
+        if keyboard_input.just_pressed(input_mapping.controls.cycle) {
             if let Some(entity) = player_gear.right_hand.take() {
                 player_gear.inventory.push(entity);
                 commands.entity(entity).insert(EquipmentPosition::Stowed);
@@ -206,11 +206,11 @@ fn cycle_inventory(
 
 fn swap_hands(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &PlayerSprite)>,
+    mut players: Query<(&mut PlayerGear, &PlayerInputMapping)>,
     mut commands: Commands,
 ) {
-    for (mut player_gear, player_sprite) in players.iter_mut() {
-        if keyboard_input.just_pressed(player_sprite.controls.swap) {
+    for (mut player_gear, input_mapping) in players.iter_mut() {
+        if keyboard_input.just_pressed(input_mapping.controls.swap) {
             let tmp = player_gear.left_hand;
             player_gear.left_hand = player_gear.right_hand;
             player_gear.right_hand = tmp;
@@ -231,12 +231,12 @@ fn swap_hands(
 fn item_trigger_system(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    q_player: Query<(&PlayerGear, &PlayerSprite)>,
+    q_player: Query<(&PlayerGear, &PlayerInputMapping)>,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
     mut ga: SoundEmitter,
 ) {
-    for (player_gear, player_sprite) in q_player.iter() {
-        if keyboard_input.just_pressed(player_sprite.controls.right_hand_trigger)
+    for (player_gear, input_mapping) in q_player.iter() {
+        if keyboard_input.just_pressed(input_mapping.controls.right_hand_trigger)
             && let Some(entity) = player_gear.right_hand
         {
             if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
@@ -249,7 +249,7 @@ fn item_trigger_system(
             }
             commands.entity(entity).insert(Triggered);
         }
-        if keyboard_input.just_pressed(player_sprite.controls.left_hand_trigger)
+        if keyboard_input.just_pressed(input_mapping.controls.left_hand_trigger)
             && let Some(entity) = player_gear.left_hand
         {
             if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {

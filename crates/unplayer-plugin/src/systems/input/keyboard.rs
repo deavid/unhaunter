@@ -4,7 +4,7 @@ use unnavigation_core::components::{
     move_to::MoveToTarget,
     waypoint::{Waypoint, WaypointOwner, WaypointQueue},
 };
-use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite};
 use unsettings_core::game::{GameplaySettings, MovementStyle};
 
 /// System that handles keyboard input for player movement.
@@ -15,29 +15,32 @@ use unsettings_core::game::{GameplaySettings, MovementStyle};
 pub(crate) fn keyboard_input_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
-    mut players: Query<(Entity, &PlayerSprite, &mut PlayerInput), With<MainPlayer>>,
+    mut players: Query<
+        (Entity, &PlayerSprite, &PlayerInputMapping, &mut PlayerInput),
+        With<MainPlayer>,
+    >,
     mut waypoint_queues: Query<&mut WaypointQueue>,
     q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
     game_settings: Res<Persistent<GameplaySettings>>,
 ) {
-    for (entity, player, mut player_input) in players.iter_mut() {
+    for (entity, _player, input_mapping, mut player_input) in players.iter_mut() {
         let mut movement = Vec2::ZERO;
 
-        if keyboard_input.pressed(player.controls.up) {
+        if keyboard_input.pressed(input_mapping.controls.up) {
             movement.y += 1.0;
         }
-        if keyboard_input.pressed(player.controls.down) {
+        if keyboard_input.pressed(input_mapping.controls.down) {
             movement.y -= 1.0;
         }
-        if keyboard_input.pressed(player.controls.left) {
+        if keyboard_input.pressed(input_mapping.controls.left) {
             movement.x -= 1.0;
         }
-        if keyboard_input.pressed(player.controls.right) {
+        if keyboard_input.pressed(input_mapping.controls.right) {
             movement.x += 1.0;
         }
 
-        player_input.run = keyboard_input.pressed(player.controls.run);
-        player_input.interact = keyboard_input.just_pressed(player.controls.activate);
+        player_input.run = keyboard_input.pressed(input_mapping.controls.run);
+        player_input.interact = keyboard_input.just_pressed(input_mapping.controls.activate);
 
         // Apply MovementStyle transformation (from original keyboard_player)
         if matches!(

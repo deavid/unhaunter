@@ -51,7 +51,7 @@ pub(crate) fn update_time(
     }
     sd.difficulty = difficulty.clone();
     sd.time_taken_secs += time.delta_secs();
-    let total_sanity: f32 = qp.iter().map(|x| x.sanity()).sum();
+    let total_sanity: f32 = qp.iter().map(|x| x.sanity).sum();
     let player_count = qp.iter().count();
     let alive_count = qp.iter().filter(|x| x.health > 0.0).count();
     sd.player_count = player_count;

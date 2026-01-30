@@ -11,7 +11,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
@@ -32,7 +32,10 @@ fn trigger_gear_selected_not_activated_system(
     roomdb: Res<RoomDB>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
+    player_query: Query<
+        (&PlayerInputMapping, &PlayerGear, &Position),
+        With<MainPlayer>,
+    >,
     q_gear: Query<(&GearKind, &Toggleable, Option<&Battery>)>,
     mut tracker: Local<Option<RightHandGearStateTracker>>,
     mut r_triggered: Local<i32>,
@@ -47,7 +50,7 @@ fn trigger_gear_selected_not_activated_system(
         return;
     }
 
-    let Ok((player_sprite, player_gear, player_pos)) = player_query.single() else {
+    let Ok((input_mapping, player_gear, player_pos)) = player_query.single() else {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -113,7 +116,7 @@ fn trigger_gear_selected_not_activated_system(
     let current_gear_kind = *gear_kind;
     let mut reset_timer_this_frame = false;
 
-    if keyboard_input.just_pressed(player_sprite.controls.right_hand_trigger) {
+    if keyboard_input.just_pressed(input_mapping.controls.right_hand_trigger) {
         // [R] key
         reset_timer_this_frame = true;
         *r_triggered += 1;
@@ -379,7 +382,10 @@ fn trigger_did_not_cycle_to_other_gear_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
+    player_query: Query<
+        (&PlayerInputMapping, &PlayerGear, &Position),
+        With<MainPlayer>,
+    >,
     roomdb: Res<RoomDB>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     difficulty: Res<CurrentDifficulty>,
@@ -403,7 +409,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     }
 
     // 2. Get Player Info & Location Check
-    let Ok((player_sprite, player_gear, player_pos)) = player_query.single() else {
+    let Ok((input_mapping, player_gear, player_pos)) = player_query.single() else {
         *tracker = GearCycleUsageTracker::default();
         return;
     };
@@ -423,7 +429,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     }
 
     // 3. Manage Tracker - time_since_last_q_press
-    if keyboard_input.just_pressed(player_sprite.controls.cycle) {
+    if keyboard_input.just_pressed(input_mapping.controls.cycle) {
         // [Q] key
         tracker.time_since_last_q_press = 0.0;
     } else {
