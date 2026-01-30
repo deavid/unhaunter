@@ -26,28 +26,5 @@ impl Plugin for UnhaunterRootPlugin {
         app.init_resource::<unnoise_core::perlin::PerlinNoise>();
         app.init_resource::<unplayer_core::resources::game_config::GameConfig>();
         app.add_message::<OnScreenHintEvent>();
-
-        arch_setup::app_setup(app);
     }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-mod arch_setup {
-    use bevy::prelude::*;
-
-    fn set_fps_limiter(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
-        settings.limiter = bevy_framepace::Limiter::from_framerate(60.0);
-    }
-
-    pub(crate) fn app_setup(app: &mut App) {
-        app.add_plugins(bevy_framepace::FramepacePlugin)
-            .add_systems(Startup, set_fps_limiter);
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-mod arch_setup {
-    use bevy::prelude::*;
-
-    pub fn app_setup(_app: &mut App) {}
 }

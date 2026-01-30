@@ -117,7 +117,6 @@ bevy_asset_loader = { version = "0.24.0", features = ["2d"] }
 bevy_math = "0.17"
 bevy-persistent = { version = "0.9", features = ["all"] }
 bevy_platform = "0.17"
-bevy_framepace = "0.20"
 bevy_dylib = "0.17"
 bevy_picking = "0.17"
 ndarray = "0.17"
