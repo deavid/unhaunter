@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
-use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
+use unsound_core::emitter::SoundEmitter;
 
 /// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = true;
