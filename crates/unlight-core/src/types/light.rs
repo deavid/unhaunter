@@ -80,6 +80,15 @@ impl LightData {
             ultraviolet: self.ultraviolet / mag,
         }
     }
+
+    pub fn scale(&self, factor: f32) -> Self {
+        Self {
+            visible: self.visible * factor,
+            red: self.red * factor,
+            infrared: self.infrared * factor,
+            ultraviolet: self.ultraviolet * factor,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

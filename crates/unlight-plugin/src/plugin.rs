@@ -23,13 +23,13 @@ impl Plugin for UnhaunterLightPlugin {
                         .in_set(BoardUpdateSet::Lighting)
                         .after(BoardUpdateSet::Collision),
                     (
-                        maplight::player_visibility_system,
+                        maplight::systems::gathering::player_visibility_system,
                         power_visuals::update_power_visuals,
-                        maplight::gather_flashlights_system,
-                        maplight::update_exposure_system,
-                        maplight::apply_lighting_to_tiles_system,
-                        maplight::apply_lighting_to_sprites_system,
-                        maplight::highlight_placement_tiles_system,
+                        maplight::systems::gathering::gather_flashlights_system,
+                        maplight::systems::gathering::update_exposure_system,
+                        maplight::systems::tiles::apply_lighting_to_tiles_system,
+                        maplight::systems::sprites::apply_lighting_to_sprites_system,
+                        maplight::systems::sprites::highlight_placement_tiles_system,
                     )
                         .chain()
                         .after(BoardUpdateSet::Lighting)
@@ -37,7 +37,7 @@ impl Plugin for UnhaunterLightPlugin {
                 ),
             );
         audio::app_setup(app);
-        maplight::app_setup(app);
+        maplight::systems::app_setup(app);
         metrics::register_all(app);
     }
 }
