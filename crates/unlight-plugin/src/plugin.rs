@@ -27,7 +27,9 @@ impl Plugin for UnhaunterLightPlugin {
                         power_visuals::update_power_visuals,
                         maplight::gather_flashlights_system,
                         maplight::update_exposure_system,
-                        maplight::apply_lighting,
+                        maplight::apply_lighting_to_tiles_system,
+                        maplight::apply_lighting_to_sprites_system,
+                        maplight::highlight_placement_tiles_system,
                     )
                         .chain()
                         .after(BoardUpdateSet::Lighting)
