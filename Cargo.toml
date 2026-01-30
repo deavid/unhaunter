@@ -16,6 +16,8 @@ members = [
     "crates/undifficulty-core",
     "crates/unfog-plugin",
     "crates/unfog-core",
+    "crates/unfps-core",
+    "crates/unfps-plugin",
     "crates/ungear-core",
     "crates/ungear-plugin",
     "crates/ungearitems-core",
@@ -153,6 +155,7 @@ uncampaign-plugin = { path = "crates/uncampaign-plugin" }
 unclassic-mode-plugin = { path = "crates/unclassic-mode-plugin" }
 unengine-plugin = { path = "crates/unengine-plugin" }
 unfog-plugin = { path = "crates/unfog-plugin" }
+unfps-plugin = { path = "crates/unfps-plugin" }
 ungear-plugin = { path = "crates/ungear-plugin" }
 ungearitems-plugin = { path = "crates/ungearitems-plugin" }
 unghost-plugin = { path = "crates/unghost-plugin" }

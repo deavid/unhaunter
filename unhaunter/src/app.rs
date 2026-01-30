@@ -6,6 +6,7 @@ use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
 use unclassic_mode_plugin::plugin::ClassicModePlugin;
 use unengine_plugin::plugin::UnhaunterEnginePlugin;
 use unfog_plugin::plugin::UnhaunterFogPlugin;
+use unfps_plugin::plugin::UnhaunterFpsPlugin;
 use ungear_plugin::plugin::UnhaunterGearPlugin;
 use ungearitems_plugin::plugin::UnhaunterGearItemsPlugin;
 use unghost_plugin::plugin::UnhaunterGhostPlugin;
@@ -66,6 +67,7 @@ pub fn app_run(cli_options: CliOptions) {
     app.add_plugins(CustomSpritePickingPlugin);
 
     app.add_plugins((
+        UnhaunterFpsPlugin,
         UnhaunterSettingsPlugin,
         UnhaunterRootPlugin,
         UnhaunterEnginePlugin,

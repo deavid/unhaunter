@@ -1,0 +1,16 @@
+[package]
+name = "unfps-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+unfps-core = { path = "../unfps-core" }
+unmetrics-core = { path = "../unmetrics-core" }
+bevy = { workspace = true }

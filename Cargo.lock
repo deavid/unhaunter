@@ -5782,6 +5782,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "unfps-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
+name = "unfps-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "unfps-core",
+ "unmetrics-core",
+]
+
+[[package]]
 name = "ungear-core"
 version = "0.3.2-dev"
 dependencies = [
@@ -5911,6 +5927,7 @@ dependencies = [
  "unclassic-mode-plugin",
  "unengine-plugin",
  "unfog-plugin",
+ "unfps-plugin",
  "ungear-plugin",
  "ungearitems-plugin",
  "unghost-plugin",
