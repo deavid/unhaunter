@@ -20,6 +20,7 @@ use unmenu_plugin::plugin::UnhaunterCoreMenuPlugin;
 use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
 use unmetrics_plugin::plugin::UnmetricsPlugin;
 use unmission_plugin::MissionPlugin;
+use unnet_plugin::plugin::UnhaunterNetPlugin;
 use unnpc_plugin::plugin::UnhaunterNPCPlugin;
 use unpicking_plugin::plugin::CustomSpritePickingPlugin;
 use unplayer_plugin::plugin::UnhaunterPlayerPlugin;
@@ -91,6 +92,7 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterMenuPlugin,
         UnhaunterLightPlugin,
         UnhaunterNPCPlugin,
+        UnhaunterNetPlugin,
     ));
     app.add_plugins((
         UnhaunterTmxMapPlugin,

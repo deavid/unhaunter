@@ -6011,6 +6011,7 @@ dependencies = [
  "unmenusettings-plugin",
  "unmetrics-plugin",
  "unmission-plugin",
+ "unnet-plugin",
  "unnpc-plugin",
  "unpicking-plugin",
  "unplayer-plugin",
@@ -6281,6 +6282,27 @@ dependencies = [
  "unboard-core",
  "unrender-std",
  "unspatial-core",
+]
+
+[[package]]
+name = "unnet-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "unnet-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "crossbeam-channel",
+ "serde",
+ "serde_json",
+ "unnet-core",
+ "untypes-core",
 ]
 
 [[package]]

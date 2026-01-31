@@ -40,6 +40,8 @@ members = [
     "crates/unmetrics-plugin",
     "crates/unmission-plugin",
     "crates/unnavigation-core",
+    "crates/unnet-core",
+    "crates/unnet-plugin",
     "crates/unnpc-plugin",
     "crates/unnoise-core",
     "crates/unpicking-plugin",
@@ -123,6 +125,8 @@ bevy_picking = "0.18"
 ndarray = "0.17"
 sha2 = "0.10"
 rayon = "1.11"
+crossbeam-channel = "0.5"
+flume = "0.11"
 
 # winit is not for WASM, and needs to be in sync with bevy version
 winit = "0.30"
@@ -166,6 +170,7 @@ unmenu-plugin = { path = "crates/unmenu-plugin" }
 unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }
 unmetrics-plugin = { path = "crates/unmetrics-plugin" }
 unmission-plugin = { path = "crates/unmission-plugin" }
+unnet-plugin = { path = "crates/unnet-plugin" }
 unnpc-plugin = { path = "crates/unnpc-plugin" }
 unplayer-plugin = { path = "crates/unplayer-plugin" }
 unprofile-plugin = { path = "crates/unprofile-plugin" }

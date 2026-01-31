@@ -29,30 +29,66 @@ Here are some screenshots of the game:
 
 ## Gameplay
 
-### Exploration
+### Core Loop
 
-Explore atmospheric, isometric environments and unravel their secrets. Venture into dimly lit rooms, interact with
-objects like doors, switches, and lamps, and uncover clues to help you identify the ghost.
+1. **Explore & Locate:** Venture into haunted locations and find the ghost's **breach**—the portal it uses to enter our
+   world.
+2. **Gather Evidence:** Use specialized equipment to identify which of the 44 ghost types is present.
+3. **Manipulate the Environment:** Use **Haunted Objects** to attract or repel the ghost, shifting its behavior to your
+   advantage.
+4. **Assistance:** Listen to your **Walkie-Talkie Buddy** for vital hints and warnings about your sanity and ghost
+   activity.
+5. **Identify & Craft:** Once you have 5 out of 8 pieces of evidence, return to the van to craft a unique **Ghost
+   Repellent**.
+6. **Expel:** Confront the ghost with the repellent to banish it and complete the mission.
 
-### Investigation
+### Intuitive Controls & Exploration
 
-Your ultimate goal is to banish the lingering spirits (currently one per location).
+Navigate the world with ease using either traditional **WASD** keys or **modern mouse controls**. Click to walk with
+built-in pathfinding, and use your mouse to naturally aim your flashlight as you scan for ghosts.
 
-To achieve this, you must first identify the ghost among 44 distinct possible ghost types. Each ghost type interacts
-with your equipment in a different way, leaving behind specific clues known as evidence.
+Explore atmospheric, multi-floor environments with dynamic **isometric lighting**. The game features realistic **eye
+adaptation**, where your vision adjusts as you move between dark hallways and brightly lit rooms.
 
-There are 8 types of evidence. Each ghost exhibits 5 of these 8.
+Be wary of the **Miasma**—a thick, spectral fog that flows through the location. Standing in the miasma is oppressive
+and will drain your stamina faster when you try to run.
 
-### Ghost Identification
+### Tactical Equipment & Journal
 
-Your first task is to locate the ghost and determine its preferred area. Look for subtle visual clues like a
-semi-transparent dust cloud, which indicates the ghost's spawn point (breach). This is often easiest to see with the
-location's lights (not your flashlight). You can also use your equipment, like the Thermometer, to detect temperature
-changes, or the EMF meter to find fluctuations in the electromagnetic field. Carefully test your equipment, and record
-your findings in your trusty van. Once you have enough evidence, synthesize a specialized "Unhaunter Ghost Repellent" to
-expel the ghost.
+Your **Journal** is your most powerful tool. It automatically filters potential ghosts based on the evidence you record,
+and even helps you determine the correct repellent to craft.
 
-Once you're done, you can click "End Mission" on the van and you'll get the mission score.
+As you investigate, manage the building's **Fuse Box** carefully. Turning on too many lights can overload the circuit
+and plunge the entire location into darkness, forcing you to find the breaker to restore power. When things get intense,
+watch for visual feedback—your **Ghost Repellent** will glow electric blue when it hits the correct spirit, or bright
+red if you've made a mistake.
+
+### Haunted Objects
+
+Some objects in the house are not what they seem. These **Haunted Objects** can be **Attractive** or **Repulsive** to
+ghosts. You can use this to your advantage:
+
+- **Locate them:** Use your **UV Torch**, **Red Light**, or **Night Vision Camera** to spot the telltale spectral glow
+  of a haunted item.
+- **Tactical Control:** Moving these items allows you to influence where the ghost roams or even provoke a hunt if you
+  need to gather specific evidence.
+
+### Survival & Hiding
+
+Beware! Ghosts can enter a **Hunting Phase**, becoming aggressive and pursuing players to inflict damage. The likelihood
+of a hunt increases as the ghost's rage grows. Before a hunt begins, the ghost will often give a warning, such as a loud
+roar or a drop in ambient audio.
+
+If you can't reach the safety of your van, you must **Hide**. By holding the **Interact [E]** key near beds, tables, or
+other hiding spots, your character will take cover. While hidden, the ghost will have a much harder time spotting
+you—just make sure you aren't seen entering your hiding spot! If the ghost catches you during a hunt, it will damage
+your health.
+
+### Progression & Campaign
+
+Embark on a full **Campaign** featuring over 15 unique maps. As you successfully complete investigations, you'll earn
+**Experience (XP)** and **Money**, allowing you to level up and take on more challenging missions. Each mission is
+graded from **A to F** based on your performance and bravery.
 
 ### Controls
 
@@ -67,14 +103,6 @@ Once you're done, you can click "End Mission" on the van and you'll get the miss
 - **[C]:** Record Evidence
 - **[ShiftLeft]:** Run (hold)
 
-### Ghost Hunting
-
-Beware! Ghosts can enter a hunting phase, becoming more aggressive and directly pursuing players to inflict damage. The
-likelihood of a hunt increases as the ghost's rage grows, and its duration is determined by the ghost's "hunting" state.
-Before a hunt begins, the ghost will often give a warning, such as a loud roar, giving you time to prepare. During a
-hunt, you can try to hide behind certain objects by holding down the [E] key. If the ghost catches you during a hunt, it
-will damage your health.
-
 ## Evidence & Equipment
 
 | Evidence       | Gear           | Description                                                                                                                                                                               |
@@ -88,53 +116,16 @@ will damage your health.
 | RL Presence    | Red Torch      | Some ghosts glow orange under red light. Lights must be OFF.                                                                                                                              |
 | 500+ cpm       | Geiger Counter | The Geiger Counter measures radiation levels. Some ghosts emit high radiation, registering over 500 counts per minute (cpm). It takes time for the Geiger counter to settle into a value. |
 
-## Basic Strategy
-
-### Quick Tips
+## Quick Tips
 
 - **Use your ears:** Pay close attention to audio cues from your equipment (changes in the EMF meter's beeping, the
   ghost's whispers, etc.).
 - **Control the environment:** Closing doors helps contain cold air for more accurate temperature readings. Lights also
   heat up the room, so turning them off can create a colder environment.
-- **Hide:** If a hunt starts, press and hold [E] near tables, beds, and other objects to hide itself.
-- **Sanity is key:** Manage your sanity by taking breaks in the truck.
-
-### Finding the Ghost
-
-Your first task is to locate the ghost and determine its preferred area.
-
-The ghost's spawn point, known as its breach, appears as a subtle, semi-transparent dust cloud. It's most visible with
-the location's lights (not from your torch). The UV Torch will make it glow golden, this is not evidence, but it helps
-with visual identification.
-
-### Gathering Evidence
-
-Ghosts can move throughout the environment, but you might find more activity near their breach (spawn point).
-Investigate this area carefully.
-
-For the best results, turn off lights near the breach and close the doors. This will help create a colder environment
-for more accurate temperature readings and might enhance the visibility of certain paranormal phenomena.
-
-Use your equipment and take note of which ones yield positive results.
-
-### Crafting the Repellent
-
-Return to your van and record the evidence you've gathered in your journal. The crafting of the ghost repellent can only
-be performed inside the van.
-
-As you record evidence, the list of possible ghosts in your journal will narrow down. Once you're confident in your
-identification, select the ghost and click "Craft Unhaunter Ghost Repellent".
-
-### Expelling the Ghost
-
-This will create a vial filled with the specific repellent needed to banish that ghost type. Return to the ghost's room
-(breach), wait for it to appear, and activate the vial.
-
-If successful, the ghost will fade out over several seconds while emitting smoke particles. You'll also hear distinct
-sounds indicating its departure. Make sure the ghost and its breach are completely gone before ending the mission. You
-can refill the vial automatically when crafting a new repellent in the van.
-
-Once you're certain there are no more ghosts, go back to the van and click "End Mission".
+- **Hide:** If a hunt starts, press and hold **[E]** near tables, beds, and other objects to hide.
+- **Sanity is key:** Manage your sanity by taking breaks in the truck and listening to your buddy's warnings.
+- **Visual Cues:** The ghost's **breach** (spawn point) is a subtle dust cloud, best seen with the room's lights. Your
+  UV Torch will make it glow gold, helping you find the center of activity.
 
 ## Building and Installing
 
