@@ -39,10 +39,16 @@ pub enum NetworkMessage {
     /// Initial handshake from Client to Host.
     Hello { version: String },
     /// Response from Host to Client.
-    Welcome { id: u64, map_seed: u64 },
+    Welcome {
+        id: u64,
+        map_seed: u64,
+        map_filepath: String,
+        difficulty_id: String,
+    },
     /// Periodic state update from Host to Client.
     Snapshot {
         tick: u64,
+        game_state: String,
         players: Vec<PlayerState>,
         ghosts: Vec<GhostState>,
         rooms: Vec<RoomSync>,
@@ -58,5 +64,7 @@ pub enum NetworkMessage {
         drop: bool,
         use_right_hand: bool,
         use_left_hand: bool,
+        inventory_cycle: bool,
+        inventory_swap: bool,
     },
 }

@@ -39,6 +39,12 @@ pub struct PlayerInput {
 
     /// Whether the player wants to use the item in their left hand.
     pub use_left_hand: bool,
+
+    /// Cycle inventory.
+    pub inventory_cycle: bool,
+
+    /// Swap hands.
+    pub inventory_swap: bool,
 }
 
 impl PlayerInput {
@@ -56,6 +62,8 @@ impl PlayerInput {
         self.drop = false;
         self.use_right_hand = false;
         self.use_left_hand = false;
+        self.inventory_cycle = false;
+        self.inventory_swap = false;
     }
 }
 

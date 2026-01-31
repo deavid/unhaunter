@@ -11,7 +11,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::GearKind;
-use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
+use unplayer_core::components::{Inventory, InventoryNext, InventoryStats, MainPlayer};
 use unrender_std::assets::GearAssets;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
@@ -112,7 +112,7 @@ fn keyboard_gear(
 }
 
 fn update_gear_ui(
-    q_gear: Query<&PlayerGear, With<PlayerTag>>,
+    q_gear: Query<&PlayerGear, With<MainPlayer>>,
     mut qi: Query<(&Inventory, &mut ImageNode), Without<InventoryNext>>,
     mut qin: Query<(&InventoryNext, &mut ImageNode), Without<Inventory>>,
     mut qs: Query<(&InventoryStats, &mut Text, &mut Node)>,

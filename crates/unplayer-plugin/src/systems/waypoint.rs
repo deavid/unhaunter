@@ -1,4 +1,3 @@
-use crate::components::player_sprite::PlayerSprite;
 use bevy::{prelude::*, window::PrimaryWindow};
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
@@ -11,6 +10,7 @@ use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
 use unnavigation_core::pathfinding::Pathfinder;
+use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::{MainPlayer, PlayerInput};
 use unrender_std::components::game::GameSprite;
 use unrender_std::resources::visibility_data::VisibilityData;

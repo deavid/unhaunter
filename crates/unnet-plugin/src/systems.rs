@@ -23,6 +23,7 @@ use unspatial_core::position::Position;
 use untags_core::tags::{GhostTag, NetworkId};
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
+use untypes_core::states::GameState;
 
 pub fn startup_network_system(cli: Res<CliOptions>, mut conn: ResMut<NetworkConn>) {
     match &cli.net_mode {
@@ -161,6 +162,8 @@ pub fn handshake_handler_system(
     mut conn: ResMut<NetworkConn>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
     cli: Res<CliOptions>,
+    mut ev_load_level: MessageWriter<LoadLevelEvent>,
+    mut current_difficulty: ResMut<CurrentDifficulty>,
 ) {
     let mut to_send = Vec::new();
     let mut new_handshake = None;
@@ -190,17 +193,39 @@ pub fn handshake_handler_system(
                         to_send.push(NetworkMessage::Welcome {
                             id: 2, // Client is always 2 in MVP
                             map_seed: seed,
+                            map_filepath: cli.map_path.clone().unwrap_or_default(),
+                            difficulty_id: cli
+                                .difficulty_id
+                                .clone()
+                                .unwrap_or("medium".to_string()),
                         });
                         new_handshake = Some(HandshakeState::Completed);
                     }
                 }
-                NetworkMessage::Welcome { id, map_seed } => {
+                NetworkMessage::Welcome {
+                    id,
+                    map_seed,
+                    map_filepath,
+                    difficulty_id,
+                } => {
                     info!(
-                        "Network: Received Welcome (Your ID: {}, Seed: {})",
-                        id, map_seed
+                        "Network: Received Welcome (Your ID: {}, Seed: {}, Map: {})",
+                        id, map_seed, map_filepath
                     );
                     if matches!(cli.net_mode, NetMode::Join { .. }) {
                         new_handshake = Some(HandshakeState::Completed);
+                        // Apply difficulty
+                        if let Ok(d) = Difficulty::from_str(&difficulty_id) {
+                            *current_difficulty = CurrentDifficulty::new(d);
+                        }
+                        // Load Level
+                        if !map_filepath.is_empty() {
+                            ev_load_level.write(LoadLevelEvent {
+                                map_filepath: map_filepath.clone(),
+                            });
+                        } else {
+                            warn!("Network: Host sent empty map filepath!");
+                        }
                     }
                 }
                 _ => {}
@@ -225,6 +250,7 @@ pub fn host_send_snapshots_system(
     room_db: Res<RoomDB>,
     query_map_tiles: Query<(&Position, &Behavior), With<Interactive>>,
     query_gear: Query<(&NetworkId, &Position, &Toggleable)>,
+    game_state: Res<State<GameState>>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -285,6 +311,7 @@ pub fn host_send_snapshots_system(
 
     conn.send(NetworkMessage::Snapshot {
         tick,
+        game_state: format!("{:?}", game_state.get()),
         players,
         ghosts,
         rooms,
@@ -314,6 +341,8 @@ pub fn client_send_input_system(
             drop: input.drop,
             use_right_hand: input.use_right_hand,
             use_left_hand: input.use_left_hand,
+            inventory_cycle: input.inventory_cycle,
+            inventory_swap: input.inventory_swap,
         });
     }
 }
@@ -338,6 +367,7 @@ pub fn client_apply_snapshots_system(
         (&NetworkId, &mut Position, &mut Toggleable),
         (Without<PlayerSprite>, Without<GhostTag>),
     >,
+    current_game_state: Res<State<GameState>>,
 ) {
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         return;
@@ -345,14 +375,31 @@ pub fn client_apply_snapshots_system(
 
     for ev in ev_reader.read() {
         if let NetworkMessage::Snapshot {
+            tick: _,
+            game_state,
             players,
             ghosts,
             rooms,
             map_tiles,
             gear,
-            ..
         } = &ev.message
         {
+            // Sync GameState
+            let server_state_str = game_state.as_str();
+            let current_state_str = format!("{:?}", current_game_state.get());
+
+            if server_state_str != current_state_str {
+                let new_state = match server_state_str {
+                    "None" => GameState::None,
+                    "Truck" => GameState::Truck,
+                    "Pause" => GameState::Pause,
+                    _ => *current_game_state.get(),
+                };
+                if new_state != *current_game_state.get() {
+                    interactive_stuff.game_next_state.set(new_state);
+                }
+            }
+
             // Update players
             for p_state in players {
                 for (p_sprite, mut pos, mut anim) in query_players.iter_mut() {
@@ -480,6 +527,8 @@ pub fn host_apply_input_system(
             drop,
             use_right_hand,
             use_left_hand,
+            inventory_cycle,
+            inventory_swap,
         } = &ev.message
         {
             // Client is always ID 2 in this MVP
@@ -492,6 +541,8 @@ pub fn host_apply_input_system(
                     input.drop = *drop;
                     input.use_right_hand = *use_right_hand;
                     input.use_left_hand = *use_left_hand;
+                    input.inventory_cycle = *inventory_cycle;
+                    input.inventory_swap = *inventory_swap;
                 }
             }
         }
@@ -504,6 +555,10 @@ pub fn autostart_net_game(
     mut current_difficulty: ResMut<CurrentDifficulty>,
 ) {
     if matches!(cli.net_mode, NetMode::Offline) {
+        return;
+    }
+    if matches!(cli.net_mode, NetMode::Join { .. }) {
+        // Client waits for Welcome message to load level
         return;
     }
 

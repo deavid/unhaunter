@@ -1,5 +1,4 @@
 use crate::components::player::Stamina;
-use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unbehavior::roomdb::RoomDB;
@@ -9,6 +8,7 @@ use unfoundation_core::types::grade::Grade;
 use unfoundation_core::utils::time::PrintingTimer;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::MainPlayer;
+use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;
 use unsound_core::resources::SoundGrid;

@@ -1,7 +1,7 @@
-use crate::components::player_sprite::PlayerSprite;
 use bevy::{prelude::*, window::PrimaryWindow};
 use unengine_core::GCameraArena;
 use unplayer_core::components::MainPlayer;
+use unplayer_core::components::PlayerSprite;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;

@@ -1,4 +1,3 @@
-use crate::components::player_sprite::{PlayerInputMapping, PlayerSprite};
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::FloorItemCollidable;
@@ -9,6 +8,7 @@ use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::{HeldObject, PlayerGear};
 use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::GearKind;
+use unplayer_core::components::{PlayerInput, PlayerSprite};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::position::Position;
@@ -51,8 +51,7 @@ fn update_held_object_position(
 }
 
 fn grab_object(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &Position, &PlayerInputMapping)>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerInput)>,
     pickables: Query<
         (Entity, &Position, Option<&GearKind>, Option<&Behavior>),
         (Without<PlayerSprite>, With<FloorItemCollidable>),
@@ -60,8 +59,8 @@ fn grab_object(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    for (mut player_gear, player_pos, input_mapping) in players.iter_mut() {
-        if keyboard_input.just_pressed(input_mapping.controls.grab) {
+    for (mut player_gear, player_pos, player_input) in players.iter_mut() {
+        if player_input.grab {
             let mut closest = None;
             let mut min_dist = 1.0;
 
@@ -121,20 +120,14 @@ fn grab_object(
 }
 
 fn drop_object(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(
-        &mut PlayerGear,
-        &Position,
-        &PlayerInputMapping,
-        &PlayerSprite,
-    )>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerInput, &PlayerSprite)>,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
     pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,
     asset_server: Res<AssetServer>,
 ) {
-    for (mut player_gear, player_pos, input_mapping, player_sprite) in players.iter_mut() {
-        if keyboard_input.just_pressed(input_mapping.controls.drop) {
+    for (mut player_gear, player_pos, player_input, player_sprite) in players.iter_mut() {
+        if player_input.drop {
             // Check if the tile is free
             let bpos = player_pos.to_board_position();
             let is_free = board_collision
@@ -185,13 +178,9 @@ fn drop_object(
     }
 }
 
-fn cycle_inventory(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &PlayerInputMapping)>,
-    mut commands: Commands,
-) {
-    for (mut player_gear, input_mapping) in players.iter_mut() {
-        if keyboard_input.just_pressed(input_mapping.controls.cycle) {
+fn cycle_inventory(mut players: Query<(&mut PlayerGear, &PlayerInput)>, mut commands: Commands) {
+    for (mut player_gear, player_input) in players.iter_mut() {
+        if player_input.inventory_cycle {
             if let Some(entity) = player_gear.right_hand.take() {
                 player_gear.inventory.push(entity);
                 commands.entity(entity).insert(EquipmentPosition::Stowed);
@@ -207,13 +196,9 @@ fn cycle_inventory(
     }
 }
 
-fn swap_hands(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &PlayerInputMapping)>,
-    mut commands: Commands,
-) {
-    for (mut player_gear, input_mapping) in players.iter_mut() {
-        if keyboard_input.just_pressed(input_mapping.controls.swap) {
+fn swap_hands(mut players: Query<(&mut PlayerGear, &PlayerInput)>, mut commands: Commands) {
+    for (mut player_gear, player_input) in players.iter_mut() {
+        if player_input.inventory_swap {
             let tmp = player_gear.left_hand;
             player_gear.left_hand = player_gear.right_hand;
             player_gear.right_hand = tmp;

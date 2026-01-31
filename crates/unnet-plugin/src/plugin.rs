@@ -19,8 +19,13 @@ impl Plugin for UnhaunterNetPlugin {
         app.add_systems(OnEnter(AppState::MainMenu), autostart_net_game);
 
         app.add_systems(
-            Update,
-            (network_io_system, handshake_handler_system).chain(),
+            PreUpdate,
+            (
+                network_io_system,
+                handshake_handler_system,
+                host_apply_input_system.run_if(in_state(AppState::InGame)),
+            )
+                .chain(),
         );
 
         app.add_systems(
@@ -29,7 +34,6 @@ impl Plugin for UnhaunterNetPlugin {
                 host_send_snapshots_system,
                 client_send_input_system,
                 client_apply_snapshots_system,
-                host_apply_input_system,
             )
                 .chain()
                 .run_if(in_state(AppState::InGame)),

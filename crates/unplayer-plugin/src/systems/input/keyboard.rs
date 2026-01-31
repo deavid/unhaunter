@@ -49,6 +49,8 @@ pub(crate) fn keyboard_input_system(
             || mouse_input.just_pressed(MouseButton::Right);
         player_input.use_left_hand =
             keyboard_input.just_pressed(input_mapping.controls.left_hand_trigger);
+        player_input.inventory_cycle = keyboard_input.just_pressed(input_mapping.controls.cycle);
+        player_input.inventory_swap = keyboard_input.just_pressed(input_mapping.controls.swap);
 
         // Apply MovementStyle transformation (from original keyboard_player)
         if matches!(
