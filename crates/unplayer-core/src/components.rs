@@ -27,6 +27,18 @@ pub struct PlayerInput {
 
     /// Whether the player wants to interact with an object.
     pub interact: bool,
+
+    /// Whether the player wants to grab an object.
+    pub grab: bool,
+
+    /// Whether the player wants to drop an object.
+    pub drop: bool,
+
+    /// Whether the player wants to use the item in their right hand.
+    pub use_right_hand: bool,
+
+    /// Whether the player wants to use the item in their left hand.
+    pub use_left_hand: bool,
 }
 
 impl PlayerInput {
@@ -40,6 +52,10 @@ impl PlayerInput {
         self.target_position = None;
         self.run = false;
         self.interact = false;
+        self.grab = false;
+        self.drop = false;
+        self.use_right_hand = false;
+        self.use_left_hand = false;
     }
 }
 

@@ -9,10 +9,8 @@ use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::{HeldObject, PlayerGear};
 use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::GearKind;
-use uninteraction_core::interaction::{Toggleable, Triggered};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 fn sync_held_gear_position(
@@ -233,44 +231,8 @@ fn swap_hands(
     }
 }
 
-fn item_trigger_system(
-    mut commands: Commands,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    q_player: Query<(&PlayerGear, &PlayerInputMapping)>,
-    mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
-    mut ga: SoundEmitter,
-) {
-    for (player_gear, input_mapping) in q_player.iter() {
-        if keyboard_input.just_pressed(input_mapping.controls.right_hand_trigger)
-            && let Some(entity) = player_gear.right_hand
-        {
-            if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
-                toggle.is_on = !toggle.is_on;
-                if let Some(pos) = pos {
-                    ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
-                } else {
-                    ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
-                }
-            }
-            commands.entity(entity).insert(Triggered);
-        }
-        if keyboard_input.just_pressed(input_mapping.controls.left_hand_trigger)
-            && let Some(entity) = player_gear.left_hand
-        {
-            if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
-                toggle.is_on = !toggle.is_on;
-                if let Some(pos) = pos {
-                    ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
-                } else {
-                    ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
-                }
-            }
-            commands.entity(entity).insert(Triggered);
-        }
-    }
-}
-
 pub(crate) fn app_setup(app: &mut App) {
+    use untypes_core::cli::is_host;
     app.add_systems(
         Update,
         (
@@ -280,7 +242,7 @@ pub(crate) fn app_setup(app: &mut App) {
             drop_object,
             cycle_inventory,
             swap_hands,
-        ),
+        )
+            .run_if(is_host),
     );
-    app.add_systems(PreUpdate, item_trigger_system);
 }

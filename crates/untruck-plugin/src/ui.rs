@@ -60,6 +60,10 @@ fn setup_ui(
         Visibility::Hidden
     };
 
+    // Client doesn't have a UI for equipment yet, so we spawn a dummy one to avoid panics.
+    // In a real implementation we would have a read-only view of the truck.
+    // However, the current UI handles interaction which only the host should do.
+
     type Cb<'a, 'b> = &'b mut ChildSpawnerCommands<'a>;
     let panel_material = materials.add(UIPanelMaterial {
         color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
@@ -435,9 +439,10 @@ fn update_tab_interactions(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::InGame), setup_ui)
+    use untypes_core::cli::is_host;
+    app.add_systems(OnEnter(AppState::InGame), setup_ui.run_if(is_host))
         .add_systems(
             Update,
-            update_tab_interactions.run_if(in_state(GameState::Truck)),
+            update_tab_interactions.run_if(in_state(GameState::Truck).and(is_host)),
         );
 }

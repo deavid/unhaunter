@@ -13,6 +13,28 @@ pub struct GhostState {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MapTileState {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+    pub tileset: String,
+    pub tileuid: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RoomSync {
+    pub name: String,
+    pub state: u8, // 0=Off, 1=On
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GearSyncState {
+    pub id: u32,
+    pub position: [f32; 3],
+    pub is_on: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum NetworkMessage {
     /// Initial handshake from Client to Host.
     Hello { version: String },
@@ -23,11 +45,18 @@ pub enum NetworkMessage {
         tick: u64,
         players: Vec<PlayerState>,
         ghosts: Vec<GhostState>,
+        rooms: Vec<RoomSync>,
+        map_tiles: Vec<MapTileState>,
+        gear: Vec<GearSyncState>,
     },
     /// Periodic input update from Client to Host.
     PlayerInput {
         movement: [f32; 2],
         run: bool,
         interact: bool,
+        grab: bool,
+        drop: bool,
+        use_right_hand: bool,
+        use_left_hand: bool,
     },
 }

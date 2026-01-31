@@ -105,23 +105,35 @@ pub(crate) fn classic_mode_orchestrator(
     }
 
     let mut player_gear = PlayerGear::default();
+    let mut gear_id_counter = 1000u32;
     if p.difficulty.0.player_gear.left_hand.is_some() {
-        player_gear.left_hand = Some(
-            p.gear_registry
-                .spawn(&mut commands, p.difficulty.0.player_gear.left_hand),
-        );
+        let gear_entity = p
+            .gear_registry
+            .spawn(&mut commands, p.difficulty.0.player_gear.left_hand);
+        player_gear.left_hand = Some(gear_entity);
+        commands
+            .entity(gear_entity)
+            .insert(untags_core::tags::NetworkId(gear_id_counter));
+        gear_id_counter += 1;
     }
     if p.difficulty.0.player_gear.right_hand.is_some() {
-        player_gear.right_hand = Some(
-            p.gear_registry
-                .spawn(&mut commands, p.difficulty.0.player_gear.right_hand),
-        );
+        let gear_entity = p
+            .gear_registry
+            .spawn(&mut commands, p.difficulty.0.player_gear.right_hand);
+        player_gear.right_hand = Some(gear_entity);
+        commands
+            .entity(gear_entity)
+            .insert(untags_core::tags::NetworkId(gear_id_counter));
+        gear_id_counter += 1;
     }
     for kind in &p.difficulty.0.player_gear.inventory {
         if kind.is_some() {
-            player_gear
-                .inventory
-                .push(p.gear_registry.spawn(&mut commands, *kind));
+            let gear_entity = p.gear_registry.spawn(&mut commands, *kind);
+            player_gear.inventory.push(gear_entity);
+            commands
+                .entity(gear_entity)
+                .insert(untags_core::tags::NetworkId(gear_id_counter));
+            gear_id_counter += 1;
         }
     }
 

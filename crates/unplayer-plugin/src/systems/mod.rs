@@ -8,6 +8,7 @@ pub(crate) mod movement;
 pub(crate) mod pathfinding;
 pub(crate) mod sanityhealth;
 pub(crate) mod setup;
+pub(crate) mod styling;
 pub(crate) mod viewer_sync;
 pub(crate) mod walk_target_indicator;
 pub(crate) mod waypoint;

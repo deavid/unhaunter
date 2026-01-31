@@ -14,6 +14,7 @@ use unsettings_core::game::{GameplaySettings, MovementStyle};
 /// clears any active click-to-move targets and waypoint queues when keyboard movement is detected.
 pub(crate) fn keyboard_input_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut commands: Commands,
     mut players: Query<
         (Entity, &PlayerSprite, &PlayerInputMapping, &mut PlayerInput),
@@ -41,6 +42,13 @@ pub(crate) fn keyboard_input_system(
 
         player_input.run = keyboard_input.pressed(input_mapping.controls.run);
         player_input.interact = keyboard_input.just_pressed(input_mapping.controls.activate);
+        player_input.grab = keyboard_input.just_pressed(input_mapping.controls.grab);
+        player_input.drop = keyboard_input.just_pressed(input_mapping.controls.drop);
+        player_input.use_right_hand = keyboard_input
+            .just_pressed(input_mapping.controls.right_hand_trigger)
+            || mouse_input.just_pressed(MouseButton::Right);
+        player_input.use_left_hand =
+            keyboard_input.just_pressed(input_mapping.controls.left_hand_trigger);
 
         // Apply MovementStyle transformation (from original keyboard_player)
         if matches!(
@@ -74,5 +82,11 @@ pub(crate) fn keyboard_input_system(
         }
 
         player_input.movement = movement;
+    }
+}
+
+pub(crate) fn player_input_clear_system(mut players: Query<&mut PlayerInput>) {
+    for mut player_input in players.iter_mut() {
+        player_input.clear();
     }
 }

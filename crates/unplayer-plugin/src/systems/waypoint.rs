@@ -16,6 +16,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
+use untypes_core::cli::is_host;
 use unui_core::resources::MouseVisibility;
 
 use super::pathfinding::detect_stair_area;
@@ -211,7 +212,9 @@ pub(crate) fn waypoint_following_system(
     mut interactive_stuff: InteractiveStuff,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
+    cli: Res<untypes_core::cli::CliOptions>,
 ) {
+    let is_host = is_host(cli);
     for (player_entity, player_pos, waypoint_queue, mut player_input) in q_player.iter_mut() {
         if let Some(current_waypoint_entity) = waypoint_queue.next() {
             if let Ok((waypoint_pos, waypoint)) = q_waypoints.get(current_waypoint_entity) {
@@ -238,16 +241,22 @@ pub(crate) fn waypoint_following_system(
                                 if behavior.is_npc() {
                                     ev_npc.write(NpcHelpEvent::new(*interaction_target));
                                 }
-                                // Execute the interaction
-                                if interactive_stuff.execute_interaction(
-                                    *interaction_target,
-                                    interactive_pos,
-                                    Some(interactive),
-                                    behavior,
-                                    room_state,
-                                    unevents_core::events::roomchanged::InteractionExecutionType::ChangeState,
-                                ) {
-                                    ev_room.write(RoomChangedEvent::default());
+
+                                if is_host {
+                                    // Execute the interaction directly on the host
+                                    if interactive_stuff.execute_interaction(
+                                        *interaction_target,
+                                        interactive_pos,
+                                        Some(interactive),
+                                        behavior,
+                                        room_state,
+                                        unevents_core::events::roomchanged::InteractionExecutionType::ChangeState,
+                                    ) {
+                                        ev_room.write(RoomChangedEvent::default());
+                                    }
+                                } else {
+                                    // On the client, signal the interaction intent to the host
+                                    player_input.interact = true;
                                 }
                                 true // Complete the waypoint after interaction
                             } else {

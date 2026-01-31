@@ -11,7 +11,6 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::GearKind;
-use uninteraction_core::interaction::Triggered;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unrender_std::assets::GearAssets;
 use unrender_std::components::game::GameSprite;
@@ -195,25 +194,12 @@ fn update_gear_ui(
     }
 }
 
-fn gear_trigger_handler() {}
-
-fn clear_trigger_handler(mut commands: Commands, q_triggered: Query<Entity, With<Triggered>>) {
-    for entity in q_triggered.iter() {
-        commands.entity(entity).remove::<Triggered>();
-    }
-}
-
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(FixedUpdate, update_gear_ui)
         .add_systems(
             Update,
-            (
-                update_deployed_gear_sprites,
-                sound_playback_system,
-                gear_trigger_handler,
-            )
+            (update_deployed_gear_sprites, sound_playback_system)
                 .run_if(in_state(AppState::InGame)),
         )
-        .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)))
-        .add_systems(PostUpdate, clear_trigger_handler);
+        .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)));
 }

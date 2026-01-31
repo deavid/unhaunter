@@ -105,6 +105,7 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterCampaignPlugin,
         UnhaunterProfilePlugin,
     ));
+
     app.run();
 }
 

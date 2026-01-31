@@ -5,12 +5,22 @@ use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::str::FromStr;
+use unbehavior::behavior::{Behavior, Interactive};
+use unbehavior::roomdb::RoomDB;
+use unbehavior::state::TileState;
+use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::LoadLevelEvent;
-use unnet_core::messages::NetworkMessage;
+use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use uninteraction_core::interaction::Toggleable;
+use uninteraction_core::interactivestuff::InteractiveStuff;
+use unnet_core::messages::{GearSyncState, MapTileState, NetworkMessage, RoomSync};
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
+use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
+use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::perspective;
 use unspatial_core::position::Position;
-use untags_core::tags::GhostTag;
+use untags_core::tags::{GhostTag, NetworkId};
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
 
@@ -212,6 +222,9 @@ pub fn host_send_snapshots_system(
     query_players: Query<(&PlayerSprite, &Position)>,
     query_ghosts: Query<&Position, With<GhostTag>>,
     time: Res<Time>,
+    room_db: Res<RoomDB>,
+    query_map_tiles: Query<(&Position, &Behavior), With<Interactive>>,
+    query_gear: Query<(&NetworkId, &Position, &Toggleable)>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -236,10 +249,47 @@ pub fn host_send_snapshots_system(
         })
         .collect();
 
+    let rooms = room_db
+        .room_state
+        .iter()
+        .map(|(name, state): (&String, &TileState)| RoomSync {
+            name: name.clone(),
+            state: match state {
+                TileState::On => 1,
+                _ => 0,
+            },
+        })
+        .collect();
+
+    let map_tiles = query_map_tiles
+        .iter()
+        .map(|(pos, beh): (&Position, &Behavior)| MapTileState {
+            x: pos.x as i32,
+            y: pos.y as i32,
+            z: pos.z as i32,
+            tileset: beh.cfg().tileset.clone(),
+            tileuid: beh.cfg().tileuid,
+        })
+        .collect();
+
+    let gear = query_gear
+        .iter()
+        .map(
+            |(id, pos, toggle): (&NetworkId, &Position, &Toggleable)| GearSyncState {
+                id: id.0,
+                position: [pos.x, pos.y, pos.z],
+                is_on: toggle.is_on,
+            },
+        )
+        .collect();
+
     conn.send(NetworkMessage::Snapshot {
         tick,
         players,
         ghosts,
+        rooms,
+        map_tiles,
+        gear,
     });
 }
 
@@ -260,6 +310,10 @@ pub fn client_send_input_system(
             movement: [input.movement.x, input.movement.y],
             run: input.run,
             interact: input.interact,
+            grab: input.grab,
+            drop: input.drop,
+            use_right_hand: input.use_right_hand,
+            use_left_hand: input.use_left_hand,
         });
     }
 }
@@ -267,8 +321,23 @@ pub fn client_send_input_system(
 pub fn client_apply_snapshots_system(
     cli: Res<CliOptions>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
-    mut query_players: Query<(&PlayerSprite, &mut Position), Without<GhostTag>>,
-    mut query_ghosts: Query<&mut Position, With<GhostTag>>,
+    mut query_players: Query<
+        (&PlayerSprite, &mut Position, &mut AnimationTimer),
+        (Without<GhostTag>, Without<NetworkId>),
+    >,
+    mut query_ghosts: Query<&mut Position, (With<GhostTag>, Without<NetworkId>)>,
+    mut ev_room: MessageWriter<RoomChangedEvent>,
+    board_field: Res<BoardEntityField>,
+    board_topo: Res<BoardTopology>,
+    query_tiles: Query<
+        (&Position, &Behavior),
+        (Without<PlayerSprite>, Without<GhostTag>, Without<NetworkId>),
+    >,
+    mut interactive_stuff: InteractiveStuff,
+    mut query_gear: Query<
+        (&NetworkId, &mut Position, &mut Toggleable),
+        (Without<PlayerSprite>, Without<GhostTag>),
+    >,
 ) {
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         return;
@@ -276,24 +345,117 @@ pub fn client_apply_snapshots_system(
 
     for ev in ev_reader.read() {
         if let NetworkMessage::Snapshot {
-            players, ghosts, ..
+            players,
+            ghosts,
+            rooms,
+            map_tiles,
+            gear,
+            ..
         } = &ev.message
         {
+            // Update players
             for p_state in players {
-                for (p_sprite, mut pos) in query_players.iter_mut() {
+                for (p_sprite, mut pos, mut anim) in query_players.iter_mut() {
                     if p_sprite.id as u64 == p_state.id {
+                        let old_pos = *pos;
                         pos.x = p_state.position[0];
                         pos.y = p_state.position[1];
                         pos.z = p_state.position[2];
+
+                        let velocity = Vec2::new(pos.x - old_pos.x, pos.y - old_pos.y);
+                        if velocity.length_squared() > 0.00001 {
+                            let dscreen = perspective::direction_to_screen_coord(
+                                unspatial_core::direction::Direction {
+                                    dx: velocity.x,
+                                    dy: velocity.y,
+                                    dz: 0.0,
+                                },
+                            );
+                            anim.set_range(
+                                CharacterAnimation::from_dir(dscreen.x * 60.0, dscreen.y * 120.0)
+                                    .to_vec(),
+                            );
+                        } else {
+                            anim.set_range(CharacterAnimation::from_dir(0.0, 0.0).to_vec());
+                        }
                     }
                 }
             }
 
+            // Update ghosts
             for g_state in ghosts {
                 if let Ok(mut pos) = query_ghosts.single_mut() {
                     pos.x = g_state.position[0];
                     pos.y = g_state.position[1];
                     pos.z = g_state.position[2];
+                }
+            }
+
+            // Update rooms
+            let mut room_changed = false;
+            for r_sync in rooms {
+                let new_state = if r_sync.state == 1 {
+                    TileState::On
+                } else {
+                    TileState::Off
+                };
+                if let Some(state) = interactive_stuff.roomdb.room_state.get_mut(&r_sync.name)
+                    && *state != new_state
+                {
+                    *state = new_state;
+                    room_changed = true;
+                }
+            }
+            if room_changed {
+                ev_room.write(RoomChangedEvent::default());
+            }
+
+            // Update map tiles
+            for t_sync in map_tiles {
+                let bpos = BoardPosition {
+                    x: t_sync.x as i64,
+                    y: t_sync.y as i64,
+                    z: t_sync.z as i64,
+                };
+                let rel_x = bpos.x - board_topo.origin.0 as i64;
+                let rel_y = bpos.y - board_topo.origin.1 as i64;
+                let rel_z = bpos.z - board_topo.origin.2 as i64;
+
+                if rel_x >= 0
+                    && rel_y >= 0
+                    && rel_z >= 0
+                    && rel_x < board_field.0.shape()[0] as i64
+                    && rel_y < board_field.0.shape()[1] as i64
+                    && rel_z < board_field.0.shape()[2] as i64
+                {
+                    let entities = &board_field.0[[rel_x as usize, rel_y as usize, rel_z as usize]];
+                    for &entity in entities {
+                        if let Ok((pos, beh)) = query_tiles.get(entity)
+                            && (beh.cfg().tileset != t_sync.tileset
+                                || beh.cfg().tileuid != t_sync.tileuid)
+                        {
+                            interactive_stuff.execute_interaction(
+                                entity,
+                                pos,
+                                None,
+                                beh,
+                                None, // Map tiles synced this way are usually not room-bound or redundant
+                                InteractionExecutionType::ChangeState,
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Update gear
+            for g_sync in gear {
+                for (id, mut pos, mut toggle) in query_gear.iter_mut() {
+                    if id.0 == g_sync.id {
+                        pos.x = g_sync.position[0];
+                        pos.y = g_sync.position[1];
+                        pos.z = g_sync.position[2];
+                        toggle.is_on = g_sync.is_on;
+                    }
                 }
             }
         }
@@ -314,6 +476,10 @@ pub fn host_apply_input_system(
             movement,
             run,
             interact,
+            grab,
+            drop,
+            use_right_hand,
+            use_left_hand,
         } = &ev.message
         {
             // Client is always ID 2 in this MVP
@@ -322,6 +488,10 @@ pub fn host_apply_input_system(
                     input.movement = Vec2::new(movement[0], movement[1]);
                     input.run = *run;
                     input.interact = *interact;
+                    input.grab = *grab;
+                    input.drop = *drop;
+                    input.use_right_hand = *use_right_hand;
+                    input.use_left_hand = *use_left_hand;
                 }
             }
         }

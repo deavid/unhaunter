@@ -6,30 +6,42 @@ use bevy::{
 use unbehavior::components::Interactive;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interaction::{Toggleable, Triggered};
-use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
-pub(crate) fn mouse_right_click_gear_system(
+pub(crate) fn player_gear_usage_system(
     mut commands: Commands,
-    mouse: Res<ButtonInput<MouseButton>>,
-    q_player: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
+    q_players: Query<(&PlayerGear, &PlayerInput), With<PlayerSprite>>,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
     mut ga: SoundEmitter,
 ) {
-    if mouse.just_pressed(MouseButton::Right) {
-        for player_gear in q_player.iter() {
-            if let Some(entity) = player_gear.right_hand {
-                if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
-                    toggle.is_on = !toggle.is_on;
-                    if let Some(pos) = pos {
-                        ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
-                    } else {
-                        ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
-                    }
+    for (player_gear, player_input) in q_players.iter() {
+        if player_input.use_right_hand
+            && let Some(entity) = player_gear.right_hand
+        {
+            if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
+                toggle.is_on = !toggle.is_on;
+                if let Some(pos) = pos {
+                    ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                } else {
+                    ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                 }
-                commands.entity(entity).insert(Triggered);
             }
+            commands.entity(entity).insert(Triggered);
+        }
+        if player_input.use_left_hand
+            && let Some(entity) = player_gear.left_hand
+        {
+            if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
+                toggle.is_on = !toggle.is_on;
+                if let Some(pos) = pos {
+                    ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                } else {
+                    ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
+                }
+            }
+            commands.entity(entity).insert(Triggered);
         }
     }
 }

@@ -409,13 +409,14 @@ fn update_craft_button_text(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
+    use untypes_core::cli::is_host;
     // Initialize the RepellentCraftTracker resource
     app.init_resource::<RepellentCraftTracker>();
 
-    app.add_systems(OnExit(AppState::InGame), cleanup);
-    app.add_systems(OnEnter(GameState::Truck), show_ui);
-    app.add_systems(OnExit(GameState::Truck), hide_ui);
-    app.add_systems(Update, keyboard);
+    app.add_systems(OnExit(AppState::InGame), cleanup.run_if(is_host));
+    app.add_systems(OnEnter(GameState::Truck), show_ui.run_if(is_host));
+    app.add_systems(OnExit(GameState::Truck), hide_ui.run_if(is_host));
+    app.add_systems(Update, keyboard.run_if(is_host));
     app.add_systems(
         Update,
         (
@@ -423,8 +424,8 @@ pub(crate) fn app_setup(app: &mut App) {
             truckui_event_handle.after(hold_button_system),
             update_craft_button_text,
         )
-            .run_if(in_state(GameState::Truck)),
+            .run_if(in_state(GameState::Truck).and(is_host)),
     );
-    app.add_systems(OnEnter(AppState::InGame), init_repellent_tracker);
-    app.add_systems(OnExit(AppState::InGame), reset_repellent_tracker);
+    app.add_systems(OnEnter(AppState::InGame), init_repellent_tracker.run_if(is_host));
+    app.add_systems(OnExit(AppState::InGame), reset_repellent_tracker.run_if(is_host));
 }

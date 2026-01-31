@@ -12,7 +12,9 @@ pub(crate) use ungearitems_core::components::flashlight::{Flashlight, Flashlight
 use unrender_std::resources::sprite_registry::GearSpriteID;
 
 pub(crate) fn update_flashlight(
+    mut commands: Commands,
     mut q_flashlight: Query<(
+        Entity,
         &mut Flashlight,
         &mut LightEmitter,
         &mut StatusText,
@@ -27,6 +29,7 @@ pub(crate) fn update_flashlight(
     mut ga: SoundEmitter,
 ) {
     for (
+        entity,
         mut flashlight,
         mut flashlight_render,
         mut status,
@@ -47,6 +50,8 @@ pub(crate) fn update_flashlight(
             } else if flashlight.status != FlashlightStatus::Off {
                 flashlight.status = FlashlightStatus::Off;
             }
+            // Remove Triggered now that we've processed it
+            commands.entity(entity).remove::<Triggered>();
         }
 
         // Sync Toggleable with FlashlightStatus
