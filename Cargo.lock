@@ -6301,7 +6301,12 @@ dependencies = [
  "crossbeam-channel",
  "serde",
  "serde_json",
+ "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "unnet-core",
+ "unplayer-core",
+ "unspatial-core",
  "untypes-core",
 ]
 
@@ -6639,6 +6644,7 @@ dependencies = [
  "bevy",
  "enum-iterator",
  "serde",
+ "strum",
 ]
 
 [[package]]

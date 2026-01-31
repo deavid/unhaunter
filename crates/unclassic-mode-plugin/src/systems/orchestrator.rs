@@ -43,6 +43,7 @@ use untags_core::tags::{GhostTag, PlayerTag};
 
 #[derive(SystemParam)]
 pub(crate) struct ClassicModeSystemParam<'w> {
+    pub cli: Res<'w, untypes_core::cli::CliOptions>,
     pub asset_server: Res<'w, AssetServer>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub player_assets: Res<'w, unplayer_core::assets::PlayerAssets>,
@@ -91,7 +92,6 @@ pub(crate) fn classic_mode_orchestrator(
     // --- Spawn Player ---
     let mut rng = random_seed::rng();
     let player_position = player_spawn_points.choose(&mut rng).copied().unwrap();
-    let player_scoord = perspective::to_screen_coord(player_position);
 
     let mut player_image = p.player_assets.character.clone();
     let mut player_rf = 1.0;
@@ -140,75 +140,103 @@ pub(crate) fn classic_mode_orchestrator(
         sprite_size.x * (anchor.x + 0.5),
         sprite_size.y * (0.5 - anchor.y),
     );
-    let mesh_handle = p
+    let src_mesh_handle = p
         .meshes
         .add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
 
-    let mut material = CustomMaterial1::from_texture(player_image);
-    material.data.sheet_cols = 16;
-    material.data.sheet_rows = 4;
-    material.data.sprite_width = 32.0 * player_rf;
-    material.data.sprite_height = 32.0 * player_rf;
-    material.data.upscale_factor = player_rf;
-    material.data.y_anchor = anchor.y;
+    let mut player_ids_to_spawn = vec![1_usize];
+    if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Offline) {
+        player_ids_to_spawn.push(2);
+    }
 
-    let material_handle = p.materials1.add(material);
+    for (idx, id) in player_ids_to_spawn.into_iter().enumerate() {
+        let is_main_player = match p.cli.net_mode {
+            untypes_core::cli::NetMode::Offline => true,
+            untypes_core::cli::NetMode::Host { .. } => id == 1,
+            untypes_core::cli::NetMode::Join { .. } => id == 2,
+        };
 
-    let player_id = commands
-        .spawn(Mesh2d(mesh_handle))
-        .insert(MeshMaterial2d(material_handle))
-        .insert(
-            Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])
-                .with_scale(Vec3::new(1.0 / player_rf, 1.0 / player_rf, 1.0 / player_rf)),
-        )
-        .insert(ResolutionFactor(player_rf))
-        .insert(GameSprite)
-        .insert(MapTileSprite)
-        .insert(SpriteLayer(0.00001))
-        .insert(PlayerSprite::new(1, player_position))
-        .insert(PlayerInputMapping {
-            controls: **p.control_settings,
-        })
-        .insert(MainPlayer)
-        .insert(PlayerInput::default())
-        .insert(VisibilityData::default())
-        .insert(PlayerTag { id: 1 })
-        .insert(ShadowCaster::default())
-        .insert(Viewer { id: 1, ..default() })
-        .insert(SpatialListener::new(
-            -p.audio_settings.sound_output.to_ear_offset(),
-        ))
-        .insert(player_position)
-        .insert(MapEntityFieldBPos(player_position.to_board_position()))
-        .insert(Movable)
-        .insert(LightSensitive {
-            exposure_factor: 1.1,
-            bias: 0.01,
-        })
-        .insert(Direction::new_right())
-        .insert(AnimationTimer::from_range(
-            Timer::from_seconds(0.20, TimerMode::Repeating),
-            CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
-        ))
-        .insert(Stamina::default())
-        .insert(unnavigation_core::components::waypoint::WaypointQueue::default())
-        .insert(player_gear)
-        .with_children(|parent| {
-            parent
-                .spawn(Sprite {
-                    image: p.ghost_assets.focus_ring_vignette.clone(),
-                    color: Color::srgba(1.0, 1.0, 1.0, 0.0),
-                    ..default()
-                })
-                .insert(
-                    Transform::from_scale(Vec3::splat(1.1 * player_rf))
-                        .with_translation(Vec3::new(0.0, 0.1, 0.01)),
-                )
-                .insert(FocusRing::default());
-        })
-        .id();
+        // Pick a spawn point for this player. Use index-based selection to avoid spawning on top of each other.
+        let spawn_pos = player_spawn_points
+            .get(idx % player_spawn_points.len())
+            .copied()
+            .unwrap_or(player_position);
 
-    p.board_entity_field.0[player_position.to_board_position().ndidx()].push(player_id);
+        let spawn_scoord = perspective::to_screen_coord(spawn_pos);
+
+        let mut material = CustomMaterial1::from_texture(player_image.clone());
+        material.data.sheet_cols = 16;
+        material.data.sheet_rows = 4;
+        material.data.sprite_width = 32.0 * player_rf;
+        material.data.sprite_height = 32.0 * player_rf;
+        material.data.upscale_factor = player_rf;
+        material.data.y_anchor = anchor.y;
+
+        let material_handle = p.materials1.add(material);
+
+        let mut ec = commands.spawn(Mesh2d(src_mesh_handle.clone()));
+        ec.insert(MeshMaterial2d(material_handle))
+            .insert(
+                Transform::from_xyz(spawn_scoord[0], spawn_scoord[1], spawn_scoord[2])
+                    .with_scale(Vec3::new(1.0 / player_rf, 1.0 / player_rf, 1.0 / player_rf)),
+            )
+            .insert(ResolutionFactor(player_rf))
+            .insert(GameSprite)
+            .insert(MapTileSprite)
+            .insert(SpriteLayer(0.00001))
+            .insert(PlayerSprite::new(id, spawn_pos))
+            .insert(PlayerInputMapping {
+                controls: **p.control_settings,
+            })
+            .insert(PlayerInput::default())
+            .insert(VisibilityData::default())
+            .insert(PlayerTag { id })
+            .insert(ShadowCaster::default())
+            .insert(spawn_pos)
+            .insert(MapEntityFieldBPos(spawn_pos.to_board_position()))
+            .insert(Movable)
+            .insert(LightSensitive {
+                exposure_factor: 1.1,
+                bias: 0.01,
+            })
+            .insert(Direction::new_right())
+            .insert(AnimationTimer::from_range(
+                Timer::from_seconds(0.20, TimerMode::Repeating),
+                CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
+            ))
+            .insert(Stamina::default())
+            .insert(unnavigation_core::components::waypoint::WaypointQueue::default());
+
+        if is_main_player {
+            ec.insert(MainPlayer)
+                .insert(Viewer { id, ..default() })
+                .insert(SpatialListener::new(
+                    -p.audio_settings.sound_output.to_ear_offset(),
+                ))
+                .insert(player_gear.clone());
+        } else {
+            // Remote player needs some dummy gear or none for now
+            ec.insert(PlayerGear::default());
+        }
+
+        let player_ent_id = ec
+            .with_children(|parent| {
+                parent
+                    .spawn(Sprite {
+                        image: p.ghost_assets.focus_ring_vignette.clone(),
+                        color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                        ..default()
+                    })
+                    .insert(
+                        Transform::from_scale(Vec3::splat(1.1 * player_rf))
+                            .with_translation(Vec3::new(0.0, 0.1, 0.01)),
+                    )
+                    .insert(FocusRing::default());
+            })
+            .id();
+
+        p.board_entity_field.0[player_position.to_board_position().ndidx()].push(player_ent_id);
+    }
 
     // --- Spawn Ghost ---
     let ghost_spawn = ghost_spawn_points
