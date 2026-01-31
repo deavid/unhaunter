@@ -6304,9 +6304,11 @@ dependencies = [
  "undifficulty-core",
  "unevents-core",
  "unfoundation-core",
+ "unghost-core",
  "unnet-core",
  "unplayer-core",
  "unspatial-core",
+ "untags-core",
  "untypes-core",
 ]
 

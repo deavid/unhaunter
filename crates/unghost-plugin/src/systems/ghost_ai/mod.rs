@@ -206,6 +206,8 @@ pub(crate) fn ghost_scale_glitch_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
+    use untypes_core::cli::is_host;
+
     app.add_systems(
         Update,
         (
@@ -214,10 +216,11 @@ pub(crate) fn app_setup(app: &mut App) {
             ghost_fade_out_system,
             update_ghost_warning_field,
             ghost_scale_glitch_system,
-            ghost_visual_sync,
-            ghost_influence_visual_sync,
-        ),
+        )
+            .run_if(is_host),
     );
+
+    app.add_systems(Update, (ghost_visual_sync, ghost_influence_visual_sync));
 
     // Initialize dynamic behavior update system
     crate::systems::dynamic_behavior_update::app_setup(app);

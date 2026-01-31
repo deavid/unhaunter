@@ -8,6 +8,11 @@ pub struct PlayerState {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GhostState {
+    pub position: [f32; 3],
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum NetworkMessage {
     /// Initial handshake from Client to Host.
     Hello { version: String },
@@ -17,6 +22,7 @@ pub enum NetworkMessage {
     Snapshot {
         tick: u64,
         players: Vec<PlayerState>,
+        ghosts: Vec<GhostState>,
     },
     /// Periodic input update from Client to Host.
     PlayerInput {

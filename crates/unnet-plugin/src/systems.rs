@@ -10,6 +10,7 @@ use unevents_core::events::loadlevel::LoadLevelEvent;
 use unnet_core::messages::NetworkMessage;
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unspatial_core::position::Position;
+use untags_core::tags::GhostTag;
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
 
@@ -209,6 +210,7 @@ pub fn host_send_snapshots_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
     query_players: Query<(&PlayerSprite, &Position)>,
+    query_ghosts: Query<&Position, With<GhostTag>>,
     time: Res<Time>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
@@ -221,15 +223,24 @@ pub fn host_send_snapshots_system(
     let tick = (time.elapsed_secs() * 60.0) as u64;
     let players = query_players
         .iter()
-        .map(|(p, pos)| {
-            unnet_core::messages::PlayerState {
-                id: p.id as u64,
-                position: [pos.x, pos.y, pos.z, 0.0], // orientation placeholder
-            }
+        .map(|(p, pos)| unnet_core::messages::PlayerState {
+            id: p.id as u64,
+            position: [pos.x, pos.y, pos.z, 0.0], // orientation placeholder
         })
         .collect();
 
-    conn.send(NetworkMessage::Snapshot { tick, players });
+    let ghosts = query_ghosts
+        .iter()
+        .map(|pos| unnet_core::messages::GhostState {
+            position: [pos.x, pos.y, pos.z],
+        })
+        .collect();
+
+    conn.send(NetworkMessage::Snapshot {
+        tick,
+        players,
+        ghosts,
+    });
 }
 
 pub fn client_send_input_system(
@@ -256,14 +267,18 @@ pub fn client_send_input_system(
 pub fn client_apply_snapshots_system(
     cli: Res<CliOptions>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
-    mut query_players: Query<(&PlayerSprite, &mut Position)>,
+    mut query_players: Query<(&PlayerSprite, &mut Position), Without<GhostTag>>,
+    mut query_ghosts: Query<&mut Position, With<GhostTag>>,
 ) {
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         return;
     }
 
     for ev in ev_reader.read() {
-        if let NetworkMessage::Snapshot { players, .. } = &ev.message {
+        if let NetworkMessage::Snapshot {
+            players, ghosts, ..
+        } = &ev.message
+        {
             for p_state in players {
                 for (p_sprite, mut pos) in query_players.iter_mut() {
                     if p_sprite.id as u64 == p_state.id {
@@ -271,6 +286,14 @@ pub fn client_apply_snapshots_system(
                         pos.y = p_state.position[1];
                         pos.z = p_state.position[2];
                     }
+                }
+            }
+
+            for g_state in ghosts {
+                if let Ok(mut pos) = query_ghosts.single_mut() {
+                    pos.x = g_state.position[0];
+                    pos.y = g_state.position[1];
+                    pos.z = g_state.position[2];
                 }
             }
         }

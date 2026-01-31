@@ -16,6 +16,8 @@ untypes-core = { path = "../untypes-core" }
 unplayer-core = { path = "../unplayer-core" }
 unspatial-core = { path = "../unspatial-core" }
 unfoundation-core = { path = "../unfoundation-core" }
+unghost-core = { path = "../unghost-core" }
+untags-core = { path = "../untags-core" }
 unevents-core = { path = "../unevents-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 bevy = { workspace = true }
