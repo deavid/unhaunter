@@ -19,9 +19,13 @@ unfoundation-core = { path = "../unfoundation-core" }
 untags-core = { path = "../untags-core" }
 unevents-core = { path = "../unevents-core" }
 undifficulty-core = { path = "../undifficulty-core" }
+unghost-core = { path = "../unghost-core" }
+ungear-core = { path = "../ungear-core" }
+ungearitems-core = { path = "../ungearitems-core" }
 unbehavior = { path = "../unbehavior" }
 unboard-core = { path = "../unboard-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 unrender-std = { path = "../unrender-std" }
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 serde_json = { workspace = true }

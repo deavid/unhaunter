@@ -18,14 +18,10 @@ fn sync_held_gear_position(
     mut q_gear: Query<&mut Position, (With<GearMarker>, Without<PlayerSprite>)>,
 ) {
     for (player_pos, player_gear) in q_player.iter() {
-        if let Some(e) = player_gear.left_hand
-            && let Ok(mut gear_pos) = q_gear.get_mut(e)
-        {
+        if let Some(mut gear_pos) = player_gear.left_hand.and_then(|e| q_gear.get_mut(e).ok()) {
             *gear_pos = *player_pos;
         }
-        if let Some(e) = player_gear.right_hand
-            && let Ok(mut gear_pos) = q_gear.get_mut(e)
-        {
+        if let Some(mut gear_pos) = player_gear.right_hand.and_then(|e| q_gear.get_mut(e).ok()) {
             *gear_pos = *player_pos;
         }
         for &e in &player_gear.inventory {
@@ -41,8 +37,10 @@ fn update_held_object_position(
     mut q_held: Query<&mut Position, (Without<PlayerSprite>, Without<GearMarker>)>,
 ) {
     for (player_pos, player_gear) in q_player.iter() {
-        if let Some(held) = &player_gear.held_item
-            && let Ok(mut object_pos) = q_held.get_mut(held.entity)
+        if let Some(mut object_pos) = player_gear
+            .held_item
+            .as_ref()
+            .and_then(|held| q_held.get_mut(held.entity).ok())
         {
             *object_pos = *player_pos;
             object_pos.z += 0.25;
@@ -220,14 +218,10 @@ pub(crate) fn app_setup(app: &mut App) {
     use untypes_core::cli::is_host;
     app.add_systems(
         Update,
-        (
-            sync_held_gear_position,
-            update_held_object_position,
-            grab_object,
-            drop_object,
-            cycle_inventory,
-            swap_hands,
-        )
-            .run_if(is_host),
+        (sync_held_gear_position, update_held_object_position),
+    );
+    app.add_systems(
+        Update,
+        (grab_object, drop_object, cycle_inventory, swap_hands).run_if(is_host),
     );
 }

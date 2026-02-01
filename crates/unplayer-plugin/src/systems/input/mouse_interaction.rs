@@ -68,17 +68,12 @@ pub(crate) fn player_gear_usage_system(
 
 pub(crate) fn mouse_scroll_gear_system(
     mut scroll_events: MessageReader<MouseWheel>,
-    mut q_player: Query<&mut PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
+    mut q_player: Query<&mut PlayerInput, (With<PlayerSprite>, With<MainPlayer>)>,
 ) {
     for event in scroll_events.read() {
         if event.y != 0.0 {
-            for mut player_gear in q_player.iter_mut() {
-                if let Some(entity) = player_gear.right_hand.take() {
-                    player_gear.inventory.push(entity);
-                }
-                if !player_gear.inventory.is_empty() {
-                    player_gear.right_hand = Some(player_gear.inventory.remove(0));
-                }
+            for mut player_input in q_player.iter_mut() {
+                player_input.inventory_cycle = true;
             }
         }
     }

@@ -176,7 +176,7 @@ impl PlayerSprite {
 /// Marks a player entity that is currently hiding.
 #[derive(Component)]
 pub struct Hiding {
-    pub hiding_spot: Entity,
+    pub hiding_spot: Option<Entity>,
 }
 
 /// Component for managing player stamina and running ability

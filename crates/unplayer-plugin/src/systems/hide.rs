@@ -5,7 +5,7 @@ use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
 use unboard_core::components::mapcolor::MapColor;
 use ungear_core::components::playergear::PlayerGear;
-use unplayer_core::components::{PlayerInputMapping, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unrender_std::components::animation::AnimationTimer;
 use unrender_std::components::visuals::ResolutionFactor;
 use unsound_core::emitter::SoundEmitter;
@@ -22,7 +22,7 @@ fn hide_player(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
         (Entity, &PlayerInputMapping, &mut Position, &PlayerGear),
-        (Without<Hiding>, Without<Behavior>),
+        (With<MainPlayer>, Without<Hiding>, Without<Behavior>),
     >,
     hiding_spots: Query<
         (Entity, &Position, &Behavior, Option<&ResolutionFactor>),
@@ -60,7 +60,7 @@ fn hide_player(
                 commands
                     .entity(player_entity)
                     .insert(Hiding {
-                        hiding_spot: hiding_spot_entity,
+                        hiding_spot: Some(hiding_spot_entity),
                     })
                     .insert(MapColor {
                         color: css::DARK_GRAY.with_alpha(0.5).into(),
@@ -102,13 +102,16 @@ fn hide_player(
 fn unhide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(
-        Entity,
-        &PlayerInputMapping,
-        &mut Transform,
-        &mut Visibility,
-        &Hiding,
-    )>,
+    mut players: Query<
+        (
+            Entity,
+            &PlayerInputMapping,
+            &mut Transform,
+            &mut Visibility,
+            &Hiding,
+        ),
+        With<MainPlayer>,
+    >,
 ) {
     for (player_entity, input_mapping, _, _visibility, hiding) in players.iter_mut() {
         if keyboard_input.just_pressed(input_mapping.controls.activate) {
@@ -125,9 +128,9 @@ fn unhide_player(
                     color: Color::WHITE.with_alpha(1.0),
                 });
 
-            commands
-                .entity(hiding.hiding_spot)
-                .despawn_related::<Children>();
+            if let Some(hiding_spot) = hiding.hiding_spot {
+                commands.entity(hiding_spot).despawn_related::<Children>();
+            }
         }
     }
 }

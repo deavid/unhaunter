@@ -1,24 +1,18 @@
 use bevy::prelude::*;
 use enum_iterator::Sequence;
+use strum::{AsRefStr, Display, EnumString};
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Sequence)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Sequence, Display, EnumString, AsRefStr)]
 pub enum FlashlightStatus {
     #[default]
+    #[strum(serialize = "OFF")]
     Off,
+    #[strum(serialize = "LOW")]
     Low,
+    #[strum(serialize = "MID")]
     Mid,
+    #[strum(serialize = " HI")]
     High,
-}
-
-impl FlashlightStatus {
-    pub fn string(&self) -> &'static str {
-        match self {
-            FlashlightStatus::Off => "OFF",
-            FlashlightStatus::Low => "LOW",
-            FlashlightStatus::Mid => "MID",
-            FlashlightStatus::High => " HI",
-        }
-    }
 }
 
 #[derive(Component, Debug, Clone)]

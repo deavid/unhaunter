@@ -5915,6 +5915,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
+ "strum",
  "unfoundation-core",
  "unghost-core",
  "unrender-std",
@@ -6318,12 +6319,16 @@ name = "unnet-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_platform",
  "serde_json",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
  "unevents-core",
  "unfoundation-core",
+ "ungear-core",
+ "ungearitems-core",
+ "unghost-core",
  "uninteraction-core",
  "unnet-core",
  "unplayer-core",

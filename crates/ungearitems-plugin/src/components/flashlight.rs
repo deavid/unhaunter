@@ -127,7 +127,7 @@ pub(crate) fn update_flashlight(
         };
 
         // Update Status Text
-        let on_s = flashlight.status.string();
+        let on_s = flashlight.status.as_ref();
         let overheat = if flashlight.heatsink_temp > 0.8 {
             "OVERHEAT"
         } else {

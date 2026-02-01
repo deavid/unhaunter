@@ -467,9 +467,10 @@ fn find_throw_destination(
 
         // Check if destination is valid (walkable floor) AND within map bounds
         let board_pos = candidate_pos.to_board_position();
-        if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size)
-            && let Some(collision_data) = board_collision.0.get(idx)
-            && collision_data.player_free
+        if let Some(_collision_data) = board_pos
+            .ndidx_checked(board_topology.map_size)
+            .and_then(|idx| board_collision.0.get(idx))
+            .filter(|c| c.player_free)
         {
             return Some(candidate_pos);
         }
@@ -491,9 +492,10 @@ fn find_throw_destination(
         };
 
         let board_pos = candidate_pos.to_board_position();
-        if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size)
-            && let Some(collision_data) = board_collision.0.get(idx)
-            && collision_data.player_free
+        if let Some(_collision_data) = board_pos
+            .ndidx_checked(board_topology.map_size)
+            .and_then(|idx| board_collision.0.get(idx))
+            .filter(|c| c.player_free)
         {
             return Some(candidate_pos);
         }
@@ -529,9 +531,10 @@ fn find_movement_destination(
 
         // Check if destination is valid (walkable floor) AND within map bounds
         let board_pos = candidate_pos.to_board_position();
-        if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size)
-            && let Some(collision_data) = board_collision.0.get(idx)
-            && collision_data.player_free
+        if let Some(_collision_data) = board_pos
+            .ndidx_checked(board_topology.map_size)
+            .and_then(|idx| board_collision.0.get(idx))
+            .filter(|c| c.player_free)
         {
             return Some(candidate_pos);
         }
@@ -564,9 +567,10 @@ fn find_nudge_destination(
         };
 
         let board_pos = candidate_pos.to_board_position();
-        if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size)
-            && let Some(collision_data) = board_collision.0.get(idx)
-            && collision_data.player_free
+        if let Some(_collision_data) = board_pos
+            .ndidx_checked(board_topology.map_size)
+            .and_then(|idx| board_collision.0.get(idx))
+            .filter(|c| c.player_free)
         {
             return Some(candidate_pos);
         }

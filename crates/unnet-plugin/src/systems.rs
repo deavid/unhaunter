@@ -1,4 +1,5 @@
 use crate::resources::{HandshakeState, NetworkConn};
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
@@ -11,12 +12,18 @@ use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::LoadLevelEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use unevents_core::events::sound::SoundEvent;
+use ungear_core::components::core::Battery;
+use ungear_core::components::playergear::PlayerGear;
+use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
+use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unnet_core::messages::{
-    GearSyncState, MapTileState, NetworkDataEvent, NetworkMessage, RoomSync,
+    GearSyncState, GhostState, MapTileState, NetworkDataEvent, NetworkMessage, PlayerGearState,
+    PlayerState, RoomSync,
 };
 use unnet_core::network_id::NetworkId;
-use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
+use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::perspective;
@@ -24,7 +31,7 @@ use unspatial_core::position::Position;
 use untags_core::tags::GhostTag;
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
-use untypes_core::states::GameState;
+use untypes_core::states::{AppState, GameState};
 
 pub fn startup_network_system(cli: Res<CliOptions>, mut conn: ResMut<NetworkConn>) {
     match &cli.net_mode {
@@ -245,13 +252,26 @@ pub fn handshake_handler_system(
 pub fn host_send_snapshots_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
-    query_players: Query<(&PlayerSprite, &Position)>,
-    query_ghosts: Query<(&NetworkId, &Position), With<GhostTag>>,
+    query_players: Query<(
+        &PlayerSprite,
+        &Position,
+        Option<&Hiding>,
+        Option<&PlayerGear>,
+    )>,
+    query_ghosts: Query<(&NetworkId, &Position, &GhostSprite), With<GhostTag>>,
     time: Res<Time>,
     room_db: Res<RoomDB>,
     query_map_tiles: Query<(&Position, &Behavior), With<Interactive>>,
-    query_gear: Query<(&NetworkId, &Position, &Toggleable)>,
+    query_gear: Query<(
+        &NetworkId,
+        &Position,
+        &Toggleable,
+        Option<&Battery>,
+        Option<&Flashlight>,
+    )>,
+    query_net_id: Query<&NetworkId>,
     game_state: Res<State<GameState>>,
+    app_state: Res<State<AppState>>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -263,17 +283,44 @@ pub fn host_send_snapshots_system(
     let tick = (time.elapsed_secs() * 60.0) as u64;
     let players = query_players
         .iter()
-        .map(|(p, pos)| unnet_core::messages::PlayerState {
+        .map(|(p, pos, hiding, _)| PlayerState {
             id: p.id,
             position: [pos.x, pos.y, pos.z, 0.0], // orientation placeholder
+            is_hiding: hiding.is_some(),
+        })
+        .collect();
+
+    let player_gear = query_players
+        .iter()
+        .filter_map(|(p, _, _, gear)| {
+            gear.map(|g| PlayerGearState {
+                player_id: p.id,
+                left_hand: g.left_hand.and_then(|e| query_net_id.get(e).ok().cloned()),
+                right_hand: g.right_hand.and_then(|e| query_net_id.get(e).ok().cloned()),
+                inventory: g
+                    .inventory
+                    .iter()
+                    .filter_map(|&e| query_net_id.get(e).ok().cloned())
+                    .collect(),
+                held_item: g
+                    .held_item
+                    .as_ref()
+                    .and_then(|h| query_net_id.get(h.entity).ok().cloned()),
+            })
         })
         .collect();
 
     let ghosts = query_ghosts
         .iter()
-        .map(|(id, pos)| unnet_core::messages::GhostState {
+        .map(|(id, pos, ghost)| GhostState {
             id: *id,
             position: [pos.x, pos.y, pos.z],
+            warp: ghost.warp,
+            hunt_warning_active: ghost.hunt_warning_active,
+            hunt_warning_intensity: ghost.hunt_warning_intensity,
+            calm_time_secs: ghost.calm_time_secs,
+            repellent_hits_delta: ghost.repellent_hits_delta,
+            repellent_misses_delta: ghost.repellent_misses_delta,
         })
         .collect();
 
@@ -302,23 +349,25 @@ pub fn host_send_snapshots_system(
 
     let gear = query_gear
         .iter()
-        .map(
-            |(id, pos, toggle): (&NetworkId, &Position, &Toggleable)| GearSyncState {
-                id: *id,
-                position: [pos.x, pos.y, pos.z],
-                is_on: toggle.is_on,
-            },
-        )
+        .map(|(id, pos, toggle, battery, flashlight)| GearSyncState {
+            id: *id,
+            position: [pos.x, pos.y, pos.z],
+            is_on: toggle.is_on,
+            mode: flashlight.map(|f| f.status.to_string()),
+            battery: battery.map(|b| b.level).unwrap_or(0.0),
+        })
         .collect();
 
     conn.send(NetworkMessage::Snapshot {
         tick,
+        app_state: format!("{:?}", app_state.get()),
         game_state: format!("{:?}", game_state.get()),
         players,
         ghosts,
         rooms,
         map_tiles,
         gear,
+        player_gear,
     });
 }
 
@@ -345,18 +394,38 @@ pub fn client_send_input_system(
             use_left_hand: input.use_left_hand,
             inventory_cycle: input.inventory_cycle,
             inventory_swap: input.inventory_swap,
+            target_position: input.target_position.map(|v| [v.x, v.y]),
         });
     }
 }
 
+#[derive(SystemParam)]
+pub struct SnapshotAppStates<'w> {
+    pub game_next_state: ResMut<'w, NextState<GameState>>,
+    pub current_game_state: Res<'w, State<GameState>>,
+    pub current_app_state: Res<'w, State<AppState>>,
+    pub app_next_state: ResMut<'w, NextState<AppState>>,
+}
+
 pub fn client_apply_snapshots_system(
+    mut commands: Commands,
     cli: Res<CliOptions>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut query_players: Query<
-        (&NetworkId, &mut Position, &mut AnimationTimer),
+        (
+            Entity,
+            &NetworkId,
+            &mut Position,
+            &mut AnimationTimer,
+            Option<&Hiding>,
+            Option<&mut PlayerGear>,
+        ),
         (With<PlayerSprite>, Without<GhostTag>),
     >,
-    mut query_ghosts: Query<(&NetworkId, &mut Position), (With<GhostTag>, Without<PlayerSprite>)>,
+    mut query_ghosts: Query<
+        (&NetworkId, &mut Position, &mut GhostSprite),
+        (With<GhostTag>, Without<PlayerSprite>),
+    >,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_field: Res<BoardEntityField>,
     board_topo: Res<BoardTopology>,
@@ -366,12 +435,18 @@ pub fn client_apply_snapshots_system(
     >,
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut room_db: ResMut<RoomDB>,
-    mut game_next_state: ResMut<NextState<GameState>>,
+    mut states: SnapshotAppStates,
     mut query_gear: Query<
-        (&NetworkId, &mut Position, &mut Toggleable),
+        (
+            &NetworkId,
+            &mut Position,
+            &mut Toggleable,
+            Option<&mut Battery>,
+            Option<&mut Flashlight>,
+        ),
         (Without<PlayerSprite>, Without<GhostTag>),
     >,
-    current_game_state: Res<State<GameState>>,
+    query_net_entities: Query<(Entity, &NetworkId)>,
 ) {
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         return;
@@ -380,38 +455,69 @@ pub fn client_apply_snapshots_system(
     for ev in ev_reader.read() {
         if let NetworkMessage::Snapshot {
             tick: _,
-            game_state,
+            app_state: server_app_state_str,
+            game_state: server_game_state_str,
             players,
             ghosts,
             rooms,
             map_tiles,
             gear,
+            player_gear,
         } = &ev.message
         {
-            // Sync GameState
-            let server_state_str = game_state.as_str();
-            let current_state_str = format!("{:?}", current_game_state.get());
-
-            if server_state_str != current_state_str {
-                let new_state = match server_state_str {
-                    "None" => GameState::None,
-                    "Truck" => GameState::Truck,
-                    "Pause" => GameState::Pause,
-                    _ => *current_game_state.get(),
+            // Sync AppState
+            let current_app_state_str = format!("{:?}", states.current_app_state.get());
+            if *server_app_state_str != current_app_state_str {
+                let new_state = match server_app_state_str.as_str() {
+                    "MainMenu" => AppState::MainMenu,
+                    "InGame" => AppState::InGame,
+                    "Summary" => AppState::Summary,
+                    _ => *states.current_app_state.get(),
                 };
-                if new_state != *current_game_state.get() {
-                    game_next_state.set(new_state);
+                if new_state != *states.current_app_state.get() {
+                    states.app_next_state.set(new_state);
                 }
             }
 
+            // Sync GameState
+            let current_game_state_str = format!("{:?}", states.current_game_state.get());
+
+            if *server_game_state_str != current_game_state_str {
+                let new_state = match server_game_state_str.as_str() {
+                    "None" => GameState::None,
+                    "Truck" => GameState::Truck,
+                    "Pause" => GameState::Pause,
+                    _ => *states.current_game_state.get(),
+                };
+                if new_state != *states.current_game_state.get() {
+                    states.game_next_state.set(new_state);
+                }
+            }
+
+            let net_to_entity: std::collections::HashMap<NetworkId, Entity> =
+                query_net_entities.iter().map(|(e, id)| (*id, e)).collect();
+
             // Update players
             for p_state in players {
-                for (id, mut pos, mut anim) in query_players.iter_mut() {
+                for (p_entity, id, mut pos, mut anim, hiding, _) in query_players.iter_mut() {
                     if *id == p_state.id {
                         let old_pos = *pos;
                         pos.x = p_state.position[0];
                         pos.y = p_state.position[1];
                         pos.z = p_state.position[2];
+
+                        // 2.4 Hiding
+                        match (p_state.is_hiding, hiding) {
+                            (true, None) => {
+                                commands
+                                    .entity(p_entity)
+                                    .insert(Hiding { hiding_spot: None });
+                            }
+                            (false, Some(_)) => {
+                                commands.entity(p_entity).remove::<Hiding>();
+                            }
+                            _ => {}
+                        }
 
                         let velocity = Vec2::new(pos.x - old_pos.x, pos.y - old_pos.y);
                         if velocity.length_squared() > 0.00001 {
@@ -433,13 +539,49 @@ pub fn client_apply_snapshots_system(
                 }
             }
 
+            // Update player gear
+            for pg_state in player_gear {
+                for (_, id, _, _, _, gear) in query_players.iter_mut() {
+                    if *id == pg_state.player_id
+                        && let Some(mut gear) = gear
+                    {
+                        gear.left_hand = pg_state
+                            .left_hand
+                            .and_then(|nid| net_to_entity.get(&nid))
+                            .cloned();
+                        gear.right_hand = pg_state
+                            .right_hand
+                            .and_then(|nid| net_to_entity.get(&nid))
+                            .cloned();
+                        gear.inventory = pg_state
+                            .inventory
+                            .iter()
+                            .filter_map(|nid| net_to_entity.get(nid))
+                            .cloned()
+                            .collect();
+                        gear.held_item = pg_state
+                            .held_item
+                            .and_then(|nid| net_to_entity.get(&nid))
+                            .map(|&entity| ungear_core::components::playergear::HeldObject {
+                                entity,
+                            });
+                    }
+                }
+            }
+
             // Update ghosts
             for g_state in ghosts {
-                for (id, mut pos) in query_ghosts.iter_mut() {
+                for (id, mut pos, mut ghost) in query_ghosts.iter_mut() {
                     if *id == g_state.id {
                         pos.x = g_state.position[0];
                         pos.y = g_state.position[1];
                         pos.z = g_state.position[2];
+                        ghost.warp = g_state.warp;
+                        ghost.hunt_warning_active = g_state.hunt_warning_active;
+                        ghost.hunt_warning_intensity = g_state.hunt_warning_intensity;
+                        ghost.calm_time_secs = g_state.calm_time_secs;
+                        ghost.repellent_hits_delta = g_state.repellent_hits_delta;
+                        ghost.repellent_misses_delta = g_state.repellent_misses_delta;
                     }
                 }
             }
@@ -452,8 +594,10 @@ pub fn client_apply_snapshots_system(
                 } else {
                     TileState::Off
                 };
-                if let Some(state) = room_db.room_state.get_mut(&r_sync.name)
-                    && *state != new_state
+                if let Some(state) = room_db
+                    .room_state
+                    .get_mut(&r_sync.name)
+                    .filter(|s| **s != new_state)
                 {
                     *state = new_state;
                     room_changed = true;
@@ -483,9 +627,11 @@ pub fn client_apply_snapshots_system(
                 {
                     let entities = &board_field.0[[rel_x as usize, rel_y as usize, rel_z as usize]];
                     for &entity in entities {
-                        if let Ok((_pos, beh)) = query_tiles.get(entity)
-                            && (beh.cfg().tileset != t_sync.tileset
-                                || beh.cfg().tileuid != t_sync.tileuid)
+                        if let Some((_pos, _beh)) =
+                            query_tiles.get(entity).ok().filter(|(_, beh)| {
+                                beh.cfg().tileset != t_sync.tileset
+                                    || beh.cfg().tileuid != t_sync.tileuid
+                            })
                         {
                             debug!(
                                 "Client: Applying map tile update at {:?} (tileset: {}, tileuid: {})",
@@ -503,12 +649,24 @@ pub fn client_apply_snapshots_system(
 
             // Update gear
             for g_sync in gear {
-                for (id, mut pos, mut toggle) in query_gear.iter_mut() {
+                for (id, mut pos, mut toggle, battery, flashlight) in query_gear.iter_mut() {
                     if *id == g_sync.id {
                         pos.x = g_sync.position[0];
                         pos.y = g_sync.position[1];
                         pos.z = g_sync.position[2];
                         toggle.is_on = g_sync.is_on;
+                        if let Some(mut b) = battery {
+                            b.level = g_sync.battery;
+                        }
+                        if let (Some(mut f), Some(status)) = (
+                            flashlight,
+                            g_sync
+                                .mode
+                                .as_ref()
+                                .and_then(|m| m.parse::<FlashlightStatus>().ok()),
+                        ) {
+                            f.status = status;
+                        }
                     }
                 }
             }
@@ -539,6 +697,7 @@ pub fn host_apply_input_system(
                 use_left_hand,
                 inventory_cycle,
                 inventory_swap,
+                target_position,
             } => {
                 // In this MVP, we apply remote input to all sprites that aren't the MainPlayer.
                 // This correctly handles the single client without hardcoding IDs.
@@ -552,6 +711,7 @@ pub fn host_apply_input_system(
                     input.use_left_hand = *use_left_hand;
                     input.inventory_cycle = *inventory_cycle;
                     input.inventory_swap = *inventory_swap;
+                    input.target_position = target_position.map(|v| Vec2::new(v[0], v[1]));
                 }
             }
             NetworkMessage::RequestTruckEntry => {
@@ -612,5 +772,56 @@ pub fn autostart_net_game(
         });
     } else if matches!(cli.net_mode, NetMode::Host { .. }) {
         warn!("NetMode::Host active but no --map provided. Staying in Main Menu.");
+    }
+}
+
+pub fn host_replicate_sounds_system(
+    cli: Res<CliOptions>,
+    mut conn: ResMut<NetworkConn>,
+    mut ev_reader: MessageReader<SoundEvent>,
+) {
+    if !matches!(cli.net_mode, NetMode::Host { .. }) {
+        return;
+    }
+    if !conn.is_active() {
+        return;
+    }
+
+    for ev in ev_reader.read() {
+        conn.send(NetworkMessage::SoundEvent {
+            sound_file: ev.sound_file.clone(),
+            volume: ev.volume,
+            position: ev.position.map(|p| [p.x, p.y, p.z]),
+        });
+    }
+}
+
+pub fn client_replicate_sounds_system(
+    cli: Res<CliOptions>,
+    mut ev_reader: MessageReader<NetworkDataEvent>,
+    mut ev_sound: MessageWriter<SoundEvent>,
+) {
+    if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        return;
+    }
+
+    for ev in ev_reader.read() {
+        if let NetworkMessage::SoundEvent {
+            sound_file,
+            volume,
+            position,
+        } = &ev.message
+        {
+            ev_sound.write(SoundEvent {
+                sound_file: sound_file.clone(),
+                volume: *volume,
+                position: position.map(|p| Position {
+                    x: p[0],
+                    y: p[1],
+                    z: p[2],
+                    visual_priority: 0.0,
+                }),
+            });
+        }
     }
 }

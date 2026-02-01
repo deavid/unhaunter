@@ -6,13 +6,28 @@ use serde::{Deserialize, Serialize};
 pub struct PlayerState {
     pub id: NetworkId,
     pub position: [f32; 4], // x, y, z, orientation
-                            // We can add animation states later
+    pub is_hiding: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PlayerGearState {
+    pub player_id: NetworkId,
+    pub left_hand: Option<NetworkId>,
+    pub right_hand: Option<NetworkId>,
+    pub inventory: Vec<NetworkId>,
+    pub held_item: Option<NetworkId>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GhostState {
     pub id: NetworkId,
     pub position: [f32; 3],
+    pub warp: f32,
+    pub hunt_warning_active: bool,
+    pub hunt_warning_intensity: f32,
+    pub calm_time_secs: f32,
+    pub repellent_hits_delta: f32,
+    pub repellent_misses_delta: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -35,6 +50,8 @@ pub struct GearSyncState {
     pub id: NetworkId,
     pub position: [f32; 3],
     pub is_on: bool,
+    pub mode: Option<String>,
+    pub battery: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -51,12 +68,14 @@ pub enum NetworkMessage {
     /// Periodic state update from Host to Client.
     Snapshot {
         tick: u64,
+        app_state: String,
         game_state: String,
         players: Vec<PlayerState>,
         ghosts: Vec<GhostState>,
         rooms: Vec<RoomSync>,
         map_tiles: Vec<MapTileState>,
         gear: Vec<GearSyncState>,
+        player_gear: Vec<PlayerGearState>,
     },
     /// Periodic input update from Client to Host.
     PlayerInput {
@@ -69,9 +88,16 @@ pub enum NetworkMessage {
         use_left_hand: bool,
         inventory_cycle: bool,
         inventory_swap: bool,
+        target_position: Option<[f32; 2]>,
     },
     /// Client requests to enter the truck/van.
     RequestTruckEntry,
+    /// Replication of a sound event from Host to Client.
+    SoundEvent {
+        sound_file: String,
+        volume: f32,
+        position: Option<[f32; 3]>,
+    },
 }
 
 #[derive(Debug, Clone, Message)]
