@@ -24,6 +24,9 @@ pub struct PlayerState {
     pub id: NetworkId,
     pub position: [f32; 4], // x, y, z, orientation
     pub is_hiding: bool,
+    pub stamina: f32,
+    pub is_running: bool,
+    pub frame: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

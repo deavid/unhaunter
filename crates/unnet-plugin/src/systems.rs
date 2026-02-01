@@ -26,7 +26,7 @@ use unnet_core::messages::{
     PlayerState, RoomSync, TransientEvent,
 };
 use unnet_core::network_id::NetworkId;
-use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite};
+use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite, Stamina};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
@@ -271,6 +271,8 @@ pub fn host_send_snapshots_system(
         &unspatial_core::direction::Direction,
         Option<&Hiding>,
         Option<&PlayerGear>,
+        Option<&Stamina>,
+        &AnimationTimer,
     )>,
     query_ghosts: Query<
         (&NetworkId, &Position, &GhostSprite, &GhostBehaviorDynamics),
@@ -304,16 +306,19 @@ pub fn host_send_snapshots_system(
     let tick = (time.elapsed_secs() * 60.0) as u64;
     let players = query_players
         .iter()
-        .map(|(p, pos, dir, hiding, _)| PlayerState {
+        .map(|(p, pos, dir, hiding, _, stamina, anim)| PlayerState {
             id: p.id,
             position: [pos.x, pos.y, pos.z, f32::atan2(dir.dy, dir.dx)],
             is_hiding: hiding.is_some(),
+            stamina: stamina.map(|s| s.current).unwrap_or(100.0),
+            is_running: stamina.map(|s| s.running).unwrap_or(false),
+            frame: anim.idx() as u16,
         })
         .collect();
 
     let player_gear = query_players
         .iter()
-        .filter_map(|(p, _, _, _, gear)| {
+        .filter_map(|(p, _, _, _, gear, _, _)| {
             gear.map(|g| PlayerGearState {
                 player_id: p.id,
                 left_hand: g.left_hand.and_then(|e| query_net_id.get(e).ok().cloned()),
@@ -489,6 +494,7 @@ pub fn client_apply_snapshots_system(
             Option<&Hiding>,
             Option<&mut PlayerGear>,
             Option<&MainPlayer>,
+            &mut Stamina,
         ),
         (With<PlayerSprite>, Without<GhostTag>, Without<Behavior>),
     >,
@@ -559,8 +565,17 @@ pub fn client_apply_snapshots_system(
 
             // Update players
             for p_state in players {
-                for (p_entity, id, mut pos, mut anim, mut dir, hiding, _, _) in
-                    query_players.iter_mut()
+                for (
+                    p_entity,
+                    id,
+                    mut pos,
+                    mut anim,
+                    mut dir,
+                    hiding,
+                    _,
+                    main_player,
+                    mut stamina,
+                ) in query_players.iter_mut()
                 {
                     if *id == p_state.id {
                         let old_pos = *pos;
@@ -585,6 +600,16 @@ pub fn client_apply_snapshots_system(
                             _ => {}
                         }
 
+                        if main_player.is_none() {
+                            stamina.current = p_state.stamina;
+                            stamina.running = p_state.is_running;
+                            // We do not want to set the actual frame. there's no need to sync this as the client
+                            // is free to play the animation at its own pace. Setting the frame would open us to
+                            // sync issues.
+                            // anim.set_idx(p_state.frame as usize);
+                        }
+
+                        let animation_speed_factor = if p_state.is_running { 1.5 } else { 1.0 };
                         let velocity = Vec2::new(pos.x - old_pos.x, pos.y - old_pos.y);
                         if velocity.length_squared() > 0.00001 {
                             let dscreen = perspective::direction_to_screen_coord(
@@ -595,8 +620,11 @@ pub fn client_apply_snapshots_system(
                                 },
                             );
                             anim.set_range(
-                                CharacterAnimation::from_dir(dscreen.x * 60.0, dscreen.y * 120.0)
-                                    .to_vec(),
+                                CharacterAnimation::from_dir(
+                                    dscreen.x * 60.0 * animation_speed_factor,
+                                    dscreen.y * 120.0 * animation_speed_factor,
+                                )
+                                .to_vec(),
                             );
                         } else {
                             let dscreen = perspective::direction_to_screen_coord(*dir);
@@ -611,7 +639,7 @@ pub fn client_apply_snapshots_system(
 
             // Update player gear
             for pg_state in player_gear {
-                for (_, id, _, _, _, _, gear, _) in query_players.iter_mut() {
+                for (_, id, _, _, _, _, gear, _, _) in query_players.iter_mut() {
                     if *id == pg_state.player_id
                         && let Some(mut gear) = gear
                     {

@@ -112,6 +112,14 @@ impl AnimationTimer {
         self.frames = range.into_iter().collect();
     }
 
+    pub fn idx(&self) -> usize {
+        self.idx
+    }
+
+    pub fn set_idx(&mut self, idx: usize) {
+        self.idx = idx % self.frames.len().max(1);
+    }
+
     pub fn tick(&mut self, delta: Duration) -> Option<usize> {
         self.timer.tick(delta);
         if !self.timer.just_finished() {
