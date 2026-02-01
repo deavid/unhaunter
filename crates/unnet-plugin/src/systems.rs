@@ -1,12 +1,14 @@
 use crate::resources::{HandshakeState, NetworkConn};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use rand::Rng;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::str::FromStr;
 use unassets_core::resources::maps::Maps;
+use unassets_core::resources::upscale::UpscaleIndex;
 use unbehavior::behavior::{Behavior, Interactive};
 use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
@@ -18,8 +20,10 @@ use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEv
 use unevents_core::events::sound::SoundEvent;
 use ungear_core::components::core::Battery;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungearitems_core::components::flashlight::Flashlight;
 use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
+use unghost_core::assets::GhostAssets;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::ghost_guess::GhostGuess;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
@@ -29,15 +33,23 @@ use unnet_core::messages::{
 };
 use unnet_core::network_id::NetworkId;
 use unnet_core::resources::LocalPlayer;
+use unplayer_core::assets::PlayerAssets;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite, Stamina};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use unspatial_core::boardposition::BoardPosition;
+use unrender_std::components::visuals::{LightSensitive, ResolutionFactor, ShadowCaster};
+use unrender_std::materials::CustomMaterial1;
+use unrender_std::resources::visibility_data::VisibilityData;
+use unrender_std::utils::quadcc::QuadCC;
+use unsettings_core::audio::AudioSettings;
+use unsettings_core::controls::ControlKeys;
+use unsettings_core::video::VideoSettings;
+use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
-use untags_core::tags::GhostTag;
+use untags_core::tags::{GhostTag, PlayerTag};
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use untypes_core::cli::{CliOptions, NetMode};
@@ -82,6 +94,9 @@ pub fn startup_network_system(
                             read_buffer: String::new(),
                             write_queue: VecDeque::new(),
                             handshake: HandshakeState::None,
+                            associated_id: None,
+                            needs_full_sync: false,
+                            host_listener: None,
                         };
                     }
                 }
@@ -94,41 +109,56 @@ pub fn startup_network_system(
 pub fn network_io_system(
     mut conn: ResMut<NetworkConn>,
     mut ev_writer: MessageWriter<NetworkDataEvent>,
+    mut ev_disconnect: MessageWriter<unnet_core::messages::NetworkDisconnectEvent>,
 ) {
-    let mut new_conn = None;
+    let current_conn = std::mem::replace(&mut *conn, NetworkConn::Disconnected);
 
-    match &mut *conn {
-        NetworkConn::Disconnected => {}
+    match current_conn {
+        NetworkConn::Disconnected => {
+            *conn = NetworkConn::Disconnected;
+        }
         NetworkConn::Listening(listener) => match listener.accept() {
             Ok((stream, addr)) => {
                 info!("Network: Client connected from {}", addr);
                 if let Err(e) = stream.set_nonblocking(true) {
                     error!("Failed to set client stream non-blocking: {}", e);
+                    *conn = NetworkConn::Listening(listener);
                 } else {
-                    new_conn = Some(NetworkConn::Active {
+                    *conn = NetworkConn::Active {
                         stream,
                         read_buffer: String::new(),
                         write_queue: VecDeque::new(),
                         handshake: HandshakeState::None,
-                    });
+                        associated_id: None,
+                        needs_full_sync: false,
+                        host_listener: Some(listener),
+                    };
                 }
             }
-            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
-            Err(e) => error!("Network: Accept error: {}", e),
+            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                *conn = NetworkConn::Listening(listener);
+            }
+            Err(e) => {
+                error!("Network: Accept error: {}", e);
+                *conn = NetworkConn::Listening(listener);
+            }
         },
         NetworkConn::Active {
             stream,
-            read_buffer,
-            write_queue,
-            handshake: _,
+            mut read_buffer,
+            mut write_queue,
+            handshake,
+            associated_id,
+            needs_full_sync,
+            host_listener,
         } => {
+            let mut closed = false;
             // --- Read ---
             let mut buf = [0u8; 4096];
-            match stream.read(&mut buf) {
+            match (&stream).read(&mut buf) {
                 Ok(0) => {
                     info!("Network: Connection closed by peer");
-                    *conn = NetworkConn::Disconnected;
-                    return;
+                    closed = true;
                 }
                 Ok(n) => {
                     if let Ok(s) = std::str::from_utf8(&buf[..n]) {
@@ -150,36 +180,78 @@ pub fn network_io_system(
                                 }
                             }
                         }
-                        *read_buffer = read_buffer[pos + 1..].to_string();
+                        read_buffer = read_buffer[pos + 1..].to_string();
                     }
                 }
                 Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
                 Err(e) => {
                     error!("Network: Read error: {}", e);
-                    *conn = NetworkConn::Disconnected;
-                    return;
+                    closed = true;
                 }
             }
 
-            // --- Write ---
-            while let Some(msg) = write_queue.pop_front() {
-                match serde_json::to_string(&msg) {
-                    Ok(mut json) => {
-                        json.push('\n');
-                        if let Err(e) = stream.write_all(json.as_bytes()) {
-                            error!("Network: Write error: {}", e);
-                            *conn = NetworkConn::Disconnected;
-                            return;
+            if !closed {
+                // --- Write ---
+                while let Some(msg) = write_queue.pop_front() {
+                    match serde_json::to_string(&msg) {
+                        Ok(mut json) => {
+                            json.push('\n');
+                            if let Err(e) = (&stream).write_all(json.as_bytes()) {
+                                error!("Network: Write error: {}", e);
+                                closed = true;
+                                break;
+                            }
                         }
+                        Err(e) => error!("Network: Serialization error: {}", e),
                     }
-                    Err(e) => error!("Network: Serialization error: {}", e),
                 }
+            }
+
+            if closed {
+                if let Some(id) = associated_id {
+                    ev_disconnect.write(unnet_core::messages::NetworkDisconnectEvent { id });
+                }
+                if let Some(listener) = host_listener {
+                    info!("Network: Re-entering Listening state.");
+                    *conn = NetworkConn::Listening(listener);
+                } else {
+                    *conn = NetworkConn::Disconnected;
+                }
+            } else {
+                *conn = NetworkConn::Active {
+                    stream,
+                    read_buffer,
+                    write_queue,
+                    handshake,
+                    associated_id,
+                    needs_full_sync,
+                    host_listener,
+                };
             }
         }
     }
+}
 
-    if let Some(c) = new_conn {
-        *conn = c;
+pub fn host_handle_disconnects_system(
+    mut ev_disconnect: MessageReader<unnet_core::messages::NetworkDisconnectEvent>,
+    query_players: Query<
+        (Entity, &NetworkId),
+        (
+            With<PlayerTag>,
+            Without<unplayer_core::components::PlayerDisconnected>,
+        ),
+    >,
+    mut commands: Commands,
+) {
+    for ev in ev_disconnect.read() {
+        for (entity, id) in query_players.iter() {
+            if id == &ev.id {
+                info!("Network: Marking player {:?} as disconnected", id);
+                commands
+                    .entity(entity)
+                    .insert(unplayer_core::components::PlayerDisconnected);
+            }
+        }
     }
 }
 
@@ -190,9 +262,15 @@ pub fn handshake_handler_system(
     mut local_id: ResMut<LocalPlayer>,
     mut pending_map: ResMut<crate::resources::PendingMapLoad>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
+    mut commands: Commands,
+    query_disconnected: Query<
+        (Entity, &NetworkId),
+        With<unplayer_core::components::PlayerDisconnected>,
+    >,
 ) {
     let mut to_send = Vec::new();
     let mut new_handshake = None;
+    let mut associate_id = None;
 
     if let NetworkConn::Active { handshake, .. } = &*conn {
         // Client side automatic Hello
@@ -200,6 +278,7 @@ pub fn handshake_handler_system(
             info!("Network: Sending Hello...");
             to_send.push(NetworkMessage::Hello {
                 version: "0.1.0".to_string(),
+                previous_id: local_id.0,
             });
             new_handshake = Some(HandshakeState::HelloSent);
         }
@@ -211,13 +290,34 @@ pub fn handshake_handler_system(
 
         for msg in events {
             match msg {
-                NetworkMessage::Hello { version } => {
-                    info!("Network: Received Hello (version: {})", version);
+                NetworkMessage::Hello {
+                    version,
+                    previous_id,
+                } => {
+                    info!(
+                        "Network: Received Hello (version: {}, prev_id: {:?})",
+                        version, previous_id
+                    );
                     if matches!(cli.net_mode, NetMode::Host { .. }) {
-                        info!("Network: Sending Welcome...");
+                        let id = previous_id.unwrap_or(NetworkId(2)); // Client is always 2 in MVP
+                        info!("Network: Sending Welcome to {:?}...", id);
+
+                        // Check if we can re-associate with an existing disconnected entity
+                        for (entity, disc_id) in query_disconnected.iter() {
+                            if disc_id == &id {
+                                info!(
+                                    "Network: Re-associating connection with entity {:?}",
+                                    entity
+                                );
+                                commands
+                                    .entity(entity)
+                                    .remove::<unplayer_core::components::PlayerDisconnected>();
+                            }
+                        }
+
                         let seed = unfoundation_core::random_seed::heavy_rng_seed();
                         to_send.push(NetworkMessage::Welcome {
-                            id: NetworkId(2), // Client is always 2 in MVP
+                            id,
                             map_seed: seed,
                             map_filepath: cli.map_path.clone().unwrap_or_default(),
                             difficulty_id: cli
@@ -226,6 +326,7 @@ pub fn handshake_handler_system(
                                 .unwrap_or("medium".to_string()),
                         });
                         new_handshake = Some(HandshakeState::Completed);
+                        associate_id = Some(id);
                     }
                 }
                 NetworkMessage::Welcome {
@@ -262,8 +363,23 @@ pub fn handshake_handler_system(
         }
     }
 
-    if let (Some(hs), NetworkConn::Active { handshake, .. }) = (new_handshake, &mut *conn) {
+    if let (
+        Some(hs),
+        NetworkConn::Active {
+            handshake,
+            associated_id,
+            needs_full_sync,
+            ..
+        },
+    ) = (new_handshake, &mut *conn)
+    {
         *handshake = hs;
+        if let Some(id) = associate_id {
+            *associated_id = Some(id);
+            if hs == HandshakeState::Completed {
+                *needs_full_sync = true;
+            }
+        }
     }
     for msg in to_send {
         conn.send(msg);
@@ -304,6 +420,7 @@ pub struct HostSnapshotParams<'w, 's> {
         's,
         (
             &'static NetworkId,
+            &'static ungear_core::types::gear::kind::GearKind,
             &'static Position,
             &'static Toggleable,
             Option<&'static Battery>,
@@ -425,31 +542,34 @@ pub fn host_send_snapshots_system(
     let gear = host_params
         .query_gear
         .iter()
-        .map(|(id, pos, toggle, battery, flashlight, sage, repellent)| {
-            let details = if let Some(f) = flashlight {
-                unnet_core::messages::GearDetails::Flashlight(f.status.clone())
-            } else if let Some(s) = sage {
-                unnet_core::messages::GearDetails::Sage {
-                    consumed: s.consumed,
-                    is_active: s.is_active,
-                    remaining_secs: s.burn_timer.remaining_secs(),
+        .map(
+            |(id, kind, pos, toggle, battery, flashlight, sage, repellent)| {
+                let details = if let Some(f) = flashlight {
+                    unnet_core::messages::GearDetails::Flashlight(f.status.clone())
+                } else if let Some(s) = sage {
+                    unnet_core::messages::GearDetails::Sage {
+                        consumed: s.consumed,
+                        is_active: s.is_active,
+                        remaining_secs: s.burn_timer.remaining_secs(),
+                    }
+                } else if let Some(r) = repellent {
+                    unnet_core::messages::GearDetails::RepellentFlask {
+                        qty: r.qty,
+                        active: r.active,
+                    }
+                } else {
+                    unnet_core::messages::GearDetails::None
+                };
+                GearSyncState {
+                    id: *id,
+                    kind: *kind,
+                    position: [pos.x, pos.y, pos.z],
+                    is_on: toggle.is_on,
+                    details,
+                    battery: battery.map(|b| b.level).unwrap_or(0.0),
                 }
-            } else if let Some(r) = repellent {
-                unnet_core::messages::GearDetails::RepellentFlask {
-                    qty: r.qty,
-                    active: r.active,
-                }
-            } else {
-                unnet_core::messages::GearDetails::None
-            };
-            GearSyncState {
-                id: *id,
-                position: [pos.x, pos.y, pos.z],
-                is_on: toggle.is_on,
-                details,
-                battery: battery.map(|b| b.level).unwrap_or(0.0),
-            }
-        })
+            },
+        )
         .collect();
 
     let mut events: Vec<unnet_core::messages::TransientEvent> = ev_sound
@@ -463,8 +583,19 @@ pub fn host_send_snapshots_system(
 
     events.extend(ev_transient.read().cloned());
 
+    let mut is_full_sync = false;
+    if let NetworkConn::Active {
+        needs_full_sync, ..
+    } = &mut *conn
+        && *needs_full_sync
+    {
+        is_full_sync = true;
+        *needs_full_sync = false;
+    }
+
     conn.send(NetworkMessage::Snapshot {
         tick,
+        is_full_sync,
         app_state: *host_params.app_state.get(),
         game_state: *host_params.game_state.get(),
         players,
@@ -487,6 +618,31 @@ pub fn host_send_snapshots_system(
             .cloned()
             .collect(),
         ghost_type_guess: host_params.ghost_guess.ghost_type,
+        mission_result: Box::new(if *host_params.app_state.get() == AppState::Summary {
+            Some(unnet_core::messages::MissionResult {
+                time_taken_secs: host_params.summary_data.time_taken_secs,
+                ghost_types: host_params.summary_data.ghost_types.clone(),
+                repellent_used_amt: host_params.summary_data.repellent_used_amt,
+                ghosts_unhaunted: host_params.summary_data.ghosts_unhaunted,
+                base_score: host_params.summary_data.base_score,
+                difficulty_multiplier: host_params.summary_data.difficulty_multiplier,
+                grade_multiplier: host_params.summary_data.grade_multiplier,
+                average_sanity: host_params.summary_data.average_sanity,
+                player_count: host_params.summary_data.player_count as u32,
+                alive_count: host_params.summary_data.alive_count as u32,
+                full_score: host_params.summary_data.full_score,
+                mission_successful: host_params.summary_data.mission_successful,
+                money_earned: host_params.summary_data.money_earned,
+                grade_achieved: host_params.summary_data.grade_achieved,
+                required_deposit: host_params.summary_data.required_deposit,
+                mission_reward_base: host_params.summary_data.mission_reward_base,
+                deposit_originally_held: host_params.summary_data.deposit_originally_held,
+                deposit_returned_to_bank: host_params.summary_data.deposit_returned_to_bank,
+                costs_deducted_from_deposit: host_params.summary_data.costs_deducted_from_deposit,
+            })
+        } else {
+            None
+        }),
     });
 }
 
@@ -537,6 +693,15 @@ pub struct ClientSnapshotParams<'w, 's> {
     pub commands: Commands<'w, 's>,
     pub cli: Res<'w, CliOptions>,
     pub asset_server: Res<'w, AssetServer>,
+    pub player_assets: Res<'w, PlayerAssets>,
+    pub ghost_assets: Res<'w, GhostAssets>,
+    pub gear_registry: Res<'w, GearSpawnerRegistry>,
+    pub upscale_idx: Res<'w, UpscaleIndex>,
+    pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
+    pub meshes: ResMut<'w, Assets<Mesh>>,
+    pub video_settings: Res<'w, Persistent<VideoSettings>>,
+    pub audio_settings: Res<'w, Persistent<AudioSettings>>,
+    pub control_settings: Res<'w, Persistent<ControlKeys>>,
     pub query_players: Query<
         'w,
         's,
@@ -597,6 +762,76 @@ pub struct ClientSnapshotParams<'w, 's> {
     pub summary_data: ResMut<'w, SummaryData>,
 }
 
+fn spawn_remote_player(params: &mut ClientSnapshotParams, id: NetworkId) -> Entity {
+    let player_rf = 1.0;
+    let player_image = params.player_assets.character.clone();
+    let sprite_size = Vec2::new(32.0 * player_rf, 32.0 * player_rf);
+    let anchor = unplayer_core::assets::PLAYER_ANCHOR;
+    let sprite_anchor = Vec2::new(
+        sprite_size.x * (anchor.x + 0.5),
+        sprite_size.y * (0.5 - anchor.y),
+    );
+    let src_mesh_handle = params
+        .meshes
+        .add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
+
+    let mut material = CustomMaterial1::from_texture(player_image.clone());
+    material.data.sheet_cols = 16;
+    material.data.sheet_rows = 4;
+    material.data.sprite_width = 32.0 * player_rf;
+    material.data.sprite_height = 32.0 * player_rf;
+    material.data.upscale_factor = player_rf;
+    material.data.y_anchor = anchor.y;
+
+    let material_handle = params.materials1.add(material);
+
+    let mut ec = params.commands.spawn(Mesh2d(src_mesh_handle.clone()));
+    ec.insert(MeshMaterial2d(material_handle))
+        .insert(Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::new(
+            1.0 / player_rf,
+            1.0 / player_rf,
+            1.0 / player_rf,
+        )))
+        .insert(ResolutionFactor(player_rf))
+        .insert(GameSprite)
+        .insert(unrender_std::components::game::MapTileSprite)
+        .insert(SpriteLayer(0.00001));
+
+    ec.insert(PlayerSprite::new(id, Position::new_i64(0, 0, 0)))
+        .insert(id)
+        .insert(PlayerInput::default())
+        .insert(VisibilityData::default())
+        .insert(PlayerTag)
+        .insert(ShadowCaster::default())
+        .insert(Position::new_i64(0, 0, 0))
+        .insert(MapEntityFieldBPos(
+            Position::new_i64(0, 0, 0).to_board_position(),
+        ))
+        .insert(unbehavior::components::Movable)
+        .insert(LightSensitive {
+            exposure_factor: 1.1,
+            bias: 0.01,
+        })
+        .insert(unspatial_core::direction::Direction::new_right())
+        .insert(AnimationTimer::from_range(
+            Timer::from_seconds(0.20, TimerMode::Repeating),
+            CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
+        ))
+        .insert(Stamina::default())
+        .insert(unnavigation_core::components::waypoint::WaypointQueue::default())
+        .insert(PlayerGear::default());
+
+    ec.id()
+}
+
+fn spawn_remote_gear(params: &mut ClientSnapshotParams, g_sync: &GearSyncState) -> Entity {
+    let entity = params
+        .gear_registry
+        .spawn(&mut params.commands, g_sync.kind);
+    params.commands.entity(entity).insert(g_sync.id);
+    entity
+}
+
 pub fn client_apply_snapshots_system(
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut params: ClientSnapshotParams,
@@ -608,6 +843,7 @@ pub fn client_apply_snapshots_system(
     for ev in ev_reader.read() {
         if let NetworkMessage::Snapshot {
             tick: _,
+            is_full_sync,
             app_state: server_app_state,
             game_state: server_game_state,
             players,
@@ -620,8 +856,10 @@ pub fn client_apply_snapshots_system(
             evidences_found,
             evidences_missing,
             ghost_type_guess,
+            mission_result,
         } = &ev.message
         {
+            let is_full_sync = *is_full_sync;
             // Sync AppState
             if *server_app_state != *params.states.current_app_state.get() {
                 params.states.app_next_state.set(*server_app_state);
@@ -638,11 +876,42 @@ pub fn client_apply_snapshots_system(
                 .map(|(e, id)| (*id, e))
                 .collect();
 
+            if is_full_sync {
+                let mut seen_ids = std::collections::HashSet::new();
+                for p in players {
+                    seen_ids.insert(p.id);
+                }
+                for g in gear {
+                    seen_ids.insert(g.id);
+                }
+                for g in ghosts {
+                    seen_ids.insert(g.id);
+                }
+                for (entity, id) in params.query_net_entities.iter() {
+                    if !seen_ids.contains(id) {
+                        let is_main = params
+                            .query_players
+                            .get(entity)
+                            .map(|q| q.7.is_some())
+                            .unwrap_or(false);
+                        if !is_main {
+                            params.commands.entity(entity).despawn();
+                        }
+                    }
+                }
+            }
+
             // Update players
             for p_state in players {
-                for (
-                    p_entity,
-                    id,
+                let p_entity = if let Some(e) = net_to_entity.get(&p_state.id) {
+                    *e
+                } else {
+                    spawn_remote_player(&mut params, p_state.id)
+                };
+
+                if let Ok((
+                    _p_entity,
+                    _id,
                     mut pos,
                     mut anim,
                     mut dir,
@@ -650,63 +919,61 @@ pub fn client_apply_snapshots_system(
                     _,
                     main_player,
                     mut stamina,
-                ) in params.query_players.iter_mut()
+                )) = params.query_players.get_mut(p_entity)
                 {
-                    if *id == p_state.id {
-                        let old_pos = *pos;
-                        pos.x = p_state.position[0];
-                        pos.y = p_state.position[1];
-                        pos.z = p_state.position[2];
+                    let old_pos = *pos;
+                    pos.x = p_state.position[0];
+                    pos.y = p_state.position[1];
+                    pos.z = p_state.position[2];
 
-                        let orientation = p_state.position[3];
-                        dir.dx = f32::cos(orientation);
-                        dir.dy = f32::sin(orientation);
+                    let orientation = p_state.position[3];
+                    dir.dx = f32::cos(orientation);
+                    dir.dy = f32::sin(orientation);
 
-                        // 2.4 Hiding
-                        match (p_state.is_hiding, hiding) {
-                            (true, None) => {
-                                params
-                                    .commands
-                                    .entity(p_entity)
-                                    .insert(Hiding { hiding_spot: None });
-                            }
-                            (false, Some(_)) => {
-                                params.commands.entity(p_entity).remove::<Hiding>();
-                            }
-                            _ => {}
+                    // 2.4 Hiding
+                    match (p_state.is_hiding, hiding) {
+                        (true, None) => {
+                            params
+                                .commands
+                                .entity(p_entity)
+                                .insert(Hiding { hiding_spot: None });
                         }
-
-                        if main_player.is_none() {
-                            stamina.current = p_state.stamina;
-                            stamina.running = p_state.is_running;
-                            // No need to sync frame directly as it causes jitter with local animation timer.
-                            // The range and stamina.running are enough for local reproduction.
+                        (false, Some(_)) => {
+                            params.commands.entity(p_entity).remove::<Hiding>();
                         }
+                        _ => {}
+                    }
 
-                        let animation_speed_factor = if p_state.is_running { 1.5 } else { 1.0 };
-                        let velocity = Vec2::new(pos.x - old_pos.x, pos.y - old_pos.y);
-                        if velocity.length_squared() > 0.00001 {
-                            let dscreen = perspective::direction_to_screen_coord(
-                                unspatial_core::direction::Direction {
-                                    dx: velocity.x,
-                                    dy: velocity.y,
-                                    dz: 0.0,
-                                },
-                            );
-                            anim.set_range(
-                                CharacterAnimation::from_dir(
-                                    dscreen.x * 60.0 * animation_speed_factor,
-                                    dscreen.y * 120.0 * animation_speed_factor,
-                                )
+                    if main_player.is_none() {
+                        stamina.current = p_state.stamina;
+                        stamina.running = p_state.is_running;
+                        // No need to sync frame directly as it causes jitter with local animation timer.
+                        // The range and stamina.running are enough for local reproduction.
+                    }
+
+                    let animation_speed_factor = if p_state.is_running { 1.5 } else { 1.0 };
+                    let velocity = Vec2::new(pos.x - old_pos.x, pos.y - old_pos.y);
+                    if velocity.length_squared() > 0.00001 {
+                        let dscreen = perspective::direction_to_screen_coord(
+                            unspatial_core::direction::Direction {
+                                dx: velocity.x,
+                                dy: velocity.y,
+                                dz: 0.0,
+                            },
+                        );
+                        anim.set_range(
+                            CharacterAnimation::from_dir(
+                                dscreen.x * 60.0 * animation_speed_factor,
+                                dscreen.y * 120.0 * animation_speed_factor,
+                            )
+                            .to_vec(),
+                        );
+                    } else {
+                        let dscreen = perspective::direction_to_screen_coord(*dir);
+                        anim.set_range(
+                            CharacterAnimation::from_dir(dscreen.x * 0.001, dscreen.y * 0.001)
                                 .to_vec(),
-                            );
-                        } else {
-                            let dscreen = perspective::direction_to_screen_coord(*dir);
-                            anim.set_range(
-                                CharacterAnimation::from_dir(dscreen.x * 0.001, dscreen.y * 0.001)
-                                    .to_vec(),
-                            );
-                        }
+                        );
                     }
                 }
             }
@@ -834,48 +1101,52 @@ pub fn client_apply_snapshots_system(
 
             // Update gear
             for g_sync in gear {
-                for (id, mut pos, mut toggle, battery, flashlight, sage, repellent) in
-                    params.query_gear.iter_mut()
+                let g_entity = if let Some(e) = net_to_entity.get(&g_sync.id) {
+                    *e
+                } else {
+                    spawn_remote_gear(&mut params, g_sync)
+                };
+
+                if let Ok((_, mut pos, mut toggle, battery, flashlight, sage, repellent)) =
+                    params.query_gear.get_mut(g_entity)
                 {
-                    if *id == g_sync.id {
-                        pos.x = g_sync.position[0];
-                        pos.y = g_sync.position[1];
-                        pos.z = g_sync.position[2];
-                        toggle.is_on = g_sync.is_on;
-                        if let Some(mut b) = battery {
-                            b.level = g_sync.battery;
-                        }
+                    pos.x = g_sync.position[0];
+                    pos.y = g_sync.position[1];
+                    pos.z = g_sync.position[2];
+                    toggle.is_on = g_sync.is_on;
+                    if let Some(mut b) = battery {
+                        b.level = g_sync.battery;
+                    }
 
-                        match &g_sync.details {
-                            unnet_core::messages::GearDetails::Flashlight(status) => {
-                                if let Some(mut f) = flashlight {
-                                    f.status = status.clone();
-                                }
+                    match &g_sync.details {
+                        unnet_core::messages::GearDetails::Flashlight(status) => {
+                            if let Some(mut f) = flashlight {
+                                f.status = status.clone();
                             }
-                            unnet_core::messages::GearDetails::Sage {
-                                consumed,
-                                is_active,
-                                remaining_secs,
-                            } => {
-                                if let Some(mut s) = sage {
-                                    s.consumed = *consumed;
-                                    s.is_active = *is_active;
-
-                                    let elapsed =
-                                        s.burn_timer.duration().as_secs_f32() - remaining_secs;
-                                    s.burn_timer.set_elapsed(std::time::Duration::from_secs_f32(
-                                        elapsed.max(0.0),
-                                    ));
-                                }
-                            }
-                            unnet_core::messages::GearDetails::RepellentFlask { qty, active } => {
-                                if let Some(mut r) = repellent {
-                                    r.qty = *qty;
-                                    r.active = *active;
-                                }
-                            }
-                            unnet_core::messages::GearDetails::None => {}
                         }
+                        unnet_core::messages::GearDetails::Sage {
+                            consumed,
+                            is_active,
+                            remaining_secs,
+                        } => {
+                            if let Some(mut s) = sage {
+                                s.consumed = *consumed;
+                                s.is_active = *is_active;
+
+                                let elapsed =
+                                    s.burn_timer.duration().as_secs_f32() - remaining_secs;
+                                s.burn_timer.set_elapsed(std::time::Duration::from_secs_f32(
+                                    elapsed.max(0.0),
+                                ));
+                            }
+                        }
+                        unnet_core::messages::GearDetails::RepellentFlask { qty, active } => {
+                            if let Some(mut r) = repellent {
+                                r.qty = *qty;
+                                r.active = *active;
+                            }
+                        }
+                        unnet_core::messages::GearDetails::None => {}
                     }
                 }
             }
@@ -944,7 +1215,8 @@ pub fn client_apply_snapshots_system(
             }
 
             // Sync GhostGuess
-            let ghost_guess_changed = params.ghost_guess.ghost_type != *ghost_type_guess
+            let ghost_guess_changed = is_full_sync
+                || params.ghost_guess.ghost_type != *ghost_type_guess
                 || params.ghost_guess.evidences_found.len() != evidences_found.len()
                 || params.ghost_guess.evidences_missing.len() != evidences_missing.len()
                 || !evidences_found
@@ -981,6 +1253,29 @@ pub fn client_apply_snapshots_system(
                         _ => {}
                     }
                 }
+            }
+
+            // Sync Mission Result
+            if let Some(res) = &**mission_result {
+                params.summary_data.time_taken_secs = res.time_taken_secs;
+                params.summary_data.ghost_types = res.ghost_types.clone();
+                params.summary_data.repellent_used_amt = res.repellent_used_amt;
+                params.summary_data.ghosts_unhaunted = res.ghosts_unhaunted;
+                params.summary_data.base_score = res.base_score;
+                params.summary_data.difficulty_multiplier = res.difficulty_multiplier;
+                params.summary_data.grade_multiplier = res.grade_multiplier;
+                params.summary_data.average_sanity = res.average_sanity;
+                params.summary_data.player_count = res.player_count as usize;
+                params.summary_data.alive_count = res.alive_count as usize;
+                params.summary_data.full_score = res.full_score;
+                params.summary_data.mission_successful = res.mission_successful;
+                params.summary_data.money_earned = res.money_earned;
+                params.summary_data.grade_achieved = res.grade_achieved;
+                params.summary_data.required_deposit = res.required_deposit;
+                params.summary_data.mission_reward_base = res.mission_reward_base;
+                params.summary_data.deposit_originally_held = res.deposit_originally_held;
+                params.summary_data.deposit_returned_to_bank = res.deposit_returned_to_bank;
+                params.summary_data.costs_deducted_from_deposit = res.costs_deducted_from_deposit;
             }
         } else if let NetworkMessage::MissionSummary { result } = &ev.message {
             params.summary_data.time_taken_secs = result.time_taken_secs;

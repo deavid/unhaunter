@@ -26,6 +26,9 @@ pub enum NetworkConn {
         read_buffer: String,
         write_queue: VecDeque<NetworkMessage>,
         handshake: HandshakeState,
+        associated_id: Option<unnet_core::network_id::NetworkId>,
+        needs_full_sync: bool,
+        host_listener: Option<std::net::TcpListener>,
     },
 }
 

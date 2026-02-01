@@ -631,6 +631,7 @@ sound.
 #### 2.1: Sync `PlayerGear`
 
 - **Action**: Add `PlayerGearState` to `NetworkMessage::Snapshot`:
+
   ```rust
   pub struct PlayerGearState {
       pub player_id: u64,
@@ -640,6 +641,7 @@ sound.
       pub held_item: Option<u64>,
   }
   ```
+
 - **Action**: Host populates this from `Query<(&PlayerSprite, &PlayerGear)>`.
 - **Action**: Client applies this by:
   1. Looking up gear entities by `NetworkId`.
@@ -649,6 +651,7 @@ sound.
 #### 2.2: Sync Flashlight Mode
 
 - **Action**: Expand `GearSyncState`:
+
   ```rust
   pub struct GearSyncState {
       pub id: u32,
@@ -658,6 +661,7 @@ sound.
       pub battery: f32,
   }
   ```
+
 - **Action**: Host encodes `Flashlight::status` as a string.
 - **Action**: Client decodes and updates `Flashlight` component.
 - **Validation**: Host cycles flashlight modes → Client sees correct brightness.
@@ -665,6 +669,7 @@ sound.
 #### 2.3: Sync Ghost Visual State
 
 - **Action**: Expand `GhostState`:
+
   ```rust
   pub struct GhostState {
       pub position: [f32; 3],
@@ -676,6 +681,7 @@ sound.
       pub repellent_misses_delta: f32,
   }
   ```
+
 - **Action**: Host copies from `GhostSprite` component.
 - **Action**: Client writes to `GhostSprite` component (instead of computing locally).
 - **Validation**: Host sees ghost warp → Client sees identical warp effect.
@@ -739,9 +745,11 @@ sound.
 #### 4.2: Option B - Query All Lights
 
 - **Action**: Change `gather_flashlights_system` to:
+
   ```rust
   q_all_lights: Query<(&LightEmitter, &Toggleable, &Position)>,
   ```
+
 - **Action**: Iterate over **all** lights, not just those in `PlayerGear`.
 - **Issue**: This might include deployed lights and other light sources, mixing them with handheld ones.
 - **Decision**: Use Option A (sync `PlayerGear`).
@@ -755,19 +763,23 @@ sound.
 #### 5.1: Add Diagnostic Logging
 
 - **Action**: Add `info!()` in `client_apply_snapshots_system` when processing `MapTileState`.
+
   ```rust
   info!("Client: Applying map tile at ({}, {}, {}): {} -> {}",
         t_sync.x, t_sync.y, t_sync.z, beh.cfg().tileuid, t_sync.tileuid);
   ```
+
 - **Action**: Add `info!()` in `execute_interaction` when changing door state.
 - **Goal**: Determine if the Client is receiving and processing door updates.
 
 #### 5.2: Fix Query Mismatch
 
 - **Action**: Ensure `query_tiles` on the Client uses the **same filters** as `query_map_tiles` on the Host:
+
   ```rust
   query_tiles: Query<(&Position, &Behavior), With<Interactive>>,
   ```
+
 - **Validation**: Door updates are received and applied on Client.
 
 #### 5.3: Test Room-Connected Doors
@@ -810,32 +822,34 @@ sound.
 
 ---
 
-### Phase 8: Polish & Edge Cases (2-3 days)
+### Phase 8: Reconnection & Session Persistence (2-3 days)
 
-**Goal**: Handle disconnections, late joins, and other edge cases.
+**Goal**: Allow clients to reconnect after a disconnect and continue their session exactly where they left off.
 
-#### 8.1: Late Join (Client Joins Mid-Session)
+#### 8.1: Ghosting & Entity Retention
 
-- **Current**: Client joins → receives Welcome → loads map → starts receiving snapshots.
-- **Issue**: Client might receive snapshots before map finishes loading.
-- **Action**: Add a "full sync" message that includes:
-  - All entity states (not just deltas).
-  - Map seed and initial RNG state (if deterministic).
-- **Validation**: Client joins mid-game → sees correct world state.
+- **Problem**: When a client disconnects, the Host currently treats it as a permanent leave, which can lead to item loss
+  if the player was holding gear.
+- **Action**: On Host: Detect disconnects and mark the `PlayerSprite` as "Inactive" instead of despawning immediately.
+- **Action**: Keep the player's gear and position in the world so they are exactly where they were upon return.
+- **Validation**: Killing the client process leaves the representative "ghost" player in the world on the Host.
 
-#### 8.2: Disconnection Handling
+#### 8.2: Connection Re-association
 
-- **Current**: Disconnect → game freezes or crashes.
-- **Action**: Host detects disconnect → removes Client player entity → continues as single-player.
-- **Action**: Client detects disconnect → shows "Connection Lost" message → returns to main menu.
-- **Validation**: Disconnect doesn't crash either instance.
+- **Problem**: The Host currently hardcodes `NetworkId(2)`. This prevents a client from re-joining their own slot if the
+  Host still thinks the old connection is alive (or just assigns a new ID).
+- **Action**: Update the handshake so the Client can include its previous `NetworkId` in the `Hello` message.
+- **Action**: Host validates the ID and re-links the new TCP stream to the existing "Inactive" player entity.
 
-#### 8.3: Snapshot Rate Tuning
+#### 8.3: Full State Reconciliation (The "Join-in-Progress" Fix)
 
-- **Current**: 60 Hz snapshots (~30 KB/s).
-- **Action**: Profile actual bandwidth usage.
-- **Action**: Consider delta compression (only send changed fields).
-- **Goal**: Reduce bandwidth without increasing latency.
+- **Problem**: A re-joining (or late-joining) client starts with a blank world and might miss the current ghost
+  evidence, toggled light states, or open doors.
+- **Action**: Implement a "Full Sync" flag in the snapshot or a dedicated message sent immediately after `Welcome`.
+- **Action**: Ensure the client overwrites all local state (including `GhostGuess`, `SummaryData`, and all `Interactive`
+  states) to match the Host immediately.
+- **Validation**: Disconnect -> Reconnect -> Client is holding the same flashlight in the same room with the same
+  evidence discovered.
 
 ---
 

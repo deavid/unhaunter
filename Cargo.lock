@@ -6316,6 +6316,7 @@ dependencies = [
  "bevy",
  "serde",
  "unfoundation-core",
+ "ungear-core",
  "ungearitems-core",
  "unghost-core",
  "untypes-core",
@@ -6326,6 +6327,7 @@ name = "unnet-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "rand 0.9.2",
  "serde_json",
  "unassets-core",
@@ -6338,9 +6340,11 @@ dependencies = [
  "ungearitems-core",
  "unghost-core",
  "uninteraction-core",
+ "unnavigation-core",
  "unnet-core",
  "unplayer-core",
  "unrender-std",
+ "unsettings-core",
  "unspatial-core",
  "unsummary-core",
  "untags-core",

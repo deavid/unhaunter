@@ -81,6 +81,7 @@ pub struct RoomSync {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GearSyncState {
     pub id: NetworkId,
+    pub kind: ungear_core::types::gear::kind::GearKind,
     pub position: [f32; 3],
     pub is_on: bool,
     pub details: GearDetails,
@@ -126,7 +127,10 @@ pub enum TransientEvent {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum NetworkMessage {
     /// Initial handshake from Client to Host.
-    Hello { version: String },
+    Hello {
+        version: String,
+        previous_id: Option<NetworkId>,
+    },
     /// Response from Host to Client.
     Welcome {
         id: NetworkId,
@@ -137,6 +141,7 @@ pub enum NetworkMessage {
     /// Periodic state update from Host to Client.
     Snapshot {
         tick: u64,
+        is_full_sync: bool,
         app_state: AppState,
         game_state: GameState,
         players: Vec<PlayerState>,
@@ -149,6 +154,7 @@ pub enum NetworkMessage {
         evidences_found: Vec<Evidence>,
         evidences_missing: Vec<Evidence>,
         ghost_type_guess: Option<GhostType>,
+        mission_result: Box<Option<MissionResult>>,
     },
     /// Periodic input update from Client to Host.
     PlayerInput {
@@ -185,4 +191,9 @@ pub enum NetworkMessage {
 #[derive(Debug, Clone, Message)]
 pub struct NetworkDataEvent {
     pub message: NetworkMessage,
+}
+
+#[derive(Debug, Clone, Message)]
+pub struct NetworkDisconnectEvent {
+    pub id: NetworkId,
 }

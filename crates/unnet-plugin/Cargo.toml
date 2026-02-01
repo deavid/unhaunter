@@ -29,6 +29,9 @@ unboard-core = { path = "../unboard-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 unrender-std = { path = "../unrender-std" }
 unassets-core = { path = "../unassets-core" }
+unsettings-core = { path = "../unsettings-core" }
+unnavigation-core = { path = "../unnavigation-core" }
 rand = { workspace = true }
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
 serde_json = { workspace = true }

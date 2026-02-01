@@ -8,6 +8,10 @@ use unspatial_core::position::Position;
 #[derive(Component, Debug, Clone, Default)]
 pub struct MainPlayer;
 
+/// Component added to players who have disconnected but whose entity is being retained.
+#[derive(Component, Debug, Clone, Default)]
+pub struct PlayerDisconnected;
+
 /// Component that acts as a virtual joystick for player movement.
 /// All input systems write to this component, and the movement system reads from it.
 #[derive(Component, Debug, Default, Clone)]
