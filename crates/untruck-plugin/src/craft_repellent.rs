@@ -54,7 +54,12 @@ pub(crate) fn craft_repellent(
 
         // Put in right hand (swap if needed)
         if let Some(old_rh) = playergear.right_hand.take() {
-            playergear.inventory.push(old_rh);
+            if playergear.inventory.len() < 2 {
+                playergear.inventory.push(old_rh);
+            } else {
+                // No space in backpack, return to van (despawn)
+                commands.entity(old_rh).despawn();
+            }
         }
         playergear.right_hand = Some(entity);
         flask_entity = Some(entity);

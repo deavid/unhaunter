@@ -503,7 +503,7 @@ fn button_clicked(
                 p_gear.left_hand = Some(entity);
             } else if p_gear.right_hand.is_none() {
                 p_gear.right_hand = Some(entity);
-            } else if p_gear.inventory.len() < 4 {
+            } else if p_gear.inventory.len() < 2 {
                 p_gear.inventory.push(entity);
             } else {
                 // No space, despawn

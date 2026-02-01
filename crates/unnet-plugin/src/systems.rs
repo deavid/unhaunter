@@ -286,6 +286,7 @@ pub fn host_send_snapshots_system(
         Option<&Battery>,
         Option<&Flashlight>,
         Option<&ungearitems_core::components::sage::SageBundleData>,
+        Option<&ungearitems_core::components::repellentflask::RepellentFlask>,
     )>,
     query_net_id: Query<&NetworkId>,
     game_state: Res<State<GameState>>,
@@ -379,7 +380,7 @@ pub fn host_send_snapshots_system(
 
     let gear = query_gear
         .iter()
-        .map(|(id, pos, toggle, battery, flashlight, sage)| {
+        .map(|(id, pos, toggle, battery, flashlight, sage, repellent)| {
             let details = if let Some(f) = flashlight {
                 unnet_core::messages::GearDetails::Flashlight(f.status.clone())
             } else if let Some(s) = sage {
@@ -387,6 +388,11 @@ pub fn host_send_snapshots_system(
                     consumed: s.consumed,
                     is_active: s.is_active,
                     remaining_secs: s.burn_timer.remaining_secs(),
+                }
+            } else if let Some(r) = repellent {
+                unnet_core::messages::GearDetails::RepellentFlask {
+                    qty: r.qty,
+                    active: r.active,
                 }
             } else {
                 unnet_core::messages::GearDetails::None
@@ -513,6 +519,7 @@ pub fn client_apply_snapshots_system(
             Option<&mut Battery>,
             Option<&mut Flashlight>,
             Option<&mut ungearitems_core::components::sage::SageBundleData>,
+            Option<&mut ungearitems_core::components::repellentflask::RepellentFlask>,
         ),
         (Without<PlayerSprite>, Without<GhostTag>),
     >,
@@ -723,7 +730,9 @@ pub fn client_apply_snapshots_system(
 
             // Update gear
             for g_sync in gear {
-                for (id, mut pos, mut toggle, battery, flashlight, sage) in query_gear.iter_mut() {
+                for (id, mut pos, mut toggle, battery, flashlight, sage, repellent) in
+                    query_gear.iter_mut()
+                {
                     if *id == g_sync.id {
                         pos.x = g_sync.position[0];
                         pos.y = g_sync.position[1];
@@ -753,6 +762,12 @@ pub fn client_apply_snapshots_system(
                                     s.burn_timer.set_elapsed(std::time::Duration::from_secs_f32(
                                         elapsed.max(0.0),
                                     ));
+                                }
+                            }
+                            unnet_core::messages::GearDetails::RepellentFlask { qty, active } => {
+                                if let Some(mut r) = repellent {
+                                    r.qty = *qty;
+                                    r.active = *active;
                                 }
                             }
                             unnet_core::messages::GearDetails::None => {}

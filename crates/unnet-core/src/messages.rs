@@ -12,6 +12,10 @@ pub enum GearDetails {
         is_active: bool,
         remaining_secs: f32,
     },
+    RepellentFlask {
+        qty: i32,
+        active: bool,
+    },
     None,
 }
 
