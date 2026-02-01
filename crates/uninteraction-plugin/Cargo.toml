@@ -17,4 +17,6 @@ unspatial-core = { path = "../unspatial-core" }
 untypes-core = { path = "../untypes-core" }
 unbehavior = { path = "../unbehavior" }
 unrender-std = { path = "../unrender-std" }
+unnet-core = { path = "../unnet-core" }
+
 bevy = { workspace = true }

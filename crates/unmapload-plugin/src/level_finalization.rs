@@ -151,7 +151,7 @@ fn process_pre_meshes(
             } => {
                 if let Some(image) = images.get(image_handle) {
                     let sz = image.texture_descriptor.size;
-                    println!(
+                    debug!(
                         "Physical image size: {} x {} (Resolution Factor: {})",
                         sz.width, sz.height, rf.0
                     );
@@ -171,7 +171,7 @@ fn process_pre_meshes(
 
                     // Replace PreMesh with actual Mesh
                     commands.entity(entity).insert(mesh2d).remove::<PreMesh>();
-                    println!("Processed entity: {:?}", entity);
+                    debug!("Processed entity: {:?}", entity);
                 }
             }
         }

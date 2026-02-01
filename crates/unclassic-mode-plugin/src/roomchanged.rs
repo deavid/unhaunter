@@ -51,6 +51,7 @@ fn roomchanged_event(
         ev_interaction.write(ExecuteInteractionEvent {
             entity,
             ietype: InteractionExecutionType::ReadRoomState,
+            force_tuid: None,
         });
     }
 

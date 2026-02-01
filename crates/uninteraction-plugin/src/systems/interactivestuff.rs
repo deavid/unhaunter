@@ -4,6 +4,8 @@ use unbehavior::components::RoomState;
 use unbehavior::roomdb::RoomDB;
 use unevents_core::events::roomchanged::InteractionExecutionType;
 use unevents_core::events::sound::SoundEvent;
+use uninteraction_core::interaction::Authority;
+use unnet_core::messages::{NetworkDataEvent, NetworkMessage};
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::materials::CustomMaterial1;
 use unspatial_core::boardposition::BoardPosition;
@@ -45,6 +47,8 @@ pub struct InteractiveStuff<'w, 's> {
     pub roomdb: ResMut<'w, RoomDB>,
     /// Controls the transition to different game states, such as the truck UI.
     pub game_next_state: ResMut<'w, NextState<GameState>>,
+    /// Event writer for sending network messages.
+    pub net_events: MessageWriter<'w, NetworkDataEvent>,
 }
 
 impl InteractiveStuff<'_, '_> {
@@ -81,10 +85,12 @@ impl InteractiveStuff<'_, '_> {
         behavior: &Behavior,
         room_state: Option<&RoomState>,
         ietype: InteractionExecutionType,
+        authority: Authority,
+        force_tuid: Option<u32>,
     ) -> bool {
         debug!(
-            "execute_interaction: entity={:?}, ietype={:?}",
-            entity, ietype
+            "execute_interaction: entity={:?}, ietype={:?}, authority={:?}, force_tuid={:?}",
+            entity, ietype, authority, force_tuid
         );
         let item_bpos = item_pos.to_board_position();
         let tuid = behavior.key_tuid();
@@ -93,19 +99,32 @@ impl InteractiveStuff<'_, '_> {
             if ietype != InteractionExecutionType::ChangeState {
                 return false;
             }
-            if let Some(interactive) = interactive {
-                let sound_file = interactive.sound_for_moving_into_state(behavior);
-                self.sound_events.write(SoundEvent {
-                    sound_file,
-                    volume: 1.0,
-                    position: Some(*item_pos),
-                });
+            match authority {
+                Authority::Host => {
+                    if let Some(interactive) = interactive {
+                        let sound_file = interactive.sound_for_moving_into_state(behavior);
+                        self.sound_events.write(SoundEvent {
+                            sound_file,
+                            volume: 1.0,
+                            position: Some(*item_pos),
+                        });
+                    }
+                    self.game_next_state.set(GameState::Truck);
+                }
+                Authority::Client => {
+                    self.net_events.write(NetworkDataEvent {
+                        message: NetworkMessage::RequestTruckEntry,
+                    });
+                }
             }
-            self.game_next_state.set(GameState::Truck);
             return false;
         }
         for other_tuid in self.bf.cvo_idx.get(&cvo).unwrap().iter() {
-            if *other_tuid == tuid {
+            if let Some(ftuid) = force_tuid {
+                if other_tuid.1 != ftuid {
+                    continue;
+                }
+            } else if *other_tuid == tuid {
                 continue;
             }
             let mut e_commands = self.commands.get_entity(entity).unwrap();
@@ -114,8 +133,8 @@ impl InteractiveStuff<'_, '_> {
             beh.flip(behavior.p.flip);
 
             debug!(
-                "execute_interaction: Changing entity {:?} state to tuid {:?}",
-                entity, other_tuid
+                "execute_interaction: Changing entity {:?} state to tuid {:?} (authority={:?})",
+                entity, other_tuid, authority
             );
 
             // In case it is connected to a room, we need to change room state.
@@ -132,10 +151,12 @@ impl InteractiveStuff<'_, '_> {
                     .cloned()
                     .unwrap_or_default();
 
-                // dbg!(&room_state, &item_roombpos); dbg!(&room_name);
                 match ietype {
                     InteractionExecutionType::ChangeState => {
-                        if let Some(main_room_state) = self.roomdb.room_state.get_mut(&room_name) {
+                        if authority == Authority::Host
+                            && let Some(main_room_state) =
+                                self.roomdb.room_state.get_mut(&room_name)
+                        {
                             *main_room_state = beh.state();
                         }
                     }
@@ -156,6 +177,7 @@ impl InteractiveStuff<'_, '_> {
             e_commands.insert(beh);
             if ietype == InteractionExecutionType::ChangeState
                 && let Some(interactive) = interactive
+                && authority == Authority::Host
             {
                 let sound_file = interactive.sound_for_moving_into_state(&other.behavior);
                 self.sound_events.write(SoundEvent {

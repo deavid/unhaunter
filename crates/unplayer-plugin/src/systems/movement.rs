@@ -214,6 +214,7 @@ pub(crate) fn player_movement_system(
                     ev_interaction.write(ExecuteInteractionEvent {
                         entity,
                         ietype: InteractionExecutionType::ChangeState,
+                        force_tuid: None,
                     });
                 }
             }

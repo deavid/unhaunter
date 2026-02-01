@@ -148,7 +148,7 @@ query_gear: Query<(&NetworkId, &Position, &Toggleable)>,
 
 Yes! Gear sync includes `Toggleable`. So why doesn't the Client see the light?
 
-**The Missing Link: Light Visibility**
+### The Missing Link: Light Visibility
 
 The flashlight's **visual effect** is computed by:
 
@@ -587,12 +587,14 @@ sound.
 
 - **Problem**: `execute_interaction()` is called on both Host and Client.
 - **Action**: Add an `authority: Authority` parameter to `execute_interaction()`.
+
   ```rust
   pub enum Authority {
       Host,      // Can mutate state
       Client,    // Read-only, visual updates only
   }
   ```
+
 - **Action**: When `authority == Authority::Client`:
   - Update visuals (sprites, materials).
   - **Do NOT** emit sounds (Host will send sound events).

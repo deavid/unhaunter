@@ -1,4 +1,3 @@
-use crate::events::NetworkDataEvent;
 use crate::resources::{HandshakeState, NetworkConn};
 use bevy::prelude::*;
 use std::collections::VecDeque;
@@ -13,7 +12,9 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::LoadLevelEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
-use unnet_core::messages::{GearSyncState, MapTileState, NetworkMessage, RoomSync};
+use unnet_core::messages::{
+    GearSyncState, MapTileState, NetworkDataEvent, NetworkMessage, RoomSync,
+};
 use unnet_core::network_id::NetworkId;
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
@@ -493,6 +494,7 @@ pub fn client_apply_snapshots_system(
                             ev_interaction.write(ExecuteInteractionEvent {
                                 entity,
                                 ietype: InteractionExecutionType::ChangeState,
+                                force_tuid: Some(t_sync.tileuid),
                             });
                         }
                     }
@@ -517,28 +519,30 @@ pub fn client_apply_snapshots_system(
 pub fn host_apply_input_system(
     cli: Res<CliOptions>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
-    mut query_players: Query<(&PlayerSprite, &mut PlayerInput)>,
+    mut query_players: Query<(&PlayerSprite, &mut PlayerInput, &Position), Without<MainPlayer>>,
+    query_van: Query<(&Position, &Behavior)>,
+    mut game_next_state: ResMut<NextState<GameState>>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
     }
 
     for ev in ev_reader.read() {
-        if let NetworkMessage::PlayerInput {
-            movement,
-            run,
-            interact,
-            grab,
-            drop,
-            use_right_hand,
-            use_left_hand,
-            inventory_cycle,
-            inventory_swap,
-        } = &ev.message
-        {
-            // Client is always ID 2 in this MVP
-            for (p_sprite, mut input) in query_players.iter_mut() {
-                if p_sprite.id == NetworkId(2) {
+        match &ev.message {
+            NetworkMessage::PlayerInput {
+                movement,
+                run,
+                interact,
+                grab,
+                drop,
+                use_right_hand,
+                use_left_hand,
+                inventory_cycle,
+                inventory_swap,
+            } => {
+                // In this MVP, we apply remote input to all sprites that aren't the MainPlayer.
+                // This correctly handles the single client without hardcoding IDs.
+                for (_, mut input, _) in query_players.iter_mut() {
                     input.movement = Vec2::new(movement[0], movement[1]);
                     input.run = *run;
                     input.interact = *interact;
@@ -550,6 +554,26 @@ pub fn host_apply_input_system(
                     input.inventory_swap = *inventory_swap;
                 }
             }
+            NetworkMessage::RequestTruckEntry => {
+                debug!("Network: Received RequestTruckEntry from client");
+                let mut near_van = false;
+                for (_, _, p_pos) in query_players.iter() {
+                    for (v_pos, v_beh) in query_van.iter() {
+                        if v_beh.is_van_entry() && p_pos.delta(*v_pos).distance() < 2.0 {
+                            near_van = true;
+                            break;
+                        }
+                    }
+                }
+
+                if near_van {
+                    info!("Network: RequestTruckEntry validated. Transitioning to Truck state.");
+                    game_next_state.set(GameState::Truck);
+                } else {
+                    warn!("Network: Rejected RequestTruckEntry - player too far from van");
+                }
+            }
+            _ => {}
         }
     }
 }

@@ -1,4 +1,3 @@
-use crate::events::NetworkDataEvent;
 use crate::resources::NetworkConn;
 use crate::systems::{
     autostart_net_game, client_apply_snapshots_system, client_send_input_system,
@@ -6,6 +5,7 @@ use crate::systems::{
     network_io_system, startup_network_system,
 };
 use bevy::prelude::*;
+use unnet_core::messages::NetworkDataEvent;
 use untypes_core::states::AppState;
 
 pub struct UnhaunterNetPlugin;

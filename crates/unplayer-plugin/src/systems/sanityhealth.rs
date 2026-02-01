@@ -5,7 +5,6 @@ use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
-use unfoundation_core::utils::time::PrintingTimer;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSprite;
@@ -18,8 +17,6 @@ use unthermal_core::resources::ThermalGrid;
 use untypes_core::states::AppState;
 use unui_core::components::game_ui::DamageBackground;
 
-const DEBUG_PLAYER: bool = false;
-
 pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
     const LINEAR: f32 = 30.0;
     const SCALE: f32 = 100.0;
@@ -28,18 +25,13 @@ pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
 
 fn lose_sanity(
     time: Res<Time>,
-    mut timer: Local<PrintingTimer>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
-    _bf: Res<BoardTopology>,
-    _bcf: Res<BoardCollisionField>,
     thermal_grid: Res<ThermalGrid>,
     sound_grid: Res<SoundGrid>,
     lg: Res<LightGrid>,
     roomdb: Res<RoomDB>,
-    // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
-    timer.tick(time.delta());
     let dt = time.delta_secs();
     for (mut ps, pos) in &mut qp {
         let bpos = pos.to_board_position();
@@ -93,22 +85,16 @@ fn lose_sanity(
         if ps.health > 100.0 {
             ps.health = 100.0;
         }
-        if timer.just_finished() && DEBUG_PLAYER {
-            dbg!(ps.sanity, ps.mean_sound, ps.health);
-        }
     }
 }
 
 fn recover_sanity(
     time: Res<Time>,
     mut qp: Query<&mut PlayerSprite>,
-    mut timer: Local<PrintingTimer>,
-    // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
     // Players recover sanity while in the truck.
     let dt = time.delta_secs();
-    timer.tick(time.delta());
     for mut ps in &mut qp {
         // --- Gradual Health Recovery --- Health points recovered per second
         const HEALTH_RECOVERY_RATE: f32 = 2.0;
@@ -124,9 +110,6 @@ fn recover_sanity(
             ps.crazyness /= 1.005_f32.powf(dt);
         }
         ps.sanity = calculate_sanity(ps.crazyness);
-        if timer.just_finished() {
-            dbg!(ps.sanity);
-        }
     }
 }
 

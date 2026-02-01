@@ -25,6 +25,7 @@ ungear-core = { path = "../ungear-core" }
 untags-core = { path = "../untags-core" }
 unghost-core = { path = "../unghost-core" }
 unplayer-core = { path = "../unplayer-core" }
+untypes-core = { path = "../untypes-core" }
 unfog-core = { path = "../unfog-core" }
 unsound-core = { path = "../unsound-core" }
 unsummary-core = { path = "../unsummary-core" }

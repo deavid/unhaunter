@@ -320,6 +320,7 @@ fn execute_toggle_interaction(
         ev_interaction_executor.write(ExecuteInteractionEvent {
             entity: target,
             ietype: InteractionExecutionType::ChangeState,
+            force_tuid: None,
         });
     } else {
         warn!(
@@ -348,9 +349,9 @@ fn execute_door_slam_interaction(
         ev_interaction_executor.write(ExecuteInteractionEvent {
             entity: target,
             ietype: InteractionExecutionType::ChangeState,
+            force_tuid: None,
         });
 
-        // Play door slam sound effect (using door-close.ogg with higher volume)
         ev_sound.write(SoundEvent {
             sound_file: "sounds/door-close.ogg".to_string(),
             volume: 1.5, // Louder than normal door close to simulate slam
@@ -383,6 +384,7 @@ fn execute_door_creak_interaction(
         ev_interaction_executor.write(ExecuteInteractionEvent {
             entity: target,
             ietype: InteractionExecutionType::ChangeState,
+            force_tuid: None,
         });
 
         // Play door creak sound effect
@@ -627,6 +629,7 @@ fn execute_trip_breaker_interaction(
         ev_interaction_executor.write(ExecuteInteractionEvent {
             entity: target,
             ietype: InteractionExecutionType::ChangeState,
+            force_tuid: None,
         });
 
         // Play breaker trip sound effect

@@ -1,4 +1,5 @@
 use crate::network_id::NetworkId;
+use bevy::prelude::Message;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -69,4 +70,11 @@ pub enum NetworkMessage {
         inventory_cycle: bool,
         inventory_swap: bool,
     },
+    /// Client requests to enter the truck/van.
+    RequestTruckEntry,
+}
+
+#[derive(Debug, Clone, Message)]
+pub struct NetworkDataEvent {
+    pub message: NetworkMessage,
 }

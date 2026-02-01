@@ -362,24 +362,7 @@ fn update_miasma(
         })
         .take(8)
         .collect::<Vec<_>>();
-    // if rng.random_range(0..256) == 0 {
-    //     dbg!(
-    //         chunks.len(),
-    //         ChunkIterator::new(board_data.map_size).count()
-    //     );
-    //     dbg!(
-    //         chunks
-    //             .iter()
-    //             .map(|chunk| CellIterator::new(chunk).count())
-    //             .sum::<usize>()
-    //     );
-    //     let mut distances = chunks
-    //         .iter()
-    //         .map(|chunk| player_bpos.distance_to_chunk(chunk))
-    //         .collect::<Vec<_>>();
-    //     distances.sort();
-    //     warn!("Chunk distances: {:?}", distances);
-    // }
+
     for chunk in &chunks {
         // Iterate through all cells in the pressure field within the chunk.
         for p in CellIterator::new(chunk) {

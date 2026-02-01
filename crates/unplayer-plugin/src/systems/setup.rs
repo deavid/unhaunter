@@ -21,10 +21,7 @@ pub(crate) fn app_setup(app: &mut App) {
     grabdrop::app_setup(app);
     hide::app_setup(app);
 
-    app.add_systems(
-        PostUpdate,
-        input::keyboard::player_input_clear_system.run_if(is_host),
-    );
+    app.add_systems(PostUpdate, input::keyboard::player_input_clear_system);
 
     // Set up input and movement systems with proper ordering
     app.add_systems(
@@ -32,8 +29,8 @@ pub(crate) fn app_setup(app: &mut App) {
         (
             // Input systems run first (Always run on all instances to gather input)
             input::keyboard::keyboard_input_system,
-            // Gear usage system (authoritative logic)
-            input::mouse_interaction::player_gear_usage_system.run_if(is_host),
+            // Gear usage system (predictive on client, authoritative on host)
+            input::mouse_interaction::player_gear_usage_system,
             // Walk target indicator system (kept for compatibility)
             walk_target_indicator::manage_walk_target_indicator,
             // Mouse interaction systems (gear only, clicks handled by waypoint system)

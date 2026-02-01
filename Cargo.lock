@@ -5950,6 +5950,7 @@ dependencies = [
  "unsummary-core",
  "untags-core",
  "unthermal-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6086,11 +6087,8 @@ name = "uninteraction-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "unbehavior",
  "unevents-core",
- "unrender-std",
  "unspatial-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -6101,6 +6099,7 @@ dependencies = [
  "unbehavior",
  "unevents-core",
  "uninteraction-core",
+ "unnet-core",
  "unrender-std",
  "unspatial-core",
  "untypes-core",

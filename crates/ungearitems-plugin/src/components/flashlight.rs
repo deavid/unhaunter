@@ -10,6 +10,7 @@ use enum_iterator::Sequence;
 use rand::Rng;
 pub(crate) use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 use unrender_std::resources::sprite_registry::GearSpriteID;
+use untypes_core::cli::{CliOptions, is_host};
 
 pub(crate) fn update_flashlight(
     mut commands: Commands,
@@ -27,7 +28,9 @@ pub(crate) fn update_flashlight(
         &ItemName,
     )>,
     mut ga: SoundEmitter,
+    cli: Res<CliOptions>,
 ) {
+    let is_host = is_host(cli);
     for (
         entity,
         mut flashlight,
@@ -55,30 +58,37 @@ pub(crate) fn update_flashlight(
         }
 
         // Sync Toggleable with FlashlightStatus
-        toggle.is_on = flashlight.status != FlashlightStatus::Off;
+        if is_host {
+            toggle.is_on = flashlight.status != FlashlightStatus::Off;
+        } else if !toggle.is_on && flashlight.status != FlashlightStatus::Off {
+            // If the host says it's off, it's off.
+            flashlight.status = FlashlightStatus::Off;
+        }
 
         // Update Logic
         flashlight.frame_counter += 1;
         flashlight.frame_counter %= 210;
-        if flashlight.frame_counter.is_multiple_of(5) {
-            flashlight.rand = random_seed::rng().random_range(0..12);
-            const HS_MASS: f32 = 2.0;
-            flashlight.heatsink_temp =
-                (flashlight.heatsink_temp * HS_MASS + flashlight.inner_temp) / (HS_MASS + 1.0);
-        }
-
-        // Update Battery Drain Rate
-        battery.drain_rate = flashlight.calculate_output_power() / 5000.0;
-
-        if electronic.glitch_timer <= 0.0 {
-            if battery.level <= 0.0 {
-                flashlight.status = FlashlightStatus::Off;
+        if is_host {
+            if flashlight.frame_counter.is_multiple_of(5) {
+                flashlight.rand = random_seed::rng().random_range(0..12);
+                const HS_MASS: f32 = 2.0;
+                flashlight.heatsink_temp =
+                    (flashlight.heatsink_temp * HS_MASS + flashlight.inner_temp) / (HS_MASS + 1.0);
             }
-            flashlight.inner_temp += flashlight.output_power / 50000.0;
-            flashlight.inner_temp /= 1.00032;
-            if flashlight.inner_temp > 1.0 && flashlight.status != FlashlightStatus::Off {
-                flashlight.status = FlashlightStatus::Off;
-                ga.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
+
+            // Update Battery Drain Rate
+            battery.drain_rate = flashlight.calculate_output_power() / 5000.0;
+
+            if electronic.glitch_timer <= 0.0 {
+                if battery.level <= 0.0 {
+                    flashlight.status = FlashlightStatus::Off;
+                }
+                flashlight.inner_temp += flashlight.output_power / 50000.0;
+                flashlight.inner_temp /= 1.00032;
+                if flashlight.inner_temp > 1.0 && flashlight.status != FlashlightStatus::Off {
+                    flashlight.status = FlashlightStatus::Off;
+                    ga.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
+                }
             }
         }
 

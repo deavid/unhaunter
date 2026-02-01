@@ -13,7 +13,4 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 unspatial-core = { path = "../unspatial-core" }
-unbehavior = { path = "../unbehavior" }
-unrender-std = { path = "../unrender-std" }
 unevents-core = { path = "../unevents-core" }
-untypes-core = { path = "../untypes-core" }

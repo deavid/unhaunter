@@ -240,16 +240,18 @@ pub(crate) fn waypoint_following_system(
                                     ev_npc.write(NpcHelpEvent::new(*interaction_target));
                                 }
 
-                                if is_host {
-                                    // Execute the interaction directly on the host
+                                if !is_host {
+                                    // On the client, signal predictive intent
                                     ev_interaction.write(ExecuteInteractionEvent {
                                         entity: *interaction_target,
                                         ietype: InteractionExecutionType::ChangeState,
+                                        force_tuid: None,
                                     });
-                                } else {
-                                    // On the client, signal the interaction intent to the host
-                                    player_input.interact = true;
                                 }
+
+                                // Always signal intent via input. This will be processed
+                                // authoritatively by player_movement_system on the Host.
+                                player_input.interact = true;
                                 true // Complete the waypoint after interaction
                             } else {
                                 // Still too far, keep moving
