@@ -1,7 +1,10 @@
 use crate::network_id::NetworkId;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use unfoundation_core::types::grade::Grade;
 use ungearitems_core::components::flashlight::FlashlightStatus;
+use unghost_core::types::evidence::Evidence;
+use unghost_core::types::ghost::types::GhostType;
 use untypes_core::states::{AppState, GameState};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -84,6 +87,29 @@ pub struct GearSyncState {
     pub battery: f32,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MissionResult {
+    pub time_taken_secs: f32,
+    pub ghost_types: Vec<GhostType>,
+    pub repellent_used_amt: u32,
+    pub ghosts_unhaunted: u32,
+    pub base_score: i64,
+    pub difficulty_multiplier: f32,
+    pub grade_multiplier: f64,
+    pub average_sanity: f32,
+    pub player_count: u32,
+    pub alive_count: u32,
+    pub full_score: i64,
+    pub mission_successful: bool,
+    pub money_earned: i64,
+    pub grade_achieved: Grade,
+    pub required_deposit: i64,
+    pub mission_reward_base: i64,
+    pub deposit_originally_held: i64,
+    pub deposit_returned_to_bank: i64,
+    pub costs_deducted_from_deposit: i64,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Message)]
 pub enum TransientEvent {
     PlaySound {
@@ -120,6 +146,9 @@ pub enum NetworkMessage {
         gear: Vec<GearSyncState>,
         player_gear: Vec<PlayerGearState>,
         events: Vec<TransientEvent>,
+        evidences_found: Vec<Evidence>,
+        evidences_missing: Vec<Evidence>,
+        ghost_type_guess: Option<GhostType>,
     },
     /// Periodic input update from Client to Host.
     PlayerInput {
@@ -134,6 +163,20 @@ pub enum NetworkMessage {
         inventory_cycle: bool,
         inventory_swap: bool,
         target_position: Option<[f32; 2]>,
+    },
+    /// Host sends the final mission summary.
+    MissionSummary { result: MissionResult },
+    /// Client updates their journal guess.
+    JournalUpdate {
+        player_id: NetworkId,
+        ghost_type: Option<GhostType>,
+        evidences_found: Vec<Evidence>,
+        evidences_missing: Vec<Evidence>,
+    },
+    /// Client requests to craft repellent.
+    CraftRepellent {
+        player_id: NetworkId,
+        ghost_type: GhostType,
     },
     /// Client requests to enter the truck/van.
     RequestTruckEntry,

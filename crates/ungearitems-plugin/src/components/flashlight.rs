@@ -8,8 +8,8 @@ use unspatial_core::position::Position;
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;
-pub(crate) use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
+pub(crate) use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 use untypes_core::cli::{CliOptions, is_host};
 
 pub(crate) fn update_flashlight(

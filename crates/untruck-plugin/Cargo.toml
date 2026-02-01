@@ -26,6 +26,7 @@ unprofile-core = { path = "../unprofile-core" }
 unwalkie-core = { path = "../unwalkie-core" }
 unghost-core = { path = "../unghost-core" }
 unbehavior = { path = "../unbehavior" }
+unnet-core = { path = "../unnet-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

@@ -11,8 +11,10 @@ pub enum HandshakeState {
     Completed,
 }
 
-#[derive(Resource, Default)]
-pub struct LocalPlayerId(pub Option<unnet_core::network_id::NetworkId>);
+#[derive(Resource, Default, Debug)]
+pub struct PendingMapLoad {
+    pub map_filepath: Option<String>,
+}
 
 #[derive(Resource, Default)]
 pub enum NetworkConn {

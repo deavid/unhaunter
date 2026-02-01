@@ -4,7 +4,9 @@ use enum_iterator::{Sequence, all};
 use crate::types::evidence::Evidence;
 use crate::types::ghost::personality::GhostPersonality;
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize)]
 pub enum GhostType {
     BeanSidhe,
     Dullahan,

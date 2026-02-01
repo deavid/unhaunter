@@ -6,6 +6,7 @@ use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::salt::{
     SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltyTrace, SaltyTraceTimer, UVReactive,
 };
@@ -14,7 +15,6 @@ use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use ungear_core::types::gear::sprite_id::GearSpriteID;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;

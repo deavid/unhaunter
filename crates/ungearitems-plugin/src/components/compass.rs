@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use ungear_core::components::core::{GearSprite, ItemName, StatusText};
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::compass::Compass;
 use uninteraction_core::interaction::Toggleable;
-use ungear_core::types::gear::sprite_id::GearSpriteID;
 
 pub(crate) fn update_compass(
     mut q_compass: Query<(&mut StatusText, &mut GearSprite, &Toggleable, &ItemName), With<Compass>>,
