@@ -7,17 +7,15 @@ use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use unfoundation_core::utils::time::format_time;
 use ungear_core::components::core::{GearSprite, StatusText};
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::sage::{SageBundleData, SageSmokeParticle, SmokeParticleTimer};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
-use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_layer::SpriteLayer;
-use unrender_std::resources::sprite_registry::GearSpriteID;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::direction::Direction;
-use unspatial_core::perspective;
 use unspatial_core::position::Position;
+use untypes_core::cli::CliOptions;
 
 pub(crate) fn update_sage(
     mut q_sage: Query<(
@@ -31,9 +29,13 @@ pub(crate) fn update_sage(
     )>,
     mut gs_audio: SoundEmitter,
     mut commands: Commands,
+    cli: Res<CliOptions>,
+    mut ev_snapshot_events: MessageWriter<unnet_core::messages::TransientEvent>,
 ) {
+    let is_host = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+
     for (entity, mut sage, mut status, mut sprite, pos, _ep, triggered) in q_sage.iter_mut() {
-        if triggered.is_some() && !sage.is_active && !sage.consumed {
+        if is_host && triggered.is_some() && !sage.is_active && !sage.consumed {
             sage.is_active = true;
             sage.burn_timer.reset();
 
@@ -43,7 +45,7 @@ pub(crate) fn update_sage(
             commands.entity(entity).remove::<Triggered>();
         }
 
-        if sage.is_active && !sage.consumed {
+        if is_host && sage.is_active && !sage.consumed {
             sage.burn_timer.tick(gs_audio.time.delta());
 
             // Spawn smoke particles
@@ -51,33 +53,18 @@ pub(crate) fn update_sage(
                 sage.is_active = false;
                 sage.consumed = true;
             } else if (sage.smoke_produced as f32) < sage.burn_timer.elapsed_secs() * 3.0 {
-                let mut pos = *pos;
+                let mut p = *pos;
                 let mut rng = random_seed::rng();
-                pos.z += 0.2;
-                pos.x += rng.random_range(-0.2..0.2);
-                pos.y += rng.random_range(-0.2..0.2);
+                p.z += 0.2;
+                p.x += rng.random_range(-0.2..0.2);
+                p.y += rng.random_range(-0.2..0.2);
 
-                // Spawn smoke particle
-                commands
-                    .spawn(Sprite {
-                        image: gs_audio.asset_server.load("img/smoke.png"),
-                        ..default()
-                    })
-                    .insert(
-                        Transform::from_translation(perspective::to_screen_coord(pos))
-                            .with_scale(Vec3::new(0.2, 0.2, 0.2)),
-                    )
-                    .insert(SageSmokeParticle)
-                    .insert(GameSprite)
-                    .insert(pos)
-                    .insert(MapColor {
-                        color: Color::WHITE.with_alpha(0.00),
-                    })
-                    .insert(SmokeParticleTimer(Timer::from_seconds(
-                        5.0,
-                        TimerMode::Once,
-                    )))
-                    .insert(SpriteLayer::default());
+                // Spawn smoke particle via network event
+                ev_snapshot_events.write(unnet_core::messages::TransientEvent::SpawnParticle {
+                    particle_type: "smoke".to_string(),
+                    position: [p.x, p.y, p.z],
+                });
+
                 sage.smoke_produced += 1;
             }
         }

@@ -17,7 +17,7 @@ use ungear_core::components::core::{
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::geigercounter::GeigerCounter;
 use uninteraction_core::interaction::Toggleable;
-use unrender_std::resources::sprite_registry::GearSpriteID;
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 
 pub(crate) trait GeigerCounterExt {
     fn calculate_output_sound(&self, haunt_state: &HauntState) -> f32;

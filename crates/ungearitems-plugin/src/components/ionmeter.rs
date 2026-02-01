@@ -3,7 +3,7 @@ use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, S
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::ionmeter::IonMeter;
 use uninteraction_core::interaction::Toggleable;
-use unrender_std::resources::sprite_registry::GearSpriteID;
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 
 pub(crate) fn update_ionmeter(
     mut q_ionmeter: Query<

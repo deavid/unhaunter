@@ -17,7 +17,11 @@ const GIS_DEBUG: bool = false;
 
 /// Registers selection systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(bevy::prelude::Update, ghost_interaction_selection_system);
+    use untypes_core::cli::is_host;
+    app.add_systems(
+        bevy::prelude::Update,
+        ghost_interaction_selection_system.run_if(is_host),
+    );
 }
 
 /// System that determines when and what interactions a ghost performs based on personality.

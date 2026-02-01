@@ -12,7 +12,7 @@ use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unprofile_core::profile::PlayerProfileData;
-use unrender_std::resources::sprite_registry::GearSpriteID;
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;

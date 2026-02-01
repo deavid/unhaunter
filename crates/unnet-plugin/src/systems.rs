@@ -1,6 +1,7 @@
-use crate::resources::{HandshakeState, NetworkConn};
+use crate::resources::{HandshakeState, LocalPlayerId, NetworkConn};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use rand::Rng;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -8,6 +9,7 @@ use std::str::FromStr;
 use unbehavior::behavior::{Behavior, Interactive};
 use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
+use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::LoadLevelEvent;
@@ -15,16 +17,19 @@ use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEv
 use unevents_core::events::sound::SoundEvent;
 use ungear_core::components::core::Battery;
 use ungear_core::components::playergear::PlayerGear;
-use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
-use unghost_core::components::ghost_sprite::GhostSprite;
+use ungearitems_core::components::flashlight::Flashlight;
+use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
+use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unnet_core::messages::{
     GearSyncState, GhostState, MapTileState, NetworkDataEvent, NetworkMessage, PlayerGearState,
-    PlayerState, RoomSync,
+    PlayerState, RoomSync, TransientEvent,
 };
 use unnet_core::network_id::NetworkId;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
+use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
@@ -33,12 +38,18 @@ use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::{AppState, GameState};
 
-pub fn startup_network_system(cli: Res<CliOptions>, mut conn: ResMut<NetworkConn>) {
+pub fn startup_network_system(
+    cli: Res<CliOptions>,
+    mut conn: ResMut<NetworkConn>,
+    mut local_id: ResMut<LocalPlayerId>,
+) {
     match &cli.net_mode {
         NetMode::Offline => {
             *conn = NetworkConn::Disconnected;
+            local_id.0 = Some(NetworkId(1));
         }
         NetMode::Host { port } => {
+            local_id.0 = Some(NetworkId(1));
             let addr = format!("0.0.0.0:{}", port);
             match TcpListener::bind(&addr) {
                 Ok(listener) => {
@@ -170,6 +181,7 @@ pub fn handshake_handler_system(
     mut conn: ResMut<NetworkConn>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
     cli: Res<CliOptions>,
+    mut local_id: ResMut<LocalPlayerId>,
     mut ev_load_level: MessageWriter<LoadLevelEvent>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
 ) {
@@ -221,6 +233,7 @@ pub fn handshake_handler_system(
                         id, map_seed, map_filepath
                     );
                     if matches!(cli.net_mode, NetMode::Join { .. }) {
+                        local_id.0 = Some(id);
                         new_handshake = Some(HandshakeState::Completed);
                         // Apply difficulty
                         if let Ok(d) = Difficulty::from_str(&difficulty_id) {
@@ -255,10 +268,14 @@ pub fn host_send_snapshots_system(
     query_players: Query<(
         &PlayerSprite,
         &Position,
+        &unspatial_core::direction::Direction,
         Option<&Hiding>,
         Option<&PlayerGear>,
     )>,
-    query_ghosts: Query<(&NetworkId, &Position, &GhostSprite), With<GhostTag>>,
+    query_ghosts: Query<
+        (&NetworkId, &Position, &GhostSprite, &GhostBehaviorDynamics),
+        With<GhostTag>,
+    >,
     time: Res<Time>,
     room_db: Res<RoomDB>,
     query_map_tiles: Query<(&Position, &Behavior), With<Interactive>>,
@@ -268,10 +285,13 @@ pub fn host_send_snapshots_system(
         &Toggleable,
         Option<&Battery>,
         Option<&Flashlight>,
+        Option<&ungearitems_core::components::sage::SageBundleData>,
     )>,
     query_net_id: Query<&NetworkId>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
+    mut ev_sound: MessageReader<SoundEvent>,
+    mut ev_transient: MessageReader<unnet_core::messages::TransientEvent>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -283,16 +303,16 @@ pub fn host_send_snapshots_system(
     let tick = (time.elapsed_secs() * 60.0) as u64;
     let players = query_players
         .iter()
-        .map(|(p, pos, hiding, _)| PlayerState {
+        .map(|(p, pos, dir, hiding, _)| PlayerState {
             id: p.id,
-            position: [pos.x, pos.y, pos.z, 0.0], // orientation placeholder
+            position: [pos.x, pos.y, pos.z, f32::atan2(dir.dy, dir.dx)],
             is_hiding: hiding.is_some(),
         })
         .collect();
 
     let player_gear = query_players
         .iter()
-        .filter_map(|(p, _, _, gear)| {
+        .filter_map(|(p, _, _, _, gear)| {
             gear.map(|g| PlayerGearState {
                 player_id: p.id,
                 left_hand: g.left_hand.and_then(|e| query_net_id.get(e).ok().cloned()),
@@ -312,7 +332,7 @@ pub fn host_send_snapshots_system(
 
     let ghosts = query_ghosts
         .iter()
-        .map(|(id, pos, ghost)| GhostState {
+        .map(|(id, pos, ghost, dynamics)| GhostState {
             id: *id,
             position: [pos.x, pos.y, pos.z],
             warp: ghost.warp,
@@ -321,6 +341,16 @@ pub fn host_send_snapshots_system(
             calm_time_secs: ghost.calm_time_secs,
             repellent_hits_delta: ghost.repellent_hits_delta,
             repellent_misses_delta: ghost.repellent_misses_delta,
+            freezing_temp_clarity: dynamics.freezing_temp_clarity,
+            floating_orbs_clarity: dynamics.floating_orbs_clarity,
+            uv_ectoplasm_clarity: dynamics.uv_ectoplasm_clarity,
+            emf_level5_clarity: dynamics.emf_level5_clarity,
+            evp_recording_clarity: dynamics.evp_recording_clarity,
+            spirit_box_clarity: dynamics.spirit_box_clarity,
+            rl_presence_clarity: dynamics.rl_presence_clarity,
+            cpm500_clarity: dynamics.cpm500_clarity,
+            visual_alpha_multiplier: dynamics.visual_alpha_multiplier,
+            rage_tendency_multiplier: dynamics.rage_tendency_multiplier,
         })
         .collect();
 
@@ -349,31 +379,57 @@ pub fn host_send_snapshots_system(
 
     let gear = query_gear
         .iter()
-        .map(|(id, pos, toggle, battery, flashlight)| GearSyncState {
-            id: *id,
-            position: [pos.x, pos.y, pos.z],
-            is_on: toggle.is_on,
-            mode: flashlight.map(|f| f.status.to_string()),
-            battery: battery.map(|b| b.level).unwrap_or(0.0),
+        .map(|(id, pos, toggle, battery, flashlight, sage)| {
+            let details = if let Some(f) = flashlight {
+                unnet_core::messages::GearDetails::Flashlight(f.status.clone())
+            } else if let Some(s) = sage {
+                unnet_core::messages::GearDetails::Sage {
+                    consumed: s.consumed,
+                    is_active: s.is_active,
+                    remaining_secs: s.burn_timer.remaining_secs(),
+                }
+            } else {
+                unnet_core::messages::GearDetails::None
+            };
+            GearSyncState {
+                id: *id,
+                position: [pos.x, pos.y, pos.z],
+                is_on: toggle.is_on,
+                details,
+                battery: battery.map(|b| b.level).unwrap_or(0.0),
+            }
         })
         .collect();
 
+    let mut events: Vec<unnet_core::messages::TransientEvent> = ev_sound
+        .read()
+        .map(|ev| unnet_core::messages::TransientEvent::PlaySound {
+            sound_file: ev.sound_file.clone(),
+            volume: ev.volume,
+            position: ev.position.map(|p| [p.x, p.y, p.z]),
+        })
+        .collect();
+
+    events.extend(ev_transient.read().cloned());
+
     conn.send(NetworkMessage::Snapshot {
         tick,
-        app_state: format!("{:?}", app_state.get()),
-        game_state: format!("{:?}", game_state.get()),
+        app_state: *app_state.get(),
+        game_state: *game_state.get(),
         players,
         ghosts,
         rooms,
         map_tiles,
         gear,
         player_gear,
+        events,
     });
 }
 
 pub fn client_send_input_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
+    local_id: Res<LocalPlayerId>,
     query_player: Query<&PlayerInput, With<MainPlayer>>,
 ) {
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
@@ -383,8 +439,13 @@ pub fn client_send_input_system(
         return;
     }
 
+    let Some(player_id) = local_id.0 else {
+        return;
+    };
+
     for input in query_player.iter() {
         conn.send(NetworkMessage::PlayerInput {
+            player_id,
             movement: [input.movement.x, input.movement.y],
             run: input.run,
             interact: input.interact,
@@ -410,6 +471,7 @@ pub struct SnapshotAppStates<'w> {
 pub fn client_apply_snapshots_system(
     mut commands: Commands,
     cli: Res<CliOptions>,
+    asset_server: Res<AssetServer>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut query_players: Query<
         (
@@ -417,13 +479,20 @@ pub fn client_apply_snapshots_system(
             &NetworkId,
             &mut Position,
             &mut AnimationTimer,
+            &mut unspatial_core::direction::Direction,
             Option<&Hiding>,
             Option<&mut PlayerGear>,
+            Option<&MainPlayer>,
         ),
         (With<PlayerSprite>, Without<GhostTag>),
     >,
     mut query_ghosts: Query<
-        (&NetworkId, &mut Position, &mut GhostSprite),
+        (
+            &NetworkId,
+            &mut Position,
+            &mut GhostSprite,
+            &mut GhostBehaviorDynamics,
+        ),
         (With<GhostTag>, Without<PlayerSprite>),
     >,
     mut ev_room: MessageWriter<RoomChangedEvent>,
@@ -443,10 +512,12 @@ pub fn client_apply_snapshots_system(
             &mut Toggleable,
             Option<&mut Battery>,
             Option<&mut Flashlight>,
+            Option<&mut ungearitems_core::components::sage::SageBundleData>,
         ),
         (Without<PlayerSprite>, Without<GhostTag>),
     >,
     query_net_entities: Query<(Entity, &NetworkId)>,
+    mut ev_sound: MessageWriter<SoundEvent>,
 ) {
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         return;
@@ -455,43 +526,25 @@ pub fn client_apply_snapshots_system(
     for ev in ev_reader.read() {
         if let NetworkMessage::Snapshot {
             tick: _,
-            app_state: server_app_state_str,
-            game_state: server_game_state_str,
+            app_state: server_app_state,
+            game_state: server_game_state,
             players,
             ghosts,
             rooms,
             map_tiles,
             gear,
             player_gear,
+            events,
         } = &ev.message
         {
             // Sync AppState
-            let current_app_state_str = format!("{:?}", states.current_app_state.get());
-            if *server_app_state_str != current_app_state_str {
-                let new_state = match server_app_state_str.as_str() {
-                    "MainMenu" => AppState::MainMenu,
-                    "InGame" => AppState::InGame,
-                    "Summary" => AppState::Summary,
-                    _ => *states.current_app_state.get(),
-                };
-                if new_state != *states.current_app_state.get() {
-                    states.app_next_state.set(new_state);
-                }
+            if *server_app_state != *states.current_app_state.get() {
+                states.app_next_state.set(*server_app_state);
             }
 
             // Sync GameState
-            let current_game_state_str = format!("{:?}", states.current_game_state.get());
-
-            if *server_game_state_str != current_game_state_str {
-                let new_state = match server_game_state_str.as_str() {
-                    "None" => GameState::None,
-                    "Truck" => GameState::Truck,
-                    "Pause" => GameState::Pause,
-                    _ => *states.current_game_state.get(),
-                };
-                if new_state != *states.current_game_state.get() {
-                    states.game_next_state.set(new_state);
-                }
+            if *server_game_state != *states.current_game_state.get() {
+                states.game_next_state.set(*server_game_state);
             }
 
             let net_to_entity: std::collections::HashMap<NetworkId, Entity> =
@@ -499,12 +552,18 @@ pub fn client_apply_snapshots_system(
 
             // Update players
             for p_state in players {
-                for (p_entity, id, mut pos, mut anim, hiding, _) in query_players.iter_mut() {
+                for (p_entity, id, mut pos, mut anim, mut dir, hiding, _, _) in
+                    query_players.iter_mut()
+                {
                     if *id == p_state.id {
                         let old_pos = *pos;
                         pos.x = p_state.position[0];
                         pos.y = p_state.position[1];
                         pos.z = p_state.position[2];
+
+                        let orientation = p_state.position[3];
+                        dir.dx = f32::cos(orientation);
+                        dir.dy = f32::sin(orientation);
 
                         // 2.4 Hiding
                         match (p_state.is_hiding, hiding) {
@@ -533,7 +592,11 @@ pub fn client_apply_snapshots_system(
                                     .to_vec(),
                             );
                         } else {
-                            anim.set_range(CharacterAnimation::from_dir(0.0, 0.0).to_vec());
+                            let dscreen = perspective::direction_to_screen_coord(*dir);
+                            anim.set_range(
+                                CharacterAnimation::from_dir(dscreen.x * 0.001, dscreen.y * 0.001)
+                                    .to_vec(),
+                            );
                         }
                     }
                 }
@@ -541,7 +604,7 @@ pub fn client_apply_snapshots_system(
 
             // Update player gear
             for pg_state in player_gear {
-                for (_, id, _, _, _, gear) in query_players.iter_mut() {
+                for (_, id, _, _, _, _, gear, _) in query_players.iter_mut() {
                     if *id == pg_state.player_id
                         && let Some(mut gear) = gear
                     {
@@ -571,7 +634,7 @@ pub fn client_apply_snapshots_system(
 
             // Update ghosts
             for g_state in ghosts {
-                for (id, mut pos, mut ghost) in query_ghosts.iter_mut() {
+                for (id, mut pos, mut ghost, mut dynamics) in query_ghosts.iter_mut() {
                     if *id == g_state.id {
                         pos.x = g_state.position[0];
                         pos.y = g_state.position[1];
@@ -582,6 +645,17 @@ pub fn client_apply_snapshots_system(
                         ghost.calm_time_secs = g_state.calm_time_secs;
                         ghost.repellent_hits_delta = g_state.repellent_hits_delta;
                         ghost.repellent_misses_delta = g_state.repellent_misses_delta;
+
+                        dynamics.freezing_temp_clarity = g_state.freezing_temp_clarity;
+                        dynamics.floating_orbs_clarity = g_state.floating_orbs_clarity;
+                        dynamics.uv_ectoplasm_clarity = g_state.uv_ectoplasm_clarity;
+                        dynamics.emf_level5_clarity = g_state.emf_level5_clarity;
+                        dynamics.evp_recording_clarity = g_state.evp_recording_clarity;
+                        dynamics.spirit_box_clarity = g_state.spirit_box_clarity;
+                        dynamics.rl_presence_clarity = g_state.rl_presence_clarity;
+                        dynamics.cpm500_clarity = g_state.cpm500_clarity;
+                        dynamics.visual_alpha_multiplier = g_state.visual_alpha_multiplier;
+                        dynamics.rage_tendency_multiplier = g_state.rage_tendency_multiplier;
                     }
                 }
             }
@@ -649,7 +723,7 @@ pub fn client_apply_snapshots_system(
 
             // Update gear
             for g_sync in gear {
-                for (id, mut pos, mut toggle, battery, flashlight) in query_gear.iter_mut() {
+                for (id, mut pos, mut toggle, battery, flashlight, sage) in query_gear.iter_mut() {
                     if *id == g_sync.id {
                         pos.x = g_sync.position[0];
                         pos.y = g_sync.position[1];
@@ -658,14 +732,92 @@ pub fn client_apply_snapshots_system(
                         if let Some(mut b) = battery {
                             b.level = g_sync.battery;
                         }
-                        if let (Some(mut f), Some(status)) = (
-                            flashlight,
-                            g_sync
-                                .mode
-                                .as_ref()
-                                .and_then(|m| m.parse::<FlashlightStatus>().ok()),
-                        ) {
-                            f.status = status;
+
+                        match &g_sync.details {
+                            unnet_core::messages::GearDetails::Flashlight(status) => {
+                                if let Some(mut f) = flashlight {
+                                    f.status = status.clone();
+                                }
+                            }
+                            unnet_core::messages::GearDetails::Sage {
+                                consumed,
+                                is_active,
+                                remaining_secs,
+                            } => {
+                                if let Some(mut s) = sage {
+                                    s.consumed = *consumed;
+                                    s.is_active = *is_active;
+
+                                    let elapsed =
+                                        s.burn_timer.duration().as_secs_f32() - remaining_secs;
+                                    s.burn_timer.set_elapsed(std::time::Duration::from_secs_f32(
+                                        elapsed.max(0.0),
+                                    ));
+                                }
+                            }
+                            unnet_core::messages::GearDetails::None => {}
+                        }
+                    }
+                }
+            }
+
+            // Update events
+            for event in events {
+                match event {
+                    TransientEvent::PlaySound {
+                        sound_file,
+                        volume,
+                        position,
+                    } => {
+                        ev_sound.write(SoundEvent {
+                            sound_file: sound_file.clone(),
+                            volume: *volume,
+                            position: position.map(|p| Position {
+                                x: p[0],
+                                y: p[1],
+                                z: p[2],
+                                visual_priority: 0.0,
+                            }),
+                        });
+                    }
+                    TransientEvent::SpawnParticle {
+                        particle_type,
+                        position,
+                    } => {
+                        if particle_type == "smoke" {
+                            let mut rng = unfoundation_core::random_seed::rng();
+                            let pos = Position {
+                                x: position[0],
+                                y: position[1],
+                                z: position[2],
+                                visual_priority: 0.0,
+                            };
+                            commands
+                                .spawn(Sprite {
+                                    image: asset_server.load("img/smoke.png"),
+                                    color: Color::NONE,
+                                    ..default()
+                                })
+                                .insert(
+                                    Transform::from_translation(perspective::to_screen_coord(pos))
+                                        .with_scale(Vec3::new(0.2, 0.2, 0.2)),
+                                )
+                                .insert(SageSmokeParticle)
+                                .insert(GameSprite)
+                                .insert(pos)
+                                .insert(unspatial_core::direction::Direction {
+                                    dx: rng.random_range(-0.9..0.9),
+                                    dy: rng.random_range(-0.9..0.9),
+                                    dz: rng.random_range(-0.5..0.5),
+                                })
+                                .insert(MapColor {
+                                    color: Color::srgba(1.0, 1.0, 1.0, 0.20),
+                                })
+                                .insert(SmokeParticleTimer(Timer::from_seconds(
+                                    5.0,
+                                    TimerMode::Once,
+                                )))
+                                .insert(SpriteLayer::default());
                         }
                     }
                 }
@@ -677,9 +829,10 @@ pub fn client_apply_snapshots_system(
 pub fn host_apply_input_system(
     cli: Res<CliOptions>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
-    mut query_players: Query<(&PlayerSprite, &mut PlayerInput, &Position), Without<MainPlayer>>,
+    mut query_players: Query<(&NetworkId, &mut PlayerInput), Without<MainPlayer>>,
     query_van: Query<(&Position, &Behavior)>,
     mut game_next_state: ResMut<NextState<GameState>>,
+    query_player_pos: Query<(&NetworkId, &Position), (With<PlayerSprite>, Without<MainPlayer>)>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -688,6 +841,7 @@ pub fn host_apply_input_system(
     for ev in ev_reader.read() {
         match &ev.message {
             NetworkMessage::PlayerInput {
+                player_id,
                 movement,
                 run,
                 interact,
@@ -699,25 +853,26 @@ pub fn host_apply_input_system(
                 inventory_swap,
                 target_position,
             } => {
-                // In this MVP, we apply remote input to all sprites that aren't the MainPlayer.
-                // This correctly handles the single client without hardcoding IDs.
-                for (_, mut input, _) in query_players.iter_mut() {
-                    input.movement = Vec2::new(movement[0], movement[1]);
-                    input.run = *run;
-                    input.interact = *interact;
-                    input.grab = *grab;
-                    input.drop = *drop;
-                    input.use_right_hand = *use_right_hand;
-                    input.use_left_hand = *use_left_hand;
-                    input.inventory_cycle = *inventory_cycle;
-                    input.inventory_swap = *inventory_swap;
-                    input.target_position = target_position.map(|v| Vec2::new(v[0], v[1]));
+                for (id, mut input) in query_players.iter_mut() {
+                    if id == player_id {
+                        input.movement = Vec2::new(movement[0], movement[1]);
+                        input.run = *run;
+                        input.interact = *interact;
+                        input.grab = *grab;
+                        input.drop = *drop;
+                        input.use_right_hand = *use_right_hand;
+                        input.use_left_hand = *use_left_hand;
+                        input.inventory_cycle = *inventory_cycle;
+                        input.inventory_swap = *inventory_swap;
+                        input.target_position = target_position.map(|v| Vec2::new(v[0], v[1]));
+                    }
                 }
             }
             NetworkMessage::RequestTruckEntry => {
                 debug!("Network: Received RequestTruckEntry from client");
                 let mut near_van = false;
-                for (_, _, p_pos) in query_players.iter() {
+                for (_id, p_pos) in query_player_pos.iter() {
+                    // For now we just check if ANY player (client) is near van when they request it
                     for (v_pos, v_beh) in query_van.iter() {
                         if v_beh.is_van_entry() && p_pos.delta(*v_pos).distance() < 2.0 {
                             near_van = true;
@@ -772,56 +927,5 @@ pub fn autostart_net_game(
         });
     } else if matches!(cli.net_mode, NetMode::Host { .. }) {
         warn!("NetMode::Host active but no --map provided. Staying in Main Menu.");
-    }
-}
-
-pub fn host_replicate_sounds_system(
-    cli: Res<CliOptions>,
-    mut conn: ResMut<NetworkConn>,
-    mut ev_reader: MessageReader<SoundEvent>,
-) {
-    if !matches!(cli.net_mode, NetMode::Host { .. }) {
-        return;
-    }
-    if !conn.is_active() {
-        return;
-    }
-
-    for ev in ev_reader.read() {
-        conn.send(NetworkMessage::SoundEvent {
-            sound_file: ev.sound_file.clone(),
-            volume: ev.volume,
-            position: ev.position.map(|p| [p.x, p.y, p.z]),
-        });
-    }
-}
-
-pub fn client_replicate_sounds_system(
-    cli: Res<CliOptions>,
-    mut ev_reader: MessageReader<NetworkDataEvent>,
-    mut ev_sound: MessageWriter<SoundEvent>,
-) {
-    if !matches!(cli.net_mode, NetMode::Join { .. }) {
-        return;
-    }
-
-    for ev in ev_reader.read() {
-        if let NetworkMessage::SoundEvent {
-            sound_file,
-            volume,
-            position,
-        } = &ev.message
-        {
-            ev_sound.write(SoundEvent {
-                sound_file: sound_file.clone(),
-                volume: *volume,
-                position: position.map(|p| Position {
-                    x: p[0],
-                    y: p[1],
-                    z: p[2],
-                    visual_priority: 0.0,
-                }),
-            });
-        }
     }
 }

@@ -12,8 +12,9 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+serde = { workspace = true }
 enum-iterator = { workspace = true }
 strum = { workspace = true }
 unfoundation-core = { path = "../unfoundation-core" }
 unghost-core = { path = "../unghost-core" }
-unrender-std = { path = "../unrender-std" }
+ungear-core = { path = "../ungear-core" }

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unrender_std::resources::sprite_registry::GearSpriteID;
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum EMFLevel {

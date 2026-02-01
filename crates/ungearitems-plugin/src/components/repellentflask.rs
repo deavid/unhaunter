@@ -24,7 +24,7 @@ use crate::metrics;
 use bevy::{color::palettes::css, prelude::*};
 use rand::Rng;
 pub(crate) use ungearitems_core::components::repellentflask::RepellentFlask;
-use unrender_std::resources::sprite_registry::GearSpriteID;
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 
 // Colors for repellent particles
 const ELECTRIC_BLUE: Color = Color::srgba(0.0, 0.3, 1.0, 1.0);

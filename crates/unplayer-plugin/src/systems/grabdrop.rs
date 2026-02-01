@@ -3,6 +3,7 @@ use unbehavior::behavior::Behavior;
 use unbehavior::components::FloorItemCollidable;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::BoardCollisionField;
+use unevents_core::events::sound::SoundEvent;
 use unfoundation_core::types::gear::{EquipmentPosition, Hand};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::{HeldObject, PlayerGear};
@@ -55,7 +56,7 @@ fn grab_object(
         (Without<PlayerSprite>, With<FloorItemCollidable>),
     >,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    mut ev_sound: MessageWriter<SoundEvent>,
 ) {
     for (mut player_gear, player_pos, player_input) in players.iter_mut() {
         if player_input.grab {
@@ -98,9 +99,11 @@ fn grab_object(
                         commands.entity(entity).remove::<GameSprite>();
                         commands.entity(entity).remove::<SpriteLayer>();
                         commands.entity(entity).remove::<MapColor>();
-                        commands.spawn(AudioPlayer::new(
-                            asset_server.load("sounds/item-pickup-whoosh.ogg"),
-                        ));
+                        ev_sound.write(SoundEvent {
+                            sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
+                            volume: 1.0,
+                            position: Some(*player_pos),
+                        });
                     }
                 } else if let Some(behavior) = behavior
                     && behavior.p.object.pickable
@@ -108,9 +111,11 @@ fn grab_object(
                 {
                     player_gear.held_item = Some(HeldObject { entity });
                     commands.entity(entity).remove::<FloorItemCollidable>();
-                    commands.spawn(AudioPlayer::new(
-                        asset_server.load("sounds/item-pickup-whoosh.ogg"),
-                    ));
+                    ev_sound.write(SoundEvent {
+                        sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
+                        volume: 1.0,
+                        position: Some(*player_pos),
+                    });
                 }
             }
         }
@@ -122,7 +127,7 @@ fn drop_object(
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
     pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,
-    asset_server: Res<AssetServer>,
+    mut ev_sound: MessageWriter<SoundEvent>,
 ) {
     for (mut player_gear, player_pos, player_input, player_sprite) in players.iter_mut() {
         if player_input.drop {
@@ -148,9 +153,11 @@ fn drop_object(
                 let entity = held.entity;
                 commands.entity(entity).insert(*player_pos);
                 commands.entity(entity).insert(FloorItemCollidable);
-                commands.spawn(AudioPlayer::new(
-                    asset_server.load("sounds/item-drop-clunk.ogg"),
-                ));
+                ev_sound.write(SoundEvent {
+                    sound_file: "sounds/item-drop-clunk.ogg".to_string(),
+                    volume: 1.0,
+                    position: Some(*player_pos),
+                });
                 continue;
             }
 
@@ -161,9 +168,11 @@ fn drop_object(
                 commands.entity(entity).insert(DeployedGear {
                     direction: player_sprite.movement,
                 });
-                commands.spawn(AudioPlayer::new(
-                    asset_server.load("sounds/item-drop-clunk.ogg"),
-                ));
+                ev_sound.write(SoundEvent {
+                    sound_file: "sounds/item-drop-clunk.ogg".to_string(),
+                    volume: 1.0,
+                    position: Some(*player_pos),
+                });
                 if !player_gear.inventory.is_empty() {
                     let next_item = player_gear.inventory.remove(0);
                     player_gear.right_hand = Some(next_item);

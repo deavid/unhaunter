@@ -13,7 +13,7 @@ use rand::Rng;
 use ungear_core::types::gear::utils::on_off;
 use ungearitems_core::components::recorder::Recorder;
 use unghost_core::types::evidence::Evidence;
-use unrender_std::resources::sprite_registry::GearSpriteID;
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_recorder(

@@ -394,7 +394,7 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(SpriteLayer(10.0))
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(Ethereal::default())
-        .insert(GhostBehaviorDynamics::default())
+        .insert(p.haunt_state.ghost_dynamics)
         .insert(GhostTag)
         .insert(ghost_id_net)
         .insert(ghost_spawn)
@@ -528,12 +528,11 @@ fn spawn_ambient_sounds(p: &ClassicModeSystemParam, commands: &mut Commands) {
 }
 
 pub(crate) fn sync_ghost_visuals(
-    haunt_state: Res<HauntState>,
-    mut q_ghost: Query<&mut SpectralClarity, With<GhostTag>>,
+    mut q_ghost: Query<(&mut SpectralClarity, &GhostBehaviorDynamics), With<GhostTag>>,
 ) {
-    for mut clarity in q_ghost.iter_mut() {
-        clarity.uv = haunt_state.ghost_dynamics.uv_ectoplasm_clarity;
-        clarity.rl = haunt_state.ghost_dynamics.rl_presence_clarity;
-        clarity.alpha = haunt_state.ghost_dynamics.visual_alpha_multiplier;
+    for (mut clarity, dynamics) in q_ghost.iter_mut() {
+        clarity.uv = dynamics.uv_ectoplasm_clarity;
+        clarity.rl = dynamics.rl_presence_clarity;
+        clarity.alpha = dynamics.visual_alpha_multiplier;
     }
 }

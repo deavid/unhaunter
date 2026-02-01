@@ -9,7 +9,7 @@ use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;
 pub(crate) use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
-use unrender_std::resources::sprite_registry::GearSpriteID;
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 use untypes_core::cli::{CliOptions, is_host};
 
 pub(crate) fn update_flashlight(

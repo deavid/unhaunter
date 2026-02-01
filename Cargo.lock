@@ -5915,10 +5915,11 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
+ "serde",
  "strum",
  "unfoundation-core",
+ "ungear-core",
  "unghost-core",
- "unrender-std",
 ]
 
 [[package]]
@@ -5943,6 +5944,7 @@ dependencies = [
  "uninteraction-core",
  "unlight-core",
  "unmetrics-core",
+ "unnet-core",
  "unplayer-core",
  "unprofile-core",
  "unrender-std",
@@ -5985,6 +5987,7 @@ dependencies = [
  "unghost-core",
  "uninteraction-core",
  "unmetrics-core",
+ "unnet-core",
  "unnoise-core",
  "unplayer-core",
  "unrender-std",
@@ -6312,6 +6315,8 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
+ "ungearitems-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6319,7 +6324,7 @@ name = "unnet-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_platform",
+ "rand 0.9.2",
  "serde_json",
  "unbehavior",
  "unboard-core",
@@ -6473,10 +6478,10 @@ dependencies = [
  "bevy_platform",
  "enum-iterator",
  "ndarray",
- "serde",
  "unbehavior",
  "unboard-core",
  "unfoundation-core",
+ "ungear-core",
  "unnet-core",
  "unspatial-core",
 ]

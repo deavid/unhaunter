@@ -28,6 +28,7 @@ ungearitems-core = { path = "../ungearitems-core" }
 untags-core = { path = "../untags-core" }
 unspatial-core = { path = "../unspatial-core" }
 unghost-core = { path = "../unghost-core" }
+unnet-core = { path = "../unnet-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

@@ -159,7 +159,11 @@ use crate::components::interaction::{Locked, Tween};
 
 /// Registers execution systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(bevy::prelude::Update, ghost_interaction_execution_system);
+    use untypes_core::cli::is_host;
+    app.add_systems(
+        bevy::prelude::Update,
+        ghost_interaction_execution_system.run_if(is_host),
+    );
 }
 
 /// System that executes ghost interactions by processing GhostInteractionEvent

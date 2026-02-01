@@ -4,15 +4,10 @@ use bevy::prelude::*;
 use rand::Rng;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
-use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
-use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::ResolutionFactor;
 use unsound_core::emitter::SoundEmitter;
-use unspatial_core::direction::Direction;
-use unspatial_core::perspective;
 use unspatial_core::position::Position;
 
 use crate::components::fade_out::FadeOut;
@@ -36,6 +31,7 @@ pub(crate) fn ghost_fade_out_system(
         Option<&GhostSprite>,
     )>,
     mut ga: SoundEmitter,
+    mut ev_snapshot_events: MessageWriter<unnet_core::messages::TransientEvent>,
 ) {
     let mut rng = random_seed::rng();
     for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {
@@ -48,32 +44,10 @@ pub(crate) fn ghost_fade_out_system(
         // Emit smoke particles while fading
         if fade_out.timer.remaining_secs() > 0.0 && rng.random_bool(((1.0 - rem_f) / 3.0) as f64) {
             let pos = *position;
-            commands
-                .spawn(Sprite {
-                    image: ga.asset_server.load("img/smoke.png"),
-                    color: Color::NONE,
-                    ..default()
-                })
-                .insert(
-                    Transform::from_translation(perspective::to_screen_coord(pos))
-                        .with_scale(Vec3::new(0.2, 0.2, 0.2)),
-                )
-                .insert(SageSmokeParticle)
-                .insert(GameSprite)
-                .insert(pos)
-                .insert(Direction {
-                    dx: rng.random_range(-0.9..0.9),
-                    dy: rng.random_range(-0.9..0.9),
-                    dz: rng.random_range(-0.5..0.5), // Add Z direction for smoke particles
-                })
-                .insert(MapColor {
-                    color: Color::WHITE.with_alpha(0.20),
-                })
-                .insert(SmokeParticleTimer(Timer::from_seconds(
-                    5.0,
-                    TimerMode::Once,
-                )))
-                .insert(SpriteLayer::default());
+            ev_snapshot_events.write(unnet_core::messages::TransientEvent::SpawnParticle {
+                particle_type: "smoke".to_string(),
+                position: [pos.x, pos.y, pos.z],
+            });
         }
 
         // Play roar sounds
@@ -211,13 +185,12 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            ghost_movement,
-            ghost_enrage,
-            ghost_fade_out_system,
-            update_ghost_warning_field,
-            ghost_scale_glitch_system,
-        )
-            .run_if(is_host),
+            ghost_movement.run_if(is_host),
+            ghost_enrage.run_if(is_host),
+            ghost_fade_out_system.run_if(is_host),
+            update_ghost_warning_field.run_if(is_host),
+            ghost_scale_glitch_system.run_if(is_host),
+        ),
     );
 
     app.add_systems(Update, (ghost_visual_sync, ghost_influence_visual_sync));

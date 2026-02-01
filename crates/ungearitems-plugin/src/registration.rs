@@ -8,6 +8,7 @@ use ungear_core::components::core::{
 };
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
 use ungear_core::types::gear::kind::GearKind;
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::quartz::QuartzStoneData;
 use ungearitems_core::components::recorder::Recorder;
 use ungearitems_core::components::sage::SageBundleData;
@@ -16,7 +17,6 @@ use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unrender_std::components::light::LightEmitter;
-use unrender_std::resources::sprite_registry::GearSpriteID;
 
 use crate::components::compass::Compass;
 use crate::components::emfmeter::EMFMeter;

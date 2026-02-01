@@ -18,13 +18,13 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::Rng;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;
+use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::types::evidence::Evidence;
 use unlight_core::resources::light_grid::LightGrid;
 use unprofile_core::profile::PlayerProfileData;
-use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_spiritbox(

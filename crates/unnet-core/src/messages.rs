@@ -1,6 +1,19 @@
 use crate::network_id::NetworkId;
-use bevy::prelude::Message;
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use ungearitems_core::components::flashlight::FlashlightStatus;
+use untypes_core::states::{AppState, GameState};
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum GearDetails {
+    Flashlight(FlashlightStatus),
+    Sage {
+        consumed: bool,
+        is_active: bool,
+        remaining_secs: f32,
+    },
+    None,
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PlayerState {
@@ -28,6 +41,16 @@ pub struct GhostState {
     pub calm_time_secs: f32,
     pub repellent_hits_delta: f32,
     pub repellent_misses_delta: f32,
+    pub freezing_temp_clarity: f32,
+    pub floating_orbs_clarity: f32,
+    pub uv_ectoplasm_clarity: f32,
+    pub emf_level5_clarity: f32,
+    pub evp_recording_clarity: f32,
+    pub spirit_box_clarity: f32,
+    pub rl_presence_clarity: f32,
+    pub cpm500_clarity: f32,
+    pub visual_alpha_multiplier: f32,
+    pub rage_tendency_multiplier: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -50,8 +73,21 @@ pub struct GearSyncState {
     pub id: NetworkId,
     pub position: [f32; 3],
     pub is_on: bool,
-    pub mode: Option<String>,
+    pub details: GearDetails,
     pub battery: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Message)]
+pub enum TransientEvent {
+    PlaySound {
+        sound_file: String,
+        volume: f32,
+        position: Option<[f32; 3]>,
+    },
+    SpawnParticle {
+        particle_type: String,
+        position: [f32; 3],
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -68,17 +104,19 @@ pub enum NetworkMessage {
     /// Periodic state update from Host to Client.
     Snapshot {
         tick: u64,
-        app_state: String,
-        game_state: String,
+        app_state: AppState,
+        game_state: GameState,
         players: Vec<PlayerState>,
         ghosts: Vec<GhostState>,
         rooms: Vec<RoomSync>,
         map_tiles: Vec<MapTileState>,
         gear: Vec<GearSyncState>,
         player_gear: Vec<PlayerGearState>,
+        events: Vec<TransientEvent>,
     },
     /// Periodic input update from Client to Host.
     PlayerInput {
+        player_id: NetworkId,
         movement: [f32; 2],
         run: bool,
         interact: bool,
@@ -92,12 +130,6 @@ pub enum NetworkMessage {
     },
     /// Client requests to enter the truck/van.
     RequestTruckEntry,
-    /// Replication of a sound event from Host to Client.
-    SoundEvent {
-        sound_file: String,
-        volume: f32,
-        position: Option<[f32; 3]>,
-    },
 }
 
 #[derive(Debug, Clone, Message)]
