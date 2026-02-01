@@ -20,6 +20,10 @@ pub(crate) fn player_gear_usage_system(
         if player_input.use_right_hand
             && let Some(entity) = player_gear.right_hand
         {
+            debug!(
+                "player_gear_usage_system: Toggling right-hand item {:?} on entity {:?}",
+                player_gear.right_hand, entity
+            );
             if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
                 toggle.is_on = !toggle.is_on;
                 if let Some(pos) = pos {
@@ -33,6 +37,10 @@ pub(crate) fn player_gear_usage_system(
         if player_input.use_left_hand
             && let Some(entity) = player_gear.left_hand
         {
+            debug!(
+                "player_gear_usage_system: Toggling left-hand item {:?} on entity {:?}",
+                player_gear.left_hand, entity
+            );
             if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
                 toggle.is_on = !toggle.is_on;
                 if let Some(pos) = pos {

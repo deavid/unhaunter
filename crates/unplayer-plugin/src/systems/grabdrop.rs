@@ -7,7 +7,7 @@ use unfoundation_core::types::gear::{EquipmentPosition, Hand};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::{HeldObject, PlayerGear};
 use ungear_core::resources::spawner::GearMarker;
-use ungear_core::types::gear::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use unplayer_core::components::{PlayerInput, PlayerSprite};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;

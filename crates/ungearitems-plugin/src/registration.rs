@@ -7,8 +7,12 @@ use ungear_core::components::core::{
     PerceivedClarity, StatusText,
 };
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
-use ungear_core::types::gear::GearKind;
-use ungearitems_core::prelude::{QuartzStoneData, Recorder, SageBundleData, SaltData, Thermometer};
+use ungear_core::types::gear::kind::GearKind;
+use ungearitems_core::components::quartz::QuartzStoneData;
+use ungearitems_core::components::recorder::Recorder;
+use ungearitems_core::components::sage::SageBundleData;
+use ungearitems_core::components::salt::SaltData;
+use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unrender_std::components::light::LightEmitter;

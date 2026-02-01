@@ -9,9 +9,10 @@ use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use untruck_core::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
+use untruck_core::components::truck_ui_button::TruckUIButton;
+use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
 const DELAY_AFTER_INCORRECT_MARKING_SECONDS: f32 = 10.0;

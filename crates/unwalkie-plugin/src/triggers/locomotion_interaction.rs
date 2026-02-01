@@ -11,7 +11,7 @@ use unplayer_core::components::{Hiding, MainPlayer, PlayerInputMapping, PlayerSp
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
 const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;
@@ -346,7 +346,7 @@ fn trigger_player_stays_hidden_too_long(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     hiding_query: Query<Entity, With<Hiding>>,
-    ghost_query: Query<&unghost_core::components::GhostSprite>,
+    ghost_query: Query<&unghost_core::components::ghost_sprite::GhostSprite>,
     mut post_hunt_hidden_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {
@@ -400,7 +400,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&Position, Entity), Without<Hiding>>,
     hiding_spots: Query<(&Position, &Behavior)>,
-    ghost_query: Query<&unghost_core::components::GhostSprite>,
+    ghost_query: Query<&unghost_core::components::ghost_sprite::GhostSprite>,
     mut near_hiding_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {

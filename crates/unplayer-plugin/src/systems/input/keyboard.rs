@@ -81,9 +81,9 @@ pub(crate) fn keyboard_input_system(
                 }
                 waypoint_queue.clear();
             }
-        }
 
-        player_input.movement = movement;
+            player_input.movement = movement;
+        }
     }
 }
 

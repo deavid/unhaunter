@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use ungear_core::types::GearKind;
+    use ungear_core::types::gear::kind::GearKind;
     use unghost_core::types::evidence::Evidence;
 
-    use crate::events::{WalkieEvent, WalkieEventPriority, WalkieRepeatBehavior};
+    use crate::events::walkie_types::{WalkieEvent, WalkieEventPriority, WalkieRepeatBehavior};
 
     #[test]
     fn test_effective_priority_downgrading() {

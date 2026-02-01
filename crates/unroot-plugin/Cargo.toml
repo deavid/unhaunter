@@ -12,7 +12,7 @@ workspace = true
 
 [dependencies]
 unassets-core = { path = "../unassets-core" }
-undifficulty-core = { path = "../undifficulty-core" }
+undifficulty-plugin = { path = "../undifficulty-plugin" }
 untypes-core = { path = "../untypes-core" }
 unevents-core = { path = "../unevents-core" }
 unmenu-core = { path = "../unmenu-core" }

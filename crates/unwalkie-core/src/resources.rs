@@ -1,4 +1,4 @@
-use crate::events::WalkieEvent;
+use crate::events::walkie_types::WalkieEvent;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use rand::Rng;

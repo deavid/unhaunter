@@ -17,7 +17,7 @@ use uninteraction_core::interaction::Toggleable;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::Rng;
-use unfoundation_core::utils::kelvin_to_celsius;
+use unfoundation_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};

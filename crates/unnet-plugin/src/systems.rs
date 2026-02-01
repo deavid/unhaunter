@@ -12,15 +12,15 @@ use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::LoadLevelEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
-use uninteraction_core::interaction::Toggleable;
-use uninteraction_core::interactivestuff::InteractiveStuff;
+use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unnet_core::messages::{GearSyncState, MapTileState, NetworkMessage, RoomSync};
+use unnet_core::network_id::NetworkId;
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
-use untags_core::tags::{GhostTag, NetworkId};
+use untags_core::tags::GhostTag;
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::GameState;
@@ -191,7 +191,7 @@ pub fn handshake_handler_system(
                         info!("Network: Sending Welcome...");
                         let seed = unfoundation_core::random_seed::heavy_rng_seed();
                         to_send.push(NetworkMessage::Welcome {
-                            id: 2, // Client is always 2 in MVP
+                            id: NetworkId(2), // Client is always 2 in MVP
                             map_seed: seed,
                             map_filepath: cli.map_path.clone().unwrap_or_default(),
                             difficulty_id: cli
@@ -209,7 +209,7 @@ pub fn handshake_handler_system(
                     difficulty_id,
                 } => {
                     info!(
-                        "Network: Received Welcome (Your ID: {}, Seed: {}, Map: {})",
+                        "Network: Received Welcome (Your ID: {:?}, Seed: {}, Map: {})",
                         id, map_seed, map_filepath
                     );
                     if matches!(cli.net_mode, NetMode::Join { .. }) {
@@ -245,7 +245,7 @@ pub fn host_send_snapshots_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
     query_players: Query<(&PlayerSprite, &Position)>,
-    query_ghosts: Query<&Position, With<GhostTag>>,
+    query_ghosts: Query<(&NetworkId, &Position), With<GhostTag>>,
     time: Res<Time>,
     room_db: Res<RoomDB>,
     query_map_tiles: Query<(&Position, &Behavior), With<Interactive>>,
@@ -263,14 +263,15 @@ pub fn host_send_snapshots_system(
     let players = query_players
         .iter()
         .map(|(p, pos)| unnet_core::messages::PlayerState {
-            id: p.id as u64,
+            id: p.id,
             position: [pos.x, pos.y, pos.z, 0.0], // orientation placeholder
         })
         .collect();
 
     let ghosts = query_ghosts
         .iter()
-        .map(|pos| unnet_core::messages::GhostState {
+        .map(|(id, pos)| unnet_core::messages::GhostState {
+            id: *id,
             position: [pos.x, pos.y, pos.z],
         })
         .collect();
@@ -302,7 +303,7 @@ pub fn host_send_snapshots_system(
         .iter()
         .map(
             |(id, pos, toggle): (&NetworkId, &Position, &Toggleable)| GearSyncState {
-                id: id.0,
+                id: *id,
                 position: [pos.x, pos.y, pos.z],
                 is_on: toggle.is_on,
             },
@@ -351,10 +352,10 @@ pub fn client_apply_snapshots_system(
     cli: Res<CliOptions>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut query_players: Query<
-        (&PlayerSprite, &mut Position, &mut AnimationTimer),
-        (Without<GhostTag>, Without<NetworkId>),
+        (&NetworkId, &mut Position, &mut AnimationTimer),
+        (With<PlayerSprite>, Without<GhostTag>),
     >,
-    mut query_ghosts: Query<&mut Position, (With<GhostTag>, Without<NetworkId>)>,
+    mut query_ghosts: Query<(&NetworkId, &mut Position), (With<GhostTag>, Without<PlayerSprite>)>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_field: Res<BoardEntityField>,
     board_topo: Res<BoardTopology>,
@@ -362,7 +363,9 @@ pub fn client_apply_snapshots_system(
         (&Position, &Behavior),
         (Without<PlayerSprite>, Without<GhostTag>, Without<NetworkId>),
     >,
-    mut interactive_stuff: InteractiveStuff,
+    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
+    mut room_db: ResMut<RoomDB>,
+    mut game_next_state: ResMut<NextState<GameState>>,
     mut query_gear: Query<
         (&NetworkId, &mut Position, &mut Toggleable),
         (Without<PlayerSprite>, Without<GhostTag>),
@@ -396,14 +399,14 @@ pub fn client_apply_snapshots_system(
                     _ => *current_game_state.get(),
                 };
                 if new_state != *current_game_state.get() {
-                    interactive_stuff.game_next_state.set(new_state);
+                    game_next_state.set(new_state);
                 }
             }
 
             // Update players
             for p_state in players {
-                for (p_sprite, mut pos, mut anim) in query_players.iter_mut() {
-                    if p_sprite.id as u64 == p_state.id {
+                for (id, mut pos, mut anim) in query_players.iter_mut() {
+                    if *id == p_state.id {
                         let old_pos = *pos;
                         pos.x = p_state.position[0];
                         pos.y = p_state.position[1];
@@ -431,10 +434,12 @@ pub fn client_apply_snapshots_system(
 
             // Update ghosts
             for g_state in ghosts {
-                if let Ok(mut pos) = query_ghosts.single_mut() {
-                    pos.x = g_state.position[0];
-                    pos.y = g_state.position[1];
-                    pos.z = g_state.position[2];
+                for (id, mut pos) in query_ghosts.iter_mut() {
+                    if *id == g_state.id {
+                        pos.x = g_state.position[0];
+                        pos.y = g_state.position[1];
+                        pos.z = g_state.position[2];
+                    }
                 }
             }
 
@@ -446,7 +451,7 @@ pub fn client_apply_snapshots_system(
                 } else {
                     TileState::Off
                 };
-                if let Some(state) = interactive_stuff.roomdb.room_state.get_mut(&r_sync.name)
+                if let Some(state) = room_db.room_state.get_mut(&r_sync.name)
                     && *state != new_state
                 {
                     *state = new_state;
@@ -477,18 +482,18 @@ pub fn client_apply_snapshots_system(
                 {
                     let entities = &board_field.0[[rel_x as usize, rel_y as usize, rel_z as usize]];
                     for &entity in entities {
-                        if let Ok((pos, beh)) = query_tiles.get(entity)
+                        if let Ok((_pos, beh)) = query_tiles.get(entity)
                             && (beh.cfg().tileset != t_sync.tileset
                                 || beh.cfg().tileuid != t_sync.tileuid)
                         {
-                            interactive_stuff.execute_interaction(
-                                entity,
-                                pos,
-                                None,
-                                beh,
-                                None, // Map tiles synced this way are usually not room-bound or redundant
-                                InteractionExecutionType::ChangeState,
+                            debug!(
+                                "Client: Applying map tile update at {:?} (tileset: {}, tileuid: {})",
+                                bpos, t_sync.tileset, t_sync.tileuid
                             );
+                            ev_interaction.write(ExecuteInteractionEvent {
+                                entity,
+                                ietype: InteractionExecutionType::ChangeState,
+                            });
                         }
                     }
                 }
@@ -497,7 +502,7 @@ pub fn client_apply_snapshots_system(
             // Update gear
             for g_sync in gear {
                 for (id, mut pos, mut toggle) in query_gear.iter_mut() {
-                    if id.0 == g_sync.id {
+                    if *id == g_sync.id {
                         pos.x = g_sync.position[0];
                         pos.y = g_sync.position[1];
                         pos.z = g_sync.position[2];
@@ -533,7 +538,7 @@ pub fn host_apply_input_system(
         {
             // Client is always ID 2 in this MVP
             for (p_sprite, mut input) in query_players.iter_mut() {
-                if p_sprite.id == 2 {
+                if p_sprite.id == NetworkId(2) {
                     input.movement = Vec2::new(movement[0], movement[1]);
                     input.run = *run;
                     input.interact = *interact;

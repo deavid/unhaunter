@@ -7,7 +7,7 @@ use crate::manual_types::ManualChapterIndex;
 use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
 use unfoundation_core::types::truck::TabContents;
-use ungear_core::types::gear::{GearKind, PlayerGearKind};
+use ungear_core::types::gear::kind::{GearKind, PlayerGearKind};
 use unghost_core::types::ghost::definitions::GhostSet;
 use untypes_core::difficulty::Difficulty;
 

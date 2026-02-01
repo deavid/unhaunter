@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
-use unwalkie_core::events::WalkieTalkingEvent;
+use unwalkie_core::events::walkie_types::WalkieTalkingEvent;
 use unwalkie_core::resources::WalkiePlay;
 
 pub struct UnhaunterWalkiePlugin;

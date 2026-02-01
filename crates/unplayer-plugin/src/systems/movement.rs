@@ -6,10 +6,10 @@ use unbehavior::components::RoomState;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::npc_help::NpcHelpEvent;
-use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use unevents_core::events::roomchanged::InteractionExecutionType;
 use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
-use uninteraction_core::interactivestuff::InteractiveStuff;
+use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unplayer_core::components::PlayerInput;
 use unplayer_core::components::PlayerSprite;
@@ -63,8 +63,7 @@ pub(crate) fn player_movement_system(
         ),
         Without<PlayerSprite>,
     >,
-    mut interactive_stuff: InteractiveStuff,
-    mut ev_room: MessageWriter<RoomChangedEvent>,
+    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
     difficulty: Res<CurrentDifficulty>,
     _board_topology: Res<BoardTopology>,
@@ -206,22 +205,16 @@ pub(crate) fn player_movement_system(
                 }
             }
             if let Some(entity) = selected_entity {
-                for (entity, item_pos, interactive, behavior, rs) in
+                for (entity, _, _, behavior, _) in
                     interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
                 {
                     if behavior.is_npc() {
                         ev_npc.write(NpcHelpEvent::new(entity));
                     }
-                    if interactive_stuff.execute_interaction(
+                    ev_interaction.write(ExecuteInteractionEvent {
                         entity,
-                        item_pos,
-                        Some(interactive),
-                        behavior,
-                        rs,
-                        InteractionExecutionType::ChangeState,
-                    ) {
-                        ev_room.write(RoomChangedEvent::default());
-                    }
+                        ietype: InteractionExecutionType::ChangeState,
+                    });
                 }
             }
         }

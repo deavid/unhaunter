@@ -1,5 +1,5 @@
+use crate::events::walkie_types::WalkieEvent;
 use crate::{
-    events::walkie_types::WalkieEvent,
     generated::{
         base1::Base1Concept, basic_gear_usage::BasicGearUsageConcept,
         consumables_and_defense::ConsumablesAndDefenseConcept,
@@ -16,7 +16,7 @@ use crate::{
     traits::ConceptTrait,
 };
 use bevy::log::warn;
-use ungear_core::types::gear::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
 use untypes_core::difficulty::Difficulty;
 use unwalkie_types::types::VoiceLineData;

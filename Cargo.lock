@@ -5746,6 +5746,7 @@ dependencies = [
  "unlight-core",
  "unmapload-core",
  "unnavigation-core",
+ "unnet-core",
  "unpicking-core",
  "unplayer-core",
  "unprofile-core",
@@ -5769,6 +5770,14 @@ dependencies = [
  "ungear-core",
  "unghost-core",
  "untypes-core",
+]
+
+[[package]]
+name = "undifficulty-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "undifficulty-core",
 ]
 
 [[package]]
@@ -5892,7 +5901,6 @@ dependencies = [
  "unevents-core",
  "unfoundation-core",
  "ungear-core",
- "uninteraction-core",
  "unplayer-core",
  "unrender-std",
  "unsettings-core",
@@ -5995,13 +6003,14 @@ dependencies = [
  "unassets-core",
  "uncampaign-plugin",
  "unclassic-mode-plugin",
- "undifficulty-core",
+ "undifficulty-plugin",
  "unengine-plugin",
  "unfog-plugin",
  "unfps-plugin",
  "ungear-plugin",
  "ungearitems-plugin",
  "unghost-plugin",
+ "uninteraction-plugin",
  "unlight-plugin",
  "unmainmenu-plugin",
  "unmanual-plugin",
@@ -6079,6 +6088,19 @@ dependencies = [
  "bevy",
  "unbehavior",
  "unevents-core",
+ "unrender-std",
+ "unspatial-core",
+ "untypes-core",
+]
+
+[[package]]
+name = "uninteraction-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "unbehavior",
+ "unevents-core",
+ "uninteraction-core",
  "unrender-std",
  "unspatial-core",
  "untypes-core",
@@ -6290,7 +6312,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
- "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -6298,15 +6319,12 @@ name = "unnet-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "crossbeam-channel",
- "serde",
  "serde_json",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
  "unevents-core",
  "unfoundation-core",
- "unghost-core",
  "uninteraction-core",
  "unnet-core",
  "unplayer-core",
@@ -6364,6 +6382,7 @@ dependencies = [
  "bevy",
  "bevy_asset_loader",
  "unfoundation-core",
+ "unnet-core",
  "unsettings-core",
  "unspatial-core",
 ]
@@ -6387,6 +6406,7 @@ dependencies = [
  "uninteraction-core",
  "unlight-core",
  "unnavigation-core",
+ "unnet-core",
  "unplayer-core",
  "unprofile-core",
  "unrender-std",
@@ -6453,6 +6473,7 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "unfoundation-core",
+ "unnet-core",
  "unspatial-core",
 ]
 

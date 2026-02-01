@@ -1,12 +1,7 @@
 use bevy::prelude::*;
 
-#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct NetworkId(pub u32);
-
 #[derive(Component)]
-pub struct PlayerTag {
-    pub id: usize,
-}
+pub struct PlayerTag;
 
 #[derive(Component)]
 pub struct GhostTag;

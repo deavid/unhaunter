@@ -14,5 +14,6 @@ workspace = true
 unfoundation-core = { path = "../unfoundation-core" }
 unsettings-core = { path = "../unsettings-core" }
 unspatial-core = { path = "../unspatial-core" }
+unnet-core = { path = "../unnet-core" }
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

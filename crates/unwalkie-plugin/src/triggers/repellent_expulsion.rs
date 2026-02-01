@@ -3,7 +3,7 @@ use bevy_platform::collections::HashSet;
 use unbehavior::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::types::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
@@ -11,7 +11,7 @@ use unghost_core::types::ghost::types::GhostType;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
 /// How long player must linger after ghost is gone

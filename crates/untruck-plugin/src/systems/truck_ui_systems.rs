@@ -9,7 +9,7 @@ use unevents_core::events::mission::MissionEvent;
 use unevents_core::events::truck::TruckUIEvent;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use ungear_core::types::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
@@ -426,6 +426,12 @@ pub(crate) fn app_setup(app: &mut App) {
         )
             .run_if(in_state(GameState::Truck).and(is_host)),
     );
-    app.add_systems(OnEnter(AppState::InGame), init_repellent_tracker.run_if(is_host));
-    app.add_systems(OnExit(AppState::InGame), reset_repellent_tracker.run_if(is_host));
+    app.add_systems(
+        OnEnter(AppState::InGame),
+        init_repellent_tracker.run_if(is_host),
+    );
+    app.add_systems(
+        OnExit(AppState::InGame),
+        reset_repellent_tracker.run_if(is_host),
+    );
 }

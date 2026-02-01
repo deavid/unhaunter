@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unghost_core::components::GhostBreach;
+use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;

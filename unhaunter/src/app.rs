@@ -4,13 +4,14 @@ use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
 use unclassic_mode_plugin::plugin::ClassicModePlugin;
-use undifficulty_core::plugin::UnhaunterDifficultyPlugin;
+use undifficulty_plugin::plugin::UnhaunterDifficultyPlugin;
 use unengine_plugin::plugin::UnhaunterEnginePlugin;
 use unfog_plugin::plugin::UnhaunterFogPlugin;
 use unfps_plugin::plugin::UnhaunterFpsPlugin;
 use ungear_plugin::plugin::UnhaunterGearPlugin;
 use ungearitems_plugin::plugin::UnhaunterGearItemsPlugin;
 use unghost_plugin::plugin::UnhaunterGhostPlugin;
+use uninteraction_plugin::plugin::UnhaunterInteractionPlugin;
 use unlight_plugin::plugin::UnhaunterLightPlugin;
 use unmainmenu_plugin::plugin::UnhaunterMenuPlugin;
 use unmanual_plugin::plugin::UnhaunterManualPlugin;
@@ -81,6 +82,7 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterManualPlugin,
         UnhaunterSummaryPlugin,
         UnhaunterGearPlugin,
+        UnhaunterInteractionPlugin,
         MissionPlugin,
     ));
     app.add_plugins((

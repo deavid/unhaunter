@@ -2,11 +2,11 @@ use bevy::prelude::*;
 
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::types::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
 pub(crate) struct TutorialGearExplanationsTriggerPlugin;

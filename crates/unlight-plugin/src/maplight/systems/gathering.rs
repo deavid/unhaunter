@@ -5,10 +5,10 @@ use bevy::prelude::*;
 use ndarray::Array3;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::BoardCollisionField;
+use unfoundation_core::types::gear::{EquipmentPosition, Hand};
 use unfoundation_core::types::light::LightType;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::types::gear::{EquipmentPosition, Hand};
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::resources::light_grid::LightGrid;
 use unmetrics_core::metrics::SendMetric;
@@ -111,10 +111,8 @@ pub(crate) fn gather_flashlights_system(
 
         for (power, color, p, light_type) in player_flashlight {
             if power > 0.0 {
-                use EquipmentPosition::*;
-
                 let mut fldir = *direction;
-                if p == Stowed {
+                if p == EquipmentPosition::Stowed {
                     fldir = Direction {
                         dx: fldir.dx / 1000.0,
                         dy: fldir.dy / 1000.0,

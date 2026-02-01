@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use unspatial_core::position::Position;
 
+use unevents_core::events::roomchanged::InteractionExecutionType;
+
 /// A generic wrapper for targeting entities without knowing their type.
 #[derive(Component)]
 pub struct Target(pub Entity);
@@ -16,7 +18,12 @@ pub struct Toggleable {
     pub is_on: bool,
 }
 
-/// Marker for a trigger event on an item.
-#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+/// Event to trigger an interaction with an entity.
+#[derive(Debug, Clone, Message)]
+pub struct ExecuteInteractionEvent {
+    pub entity: Entity,
+    pub ietype: InteractionExecutionType,
+}
+#[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct Triggered;

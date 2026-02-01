@@ -15,10 +15,11 @@ use unfoundation_core::random_seed;
 use unfoundation_core::types::sound::SoundType;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use unghost_core::components::GhostBehaviorDynamics;
-use unghost_core::components::GhostBreach;
+use unghost_core::components::ghost_breach::GhostBreach;
+use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
+use unnet_core::network_id::NetworkId;
 use unplayer_core::components::{
     MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite, Stamina,
 };
@@ -105,7 +106,7 @@ pub(crate) fn classic_mode_orchestrator(
     }
 
     let mut player_gear = PlayerGear::default();
-    let mut gear_id_counter = 1000u32;
+    let mut gear_id_counter = 1000u64;
     if p.difficulty.0.player_gear.left_hand.is_some() {
         let gear_entity = p
             .gear_registry
@@ -113,7 +114,7 @@ pub(crate) fn classic_mode_orchestrator(
         player_gear.left_hand = Some(gear_entity);
         commands
             .entity(gear_entity)
-            .insert(untags_core::tags::NetworkId(gear_id_counter));
+            .insert(NetworkId(gear_id_counter));
         gear_id_counter += 1;
     }
     if p.difficulty.0.player_gear.right_hand.is_some() {
@@ -123,7 +124,7 @@ pub(crate) fn classic_mode_orchestrator(
         player_gear.right_hand = Some(gear_entity);
         commands
             .entity(gear_entity)
-            .insert(untags_core::tags::NetworkId(gear_id_counter));
+            .insert(NetworkId(gear_id_counter));
         gear_id_counter += 1;
     }
     for kind in &p.difficulty.0.player_gear.inventory {
@@ -132,7 +133,7 @@ pub(crate) fn classic_mode_orchestrator(
             player_gear.inventory.push(gear_entity);
             commands
                 .entity(gear_entity)
-                .insert(untags_core::tags::NetworkId(gear_id_counter));
+                .insert(NetworkId(gear_id_counter));
             gear_id_counter += 1;
         }
     }
@@ -195,14 +196,18 @@ pub(crate) fn classic_mode_orchestrator(
             .insert(ResolutionFactor(player_rf))
             .insert(GameSprite)
             .insert(MapTileSprite)
-            .insert(SpriteLayer(0.00001))
-            .insert(PlayerSprite::new(id, spawn_pos))
+            .insert(SpriteLayer(0.00001));
+
+        let id_net = NetworkId(id as u64);
+
+        ec.insert(PlayerSprite::new(id_net, spawn_pos))
+            .insert(id_net)
             .insert(PlayerInputMapping {
                 controls: **p.control_settings,
             })
             .insert(PlayerInput::default())
             .insert(VisibilityData::default())
-            .insert(PlayerTag { id })
+            .insert(PlayerTag)
             .insert(ShadowCaster::default())
             .insert(spawn_pos)
             .insert(MapEntityFieldBPos(spawn_pos.to_board_position()))
@@ -221,7 +226,10 @@ pub(crate) fn classic_mode_orchestrator(
 
         if is_main_player {
             ec.insert(MainPlayer)
-                .insert(Viewer { id, ..default() })
+                .insert(Viewer {
+                    id: id_net,
+                    ..default()
+                })
                 .insert(SpatialListener::new(
                     -p.audio_settings.sound_output.to_ear_offset(),
                 ))
@@ -373,6 +381,7 @@ pub(crate) fn classic_mode_orchestrator(
     material.data.y_anchor = anchor.y;
     let material_handle = p.materials1.add(material);
 
+    let ghost_id_net = NetworkId(0); // Ghost is always 0 in MVP
     let ghost_id = commands
         .spawn(Mesh2d(mesh_handle))
         .insert(MeshMaterial2d(material_handle))
@@ -387,6 +396,7 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(Ethereal::default())
         .insert(GhostBehaviorDynamics::default())
         .insert(GhostTag)
+        .insert(ghost_id_net)
         .insert(ghost_spawn)
         .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
         .insert(Movable)

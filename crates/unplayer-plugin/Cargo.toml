@@ -28,6 +28,7 @@ unfog-core = { path = "../unfog-core" }
 unrender-std = { path = "../unrender-std" }
 uninteraction-core = { path = "../uninteraction-core" }
 ungear-core = { path = "../ungear-core" }
+unnet-core = { path = "../unnet-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unspatial-core = { path = "../unspatial-core" }

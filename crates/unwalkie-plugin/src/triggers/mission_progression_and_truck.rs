@@ -1,14 +1,14 @@
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_platform::collections::HashSet;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::types::GearKind;
-use unghost_core::components::GhostBreach;
+use ungear_core::types::gear::kind::GearKind;
+use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::types::evidence::Evidence;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSprite;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
 const LINGER_DURATION_SECONDS: f32 = 45.0;

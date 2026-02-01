@@ -1,14 +1,16 @@
+use crate::network_id::NetworkId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PlayerState {
-    pub id: u64,
+    pub id: NetworkId,
     pub position: [f32; 4], // x, y, z, orientation
                             // We can add animation states later
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GhostState {
+    pub id: NetworkId,
     pub position: [f32; 3],
 }
 
@@ -29,7 +31,7 @@ pub struct RoomSync {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GearSyncState {
-    pub id: u32,
+    pub id: NetworkId,
     pub position: [f32; 3],
     pub is_on: bool,
 }
@@ -40,7 +42,7 @@ pub enum NetworkMessage {
     Hello { version: String },
     /// Response from Host to Client.
     Welcome {
-        id: u64,
+        id: NetworkId,
         map_seed: u64,
         map_filepath: String,
         difficulty_id: String,

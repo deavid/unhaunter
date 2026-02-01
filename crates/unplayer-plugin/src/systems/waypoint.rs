@@ -4,8 +4,8 @@ use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
 use unengine_core::GCameraArena;
 use unevents_core::events::npc_help::NpcHelpEvent;
-use unevents_core::events::roomchanged::RoomChangedEvent;
-use uninteraction_core::interactivestuff::InteractiveStuff;
+use unevents_core::events::roomchanged::InteractionExecutionType;
+use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
@@ -209,8 +209,7 @@ pub(crate) fn waypoint_following_system(
         &Behavior,
         Option<&unbehavior::components::RoomState>,
     )>,
-    mut interactive_stuff: InteractiveStuff,
-    mut ev_room: MessageWriter<RoomChangedEvent>,
+    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
     cli: Res<untypes_core::cli::CliOptions>,
 ) {
@@ -233,8 +232,7 @@ pub(crate) fn waypoint_following_system(
                     }
                     WaypointType::Interact(interaction_target) => {
                         // For interaction waypoints, try to interact as soon as we're close enough
-                        if let Ok((_, interactive_pos, interactive, behavior, room_state)) =
-                            q_interactives.get(*interaction_target)
+                        if let Ok((_, _, _, behavior, _)) = q_interactives.get(*interaction_target)
                         {
                             let distance = player_pos.distance(waypoint_pos);
                             if distance <= INTERACTION_DISTANCE {
@@ -244,16 +242,10 @@ pub(crate) fn waypoint_following_system(
 
                                 if is_host {
                                     // Execute the interaction directly on the host
-                                    if interactive_stuff.execute_interaction(
-                                        *interaction_target,
-                                        interactive_pos,
-                                        Some(interactive),
-                                        behavior,
-                                        room_state,
-                                        unevents_core::events::roomchanged::InteractionExecutionType::ChangeState,
-                                    ) {
-                                        ev_room.write(RoomChangedEvent::default());
-                                    }
+                                    ev_interaction.write(ExecuteInteractionEvent {
+                                        entity: *interaction_target,
+                                        ietype: InteractionExecutionType::ChangeState,
+                                    });
                                 } else {
                                     // On the client, signal the interaction intent to the host
                                     player_input.interact = true;

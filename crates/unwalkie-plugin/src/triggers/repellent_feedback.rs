@@ -7,7 +7,7 @@ use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use untypes_core::states::AppState;
-use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};
+use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 
 // Track which repellent types have already given hints this mission
 #[derive(Resource, Default)]

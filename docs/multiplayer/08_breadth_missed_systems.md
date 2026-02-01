@@ -20,8 +20,8 @@ use `query.single()` to access the player. In multiplayer, these will cause cras
 ## 2. Shared Interaction Logic (`InteractiveStuff`)
 
 The `InteractiveStuff` SystemParam
-([crates/uninteraction-core/src/interactivestuff.rs](crates/uninteraction-core/src/interactivestuff.rs)) is the heart of
-world interactivity (doors, switches, van entry).
+([crates/uninteraction-plugin/src/systems/interactivestuff.rs](crates/uninteraction-plugin/src/systems/interactivestuff.rs))
+is the heart of world interactivity (doors, switches, van entry).
 
 ### Sync Challenges:
 

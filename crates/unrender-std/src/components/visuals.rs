@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use unnet_core::network_id::NetworkId;
 
 /// Component that controls how an entity reacts to general lighting and exposure.
 #[derive(Component, Debug, Clone, Copy)]
@@ -166,7 +167,7 @@ impl Default for Ethereal {
 /// Component that identifies an entity as a light viewer (usually the player's eyes).
 #[derive(Component, Clone, Copy, Debug, Reflect)]
 pub struct Viewer {
-    pub id: usize,
+    pub id: NetworkId,
     pub health: f32,
     pub sanity: f32,
 }
@@ -174,7 +175,7 @@ pub struct Viewer {
 impl Default for Viewer {
     fn default() -> Self {
         Self {
-            id: 0,
+            id: NetworkId(0),
             health: 100.0,
             sanity: 100.0,
         }

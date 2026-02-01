@@ -2,12 +2,12 @@ use bevy::{prelude::*, time::Stopwatch};
 use unbehavior::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::types::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::components::MainPlayer;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
 /// Reminds the player to pick up equipment if they enter the location without any gear during the tutorial.

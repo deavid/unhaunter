@@ -14,6 +14,7 @@ members = [
     "crates/unfoundation-core",
     "crates/untypes-core",
     "crates/undifficulty-core",
+    "crates/undifficulty-plugin",
     "crates/unfog-plugin",
     "crates/unfog-core",
     "crates/unfps-core",
@@ -25,6 +26,7 @@ members = [
     "crates/unghost-plugin",
     "crates/unghost-core",
     "crates/uninteraction-core",
+    "crates/uninteraction-plugin",
     "crates/unlight-plugin",
     "crates/unlight-core",
     "crates/unmanual-core",
@@ -184,7 +186,8 @@ untruck-plugin = { path = "crates/untruck-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unui-plugin = { path = "crates/unui-plugin" }
-undifficulty-core = { path = "crates/undifficulty-core" }
+undifficulty-plugin = { path = "crates/undifficulty-plugin" }
+uninteraction-plugin = { path = "crates/uninteraction-plugin" }
 
 [[bin]]
 name = "unhaunter_game"

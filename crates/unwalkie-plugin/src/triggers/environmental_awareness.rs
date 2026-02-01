@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
-use unghost_core::components::GhostBreach;
+use unghost_core::components::ghost_breach::GhostBreach;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
@@ -9,10 +9,10 @@ use untypes_core::states::{AppState, GameState};
 
 use unbehavior::roomdb::RoomDB;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::types::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::thermometer::Thermometer;
 use uninteraction_core::interaction::Toggleable;
-use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
 /// System that monitors the player's exposure to darkness.
@@ -79,8 +79,8 @@ fn trigger_breach_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let untruck_core::uibutton::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == untruck_core::uibutton::TruckButtonState::Pressed
+        if let untruck_core::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == untruck_core::types::truck_button::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }
@@ -113,7 +113,7 @@ fn trigger_ghost_showcase(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
-    q_ghost: Query<&Position, With<unghost_core::components::GhostSprite>>,
+    q_ghost: Query<&Position, With<unghost_core::components::ghost_sprite::GhostSprite>>,
     truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
@@ -125,8 +125,8 @@ fn trigger_ghost_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let untruck_core::uibutton::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == untruck_core::uibutton::TruckButtonState::Pressed
+        if let untruck_core::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == untruck_core::types::truck_button::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }
@@ -226,7 +226,7 @@ fn trigger_thermometer_non_freezing_fixation(
         if let Some(hand_entity) = player_gear.right_hand
             && let Ok((thermo, toggleable)) = q_thermometer.get(hand_entity)
         {
-            let temp_c = unfoundation_core::utils::kelvin_to_celsius(thermo.temp);
+            let temp_c = unfoundation_core::utils::temperature::kelvin_to_celsius(thermo.temp);
             if toggleable.is_on && (1.0..=10.0).contains(&temp_c) {
                 any_player_fixing_on_cold = true;
                 break;

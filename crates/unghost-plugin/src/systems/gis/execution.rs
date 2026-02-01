@@ -9,7 +9,7 @@ use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInter
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use unevents_core::events::sound::SoundEvent;
 use unfoundation_core::random_seed;
-use uninteraction_core::interactivestuff::InteractiveStuff;
+use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unspatial_core::position::Position;
 
 /// Enhanced destination validation with collision avoidance and path checking
@@ -178,7 +178,8 @@ fn ghost_interaction_execution_system(
         Option<&RoomState>,
     )>,
     q_objects: Query<&Position, With<InteractableByGhost>>,
-    mut interactive_stuff: InteractiveStuff,
+    mut ev_interaction_executor: MessageWriter<ExecuteInteractionEvent>,
+    mut ev_sound: MessageWriter<SoundEvent>,
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_topology: Res<BoardTopology>,
@@ -200,7 +201,7 @@ fn ghost_interaction_execution_system(
         match event.interaction_type {
             GhostInteractionType::Toggle => {
                 execute_toggle_interaction(
-                    &mut interactive_stuff,
+                    &mut ev_interaction_executor,
                     &mut ev_bdr,
                     &mut ev_room,
                     &q_targets,
@@ -210,7 +211,8 @@ fn ghost_interaction_execution_system(
 
             GhostInteractionType::DoorSlam => {
                 execute_door_slam_interaction(
-                    &mut interactive_stuff,
+                    &mut ev_interaction_executor,
+                    &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
@@ -219,7 +221,8 @@ fn ghost_interaction_execution_system(
 
             GhostInteractionType::DoorCreak => {
                 execute_door_creak_interaction(
-                    &mut interactive_stuff,
+                    &mut ev_interaction_executor,
+                    &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
@@ -230,7 +233,7 @@ fn ghost_interaction_execution_system(
                 if let Some(destination) = event.destination {
                     execute_throw_interaction(
                         &mut commands,
-                        &mut interactive_stuff,
+                        &mut ev_sound,
                         &q_targets,
                         &q_objects,
                         event.target,
@@ -249,7 +252,7 @@ fn ghost_interaction_execution_system(
             GhostInteractionType::Nudge => {
                 execute_nudge_interaction(
                     &mut commands,
-                    &mut interactive_stuff,
+                    &mut ev_sound,
                     &q_targets,
                     &q_objects,
                     event.target,
@@ -263,7 +266,7 @@ fn ghost_interaction_execution_system(
                 if let Some(destination) = event.destination {
                     execute_haunted_move_interaction(
                         &mut commands,
-                        &mut interactive_stuff,
+                        &mut ev_sound,
                         &q_targets,
                         &q_objects,
                         event.target,
@@ -280,19 +283,15 @@ fn ghost_interaction_execution_system(
             }
 
             GhostInteractionType::Lock => {
-                execute_lock_interaction(
-                    &mut commands,
-                    &mut interactive_stuff,
-                    &q_targets,
-                    event.target,
-                );
+                execute_lock_interaction(&mut commands, &mut ev_sound, &q_targets, event.target);
             }
 
             GhostInteractionType::TripBreaker => {
                 execute_trip_breaker_interaction(
                     &mut commands,
                     &asset_server,
-                    &mut interactive_stuff,
+                    &mut ev_interaction_executor,
+                    &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
@@ -304,9 +303,9 @@ fn ghost_interaction_execution_system(
 
 /// Execute toggle interaction (lights, switches)
 fn execute_toggle_interaction(
-    interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
-    ev_room: &mut MessageWriter<RoomChangedEvent>,
+    ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
+    _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
+    _ev_room: &mut MessageWriter<RoomChangedEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -316,26 +315,11 @@ fn execute_toggle_interaction(
     target: Entity,
 ) {
     // Get the behavior component to execute the interaction
-    if let Ok((behavior, position, interactive, room_state)) = q_targets.get(target) {
+    if q_targets.get(target).is_ok() {
         // Execute the toggle interaction using the existing InteractiveStuff system
-        let changed = interactive_stuff.execute_interaction(
-            target,
-            position,
-            interactive,
-            behavior,
-            room_state,
-            InteractionExecutionType::ChangeState,
-        );
-
-        // If the interaction changed the state, trigger room update
-        if changed {
-            ev_room.write(RoomChangedEvent::default());
-        }
-
-        // Rebuild lighting and collision data
-        ev_bdr.write(BoardTopologyToRebuild {
-            lighting: true,
-            collision: true,
+        ev_interaction_executor.write(ExecuteInteractionEvent {
+            entity: target,
+            ietype: InteractionExecutionType::ChangeState,
         });
     } else {
         warn!(
@@ -347,8 +331,9 @@ fn execute_toggle_interaction(
 
 /// Execute door slam interaction (fast door closure)
 fn execute_door_slam_interaction(
-    interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
+    ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
+    ev_sound: &mut MessageWriter<SoundEvent>,
+    _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -358,28 +343,18 @@ fn execute_door_slam_interaction(
     target: Entity,
 ) {
     // Get the behavior component to execute the interaction
-    if let Ok((behavior, position, _interactive, room_state)) = q_targets.get(target) {
-        // Execute the door slam using the existing InteractiveStuff system
-        interactive_stuff.execute_interaction(
-            target,
-            position,
-            None, // suppress default sound; we play a custom slam below
-            behavior,
-            room_state,
-            InteractionExecutionType::ChangeState,
-        );
+    if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
+        // Execute the toggle interaction using the existing InteractiveStuff system
+        ev_interaction_executor.write(ExecuteInteractionEvent {
+            entity: target,
+            ietype: InteractionExecutionType::ChangeState,
+        });
 
         // Play door slam sound effect (using door-close.ogg with higher volume)
-        interactive_stuff.sound_events.write(SoundEvent {
+        ev_sound.write(SoundEvent {
             sound_file: "sounds/door-close.ogg".to_string(),
             volume: 1.5, // Louder than normal door close to simulate slam
             position: Some(*position),
-        });
-
-        // Rebuild lighting and collision data
-        ev_bdr.write(BoardTopologyToRebuild {
-            lighting: true,
-            collision: true,
         });
     } else {
         warn!(
@@ -391,8 +366,9 @@ fn execute_door_slam_interaction(
 
 /// Execute door creak interaction (slow door movement)
 fn execute_door_creak_interaction(
-    interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
+    ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
+    ev_sound: &mut MessageWriter<SoundEvent>,
+    _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -402,28 +378,18 @@ fn execute_door_creak_interaction(
     target: Entity,
 ) {
     // Get the behavior component to execute the interaction
-    if let Ok((behavior, position, _interactive, room_state)) = q_targets.get(target) {
+    if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
         // Execute the door creak using the existing InteractiveStuff system
-        interactive_stuff.execute_interaction(
-            target,
-            position,
-            None, // suppress default sound; we play a custom creak below
-            behavior,
-            room_state,
-            InteractionExecutionType::ChangeState,
-        );
+        ev_interaction_executor.write(ExecuteInteractionEvent {
+            entity: target,
+            ietype: InteractionExecutionType::ChangeState,
+        });
 
         // Play door creak sound effect
-        interactive_stuff.sound_events.write(SoundEvent {
+        ev_sound.write(SoundEvent {
             sound_file: "sounds/door_creak_slow.ogg".to_string(),
             volume: 0.7,
             position: Some(*position),
-        });
-
-        // Rebuild lighting and collision data
-        ev_bdr.write(BoardTopologyToRebuild {
-            lighting: true,
-            collision: true,
         });
     } else {
         warn!(
@@ -436,7 +402,7 @@ fn execute_door_creak_interaction(
 /// Execute throw interaction (object flies through air)
 fn execute_throw_interaction(
     commands: &mut Commands,
-    interactive_stuff: &mut InteractiveStuff,
+    ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -468,7 +434,7 @@ fn execute_throw_interaction(
             commands.entity(target).insert(tween);
 
             // Play throw sound effect
-            interactive_stuff.sound_events.write(SoundEvent {
+            ev_sound.write(SoundEvent {
                 sound_file: "sounds/object_throw_generic.ogg".to_string(),
                 volume: 0.8,
                 position: Some(*current_position),
@@ -490,7 +456,7 @@ fn execute_throw_interaction(
 /// Execute nudge interaction (small object movement)
 fn execute_nudge_interaction(
     commands: &mut Commands,
-    interactive_stuff: &mut InteractiveStuff,
+    ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -541,7 +507,7 @@ fn execute_nudge_interaction(
         commands.entity(target).insert(tween);
 
         // Play nudge sound effect
-        interactive_stuff.sound_events.write(SoundEvent {
+        ev_sound.write(SoundEvent {
             sound_file: "sounds/object_nudge_1.ogg".to_string(),
             volume: 0.6,
             position: Some(*current_position),
@@ -557,7 +523,7 @@ fn execute_nudge_interaction(
 /// Execute haunted move interaction (slow object slide)
 fn execute_haunted_move_interaction(
     commands: &mut Commands,
-    interactive_stuff: &mut InteractiveStuff,
+    ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -589,7 +555,7 @@ fn execute_haunted_move_interaction(
             commands.entity(target).insert(tween);
 
             // Play haunted move sound effect
-            interactive_stuff.sound_events.write(SoundEvent {
+            ev_sound.write(SoundEvent {
                 sound_file: "sounds/object_drag_wood.ogg".to_string(),
                 volume: 0.9,
                 position: Some(*current_position),
@@ -611,7 +577,7 @@ fn execute_haunted_move_interaction(
 /// Execute lock interaction (temporarily lock a door)
 fn execute_lock_interaction(
     commands: &mut Commands,
-    interactive_stuff: &mut InteractiveStuff,
+    ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -627,7 +593,7 @@ fn execute_lock_interaction(
         commands.entity(target).insert(Locked(lock_timer));
 
         // Play door lock sound effect
-        interactive_stuff.sound_events.write(SoundEvent {
+        ev_sound.write(SoundEvent {
             sound_file: "sounds/door_lock_heavy.ogg".to_string(),
             volume: 0.9,
             position: Some(*position),
@@ -644,8 +610,9 @@ fn execute_lock_interaction(
 fn execute_trip_breaker_interaction(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
+    ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
+    ev_sound: &mut MessageWriter<SoundEvent>,
+    _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -655,19 +622,15 @@ fn execute_trip_breaker_interaction(
     target: Entity,
 ) {
     // Get the behavior component to execute the interaction
-    if let Ok((behavior, position, _interactive, room_state)) = q_targets.get(target) {
+    if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
         // Execute the breaker trip using the existing InteractiveStuff system
-        interactive_stuff.execute_interaction(
-            target,
-            position,
-            None, // suppress default sound; custom breaker sound below
-            behavior,
-            room_state,
-            InteractionExecutionType::ChangeState,
-        );
+        ev_interaction_executor.write(ExecuteInteractionEvent {
+            entity: target,
+            ietype: InteractionExecutionType::ChangeState,
+        });
 
         // Play breaker trip sound effect
-        interactive_stuff.sound_events.write(SoundEvent {
+        ev_sound.write(SoundEvent {
             sound_file: "sounds/switch-on-2.ogg".to_string(),
             volume: 1.0,
             position: Some(*position),
@@ -675,12 +638,6 @@ fn execute_trip_breaker_interaction(
 
         // Spawn electrical sparks visual effect
         visual_effects::spawn_electrical_sparks(commands, asset_server, *position);
-
-        // Rebuild lighting and collision data (this will turn off all lights)
-        ev_bdr.write(BoardTopologyToRebuild {
-            lighting: true,
-            collision: true,
-        });
     } else {
         warn!(
             "GIS execution -> TripBreaker interaction for {:?} FAILED: target entity not found or missing components",

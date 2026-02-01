@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use unassets_core::resources::maps::Maps;
-use undifficulty_core::plugin::UnhaunterDifficultyPlugin;
+use undifficulty_plugin::plugin::UnhaunterDifficultyPlugin;
 use unevents_core::events::hint::OnScreenHintEvent;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unmenu_core::mission_select::CurrentMissionSelectMode;

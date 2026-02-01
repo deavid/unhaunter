@@ -7,7 +7,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::truck::TruckUIEvent;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use ungear_core::types::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
@@ -100,7 +100,7 @@ fn button_system(
             continue;
         }
 
-        if interaction.is_changed() && *interaction == Interaction::Pressed {
+        if interaction.is_changed() && interaction.as_ref() == &Interaction::Pressed {
             match tui_button.class {
                 TruckButtonType::Evidence(_) => {
                     if shift_pressed {

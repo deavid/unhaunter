@@ -5,7 +5,7 @@ use unbehavior::state::TileState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use unevents_core::events::roomchanged::InteractionExecutionType;
-use uninteraction_core::interactivestuff::InteractiveStuff;
+use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unspatial_core::position::Position;
 
 /// Cooldown timer to prevent rapid re-tripping of the breaker
@@ -122,7 +122,7 @@ fn initialize_fuse_box_system(mut commands: Commands) {
 fn breaker_sync_system(
     q_changed: Query<&Behavior, (With<Position>, Changed<Behavior>)>,
     q_all: Query<(Entity, &Position, &Behavior)>,
-    mut interactive_stuff: InteractiveStuff,
+    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
 ) {
     // Check if any breaker changed state this frame
     let target_state = q_changed
@@ -136,16 +136,12 @@ fn breaker_sync_system(
     };
 
     // Synchronize all other breakers to match this state
-    for (entity, pos, behavior) in q_all.iter() {
+    for (entity, _pos, behavior) in q_all.iter() {
         if behavior.p.is_breaker && behavior.state() != state {
-            interactive_stuff.execute_interaction(
+            ev_interaction.write(ExecuteInteractionEvent {
                 entity,
-                pos,
-                None,
-                behavior,
-                None,
-                InteractionExecutionType::ChangeState,
-            );
+                ietype: InteractionExecutionType::ChangeState,
+            });
         }
     }
 }

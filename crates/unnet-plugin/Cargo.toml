@@ -16,7 +16,6 @@ untypes-core = { path = "../untypes-core" }
 unplayer-core = { path = "../unplayer-core" }
 unspatial-core = { path = "../unspatial-core" }
 unfoundation-core = { path = "../unfoundation-core" }
-unghost-core = { path = "../unghost-core" }
 untags-core = { path = "../untags-core" }
 unevents-core = { path = "../unevents-core" }
 undifficulty-core = { path = "../undifficulty-core" }
@@ -25,6 +24,4 @@ unboard-core = { path = "../unboard-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 unrender-std = { path = "../unrender-std" }
 bevy = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-crossbeam-channel = { workspace = true }

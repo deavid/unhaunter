@@ -7,7 +7,7 @@ use unfoundation_core::random_seed;
 use unsettings_core::audio::AudioSettings;
 use untypes_core::states::{AppState, GameState};
 use unui_core::components::game_ui::WalkieText;
-use unwalkie_core::events::WalkieTalkingEvent;
+use unwalkie_core::events::walkie_types::WalkieTalkingEvent;
 use unwalkie_core::resources::{WalkiePlay, WalkieSoundState};
 use unwalkie_types::types::VoiceLineData;
 

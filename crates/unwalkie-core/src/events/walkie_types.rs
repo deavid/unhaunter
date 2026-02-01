@@ -1,6 +1,6 @@
 use bevy::prelude::Message;
 use enum_iterator::Sequence;
-use ungear_core::types::gear::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
 use untypes_core::difficulty::Difficulty;
 

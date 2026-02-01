@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use unnet_core::network_id::NetworkId;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::materials::CustomMaterial1;
 
@@ -9,8 +10,8 @@ pub(crate) fn player_style_system(
     for (sprite, mat_handle) in query_players.iter_mut() {
         if let Some(mat) = materials.get_mut(&mat_handle.0) {
             let tint: LinearRgba = match sprite.id {
-                1 => Color::srgba(0.8, 1.0, 0.8, 1.0).into(), // Host: Greenish
-                2 => Color::srgba(1.0, 1.0, 0.8, 1.0).into(), // Client: Yellowish
+                NetworkId(1) => Color::srgba(0.8, 1.0, 0.8, 1.0).into(), // Host: Greenish
+                NetworkId(2) => Color::srgba(1.0, 1.0, 0.8, 1.0).into(), // Client: Yellowish
                 _ => Color::WHITE.into(),
             };
             if mat.data.color != tint {

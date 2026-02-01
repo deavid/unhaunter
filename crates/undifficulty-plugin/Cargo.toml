@@ -1,0 +1,15 @@
+[package]
+name = "undifficulty-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+undifficulty-core = { path = "../undifficulty-core" }
+bevy = { workspace = true }

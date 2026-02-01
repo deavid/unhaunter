@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
 use unevents_core::events::loadlevel::LevelLoadedEvent;
 use unfoundation_core::colors;
-use unghost_core::components::GhostSprite;
+use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::types::evidence::Evidence;

@@ -8,7 +8,7 @@ use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unrender_std::components::light::LightLevel;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay; // Corrected import for LightLevel
 
 // Constants for SanityDroppedBelowThresholdDarkness

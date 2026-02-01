@@ -44,26 +44,14 @@ pub(crate) fn app_setup(app: &mut App) {
             waypoint::waypoint_creation_system,
             waypoint::waypoint_following_system,
             waypoint::waypoint_queue_cleanup_system,
+            // Movement system runs after input and waypoints
+            // Gated by is_host: Only the host simulates movement.
+            movement::player_movement_system.run_if(is_host),
+            // Stairs system runs last
+            keyboard::stairs_player.run_if(is_host),
         )
             .chain()
             .run_if(in_state(GameState::None).and(in_state(AppState::InGame))),
-    );
-
-    app.add_systems(
-        Update,
-        (
-            // Movement system runs after input and waypoints
-            // Gated by is_host: Only the host simulates movement.
-            movement::player_movement_system,
-            // Stairs system runs last
-            keyboard::stairs_player,
-        )
-            .chain()
-            .run_if(
-                in_state(GameState::None)
-                    .and(in_state(AppState::InGame))
-                    .and(is_host),
-            ),
     );
 
     app.add_systems(

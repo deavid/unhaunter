@@ -1,0 +1,20 @@
+[package]
+name = "uninteraction-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+uninteraction-core = { path = "../uninteraction-core" }
+unevents-core = { path = "../unevents-core" }
+unspatial-core = { path = "../unspatial-core" }
+untypes-core = { path = "../untypes-core" }
+unbehavior = { path = "../unbehavior" }
+unrender-std = { path = "../unrender-std" }
+bevy = { workspace = true }

@@ -2,8 +2,8 @@
 //! that influence ghost behavior.
 use unbehavior::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unghost_core::components::{GhostInfluence, InfluenceType};
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unspatial_core::position::Position;
 

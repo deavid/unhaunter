@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use unfoundation_core::types::gear::Hand;
+use unnet_core::network_id::NetworkId;
 use unsettings_core::controls::ControlKeys;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -118,7 +119,7 @@ impl InventoryStats {
 #[derive(Component, Debug)]
 pub struct PlayerSprite {
     /// The unique identifier for the player (e.g., Player 1, Player 2).
-    pub id: usize,
+    pub id: NetworkId,
     /// The player's accumulated "craziness" level. Higher craziness reduces sanity.
     pub crazyness: f32,
     /// The player's current sanity level (0.0 - 100.0).
@@ -141,15 +142,15 @@ pub struct PlayerInputMapping {
 }
 
 impl PlayerInputMapping {
-    pub fn new(id: usize) -> Self {
+    pub fn new(id: NetworkId) -> Self {
         Self {
             controls: Self::default_controls(id),
         }
     }
 
     /// Returns the default `ControlKeys` for the given player ID.
-    fn default_controls(id: usize) -> ControlKeys {
-        match id {
+    fn default_controls(id: NetworkId) -> ControlKeys {
+        match id.0 {
             1 => ControlKeys::WASD,
             2 => ControlKeys::IJKL,
             _ => ControlKeys::NONE,
@@ -159,7 +160,7 @@ impl PlayerInputMapping {
 
 impl PlayerSprite {
     /// Creates a new `PlayerSprite` with the specified ID.
-    pub fn new(id: usize, spawn_position: Position) -> Self {
+    pub fn new(id: NetworkId, spawn_position: Position) -> Self {
         Self {
             id,
             crazyness: 0.0,

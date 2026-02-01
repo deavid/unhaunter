@@ -3,7 +3,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungearitems_core::components::quartz::QuartzStoneData;
-use unghost_core::components::GhostSprite;
+use unghost_core::components::ghost_sprite::GhostSprite;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;

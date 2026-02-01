@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use ungear_core::types::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::types::ghost::types::GhostType;
 

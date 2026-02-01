@@ -6,7 +6,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::manual_types::ManualChapterIndex;
 use ungear_core::components::core::Battery;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::types::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
@@ -15,7 +15,7 @@ use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay; // Core walkie types
 
 // Local struct to track the state for this specific trigger

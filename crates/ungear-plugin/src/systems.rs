@@ -10,7 +10,7 @@ use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use ungear_core::types::gear::GearKind;
+use ungear_core::types::gear::kind::GearKind;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats, MainPlayer};
 use unrender_std::assets::GearAssets;
 use unrender_std::components::game::GameSprite;
