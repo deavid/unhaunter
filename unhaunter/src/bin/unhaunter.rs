@@ -20,6 +20,9 @@ struct Args {
 
     #[clap(long)]
     difficulty: Option<String>,
+
+    #[clap(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
 }
 
 fn main() {
@@ -88,5 +91,6 @@ fn main() {
         net_mode,
         map_path: final_map_path,
         difficulty_id: args.difficulty,
+        verbose: args.verbose,
     });
 }

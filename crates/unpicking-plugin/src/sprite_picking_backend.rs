@@ -208,14 +208,8 @@ pub(crate) fn custom_sprite_picking(
 
         let order = camera.order as f32;
         if !picks.is_empty() {
-            // info!(
-            //     "CustomSpritePicking: Writing {} picks for pointer {:?} with order {}",
-            //     picks.len(),
-            //     pointer,
-            //     order
-            // );
             for (entity, hit_data) in &picks {
-                debug!(
+                trace!(
                     "CustomSpritePicking: Pick hit entity {:?} at depth {:.2}",
                     entity, hit_data.depth
                 );

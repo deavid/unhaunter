@@ -40,6 +40,9 @@ use unwalkie_plugin::plugin::UnhaunterWalkiePlugin;
 
 pub fn app_run(cli_options: CliOptions) {
     let mut app = App::new();
+
+    let filter = crate::log_filter::build_log_filter(cli_options.verbose);
+
     app.insert_resource(cli_options);
     app.add_plugins(
         DefaultPlugins
@@ -54,7 +57,8 @@ pub fn app_run(cli_options: CliOptions) {
                 ..default()
             })
             .set(bevy::log::LogPlugin {
-                level: bevy::log::Level::INFO,
+                level: bevy::log::Level::TRACE,
+                filter,
                 ..default()
             }),
     )

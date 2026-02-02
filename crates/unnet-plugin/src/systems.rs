@@ -569,12 +569,6 @@ pub fn host_send_snapshots_system(
         )
         .collect();
 
-    debug!(
-        "Snapshot gear count: {}, gear: {:?}",
-        gear.len(),
-        gear.iter().map(|g| (g.id, g.kind)).collect::<Vec<_>>()
-    );
-
     let mut events: Vec<unnet_core::messages::TransientEvent> = ev_sound
         .read()
         .map(|ev| unnet_core::messages::TransientEvent::PlaySound {
@@ -1008,10 +1002,9 @@ pub fn client_apply_snapshots_system(
             // Update gear
             for g_sync in gear {
                 let g_entity = if let Some(e) = net_to_entity.get(&g_sync.id) {
-                    debug!("Gear {:?} already exists as entity {:?}", g_sync.id, e);
                     *e
                 } else {
-                    debug!(
+                    info!(
                         "Spawning remote gear {:?} (kind: {:?})",
                         g_sync.id, g_sync.kind
                     );
@@ -1093,6 +1086,10 @@ pub fn client_apply_snapshots_system(
                     if *id == pg_state.player_id
                         && let Some(mut gear) = gear
                     {
+                        let old_left = gear.left_hand;
+                        let old_right = gear.right_hand;
+                        let old_held = gear.held_item.as_ref().map(|h| h.entity);
+
                         gear.left_hand = pg_state
                             .left_hand
                             .and_then(|nid| net_to_entity.get(&nid))
@@ -1113,13 +1110,19 @@ pub fn client_apply_snapshots_system(
                             .map(|&entity| ungear_core::components::playergear::HeldObject {
                                 entity,
                             });
-                        debug!(
-                            "Player {:?} gear state: left={:?}, right={:?}, inv_count={}",
-                            id,
-                            gear.left_hand,
-                            gear.right_hand,
-                            gear.inventory.len()
-                        );
+                        let new_held = gear.held_item.as_ref().map(|h| h.entity);
+                        if old_left != gear.left_hand
+                            || old_right != gear.right_hand
+                            || old_held != new_held
+                        {
+                            info!(
+                                "Player {:?} gear state: left={:?}, right={:?}, inv_count={}",
+                                id,
+                                gear.left_hand,
+                                gear.right_hand,
+                                gear.inventory.len()
+                            );
+                        }
                     }
                 }
             }
