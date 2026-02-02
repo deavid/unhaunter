@@ -15,6 +15,7 @@ bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
 unfoundation-core = { path = "../unfoundation-core" }
 unspatial-core = { path = "../unspatial-core" }
+unrender-core = { path = "../unrender-core" }
 unbehavior = { path = "../unbehavior" }
 unboard-core = { path = "../unboard-core" }
 unnet-core = { path = "../unnet-core" }

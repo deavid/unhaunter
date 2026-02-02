@@ -13,8 +13,9 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+unfoundation-core = { path = "../unfoundation-core" }
+unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 ungear-core = { path = "../ungear-core" }
 ungearitems-core = { path = "../ungearitems-core" }
 unghost-core = { path = "../unghost-core" }
-unfoundation-core = { path = "../unfoundation-core" }

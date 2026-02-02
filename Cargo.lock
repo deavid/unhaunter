@@ -5811,6 +5811,7 @@ name = "unevents-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "serde",
  "unboard-core",
  "unspatial-core",
  "untiled-core",
@@ -6315,6 +6316,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
+ "unevents-core",
  "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
@@ -6461,6 +6463,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "unrender-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "unrender-plugin"
 version = "0.3.2-dev"
 dependencies = [
@@ -6492,6 +6501,7 @@ dependencies = [
  "unfoundation-core",
  "ungear-core",
  "unnet-core",
+ "unrender-core",
  "unspatial-core",
 ]
 
@@ -6625,7 +6635,7 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "tiled",
- "unrender-std",
+ "unrender-core",
 ]
 
 [[package]]

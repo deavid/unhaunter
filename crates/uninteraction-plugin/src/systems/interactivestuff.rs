@@ -42,6 +42,8 @@ pub struct InteractiveStuff<'w, 's> {
     /// Access to the materials used for rendering map tiles. Used to update tile
     /// visuals when object states change.
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
+    /// ID of the local player.
+    pub local_player: Res<'w, unnet_core::resources::LocalPlayer>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
     pub roomdb: ResMut<'w, RoomDB>,
@@ -119,6 +121,21 @@ impl InteractiveStuff<'_, '_> {
             }
             return false;
         }
+
+        if force_tuid.is_none() && authority == Authority::Client {
+            if let Some(player_id) = self.local_player.0 {
+                debug!("Client: Requesting interaction at {:?}", item_bpos);
+                self.net_events.write(NetworkDataEvent {
+                    message: NetworkMessage::InteractionRequest {
+                        player_id,
+                        position: [item_bpos.x as i32, item_bpos.y as i32, item_bpos.z as i32],
+                        interaction_type: ietype,
+                    },
+                });
+            }
+            return false;
+        }
+
         for other_tuid in self.bf.cvo_idx.get(&cvo).unwrap().iter() {
             if let Some(ftuid) = force_tuid {
                 if other_tuid.1 != ftuid {

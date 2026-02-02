@@ -1,5 +1,5 @@
 [package]
-name = "untiled-core"
+name = "unrender-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -12,6 +12,3 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
-tiled = { workspace = true }
-unrender-core = { path = "../unrender-core" }

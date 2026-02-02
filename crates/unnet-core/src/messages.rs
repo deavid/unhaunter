@@ -1,6 +1,7 @@
 use crate::network_id::NetworkId;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use unevents_core::events::roomchanged::InteractionExecutionType;
 use unfoundation_core::types::grade::Grade;
 use ungearitems_core::components::flashlight::FlashlightStatus;
 use unghost_core::types::evidence::Evidence;
@@ -10,6 +11,12 @@ use untypes_core::states::{AppState, GameState};
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum GearDetails {
     Flashlight(FlashlightStatus),
+    Thermometer {
+        temp: f32,
+    },
+    EMF {
+        level: f32,
+    },
     Sage {
         consumed: bool,
         is_active: bool,
@@ -171,6 +178,12 @@ pub enum NetworkMessage {
         inventory_swap: bool,
         target_position: Option<[f32; 2]>,
         aim_direction: [f32; 2],
+    },
+    /// Request to interact with a map tile.
+    InteractionRequest {
+        player_id: NetworkId,
+        position: [i32; 3],
+        interaction_type: InteractionExecutionType,
     },
     /// Host sends the final mission summary.
     MissionSummary { result: MissionResult },

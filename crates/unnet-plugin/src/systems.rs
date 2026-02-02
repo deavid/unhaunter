@@ -427,6 +427,8 @@ pub struct HostSnapshotParams<'w, 's> {
             Option<&'static Flashlight>,
             Option<&'static ungearitems_core::components::sage::SageBundleData>,
             Option<&'static ungearitems_core::components::repellentflask::RepellentFlask>,
+            Option<&'static ungearitems_core::components::thermometer::Thermometer>,
+            Option<&'static ungearitems_core::components::emfmeter::EMFMeter>,
         ),
     >,
     pub query_net_id: Query<'w, 's, &'static NetworkId>,
@@ -544,7 +546,7 @@ pub fn host_send_snapshots_system(
         .query_gear
         .iter()
         .map(
-            |(id, kind, pos, toggle, battery, flashlight, sage, repellent)| {
+            |(id, kind, pos, toggle, battery, flashlight, sage, repellent, thermometer, emfm)| {
                 let details = if let Some(f) = flashlight {
                     unnet_core::messages::GearDetails::Flashlight(f.status.clone())
                 } else if let Some(s) = sage {
@@ -558,9 +560,14 @@ pub fn host_send_snapshots_system(
                         qty: r.qty,
                         active: r.active,
                     }
+                } else if let Some(t) = thermometer {
+                    unnet_core::messages::GearDetails::Thermometer { temp: t.temp }
+                } else if let Some(e) = emfm {
+                    unnet_core::messages::GearDetails::EMF { level: e.emf }
                 } else {
                     unnet_core::messages::GearDetails::None
                 };
+
                 GearSyncState {
                     id: *id,
                     kind: *kind,
@@ -760,6 +767,8 @@ pub struct ClientSnapshotParams<'w, 's> {
             Option<&'static mut Flashlight>,
             Option<&'static mut ungearitems_core::components::sage::SageBundleData>,
             Option<&'static mut ungearitems_core::components::repellentflask::RepellentFlask>,
+            Option<&'static mut ungearitems_core::components::thermometer::Thermometer>,
+            Option<&'static mut ungearitems_core::components::emfmeter::EMFMeter>,
         ),
         (Without<PlayerSprite>, Without<GhostTag>, Without<Behavior>),
     >,
@@ -1005,8 +1014,17 @@ pub fn client_apply_snapshots_system(
                     ent
                 };
 
-                if let Ok((_, mut pos, mut toggle, battery, flashlight, sage, repellent)) =
-                    params.query_gear.get_mut(g_entity)
+                if let Ok((
+                    _,
+                    mut pos,
+                    mut toggle,
+                    battery,
+                    flashlight,
+                    sage,
+                    repellent,
+                    thermometer,
+                    emf_meter,
+                )) = params.query_gear.get_mut(g_entity)
                 {
                     pos.x = g_sync.position[0];
                     pos.y = g_sync.position[1];
@@ -1042,6 +1060,20 @@ pub fn client_apply_snapshots_system(
                             if let Some(mut r) = repellent {
                                 r.qty = *qty;
                                 r.active = *active;
+                            }
+                        }
+                        unnet_core::messages::GearDetails::Thermometer { temp } => {
+                            if let Some(mut t) = thermometer {
+                                t.temp = *temp;
+                            }
+                        }
+                        unnet_core::messages::GearDetails::EMF { level } => {
+                            if let Some(mut e) = emf_meter {
+                                e.emf = *level;
+                                e.emf_level =
+                                    ungearitems_core::components::emfmeter::EMFLevel::from_milligauss(
+                                        e.emf,
+                                    );
                             }
                         }
                         unnet_core::messages::GearDetails::None => {}
@@ -1334,6 +1366,9 @@ pub fn host_apply_input_system(
     query_van: Query<(&Position, &Behavior)>,
     mut game_next_state: ResMut<NextState<GameState>>,
     query_player_pos: Query<(&NetworkId, &Position), (With<PlayerSprite>, Without<MainPlayer>)>,
+    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
+    board_field: Res<BoardEntityField>,
+    board_topo: Res<BoardTopology>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -1368,6 +1403,37 @@ pub fn host_apply_input_system(
                         input.inventory_swap = *inventory_swap;
                         input.target_position = target_position.map(|v| Vec2::new(v[0], v[1]));
                         input.aim_direction = Vec2::new(aim_direction[0], aim_direction[1]);
+                    }
+                }
+            }
+            NetworkMessage::InteractionRequest {
+                player_id: _,
+                position,
+                interaction_type,
+            } => {
+                let bpos = BoardPosition {
+                    x: position[0] as i64,
+                    y: position[1] as i64,
+                    z: position[2] as i64,
+                };
+                let rel_x = bpos.x - board_topo.origin.0 as i64;
+                let rel_y = bpos.y - board_topo.origin.1 as i64;
+                let rel_z = bpos.z - board_topo.origin.2 as i64;
+
+                if rel_x >= 0
+                    && rel_y >= 0
+                    && rel_z >= 0
+                    && rel_x < board_field.0.shape()[0] as i64
+                    && rel_y < board_field.0.shape()[1] as i64
+                    && rel_z < board_field.0.shape()[2] as i64
+                {
+                    let entities = &board_field.0[[rel_x as usize, rel_y as usize, rel_z as usize]];
+                    for &entity in entities {
+                        ev_interaction.write(ExecuteInteractionEvent {
+                            entity,
+                            ietype: interaction_type.clone(),
+                            force_tuid: None,
+                        });
                     }
                 }
             }

@@ -33,7 +33,9 @@ pub(crate) fn update_thermometer(
     tg: Res<ThermalGrid>,
     difficulty: Res<CurrentDifficulty>,
     player_profile: Res<Persistent<PlayerProfileData>>,
+    cli: Res<untypes_core::cli::CliOptions>,
 ) {
+    let is_host = untypes_core::cli::is_host(cli);
     for (
         mut thermometer,
         mut status,
@@ -50,7 +52,9 @@ pub(crate) fn update_thermometer(
         thermometer.frame_counter = thermometer.frame_counter.wrapping_add(1);
 
         // Update Battery Drain Rate
-        battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
+        if is_host {
+            battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
+        }
 
         // Update Sprite
         sprite.0 = match toggle.is_on {
@@ -60,29 +64,33 @@ pub(crate) fn update_thermometer(
 
         // Update Logic
         if toggle.is_on {
-            const K: f32 = 0.7;
-            let pos = Position {
-                x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
-                y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
-                z: pos.z,
-                visual_priority: pos.visual_priority,
-            };
-            let bpos = pos.to_board_position();
-            let temperature = tg.temperature_field[bpos.ndidx()];
-            let temp_reading = temperature;
-            let air_mass: f32 = 5.0 / difficulty.0.equipment_sensitivity;
+            if is_host {
+                const K: f32 = 0.7;
+                let pos = Position {
+                    x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+                    y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+                    z: pos.z,
+                    visual_priority: pos.visual_priority,
+                };
+                let bpos = pos.to_board_position();
+                let temperature = tg.temperature_field[bpos.ndidx()];
+                let temp_reading = temperature;
+                let air_mass: f32 = 5.0 / difficulty.0.equipment_sensitivity;
 
-            // Double noise reduction to remove any noise from measurement.
-            let n = thermometer.frame_counter as usize % thermometer.temp_l2.len();
-            thermometer.temp_l2[n] =
-                (thermometer.temp_l2[n] * air_mass + thermometer.temp_l1) / (air_mass + 1.0);
-            thermometer.temp_l1 =
-                (thermometer.temp_l1 * air_mass + temp_reading) / (air_mass + 1.0);
+                // Double noise reduction to remove any noise from measurement.
+                let n = thermometer.frame_counter as usize % thermometer.temp_l2.len();
+                thermometer.temp_l2[n] =
+                    (thermometer.temp_l2[n] * air_mass + thermometer.temp_l1) / (air_mass + 1.0);
+                thermometer.temp_l1 =
+                    (thermometer.temp_l1 * air_mass + temp_reading) / (air_mass + 1.0);
+                if thermometer.frame_counter % 5 == 0 {
+                    let sum_temp: f32 = thermometer.temp_l2.iter().sum();
+                    let avg_temp: f32 = sum_temp / thermometer.temp_l2.len() as f32;
+                    thermometer.temp = (avg_temp * 5.0).round() / 5.0;
+                }
+            }
+
             if thermometer.frame_counter % 5 == 0 {
-                let sum_temp: f32 = thermometer.temp_l2.iter().sum();
-                let avg_temp: f32 = sum_temp / thermometer.temp_l2.len() as f32;
-                thermometer.temp = (avg_temp * 5.0).round() / 5.0;
-
                 // Update blinking_hint_active
                 const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
                 if kelvin_to_celsius(thermometer.temp) < 0.0 && electronic.glitch_timer <= 0.0 {
@@ -95,18 +103,18 @@ pub(crate) fn update_thermometer(
                 } else {
                     thermometer.blinking_hint_active = false;
                 }
-            } else {
-                // Ensure blinking_hint_active is false if not updating temp this frame,
-                // or if we want it to strictly follow the evidence condition.
-                // For now, let's ensure it's false if the condition isn't met.
-                if !(kelvin_to_celsius(thermometer.temp) < 0.0 && electronic.glitch_timer <= 0.0) {
-                    thermometer.blinking_hint_active = false;
-                }
+            }
+
+            // Ensure blinking_hint_active is false if not updating temp this frame,
+            // or if we want it to strictly follow the evidence condition.
+            // For now, let's ensure it's false if the condition isn't met.
+            if !(kelvin_to_celsius(thermometer.temp) < 0.0 && electronic.glitch_timer <= 0.0) {
+                thermometer.blinking_hint_active = false;
             }
 
             // Possibly play crackling/static sounds during glitches
             if electronic.glitch_timer > 0.0 && random_seed::rng().random_range(0.0..1.0) < 0.3 {
-                gs_audio.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, &pos);
+                gs_audio.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
             }
         }
 
