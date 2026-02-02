@@ -255,7 +255,7 @@ fn clear_seen_evidence_hints_on_mission_change(
     // We iterate through them to consume them for this reader and then clear the hints.
     for _event in level_loaded_events.read() {
         seen_evidence_hints.0.clear();
-        info!("Journal: Resetting GhostGuess for new mission");
+        debug!("Journal: Resetting GhostGuess for new mission");
         *ghost_guess = GhostGuess::default();
     }
 }

@@ -17,7 +17,6 @@ pub fn rebuild_collision_data(
     bcf: &mut BoardCollisionField,
     qt: &Query<(Entity, &Position, &Behavior)>,
 ) {
-    // info!("Collision rebuild");
     assert_eq!(bcf.0.shape(), [bf.map_size.0, bf.map_size.1, bf.map_size.2]);
     bcf.0.fill(CollisionFieldData::default());
 

@@ -150,7 +150,7 @@ pub fn prebake_lighting_field(
     lg: &mut LightGrid,
     qt: &Query<(Entity, &Position, &Behavior)>,
 ) {
-    info!("Computing prebaked lighting field...");
+    debug!("Computing prebaked lighting field...");
     let build_start_time = Instant::now();
 
     // Create a new Array3 with default values
@@ -193,7 +193,7 @@ pub fn prebake_lighting_field(
         }
     }
 
-    info!("Prebaking - Found {} light sources", light_source_count);
+    debug!("Prebaking - Found {} light sources", light_source_count);
     if light_source_count == 0 {
         warn!("No light sources found! Map will be dark.");
         return;
@@ -374,7 +374,7 @@ pub fn prebake_lighting_field(
     // Call prebake_propagation_data
     prebake_propagation_data(bf, bcf, lg);
 
-    info!(
+    debug!(
         "Prebaked lighting field computed in: {:?}",
         build_start_time.elapsed()
     );

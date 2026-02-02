@@ -96,7 +96,7 @@ impl WalkiePlay {
         let dice = rng.random_range(0..=max_dice_value);
         if dice > dice_threshold {
             // Skip playing this event, played too many times.
-            info!(
+            debug!(
                 "WalkiePlay: skipped: {:?}  play dice: {}/{} (threshold: {})",
                 event, dice, max_dice_value, dice_threshold
             );
@@ -123,7 +123,7 @@ impl WalkiePlay {
             return false;
         }
 
-        warn!(
+        debug!(
             "WalkiePlay: {:?} - play dice: {}/{} (threshold: {})",
             event, dice, max_dice_value, dice_threshold
         );

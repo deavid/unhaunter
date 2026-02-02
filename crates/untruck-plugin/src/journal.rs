@@ -31,7 +31,7 @@ fn force_discard_evidence_system(
     mut gg: ResMut<GhostGuess>,
 ) {
     for event in ev_force_discard.read() {
-        info!(
+        debug!(
             "Journal: Received ForceDiscardEvidenceEvent for {:?}",
             event.0
         );
@@ -41,7 +41,7 @@ fn force_discard_evidence_system(
             if let TruckButtonType::Evidence(evidence_type) = tui_button.class
                 && evidence_type == event.0
             {
-                info!(
+                debug!(
                     "Journal: Setting evidence {:?} button from {:?} to Discard",
                     evidence_type, tui_button.status
                 );
@@ -55,7 +55,7 @@ fn force_discard_evidence_system(
         if button_found {
             // Force mark the GhostGuess as changed to trigger update systems
             gg.set_changed();
-            info!(
+            debug!(
                 "Journal: ForceDiscardEvidenceEvent processed for {:?}",
                 event.0
             );
@@ -197,7 +197,7 @@ fn button_system(mut p: JournalButtonParams) {
 
     // Only log evidence states if there are changes
     if evidence_states_changed {
-        info!(
+        debug!(
             "Journal: Evidence found: {:?}, Evidence missing: {:?}",
             selected_evidences_found, selected_evidences_missing
         );
@@ -205,11 +205,11 @@ fn button_system(mut p: JournalButtonParams) {
 
     // Update the GhostGuess if there are changes
     if evidence_states_changed {
-        info!(
+        debug!(
             "Journal: Updating evidences_found: {:?} -> {:?}",
             p.gg.evidences_found, selected_evidences_found
         );
-        info!(
+        debug!(
             "Journal: Updating evidences_missing: {:?} -> {:?}",
             p.gg.evidences_missing, selected_evidences_missing
         );
@@ -359,14 +359,14 @@ fn button_system(mut p: JournalButtonParams) {
     let final_missing_changed = p.gg.evidences_missing != selected_evidences_missing;
 
     if final_found_changed {
-        info!(
+        debug!(
             "Journal: Final update evidences_found: {:?} -> {:?}",
             p.gg.evidences_found, selected_evidences_found
         );
         p.gg.evidences_found = selected_evidences_found;
     }
     if final_missing_changed {
-        info!(
+        debug!(
             "Journal: Final update evidences_missing: {:?} -> {:?}",
             p.gg.evidences_missing, selected_evidences_missing
         );

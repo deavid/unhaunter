@@ -25,7 +25,7 @@ fn load_level_handler(
         return;
     };
     let map_filepath = load_event.map_filepath.clone();
-    warn!("Load Level: {map_filepath}");
+    info!("Load Level: {map_filepath}");
     let tiled_map = UnhaunterMapLoader::load(&map_filepath, &maps, &tmx_assets, &tsx_assets);
 
     let (layers, floor_mapping) = bevy_load_map(

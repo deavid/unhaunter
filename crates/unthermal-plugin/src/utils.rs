@@ -117,10 +117,10 @@ pub fn precompute_connectivity_scores(
     }
 
     // Log score distribution for debugging
-    info!("Connectivity score distribution for {} tiles:", total_tiles);
+    trace!("Connectivity score distribution for {} tiles:", total_tiles);
     for (score, count) in score_distribution.iter() {
         let percentage = (*count as f32 / total_tiles as f32) * 100.0;
-        info!(
+        trace!(
             "  Score {}: {} tiles ({:.1}% - {:.1}% processing chance)",
             score,
             count,

@@ -72,9 +72,16 @@ pub(crate) fn player_movement_system(
     _board_collision: Res<BoardCollisionField>,
     miasma: Res<MiasmaGrid>,
     mut avg_running: Local<f32>,
+    mut last_error_log: Local<f32>,
     mouse_visibility: Res<MouseVisibility>,
 ) {
     let dt = time.delta_secs() * 60.0;
+    let now = time.elapsed_secs();
+    let mut can_log = false;
+    if now - *last_error_log > 1.0 {
+        can_log = true;
+        *last_error_log = now;
+    }
 
     for (
         mut pos,
@@ -90,11 +97,17 @@ pub(crate) fn player_movement_system(
     {
         let is_main_player = main_player.is_some();
         if !dir.is_finite() {
-            warn!("Player direction is not finite: {dir:?}");
+            if can_log {
+                error!("Player direction is not finite: {dir:?}");
+                can_log = false;
+            }
             *dir = Direction::zero();
         }
         if !pos.is_finite() {
-            warn!("Player position is not finite: {pos:?}");
+            if can_log {
+                error!("Player position is not finite: {pos:?}");
+                can_log = false;
+            }
             if let Some((_, int_pos, _, _, _)) = interactables.iter().next() {
                 *pos = *int_pos;
             }
@@ -107,7 +120,10 @@ pub(crate) fn player_movement_system(
                 pos.x -= col_delta.x;
                 pos.y -= col_delta.y;
             } else {
-                warn!("Player collision delta is not finite: {col_delta:?}");
+                if can_log {
+                    error!("Player collision delta is not finite: {col_delta:?}");
+                    can_log = false;
+                }
                 col_delta = Vec3::ZERO;
             }
         } else {

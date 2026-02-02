@@ -147,7 +147,7 @@ fn keyboard_floor_switch(
         return;
     }
 
-    warn!(
+    debug!(
         "Floor switch: Trying to switch floors (up: {}, down: {})",
         go_up, go_down
     );
@@ -179,7 +179,7 @@ fn keyboard_floor_switch(
         if current_z + 1 < board_topology.map_size.2 {
             current_z + 1
         } else {
-            warn!("Floor switch: Already at the highest floor ({})", current_z);
+            debug!("Floor switch: Already at the highest floor ({})", current_z);
             current_z
         }
     } else {
@@ -187,7 +187,7 @@ fn keyboard_floor_switch(
         if current_z > 0 {
             current_z - 1
         } else {
-            warn!("Floor switch: Already at the lowest floor ({})", current_z);
+            debug!("Floor switch: Already at the lowest floor ({})", current_z);
             current_z
         }
     };
@@ -199,12 +199,12 @@ fn keyboard_floor_switch(
 
         // Log the floor change for debugging
         if let Some(tiled_floor) = board_topology.z_floor_map.get(&target_z) {
-            warn!(
+            debug!(
                 "Floor switch: Moving to z={} (Tiled floor number: {})",
                 target_z, tiled_floor
             );
         } else {
-            warn!(
+            debug!(
                 "Floor switch: Moving to z={} (unknown Tiled floor)",
                 target_z
             );

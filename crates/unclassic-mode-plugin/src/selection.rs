@@ -250,7 +250,7 @@ pub(crate) fn generate_scored_ghost_setup(
     };
 
     let elapsed = start_time.elapsed();
-    info!(
+    debug!(
         "Ghost setup simulation completed: {} simulations in {:.2?}. Selected setup score: {:.2}",
         simulation_count, elapsed, chosen_setup.score
     );

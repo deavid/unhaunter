@@ -32,21 +32,21 @@ pub fn report_performance(
         let mut total_systems_time = 0.0;
         for (name, time, suffix) in system_times.iter() {
             if *time > 0.05 {
-                info!("{name}: {time:.2} {suffix}");
+                debug!("{name}: {time:.2} {suffix}");
             }
             if name.starts_with("un") && name.contains("/systems/") {
                 total_systems_time += time;
             }
         }
         const MAX_TIME: f64 = 1000.0 / 60.0;
-        info!("systems: {:.2}%", total_systems_time / MAX_TIME * 100.0);
-        info!(
+        debug!("systems: {:.2}%", total_systems_time / MAX_TIME * 100.0);
+        debug!(
             "App State: {:?} - Game State: {:?}",
             app_state.get(),
             game_state.get()
         );
         if *app_state != AppState::InGame && *game_state != GameState::None {
-            warn!(
+            error!(
                 "Inconsistent state: AppState: {:?} - GameState: {:?} - setting GameState to None.",
                 app_state.get(),
                 game_state.get()

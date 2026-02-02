@@ -50,7 +50,7 @@ fn initialize_miasma(
     if level_ready.read().next().is_none() {
         return;
     }
-    warn!("Miasma Init");
+    trace!("Miasma Init");
     rebuild_collision_data(&board_data, &mut bcf, &qt);
 
     miasma.room_modifiers.clear();
@@ -79,7 +79,7 @@ fn initialize_miasma(
         miasma.pressure_field[board_position.ndidx()] =
             config.initial_room_pressure * modifier * rng.random_range(0.9..=1.1);
     }
-    warn!("Done: Miasma Init");
+    trace!("Done: Miasma Init");
 }
 
 fn spawn_miasma(

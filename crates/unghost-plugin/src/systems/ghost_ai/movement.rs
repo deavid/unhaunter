@@ -101,7 +101,7 @@ pub(crate) fn ghost_movement(
                     ghost.hunting = 0.0;
                     ghost.hunt_target = false;
                     finalize = true;
-                    warn!("Hunt finished");
+                    info!("Hunt finished");
                 }
             } else {
                 pos.x += delta.dx / 200.0 * dt * difficulty.0.ghost_speed;
@@ -252,11 +252,11 @@ pub(crate) fn ghost_movement(
                 if hunt {
                     if !ghost.hunt_target {
                         ghost.hunt_time_secs = time.elapsed_secs();
-                        warn!("Hunting player for {:.1}s", ghost.hunting);
+                        info!("Hunting player for {:.1}s", ghost.hunting);
                         // Removed mute event - now triggered anticipatory during hunt warning
                     }
                 } else if ghost.hunt_target {
-                    warn!("Hunt temporarily ended (remaining) {:.1}s", ghost.hunting);
+                    info!("Hunt temporarily ended (remaining) {:.1}s", ghost.hunting);
                 }
                 // Final check to ensure the chosen bpos is valid before assigning.
                 // This is somewhat redundant with checks in sampling, but good for safety.

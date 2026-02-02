@@ -61,14 +61,21 @@ fn sound_playback_system(
     qp: Query<&Position, With<PlayerTag>>,
     mut commands: Commands,
     audio_settings: Res<Persistent<AudioSettings>>,
+    time: Res<Time>,
+    mut last_error_log: Local<f32>,
 ) {
+    let now = time.elapsed_secs();
+    let mut can_log = now - *last_error_log > 1.0;
     for sound_event in sound_events.read() {
         let Some(player_position) = qp.iter().next() else {
             return;
         };
-        if !player_position.is_finite() {
-            warn!("Player position is not finite: {player_position:?}")
-        }
+        if !player_position.is_finite()
+            && can_log {
+                error!("Player position is not finite: {player_position:?}");
+                *last_error_log = now;
+                can_log = false;
+            }
         let dist = sound_event
             .position
             .map(|pos| player_position.distance(&pos))

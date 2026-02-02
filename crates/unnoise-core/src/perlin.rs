@@ -26,7 +26,7 @@ impl PerlinNoise {
             }
         }
 
-        info!(
+        debug!(
             "Precomputed Perlin noise lookup table initialized: {}x{} at resolution {} (~{} MB)",
             SIZE,
             SIZE,

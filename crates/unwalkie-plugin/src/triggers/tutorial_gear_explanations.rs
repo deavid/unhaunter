@@ -64,7 +64,7 @@ fn trigger_evidence_gear_explanations(
                             && walkie_play
                                 .set(WalkieEvent::GearExplanation(*kind), time.elapsed_secs_f64())
                         {
-                            info!(
+                            debug!(
                                 "Evidence gear explanation triggered for {:?} because it's enabled.",
                                 kind
                             );
@@ -105,7 +105,7 @@ fn trigger_support_item_explanations(
             )
             && walkie_play.set(WalkieEvent::GearExplanation(*kind), time.elapsed_secs_f64())
         {
-            info!(
+            debug!(
                 "Support item explanation triggered for {:?} because it's in an active hand.",
                 kind
             );

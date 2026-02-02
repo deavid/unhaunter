@@ -77,19 +77,15 @@ const UNHAUNTER_CRATES: &[&str] = &[
 ];
 
 pub fn build_log_filter(verbose: u8) -> String {
-    match verbose {
-        0 => "warn".to_string(),
-        v => {
-            let level = match v {
-                1 => "info",
-                2 => "debug",
-                _ => "trace",
-            };
-            let mut filter = "warn".to_string();
-            for c in UNHAUNTER_CRATES {
-                filter.push_str(&format!(",{}={}", c, level));
-            }
-            filter
-        }
+    let level = match verbose {
+        0 => "warn",
+        1 => "info",
+        2 => "debug",
+        _ => "trace",
+    };
+    let mut filter = "warn,wgpu_hal=error".to_string();
+    for c in UNHAUNTER_CRATES {
+        filter.push_str(&format!(",{}={}", c, level));
     }
+    filter
 }

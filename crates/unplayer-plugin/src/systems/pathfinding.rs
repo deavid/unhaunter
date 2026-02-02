@@ -11,21 +11,8 @@ pub(crate) fn detect_stair_area(
 ) -> Option<(Entity, Position, Stairs, Behavior, Position, Position)> {
     let target_bpos = target_pos.to_board_position();
 
-    debug!(
-        "Checking if position {:?} (board: {:?}) is in stairs area",
-        target_pos, target_bpos
-    );
-
     for (stair_entity, stair_pos, stair_component, behavior) in stairs_query.iter() {
         let stair_bpos = stair_pos.to_board_position();
-
-        debug!(
-            "Checking stair at {:?} (board: {:?}), orientation: {:?}, z: {}",
-            stair_pos,
-            stair_bpos,
-            behavior.orientation(),
-            stair_component.z
-        );
 
         // Check if target is within the stairs area based on orientation
         let in_stairs_area = match behavior.orientation() {
@@ -45,7 +32,7 @@ pub(crate) fn detect_stair_area(
         };
 
         if in_stairs_area {
-            debug!(
+            trace!(
                 "Found stair area! Entity: {:?}, Position: {:?}, Z: {}, Orientation: {:?}",
                 stair_entity,
                 stair_pos,
@@ -55,7 +42,7 @@ pub(crate) fn detect_stair_area(
             // Calculate start and end waypoints for stair traversal
             let (start_waypoint, end_waypoint) =
                 calculate_stair_waypoints(stair_pos, stair_component, behavior, stairs_query);
-            debug!(
+            trace!(
                 "Calculated waypoints: start={:?}, end={:?}",
                 start_waypoint, end_waypoint
             );
@@ -69,8 +56,6 @@ pub(crate) fn detect_stair_area(
             ));
         }
     }
-
-    debug!("No stair area found for position {:?}", target_pos);
     None
 }
 

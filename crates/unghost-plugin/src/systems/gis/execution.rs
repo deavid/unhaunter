@@ -192,12 +192,12 @@ fn ghost_interaction_execution_system(
     for event in ev_ghost_interaction.read() {
         // Minimal one-line log for each received interaction event
         if let Some(p) = event.destination {
-            info!(
+            debug!(
                 "GIS execution -> received {:?} for {:?} dest=({:.2}, {:.2}, {:.2})",
                 event.interaction_type, event.target, p.x, p.y, p.z
             );
         } else {
-            info!(
+            debug!(
                 "GIS execution -> received {:?} for {:?}",
                 event.interaction_type, event.target
             );
@@ -246,7 +246,7 @@ fn ghost_interaction_execution_system(
                         &board_collision,
                     );
                 } else {
-                    warn!(
+                    error!(
                         "GIS execution -> Throw interaction for {:?} FAILED: missing destination (should not happen after target selection)",
                         event.target
                     );
@@ -279,7 +279,7 @@ fn ghost_interaction_execution_system(
                         &board_collision,
                     );
                 } else {
-                    warn!(
+                    error!(
                         "GIS execution -> HauntedMove interaction for {:?} FAILED: missing destination (should not happen after target selection)",
                         event.target
                     );
@@ -327,7 +327,7 @@ fn execute_toggle_interaction(
             force_tuid: None,
         });
     } else {
-        warn!(
+        error!(
             "GIS execution -> Toggle interaction for {:?} FAILED: target entity not found or missing components",
             target
         );
@@ -362,7 +362,7 @@ fn execute_door_slam_interaction(
             position: Some(*position),
         });
     } else {
-        warn!(
+        error!(
             "GIS execution -> DoorSlam interaction for {:?} FAILED: target entity not found or missing components",
             target
         );
@@ -398,7 +398,7 @@ fn execute_door_creak_interaction(
             position: Some(*position),
         });
     } else {
-        warn!(
+        error!(
             "GIS execution -> DoorCreak interaction for {:?} FAILED: target entity not found or missing components",
             target
         );
@@ -452,7 +452,7 @@ fn execute_throw_interaction(
             );
         }
     } else {
-        warn!(
+        error!(
             "GIS execution -> Throw interaction for {:?} FAILED: target entity not found or missing components",
             target
         );
@@ -519,7 +519,7 @@ fn execute_nudge_interaction(
             position: Some(*current_position),
         });
     } else {
-        warn!(
+        error!(
             "GIS execution -> Nudge interaction for {:?} FAILED: target entity not found or missing components",
             target
         );
@@ -573,7 +573,7 @@ fn execute_haunted_move_interaction(
             );
         }
     } else {
-        warn!(
+        error!(
             "GIS execution -> HauntedMove interaction for {:?} FAILED: target entity not found or missing components",
             target
         );
@@ -605,7 +605,7 @@ fn execute_lock_interaction(
             position: Some(*position),
         });
     } else {
-        warn!(
+        error!(
             "GIS execution -> Lock interaction for {:?} FAILED: target entity not found or missing components",
             target
         );
@@ -646,7 +646,7 @@ fn execute_trip_breaker_interaction(
         // Spawn electrical sparks visual effect
         visual_effects::spawn_electrical_sparks(commands, asset_server, *position);
     } else {
-        warn!(
+        error!(
             "GIS execution -> TripBreaker interaction for {:?} FAILED: target entity not found or missing components",
             target
         );

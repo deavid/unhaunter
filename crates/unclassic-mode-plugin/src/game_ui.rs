@@ -314,7 +314,7 @@ fn setup_ui(
         .insert(colors::DEBUG_BCOLOR)
         .insert(GameUI)
         .with_children(game_ui);
-    info!("Game UI loaded");
+    debug!("Game UI loaded");
 }
 
 fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {

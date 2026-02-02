@@ -48,7 +48,7 @@ fn snapshot_schema_system(_player_profile: Res<Persistent<PlayerProfileData>>) {
                 }
             }
         } else {
-            warn!("Fixture directory not found. Skipping schema snapshot.");
+            debug!("Fixture directory not found. Skipping schema snapshot.");
         }
     }
 }
@@ -87,7 +87,7 @@ fn validate_schema_snapshots() {
                 error!("Failed to read fixture directory: {:?}", fixture_dir);
             }
         } else {
-            warn!("Fixture directory not found. Skipping schema validation.");
+            debug!("Fixture directory not found. Skipping schema validation.");
         }
     }
 }

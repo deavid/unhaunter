@@ -90,12 +90,12 @@ fn after_level_ready(
     }
 
     // Log area statistics for each floor and its rooms
-    info!("--- Usable Haunted Area Calculation ---");
+    trace!("--- Usable Haunted Area Calculation ---");
     let mut sorted_floors: Vec<_> = area_per_floor.keys().collect();
     sorted_floors.sort();
 
     for floor_z in sorted_floors {
-        info!("--- Floor {} ---", floor_z);
+        trace!("--- Floor {} ---", floor_z);
 
         // Print rooms for this floor
         if let Some(floor_rooms) = rooms_per_floor.get(floor_z) {
@@ -104,19 +104,19 @@ fn after_level_ready(
 
             for room_name in sorted_rooms {
                 if let Some(area) = floor_rooms.get(room_name) {
-                    info!("  Room '{}': {:.2} m²", room_name, area);
+                    trace!("  Room '{}': {:.2} m²", room_name, area);
                 }
             }
         }
 
         // Print floor total
         if let Some(area) = area_per_floor.get(floor_z) {
-            info!("  Floor {} Total: {:.2} m²", floor_z, area);
+            trace!("  Floor {} Total: {:.2} m²", floor_z, area);
         }
     }
 
-    info!("Grand Total Usable Area: {:.2} m²", total_usable_area_m2);
-    info!("--------------------------------------");
+    trace!("Grand Total Usable Area: {:.2} m²", total_usable_area_m2);
+    trace!("--------------------------------------");
 }
 
 /// Processes sprite placeholders (PreMesh) into actual mesh components.
@@ -151,7 +151,7 @@ fn process_pre_meshes(
             } => {
                 if let Some(image) = images.get(image_handle) {
                     let sz = image.texture_descriptor.size;
-                    debug!(
+                    trace!(
                         "Physical image size: {} x {} (Resolution Factor: {})",
                         sz.width, sz.height, rf.0
                     );
@@ -171,7 +171,7 @@ fn process_pre_meshes(
 
                     // Replace PreMesh with actual Mesh
                     commands.entity(entity).insert(mesh2d).remove::<PreMesh>();
-                    debug!("Processed entity: {:?}", entity);
+                    trace!("Processed entity: {:?}", entity);
                 }
             }
         }
@@ -188,7 +188,7 @@ fn rebuild_collision_on_level_ready(
     rebuild_collision_data(&bf, &mut bcf, &qt);
 
     // Log completion
-    info!("Map collision data rebuilt");
+    debug!("Map collision data rebuilt");
 }
 
 pub(crate) fn app_setup(app: &mut App) {

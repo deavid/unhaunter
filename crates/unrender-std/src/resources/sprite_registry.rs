@@ -12,7 +12,7 @@ pub struct SpriteRegistry {
 impl SpriteRegistry {
     pub fn get(&self, key: &VisualKey) -> usize {
         *self.registry.get(key.as_str()).unwrap_or_else(|| {
-            warn!("VisualKey not found in registry: {}", key);
+            error!("VisualKey not found in registry: {}", key);
             self.registry.get(VisualKey::NONE).unwrap_or(&0)
         })
     }

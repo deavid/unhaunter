@@ -325,7 +325,7 @@ pub(crate) fn handle_warning_phases(
             ghost.hunt_warning_intensity = 1.0; //Max intensity
             ghost.hunt_target = true;
             ghost.hunt_time_secs = time.elapsed_secs();
-            warn!("Hunting player for {:.1}s", ghost.hunting);
+            info!("Hunting player for {:.1}s", ghost.hunting);
 
             result.hunt_started = true;
         }
@@ -498,7 +498,7 @@ pub(crate) fn debug_log_ghost_state(
     rage_result: &RageUpdateResult,
     roar_decision: &RoarDecision,
 ) {
-    info!(
+    debug!(
         "Ghost calm time: {:.1}, rage: {:.1}, rage limit: {:.1}, hunting: {:.1}, warn act: {}, warning int: {:.1}, warning timer: {:.1}, roar reason: {:?}",
         ghost.calm_time_secs,
         ghost.rage,

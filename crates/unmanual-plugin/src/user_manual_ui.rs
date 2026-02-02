@@ -252,7 +252,7 @@ fn handle_manual_navigation(
                     current_manual_page.0 -= 1; // Go to the previous chapter
                     current_manual_page.1 = manuals.chapters[current_manual_page.0].pages.len() - 1;
                 } else {
-                    warn!("Already at the beginning of the manual");
+                    trace!("Already at the beginning of the manual");
                 }
             }
 
@@ -264,7 +264,7 @@ fn handle_manual_navigation(
                     current_manual_page.0 += 1; // Go to the next chapter
                     current_manual_page.1 = 0;
                 } else {
-                    warn!("Already at the end of the manual");
+                    trace!("Already at the end of the manual");
                 }
             }
 

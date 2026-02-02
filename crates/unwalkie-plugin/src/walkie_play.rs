@@ -104,7 +104,7 @@ fn walkie_talk(
                 use rand::Rng;
                 let mut rng = random_seed::rng();
                 let dice = rng.random_range(0..=saved_count.pow(2));
-                info!(
+                debug!(
                     "hint dice: {:?}: {}/{}",
                     walkie_event,
                     dice,

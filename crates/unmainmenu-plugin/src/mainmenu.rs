@@ -61,7 +61,7 @@ pub(crate) fn setup(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
         error!("Failed to persist PlayerProfileData: {:?}", e);
     }
 
-    info!("Main menu camera setup and player level updated");
+    debug!("Main menu camera setup and player level updated");
 }
 
 pub(crate) fn setup_ui(
@@ -78,7 +78,7 @@ pub(crate) fn setup_ui(
         (MenuID::Quit, MenuID::Quit.to_string()),
     ];
 
-    warn!("Setting up main menu with items: {:?}", menu_items);
+    debug!("Setting up main menu with items: {:?}", menu_items);
 
     // Create standard menu layout using templates
     let root_entity = commands
@@ -112,7 +112,7 @@ pub(crate) fn setup_ui(
         templates::create_player_status_bar(parent, &ui_assets, &player_profile);
     });
 
-    warn!("Main menu created with root entity: {:?}", root_entity);
+    debug!("Main menu created with root entity: {:?}", root_entity);
 }
 
 pub(crate) fn menu_event(
@@ -227,7 +227,7 @@ pub(crate) fn despawn_sound(
         sink.set_volume(bevy::audio::Volume::Linear(v));
         if v < 0.001 {
             commands.entity(entity).despawn();
-            info!("Song despawned");
+            debug!("Song despawned");
         }
     }
 }

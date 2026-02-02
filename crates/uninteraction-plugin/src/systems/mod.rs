@@ -35,10 +35,6 @@ fn interaction_event_handler(
     };
     for ev in ev_reader.read() {
         if let Ok((interactive, behavior, room_state, pos)) = q_interactive.get(ev.entity) {
-            info!(
-                "Client: Executing interaction for entity {:?} at {:?} (force_tuid: {:?})",
-                ev.entity, pos, ev.force_tuid
-            );
             if interactive_stuff.execute_interaction(
                 ev.entity,
                 pos,
@@ -49,7 +45,10 @@ fn interaction_event_handler(
                 authority,
                 ev.force_tuid,
             ) {
-                info!("Client: Interaction successful, rewriting board topology");
+                debug!(
+                    "Interaction successful, rewriting board topology (authority={:?})",
+                    authority
+                );
                 if authority == Authority::Host {
                     ev_room.write(RoomChangedEvent::default());
                 }
@@ -57,15 +56,10 @@ fn interaction_event_handler(
                     lighting: true,
                     collision: true,
                 });
-            } else {
-                warn!(
-                    "Client: execute_interaction returned false for entity {:?}",
-                    ev.entity
-                );
             }
         } else {
             warn!(
-                "Client: Could not find interactive components for entity {:?}",
+                "Could not find interactive components for entity {:?}",
                 ev.entity
             );
         }

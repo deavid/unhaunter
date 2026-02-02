@@ -92,7 +92,7 @@ impl InteractiveStuff<'_, '_> {
         authority: Authority,
         force_tuid: Option<u32>,
     ) -> bool {
-        debug!(
+        trace!(
             "execute_interaction: entity={:?}, ietype={:?}, authority={:?}, force_tuid={:?}",
             entity, ietype, authority, force_tuid
         );
@@ -126,7 +126,7 @@ impl InteractiveStuff<'_, '_> {
 
         if force_tuid.is_none() && authority == Authority::Client {
             if let Some(player_id) = self.local_player.0 {
-                debug!("Client: Requesting interaction at {:?}", item_bpos);
+                trace!("Client: Requesting interaction at {:?}", item_bpos);
                 self.net_events.write(NetworkDataEvent {
                     message: NetworkMessage::InteractionRequest {
                         player_id,
@@ -151,7 +151,7 @@ impl InteractiveStuff<'_, '_> {
             let mut beh = other.behavior.clone();
             beh.flip(behavior.p.flip);
 
-            debug!(
+            trace!(
                 "execute_interaction: Changing entity {:?} state to tuid {:?} (authority={:?})",
                 entity, other_tuid, authority
             );
@@ -218,10 +218,12 @@ impl InteractiveStuff<'_, '_> {
             }
             return true;
         }
-        warn!(
-            "execute_interaction: No matching tuid {:?} found in cvo group {:?} for entity {:?}",
-            force_tuid, cvo, entity
-        );
+        if let Some(ftuid) = force_tuid {
+            warn!(
+                "execute_interaction: No matching tuid {:?} found in cvo group {:?} for entity {:?}",
+                ftuid, cvo, entity
+            );
+        }
         false
     }
 }

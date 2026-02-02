@@ -163,7 +163,7 @@ fn menu_settings_class_selected(
     video_settings: Res<Persistent<VideoSettings>>,
 ) {
     for ev in events.read() {
-        warn!("Menu Setting Class Selected: {:?}", ev.menu);
+        debug!("Menu Setting Class Selected: {:?}", ev.menu);
         match ev.menu {
             MenuSettingsLevel1::Audio => {
                 let menu_items = AudioSettingsMenu::iter_events(&audio_settings);
@@ -294,7 +294,7 @@ fn menu_save_video_setting(
     use unsettings_core::video::VideoSettingsValue as v;
 
     for ev in events.read() {
-        warn!("Save Video Setting: {:?}", ev.value);
+        debug!("Save Video Setting: {:?}", ev.value);
         match ev.value {
             v::window_size(s) => video_settings.window_size = s,
             v::aspect_ratio(s) => video_settings.aspect_ratio = s,
@@ -318,7 +318,7 @@ fn menu_audio_setting_selected(
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     for ev in events.read() {
-        warn!("Audio Setting Selected: {:?}", ev.setting);
+        debug!("Audio Setting Selected: {:?}", ev.setting);
 
         let menu_items = ev.setting.iter_events_item(&audio_settings);
 
@@ -429,7 +429,7 @@ fn menu_save_audio_setting(
     use unsettings_core::audio::AudioSettingsValue as v;
 
     for ev in events.read() {
-        warn!("Save Audio Setting: {:?}", ev.value);
+        debug!("Save Audio Setting: {:?}", ev.value);
         match ev.value {
             v::volume_master(audio_level) => {
                 audio_settings.volume_master = audio_level;
@@ -475,7 +475,7 @@ fn menu_gameplay_setting_selected(
     game_settings: Res<Persistent<GameplaySettings>>,
 ) {
     for ev in events.read() {
-        warn!("Gameplay Setting Selected: {:?}", ev.setting);
+        debug!("Gameplay Setting Selected: {:?}", ev.setting);
 
         let menu_items = ev.setting.iter_events_item(&game_settings);
 
@@ -587,7 +587,7 @@ fn menu_save_gameplay_setting(
     use unsettings_core::game::GameplaySettingsValue as v;
 
     for ev in events.read() {
-        warn!("Save Gameplay Setting: {:?}", ev.value);
+        debug!("Save Gameplay Setting: {:?}", ev.value);
         match ev.value {
             v::movement_style(movement_style) => {
                 gameplay_settings.movement_style = movement_style;
@@ -633,7 +633,7 @@ fn menu_integration_system(
                 );
                 continue;
             }
-            warn!("Settings menu received click event: {:?}", click_event);
+            trace!("Settings menu received click event: {:?}", click_event);
             let clicked_idx = click_event.pos;
 
             // Find the menu item with this index
@@ -643,7 +643,7 @@ fn menu_integration_system(
             {
                 // Send the corresponding menu event
                 menu_events.write(menu_item.on_activate);
-                warn!("Activating menu item: {:?}", menu_item.on_activate);
+                debug!("Activating menu item: {:?}", menu_item.on_activate);
             } else {
                 warn!("No menu item found with index {}", clicked_idx);
             }

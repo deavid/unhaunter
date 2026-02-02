@@ -214,7 +214,7 @@ impl GhostSprite {
         let mut rng = random_seed::rng();
         let idx = rng.random_range(0..ghost_types.len());
         let class = ghost_types[idx];
-        warn!("Ghost type: {:?} - {:?}", class, class.evidences());
+        debug!("Ghost type: {:?} - {:?}", class, class.evidences());
         let mut salty_effect_timer = Timer::from_seconds(120.0, TimerMode::Once);
         salty_effect_timer.tick(Duration::from_secs(120));
         GhostSprite {

@@ -275,7 +275,7 @@ pub fn handshake_handler_system(
     if let NetworkConn::Active { handshake, .. } = &*conn {
         // Client side automatic Hello
         if matches!(cli.net_mode, NetMode::Join { .. }) && *handshake == HandshakeState::None {
-            info!("Network: Sending Hello...");
+            debug!("Network: Sending Hello...");
             to_send.push(NetworkMessage::Hello {
                 version: "0.1.0".to_string(),
                 previous_id: local_id.0,
@@ -294,18 +294,18 @@ pub fn handshake_handler_system(
                     version,
                     previous_id,
                 } => {
-                    info!(
+                    debug!(
                         "Network: Received Hello (version: {}, prev_id: {:?})",
                         version, previous_id
                     );
                     if matches!(cli.net_mode, NetMode::Host { .. }) {
                         let id = previous_id.unwrap_or(NetworkId(2)); // Client is always 2 in MVP
-                        info!("Network: Sending Welcome to {:?}...", id);
+                        debug!("Network: Sending Welcome to {:?}...", id);
 
                         // Check if we can re-associate with an existing disconnected entity
                         for (entity, disc_id) in query_disconnected.iter() {
                             if disc_id == &id {
-                                info!(
+                                debug!(
                                     "Network: Re-associating connection with entity {:?}",
                                     entity
                                 );
@@ -1004,7 +1004,7 @@ pub fn client_apply_snapshots_system(
                 let g_entity = if let Some(e) = net_to_entity.get(&g_sync.id) {
                     *e
                 } else {
-                    info!(
+                    debug!(
                         "Spawning remote gear {:?} (kind: {:?})",
                         g_sync.id, g_sync.kind
                     );
@@ -1115,7 +1115,7 @@ pub fn client_apply_snapshots_system(
                             || old_right != gear.right_hand
                             || old_held != new_held
                         {
-                            info!(
+                            debug!(
                                 "Player {:?} gear state: left={:?}, right={:?}, inv_count={}",
                                 id,
                                 gear.left_hand,
@@ -1199,7 +1199,7 @@ pub fn client_apply_snapshots_system(
                     let entities =
                         &params.board_field.0[[rel_x as usize, rel_y as usize, rel_z as usize]];
                     if entities.is_empty() {
-                        warn!(
+                        debug!(
                             "Client: No entities found at board position {:?} (Rel: {:?}, Board shape: {:?}, Origin: {:?})",
                             bpos,
                             (rel_x, rel_y, rel_z),
@@ -1214,7 +1214,7 @@ pub fn client_apply_snapshots_system(
                                     || beh.cfg().tileuid != t_sync.tileuid
                             })
                         {
-                            info!(
+                            debug!(
                                 "Client: Applying map tile update at {:?} (tileset: {}, tileuid: {})",
                                 bpos, t_sync.tileset, t_sync.tileuid
                             );
@@ -1226,7 +1226,7 @@ pub fn client_apply_snapshots_system(
                         }
                     }
                 } else {
-                    warn!(
+                    debug!(
                         "Client: Map tile update out of bounds: {:?} (Rel: {:?}, Board shape: {:?}, Origin: {:?})",
                         bpos,
                         (rel_x, rel_y, rel_z),
@@ -1577,6 +1577,6 @@ pub fn client_process_pending_map(
         });
         pending_map.map_filepath = None;
     } else {
-        debug!("Network: Waiting for map asset to be ready: {}", path);
+        trace!("Network: Waiting for map asset to be ready: {}", path);
     }
 }

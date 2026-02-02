@@ -43,7 +43,7 @@ pub(crate) fn load_walkie_event_stats(
                 .other_mission_event_count
                 .insert(walkie_event, stats.play_count);
         } else {
-            warn!("Failed to parse walkie event ID: {}", event_id_str);
+            debug!("Failed to parse walkie event ID: {}", event_id_str);
         }
     }
 

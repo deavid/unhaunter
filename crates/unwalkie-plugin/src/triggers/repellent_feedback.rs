@@ -34,7 +34,7 @@ fn repellent_feedback_trigger_system(
     // Reset hints when not in game
     if *app_state.get() != AppState::InGame {
         if !hints_given.hints_given.is_empty() || !hints_given.ready_to_play.is_empty() {
-            info!("RepellentFeedback: Resetting hints given due to leaving game");
+            debug!("RepellentFeedback: Resetting hints given due to leaving game");
             hints_given.hints_given.clear();
             hints_given.ready_to_play.clear();
         }
@@ -58,7 +58,7 @@ fn repellent_feedback_trigger_system(
             && !hints_given.ready_to_play.contains(repellent_type)
         {
             hints_given.ready_to_play.insert(*repellent_type);
-            info!(
+            debug!(
                 "RepellentFeedback: Marked {:?} as ready to play hint (50+ incorrect particles)",
                 repellent_type
             );
@@ -111,7 +111,7 @@ fn repellent_feedback_trigger_system(
 
                 // Attempt to play the walkie event
                 if walkie_play.set(walkie_event, time.elapsed_secs_f64()) {
-                    info!(
+                    debug!(
                         "RepellentFeedback: Sending hint for evidence {:?} and forcing discard (repellent {:?} vs ghost {:?}, {} total particles)",
                         selected_evidence, repellent_type, real_ghost_type, total_count
                     );
@@ -120,7 +120,7 @@ fn repellent_feedback_trigger_system(
                     // Mark this repellent type as having given a hint and remove from ready_to_play
                     hints_given.hints_given.insert(repellent_type);
                     hints_given.ready_to_play.remove(&repellent_type);
-                    info!(
+                    debug!(
                         "RepellentFeedback: Marked hint as given for repellent {:?}",
                         repellent_type
                     );

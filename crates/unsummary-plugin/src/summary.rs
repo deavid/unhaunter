@@ -18,7 +18,7 @@ use unui_core::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 pub(crate) fn setup(mut commands: Commands) {
     // ui camera
     commands.spawn(Camera2d).insert(SCamera);
-    info!("Summary camera setup");
+    debug!("Summary camera setup");
 }
 
 pub(crate) fn cleanup(

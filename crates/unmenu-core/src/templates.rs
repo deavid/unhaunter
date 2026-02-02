@@ -90,7 +90,7 @@ pub fn create_menu_item<'a>(
     ui_assets: &UiAssets,
 ) -> EntityCommands<'a> {
     let text: String = text.into();
-    warn!("Creating menu item {} with idx {}", text, idx);
+    debug!("Creating menu item {} with idx {}", text, idx);
 
     // Define colors for menu items
     let selected_color = colors::MENU_ITEM_COLOR_ON;
@@ -175,7 +175,7 @@ pub fn create_standard_menu_layout<T: Component + Copy>(
     help_text: Option<String>,
     menu_marker: impl Component,
 ) -> Entity {
-    warn!("Creating standard menu layout with {} items", items.len());
+    debug!("Creating standard menu layout with {} items", items.len());
     // Root node to hold everything
     commands
         .spawn(Node {

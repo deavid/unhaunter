@@ -91,7 +91,7 @@ fn set_window_icon(_marker: NonSendMarker, // Forces system to run on main threa
     // here we use the `image` crate to load our icon data from a png file
     // this is not a very bevy-native solution, but it will do
     let Ok(img) = image::open(assets_path.join("favicon-512x512.png")) else {
-        warn!("Failed to load icon image.");
+        error!("Failed to load icon image.");
         return;
     };
 

@@ -208,12 +208,6 @@ pub(crate) fn custom_sprite_picking(
 
         let order = camera.order as f32;
         if !picks.is_empty() {
-            for (entity, hit_data) in &picks {
-                trace!(
-                    "CustomSpritePicking: Pick hit entity {:?} at depth {:.2}",
-                    entity, hit_data.depth
-                );
-            }
             output.write(PointerHits::new(*pointer, picks, order));
         }
     }

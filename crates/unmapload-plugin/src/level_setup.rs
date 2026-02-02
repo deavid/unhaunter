@@ -123,7 +123,7 @@ fn load_level_handler(
         loaded_event.floor_mapping.floor_to_z.len(),
     );
 
-    info!(
+    debug!(
         "Level geometry initialized: size {:?}, origin {:?}",
         map_size, origin
     );
@@ -177,7 +177,7 @@ fn load_level_handler(
         }
     }
 
-    warn!("Map spawning complete: {}", loaded_event.map_filepath);
+    debug!("Map spawning complete: {}", loaded_event.map_filepath);
 }
 
 pub(crate) fn app_setup(app: &mut App) {

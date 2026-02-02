@@ -173,7 +173,7 @@ fn handle_selection_input(
                     .progression
                     .update_deposit(mission_data.required_deposit)
                 {
-                    warn!("{}", error_msg);
+                    info!("{}", error_msg);
                     if let Ok(mut text) = q_desc_text.single_mut() {
                         text.0 = error_msg;
                     }

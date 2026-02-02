@@ -24,7 +24,7 @@ fn decay_evidence_clarity_system(
             if reading.clarity > 0.0 {
                 if can_report {
                     *last_report = current_game_time;
-                    info!(
+                    debug!(
                         "Evidence clarity for {:?}: {:.1}%",
                         evidence_type,
                         reading.clarity * 100.0

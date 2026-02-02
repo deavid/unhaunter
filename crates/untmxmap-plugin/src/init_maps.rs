@@ -129,7 +129,7 @@ fn tmxmap_preload(
 
             // If the map is a draft, skip loading it unless --draft-maps is passed.
             if tmx.props.draft && !cli_options.include_draft_maps {
-                warn!(
+                debug!(
                     "Skipping draft map {:?} at path {:?} (use --draft-maps to include)",
                     tmx.props.display_name, mapload.path
                 );

@@ -115,12 +115,12 @@ fn ghost_interaction_selection_system(
                     if GIS_DEBUG {
                         // One-line log for emitted interaction
                         if let Some(p) = destination {
-                            info!(
+                            debug!(
                                 "GIS selection -> emitted {:?} to {:?} with dest ({:.2}, {:.2}, {:.2})",
                                 interaction_type, target, p.x, p.y, p.z
                             );
                         } else {
-                            info!(
+                            debug!(
                                 "GIS selection -> emitted {:?} to {:?}",
                                 interaction_type, target
                             );
@@ -347,43 +347,43 @@ fn find_interaction_target(
         if GIS_DEBUG {
             match interaction_type {
                 GhostInteractionType::Toggle => {
-                    info!(
+                    debug!(
                         "GIS selection -> no target for Toggle: nearby={}, togglables(lights+switches)={}",
                         nearby_count, can_emit_light_count
                     );
                 }
                 GhostInteractionType::DoorSlam | GhostInteractionType::DoorCreak => {
-                    info!(
+                    debug!(
                         "GIS selection -> no door target: nearby={}, doors_total={}, open={}, closed={}",
                         nearby_count, doors_total, doors_open, doors_closed
                     );
                 }
                 GhostInteractionType::Lock => {
-                    info!(
+                    debug!(
                         "GIS selection -> no lock target: nearby={}, doors_total={}, closed_unlocked={}, locked={}",
                         nearby_count, doors_total, doors_unlocked, doors_locked
                     );
                 }
                 GhostInteractionType::TripBreaker => {
-                    info!(
+                    debug!(
                         "GIS selection -> no breaker target: nearby={}, breakers_on={}, breakers_off={}",
                         nearby_count, breaker_on, breaker_off
                     );
                 }
                 GhostInteractionType::Throw => {
-                    info!(
+                    debug!(
                         "GIS selection -> no throw target: nearby={}, throwable_flag={}, with_dest={}",
                         nearby_count, throwable_flag, throwable_with_dest
                     );
                 }
                 GhostInteractionType::Nudge => {
-                    info!(
+                    debug!(
                         "GIS selection -> no nudge target: nearby={}, nudgeable_flag={}",
                         nearby_count, nudgeable_flag
                     );
                 }
                 GhostInteractionType::HauntedMove => {
-                    info!(
+                    debug!(
                         "GIS selection -> no haunted move target: nearby={}, haunt_flag={}, with_dest={}",
                         nearby_count, haunt_flag, haunt_with_dest
                     );

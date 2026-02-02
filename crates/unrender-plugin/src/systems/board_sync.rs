@@ -53,12 +53,6 @@ fn sync_map_entity_field(
                     {
                         to_update.push((entity, current_bpos.clone(), old_bpos.0.clone()));
 
-                        // info!(
-                        //     "Moved entity {:?} from {:?} to {:?}",
-                        //     entity,
-                        //     (x, y, z),
-                        //     current_bpos.ndidx()
-                        // );
                         // Update the stored BoardPosition
                         old_bpos.0 = current_bpos;
                     }
