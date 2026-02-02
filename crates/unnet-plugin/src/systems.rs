@@ -456,7 +456,8 @@ pub fn host_send_snapshots_system(
         .iter()
         .map(|(p, pos, dir, hiding, _, stamina, anim)| PlayerState {
             id: p.id,
-            position: [pos.x, pos.y, pos.z, f32::atan2(dir.dy, dir.dx)],
+            position: [pos.x, pos.y, pos.z],
+            orientation: [dir.dx, dir.dy],
             is_hiding: hiding.is_some(),
             stamina: stamina.map(|s| s.current).unwrap_or(100.0),
             is_running: stamina.map(|s| s.running).unwrap_or(false),
@@ -682,6 +683,7 @@ pub fn client_send_input_system(
             inventory_cycle: input.inventory_cycle,
             inventory_swap: input.inventory_swap,
             target_position: input.target_position.map(|v| [v.x, v.y]),
+            aim_direction: [input.aim_direction.x, input.aim_direction.y],
         });
     }
 }
@@ -935,9 +937,10 @@ pub fn client_apply_snapshots_system(
                     pos.y = p_state.position[1];
                     pos.z = p_state.position[2];
 
-                    let orientation = p_state.position[3];
-                    dir.dx = f32::cos(orientation);
-                    dir.dy = f32::sin(orientation);
+                    if main_player.is_none() {
+                        dir.dx = p_state.orientation[0];
+                        dir.dy = p_state.orientation[1];
+                    }
 
                     // 2.4 Hiding
                     match (p_state.is_hiding, hiding) {
@@ -978,10 +981,10 @@ pub fn client_apply_snapshots_system(
                             .to_vec(),
                         );
                     } else {
-                        let dscreen = perspective::direction_to_screen_coord(*dir);
+                        let dscreen =
+                            perspective::direction_to_screen_coord(*dir).normalize_or_zero();
                         anim.set_range(
-                            CharacterAnimation::from_dir(dscreen.x * 0.001, dscreen.y * 0.001)
-                                .to_vec(),
+                            CharacterAnimation::from_dir(dscreen.x * 0.5, dscreen.y * 0.5).to_vec(),
                         );
                     }
                 }
@@ -1350,6 +1353,7 @@ pub fn host_apply_input_system(
                 inventory_cycle,
                 inventory_swap,
                 target_position,
+                aim_direction,
             } => {
                 for (id, mut input) in query_players.iter_mut() {
                     if id == player_id {
@@ -1363,6 +1367,7 @@ pub fn host_apply_input_system(
                         input.inventory_cycle = *inventory_cycle;
                         input.inventory_swap = *inventory_swap;
                         input.target_position = target_position.map(|v| Vec2::new(v[0], v[1]));
+                        input.aim_direction = Vec2::new(aim_direction[0], aim_direction[1]);
                     }
                 }
             }

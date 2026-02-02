@@ -11,6 +11,7 @@ use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unnavigation_core::collision_handler::CollisionHandler;
+use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerInput;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
@@ -51,6 +52,7 @@ pub(crate) fn player_movement_system(
         &PlayerInput,
         Option<&Hiding>,
         &mut Stamina,
+        Option<&MainPlayer>,
     )>,
     colhand: CollisionHandler,
     interactables: Query<
@@ -74,9 +76,19 @@ pub(crate) fn player_movement_system(
 ) {
     let dt = time.delta_secs() * 60.0;
 
-    for (mut pos, mut dir, mut player, mut anim, player_gear, player_input, hiding, mut stamina) in
-        players.iter_mut()
+    for (
+        mut pos,
+        mut dir,
+        mut player,
+        mut anim,
+        player_gear,
+        player_input,
+        hiding,
+        mut stamina,
+        main_player,
+    ) in players.iter_mut()
     {
+        let is_main_player = main_player.is_some();
         if !dir.is_finite() {
             warn!("Player direction is not finite: {dir:?}");
             *dir = Direction::zero();
@@ -220,15 +232,19 @@ pub(crate) fn player_movement_system(
             }
         }
 
-        if !mouse_visibility.is_visible {
-            if d.distance() > 0.1 {
-                *dir = player.movement;
-            } else {
-                let dir_dist = (dir.dx.powi(2) + dir.dy.powi(2)).sqrt();
-                if dir_dist > DIR_MIN {
-                    dir.dx /= DIR_RED;
-                    dir.dy /= DIR_RED;
-                }
+        if is_main_player && mouse_visibility.is_visible {
+            // Let mouse_aim_system handle Direction for MainPlayer
+        } else if player_input.aim_direction.length_squared() > 0.001 {
+            dir.dx = player_input.aim_direction.x;
+            dir.dy = player_input.aim_direction.y;
+            dir.dz = 0.0;
+        } else if d.distance() > 0.1 {
+            *dir = player.movement;
+        } else {
+            let dir_dist = (dir.dx.powi(2) + dir.dy.powi(2)).sqrt();
+            if dir_dist > DIR_MIN {
+                dir.dx /= DIR_RED;
+                dir.dy /= DIR_RED;
             }
         }
     }

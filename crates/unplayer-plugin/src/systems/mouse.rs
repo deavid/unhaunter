@@ -1,6 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use unengine_core::GCameraArena;
 use unplayer_core::components::MainPlayer;
+use unplayer_core::components::PlayerInput;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
@@ -13,7 +14,10 @@ const AIM_MAX_DISTANCE: f32 = 8.0;
 fn mouse_aim_system(
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<GCameraArena>>,
-    mut q_player: Query<(&mut Direction, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
+    mut q_player: Query<
+        (&mut Direction, &Position, &mut PlayerInput),
+        (With<PlayerSprite>, With<MainPlayer>),
+    >,
     mouse_visibility: Res<MouseVisibility>,
 ) {
     // Only aim when mouse is visible
@@ -29,7 +33,7 @@ fn mouse_aim_system(
     let Ok((camera, cam_transform)) = q_camera.single() else {
         return;
     };
-    let Ok((mut player_dir, player_pos)) = q_player.single_mut() else {
+    let Ok((mut player_dir, player_pos, mut player_input)) = q_player.single_mut() else {
         return;
     };
 
@@ -43,6 +47,7 @@ fn mouse_aim_system(
 
         // This is now the correct aiming direction.
         *player_dir = clamped_aim_vec;
+        player_input.aim_direction = Vec2::new(clamped_aim_vec.dx, clamped_aim_vec.dy);
     }
 }
 

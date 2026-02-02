@@ -50,6 +50,9 @@ pub struct PlayerInput {
 
     /// Swap hands.
     pub inventory_swap: bool,
+
+    /// The desired aiming direction and magnitude.
+    pub aim_direction: Vec2,
 }
 
 impl PlayerInput {
@@ -69,6 +72,7 @@ impl PlayerInput {
         self.use_left_hand = false;
         self.inventory_cycle = false;
         self.inventory_swap = false;
+        self.aim_direction = Vec2::ZERO;
     }
 }
 

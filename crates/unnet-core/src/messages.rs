@@ -25,7 +25,8 @@ pub enum GearDetails {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PlayerState {
     pub id: NetworkId,
-    pub position: [f32; 4], // x, y, z, orientation
+    pub position: [f32; 3],
+    pub orientation: [f32; 2], // dx, dy
     pub is_hiding: bool,
     pub stamina: f32,
     pub is_running: bool,
@@ -169,6 +170,7 @@ pub enum NetworkMessage {
         inventory_cycle: bool,
         inventory_swap: bool,
         target_position: Option<[f32; 2]>,
+        aim_direction: [f32; 2],
     },
     /// Host sends the final mission summary.
     MissionSummary { result: MissionResult },
