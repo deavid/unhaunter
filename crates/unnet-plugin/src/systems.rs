@@ -16,7 +16,7 @@ use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::LoadLevelEvent;
-use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use unevents_core::events::roomchanged::{InteractionExecutionType, RoomStateSyncEvent};
 use unevents_core::events::sound::SoundEvent;
 use ungear_core::components::core::Battery;
 use ungear_core::components::playergear::PlayerGear;
@@ -744,7 +744,7 @@ pub struct ClientSnapshotParams<'w, 's> {
         ),
         (With<GhostTag>, Without<PlayerSprite>, Without<Behavior>),
     >,
-    pub ev_room: MessageWriter<'w, RoomChangedEvent>,
+    pub ev_room_sync: MessageWriter<'w, RoomStateSyncEvent>,
     pub board_field: Res<'w, BoardEntityField>,
     pub board_topo: Res<'w, BoardTopology>,
     pub query_tiles: Query<
@@ -1174,7 +1174,7 @@ pub fn client_apply_snapshots_system(
                 }
             }
             if room_changed {
-                params.ev_room.write(RoomChangedEvent::default());
+                params.ev_room_sync.write(RoomStateSyncEvent);
             }
 
             // Update map tiles

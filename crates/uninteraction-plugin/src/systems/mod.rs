@@ -6,13 +6,42 @@ use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomState;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
-use unevents_core::events::roomchanged::RoomChangedEvent;
+use unevents_core::events::roomchanged::RoomStateSyncEvent;
 use uninteraction_core::interaction::{Authority, ExecuteInteractionEvent};
 use unspatial_core::position::Position;
 use untypes_core::cli::{CliOptions, is_host};
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, interaction_event_handler);
+    app.add_systems(
+        Update,
+        (interaction_event_handler, room_state_sync_system).chain(),
+    );
+}
+
+fn room_state_sync_system(
+    mut ev_sync: MessageReader<RoomStateSyncEvent>,
+    mut interactive_stuff: InteractiveStuff,
+    q_interactables: Query<(Entity, &Position, &Behavior, &RoomState)>,
+    mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
+) {
+    if ev_sync.read().next().is_none() {
+        return;
+    }
+
+    let mut changed = false;
+    for (entity, pos, behavior, room_state) in q_interactables.iter() {
+        if interactive_stuff.synchronize_entity(entity, pos, behavior, room_state) {
+            changed = true;
+        }
+    }
+
+    if changed {
+        debug!("Room state synchronization triggered a board topology rebuild.");
+        ev_bdr.write(BoardTopologyToRebuild {
+            lighting: true,
+            collision: true,
+        });
+    }
 }
 
 fn interaction_event_handler(
@@ -25,7 +54,7 @@ fn interaction_event_handler(
         Option<&RoomState>,
         &Position,
     )>,
-    mut ev_room: MessageWriter<RoomChangedEvent>,
+    mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
 ) {
     let authority = if is_host(cli) {
@@ -50,7 +79,7 @@ fn interaction_event_handler(
                     authority
                 );
                 if authority == Authority::Host {
-                    ev_room.write(RoomChangedEvent::default());
+                    ev_room_sync.write(RoomStateSyncEvent);
                 }
                 ev_bdr.write(BoardTopologyToRebuild {
                     lighting: true,

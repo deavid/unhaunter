@@ -1,12 +1,8 @@
 use bevy::prelude::*;
-use unbehavior::behavior::Behavior;
-use unbehavior::components::RoomState;
 use unengine_core::GCameraArena;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
-use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
-use uninteraction_core::interaction::ExecuteInteractionEvent;
+use unevents_core::events::roomchanged::RoomChangedEvent;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unspatial_core::position::Position;
 use untypes_core::states::GameState;
 
 /// Handles `RoomChangedEvent` events, updating interactive object states and room
@@ -23,8 +19,6 @@ use untypes_core::states::GameState;
 fn roomchanged_event(
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
     mut ev_room: MessageReader<RoomChangedEvent>,
-    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
-    interactables: Query<(Entity, &Position, &Behavior, &RoomState), Without<PlayerSprite>>,
     pc: Query<(&PlayerSprite, &Transform), (Without<GCameraArena>, With<MainPlayer>)>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
     mut game_next_state: ResMut<NextState<GameState>>,
@@ -45,14 +39,6 @@ fn roomchanged_event(
 
     if !any_event {
         return;
-    }
-
-    for (entity, _, _, _) in interactables.iter() {
-        ev_interaction.write(ExecuteInteractionEvent {
-            entity,
-            ietype: InteractionExecutionType::ReadRoomState,
-            force_tuid: None,
-        });
     }
 
     ev_bdr.write(BoardTopologyToRebuild {

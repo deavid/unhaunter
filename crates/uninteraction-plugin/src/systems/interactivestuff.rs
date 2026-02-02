@@ -56,6 +56,85 @@ pub struct InteractiveStuff<'w, 's> {
 }
 
 impl InteractiveStuff<'_, '_> {
+    /// Internal helper to update an entity's visual components (mesh material and behavior)
+    /// to match a specific tile identifier.
+    fn apply_visual_update(
+        &mut self,
+        entity: Entity,
+        tuid: &(String, u32),
+        current_behavior: &Behavior,
+    ) {
+        let other = self.bf.map_tile.get(tuid).unwrap();
+        let mut beh = other.behavior.clone();
+        beh.flip(current_behavior.p.flip);
+
+        let mut e_commands = self.commands.get_entity(entity).unwrap();
+        let b = other.bundle.clone();
+        let mat = self.materials1.get(&b.material).unwrap().clone();
+        let mat = self.materials1.add(mat);
+        e_commands.insert(MeshMaterial2d(mat));
+        e_commands.insert(beh);
+    }
+
+    /// Synchronizes the entity's state with the current RoomDB state.
+    ///
+    /// Checks the `RoomState` of the room the entity belongs to. If the entity's
+    /// current behavior state (`beh.state()`) does not match the room's stored
+    /// state, it updates the entity to match.
+    ///
+    /// Returns `true` if the entity was updated.
+    pub fn synchronize_entity(
+        &mut self,
+        entity: Entity,
+        item_pos: &Position,
+        behavior: &Behavior,
+        room_state: &RoomState,
+    ) -> bool {
+        let item_bpos = item_pos.to_board_position();
+        let item_roombpos = BoardPosition {
+            x: item_bpos.x + room_state.room_delta.x,
+            y: item_bpos.y + room_state.room_delta.y,
+            z: item_bpos.z + room_state.room_delta.z,
+        };
+        let room_name = self
+            .roomdb
+            .room_tiles
+            .get(&item_roombpos)
+            .cloned()
+            .unwrap_or_default();
+
+        let Some(main_room_state) = self.roomdb.room_state.get(&room_name) else {
+            return false;
+        };
+
+        if behavior.state() == *main_room_state {
+            return false;
+        }
+
+        // We need to find the correct variant for this state.
+        let cvo = behavior.key_cvo();
+        let variants = self.bf.cvo_idx.get(&cvo).cloned().unwrap_or_default();
+
+        for variant_tuid in variants.iter() {
+            let is_match = self
+                .bf
+                .map_tile
+                .get(variant_tuid)
+                .map(|other| other.behavior.state() == *main_room_state)
+                .unwrap_or(false);
+
+            if is_match {
+                trace!(
+                    "synchronize_entity: Syncing entity {:?} to state {:?} (tuid={:?})",
+                    entity, main_room_state, variant_tuid
+                );
+                self.apply_visual_update(entity, variant_tuid, behavior);
+                return true;
+            }
+        }
+        false
+    }
+
     /// Executes an interaction with an interactive object.
     ///
     /// This method determines the object's new state based on the type of interaction,
@@ -92,6 +171,11 @@ impl InteractiveStuff<'_, '_> {
         authority: Authority,
         force_tuid: Option<u32>,
     ) -> bool {
+        if ietype == InteractionExecutionType::ReadRoomState {
+            trace!(
+                "execute_interaction: ReadRoomState is deprecated, use RoomStateSyncEvent instead."
+            );
+        }
         trace!(
             "execute_interaction: entity={:?}, ietype={:?}, authority={:?}, force_tuid={:?}",
             entity, ietype, authority, force_tuid
@@ -138,7 +222,8 @@ impl InteractiveStuff<'_, '_> {
             return false;
         }
 
-        for other_tuid in self.bf.cvo_idx.get(&cvo).unwrap().iter() {
+        let variants = self.bf.cvo_idx.get(&cvo).cloned().unwrap_or_default();
+        for other_tuid in variants.iter() {
             if let Some(ftuid) = force_tuid {
                 if other_tuid.1 != ftuid {
                     continue;
@@ -146,15 +231,15 @@ impl InteractiveStuff<'_, '_> {
             } else if *other_tuid == tuid {
                 continue;
             }
-            let mut e_commands = self.commands.get_entity(entity).unwrap();
-            let other = self.bf.map_tile.get(other_tuid).unwrap();
-            let mut beh = other.behavior.clone();
-            beh.flip(behavior.p.flip);
-
-            trace!(
-                "execute_interaction: Changing entity {:?} state to tuid {:?} (authority={:?})",
-                entity, other_tuid, authority
-            );
+            let (beh_state, other_tileset, other_tileuid, other_behavior) = {
+                let other = self.bf.map_tile.get(other_tuid).unwrap();
+                (
+                    other.behavior.state(),
+                    other.behavior.cfg().tileset.clone(),
+                    other.behavior.cfg().tileuid,
+                    other.behavior.clone(),
+                )
+            };
 
             // In case it is connected to a room, we need to change room state.
             if let Some(room_state) = room_state {
@@ -176,24 +261,26 @@ impl InteractiveStuff<'_, '_> {
                             && let Some(main_room_state) =
                                 self.roomdb.room_state.get_mut(&room_name)
                         {
-                            *main_room_state = beh.state();
+                            *main_room_state = beh_state.clone();
                         }
                     }
                     InteractionExecutionType::ReadRoomState => {
                         if let Some(main_room_state) = self.roomdb.room_state.get(&room_name)
-                            && *main_room_state != beh.state()
+                            && *main_room_state != beh_state
                         {
                             continue;
                         }
                     }
                 }
             }
-            let b = other.bundle.clone();
-            let mat = self.materials1.get(&b.material).unwrap().clone();
-            let mat = self.materials1.add(mat);
-            e_commands.insert(MeshMaterial2d(mat));
 
-            e_commands.insert(beh);
+            trace!(
+                "execute_interaction: Changing entity {:?} state to tuid {:?} (authority={:?})",
+                entity, other_tuid, authority
+            );
+
+            self.apply_visual_update(entity, other_tuid, behavior);
+
             if ietype == InteractionExecutionType::ChangeState && authority == Authority::Host {
                 self.changed_tiles
                     .0
@@ -201,15 +288,15 @@ impl InteractiveStuff<'_, '_> {
                         x: item_bpos.x as i32,
                         y: item_bpos.y as i32,
                         z: item_bpos.z as i32,
-                        tileset: other.behavior.cfg().tileset.clone(),
-                        tileuid: other.behavior.cfg().tileuid,
+                        tileset: other_tileset,
+                        tileuid: other_tileuid,
                     });
             }
             if ietype == InteractionExecutionType::ChangeState
                 && let Some(interactive) = interactive
                 && authority == Authority::Host
             {
-                let sound_file = interactive.sound_for_moving_into_state(&other.behavior);
+                let sound_file = interactive.sound_for_moving_into_state(&other_behavior);
                 self.sound_events.write(SoundEvent {
                     sound_file,
                     volume: 1.0,

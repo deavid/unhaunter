@@ -21,6 +21,13 @@ pub struct RoomChangedEvent {
     pub open_van: bool,
 }
 
+/// Event triggered to synchronize all interactive entities with the `RoomDB`.
+///
+/// This is typically fired after an interaction changes a room state, or
+/// during level initialization.
+#[derive(Clone, Debug, Default, Message)]
+pub struct RoomStateSyncEvent;
+
 impl RoomChangedEvent {
     /// Creates a new `RoomChangedEvent` specifically for level initialization.
     ///

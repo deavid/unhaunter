@@ -12,7 +12,7 @@ use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::loadlevel::LevelReadyEvent;
-use unevents_core::events::roomchanged::RoomChangedEvent;
+use unevents_core::events::roomchanged::{RoomChangedEvent, RoomStateSyncEvent};
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::components::visuals::ResolutionFactor;
 use unrender_std::utils::collision::rebuild_collision_data;
@@ -39,6 +39,7 @@ fn after_level_ready(
     bcf: Res<BoardCollisionField>,
     mut ev: MessageReader<LevelReadyEvent>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
+    mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
     roomdb: Res<RoomDB>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
@@ -54,7 +55,8 @@ fn after_level_ready(
     next_app_state.set(AppState::InGame);
     next_game_state.set(GameState::None);
 
-    // Send room changed event with van open state
+    // Send synchronization events
+    ev_room_sync.write(RoomStateSyncEvent);
     ev_room.write(RoomChangedEvent::init(open_van));
 
     // --- Calculate Usable Haunted Area ---
