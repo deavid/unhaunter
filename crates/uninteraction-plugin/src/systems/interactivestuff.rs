@@ -51,6 +51,8 @@ pub struct InteractiveStuff<'w, 's> {
     pub game_next_state: ResMut<'w, NextState<GameState>>,
     /// Event writer for sending network messages.
     pub net_events: MessageWriter<'w, NetworkDataEvent>,
+    /// Track changed tiles to send to clients.
+    pub changed_tiles: ResMut<'w, unnet_core::resources::ChangedTiles>,
 }
 
 impl InteractiveStuff<'_, '_> {
@@ -192,6 +194,17 @@ impl InteractiveStuff<'_, '_> {
             e_commands.insert(MeshMaterial2d(mat));
 
             e_commands.insert(beh);
+            if ietype == InteractionExecutionType::ChangeState && authority == Authority::Host {
+                self.changed_tiles
+                    .0
+                    .push(unnet_core::messages::MapTileState {
+                        x: item_bpos.x as i32,
+                        y: item_bpos.y as i32,
+                        z: item_bpos.z as i32,
+                        tileset: other.behavior.cfg().tileset.clone(),
+                        tileuid: other.behavior.cfg().tileuid,
+                    });
+            }
             if ietype == InteractionExecutionType::ChangeState
                 && let Some(interactive) = interactive
                 && authority == Authority::Host
@@ -205,6 +218,10 @@ impl InteractiveStuff<'_, '_> {
             }
             return true;
         }
+        warn!(
+            "execute_interaction: No matching tuid {:?} found in cvo group {:?} for entity {:?}",
+            force_tuid, cvo, entity
+        );
         false
     }
 }

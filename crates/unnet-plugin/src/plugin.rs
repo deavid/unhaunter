@@ -14,6 +14,7 @@ impl Plugin for UnhaunterNetPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<crate::resources::NetworkConn>();
         app.init_resource::<unnet_core::resources::LocalPlayer>();
+        app.init_resource::<unnet_core::resources::ChangedTiles>();
         app.init_resource::<crate::resources::PendingMapLoad>();
         app.add_message::<NetworkDataEvent>();
         app.add_message::<unnet_core::messages::NetworkDisconnectEvent>();

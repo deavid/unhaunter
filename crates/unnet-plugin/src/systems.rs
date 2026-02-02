@@ -436,12 +436,13 @@ pub struct HostSnapshotParams<'w, 's> {
     pub app_state: Res<'w, State<AppState>>,
     pub ghost_guess: Res<'w, GhostGuess>,
     pub summary_data: Res<'w, SummaryData>,
+    pub changed_tiles: ResMut<'w, unnet_core::resources::ChangedTiles>,
 }
 
 pub fn host_send_snapshots_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
-    host_params: HostSnapshotParams,
+    mut host_params: HostSnapshotParams,
     mut ev_sound: MessageReader<SoundEvent>,
     mut ev_transient: MessageReader<unnet_core::messages::TransientEvent>,
 ) {
@@ -530,18 +531,6 @@ pub fn host_send_snapshots_system(
         })
         .collect();
 
-    let map_tiles = host_params
-        .query_map_tiles
-        .iter()
-        .map(|(pos, beh): (&Position, &Behavior)| MapTileState {
-            x: pos.x as i32,
-            y: pos.y as i32,
-            z: pos.z as i32,
-            tileset: beh.cfg().tileset.clone(),
-            tileuid: beh.cfg().tileuid,
-        })
-        .collect();
-
     let gear: Vec<_> = host_params
         .query_gear
         .iter()
@@ -606,6 +595,23 @@ pub fn host_send_snapshots_system(
         is_full_sync = true;
         *needs_full_sync = false;
     }
+
+    let map_tiles = if is_full_sync {
+        host_params.changed_tiles.0.clear();
+        host_params
+            .query_map_tiles
+            .iter()
+            .map(|(pos, beh): (&Position, &Behavior)| MapTileState {
+                x: pos.x as i32,
+                y: pos.y as i32,
+                z: pos.z as i32,
+                tileset: beh.cfg().tileset.clone(),
+                tileuid: beh.cfg().tileuid,
+            })
+            .collect()
+    } else {
+        host_params.changed_tiles.0.drain(..).collect()
+    };
 
     conn.send(NetworkMessage::Snapshot {
         tick,
@@ -751,7 +757,7 @@ pub struct ClientSnapshotParams<'w, 's> {
         'w,
         's,
         (&'static Position, &'static Behavior),
-        (With<Interactive>, Without<PlayerSprite>, Without<GhostTag>),
+        (Without<PlayerSprite>, Without<GhostTag>),
     >,
     pub ev_interaction: MessageWriter<'w, ExecuteInteractionEvent>,
     pub room_db: ResMut<'w, RoomDB>,
@@ -1175,19 +1181,29 @@ pub fn client_apply_snapshots_system(
                     y: t_sync.y as i64,
                     z: t_sync.z as i64,
                 };
-                let rel_x = bpos.x - params.board_topo.origin.0 as i64;
-                let rel_y = bpos.y - params.board_topo.origin.1 as i64;
-                let rel_z = bpos.z - params.board_topo.origin.2 as i64;
+                let rel_x = bpos.x;
+                let rel_y = bpos.y;
+                let rel_z = bpos.z;
+                let shape = params.board_field.0.shape();
 
                 if rel_x >= 0
                     && rel_y >= 0
                     && rel_z >= 0
-                    && rel_x < params.board_field.0.shape()[0] as i64
-                    && rel_y < params.board_field.0.shape()[1] as i64
-                    && rel_z < params.board_field.0.shape()[2] as i64
+                    && rel_x < shape[0] as i64
+                    && rel_y < shape[1] as i64
+                    && rel_z < shape[2] as i64
                 {
                     let entities =
                         &params.board_field.0[[rel_x as usize, rel_y as usize, rel_z as usize]];
+                    if entities.is_empty() {
+                        warn!(
+                            "Client: No entities found at board position {:?} (Rel: {:?}, Board shape: {:?}, Origin: {:?})",
+                            bpos,
+                            (rel_x, rel_y, rel_z),
+                            shape,
+                            params.board_topo.origin
+                        );
+                    }
                     for &entity in entities {
                         if let Some((_pos, _beh)) =
                             params.query_tiles.get(entity).ok().filter(|(_, beh)| {
@@ -1195,7 +1211,7 @@ pub fn client_apply_snapshots_system(
                                     || beh.cfg().tileuid != t_sync.tileuid
                             })
                         {
-                            debug!(
+                            info!(
                                 "Client: Applying map tile update at {:?} (tileset: {}, tileuid: {})",
                                 bpos, t_sync.tileset, t_sync.tileuid
                             );
@@ -1206,6 +1222,14 @@ pub fn client_apply_snapshots_system(
                             });
                         }
                     }
+                } else {
+                    warn!(
+                        "Client: Map tile update out of bounds: {:?} (Rel: {:?}, Board shape: {:?}, Origin: {:?})",
+                        bpos,
+                        (rel_x, rel_y, rel_z),
+                        shape,
+                        params.board_topo.origin
+                    );
                 }
             }
 
