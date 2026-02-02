@@ -207,107 +207,83 @@ to:
 2. The client processes `MapTileState` by firing `ExecuteInteractionEvent` with `force_tuid`, but with
    `Authority::Client`, which may not actually change the state
 
+### Root Cause F: Aim Direction Not Synced from Client to Host
+
+**Problem:** The `mouse_aim_system` (in `unplayer-plugin/src/systems/mouse.rs`) correctly updates the local player's
+`Direction` component based on mouse position. However, this direction is never sent to the Host.
+
+**The Feedback Loop of Doom:**
+
+1.  **Client:** `mouse_aim_system` updates `Direction` for the local player.
+2.  **Host:** The remote player entity (representing the Client) has a default/stale `Direction` component because
+    `mouse_aim_system` only runs for `MainPlayer`.
+3.  **Host Snapshot:** `host_send_snapshots_system` packages the Host's version of the Client's direction (`atan2`) into
+    the snapshot.
+4.  **Client Snapshot Apply:** `client_apply_snapshots_system` receives the snapshot and applies the Host's stale
+    direction to the Client's local `Direction` component, **overwriting** the local mouse-controlled direction.
+
+**Impact:**
+
+- The Client cannot aim their flashlight; it keeps snapping back to a default direction or points "down" (constant).
+- The Host sees the Client's flashlight pointing in a constant direction.
+- The Host's aiming works because they are the authority on their own `Direction` and the snapshot they send is the one
+  they generated.
+
+### Root Cause G: Mouse Interaction Isolation Issues
+
+**Observed Behavior:** The user reports that mouse pointing "seems to affect a bit to the client too" and there's "no
+good isolation".
+
+**Potential Problem:** Some mouse-related resources or systems might be shared or incorrectly gated.
+
+1.  **`MouseVisibility`:** This resource controls whether `mouse_aim_system` runs. It is updated in
+    `unengine-plugin/src/hide_mouse.rs`. While it should be local, if any code accidentally uses it to gate network
+    messages or global state, it could cause issues.
+2.  **`player_gear_usage_system`:** (in `unplayer-plugin/src/systems/input/mouse_interaction.rs`) This system iterates
+    over **all** players with `PlayerSprite` and `PlayerInput`. On a Client, this includes the remote Host player. If
+    the remote Host player's `PlayerInput` component somehow gets populated with values (it shouldn't, as snapshots
+    don't carry `PlayerInput`), then the Client would try to toggle the Host's gear locally.
+
 ---
 
 ## Part 3: New Implementation Plan
 
 ### Phase A: Fix Gear Spawning on Client (Priority: Critical)
 
-**Goal:** Ensure all gear entities exist on both Host and Client.
+**Status:** COMPLETED. Client now has starter gear and can see all light types.
 
-#### A.1: Verify `spawn_remote_gear()` is Being Called
+### Phase B: Fix Aim/Light Direction Sync (Priority: High)
 
-Add debug logging to trace gear sync flow:
+**Goal:** Ensure Client's aiming is sent to Host and correctly reflected in snapshots.
 
-**File:** `crates/unnet-plugin/src/systems.rs`
+#### B.1: Update `PlayerInput` to include `aim_direction`
 
-In `host_send_snapshots_system`, log the gear list being sent:
+**File:** `crates/unplayer-core/src/components.rs`
 
-```rust
-debug!("Snapshot gear count: {}, gear: {:?}", gear.len(), gear.iter().map(|g| (g.id, g.kind)).collect::<Vec<_>>());
-```
+Add `aim_direction: Vec2` to `PlayerInput`.
 
-In `client_apply_snapshots_system`, log when spawning remote gear:
+#### B.2: Send `aim_direction` in Network Messages
 
-```rust
-let g_entity = if let Some(e) = net_to_entity.get(&g_sync.id) {
-    debug!("Gear {} already exists as entity {:?}", g_sync.id, e);
-    *e
-} else {
-    debug!("Spawning remote gear {} (kind: {:?})", g_sync.id, g_sync.kind);
-    spawn_remote_gear(&mut params, g_sync)
-};
-```
+**File:** `crates/unnet-core/src/messages.rs`
 
-#### A.2: Ensure Ordering is Correct
+Update `NetworkMessage::PlayerInput` to include `aim_direction: [f32; 2]`.
 
-The snapshot processing order should be:
+#### B.3: Populate `aim_direction` on Client
 
-1. Process `gear` (spawn/update gear entities)
-2. Process `player_gear` (update PlayerGear component references)
+**File:** `crates/unplayer-plugin/src/systems/mouse.rs`
 
-Currently this IS the order in the code. Verify this is preserved.
+In `mouse_aim_system`, update `PlayerInput.aim_direction` as well as the `Direction` component.
 
-#### A.3: Verify PlayerGear Entity Mapping
-
-After processing `player_gear`, verify the entities in `PlayerGear` are valid:
-
-```rust
-// After player_gear sync loop
-if let Some(gear) = gear {
-    debug!(
-        "Player {} gear state: left={:?}, right={:?}, inv_count={}",
-        id,
-        gear.left_hand,
-        gear.right_hand,
-        gear.inventory.len()
-    );
-}
-```
-
-### Phase B: Fix Light Direction Sync (Priority: High)
-
-**Goal:** Remote player flashlights should point in the correct direction.
-
-#### B.1: Verify Orientation is Sent Correctly
+#### B.4: Apply `aim_direction` on Host
 
 **File:** `crates/unnet-plugin/src/systems.rs`
 
-In `host_send_snapshots_system`, verify orientation is populated:
+In `host_apply_input_system`, when receiving `PlayerInput`, update the `Direction` component of the remote player entity
+using the received `aim_direction`.
 
-```rust
-let orientation = dir.dx.atan2(dir.dy);  // Check this calculation
-debug!("Player {} orientation: {} (dx={}, dy={})", id, orientation, dir.dx, dir.dy);
-```
+#### B.5: Verify Orientation Encoding/Decoding
 
-Note: `atan2` argument order matters! Standard math is `atan2(y, x)`, but we need to verify what the code expects.
-
-#### B.2: Verify Direction is Applied to Remote Players
-
-In `client_apply_snapshots_system`, after updating direction:
-
-```rust
-dir.dx = f32::cos(orientation);
-dir.dy = f32::sin(orientation);
-debug!("Applied orientation {} to player {} -> dir=({}, {})", orientation, id, dir.dx, dir.dy);
-```
-
-Verify the `sin`/`cos` usage matches the encoding.
-
-#### B.3: Check for Local Player Override
-
-Ensure the direction update isn't being skipped for remote players:
-
-```rust
-if main_player.is_none() {
-    // This IS a remote player — update should happen
-    dir.dx = f32::cos(orientation);
-    dir.dy = f32::sin(orientation);
-}
-```
-
-Wait — check if there's such a condition currently. The direction update might be unconditional but then immediately
-overwritten by local input.
+Ensure `atan2(y, x)` on Host and `cos/sin` on Client use a consistent coordinate system.
 
 ### Phase C: Fix Other Light Types (UV/Red/NV) (Priority: High)
 

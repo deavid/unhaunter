@@ -539,7 +539,7 @@ pub fn host_send_snapshots_system(
         })
         .collect();
 
-    let gear = host_params
+    let gear: Vec<_> = host_params
         .query_gear
         .iter()
         .map(
@@ -571,6 +571,12 @@ pub fn host_send_snapshots_system(
             },
         )
         .collect();
+
+    debug!(
+        "Snapshot gear count: {}, gear: {:?}",
+        gear.len(),
+        gear.iter().map(|g| (g.id, g.kind)).collect::<Vec<_>>()
+    );
 
     let mut events: Vec<unnet_core::messages::TransientEvent> = ev_sound
         .read()
@@ -870,7 +876,7 @@ pub fn client_apply_snapshots_system(
                 params.states.game_next_state.set(*server_game_state);
             }
 
-            let net_to_entity: std::collections::HashMap<NetworkId, Entity> = params
+            let mut net_to_entity: std::collections::HashMap<NetworkId, Entity> = params
                 .query_net_entities
                 .iter()
                 .map(|(e, id)| (*id, e))
@@ -906,7 +912,10 @@ pub fn client_apply_snapshots_system(
                 let p_entity = if let Some(e) = net_to_entity.get(&p_state.id) {
                     *e
                 } else {
-                    spawn_remote_player(&mut params, p_state.id)
+                    debug!("Spawning remote player {:?}", p_state.id);
+                    let ent = spawn_remote_player(&mut params, p_state.id);
+                    net_to_entity.insert(p_state.id, ent);
+                    ent
                 };
 
                 if let Ok((
@@ -978,6 +987,65 @@ pub fn client_apply_snapshots_system(
                 }
             }
 
+            // Update gear
+            for g_sync in gear {
+                let g_entity = if let Some(e) = net_to_entity.get(&g_sync.id) {
+                    debug!("Gear {:?} already exists as entity {:?}", g_sync.id, e);
+                    *e
+                } else {
+                    debug!(
+                        "Spawning remote gear {:?} (kind: {:?})",
+                        g_sync.id, g_sync.kind
+                    );
+                    let ent = spawn_remote_gear(&mut params, g_sync);
+                    net_to_entity.insert(g_sync.id, ent);
+                    ent
+                };
+
+                if let Ok((_, mut pos, mut toggle, battery, flashlight, sage, repellent)) =
+                    params.query_gear.get_mut(g_entity)
+                {
+                    pos.x = g_sync.position[0];
+                    pos.y = g_sync.position[1];
+                    pos.z = g_sync.position[2];
+                    toggle.is_on = g_sync.is_on;
+                    if let Some(mut b) = battery {
+                        b.level = g_sync.battery;
+                    }
+
+                    match &g_sync.details {
+                        unnet_core::messages::GearDetails::Flashlight(status) => {
+                            if let Some(mut f) = flashlight {
+                                f.status = status.clone();
+                            }
+                        }
+                        unnet_core::messages::GearDetails::Sage {
+                            consumed,
+                            is_active,
+                            remaining_secs,
+                        } => {
+                            if let Some(mut s) = sage {
+                                s.consumed = *consumed;
+                                s.is_active = *is_active;
+
+                                let elapsed =
+                                    s.burn_timer.duration().as_secs_f32() - remaining_secs;
+                                s.burn_timer.set_elapsed(std::time::Duration::from_secs_f32(
+                                    elapsed.max(0.0),
+                                ));
+                            }
+                        }
+                        unnet_core::messages::GearDetails::RepellentFlask { qty, active } => {
+                            if let Some(mut r) = repellent {
+                                r.qty = *qty;
+                                r.active = *active;
+                            }
+                        }
+                        unnet_core::messages::GearDetails::None => {}
+                    }
+                }
+            }
+
             // Update player gear
             for pg_state in player_gear {
                 for (_, id, _, _, _, _, gear, _, _) in params.query_players.iter_mut() {
@@ -1004,6 +1072,13 @@ pub fn client_apply_snapshots_system(
                             .map(|&entity| ungear_core::components::playergear::HeldObject {
                                 entity,
                             });
+                        debug!(
+                            "Player {:?} gear state: left={:?}, right={:?}, inv_count={}",
+                            id,
+                            gear.left_hand,
+                            gear.right_hand,
+                            gear.inventory.len()
+                        );
                     }
                 }
             }
@@ -1095,58 +1170,6 @@ pub fn client_apply_snapshots_system(
                                 force_tuid: Some(t_sync.tileuid),
                             });
                         }
-                    }
-                }
-            }
-
-            // Update gear
-            for g_sync in gear {
-                let g_entity = if let Some(e) = net_to_entity.get(&g_sync.id) {
-                    *e
-                } else {
-                    spawn_remote_gear(&mut params, g_sync)
-                };
-
-                if let Ok((_, mut pos, mut toggle, battery, flashlight, sage, repellent)) =
-                    params.query_gear.get_mut(g_entity)
-                {
-                    pos.x = g_sync.position[0];
-                    pos.y = g_sync.position[1];
-                    pos.z = g_sync.position[2];
-                    toggle.is_on = g_sync.is_on;
-                    if let Some(mut b) = battery {
-                        b.level = g_sync.battery;
-                    }
-
-                    match &g_sync.details {
-                        unnet_core::messages::GearDetails::Flashlight(status) => {
-                            if let Some(mut f) = flashlight {
-                                f.status = status.clone();
-                            }
-                        }
-                        unnet_core::messages::GearDetails::Sage {
-                            consumed,
-                            is_active,
-                            remaining_secs,
-                        } => {
-                            if let Some(mut s) = sage {
-                                s.consumed = *consumed;
-                                s.is_active = *is_active;
-
-                                let elapsed =
-                                    s.burn_timer.duration().as_secs_f32() - remaining_secs;
-                                s.burn_timer.set_elapsed(std::time::Duration::from_secs_f32(
-                                    elapsed.max(0.0),
-                                ));
-                            }
-                        }
-                        unnet_core::messages::GearDetails::RepellentFlask { qty, active } => {
-                            if let Some(mut r) = repellent {
-                                r.qty = *qty;
-                                r.active = *active;
-                            }
-                        }
-                        unnet_core::messages::GearDetails::None => {}
                     }
                 }
             }

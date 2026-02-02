@@ -105,39 +105,6 @@ pub(crate) fn classic_mode_orchestrator(
         player_rf = resolved.factor;
     }
 
-    let mut player_gear = PlayerGear::default();
-    let mut gear_id_counter = 1000u64;
-    if p.difficulty.0.player_gear.left_hand.is_some() {
-        let gear_entity = p
-            .gear_registry
-            .spawn(&mut commands, p.difficulty.0.player_gear.left_hand);
-        player_gear.left_hand = Some(gear_entity);
-        commands
-            .entity(gear_entity)
-            .insert(NetworkId(gear_id_counter));
-        gear_id_counter += 1;
-    }
-    if p.difficulty.0.player_gear.right_hand.is_some() {
-        let gear_entity = p
-            .gear_registry
-            .spawn(&mut commands, p.difficulty.0.player_gear.right_hand);
-        player_gear.right_hand = Some(gear_entity);
-        commands
-            .entity(gear_entity)
-            .insert(NetworkId(gear_id_counter));
-        gear_id_counter += 1;
-    }
-    for kind in &p.difficulty.0.player_gear.inventory {
-        if kind.is_some() {
-            let gear_entity = p.gear_registry.spawn(&mut commands, *kind);
-            player_gear.inventory.push(gear_entity);
-            commands
-                .entity(gear_entity)
-                .insert(NetworkId(gear_id_counter));
-            gear_id_counter += 1;
-        }
-    }
-
     let dist_to_van = van_entry_points
         .iter()
         .map(|v| OrderedFloat(v.distance(&player_position)))
@@ -168,6 +135,41 @@ pub(crate) fn classic_mode_orchestrator(
             untypes_core::cli::NetMode::Host { .. } => id == 1,
             untypes_core::cli::NetMode::Join { .. } => id == 2,
         };
+
+        let mut player_gear = PlayerGear::default();
+        if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
+            let mut gear_id_counter = id as u64 * 1000;
+            if p.difficulty.0.player_gear.left_hand.is_some() {
+                let gear_entity = p
+                    .gear_registry
+                    .spawn(&mut commands, p.difficulty.0.player_gear.left_hand);
+                player_gear.left_hand = Some(gear_entity);
+                commands
+                    .entity(gear_entity)
+                    .insert(NetworkId(gear_id_counter));
+                gear_id_counter += 1;
+            }
+            if p.difficulty.0.player_gear.right_hand.is_some() {
+                let gear_entity = p
+                    .gear_registry
+                    .spawn(&mut commands, p.difficulty.0.player_gear.right_hand);
+                player_gear.right_hand = Some(gear_entity);
+                commands
+                    .entity(gear_entity)
+                    .insert(NetworkId(gear_id_counter));
+                gear_id_counter += 1;
+            }
+            for kind in &p.difficulty.0.player_gear.inventory {
+                if kind.is_some() {
+                    let gear_entity = p.gear_registry.spawn(&mut commands, *kind);
+                    player_gear.inventory.push(gear_entity);
+                    commands
+                        .entity(gear_entity)
+                        .insert(NetworkId(gear_id_counter));
+                    gear_id_counter += 1;
+                }
+            }
+        }
 
         // Pick a spawn point for this player. Use index-based selection to avoid spawning on top of each other.
         let spawn_pos = player_spawn_points
@@ -232,12 +234,9 @@ pub(crate) fn classic_mode_orchestrator(
                 })
                 .insert(SpatialListener::new(
                     -p.audio_settings.sound_output.to_ear_offset(),
-                ))
-                .insert(player_gear.clone());
-        } else {
-            // Remote player needs some dummy gear or none for now
-            ec.insert(PlayerGear::default());
+                ));
         }
+        ec.insert(player_gear);
 
         let player_ent_id = ec
             .with_children(|parent| {
