@@ -328,10 +328,12 @@ fn truckui_event_handle(
                 if matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
                     if let (Some(player_id), Some(ghost_type)) = (loc_player.0, gg.ghost_type) {
                         ev_send_net.write(unnet_core::messages::SendNetworkMessage(
-                            unnet_core::messages::NetworkMessage::CraftRepellent {
-                                player_id,
-                                ghost_type,
-                            },
+                            unnet_core::messages::NetworkMessage::CraftRepellent(
+                                unnet_core::messages::CraftRepellentMsg {
+                                    player_id,
+                                    ghost_type,
+                                },
+                            ),
                         ));
                         // Client optimistic local exit
                         game_next_state.set(GameState::None);

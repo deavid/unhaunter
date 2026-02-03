@@ -9,7 +9,10 @@ use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
-use unnet_core::messages::{NetworkDataEvent, NetworkMessage, SendNetworkMessage};
+use unnet_core::messages::{
+    JournalUpdateMsg, NetworkDataEvent, NetworkMessage, RequestJournalEvidenceToggleMsg,
+    RequestJournalGhostToggleMsg, SendNetworkMessage,
+};
 use unnet_core::resources::LocalPlayer;
 use unprofile_core::profile::PlayerProfileData;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
@@ -156,20 +159,22 @@ fn button_system(mut p: JournalButtonParams) {
             if let Some(player_id) = p.local_id.0 {
                 if let Some((evidence, discard)) = clicked_evidence_type {
                     p.ev_net.write(SendNetworkMessage(
-                        NetworkMessage::RequestJournalEvidenceToggle {
-                            player_id,
-                            evidence,
-                            discard,
-                        },
+                        NetworkMessage::RequestJournalEvidenceToggle(
+                            RequestJournalEvidenceToggleMsg {
+                                player_id,
+                                evidence,
+                                discard,
+                            },
+                        ),
                     ));
                 }
                 if let Some((ghost_type, discard)) = clicked_ghost_type {
                     p.ev_net.write(SendNetworkMessage(
-                        NetworkMessage::RequestJournalGhostToggle {
+                        NetworkMessage::RequestJournalGhostToggle(RequestJournalGhostToggleMsg {
                             player_id,
                             ghost_type,
                             discard,
-                        },
+                        }),
                     ));
                 }
             }
@@ -338,12 +343,13 @@ fn host_handle_journal_messages_system(
 
     for ev in ev_reader.read() {
         match &ev.message {
-            NetworkMessage::JournalUpdate {
-                player_id,
-                ghost_type,
-                evidences_found,
-                evidences_missing,
-            } => {
+            NetworkMessage::JournalUpdate(msg) => {
+                let JournalUpdateMsg {
+                    player_id,
+                    ghost_type,
+                    evidences_found,
+                    evidences_missing,
+                } = msg;
                 debug!(
                     "Journal: Received JournalUpdate from client {:?}",
                     player_id
@@ -352,11 +358,12 @@ fn host_handle_journal_messages_system(
                 gg.evidences_found = evidences_found.iter().cloned().collect();
                 gg.evidences_missing = evidences_missing.iter().cloned().collect();
             }
-            NetworkMessage::RequestJournalEvidenceToggle {
-                player_id,
-                evidence,
-                discard,
-            } => {
+            NetworkMessage::RequestJournalEvidenceToggle(msg) => {
+                let RequestJournalEvidenceToggleMsg {
+                    player_id,
+                    evidence,
+                    discard,
+                } = msg;
                 debug!(
                     "Journal: Received RequestJournalEvidenceToggle from client {:?} for {:?} (discard: {})",
                     player_id, evidence, discard
@@ -376,11 +383,12 @@ fn host_handle_journal_messages_system(
                     gg.evidences_found.insert(*evidence);
                 }
             }
-            NetworkMessage::RequestJournalGhostToggle {
-                player_id,
-                ghost_type,
-                discard,
-            } => {
+            NetworkMessage::RequestJournalGhostToggle(msg) => {
+                let RequestJournalGhostToggleMsg {
+                    player_id,
+                    ghost_type,
+                    discard,
+                } = msg;
                 debug!(
                     "Journal: Received RequestJournalGhostToggle from client {:?} for {:?} (discard: {})",
                     player_id, ghost_type, discard

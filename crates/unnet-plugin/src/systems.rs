@@ -1,5 +1,6 @@
 use crate::resources::{HandshakeState, NetworkConn};
 use bevy::color::palettes::css;
+use bevy::ecs::query::{QueryData, QueryFilter};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -32,8 +33,10 @@ use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite}
 use unghost_core::resources::ghost_guess::GhostGuess;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unnet_core::messages::{
-    GearSyncState, GhostState, HauntedObjectSync, MapTileState, NetworkDataEvent, NetworkMessage,
-    PlayerGearState, PlayerState, RoomSync, TransientEvent,
+    CraftRepellentMsg, GearSyncState, GhostState, HauntedObjectSync, HelloMsg,
+    InteractionRequestMsg, MapTileState, MovableObjectSync, NetworkDataEvent, NetworkMessage,
+    PlayerGearState, PlayerInputMsg, PlayerState, RequestTruckInventoryChangeMsg, RoomSync,
+    SnapshotMsg, TransientEvent, WelcomeMsg,
 };
 use unnet_core::network_id::NetworkId;
 use unnet_core::resources::LocalPlayer;
@@ -297,10 +300,10 @@ pub fn handshake_handler_system(
         // Client side automatic Hello
         if matches!(cli.net_mode, NetMode::Join { .. }) && *handshake == HandshakeState::None {
             debug!("Network: Sending Hello...");
-            to_send.push(NetworkMessage::Hello {
+            to_send.push(NetworkMessage::Hello(HelloMsg {
                 version: "0.1.0".to_string(),
                 previous_id: local_id.0,
-            });
+            }));
             new_handshake = Some(HandshakeState::HelloSent);
         }
 
@@ -311,10 +314,11 @@ pub fn handshake_handler_system(
 
         for msg in events {
             match msg {
-                NetworkMessage::Hello {
-                    version,
-                    previous_id,
-                } => {
+                NetworkMessage::Hello(msg) => {
+                    let HelloMsg {
+                        version,
+                        previous_id,
+                    } = msg;
                     debug!(
                         "Network: Received Hello (version: {}, prev_id: {:?})",
                         version, previous_id
@@ -337,7 +341,7 @@ pub fn handshake_handler_system(
                         }
 
                         let seed = unfoundation_core::random_seed::heavy_rng_seed();
-                        to_send.push(NetworkMessage::Welcome {
+                        to_send.push(NetworkMessage::Welcome(WelcomeMsg {
                             id,
                             map_seed: seed,
                             map_filepath: cli.map_path.clone().unwrap_or_default(),
@@ -345,17 +349,18 @@ pub fn handshake_handler_system(
                                 .difficulty_id
                                 .clone()
                                 .unwrap_or("medium".to_string()),
-                        });
+                        }));
                         new_handshake = Some(HandshakeState::Completed);
                         associate_id = Some(id);
                     }
                 }
-                NetworkMessage::Welcome {
-                    id,
-                    map_seed,
-                    map_filepath,
-                    difficulty_id,
-                } => {
+                NetworkMessage::Welcome(msg) => {
+                    let WelcomeMsg {
+                        id,
+                        map_seed,
+                        map_filepath,
+                        difficulty_id,
+                    } = msg;
                     info!(
                         "Network: Received Welcome (Your ID: {:?}, Seed: {}, Map: {})",
                         id, map_seed, map_filepath
@@ -407,6 +412,53 @@ pub fn handshake_handler_system(
     }
 }
 
+use unbehavior::components::Movable;
+use ungear_core::types::gear::kind::GearKind;
+use ungearitems_core::components::emfmeter::EMFMeter;
+use ungearitems_core::components::repellentflask::RepellentFlask;
+use ungearitems_core::components::sage::SageBundleData;
+use ungearitems_core::components::thermometer::Thermometer;
+
+#[derive(QueryData)]
+pub struct GearItemScan {
+    pub id: &'static NetworkId,
+    pub kind: &'static GearKind,
+    pub pos: &'static Position,
+    pub toggle: &'static Toggleable,
+    pub deployed: Option<&'static DeployedGear>,
+    pub battery: Option<&'static Battery>,
+    pub flashlight: Option<&'static Flashlight>,
+    pub sage: Option<&'static SageBundleData>,
+    pub repellent: Option<&'static RepellentFlask>,
+    pub thermometer: Option<&'static Thermometer>,
+    pub emf_meter: Option<&'static EMFMeter>,
+}
+
+#[derive(QueryData)]
+#[query_data(mutable)]
+pub struct GearItemScanMut {
+    pub entity: Entity,
+    pub id: &'static NetworkId,
+    pub pos: &'static mut Position,
+    pub toggle: &'static mut Toggleable,
+    pub deployed: Option<&'static mut DeployedGear>,
+    pub battery: Option<&'static mut Battery>,
+    pub flashlight: Option<&'static mut Flashlight>,
+    pub sage: Option<&'static mut SageBundleData>,
+    pub repellent: Option<&'static mut RepellentFlask>,
+    pub thermometer: Option<&'static mut Thermometer>,
+    pub emf_meter: Option<&'static mut EMFMeter>,
+}
+
+#[derive(QueryFilter)]
+pub struct GearItemFilter {
+    _no_player: Without<PlayerSprite>,
+    _no_ghost: Without<GhostTag>,
+    _no_behavior: Without<Behavior>,
+    _no_breach: Without<GhostBreach>,
+    _no_movable: Without<Movable>,
+}
+
 #[derive(SystemParam)]
 pub struct HostSnapshotParams<'w, 's> {
     pub query_players: Query<
@@ -437,23 +489,7 @@ pub struct HostSnapshotParams<'w, 's> {
     pub time: Res<'w, Time>,
     pub room_db: Res<'w, RoomDB>,
     pub query_map_tiles: Query<'w, 's, (&'static Position, &'static Behavior), With<Interactive>>,
-    pub query_gear: Query<
-        'w,
-        's,
-        (
-            &'static NetworkId,
-            &'static ungear_core::types::gear::kind::GearKind,
-            &'static Position,
-            &'static Toggleable,
-            Option<&'static DeployedGear>,
-            Option<&'static Battery>,
-            Option<&'static Flashlight>,
-            Option<&'static ungearitems_core::components::sage::SageBundleData>,
-            Option<&'static ungearitems_core::components::repellentflask::RepellentFlask>,
-            Option<&'static ungearitems_core::components::thermometer::Thermometer>,
-            Option<&'static ungearitems_core::components::emfmeter::EMFMeter>,
-        ),
-    >,
+    pub query_gear: Query<'w, 's, GearItemScan>,
     pub query_net_id: Query<'w, 's, &'static NetworkId>,
     pub game_state: Res<'w, State<GameState>>,
     pub app_state: Res<'w, State<AppState>>,
@@ -463,6 +499,16 @@ pub struct HostSnapshotParams<'w, 's> {
     pub repellent_craft_tracker: Res<'w, RepellentCraftTracker>,
     pub query_breach: Query<'w, 's, &'static Position, With<GhostBreach>>,
     pub query_influence: Query<'w, 's, (&'static OriginalMapPosition, &'static GhostInfluence)>,
+    pub query_movable: Query<
+        'w,
+        's,
+        (
+            &'static NetworkId,
+            &'static Position,
+            &'static OriginalMapPosition,
+        ),
+        With<unbehavior::components::Movable>,
+    >,
 }
 
 pub fn host_send_snapshots_system(
@@ -563,55 +609,42 @@ pub fn host_send_snapshots_system(
     let gear: Vec<_> = host_params
         .query_gear
         .iter()
-        .map(
-            |(
-                id,
-                kind,
-                pos,
-                toggle,
-                deployed,
-                battery,
-                flashlight,
-                sage,
-                repellent,
-                thermometer,
-                emfm,
-            )| {
-                let details = if let Some(f) = flashlight {
-                    unnet_core::messages::GearDetails::Flashlight(f.status.clone())
-                } else if let Some(s) = sage {
-                    unnet_core::messages::GearDetails::Sage {
-                        consumed: s.consumed,
-                        is_active: s.is_active,
-                        remaining_secs: s.burn_timer.remaining_secs(),
-                    }
-                } else if let Some(r) = repellent {
-                    unnet_core::messages::GearDetails::RepellentFlask {
-                        qty: r.qty,
-                        active: r.active,
-                    }
-                } else if let Some(t) = thermometer {
-                    unnet_core::messages::GearDetails::Thermometer { temp: t.temp }
-                } else if let Some(e) = emfm {
-                    unnet_core::messages::GearDetails::EMF { level: e.emf }
-                } else {
-                    unnet_core::messages::GearDetails::None
-                };
-
-                GearSyncState {
-                    id: *id,
-                    kind: *kind,
-                    position: [pos.x, pos.y, pos.z],
-                    is_on: toggle.is_on,
-                    is_deployed: deployed.is_some(),
-                    deployed_direction: deployed
-                        .map(|d| [d.direction.dx, d.direction.dy])
-                        .unwrap_or([0.0, 0.0]),
-                    details,
-                    battery: battery.map(|b| b.level).unwrap_or(0.0),
+        .map(|g| {
+            let details = if let Some(f) = g.flashlight {
+                unnet_core::messages::GearDetails::Flashlight(f.status.clone())
+            } else if let Some(s) = g.sage {
+                unnet_core::messages::GearDetails::Sage {
+                    consumed: s.consumed,
+                    is_active: s.is_active,
+                    remaining_secs: s.burn_timer.remaining_secs(),
                 }
-            },
-        )
+            } else if let Some(r) = g.repellent {
+                unnet_core::messages::GearDetails::RepellentFlask {
+                    qty: r.qty,
+                    active: r.active,
+                }
+            } else if let Some(t) = g.thermometer {
+                unnet_core::messages::GearDetails::Thermometer { temp: t.temp }
+            } else if let Some(e) = g.emf_meter {
+                unnet_core::messages::GearDetails::EMF { level: e.emf }
+            } else {
+                unnet_core::messages::GearDetails::None
+            };
+
+            GearSyncState {
+                id: *g.id,
+                kind: *g.kind,
+                position: [g.pos.x, g.pos.y, g.pos.z],
+                is_on: g.toggle.is_on,
+                is_deployed: g.deployed.is_some(),
+                deployed_direction: g
+                    .deployed
+                    .map(|d| [d.direction.dx, d.direction.dy])
+                    .unwrap_or([0.0, 0.0]),
+                details,
+                battery: g.battery.map(|b| b.level).unwrap_or(0.0),
+            }
+        })
         .collect();
 
     let mut events: Vec<unnet_core::messages::TransientEvent> = ev_sound
@@ -679,7 +712,41 @@ pub fn host_send_snapshots_system(
         })
         .collect();
 
-    conn.send(NetworkMessage::Snapshot {
+    let movable_objects = host_params
+        .query_movable
+        .iter()
+        .map(|(mid, pos, orig)| {
+            let held_by =
+                host_params
+                    .query_players
+                    .iter()
+                    .find_map(|(p, _, _, _, _, gear, _, _)| {
+                        gear.and_then(|g| {
+                            g.held_item.as_ref().and_then(|h| {
+                                if host_params.query_net_id.get(h.entity).ok() == Some(mid) {
+                                    Some(p.id)
+                                } else {
+                                    None
+                                }
+                            })
+                        })
+                    });
+            MovableObjectSync {
+                id: *mid,
+                original_position: [
+                    orig.position.x as i32,
+                    orig.position.y as i32,
+                    orig.position.z as i32,
+                ],
+                tileset: orig.tileset.clone(),
+                tileuid: orig.tileuid,
+                current_position: [pos.x, pos.y, pos.z],
+                held_by,
+            }
+        })
+        .collect();
+
+    conn.send(NetworkMessage::Snapshot(Box::new(SnapshotMsg {
         tick,
         is_full_sync,
         app_state: *host_params.app_state.get(),
@@ -710,7 +777,7 @@ pub fn host_send_snapshots_system(
             .iter()
             .cloned()
             .collect(),
-        mission_result: Box::new(if *host_params.app_state.get() == AppState::Summary {
+        mission_result: if *host_params.app_state.get() == AppState::Summary {
             Some(unnet_core::messages::MissionResult {
                 time_taken_secs: host_params.summary_data.time_taken_secs,
                 ghost_types: host_params.summary_data.ghost_types.clone(),
@@ -734,12 +801,13 @@ pub fn host_send_snapshots_system(
             })
         } else {
             None
-        }),
+        },
         repellent_crafted_count: host_params.repellent_craft_tracker.crafted_count,
         breach_position,
         ghost_type,
         haunted_objects,
-    });
+        movable_objects,
+    })));
 }
 
 pub fn client_send_input_system(
@@ -761,7 +829,7 @@ pub fn client_send_input_system(
     };
 
     for input in query_player.iter() {
-        conn.send(NetworkMessage::PlayerInput {
+        conn.send(NetworkMessage::PlayerInput(PlayerInputMsg {
             player_id,
             movement: [input.movement.x, input.movement.y],
             run: input.run,
@@ -774,21 +842,21 @@ pub fn client_send_input_system(
             inventory_swap: input.inventory_swap,
             target_position: input.target_position.map(|v| [v.x, v.y]),
             aim_direction: [input.aim_direction.x, input.aim_direction.y],
-        });
+        }));
     }
 
     // Pass through CraftRepellent, Truck entry/exit, and Interaction requests
     for ev in ev_net_data.read() {
         match ev.message {
             // Messages we know we must process:
-            NetworkMessage::CraftRepellent { .. }
+            NetworkMessage::CraftRepellent(_)
             | NetworkMessage::RequestTruckEntry { .. }
             | NetworkMessage::RequestTruckExit { .. }
-            | NetworkMessage::InteractionRequest { .. } => {
+            | NetworkMessage::InteractionRequest(_) => {
                 conn.send(ev.message.clone());
             }
             // Messages that we know we must NOT process:
-            NetworkMessage::Snapshot { .. } => {}
+            NetworkMessage::Snapshot(_) => {}
             // Other messages, we report them just in case:
             _ => {
                 trace!("Ignoring message - not sending to the host: {ev:?}");
@@ -868,34 +936,13 @@ pub struct ClientSnapshotParams<'w, 's> {
             Without<PlayerSprite>,
             Without<GhostTag>,
             Without<GhostBreach>,
+            Without<unbehavior::components::Movable>,
         ),
     >,
     pub ev_interaction: MessageWriter<'w, ExecuteInteractionEvent>,
     pub room_db: ResMut<'w, RoomDB>,
     pub states: SnapshotAppStates<'w>,
-    pub query_gear: Query<
-        'w,
-        's,
-        (
-            Entity,
-            &'static NetworkId,
-            &'static mut Position,
-            &'static mut Toggleable,
-            Option<&'static mut DeployedGear>,
-            Option<&'static mut Battery>,
-            Option<&'static mut Flashlight>,
-            Option<&'static mut ungearitems_core::components::sage::SageBundleData>,
-            Option<&'static mut ungearitems_core::components::repellentflask::RepellentFlask>,
-            Option<&'static mut ungearitems_core::components::thermometer::Thermometer>,
-            Option<&'static mut ungearitems_core::components::emfmeter::EMFMeter>,
-        ),
-        (
-            Without<PlayerSprite>,
-            Without<GhostTag>,
-            Without<Behavior>,
-            Without<GhostBreach>,
-        ),
-    >,
+    pub query_gear: Query<'w, 's, GearItemScanMut, GearItemFilter>,
     pub query_net_entities: Query<'w, 's, (Entity, &'static NetworkId)>,
     pub ev_sound: MessageWriter<'w, SoundEvent>,
     pub ghost_guess: ResMut<'w, GhostGuess>,
@@ -915,6 +962,7 @@ pub struct ClientSnapshotParams<'w, 's> {
             Without<PlayerSprite>,
             Without<GhostTag>,
             Without<Behavior>,
+            Without<unbehavior::components::Movable>,
         ),
     >,
     pub query_orig_pos: Query<
@@ -924,6 +972,22 @@ pub struct ClientSnapshotParams<'w, 's> {
             Entity,
             &'static OriginalMapPosition,
             Option<&'static GhostInfluence>,
+        ),
+    >,
+    pub query_movables: Query<
+        'w,
+        's,
+        (
+            Entity,
+            &'static OriginalMapPosition,
+            &'static mut Position,
+            Option<&'static NetworkId>,
+        ),
+        (
+            With<unbehavior::components::Movable>,
+            Without<PlayerSprite>,
+            Without<GhostTag>,
+            Without<GhostBreach>,
         ),
     >,
 }
@@ -1016,29 +1080,40 @@ pub fn client_apply_snapshots_system(
     }
 
     for ev in ev_reader.read() {
-        if let NetworkMessage::Snapshot {
-            tick: _,
-            is_full_sync,
-            app_state: server_app_state,
-            game_state: server_game_state,
-            players,
-            ghosts,
-            rooms,
-            map_tiles,
-            gear,
-            player_gear,
-            events,
-            evidences_found,
-            evidences_missing,
-            ghost_type_guess,
-            ghosts_discarded,
-            mission_result,
-            repellent_crafted_count,
-            breach_position,
-            ghost_type,
-            haunted_objects,
-        } = &ev.message
-        {
+        if let NetworkMessage::Snapshot(msg) = &ev.message {
+            let SnapshotMsg {
+                tick: _,
+                is_full_sync,
+                app_state: server_app_state,
+                game_state: server_game_state,
+                players,
+                ghosts,
+                rooms,
+                map_tiles,
+                gear,
+                player_gear,
+                events,
+                evidences_found,
+                evidences_missing,
+                ghost_type_guess,
+                ghosts_discarded,
+                mission_result,
+                repellent_crafted_count,
+                breach_position,
+                ghost_type,
+                haunted_objects,
+                movable_objects,
+            } = &**msg;
+            let local_player_id =
+                params
+                    .query_players
+                    .iter()
+                    .find_map(
+                        |(_, id, _, _, _, _, _, _, is_main, _)| {
+                            if is_main.is_some() { Some(*id) } else { None }
+                        },
+                    );
+
             let is_full_sync = *is_full_sync;
             // Sync AppState - but allow independent Summary transition
             let dominated_by_server_app =
@@ -1161,6 +1236,45 @@ pub fn client_apply_snapshots_system(
                         .entity(entity)
                         .remove::<GhostInfluence>()
                         .remove::<SpectralInfluence>();
+                }
+            }
+
+            // Sync movable objects
+            for mov_sync in movable_objects {
+                let key = (
+                    mov_sync.original_position[0],
+                    mov_sync.original_position[1],
+                    mov_sync.original_position[2],
+                    mov_sync.tileset.clone(),
+                    mov_sync.tileuid,
+                );
+
+                if let Some(&entity) = orig_pos_lookup.get(&key)
+                    && let Ok((_, _, mut pos, net_id)) = params.query_movables.get_mut(entity)
+                {
+                    // Sync NetworkId
+                    if let Some(existing_id) = net_id {
+                        if *existing_id != mov_sync.id {
+                            params.commands.entity(entity).insert(mov_sync.id);
+                        }
+                    } else {
+                        params.commands.entity(entity).insert(mov_sync.id);
+                    }
+
+                    // Sync Position - only if NOT held by ME
+                    // If held by another player, we sync it because we want to see it moving with them.
+                    // If held by ME, we ignore to avoid rubber-banding.
+                    let is_held_by_me = if let Some(held_id) = mov_sync.held_by {
+                        Some(held_id) == local_player_id
+                    } else {
+                        false
+                    };
+
+                    if !is_held_by_me {
+                        pos.x = mov_sync.current_position[0];
+                        pos.y = mov_sync.current_position[1];
+                        pos.z = mov_sync.current_position[2];
+                    }
                 }
             }
 
@@ -1318,26 +1432,13 @@ pub fn client_apply_snapshots_system(
                     ent
                 };
 
-                if let Ok((
-                    g_entity,
-                    _,
-                    mut pos,
-                    mut toggle,
-                    deployed,
-                    battery,
-                    flashlight,
-                    sage,
-                    repellent,
-                    thermometer,
-                    emf_meter,
-                )) = params.query_gear.get_mut(g_entity)
-                {
-                    pos.x = g_sync.position[0];
-                    pos.y = g_sync.position[1];
-                    pos.z = g_sync.position[2];
-                    toggle.is_on = g_sync.is_on;
+                if let Ok(mut g) = params.query_gear.get_mut(g_entity) {
+                    g.pos.x = g_sync.position[0];
+                    g.pos.y = g_sync.position[1];
+                    g.pos.z = g_sync.position[2];
+                    g.toggle.is_on = g_sync.is_on;
 
-                    match (g_sync.is_deployed, deployed) {
+                    match (g_sync.is_deployed, g.deployed) {
                         (true, None) => {
                             params
                                 .commands
@@ -1366,13 +1467,13 @@ pub fn client_apply_snapshots_system(
                         _ => {}
                     }
 
-                    if let Some(mut b) = battery {
+                    if let Some(mut b) = g.battery {
                         b.level = g_sync.battery;
                     }
 
                     match &g_sync.details {
                         unnet_core::messages::GearDetails::Flashlight(status) => {
-                            if let Some(mut f) = flashlight {
+                            if let Some(mut f) = g.flashlight {
                                 f.status = status.clone();
                             }
                         }
@@ -1381,7 +1482,7 @@ pub fn client_apply_snapshots_system(
                             is_active,
                             remaining_secs,
                         } => {
-                            if let Some(mut s) = sage {
+                            if let Some(mut s) = g.sage {
                                 s.consumed = *consumed;
                                 s.is_active = *is_active;
 
@@ -1393,18 +1494,18 @@ pub fn client_apply_snapshots_system(
                             }
                         }
                         unnet_core::messages::GearDetails::RepellentFlask { qty, active } => {
-                            if let Some(mut r) = repellent {
+                            if let Some(mut r) = g.repellent {
                                 r.qty = *qty;
                                 r.active = *active;
                             }
                         }
                         unnet_core::messages::GearDetails::Thermometer { temp } => {
-                            if let Some(mut t) = thermometer {
+                            if let Some(mut t) = g.thermometer {
                                 t.temp = *temp;
                             }
                         }
                         unnet_core::messages::GearDetails::EMF { level } => {
-                            if let Some(mut e) = emf_meter {
+                            if let Some(mut e) = g.emf_meter {
                                 e.emf = *level;
                                 e.emf_level =
                                     ungearitems_core::components::emfmeter::EMFLevel::from_milligauss(
@@ -1683,7 +1784,7 @@ pub fn client_apply_snapshots_system(
             }
 
             // Sync Mission Result
-            if let Some(res) = &**mission_result {
+            if let Some(res) = mission_result {
                 params.summary_data.time_taken_secs = res.time_taken_secs;
                 params.summary_data.ghost_types = res.ghost_types.clone();
                 params.summary_data.repellent_used_amt = res.repellent_used_amt;
@@ -1756,20 +1857,21 @@ pub fn host_apply_input_system(
 
     for ev in ev_reader.read() {
         match &ev.message {
-            NetworkMessage::PlayerInput {
-                player_id,
-                movement,
-                run,
-                interact,
-                grab,
-                drop,
-                use_right_hand,
-                use_left_hand,
-                inventory_cycle,
-                inventory_swap,
-                target_position,
-                aim_direction,
-            } => {
+            NetworkMessage::PlayerInput(msg) => {
+                let PlayerInputMsg {
+                    player_id,
+                    movement,
+                    run,
+                    interact,
+                    grab,
+                    drop,
+                    use_right_hand,
+                    use_left_hand,
+                    inventory_cycle,
+                    inventory_swap,
+                    target_position,
+                    aim_direction,
+                } = msg;
                 for (_entity, id, mut input, _) in query_players.iter_mut() {
                     if id == player_id {
                         input.movement = Vec2::new(movement[0], movement[1]);
@@ -1786,11 +1888,12 @@ pub fn host_apply_input_system(
                     }
                 }
             }
-            NetworkMessage::InteractionRequest {
-                player_id: _,
-                position,
-                interaction_type,
-            } => {
+            NetworkMessage::InteractionRequest(msg) => {
+                let InteractionRequestMsg {
+                    player_id: _,
+                    position,
+                    interaction_type,
+                } = msg;
                 let rel_x = position[0] as i64;
                 let rel_y = position[1] as i64;
                 let rel_z = position[2] as i64;
@@ -1867,10 +1970,11 @@ pub fn host_apply_input_system(
                     }
                 }
             }
-            NetworkMessage::CraftRepellent {
-                player_id,
-                ghost_type,
-            } => {
+            NetworkMessage::CraftRepellent(msg) => {
+                let CraftRepellentMsg {
+                    player_id,
+                    ghost_type,
+                } = msg;
                 debug!(
                     "Network: Received CraftRepellent from client {:?} for {:?}",
                     player_id, ghost_type
@@ -1946,7 +2050,9 @@ pub fn host_apply_input_system(
                     }
                 }
             }
-            NetworkMessage::RequestTruckInventoryChange { player_id, change } => {
+            NetworkMessage::RequestTruckInventoryChange(msg) => {
+                let RequestTruckInventoryChangeMsg { player_id, change } = msg;
+
                 for (_entity, id, _input, mut p_gear) in query_players.iter_mut() {
                     if id == player_id {
                         match change {

@@ -10,7 +10,9 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
-use unnet_core::messages::{NetworkMessage, SendNetworkMessage, TruckInventoryChange};
+use unnet_core::messages::{
+    NetworkMessage, RequestTruckInventoryChangeMsg, SendNetworkMessage, TruckInventoryChange,
+};
 use unnet_core::resources::LocalPlayer;
 use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::components::{MainPlayer, PlayerSprite};
@@ -491,7 +493,10 @@ fn button_clicked(
             LoadoutButton::Van(kind) => TruckInventoryChange::AddItem(*kind),
         };
         ev_net.write(SendNetworkMessage(
-            NetworkMessage::RequestTruckInventoryChange { player_id, change },
+            NetworkMessage::RequestTruckInventoryChange(RequestTruckInventoryChangeMsg {
+                player_id,
+                change,
+            }),
         ));
         return;
     }

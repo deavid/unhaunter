@@ -442,18 +442,30 @@ pub(crate) fn classic_mode_orchestrator(
 
     p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(ghost_id);
 
-    spawn_ambient_sounds(&p, &mut commands);
+    // --- Host-only selections (Ghost Influence, NetworkIds) ---
+    if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
+        // --- Assign NetworkIds to Movable objects ---
+        let mut movable_id_counter = 10000;
+        for &entity in &movable_objects {
+            commands
+                .entity(entity)
+                .insert(NetworkId(movable_id_counter));
+            movable_id_counter += 1;
+        }
 
-    crate::influence_system::assign_ghost_influence(
-        &mut commands,
-        &movable_objects,
-        &q_ghost_breach,
-        &q_player_sprite,
-        &q_position,
-        &p.roomdb,
-        &p.board_topology,
-        &p.haunt_state,
-    );
+        crate::influence_system::assign_ghost_influence(
+            &mut commands,
+            &movable_objects,
+            &q_ghost_breach,
+            &q_player_sprite,
+            &q_position,
+            &p.roomdb,
+            &p.board_topology,
+            &p.haunt_state,
+        );
+    }
+
+    spawn_ambient_sounds(&p, &mut commands);
 
     ev_level_ready.write(LevelReadyEvent { open_van });
 }
