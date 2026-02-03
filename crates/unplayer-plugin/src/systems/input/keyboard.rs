@@ -7,6 +7,8 @@ use unnavigation_core::components::{
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite};
 use unsettings_core::game::{GameplaySettings, MovementStyle};
 
+use untruck_core::components::in_truck::InTruck;
+
 /// System that handles keyboard input for player movement.
 ///
 /// This system reads keyboard input and converts it to movement vectors in the PlayerInput component.
@@ -23,7 +25,11 @@ pub(crate) fn keyboard_input_system(
     mut waypoint_queues: Query<&mut WaypointQueue>,
     q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
     game_settings: Res<Persistent<GameplaySettings>>,
+    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
+    if !q_in_truck.is_empty() {
+        return;
+    }
     for (entity, _player, input_mapping, mut player_input) in players.iter_mut() {
         let mut movement = Vec2::ZERO;
 

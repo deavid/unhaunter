@@ -409,12 +409,11 @@ if near_van {
 **Question:** Is the intent that:
 
 1. Both players should transition to truck UI when any player enters? (Current behavior)
-2. Only the entering player transitions? (Separate UI states needed)
+2. Only the entering player transitions? (Separate UI states needed) <- this one is the correct one.
 
 If (2), this requires significant architectural changes — potentially per-player `GameState` or a different mechanism.
 
-**For now:** Document this as a design decision point. The current behavior (all players see truck UI when one enters)
-may be intentional for co-op play.
+**For now:** Investigate and create a full plan for this as docs/multiplayer/14_van_entry_refactor.md
 
 ---
 

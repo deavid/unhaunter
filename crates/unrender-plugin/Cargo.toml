@@ -22,6 +22,7 @@ unboard-core = { path = "../unboard-core" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 untags-core = { path = "../untags-core" }
+untruck-core = { path = "../untruck-core" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 winit = { workspace = true }

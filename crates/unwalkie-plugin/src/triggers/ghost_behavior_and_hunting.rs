@@ -15,7 +15,7 @@ const NO_EVASION_MAX_DISTANCE: f32 = 1.0; // Max distance player can move to sti
 fn trigger_hunt_warning_no_player_evasion_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     q_player: Query<
         (&Position, Option<&Hiding>, &PlayerGear),
@@ -28,7 +28,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
     q_gear: Query<&GearKind>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         if warning_timer.is_some() {
             *warning_timer = None;
             *player_pos_at_warning = None;

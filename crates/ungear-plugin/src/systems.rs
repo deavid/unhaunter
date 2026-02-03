@@ -20,7 +20,8 @@ use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
-use untypes_core::states::{AppState, GameState};
+use untruck_core::components::in_truck::InTruck;
+use untypes_core::states::AppState;
 
 fn update_deployed_gear_sprites(
     mut commands: Commands,
@@ -70,12 +71,11 @@ fn sound_playback_system(
         let Some(player_position) = qp.iter().next() else {
             return;
         };
-        if !player_position.is_finite()
-            && can_log {
-                error!("Player position is not finite: {player_position:?}");
-                *last_error_log = now;
-                can_log = false;
-            }
+        if !player_position.is_finite() && can_log {
+            error!("Player position is not finite: {player_position:?}");
+            *last_error_log = now;
+            can_log = false;
+        }
         let dist = sound_event
             .position
             .map(|pos| player_position.distance(&pos))
@@ -114,8 +114,11 @@ fn keyboard_gear(
     _keyboard_input: Res<ButtonInput<KeyCode>>,
     mut _q_gear: Query<&mut PlayerGear, With<PlayerTag>>,
     _looking_gear: Res<LookingGear>,
+    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
-    // TODO: Implement using Entity-based gear
+    if !q_in_truck.is_empty() {
+        // TODO: Implement using Entity-based gear
+    }
 }
 
 fn update_gear_ui(
@@ -208,5 +211,5 @@ pub(crate) fn app_setup(app: &mut App) {
             (update_deployed_gear_sprites, sound_playback_system)
                 .run_if(in_state(AppState::InGame)),
         )
-        .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)));
+        .add_systems(Update, keyboard_gear.run_if(in_state(AppState::InGame)));
 }

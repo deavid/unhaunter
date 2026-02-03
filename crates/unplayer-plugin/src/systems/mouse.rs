@@ -6,7 +6,8 @@ use unplayer_core::components::PlayerSprite;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
-use untypes_core::states::GameState;
+use untruck_core::components::in_truck::InTruck;
+use untypes_core::states::AppState;
 use unui_core::resources::MouseVisibility;
 
 const AIM_MAX_DISTANCE: f32 = 8.0;
@@ -19,7 +20,12 @@ fn mouse_aim_system(
         (With<PlayerSprite>, With<MainPlayer>),
     >,
     mouse_visibility: Res<MouseVisibility>,
+    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
+    // Skip if local player is in truck
+    if !q_in_truck.is_empty() {
+        return;
+    }
     // Only aim when mouse is visible
     if !mouse_visibility.is_visible {
         return;
@@ -52,5 +58,5 @@ fn mouse_aim_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, mouse_aim_system.run_if(in_state(GameState::None)));
+    app.add_systems(Update, mouse_aim_system.run_if(in_state(AppState::InGame)));
 }

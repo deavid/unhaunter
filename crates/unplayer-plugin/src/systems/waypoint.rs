@@ -16,6 +16,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
+use untruck_core::components::in_truck::InTruck;
 use untypes_core::cli::is_host;
 use unui_core::resources::MouseVisibility;
 
@@ -43,7 +44,12 @@ pub(crate) fn waypoint_creation_system(
     mouse: Res<ButtonInput<MouseButton>>,
     mouse_visibility: Res<MouseVisibility>,
     pathfinder: Pathfinder,
+    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
+    // Skip if local player is in truck
+    if !q_in_truck.is_empty() {
+        return;
+    }
     // Only process clicks when mouse is visible
     if !mouse_visibility.is_visible {
         return;
@@ -212,7 +218,11 @@ pub(crate) fn waypoint_following_system(
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
     cli: Res<untypes_core::cli::CliOptions>,
+    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
+    if !q_in_truck.is_empty() {
+        return;
+    }
     let is_host = is_host(cli);
     for (player_entity, player_pos, waypoint_queue, mut player_input) in q_player.iter_mut() {
         if let Some(current_waypoint_entity) = waypoint_queue.next() {

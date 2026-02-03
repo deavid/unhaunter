@@ -18,6 +18,7 @@ use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
+use untruck_core::components::in_truck::InTruck;
 use unui_core::resources::MouseVisibility;
 
 const PLAYER_SPEED: f32 = 0.04;
@@ -28,6 +29,62 @@ const DIR_STEPS: f32 = 15.0;
 const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
 const DIR_MAG3: f32 = DIR_MAG2 * 40.0;
 const DIR_RED: f32 = 1.001;
+
+pub(crate) fn player_interaction_system(
+    players: Query<(&Position, &PlayerInput, Option<&Hiding>, Option<&InTruck>), With<MainPlayer>>,
+    interactables: Query<
+        (
+            Entity,
+            &Position,
+            &Interactive,
+            &Behavior,
+            Option<&RoomState>,
+        ),
+        Without<PlayerSprite>,
+    >,
+    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
+    mut ev_npc: MessageWriter<NpcHelpEvent>,
+) {
+    for (pos, player_input, hiding, in_truck) in players.iter() {
+        if in_truck.is_some() || hiding.is_some() {
+            continue;
+        }
+        if player_input.interact {
+            let mut max_dist = 1.4;
+            let mut selected_entity = None;
+            for (entity, item_pos, interactive, behavior, _) in interactables.iter() {
+                let cp_delta = interactive.control_point_delta(behavior);
+                let item_pos = Position {
+                    x: item_pos.x + cp_delta.x,
+                    y: item_pos.y + cp_delta.y,
+                    z: item_pos.z + cp_delta.z,
+                    visual_priority: item_pos.visual_priority,
+                };
+                let new_dist = pos.delta(item_pos);
+                let dref = new_dist;
+                let dist = dref.distance();
+                if dist < max_dist {
+                    max_dist = dist + 0.00001;
+                    selected_entity = Some(entity);
+                }
+            }
+            if let Some(entity) = selected_entity {
+                for (entity, _, _, behavior, _) in
+                    interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
+                {
+                    if behavior.is_npc() {
+                        ev_npc.write(NpcHelpEvent::new(entity));
+                    }
+                    ev_interaction.write(ExecuteInteractionEvent {
+                        entity,
+                        ietype: InteractionExecutionType::ChangeState,
+                        force_tuid: None,
+                    });
+                }
+            }
+        }
+    }
+}
 
 /// System responsible for applying movement to the player based on the PlayerInput component.
 ///
@@ -51,6 +108,7 @@ pub(crate) fn player_movement_system(
         &PlayerGear,
         &PlayerInput,
         Option<&Hiding>,
+        Option<&InTruck>,
         &mut Stamina,
         Option<&MainPlayer>,
     )>,
@@ -65,8 +123,6 @@ pub(crate) fn player_movement_system(
         ),
         Without<PlayerSprite>,
     >,
-    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
-    mut ev_npc: MessageWriter<NpcHelpEvent>,
     difficulty: Res<CurrentDifficulty>,
     _board_topology: Res<BoardTopology>,
     _board_collision: Res<BoardCollisionField>,
@@ -91,11 +147,16 @@ pub(crate) fn player_movement_system(
         player_gear,
         player_input,
         hiding,
+        in_truck,
         mut stamina,
         main_player,
     ) in players.iter_mut()
     {
+        if in_truck.is_some() {
+            continue;
+        }
         let is_main_player = main_player.is_some();
+
         if !dir.is_finite() {
             if can_log {
                 error!("Player direction is not finite: {dir:?}");
@@ -211,42 +272,6 @@ pub(crate) fn player_movement_system(
             )
             .to_vec(),
         );
-
-        // Handle Interaction
-        if player_input.interact {
-            let mut max_dist = 1.4;
-            let mut selected_entity = None;
-            for (entity, item_pos, interactive, behavior, _) in interactables.iter() {
-                let cp_delta = interactive.control_point_delta(behavior);
-                let item_pos = Position {
-                    x: item_pos.x + cp_delta.x,
-                    y: item_pos.y + cp_delta.y,
-                    z: item_pos.z + cp_delta.z,
-                    visual_priority: item_pos.visual_priority,
-                };
-                let new_dist = pos.delta(item_pos);
-                let dref = new_dist;
-                let dist = dref.distance();
-                if dist < max_dist {
-                    max_dist = dist + 0.00001;
-                    selected_entity = Some(entity);
-                }
-            }
-            if let Some(entity) = selected_entity {
-                for (entity, _, _, behavior, _) in
-                    interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
-                {
-                    if behavior.is_npc() {
-                        ev_npc.write(NpcHelpEvent::new(entity));
-                    }
-                    ev_interaction.write(ExecuteInteractionEvent {
-                        entity,
-                        ietype: InteractionExecutionType::ChangeState,
-                        force_tuid: None,
-                    });
-                }
-            }
-        }
 
         if is_main_player && mouse_visibility.is_visible {
             // Let mouse_aim_system handle Direction for MainPlayer

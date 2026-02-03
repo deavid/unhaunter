@@ -24,7 +24,7 @@ const PLAYER_ERRATIC_MAX_DISTANCE: f32 = 6.0;
 /// triggers a walkie-talkie warning. The threshold is higher for experienced players.
 fn check_player_stuck_at_start(
     time: Res<Time>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     roomdb: Res<RoomDB>,
     player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
@@ -33,10 +33,6 @@ fn check_player_stuck_at_start(
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        stuck_timer.reset();
-        return;
-    }
-    if *game_state.get() != GameState::None {
         stuck_timer.reset();
         return;
     }
@@ -88,7 +84,7 @@ fn check_player_stuck_at_start(
 /// triggers a walkie-talkie warning. Only applies to players with few completed missions.
 fn check_erratic_movement_early(
     time: Res<Time>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     roomdb: Res<RoomDB>,
     player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
@@ -100,9 +96,6 @@ fn check_erratic_movement_early(
     if app_state.get() != &AppState::InGame {
         not_entered_timer.reset();
         *avg_position = None;
-        return;
-    }
-    if *game_state.get() != GameState::None {
         return;
     }
 
@@ -154,7 +147,7 @@ fn check_erratic_movement_early(
 /// triggers a walkie-talkie hint about door interaction.
 fn check_door_interaction_hesitation(
     time: Res<Time>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     roomdb: Res<RoomDB>,
     player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
@@ -163,10 +156,6 @@ fn check_door_interaction_hesitation(
     mut hesitation_timer: Local<Stopwatch>,
 ) {
     if app_state.get() != &AppState::InGame {
-        hesitation_timer.reset();
-        return;
-    }
-    if *game_state.get() != GameState::None {
         hesitation_timer.reset();
         return;
     }
@@ -219,14 +208,14 @@ fn check_door_interaction_hesitation(
 fn trigger_struggling_with_grab_drop(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<(&PlayerGear, &PlayerInputMapping), With<MainPlayer>>,
     mut full_and_failed_grab_timer: Local<Option<Stopwatch>>,
 ) {
     // 1. System Run Condition
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         *full_and_failed_grab_timer = None;
         return;
     }
@@ -287,17 +276,13 @@ fn trigger_struggling_with_grab_drop(
 fn trigger_struggling_with_hide_unhide(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<&PlayerInputMapping, (With<MainPlayer>, Without<Hiding>)>,
     mut hide_key_timer: Local<Option<Stopwatch>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *hide_key_timer = None;
-        return;
-    }
-    if *game_state.get() != GameState::None {
         *hide_key_timer = None;
         return;
     }
@@ -343,17 +328,13 @@ fn trigger_struggling_with_hide_unhide(
 fn trigger_player_stays_hidden_too_long(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     hiding_query: Query<Entity, With<Hiding>>,
     ghost_query: Query<&unghost_core::components::ghost_sprite::GhostSprite>,
     mut post_hunt_hidden_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *post_hunt_hidden_timer = None;
-        return;
-    }
-    if *game_state.get() != GameState::None {
         *post_hunt_hidden_timer = None;
         return;
     }
@@ -396,7 +377,7 @@ fn trigger_player_stays_hidden_too_long(
 fn trigger_hunt_active_near_hiding_spot_no_hide(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&Position, Entity), Without<Hiding>>,
     hiding_spots: Query<(&Position, &Behavior)>,
@@ -404,10 +385,6 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     mut near_hiding_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *near_hiding_timer = None;
-        return;
-    }
-    if *game_state.get() != GameState::None {
         *near_hiding_timer = None;
         return;
     }
@@ -460,7 +437,6 @@ pub(crate) fn app_setup(app: &mut App) {
             trigger_struggling_with_hide_unhide,
             trigger_player_stays_hidden_too_long,
             trigger_hunt_active_near_hiding_spot_no_hide,
-        )
-            .run_if(in_state(GameState::None)), // Corrected in_state path
+        ),
     );
 }

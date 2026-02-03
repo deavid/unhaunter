@@ -35,6 +35,7 @@ pub struct PlayerState {
     pub position: [f32; 3],
     pub orientation: [f32; 2], // dx, dy
     pub is_hiding: bool,
+    pub is_in_truck: bool,
     pub stamina: f32,
     pub is_running: bool,
     pub frame: u16,
@@ -92,6 +93,8 @@ pub struct GearSyncState {
     pub kind: ungear_core::types::gear::kind::GearKind,
     pub position: [f32; 3],
     pub is_on: bool,
+    pub is_deployed: bool,
+    pub deployed_direction: [f32; 2],
     pub details: GearDetails,
     pub battery: f32,
 }
@@ -162,7 +165,9 @@ pub enum NetworkMessage {
         evidences_found: Vec<Evidence>,
         evidences_missing: Vec<Evidence>,
         ghost_type_guess: Option<GhostType>,
+        ghosts_discarded: Vec<GhostType>,
         mission_result: Box<Option<MissionResult>>,
+        repellent_crafted_count: u32,
     },
     /// Periodic input update from Client to Host.
     PlayerInput {
@@ -200,7 +205,36 @@ pub enum NetworkMessage {
         ghost_type: GhostType,
     },
     /// Client requests to enter the truck/van.
-    RequestTruckEntry,
+    RequestTruckEntry { player_id: NetworkId },
+    /// Client requests to exit the truck/van.
+    RequestTruckExit { player_id: NetworkId },
+    /// A player has left the mission (ended their game or disconnected)
+    PlayerLeft { player_id: NetworkId },
+    /// Client requests a change in their truck loadout.
+    RequestTruckInventoryChange {
+        player_id: NetworkId,
+        change: TruckInventoryChange,
+    },
+    /// Client requests to toggle an evidence state in the journal.
+    RequestJournalEvidenceToggle {
+        player_id: NetworkId,
+        evidence: Evidence,
+        discard: bool,
+    },
+    /// Client requests to toggle a ghost selection/discard in the journal.
+    RequestJournalGhostToggle {
+        player_id: NetworkId,
+        ghost_type: GhostType,
+        discard: bool,
+    },
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum TruckInventoryChange {
+    RemoveLeftHand,
+    RemoveRightHand,
+    RemoveInventoryIndex(usize),
+    AddItem(ungear_core::types::gear::kind::GearKind),
 }
 
 #[derive(Debug, Clone, Message)]
@@ -212,3 +246,6 @@ pub struct NetworkDataEvent {
 pub struct NetworkDisconnectEvent {
     pub id: NetworkId,
 }
+
+#[derive(Debug, Clone, Message)]
+pub struct SendNetworkMessage(pub NetworkMessage);

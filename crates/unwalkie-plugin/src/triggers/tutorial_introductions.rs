@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use untypes_core::states::{AppState, GameState};
+use untypes_core::states::AppState;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -10,8 +10,7 @@ impl Plugin for TutorialIntroductionsTriggerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            trigger_chapter_intros
-                .run_if(in_state(AppState::InGame).and(in_state(GameState::None))),
+            trigger_chapter_intros.run_if(in_state(AppState::InGame)),
         );
     }
 }

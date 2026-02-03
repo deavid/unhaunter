@@ -28,7 +28,7 @@ struct RightHandGearStateTracker {
 fn trigger_gear_selected_not_activated_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     roomdb: Res<RoomDB>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -37,8 +37,8 @@ fn trigger_gear_selected_not_activated_system(
     mut tracker: Local<Option<RightHandGearStateTracker>>,
     mut r_triggered: Local<i32>,
 ) {
-    // 1. Check Global Conditions (InGame, GameState::None, Player inside location)
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    // 1. Check Global Conditions (InGame, Player inside location)
+    if *app_state.get() != AppState::InGame {
         if tracker.is_some() {
             // Only reset if there was a tracker
             *tracker = None;
@@ -166,7 +166,7 @@ struct IneffectiveToolInHotspotTracker {
 fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
     ghost_query: Query<(&GhostSprite, &Position)>, // GhostSprite for breach_pos, Position for live pos
@@ -177,7 +177,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     mut tracker: Local<Option<IneffectiveToolInHotspotTracker>>,
 ) {
     // 1. System Run Condition & Chapter Check
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -368,7 +368,7 @@ struct GearCycleUsageTracker {
 fn trigger_did_not_cycle_to_other_gear_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerInputMapping, &PlayerGear, &Position), With<MainPlayer>>,
     roomdb: Res<RoomDB>,
@@ -379,7 +379,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     mut tracker: Local<GearCycleUsageTracker>, // No Option, always track
 ) {
     // 1. System Run Condition & Chapter Check
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         *tracker = GearCycleUsageTracker::default(); // Reset on state change
         return;
     }

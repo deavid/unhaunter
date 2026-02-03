@@ -14,6 +14,7 @@ use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use unthermal_core::resources::ThermalGrid;
+use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::AppState;
 use unui_core::components::game_ui::DamageBackground;
 
@@ -25,7 +26,7 @@ pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
 
 fn lose_sanity(
     time: Res<Time>,
-    mut qp: Query<(&mut PlayerSprite, &Position)>,
+    mut qp: Query<(&mut PlayerSprite, &Position), Without<InTruck>>,
     thermal_grid: Res<ThermalGrid>,
     sound_grid: Res<SoundGrid>,
     lg: Res<LightGrid>,
@@ -90,7 +91,7 @@ fn lose_sanity(
 
 fn recover_sanity(
     time: Res<Time>,
-    mut qp: Query<&mut PlayerSprite>,
+    mut qp: Query<&mut PlayerSprite, With<InTruck>>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     // Players recover sanity while in the truck.
@@ -220,20 +221,11 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         (
             lose_sanity,
+            recover_sanity,
             visual_health,
             update_player_stamina,
             handle_player_death,
         )
-            .run_if(
-                in_state(untypes_core::states::GameState::None)
-                    .and(in_state(untypes_core::states::AppState::InGame)),
-            ),
-    );
-    app.add_systems(
-        Update,
-        recover_sanity.run_if(
-            in_state(untypes_core::states::GameState::Truck)
-                .and(in_state(untypes_core::states::AppState::InGame)),
-        ),
+            .run_if(in_state(AppState::InGame)),
     );
 }

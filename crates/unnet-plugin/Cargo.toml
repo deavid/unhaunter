@@ -21,6 +21,7 @@ unevents-core = { path = "../unevents-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unghost-core = { path = "../unghost-core" }
 untruck-core = { path = "../untruck-core" }
+untruck-plugin = { path = "../untruck-plugin" }
 unsummary-core = { path = "../unsummary-core" }
 ungear-core = { path = "../ungear-core" }
 ungearitems-core = { path = "../ungearitems-core" }

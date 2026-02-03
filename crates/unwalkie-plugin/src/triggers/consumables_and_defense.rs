@@ -21,11 +21,11 @@ fn quartz_cracked_feedback(
     q_quartz: Query<&QuartzStoneData>,
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     time: Res<Time>,
     mut last_cracks: Local<Option<u8>>,
 ) {
-    if app_state.get() != &AppState::InGame || *game_state.get() != GameState::None {
+    if app_state.get() != &AppState::InGame {
         *last_cracks = None;
         return;
     }
@@ -64,11 +64,11 @@ fn quartz_shattered_feedback(
     q_quartz: Query<&QuartzStoneData>,
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     time: Res<Time>,
     mut shattered: Local<bool>,
 ) {
-    if app_state.get() != &AppState::InGame || *game_state.get() != GameState::None {
+    if app_state.get() != &AppState::InGame {
         *shattered = false;
         return;
     }
@@ -104,7 +104,7 @@ fn quartz_shattered_feedback(
 fn trigger_quartz_unused_in_relevant_situation_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -114,7 +114,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     q_gear: Query<&GearKind>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         return;
     }
 
@@ -192,7 +192,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
 fn trigger_sage_unused_in_relevant_situation_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -203,7 +203,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
     q_sage: Query<&SageBundleData>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         return;
     }
 
@@ -327,7 +327,7 @@ struct SageEffectivenessTracker {
 fn trigger_sage_activated_ineffectively_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(Entity, &PlayerGear), (With<PlayerSprite>, With<MainPlayer>)>, // Added Entity to ID player
     ghost_query: Query<&GhostSprite>,
@@ -337,7 +337,7 @@ fn trigger_sage_activated_ineffectively_system(
     q_sage: Query<&SageBundleData>,
 ) {
     // 1. System Run Condition & Chapter Check & Reset conditions
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         if tracker.is_tracking_this_sage_burn {
             *tracker = SageEffectivenessTracker::default();
         }
@@ -484,7 +484,7 @@ fn reset_hunt_sage_tracker_on_mission_change(
 fn trigger_sage_unused_defensively_during_hunt_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -494,7 +494,7 @@ fn trigger_sage_unused_defensively_during_hunt_system(
     q_sage: Query<&SageBundleData>,
 ) {
     // 1. System Run Condition & Chapter Check
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         // Tracker reset is handled by `reset_hunt_sage_tracker_on_mission_change`
         return;
     }

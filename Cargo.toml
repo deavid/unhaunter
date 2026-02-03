@@ -149,8 +149,6 @@ workspace = true
 clap = { workspace = true }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
-walkdir = { workspace = true }
-anyhow = { workspace = true }
 
 untypes-core = { path = "crates/untypes-core" }
 unassets-core = { path = "crates/unassets-core" }

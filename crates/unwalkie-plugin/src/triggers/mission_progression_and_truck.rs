@@ -7,6 +7,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::types::evidence::Evidence;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSprite;
+use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
@@ -17,13 +18,13 @@ fn trigger_all_objectives_met_reminder_system(
     mut walkie_play: ResMut<WalkiePlay>,
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
     q_ghost: Query<Entity, With<GhostSprite>>,
     q_breach: Query<Entity, With<GhostBreach>>,
     mut linger_timer: Local<Option<Stopwatch>>,
+    qp_in_truck: Query<&InTruck, With<MainPlayer>>,
 ) {
     // System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::Truck {
+    if *app_state.get() != AppState::InGame || qp_in_truck.is_empty() {
         if linger_timer.is_some() {
             *linger_timer = None;
         }

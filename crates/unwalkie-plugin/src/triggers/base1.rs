@@ -19,16 +19,11 @@ fn player_forgot_equipment(
     roomdb: Res<RoomDB>,
     mut stopwatch: Local<Stopwatch>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     time: Res<Time>,
 ) {
     if app_state.get() != &AppState::InGame {
         // We want to play this only when the player is in the game.
-        stopwatch.reset();
-        return;
-    }
-    if game_state.get() != &GameState::None {
-        // We want to play this only when the player is not in the truck.
         stopwatch.reset();
         return;
     }

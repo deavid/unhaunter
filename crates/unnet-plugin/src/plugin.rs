@@ -18,6 +18,7 @@ impl Plugin for UnhaunterNetPlugin {
         app.init_resource::<crate::resources::PendingMapLoad>();
         app.add_message::<NetworkDataEvent>();
         app.add_message::<unnet_core::messages::NetworkDisconnectEvent>();
+        app.add_message::<unnet_core::messages::SendNetworkMessage>();
         app.add_message::<unnet_core::messages::TransientEvent>();
 
         app.add_systems(Startup, startup_network_system);

@@ -1,4 +1,5 @@
 use crate::resources::{HandshakeState, NetworkConn};
+use bevy::color::palettes::css;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -19,6 +20,7 @@ use unevents_core::events::loadlevel::LoadLevelEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomStateSyncEvent};
 use unevents_core::events::sound::SoundEvent;
 use ungear_core::components::core::Battery;
+use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungearitems_core::components::flashlight::Flashlight;
@@ -50,7 +52,9 @@ use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::{GhostTag, PlayerTag};
+use untruck_core::components::in_truck::InTruck;
 use untruck_core::components::truck_ui_button::TruckUIButton;
+use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
@@ -110,8 +114,20 @@ pub fn network_io_system(
     mut conn: ResMut<NetworkConn>,
     mut ev_writer: MessageWriter<NetworkDataEvent>,
     mut ev_disconnect: MessageWriter<unnet_core::messages::NetworkDisconnectEvent>,
+    mut ev_send: MessageReader<unnet_core::messages::SendNetworkMessage>,
 ) {
-    let current_conn = std::mem::replace(&mut *conn, NetworkConn::Disconnected);
+    let mut current_conn = std::mem::replace(&mut *conn, NetworkConn::Disconnected);
+
+    // Process outgoing messages from events
+    if let NetworkConn::Active {
+        ref mut write_queue,
+        ..
+    } = current_conn
+    {
+        for msg in ev_send.read() {
+            write_queue.push_back(msg.0.clone());
+        }
+    }
 
     match current_conn {
         NetworkConn::Disconnected => {
@@ -396,6 +412,7 @@ pub struct HostSnapshotParams<'w, 's> {
             &'static Position,
             &'static unspatial_core::direction::Direction,
             Option<&'static Hiding>,
+            Option<&'static InTruck>,
             Option<&'static PlayerGear>,
             Option<&'static Stamina>,
             &'static AnimationTimer,
@@ -423,6 +440,7 @@ pub struct HostSnapshotParams<'w, 's> {
             &'static ungear_core::types::gear::kind::GearKind,
             &'static Position,
             &'static Toggleable,
+            Option<&'static DeployedGear>,
             Option<&'static Battery>,
             Option<&'static Flashlight>,
             Option<&'static ungearitems_core::components::sage::SageBundleData>,
@@ -437,6 +455,7 @@ pub struct HostSnapshotParams<'w, 's> {
     pub ghost_guess: Res<'w, GhostGuess>,
     pub summary_data: Res<'w, SummaryData>,
     pub changed_tiles: ResMut<'w, unnet_core::resources::ChangedTiles>,
+    pub repellent_craft_tracker: Res<'w, RepellentCraftTracker>,
 }
 
 pub fn host_send_snapshots_system(
@@ -457,21 +476,24 @@ pub fn host_send_snapshots_system(
     let players = host_params
         .query_players
         .iter()
-        .map(|(p, pos, dir, hiding, _, stamina, anim)| PlayerState {
-            id: p.id,
-            position: [pos.x, pos.y, pos.z],
-            orientation: [dir.dx, dir.dy],
-            is_hiding: hiding.is_some(),
-            stamina: stamina.map(|s| s.current).unwrap_or(100.0),
-            is_running: stamina.map(|s| s.running).unwrap_or(false),
-            frame: anim.idx() as u16,
-        })
+        .map(
+            |(p, pos, dir, hiding, in_truck, _, stamina, anim)| PlayerState {
+                id: p.id,
+                position: [pos.x, pos.y, pos.z],
+                orientation: [dir.dx, dir.dy],
+                is_hiding: hiding.is_some(),
+                is_in_truck: in_truck.is_some(),
+                stamina: stamina.map(|s| s.current).unwrap_or(100.0),
+                is_running: stamina.map(|s| s.running).unwrap_or(false),
+                frame: anim.idx() as u16,
+            },
+        )
         .collect();
 
     let player_gear = host_params
         .query_players
         .iter()
-        .filter_map(|(p, _, _, _, gear, _, _)| {
+        .filter_map(|(p, _, _, _, _, gear, _, _)| {
             gear.map(|g| PlayerGearState {
                 player_id: p.id,
                 left_hand: g
@@ -535,7 +557,19 @@ pub fn host_send_snapshots_system(
         .query_gear
         .iter()
         .map(
-            |(id, kind, pos, toggle, battery, flashlight, sage, repellent, thermometer, emfm)| {
+            |(
+                id,
+                kind,
+                pos,
+                toggle,
+                deployed,
+                battery,
+                flashlight,
+                sage,
+                repellent,
+                thermometer,
+                emfm,
+            )| {
                 let details = if let Some(f) = flashlight {
                     unnet_core::messages::GearDetails::Flashlight(f.status.clone())
                 } else if let Some(s) = sage {
@@ -562,6 +596,10 @@ pub fn host_send_snapshots_system(
                     kind: *kind,
                     position: [pos.x, pos.y, pos.z],
                     is_on: toggle.is_on,
+                    is_deployed: deployed.is_some(),
+                    deployed_direction: deployed
+                        .map(|d| [d.direction.dx, d.direction.dy])
+                        .unwrap_or([0.0, 0.0]),
                     details,
                     battery: battery.map(|b| b.level).unwrap_or(0.0),
                 }
@@ -632,6 +670,12 @@ pub fn host_send_snapshots_system(
             .cloned()
             .collect(),
         ghost_type_guess: host_params.ghost_guess.ghost_type,
+        ghosts_discarded: host_params
+            .ghost_guess
+            .ghosts_discarded
+            .iter()
+            .cloned()
+            .collect(),
         mission_result: Box::new(if *host_params.app_state.get() == AppState::Summary {
             Some(unnet_core::messages::MissionResult {
                 time_taken_secs: host_params.summary_data.time_taken_secs,
@@ -657,6 +701,7 @@ pub fn host_send_snapshots_system(
         } else {
             None
         }),
+        repellent_crafted_count: host_params.repellent_craft_tracker.crafted_count,
     });
 }
 
@@ -665,6 +710,7 @@ pub fn client_send_input_system(
     cli: Res<CliOptions>,
     local_id: Res<LocalPlayer>,
     query_player: Query<&PlayerInput, With<MainPlayer>>,
+    mut ev_net_data: MessageReader<NetworkDataEvent>,
 ) {
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         return;
@@ -692,6 +738,21 @@ pub fn client_send_input_system(
             target_position: input.target_position.map(|v| [v.x, v.y]),
             aim_direction: [input.aim_direction.x, input.aim_direction.y],
         });
+    }
+
+    // Pass through CraftRepellent, Truck entry/exit, and Interaction requests
+    for ev in ev_net_data.read() {
+        if matches!(
+            ev.message,
+            NetworkMessage::CraftRepellent { .. }
+                | NetworkMessage::RequestTruckEntry { .. }
+                | NetworkMessage::RequestTruckExit { .. }
+                | NetworkMessage::InteractionRequest { .. }
+        ) {
+            conn.send(ev.message.clone());
+        } else {
+            trace!("Ignoring message - not sending to the host: {ev:?}");
+        }
     }
 }
 
@@ -727,6 +788,7 @@ pub struct ClientSnapshotParams<'w, 's> {
             &'static mut AnimationTimer,
             &'static mut unspatial_core::direction::Direction,
             Option<&'static Hiding>,
+            Option<&'static InTruck>,
             Option<&'static mut PlayerGear>,
             Option<&'static MainPlayer>,
             &'static mut Stamina,
@@ -760,9 +822,11 @@ pub struct ClientSnapshotParams<'w, 's> {
         'w,
         's,
         (
+            Entity,
             &'static NetworkId,
             &'static mut Position,
             &'static mut Toggleable,
+            Option<&'static mut DeployedGear>,
             Option<&'static mut Battery>,
             Option<&'static mut Flashlight>,
             Option<&'static mut ungearitems_core::components::sage::SageBundleData>,
@@ -777,6 +841,7 @@ pub struct ClientSnapshotParams<'w, 's> {
     pub ghost_guess: ResMut<'w, GhostGuess>,
     pub query_buttons: Query<'w, 's, &'static mut TruckUIButton>,
     pub summary_data: ResMut<'w, SummaryData>,
+    pub repellent_craft_tracker: ResMut<'w, RepellentCraftTracker>,
 }
 
 fn spawn_remote_player(params: &mut ClientSnapshotParams, id: NetworkId) -> Entity {
@@ -846,6 +911,15 @@ fn spawn_remote_gear(params: &mut ClientSnapshotParams, g_sync: &GearSyncState) 
         .gear_registry
         .spawn(&mut params.commands, g_sync.kind);
     params.commands.entity(entity).insert(g_sync.id);
+    if g_sync.is_deployed {
+        params
+            .commands
+            .entity(entity)
+            .insert(DeployedGear {
+                direction: Vec2::from_array(g_sync.deployed_direction).into(),
+            })
+            .insert(unbehavior::components::FloorItemCollidable);
+    }
     entity
 }
 
@@ -873,19 +947,44 @@ pub fn client_apply_snapshots_system(
             evidences_found,
             evidences_missing,
             ghost_type_guess,
+            ghosts_discarded,
             mission_result,
+            repellent_crafted_count,
         } = &ev.message
         {
             let is_full_sync = *is_full_sync;
-            // Sync AppState
-            if *server_app_state != *params.states.current_app_state.get() {
+            // Sync AppState - but allow independent Summary transition
+            let dominated_by_server_app =
+                matches!(server_app_state, AppState::Loading | AppState::MainMenu);
+            let local_in_summary = *params.states.current_app_state.get() == AppState::Summary;
+
+            if dominated_by_server_app
+                || (!local_in_summary
+                    && *server_app_state != *params.states.current_app_state.get())
+            {
                 params.states.app_next_state.set(*server_app_state);
             }
 
-            // Sync GameState
-            if *server_game_state != *params.states.current_game_state.get() {
+            // Sync GameState - but NOT Truck state (that's per-player)
+            // Only sync if Host is in a "global" state that affects everyone
+            let dominated_by_server =
+                matches!(server_game_state, GameState::Pause | GameState::NpcHelp);
+            let local_in_truck = *params.states.current_game_state.get() == GameState::Truck;
+            let server_in_truck = *server_game_state == GameState::Truck;
+
+            if dominated_by_server
+                || (!local_in_truck
+                    && !server_in_truck
+                    && *server_game_state != *params.states.current_game_state.get())
+            {
+                // Only sync if we're not locally in the truck
+                // This allows Client to stay in Truck while Host is in None
                 params.states.game_next_state.set(*server_game_state);
             }
+            // If local_in_truck is true, we keep our local Truck state
+
+            // Sync repellent craft count
+            params.repellent_craft_tracker.crafted_count = *repellent_crafted_count;
 
             let mut net_to_entity: std::collections::HashMap<NetworkId, Entity> = params
                 .query_net_entities
@@ -936,6 +1035,7 @@ pub fn client_apply_snapshots_system(
                     mut anim,
                     mut dir,
                     hiding,
+                    in_truck,
                     _,
                     main_player,
                     mut stamina,
@@ -963,6 +1063,33 @@ pub fn client_apply_snapshots_system(
                             params.commands.entity(p_entity).remove::<Hiding>();
                         }
                         _ => {}
+                    }
+
+                    // InTruck visuals for remote players
+                    if main_player.is_none() {
+                        match (p_state.is_in_truck, in_truck) {
+                            (true, None) => {
+                                params
+                                    .commands
+                                    .entity(p_entity)
+                                    .insert(InTruck)
+                                    .insert(Hiding { hiding_spot: None })
+                                    .insert(MapColor {
+                                        color: css::DARK_GRAY.with_alpha(0.5).into(),
+                                    });
+                            }
+                            (false, Some(_)) => {
+                                params
+                                    .commands
+                                    .entity(p_entity)
+                                    .remove::<InTruck>()
+                                    .remove::<Hiding>()
+                                    .insert(MapColor {
+                                        color: css::WHITE.with_alpha(1.0).into(),
+                                    });
+                            }
+                            _ => {}
+                        }
                     }
 
                     if main_player.is_none() {
@@ -1014,9 +1141,11 @@ pub fn client_apply_snapshots_system(
                 };
 
                 if let Ok((
+                    g_entity,
                     _,
                     mut pos,
                     mut toggle,
+                    deployed,
                     battery,
                     flashlight,
                     sage,
@@ -1029,6 +1158,36 @@ pub fn client_apply_snapshots_system(
                     pos.y = g_sync.position[1];
                     pos.z = g_sync.position[2];
                     toggle.is_on = g_sync.is_on;
+
+                    match (g_sync.is_deployed, deployed) {
+                        (true, None) => {
+                            params
+                                .commands
+                                .entity(g_entity)
+                                .insert(DeployedGear {
+                                    direction: Vec2::from_array(g_sync.deployed_direction).into(),
+                                })
+                                .insert(unbehavior::components::FloorItemCollidable);
+                        }
+                        (true, Some(mut d)) => {
+                            d.direction = Vec2::from_array(g_sync.deployed_direction).into();
+                        }
+                        (false, Some(_)) => {
+                            params
+                                .commands
+                                .entity(g_entity)
+                                .remove::<DeployedGear>()
+                                .remove::<unbehavior::components::FloorItemCollidable>()
+                                .remove::<Sprite>()
+                                .remove::<Transform>()
+                                .remove::<Visibility>()
+                                .remove::<unrender_std::components::game::GameSprite>()
+                                .remove::<unrender_std::components::sprite_layer::SpriteLayer>()
+                                .remove::<MapColor>();
+                        }
+                        _ => {}
+                    }
+
                     if let Some(mut b) = battery {
                         b.level = g_sync.battery;
                     }
@@ -1082,7 +1241,7 @@ pub fn client_apply_snapshots_system(
 
             // Update player gear
             for pg_state in player_gear {
-                for (_, id, _, _, _, _, gear, _, _) in params.query_players.iter_mut() {
+                for (_, id, _, _, _, _, _, gear, _, _) in params.query_players.iter_mut() {
                     if *id == pg_state.player_id
                         && let Some(mut gear) = gear
                     {
@@ -1304,17 +1463,22 @@ pub fn client_apply_snapshots_system(
                 || params.ghost_guess.ghost_type != *ghost_type_guess
                 || params.ghost_guess.evidences_found.len() != evidences_found.len()
                 || params.ghost_guess.evidences_missing.len() != evidences_missing.len()
+                || params.ghost_guess.ghosts_discarded.len() != ghosts_discarded.len()
                 || !evidences_found
                     .iter()
                     .all(|e| params.ghost_guess.evidences_found.contains(e))
                 || !evidences_missing
                     .iter()
-                    .all(|e| params.ghost_guess.evidences_missing.contains(e));
+                    .all(|e| params.ghost_guess.evidences_missing.contains(e))
+                || !ghosts_discarded
+                    .iter()
+                    .all(|g| params.ghost_guess.ghosts_discarded.contains(g));
 
             if ghost_guess_changed {
                 params.ghost_guess.ghost_type = *ghost_type_guess;
                 params.ghost_guess.evidences_found = evidences_found.iter().cloned().collect();
                 params.ghost_guess.evidences_missing = evidences_missing.iter().cloned().collect();
+                params.ghost_guess.ghosts_discarded = ghosts_discarded.iter().cloned().collect();
 
                 // Sync TruckUIButtons
                 for mut button in params.query_buttons.iter_mut() {
@@ -1387,15 +1551,26 @@ pub fn client_apply_snapshots_system(
 }
 
 pub fn host_apply_input_system(
+    mut commands: Commands,
     cli: Res<CliOptions>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
-    mut query_players: Query<(&NetworkId, &mut PlayerInput), Without<MainPlayer>>,
+    mut query_players: Query<
+        (Entity, &NetworkId, &mut PlayerInput, &mut PlayerGear),
+        Without<MainPlayer>,
+    >,
     query_van: Query<(&Position, &Behavior)>,
-    mut game_next_state: ResMut<NextState<GameState>>,
-    query_player_pos: Query<(&NetworkId, &Position), (With<PlayerSprite>, Without<MainPlayer>)>,
+    query_player_pos: Query<
+        (Entity, &NetworkId, &Position, Has<InTruck>),
+        (With<PlayerSprite>, Without<MainPlayer>),
+    >,
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     board_field: Res<BoardEntityField>,
-    board_topo: Res<BoardTopology>,
+    mut craft_tracker: ResMut<RepellentCraftTracker>,
+    gear_registry: Res<GearSpawnerRegistry>,
+    mut q_repellent: Query<&mut ungearitems_core::components::repellentflask::RepellentFlask>,
+    q_gearkind: Query<&ungear_core::types::gear::kind::GearKind>,
+    asset_server: Res<AssetServer>,
+    audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -1417,7 +1592,7 @@ pub fn host_apply_input_system(
                 target_position,
                 aim_direction,
             } => {
-                for (id, mut input) in query_players.iter_mut() {
+                for (_entity, id, mut input, _) in query_players.iter_mut() {
                     if id == player_id {
                         input.movement = Vec2::new(movement[0], movement[1]);
                         input.run = *run;
@@ -1438,14 +1613,9 @@ pub fn host_apply_input_system(
                 position,
                 interaction_type,
             } => {
-                let bpos = BoardPosition {
-                    x: position[0] as i64,
-                    y: position[1] as i64,
-                    z: position[2] as i64,
-                };
-                let rel_x = bpos.x - board_topo.origin.0 as i64;
-                let rel_y = bpos.y - board_topo.origin.1 as i64;
-                let rel_z = bpos.z - board_topo.origin.2 as i64;
+                let rel_x = position[0] as i64;
+                let rel_y = position[1] as i64;
+                let rel_z = position[2] as i64;
 
                 if rel_x >= 0
                     && rel_y >= 0
@@ -1464,24 +1634,193 @@ pub fn host_apply_input_system(
                     }
                 }
             }
-            NetworkMessage::RequestTruckEntry => {
-                debug!("Network: Received RequestTruckEntry from client");
-                let mut near_van = false;
-                for (_id, p_pos) in query_player_pos.iter() {
-                    // For now we just check if ANY player (client) is near van when they request it
-                    for (v_pos, v_beh) in query_van.iter() {
-                        if v_beh.is_van_entry() && p_pos.delta(*v_pos).distance() < 2.0 {
-                            near_van = true;
-                            break;
+            NetworkMessage::RequestTruckEntry { player_id } => {
+                debug!(
+                    "Network: Received RequestTruckEntry from client {:?}",
+                    player_id
+                );
+                for (entity, id, p_pos, _) in query_player_pos.iter() {
+                    if id == player_id {
+                        let mut near_van = false;
+                        for (v_pos, v_beh) in query_van.iter() {
+                            if v_beh.is_van_entry() && p_pos.distance(v_pos) < 2.0 {
+                                near_van = true;
+                                break;
+                            }
                         }
+
+                        if near_van {
+                            info!(
+                                "Network: RequestTruckEntry validated for player {:?}. Adding InTruck.",
+                                player_id
+                            );
+                            commands
+                                .entity(entity)
+                                .insert(InTruck)
+                                .insert(Hiding { hiding_spot: None })
+                                .insert(MapColor {
+                                    color: css::DARK_GRAY.with_alpha(0.5).into(),
+                                });
+                        } else {
+                            warn!(
+                                "Network: Rejected RequestTruckEntry for player {:?} - too far from van",
+                                player_id
+                            );
+                        }
+                        break;
+                    }
+                }
+            }
+            NetworkMessage::RequestTruckExit { player_id } => {
+                debug!(
+                    "Network: Received RequestTruckExit from client {:?}",
+                    player_id
+                );
+                for (entity, id, _, _) in query_player_pos.iter() {
+                    if id == player_id {
+                        commands
+                            .entity(entity)
+                            .remove::<InTruck>()
+                            .remove::<Hiding>()
+                            .insert(MapColor {
+                                color: css::WHITE.with_alpha(1.0).into(),
+                            });
+                        break;
+                    }
+                }
+            }
+            NetworkMessage::CraftRepellent {
+                player_id,
+                ghost_type,
+            } => {
+                debug!(
+                    "Network: Received CraftRepellent from client {:?} for {:?}",
+                    player_id, ghost_type
+                );
+                // 1. Validate player is in truck
+                let mut p_data = None;
+                for (entity, id, _, is_in_truck) in query_player_pos.iter() {
+                    if id == player_id {
+                        p_data = Some((entity, is_in_truck));
+                        break;
                     }
                 }
 
-                if near_van {
-                    info!("Network: RequestTruckEntry validated. Transitioning to Truck state.");
-                    game_next_state.set(GameState::Truck);
-                } else {
-                    warn!("Network: Rejected RequestTruckEntry - player too far from van");
+                if let Some((_entity, is_in_truck)) = p_data {
+                    if is_in_truck {
+                        // 2. Validate craft limits
+                        if craft_tracker.can_craft() {
+                            // 3. Perform craft
+                            // Find the gear for this player
+                            for (_e, id, _, mut gear) in query_players.iter_mut() {
+                                if id == player_id {
+                                    let consumed_new_bottle =
+                                        untruck_plugin::craft_repellent::craft_repellent(
+                                            &mut commands,
+                                            &gear_registry,
+                                            &mut gear,
+                                            *ghost_type,
+                                            &mut q_repellent,
+                                            &q_gearkind,
+                                        );
+
+                                    if consumed_new_bottle {
+                                        craft_tracker.craft();
+                                        info!(
+                                            "Network: Crafted repellent for remote player {:?}",
+                                            player_id
+                                        );
+
+                                        // Play sound at player position
+                                        commands
+                                            .spawn(AudioPlayer::new(
+                                                asset_server
+                                                    .load("sounds/effects-dingdingding.ogg"),
+                                            ))
+                                            .insert(PlaybackSettings {
+                                                mode: bevy::audio::PlaybackMode::Despawn,
+                                                volume: bevy::audio::Volume::Linear(
+                                                    1.0 * audio_settings.volume_master.as_f32()
+                                                        * audio_settings.volume_effects.as_f32(),
+                                                ),
+                                                ..Default::default()
+                                            });
+                                    }
+
+                                    // Client should close UI themselves upon receiving the update,
+                                    // or we could send a command.
+                                    // For now, removing InTruck will force them out if they sync state.
+                                    // But they stay in Truck state locally.
+                                    break;
+                                }
+                            }
+                        } else {
+                            warn!(
+                                "Network: CraftRepellent rejected for {:?} - limit reached",
+                                player_id
+                            );
+                        }
+                    } else {
+                        warn!(
+                            "Network: CraftRepellent rejected for {:?} - not in truck",
+                            player_id
+                        );
+                    }
+                }
+            }
+            NetworkMessage::RequestTruckInventoryChange { player_id, change } => {
+                for (_entity, id, _input, mut p_gear) in query_players.iter_mut() {
+                    if id == player_id {
+                        match change {
+                            unnet_core::messages::TruckInventoryChange::RemoveLeftHand => {
+                                if let Some(e) = p_gear.left_hand.take() {
+                                    commands.entity(e).despawn();
+                                }
+                            }
+                            unnet_core::messages::TruckInventoryChange::RemoveRightHand => {
+                                if let Some(e) = p_gear.right_hand.take() {
+                                    commands.entity(e).despawn();
+                                }
+                            }
+                            unnet_core::messages::TruckInventoryChange::RemoveInventoryIndex(
+                                idx,
+                            ) => {
+                                if *idx < p_gear.inventory.len() {
+                                    let e = p_gear.inventory.remove(*idx);
+                                    commands.entity(e).despawn();
+                                }
+                            }
+                            unnet_core::messages::TruckInventoryChange::AddItem(kind) => {
+                                if *kind != ungear_core::types::gear::kind::GearKind::None {
+                                    let entity = gear_registry.spawn(&mut commands, *kind);
+                                    let mut rng = rand::rng();
+                                    let net_id = NetworkId(rng.random_range(1000..u64::MAX));
+                                    commands.entity(entity).insert(net_id);
+
+                                    if p_gear.left_hand.is_none() {
+                                        p_gear.left_hand = Some(entity);
+                                    } else if p_gear.right_hand.is_none() {
+                                        p_gear.right_hand = Some(entity);
+                                    } else if p_gear.inventory.len() < 2 {
+                                        p_gear.inventory.push(entity);
+                                    } else {
+                                        commands.entity(entity).despawn();
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            NetworkMessage::PlayerLeft { player_id } => {
+                info!("Network: Received PlayerLeft from client {:?}", player_id);
+                for (entity, id, _, _) in query_player_pos.iter() {
+                    if id == player_id {
+                        info!("Network: Despawning player entity for {:?}", id);
+                        commands.entity(entity).despawn();
+                        break;
+                    }
                 }
             }
             _ => {}

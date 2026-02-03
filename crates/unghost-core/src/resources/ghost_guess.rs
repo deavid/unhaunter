@@ -8,4 +8,5 @@ pub struct GhostGuess {
     pub ghost_type: Option<GhostType>,
     pub evidences_found: HashSet<Evidence>,
     pub evidences_missing: HashSet<Evidence>,
+    pub ghosts_discarded: HashSet<GhostType>,
 }

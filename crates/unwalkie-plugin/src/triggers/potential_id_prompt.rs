@@ -8,8 +8,6 @@ use unghost_core::types::evidence::Evidence;
 use unprofile_core::profile::PlayerProfileData;
 use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 
-use untypes_core::states::GameState;
-
 // PotentialIDTimer struct definition removed from here
 
 fn potential_id_prompt_system(
@@ -193,8 +191,5 @@ fn potential_id_prompt_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        potential_id_prompt_system.run_if(in_state(GameState::None)),
-    );
+    app.add_systems(Update, potential_id_prompt_system);
 }

@@ -14,40 +14,12 @@ use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::audio::AudioSettings;
+use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 use untypes_core::states::{AppState, GameState};
 
 // Component to mark the progress bar for hold buttons
 #[derive(Component)]
 pub(crate) struct ProgressIndicator;
-
-/// Tracks the number of repellent bottles crafted and returned during the current mission.
-/// This resource is used to enforce the per-mission craft limit based on difficulty.
-#[derive(Resource, Default)]
-pub(crate) struct RepellentCraftTracker {
-    pub crafted_count: u32,
-    pub max_crafts: u32,
-}
-
-impl RepellentCraftTracker {
-    pub(crate) fn remaining_crafts(&self) -> u32 {
-        self.max_crafts.saturating_sub(self.crafted_count)
-    }
-
-    pub(crate) fn can_craft(&self) -> bool {
-        self.crafted_count < self.max_crafts
-    }
-
-    pub(crate) fn craft(&mut self) {
-        if self.can_craft() {
-            self.crafted_count += 1;
-        }
-    }
-
-    pub(crate) fn reset(&mut self, max_crafts: u32) {
-        self.crafted_count = 0;
-        self.max_crafts = max_crafts;
-    }
-}
 
 fn cleanup(mut commands: Commands, qtui: Query<Entity, With<TruckUI>>) {
     for e in qtui.iter() {
@@ -259,6 +231,7 @@ fn hold_button_system(
                                     info!("Sent CraftRepellent event");
                                 } else {
                                     info!("Craft repellent limit reached!");
+                                    // Optimization for net clients: if the UI haven't updated yet, don't let them click.
                                 }
                             }
                             TruckButtonType::EndMission => {
@@ -323,14 +296,48 @@ fn truckui_event_handle(
     mut q_repellent: Query<&mut RepellentFlask>,
     q_gearkind: Query<&GearKind>,
     mut ev_mission: MessageWriter<MissionEvent>,
+    cli: Res<untypes_core::cli::CliOptions>,
+    loc_player: Res<unnet_core::resources::LocalPlayer>,
+    mut ev_send_net: MessageWriter<unnet_core::messages::SendNetworkMessage>,
 ) {
     for ev in ev_truckui.read() {
         match ev {
             TruckUIEvent::EndMission => {
+                if let (Some(player_id), true) = (
+                    loc_player.0,
+                    matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. }),
+                ) {
+                    ev_send_net.write(unnet_core::messages::SendNetworkMessage(
+                        unnet_core::messages::NetworkMessage::PlayerLeft { player_id },
+                    ));
+                }
                 ev_mission.write(MissionEvent::End);
             }
-            TruckUIEvent::ExitTruck => game_next_state.set(GameState::None),
+            TruckUIEvent::ExitTruck => {
+                if let (Some(player_id), true) = (
+                    loc_player.0,
+                    matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. }),
+                ) {
+                    ev_send_net.write(unnet_core::messages::SendNetworkMessage(
+                        unnet_core::messages::NetworkMessage::RequestTruckExit { player_id },
+                    ));
+                }
+                game_next_state.set(GameState::None);
+            }
             TruckUIEvent::CraftRepellent => {
+                if matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
+                    if let (Some(player_id), Some(ghost_type)) = (loc_player.0, gg.ghost_type) {
+                        ev_send_net.write(unnet_core::messages::SendNetworkMessage(
+                            unnet_core::messages::NetworkMessage::CraftRepellent {
+                                player_id,
+                                ghost_type,
+                            },
+                        ));
+                        // Client optimistic local exit
+                        game_next_state.set(GameState::None);
+                    }
+                    continue;
+                }
                 for (_player, mut gear) in q_gear.iter_mut() {
                     if let Some(ghost_type) = gg.ghost_type {
                         let consumed_new_bottle = craft_repellent(
@@ -409,14 +416,13 @@ fn update_craft_button_text(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::is_host;
     // Initialize the RepellentCraftTracker resource
     app.init_resource::<RepellentCraftTracker>();
 
-    app.add_systems(OnExit(AppState::InGame), cleanup.run_if(is_host));
-    app.add_systems(OnEnter(GameState::Truck), show_ui.run_if(is_host));
-    app.add_systems(OnExit(GameState::Truck), hide_ui.run_if(is_host));
-    app.add_systems(Update, keyboard.run_if(is_host));
+    app.add_systems(OnExit(AppState::InGame), cleanup);
+    app.add_systems(OnEnter(GameState::Truck), show_ui);
+    app.add_systems(OnExit(GameState::Truck), hide_ui);
+    app.add_systems(Update, keyboard);
     app.add_systems(
         Update,
         (
@@ -424,14 +430,8 @@ pub(crate) fn app_setup(app: &mut App) {
             truckui_event_handle.after(hold_button_system),
             update_craft_button_text,
         )
-            .run_if(in_state(GameState::Truck).and(is_host)),
+            .run_if(in_state(GameState::Truck)),
     );
-    app.add_systems(
-        OnEnter(AppState::InGame),
-        init_repellent_tracker.run_if(is_host),
-    );
-    app.add_systems(
-        OnExit(AppState::InGame),
-        reset_repellent_tracker.run_if(is_host),
-    );
+    app.add_systems(OnEnter(AppState::InGame), init_repellent_tracker);
+    app.add_systems(OnExit(AppState::InGame), reset_repellent_tracker);
 }

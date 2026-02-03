@@ -187,24 +187,18 @@ impl InteractiveStuff<'_, '_> {
             if ietype != InteractionExecutionType::ChangeState {
                 return false;
             }
-            match authority {
-                Authority::Host => {
-                    if let Some(interactive) = interactive {
-                        let sound_file = interactive.sound_for_moving_into_state(behavior);
-                        self.sound_events.write(SoundEvent {
-                            sound_file,
-                            volume: 1.0,
-                            position: Some(*item_pos),
-                        });
-                    }
-                    self.game_next_state.set(GameState::Truck);
-                }
-                Authority::Client => {
-                    self.net_events.write(NetworkDataEvent {
-                        message: NetworkMessage::RequestTruckEntry,
-                    });
-                }
+            // Play sound regardless of authority
+            if let Some(interactive) = interactive {
+                let sound_file = interactive.sound_for_moving_into_state(behavior);
+                self.sound_events.write(SoundEvent {
+                    sound_file,
+                    volume: 1.0,
+                    position: Some(*item_pos),
+                });
             }
+            // Each instance handles their own truck entry locally
+            self.game_next_state.set(GameState::Truck);
+            // Note: InTruck component is added by a separate system that watches GameState changes
             return false;
         }
 

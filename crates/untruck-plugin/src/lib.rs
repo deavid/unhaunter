@@ -16,7 +16,7 @@
 //! the main exploration and investigation gameplay.
 pub(crate) mod activity;
 pub(crate) mod components;
-pub(crate) mod craft_repellent;
+pub mod craft_repellent;
 pub(crate) mod evidence;
 pub(crate) mod hydration;
 pub(crate) mod journal;

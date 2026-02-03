@@ -25,16 +25,12 @@ fn trigger_darkness_level_system(
     light_grid: Res<LightGrid>,
     roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     mut stopwatch: Local<Stopwatch>,
 ) {
     if app_state.get() != &AppState::InGame {
-        stopwatch.reset();
-        return;
-    }
-    if *game_state.get() != GameState::None {
         stopwatch.reset();
         return;
     }
@@ -64,16 +60,13 @@ fn trigger_breach_showcase(
     time: Res<Time>,
     roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_breach: Query<&Position, With<GhostBreach>>,
     truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
-        return;
-    }
-    if *game_state.get() != GameState::None {
         return;
     }
 
@@ -110,16 +103,13 @@ fn trigger_ghost_showcase(
     time: Res<Time>,
     roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_ghost: Query<&Position, With<unghost_core::components::ghost_sprite::GhostSprite>>,
     truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
-        return;
-    }
-    if *game_state.get() != GameState::None {
         return;
     }
 
@@ -155,15 +145,12 @@ fn trigger_room_lights_on_gear_needs_dark(
     light_grid: Res<LightGrid>,
     roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite, &PlayerGear), With<MainPlayer>>,
     q_gear: Query<(&Toggleable, &GearKind)>,
 ) {
     if app_state.get() != &AppState::InGame {
-        return;
-    }
-    if *game_state.get() != GameState::None {
         return;
     }
     for (player_pos, _player, player_gear) in qp.iter() {
@@ -199,7 +186,7 @@ fn trigger_room_lights_on_gear_needs_dark(
 fn trigger_thermometer_non_freezing_fixation(
     time: Res<Time>,
     mut walkie_play: ResMut<WalkiePlay>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     mut stopwatch: Local<Stopwatch>,
     mut trigger_count: Local<u32>,
@@ -213,10 +200,6 @@ fn trigger_thermometer_non_freezing_fixation(
         return;
     }
     if app_state.get() != &AppState::InGame {
-        stopwatch.reset();
-        return;
-    }
-    if *game_state.get() != GameState::None {
         stopwatch.reset();
         return;
     }

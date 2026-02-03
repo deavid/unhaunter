@@ -9,6 +9,7 @@ use uninteraction_core::interaction::{Authority, Toggleable, Triggered};
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
+use untruck_core::components::in_truck::InTruck;
 use untypes_core::cli::{CliOptions, is_host};
 
 pub(crate) fn player_gear_usage_system(
@@ -17,7 +18,11 @@ pub(crate) fn player_gear_usage_system(
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
     mut ga: SoundEmitter,
     cli: Res<CliOptions>,
+    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
+    if !q_in_truck.is_empty() {
+        return;
+    }
     let authority = if is_host(cli) {
         Authority::Host
     } else {
@@ -69,7 +74,11 @@ pub(crate) fn player_gear_usage_system(
 pub(crate) fn mouse_scroll_gear_system(
     mut scroll_events: MessageReader<MouseWheel>,
     mut q_player: Query<&mut PlayerInput, (With<PlayerSprite>, With<MainPlayer>)>,
+    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
+    if !q_in_truck.is_empty() {
+        return;
+    }
     for event in scroll_events.read() {
         if event.y != 0.0 {
             for mut player_input in q_player.iter_mut() {

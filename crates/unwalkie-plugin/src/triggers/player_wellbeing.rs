@@ -29,11 +29,11 @@ fn very_low_sanity_no_truck_return(
     qp: Query<(&PlayerSprite, &Position)>,
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
-    if app_state.get() != &AppState::InGame || *game_state.get() != GameState::None {
+    if app_state.get() != &AppState::InGame {
         stopwatch.reset();
         return;
     }
@@ -67,11 +67,11 @@ fn low_health_general_warning(
     qp: Query<(&PlayerSprite, &Position)>,
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
-    if app_state.get() != &AppState::InGame || *game_state.get() != GameState::None {
+    if app_state.get() != &AppState::InGame {
         stopwatch.reset();
         return;
     }
@@ -111,12 +111,12 @@ fn trigger_sanity_dropped_due_to_darkness_system(
     roomdb: Res<RoomDB>,
     lg: Res<LightGrid>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut darkness_sanity_tracker: Local<Option<(f32, Stopwatch)>>, // (sanity_at_darkness_start, timer)
     mut hint_triggered_this_episode: Local<bool>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         *darkness_sanity_tracker = None;
         *hint_triggered_this_episode = false;
         return;
@@ -185,12 +185,12 @@ fn trigger_sanity_dropped_due_to_ghost_system(
     ghost_query: Query<(Entity, &GhostSprite, &Position)>, // Query Entity to track specific ghost
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut interaction_sanity_tracker: Local<Option<(f32, Stopwatch, Entity)>>, // (sanity_at_interaction_start, timer, ghost_entity)
     mut hint_triggered_this_episode: Local<bool>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         *interaction_sanity_tracker = None;
         *hint_triggered_this_episode = false;
         return;

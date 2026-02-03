@@ -3,25 +3,18 @@ use crate::components::truck::TruckUIGhostGuess;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use bevy_platform::collections::HashSet;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::truck::TruckUIEvent;
-use ungear_core::components::playergear::PlayerGear;
-use ungear_core::resources::spawner::GearSpawnerRegistry;
-use ungear_core::types::gear::kind::GearKind;
-use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
-use unnet_core::messages::{NetworkDataEvent, NetworkMessage};
-use unnet_core::network_id::NetworkId;
+use unnet_core::messages::{NetworkDataEvent, NetworkMessage, SendNetworkMessage};
 use unnet_core::resources::LocalPlayer;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use untypes_core::cli::{CliOptions, NetMode};
-use untypes_core::states::{AppState, GameState};
+use untypes_core::states::AppState;
 use unwalkie_core::resources::WalkiePlay;
 
 /// System that handles ForceDiscardEvidenceEvents even when not in truck
@@ -87,85 +80,35 @@ struct JournalButtonParams<'w, 's> {
     potential_id_timer: ResMut<'w, PotentialIDTimer>,
     keyboard_input: Res<'w, ButtonInput<KeyCode>>,
     difficulty: Res<'w, CurrentDifficulty>,
-    q_gear: Query<'w, 's, (&'static PlayerSprite, &'static mut PlayerGear), With<MainPlayer>>,
-    commands: Commands<'w, 's>,
-    gear_registry: Res<'w, GearSpawnerRegistry>,
-    q_repellent: Query<'w, 's, &'static mut RepellentFlask>,
-    q_gearkind: Query<'w, 's, &'static GearKind>,
     cli: Res<'w, CliOptions>,
-    ev_net: MessageWriter<'w, NetworkDataEvent>,
+    ev_net: MessageWriter<'w, SendNetworkMessage>,
     local_id: Res<'w, LocalPlayer>,
 }
 
 fn button_system(mut p: JournalButtonParams) {
-    let mut selected_evidences_found = HashSet::<Evidence>::new();
-    let mut selected_evidences_missing = HashSet::<Evidence>::new();
-    let mut clicked_ghost_type: Option<GhostType> = None;
+    let mut clicked_ghost_type: Option<(GhostType, bool)> = None;
+    let mut clicked_evidence_type: Option<(Evidence, bool)> = None;
 
     let shift_pressed = p.keyboard_input.pressed(KeyCode::ShiftLeft)
         || p.keyboard_input.pressed(KeyCode::ShiftRight);
 
     // --- 1. GATHER INPUTS ---
-    // First pass: Handle evidence button clicks and detect ghost button clicks.
     for (interaction, _, _, _, mut tui_button) in &mut p.interaction_query {
-        // Skip buttons that use hold timer or are currently disabled from a previous frame
         if tui_button.disabled || tui_button.hold_duration.is_some() || tui_button.computer_locked {
             continue;
         }
 
         if interaction.is_changed() && *interaction == Interaction::Pressed {
             match tui_button.class {
-                TruckButtonType::Evidence(_) => {
-                    if shift_pressed {
-                        tui_button.toggle_discard();
-                    } else {
-                        tui_button.pressed();
-                    }
+                TruckButtonType::Evidence(evidence_type) => {
+                    clicked_evidence_type = Some((evidence_type, shift_pressed));
                 }
                 TruckButtonType::Ghost(ghost_type) => {
-                    if shift_pressed {
-                        tui_button.toggle_discard();
-                        if p.gg.ghost_type == Some(ghost_type) {
-                            p.gg.ghost_type = None;
-                        }
-                    } else {
-                        tui_button.pressed();
-                        clicked_ghost_type = Some(ghost_type);
-                    }
-                }
-                TruckButtonType::CraftRepellent => {
-                    if let Some(ghost_type) = p.gg.ghost_type {
-                        match p.cli.net_mode {
-                            NetMode::Offline | NetMode::Host { .. } => {
-                                for (_player, mut gear) in p.q_gear.iter_mut() {
-                                    crate::craft_repellent::craft_repellent(
-                                        &mut p.commands,
-                                        &p.gear_registry,
-                                        &mut gear,
-                                        ghost_type,
-                                        &mut p.q_repellent,
-                                        &p.q_gearkind,
-                                    );
-                                }
-                            }
-                            NetMode::Join { .. } => {
-                                if let Some(player_id) = p.local_id.0 {
-                                    p.ev_net.write(NetworkDataEvent {
-                                        message: NetworkMessage::CraftRepellent {
-                                            player_id,
-                                            ghost_type,
-                                        },
-                                    });
-                                }
-                            }
-                        }
-                    }
-                    if let Some(truckui_event) = tui_button.pressed() {
-                        p.ev_truckui.write(truckui_event);
-                    }
+                    clicked_ghost_type = Some((ghost_type, shift_pressed));
                 }
                 _ => {
                     // For Craft, End, etc.
+                    // These are not (yet) handled via network messages.
                     if let Some(truckui_event) = tui_button.pressed() {
                         p.ev_truckui.write(truckui_event);
                     }
@@ -174,49 +117,66 @@ fn button_system(mut p: JournalButtonParams) {
         }
     }
 
-    // After handling clicks, now collect the final state of all evidence buttons
-    for (_, _, _, _, tui_button) in &p.interaction_query {
-        if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
-            match tui_button.status {
-                TruckButtonState::Pressed => {
-                    selected_evidences_found.insert(evidence_type);
+    // --- 2. UPDATE STATE (HOST) OR SEND MESSAGES (CLIENT) ---
+    match p.cli.net_mode {
+        NetMode::Offline | NetMode::Host { .. } => {
+            if let Some((ev, discard)) = clicked_evidence_type {
+                if discard {
+                    if p.gg.evidences_missing.contains(&ev) {
+                        p.gg.evidences_missing.remove(&ev);
+                    } else {
+                        p.gg.evidences_missing.insert(ev);
+                        p.gg.evidences_found.remove(&ev);
+                    }
+                } else if p.gg.evidences_found.contains(&ev) {
+                    p.gg.evidences_found.remove(&ev);
+                } else {
+                    p.gg.evidences_found.insert(ev);
+                    p.gg.evidences_missing.remove(&ev);
                 }
-                TruckButtonState::Discard => {
-                    selected_evidences_missing.insert(evidence_type);
+            }
+            if let Some((gh, discard)) = clicked_ghost_type {
+                if discard {
+                    if p.gg.ghosts_discarded.contains(&gh) {
+                        p.gg.ghosts_discarded.remove(&gh);
+                    } else {
+                        p.gg.ghosts_discarded.insert(gh);
+                        if p.gg.ghost_type == Some(gh) {
+                            p.gg.ghost_type = None;
+                        }
+                    }
+                } else if p.gg.ghost_type == Some(gh) {
+                    p.gg.ghost_type = None;
+                } else {
+                    p.gg.ghost_type = Some(gh);
                 }
-                _ => {}
+            }
+        }
+        NetMode::Join { .. } => {
+            if let Some(player_id) = p.local_id.0 {
+                if let Some((evidence, discard)) = clicked_evidence_type {
+                    p.ev_net.write(SendNetworkMessage(
+                        NetworkMessage::RequestJournalEvidenceToggle {
+                            player_id,
+                            evidence,
+                            discard,
+                        },
+                    ));
+                }
+                if let Some((ghost_type, discard)) = clicked_ghost_type {
+                    p.ev_net.write(SendNetworkMessage(
+                        NetworkMessage::RequestJournalGhostToggle {
+                            player_id,
+                            ghost_type,
+                            discard,
+                        },
+                    ));
+                }
             }
         }
     }
 
-    // --- 2. UPDATE GHOSTGUESS RESOURCE ---
-
-    // Check if evidence states have changed
-    let evidence_states_changed = p.gg.evidences_found != selected_evidences_found
-        || p.gg.evidences_missing != selected_evidences_missing;
-
-    // Only log evidence states if there are changes
-    if evidence_states_changed {
-        debug!(
-            "Journal: Evidence found: {:?}, Evidence missing: {:?}",
-            selected_evidences_found, selected_evidences_missing
-        );
-    }
-
-    // Update the GhostGuess if there are changes
-    if evidence_states_changed {
-        debug!(
-            "Journal: Updating evidences_found: {:?} -> {:?}",
-            p.gg.evidences_found, selected_evidences_found
-        );
-        debug!(
-            "Journal: Updating evidences_missing: {:?} -> {:?}",
-            p.gg.evidences_missing, selected_evidences_missing
-        );
-        p.gg.evidences_found = selected_evidences_found.clone();
-        p.gg.evidences_missing = selected_evidences_missing.clone();
-    }
-
+    // --- 3. CALCULATE DERIVED STATE ---
     let possible_ghosts: Vec<GhostType> = p
         .difficulty
         .0
@@ -225,112 +185,79 @@ fn button_system(mut p: JournalButtonParams) {
         .into_iter()
         .filter(|ghost_type| {
             let ghost_ev = ghost_type.evidences();
-            let mut is_discarded = false;
-            for (_, _, _, _, tui_button) in &p.interaction_query {
-                if let TruckButtonType::Ghost(gh) = tui_button.class
-                    && gh == *ghost_type
-                    && tui_button.status == TruckButtonState::Discard
-                {
-                    is_discarded = true;
-                    break;
-                }
-            }
+            let is_discarded = p.gg.ghosts_discarded.contains(ghost_type);
+
             !is_discarded
-                && ghost_ev.is_superset(&selected_evidences_found)
-                && ghost_ev.is_disjoint(&selected_evidences_missing)
+                && ghost_ev.is_superset(&p.gg.evidences_found)
+                && ghost_ev.is_disjoint(&p.gg.evidences_missing)
         })
         .collect();
 
-    // a) Handle manual click on a ghost button
-    if let Some(clicked_ghost) = clicked_ghost_type {
-        if p.gg.ghost_type == Some(clicked_ghost) {
+    // Host-exclusive: auto-select/deselect logic
+    if !matches!(p.cli.net_mode, NetMode::Join { .. }) {
+        // a) Auto-deselect if the currently selected ghost becomes invalid
+        if let Some(selected_ghost) = p.gg.ghost_type
+            && !possible_ghosts.contains(&selected_ghost)
+        {
             p.gg.ghost_type = None;
-        } else {
-            p.gg.ghost_type = Some(clicked_ghost);
+        }
+
+        // b) Auto-select if only one ghost is possible and nothing is selected
+        if possible_ghosts.len() == 1 && p.gg.ghost_type.is_none() {
+            p.gg.ghost_type = Some(possible_ghosts[0]);
         }
     }
 
-    // b) Auto-deselect if the currently selected ghost becomes invalid
-    if let Some(selected_ghost) = p.gg.ghost_type
-        && !possible_ghosts.contains(&selected_ghost)
-    {
-        p.gg.ghost_type = None;
-    }
-
-    // c) Auto-select if only one ghost is possible and nothing is selected
-    if possible_ghosts.len() == 1 && p.gg.ghost_type.is_none() {
-        p.gg.ghost_type = Some(possible_ghosts[0]);
-    }
-
-    // --- d) SYNC GHOSTGUESS OVER NETWORK ---
-    if p.gg.is_changed()
-        && matches!(p.cli.net_mode, NetMode::Join { .. })
-        && let Some(player_id) = p.local_id.0
-    {
-        p.ev_net.write(NetworkDataEvent {
-            message: NetworkMessage::JournalUpdate {
-                player_id,
-                ghost_type: p.gg.ghost_type,
-                evidences_found: p.gg.evidences_found.iter().cloned().collect(),
-                evidences_missing: p.gg.evidences_missing.iter().cloned().collect(),
-            },
-        });
-    }
-
-    // --- 3. UPDATE UI FROM STATE ---
-    // Second pass: Update visuals and disabled states of all buttons based on the now-finalized GhostGuess.
+    // --- 4. UPDATE UI FROM STATE ---
     for (interaction_ref, mut bgcolor, mut border_color, children, mut tui_button) in
         &mut p.interaction_query
     {
         let interaction = *interaction_ref;
 
-        // Update ghost buttons' state and disabled status
-        if let TruckButtonType::Ghost(gh) = tui_button.class {
-            // --- MODIFIED LOGIC HERE ---
-            // A ghost button is disabled if it's not a possible candidate,
-            // UNLESS it is already in the Discard state (so it can be un-discarded).
-            if tui_button.status == TruckButtonState::Discard {
-                tui_button.disabled = false;
-            } else {
-                tui_button.disabled = !possible_ghosts.contains(&gh);
+        match tui_button.class {
+            TruckButtonType::Ghost(gh) => {
+                if p.gg.ghosts_discarded.contains(&gh) {
+                    tui_button.status = TruckButtonState::Discard;
+                    tui_button.disabled = false;
+                } else {
+                    tui_button.disabled = !possible_ghosts.contains(&gh);
+                    if p.gg.ghost_type == Some(gh) {
+                        tui_button.status = TruckButtonState::Pressed;
+                    } else {
+                        tui_button.status = TruckButtonState::Off;
+                    }
+                }
             }
+            TruckButtonType::Evidence(ev) => {
+                // Secondary check: is the gear for this evidence even available?
+                let gear_available = p
+                    .difficulty
+                    .0
+                    .truck_gear
+                    .iter()
+                    .filter_map(|gear_kind| Evidence::try_from(gear_kind).ok())
+                    .any(|e| e == ev);
 
-            // The visual "Pressed" state is now purely based on GhostGuess.
-            if p.gg.ghost_type == Some(gh) && tui_button.status != TruckButtonState::Discard {
-                tui_button.status = TruckButtonState::Pressed;
-            } else if tui_button.status != TruckButtonState::Discard {
-                tui_button.status = TruckButtonState::Off;
+                if !gear_available {
+                    tui_button.disabled = true;
+                } else if p.gg.evidences_found.contains(&ev) {
+                    tui_button.status = TruckButtonState::Pressed;
+                    tui_button.disabled = false;
+                } else if p.gg.evidences_missing.contains(&ev) {
+                    tui_button.status = TruckButtonState::Discard;
+                    tui_button.disabled = false;
+                } else {
+                    tui_button.status = TruckButtonState::Off;
+                    let cannot_be_found = !possible_ghosts.is_empty()
+                        && possible_ghosts.iter().all(|g| !g.evidences().contains(&ev));
+                    tui_button.disabled = cannot_be_found;
+                }
             }
-        }
-
-        // --- NEW LOGIC FOR EVIDENCE BUTTONS ---
-        if let TruckButtonType::Evidence(ev) = tui_button.class {
-            // Primary check: is the gear for this evidence even available?
-            if !p
-                .difficulty
-                .0
-                .truck_gear
-                .iter()
-                .filter_map(|gear_kind| Evidence::try_from(gear_kind).ok())
-                .collect::<HashSet<_>>()
-                .contains(&ev)
-            {
-                tui_button.disabled = true;
-            } else if tui_button.status == TruckButtonState::Off {
-                // If gear is available, then apply the existing logic for 'Off' buttons
-                let cannot_be_found = !possible_ghosts.is_empty()
-                    && possible_ghosts.iter().all(|g| !g.evidences().contains(&ev));
-                tui_button.disabled = cannot_be_found;
-            } else {
-                // If gear is available and button is already Pressed/Discard, it's never disabled.
-                tui_button.disabled = false;
+            TruckButtonType::CraftRepellent => {
+                tui_button.disabled = p.gg.ghost_type.is_none();
+                // Ensure status is Off unless it was somehow changed (not by this system)
             }
-        }
-
-        // Update Craft Repellent button
-        if let TruckButtonType::CraftRepellent = tui_button.class {
-            let disabled = p.gg.ghost_type.is_none();
-            tui_button.disabled = disabled;
+            _ => {}
         }
 
         let current_interaction = if tui_button.disabled {
@@ -341,7 +268,6 @@ fn button_system(mut p: JournalButtonParams) {
 
         let mut textcolor = p.q_textcolor.get_mut(children[0]).unwrap();
 
-        // Default color calculation
         let current_border_color = tui_button.border_color(current_interaction);
         let current_background_color = tui_button.background_color(current_interaction);
         let current_text_color = tui_button.text_color(current_interaction);
@@ -353,49 +279,31 @@ fn button_system(mut p: JournalButtonParams) {
         textcolor.0 = current_text_color;
     }
 
-    // Update GhostGuess resource with the latest evidence sets (only if changed)
-
-    let final_found_changed = p.gg.evidences_found != selected_evidences_found;
-    let final_missing_changed = p.gg.evidences_missing != selected_evidences_missing;
-
-    if final_found_changed {
-        debug!(
-            "Journal: Final update evidences_found: {:?} -> {:?}",
-            p.gg.evidences_found, selected_evidences_found
-        );
-        p.gg.evidences_found = selected_evidences_found;
-    }
-    if final_missing_changed {
-        debug!(
-            "Journal: Final update evidences_missing: {:?} -> {:?}",
-            p.gg.evidences_missing, selected_evidences_missing
-        );
-        p.gg.evidences_missing = selected_evidences_missing;
-    }
-
-    // Acknowledge hints
-    for (_interaction, _, _, _, tui_button) in &p.interaction_query {
-        if let TruckButtonType::Evidence(clicked_evidence_type) = tui_button.class
-            && tui_button.status == TruckButtonState::Pressed
+    // Acknowledge hints (Evidence buttons)
+    for (_, _, _, _, mut tui_button) in &mut p.interaction_query {
+        if let TruckButtonType::Evidence(ev) = tui_button.class
+            && p.gg.evidences_found.contains(&ev)
         {
+            tui_button.blinking_hint_active = false;
+
             if let Some((hinted_evidence, _)) = p.walkie_play.evidence_hinted_not_logged_via_walkie
-                && hinted_evidence == clicked_evidence_type
+                && hinted_evidence == ev
             {
                 const JOURNAL_HINT_THRESHOLD: u32 = 3;
                 let ack_count = p
                     .profile_data
                     .times_evidence_acknowledged_in_journal
-                    .entry(clicked_evidence_type)
+                    .entry(ev)
                     .or_insert(0);
                 if *ack_count < JOURNAL_HINT_THRESHOLD {
-                    *ack_count += 1;
+                    *ack_count += 3; // Optimized: set it to threshold immediately
                     p.profile_data.set_changed();
                 }
                 p.walkie_play.clear_evidence_hint();
             }
 
             if let Some(potential_data) = &p.potential_id_timer.data
-                && potential_data.evidence == clicked_evidence_type
+                && potential_data.evidence == ev
             {
                 p.potential_id_timer.data = None;
             }
@@ -423,11 +331,6 @@ fn host_handle_journal_messages_system(
     cli: Res<CliOptions>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut gg: ResMut<GhostGuess>,
-    mut commands: Commands,
-    gear_registry: Res<GearSpawnerRegistry>,
-    mut q_players: Query<(&NetworkId, &mut PlayerGear), Without<MainPlayer>>,
-    mut q_repellent: Query<&mut RepellentFlask>,
-    q_gearkind: Query<&GearKind>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -449,25 +352,53 @@ fn host_handle_journal_messages_system(
                 gg.evidences_found = evidences_found.iter().cloned().collect();
                 gg.evidences_missing = evidences_missing.iter().cloned().collect();
             }
-            NetworkMessage::CraftRepellent {
+            NetworkMessage::RequestJournalEvidenceToggle {
                 player_id,
-                ghost_type,
+                evidence,
+                discard,
             } => {
                 debug!(
-                    "Journal: Received CraftRepellent from client {:?} for {:?}",
-                    player_id, ghost_type
+                    "Journal: Received RequestJournalEvidenceToggle from client {:?} for {:?} (discard: {})",
+                    player_id, evidence, discard
                 );
-                for (id, mut gear) in q_players.iter_mut() {
-                    if id == player_id {
-                        crate::craft_repellent::craft_repellent(
-                            &mut commands,
-                            &gear_registry,
-                            &mut gear,
-                            *ghost_type,
-                            &mut q_repellent,
-                            &q_gearkind,
-                        );
+                if *discard {
+                    if gg.evidences_missing.contains(evidence) {
+                        gg.evidences_missing.remove(evidence);
+                    } else {
+                        gg.evidences_missing.insert(*evidence);
+                        gg.evidences_found.remove(evidence);
                     }
+                } else if gg.evidences_found.contains(evidence) {
+                    gg.evidences_found.remove(evidence);
+                } else if gg.evidences_missing.contains(evidence) {
+                    gg.evidences_missing.remove(evidence);
+                } else {
+                    gg.evidences_found.insert(*evidence);
+                }
+            }
+            NetworkMessage::RequestJournalGhostToggle {
+                player_id,
+                ghost_type,
+                discard,
+            } => {
+                debug!(
+                    "Journal: Received RequestJournalGhostToggle from client {:?} for {:?} (discard: {})",
+                    player_id, ghost_type, discard
+                );
+                if *discard {
+                    if gg.ghosts_discarded.contains(ghost_type) {
+                        gg.ghosts_discarded.remove(ghost_type);
+                    } else {
+                        gg.ghosts_discarded.insert(*ghost_type);
+                        if gg.ghost_type == Some(*ghost_type) {
+                            gg.ghost_type = None;
+                        }
+                    }
+                } else if gg.ghost_type == Some(*ghost_type) {
+                    gg.ghost_type = None;
+                } else {
+                    gg.ghost_type = Some(*ghost_type);
+                    gg.ghosts_discarded.remove(ghost_type);
                 }
             }
             _ => {}
@@ -486,5 +417,5 @@ pub(crate) fn app_setup(app: &mut App) {
             )
                 .run_if(in_state(AppState::InGame)),
         )
-        .add_systems(Update, button_system.run_if(in_state(GameState::Truck)));
+        .add_systems(Update, button_system.run_if(in_state(AppState::InGame)));
 }

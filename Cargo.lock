@@ -5907,6 +5907,7 @@ dependencies = [
  "unsettings-core",
  "unspatial-core",
  "untags-core",
+ "untruck-core",
  "untypes-core",
 ]
 
@@ -6003,7 +6004,6 @@ dependencies = [
 name = "unhaunter"
 version = "0.3.2-dev"
 dependencies = [
- "anyhow",
  "bevy",
  "clap",
  "unassets-core",
@@ -6041,7 +6041,6 @@ dependencies = [
  "untypes-core",
  "unui-plugin",
  "unwalkie-plugin",
- "walkdir",
  "wasm-bindgen",
 ]
 
@@ -6351,6 +6350,7 @@ dependencies = [
  "unsummary-core",
  "untags-core",
  "untruck-core",
+ "untruck-plugin",
  "untypes-core",
 ]
 
@@ -6435,6 +6435,7 @@ dependencies = [
  "unspatial-core",
  "unsummary-core",
  "unthermal-core",
+ "untruck-core",
  "untypes-core",
  "unui-core",
 ]
@@ -6483,6 +6484,7 @@ dependencies = [
  "unrender-std",
  "unspatial-core",
  "untags-core",
+ "untruck-core",
  "untypes-core",
  "winit",
 ]
@@ -6676,6 +6678,7 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_platform",
  "unbehavior",
+ "unboard-core",
  "undifficulty-core",
  "unevents-core",
  "unfoundation-core",

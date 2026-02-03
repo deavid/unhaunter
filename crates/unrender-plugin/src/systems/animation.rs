@@ -2,15 +2,19 @@ use bevy::prelude::*;
 
 use unrender_std::components::animation::AnimationTimer;
 use unrender_std::materials::CustomMaterial1;
-use untypes_core::states::GameState;
+use untruck_core::components::in_truck::InTruck;
+use untypes_core::states::AppState;
 
 fn animate_sprite(
     time: Res<Time>,
-    mut query: Query<(
-        &mut AnimationTimer,
-        Option<&mut Sprite>,
-        Option<&MeshMaterial2d<CustomMaterial1>>,
-    )>,
+    mut query: Query<
+        (
+            &mut AnimationTimer,
+            Option<&mut Sprite>,
+            Option<&MeshMaterial2d<CustomMaterial1>>,
+        ),
+        Without<InTruck>,
+    >,
     mut materials: ResMut<Assets<CustomMaterial1>>,
 ) {
     for (mut anim, mut sprite, mat) in query.iter_mut() {
@@ -31,5 +35,5 @@ fn animate_sprite(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, animate_sprite.run_if(in_state(GameState::None)));
+    app.add_systems(Update, animate_sprite.run_if(in_state(AppState::InGame)));
 }

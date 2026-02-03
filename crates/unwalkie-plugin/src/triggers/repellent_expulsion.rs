@@ -20,7 +20,7 @@ const LINGER_THRESHOLD_SECONDS: f64 = 10.0;
 fn trigger_ghost_expelled_player_lingers_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     ghost_query: Query<Entity, With<GhostSprite>>,
     player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>, // Assuming only one player for now
@@ -28,7 +28,7 @@ fn trigger_ghost_expelled_player_lingers_system(
     mut ghost_gone_and_player_in_location_timestamp: Local<Option<f64>>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         // If not in the right state, reset the timer and do nothing
         if ghost_gone_and_player_in_location_timestamp.is_some() {
             *ghost_gone_and_player_in_location_timestamp = None;
@@ -77,7 +77,7 @@ fn trigger_ghost_expelled_player_lingers_system(
 fn trigger_has_repellent_enters_location_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     roomdb: Res<RoomDB>,
@@ -85,7 +85,7 @@ fn trigger_has_repellent_enters_location_system(
     q_repellent: Query<&RepellentFlask>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         return;
     }
 
@@ -135,7 +135,7 @@ struct PrevRepellentState {
 fn trigger_repellent_used_too_far_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<(&Position, &GhostSprite), Without<PlayerSprite>>,
@@ -144,7 +144,7 @@ fn trigger_repellent_used_too_far_system(
     q_repellent: Query<&RepellentFlask>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         prev_repellent_state.was_active = false; // Reset on state change
         return;
     }
@@ -220,7 +220,7 @@ struct PrevRepellentActiveState {
 fn trigger_repellent_provokes_strong_reaction_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     mut ghost_query: Query<(&GhostSprite, &Position)>,
@@ -237,7 +237,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
     }
 
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         *tracker = None;
         prev_rep_active_state.was_active = false;
         return;
@@ -326,7 +326,7 @@ const MAX_PARTICLE_CLEAR_WAIT_SECONDS: f32 = 10.0; // Max time to wait for parti
 fn trigger_repellent_exhausted_correct_type_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -342,7 +342,7 @@ fn trigger_repellent_exhausted_correct_type_system(
     }
 
     // 1. System Run Condition Checks & Reset
-    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+    if *app_state.get() != AppState::InGame {
         *check_state = RepellentExhaustedCheckState::default(); // Reset on state change
         return;
     }

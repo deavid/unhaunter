@@ -1,5 +1,4 @@
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
-use crate::systems::truck_ui_systems::RepellentCraftTracker;
 use crate::types::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
@@ -11,11 +10,15 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
+use unnet_core::messages::{NetworkMessage, SendNetworkMessage, TruckInventoryChange};
+use unnet_core::resources::LocalPlayer;
 use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::assets::GearAssets;
 use unrender_std::materials::UIPanelMaterial;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
+use untruck_core::types::repellent_tracker::RepellentCraftTracker;
+use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
 
@@ -465,10 +468,34 @@ fn button_clicked(
     _craft_tracker: ResMut<RepellentCraftTracker>,
     gear_registry: Res<GearSpawnerRegistry>,
     mut commands: Commands,
+    cli: Res<CliOptions>,
+    local_player: Res<LocalPlayer>,
+    mut ev_net: MessageWriter<SendNetworkMessage>,
 ) {
     let Some(ev) = ev_clk.read().next() else {
         return;
     };
+
+    if matches!(cli.net_mode, NetMode::Join { .. }) {
+        let Some(player_id) = local_player.0 else {
+            return;
+        };
+        let change = match &ev.0 {
+            LoadoutButton::Inventory(inv) => match inv.hand {
+                Hand::Left => TruckInventoryChange::RemoveLeftHand,
+                Hand::Right => TruckInventoryChange::RemoveRightHand,
+            },
+            LoadoutButton::InventoryNext(invnext) => {
+                TruckInventoryChange::RemoveInventoryIndex(invnext.idx.unwrap_or(0))
+            }
+            LoadoutButton::Van(kind) => TruckInventoryChange::AddItem(*kind),
+        };
+        ev_net.write(SendNetworkMessage(
+            NetworkMessage::RequestTruckInventoryChange { player_id, change },
+        ));
+        return;
+    }
+
     let Some(mut p_gear) = q_gear
         .iter_mut()
         .find_map(|(_p, g, is_main)| if is_main { Some(g) } else { None })

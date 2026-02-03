@@ -439,10 +439,9 @@ fn update_tab_interactions(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::is_host;
-    app.add_systems(OnEnter(AppState::InGame), setup_ui.run_if(is_host))
+    app.add_systems(OnEnter(AppState::InGame), setup_ui)
         .add_systems(
             Update,
-            update_tab_interactions.run_if(in_state(GameState::Truck).and(is_host)),
+            update_tab_interactions.run_if(in_state(GameState::Truck)),
         );
 }

@@ -5,7 +5,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use untypes_core::states::{AppState, GameState};
+use untypes_core::states::AppState;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -19,7 +19,7 @@ impl Plugin for TutorialGearExplanationsTriggerPlugin {
                 trigger_evidence_gear_explanations,
                 trigger_support_item_explanations,
             )
-                .run_if(in_state(AppState::InGame).and(in_state(GameState::None))),
+                .run_if(in_state(AppState::InGame)),
         );
     }
 }

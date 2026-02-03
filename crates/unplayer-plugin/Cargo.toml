@@ -27,6 +27,7 @@ unengine-core = { path = "../unengine-core" }
 unfog-core = { path = "../unfog-core" }
 unrender-std = { path = "../unrender-std" }
 uninteraction-core = { path = "../uninteraction-core" }
+untruck-core = { path = "../untruck-core" }
 ungear-core = { path = "../ungear-core" }
 unnet-core = { path = "../unnet-core" }
 unsettings-core = { path = "../unsettings-core" }

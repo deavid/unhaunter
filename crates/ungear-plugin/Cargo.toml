@@ -21,6 +21,7 @@ unboard-core = { path = "../unboard-core" }
 unplayer-core = { path = "../unplayer-core" }
 unsettings-core = { path = "../unsettings-core" }
 untags-core = { path = "../untags-core" }
+untruck-core = { path = "../untruck-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
