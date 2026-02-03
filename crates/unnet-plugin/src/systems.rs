@@ -510,7 +510,7 @@ pub struct HostSnapshotParams<'w, 's> {
         's,
         (
             &'static NetworkId,
-            &'static Position,
+            Ref<'static, Position>,
             &'static OriginalMapPosition,
         ),
         With<unbehavior::components::Movable>,
@@ -721,7 +721,12 @@ pub fn host_send_snapshots_system(
     let movable_objects = host_params
         .query_movable
         .iter()
-        .map(|(mid, pos, orig)| {
+        .filter_map(|(mid, pos, orig)| {
+            let should_send =
+                is_full_sync || pos.is_changed() || (mid.0 + tick).is_multiple_of(120);
+            if !should_send {
+                return None;
+            }
             let held_by =
                 host_params
                     .query_players
@@ -737,7 +742,7 @@ pub fn host_send_snapshots_system(
                             })
                         })
                     });
-            MovableObjectSync {
+            Some(MovableObjectSync {
                 id: *mid,
                 original_position: [
                     orig.position.x as i32,
@@ -748,7 +753,7 @@ pub fn host_send_snapshots_system(
                 tileuid: orig.tileuid,
                 current_position: [pos.x, pos.y, pos.z],
                 held_by,
-            }
+            })
         })
         .collect();
 
