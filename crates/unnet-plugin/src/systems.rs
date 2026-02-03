@@ -26,12 +26,14 @@ use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungearitems_core::components::flashlight::Flashlight;
 use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use unghost_core::assets::GhostAssets;
+use unghost_core::components::ghost_breach::GhostBreach;
+use unghost_core::components::ghost_influence::GhostInfluence;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::ghost_guess::GhostGuess;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unnet_core::messages::{
-    GearSyncState, GhostState, MapTileState, NetworkDataEvent, NetworkMessage, PlayerGearState,
-    PlayerState, RoomSync, TransientEvent,
+    GearSyncState, GhostState, HauntedObjectSync, MapTileState, NetworkDataEvent, NetworkMessage,
+    PlayerGearState, PlayerState, RoomSync, TransientEvent,
 };
 use unnet_core::network_id::NetworkId;
 use unnet_core::resources::LocalPlayer;
@@ -40,7 +42,9 @@ use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite, S
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use unrender_std::components::visuals::{LightSensitive, ResolutionFactor, ShadowCaster};
+use unrender_std::components::visuals::{
+    LightSensitive, ResolutionFactor, ShadowCaster, SpectralInfluence,
+};
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::quadcc::QuadCC;
@@ -48,6 +52,7 @@ use unsettings_core::audio::AudioSettings;
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
+use unspatial_core::components::OriginalMapPosition;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
@@ -456,6 +461,8 @@ pub struct HostSnapshotParams<'w, 's> {
     pub summary_data: Res<'w, SummaryData>,
     pub changed_tiles: ResMut<'w, unnet_core::resources::ChangedTiles>,
     pub repellent_craft_tracker: Res<'w, RepellentCraftTracker>,
+    pub query_breach: Query<'w, 's, &'static Position, With<GhostBreach>>,
+    pub query_influence: Query<'w, 's, (&'static OriginalMapPosition, &'static GhostInfluence)>,
 }
 
 pub fn host_send_snapshots_system(
@@ -645,6 +652,33 @@ pub fn host_send_snapshots_system(
         host_params.changed_tiles.0.drain(..).collect()
     };
 
+    let breach_position = host_params
+        .query_breach
+        .single()
+        .ok()
+        .map(|pos| [pos.x, pos.y, pos.z]);
+
+    let ghost_type = host_params
+        .query_ghosts
+        .iter()
+        .next()
+        .map(|(_, _, ghost, _)| ghost.class);
+
+    let haunted_objects = host_params
+        .query_influence
+        .iter()
+        .map(|(orig, influence)| HauntedObjectSync {
+            original_position: [
+                orig.position.x as i32,
+                orig.position.y as i32,
+                orig.position.z as i32,
+            ],
+            tileset: orig.tileset.clone(),
+            tileuid: orig.tileuid,
+            influence_type: influence.influence_type,
+        })
+        .collect();
+
     conn.send(NetworkMessage::Snapshot {
         tick,
         is_full_sync,
@@ -702,6 +736,9 @@ pub fn host_send_snapshots_system(
             None
         }),
         repellent_crafted_count: host_params.repellent_craft_tracker.crafted_count,
+        breach_position,
+        ghost_type,
+        haunted_objects,
     });
 }
 
@@ -742,16 +779,20 @@ pub fn client_send_input_system(
 
     // Pass through CraftRepellent, Truck entry/exit, and Interaction requests
     for ev in ev_net_data.read() {
-        if matches!(
-            ev.message,
+        match ev.message {
+            // Messages we know we must process:
             NetworkMessage::CraftRepellent { .. }
-                | NetworkMessage::RequestTruckEntry { .. }
-                | NetworkMessage::RequestTruckExit { .. }
-                | NetworkMessage::InteractionRequest { .. }
-        ) {
-            conn.send(ev.message.clone());
-        } else {
-            trace!("Ignoring message - not sending to the host: {ev:?}");
+            | NetworkMessage::RequestTruckEntry { .. }
+            | NetworkMessage::RequestTruckExit { .. }
+            | NetworkMessage::InteractionRequest { .. } => {
+                conn.send(ev.message.clone());
+            }
+            // Messages that we know we must NOT process:
+            NetworkMessage::Snapshot { .. } => {}
+            // Other messages, we report them just in case:
+            _ => {
+                trace!("Ignoring message - not sending to the host: {ev:?}");
+            }
         }
     }
 }
@@ -793,7 +834,12 @@ pub struct ClientSnapshotParams<'w, 's> {
             Option<&'static MainPlayer>,
             &'static mut Stamina,
         ),
-        (With<PlayerSprite>, Without<GhostTag>, Without<Behavior>),
+        (
+            With<PlayerSprite>,
+            Without<GhostTag>,
+            Without<Behavior>,
+            Without<GhostBreach>,
+        ),
     >,
     pub query_ghosts: Query<
         'w,
@@ -804,7 +850,12 @@ pub struct ClientSnapshotParams<'w, 's> {
             &'static mut GhostSprite,
             &'static mut GhostBehaviorDynamics,
         ),
-        (With<GhostTag>, Without<PlayerSprite>, Without<Behavior>),
+        (
+            With<GhostTag>,
+            Without<PlayerSprite>,
+            Without<Behavior>,
+            Without<GhostBreach>,
+        ),
     >,
     pub ev_room_sync: MessageWriter<'w, RoomStateSyncEvent>,
     pub board_field: Res<'w, BoardEntityField>,
@@ -813,7 +864,11 @@ pub struct ClientSnapshotParams<'w, 's> {
         'w,
         's,
         (&'static Position, &'static Behavior),
-        (Without<PlayerSprite>, Without<GhostTag>),
+        (
+            Without<PlayerSprite>,
+            Without<GhostTag>,
+            Without<GhostBreach>,
+        ),
     >,
     pub ev_interaction: MessageWriter<'w, ExecuteInteractionEvent>,
     pub room_db: ResMut<'w, RoomDB>,
@@ -834,7 +889,12 @@ pub struct ClientSnapshotParams<'w, 's> {
             Option<&'static mut ungearitems_core::components::thermometer::Thermometer>,
             Option<&'static mut ungearitems_core::components::emfmeter::EMFMeter>,
         ),
-        (Without<PlayerSprite>, Without<GhostTag>, Without<Behavior>),
+        (
+            Without<PlayerSprite>,
+            Without<GhostTag>,
+            Without<Behavior>,
+            Without<GhostBreach>,
+        ),
     >,
     pub query_net_entities: Query<'w, 's, (Entity, &'static NetworkId)>,
     pub ev_sound: MessageWriter<'w, SoundEvent>,
@@ -842,6 +902,30 @@ pub struct ClientSnapshotParams<'w, 's> {
     pub query_buttons: Query<'w, 's, &'static mut TruckUIButton>,
     pub summary_data: ResMut<'w, SummaryData>,
     pub repellent_craft_tracker: ResMut<'w, RepellentCraftTracker>,
+    pub query_breach: Query<
+        'w,
+        's,
+        (
+            Entity,
+            &'static mut Position,
+            Option<&'static mut MapEntityFieldBPos>,
+        ),
+        (
+            With<GhostBreach>,
+            Without<PlayerSprite>,
+            Without<GhostTag>,
+            Without<Behavior>,
+        ),
+    >,
+    pub query_orig_pos: Query<
+        'w,
+        's,
+        (
+            Entity,
+            &'static OriginalMapPosition,
+            Option<&'static GhostInfluence>,
+        ),
+    >,
 }
 
 fn spawn_remote_player(params: &mut ClientSnapshotParams, id: NetworkId) -> Entity {
@@ -950,6 +1034,9 @@ pub fn client_apply_snapshots_system(
             ghosts_discarded,
             mission_result,
             repellent_crafted_count,
+            breach_position,
+            ghost_type,
+            haunted_objects,
         } = &ev.message
         {
             let is_full_sync = *is_full_sync;
@@ -985,6 +1072,97 @@ pub fn client_apply_snapshots_system(
 
             // Sync repellent craft count
             params.repellent_craft_tracker.crafted_count = *repellent_crafted_count;
+
+            // Sync breach position
+            match breach_position {
+                Some(snapshot_pos) => {
+                    if let Ok((_entity, mut pos, _bpos)) = params.query_breach.single_mut() {
+                        pos.x = snapshot_pos[0];
+                        pos.y = snapshot_pos[1];
+                        pos.z = snapshot_pos[2];
+                    } else if !is_full_sync {
+                        // Avoid warning too much during loading
+                        warn!("Client: Received breach position but no local breach found.");
+                    }
+                }
+                None => {
+                    if params.query_breach.single().is_ok()
+                        && *params.states.current_game_state.get() != GameState::None
+                    {
+                        warn!("Client: No breach position in snapshot, but local breach exists.");
+                    }
+                }
+            }
+
+            // Sync ghost type
+            if let Some(t) = ghost_type {
+                for (_, _, mut ghost, _) in params.query_ghosts.iter_mut() {
+                    if ghost.class != *t {
+                        debug!(
+                            "Client: Correcting ghost type from {:?} to {:?}",
+                            ghost.class, t
+                        );
+                        ghost.class = *t;
+                    }
+                }
+            }
+
+            // Sync haunted objects
+            let mut snap_haunted_entities = std::collections::HashSet::new();
+
+            // Build a lookup map for the client's current entities by their original position.
+            // This is O(N) where N is total map entities.
+            let mut orig_pos_lookup = std::collections::HashMap::new();
+            for (entity, orig, _influence) in params.query_orig_pos.iter() {
+                orig_pos_lookup.insert(
+                    (
+                        orig.position.x as i32,
+                        orig.position.y as i32,
+                        orig.position.z as i32,
+                        orig.tileset.clone(),
+                        orig.tileuid,
+                    ),
+                    entity,
+                );
+            }
+
+            for haunt_sync in haunted_objects {
+                let key = (
+                    haunt_sync.original_position[0],
+                    haunt_sync.original_position[1],
+                    haunt_sync.original_position[2],
+                    haunt_sync.tileset.clone(),
+                    haunt_sync.tileuid,
+                );
+
+                if let Some(&entity) = orig_pos_lookup.get(&key) {
+                    snap_haunted_entities.insert(entity);
+                    let needs_update = match params.query_orig_pos.get(entity) {
+                        Ok((_, _, Some(inf))) => inf.influence_type != haunt_sync.influence_type,
+                        _ => true,
+                    };
+                    if needs_update {
+                        params.commands.entity(entity).insert((
+                            GhostInfluence {
+                                influence_type: haunt_sync.influence_type,
+                                charge_value: 0.0,
+                            },
+                            SpectralInfluence::default(),
+                        ));
+                    }
+                }
+            }
+
+            // Remove influence from objects that the host says are not haunted
+            for (entity, _, influence) in params.query_orig_pos.iter() {
+                if influence.is_some() && !snap_haunted_entities.contains(&entity) {
+                    params
+                        .commands
+                        .entity(entity)
+                        .remove::<GhostInfluence>()
+                        .remove::<SpectralInfluence>();
+                }
+            }
 
             let mut net_to_entity: std::collections::HashMap<NetworkId, Entity> = params
                 .query_net_entities

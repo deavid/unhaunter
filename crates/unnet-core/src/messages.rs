@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use unevents_core::events::roomchanged::InteractionExecutionType;
 use unfoundation_core::types::grade::Grade;
 use ungearitems_core::components::flashlight::FlashlightStatus;
+use unghost_core::components::ghost_influence::InfluenceType;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
 use untypes_core::states::{AppState, GameState};
@@ -88,6 +89,14 @@ pub struct RoomSync {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HauntedObjectSync {
+    pub original_position: [i32; 3],
+    pub tileset: String,
+    pub tileuid: u32,
+    pub influence_type: InfluenceType,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GearSyncState {
     pub id: NetworkId,
     pub kind: ungear_core::types::gear::kind::GearKind,
@@ -168,6 +177,9 @@ pub enum NetworkMessage {
         ghosts_discarded: Vec<GhostType>,
         mission_result: Box<Option<MissionResult>>,
         repellent_crafted_count: u32,
+        breach_position: Option<[f32; 3]>,
+        ghost_type: Option<GhostType>,
+        haunted_objects: Vec<HauntedObjectSync>,
     },
     /// Periodic input update from Client to Host.
     PlayerInput {

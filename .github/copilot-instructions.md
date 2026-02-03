@@ -7,6 +7,19 @@ familiar with.
 
 Do not guess. If something feels off ask questions to the user.
 
+Unless the user asks specifically and directly, DO NOT CODE, DO NOT FIX. If the user asks to review, DO NOT CODE,
+generate a review report instead.
+
+If the ask is to do X, do not overstep the ask. Don't do more than asked.
+
+You have been warned:
+
+- If you modify code when you were not asked to fix or code anything, your code will be reverted no questions asked.
+- If you do what the user asked but you also modified something else without being asked, everything you did will be
+  reverted no questions asked, including what was correctly done.
+
+We have zero BS tolerance.
+
 ## Architecture & Module Structure
 
 The codebase follows a strict modular structure to minimize compile times and separate concerns. See
