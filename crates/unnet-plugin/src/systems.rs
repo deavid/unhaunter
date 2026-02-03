@@ -178,40 +178,46 @@ pub fn network_io_system(
         } => {
             let mut closed = false;
             // --- Read ---
-            let mut buf = [0u8; 4096];
-            match (&stream).read(&mut buf) {
-                Ok(0) => {
-                    info!("Network: Connection closed by peer");
-                    closed = true;
-                }
-                Ok(n) => {
-                    if let Ok(s) = std::str::from_utf8(&buf[..n]) {
-                        read_buffer.push_str(s);
+            loop {
+                let mut buf = [0u8; 4096];
+                match (&stream).read(&mut buf) {
+                    Ok(0) => {
+                        info!("Network: Connection closed by peer");
+                        closed = true;
+                        break;
                     }
-
-                    while let Some(pos) = read_buffer.find('\n') {
-                        let line = read_buffer[..pos].trim();
-                        if !line.is_empty() {
-                            match serde_json::from_str::<NetworkMessage>(line) {
-                                Ok(message) => {
-                                    ev_writer.write(NetworkDataEvent { message });
-                                }
-                                Err(e) => {
-                                    error!(
-                                        "Network: Failed to parse JSON message: {}. Line: {}",
-                                        e, line
-                                    );
-                                }
-                            }
+                    Ok(n) => {
+                        if let Ok(s) = std::str::from_utf8(&buf[..n]) {
+                            read_buffer.push_str(s);
                         }
-                        read_buffer = read_buffer[pos + 1..].to_string();
+                    }
+                    Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        break;
+                    }
+                    Err(e) => {
+                        error!("Network: Read error: {}", e);
+                        closed = true;
+                        break;
                     }
                 }
-                Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
-                Err(e) => {
-                    error!("Network: Read error: {}", e);
-                    closed = true;
+            }
+
+            while let Some(pos) = read_buffer.find('\n') {
+                let line = read_buffer[..pos].trim();
+                if !line.is_empty() {
+                    match serde_json::from_str::<NetworkMessage>(line) {
+                        Ok(message) => {
+                            ev_writer.write(NetworkDataEvent { message });
+                        }
+                        Err(e) => {
+                            error!(
+                                "Network: Failed to parse JSON message: {}. Line: {}",
+                                e, line
+                            );
+                        }
+                    }
                 }
+                read_buffer = read_buffer[pos + 1..].to_string();
             }
 
             if !closed {
