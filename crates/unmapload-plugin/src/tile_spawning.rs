@@ -9,7 +9,7 @@ use unboard_core::components::spawning::VanEntryPoint;
 use unmapload_core::components::PendingTiledLayerProperties;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unspatial_core::boardposition::MapEntityFieldBPos;
-use unspatial_core::components::OriginalMapPosition;
+use unspatial_core::components::NetworkOriginalMapPosition;
 use unspatial_core::position::Position;
 use untiled_core::tiledmap::map::{MapLayer, MapTile};
 use untypes_core::hydration::HydrationStage;
@@ -143,8 +143,9 @@ pub(crate) fn process_and_spawn_tile(
     beh.flip(tile.flip_x);
 
     // Add board position component
-    entity.insert(MapEntityFieldBPos(pos.to_board_position()))
-        .insert(OriginalMapPosition {
+    entity
+        .insert(MapEntityFieldBPos(pos.to_board_position()))
+        .insert(NetworkOriginalMapPosition {
             position: pos.to_board_position(),
             tileset: beh.cfg().tileset.clone(),
             tileuid: beh.cfg().tileuid,

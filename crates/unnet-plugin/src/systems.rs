@@ -19,6 +19,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::LoadLevelEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomStateSyncEvent};
 use unevents_core::events::sound::SoundEvent;
+use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::Battery;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
@@ -32,8 +33,9 @@ use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite}
 use unghost_core::resources::ghost_guess::GhostGuess;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unnet_core::messages::{
-    GearSyncState, GhostState, HauntedObjectSync, MapTileState, NetworkDataEvent, NetworkMessage,
-    PlayerGearState, PlayerState, RoomSync, TransientEvent,
+    GearSyncState, GhostState, HauntedObjectSync, MapTileState, MovableObjectSync,
+    NetworkDataEvent, NetworkMessage, PlayerGearState, PlayerState, RoomSync, SnapshotMsg,
+    TransientEvent,
 };
 use unnet_core::network_id::NetworkId;
 use unnet_core::resources::LocalPlayer;
@@ -52,7 +54,7 @@ use unsettings_core::audio::AudioSettings;
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
-use unspatial_core::components::OriginalMapPosition;
+use unspatial_core::components::NetworkOriginalMapPosition;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
@@ -414,7 +416,9 @@ pub fn handshake_handler_system(
 }
 
 #[derive(SystemParam)]
+#[allow(clippy::type_complexity)]
 pub struct HostSnapshotParams<'w, 's> {
+    pub commands: Commands<'w, 's>,
     pub query_players: Query<
         'w,
         's,
@@ -468,7 +472,19 @@ pub struct HostSnapshotParams<'w, 's> {
     pub changed_tiles: ResMut<'w, unnet_core::resources::ChangedTiles>,
     pub repellent_craft_tracker: Res<'w, RepellentCraftTracker>,
     pub query_breach: Query<'w, 's, &'static Position, With<GhostBreach>>,
-    pub query_influence: Query<'w, 's, (&'static OriginalMapPosition, &'static GhostInfluence)>,
+    pub query_influence:
+        Query<'w, 's, (&'static NetworkOriginalMapPosition, &'static GhostInfluence)>,
+    pub query_movable: Query<
+        'w,
+        's,
+        (
+            Entity,
+            Option<&'static NetworkId>,
+            &'static Position,
+            &'static NetworkOriginalMapPosition,
+        ),
+        With<unbehavior::components::Movable>,
+    >,
 }
 
 pub fn host_send_snapshots_system(
@@ -685,7 +701,51 @@ pub fn host_send_snapshots_system(
         })
         .collect();
 
-    conn.send(NetworkMessage::Snapshot {
+    let movable_objects = host_params
+        .query_movable
+        .iter()
+        .map(|(entity, nid, pos, orig)| {
+            let mid = match nid {
+                Some(id) => *id,
+                None => {
+                    use rand::Rng;
+                    let mut rng = rand::rng();
+                    let new_id = NetworkId(rng.random_range(1000..u64::MAX));
+                    host_params.commands.entity(entity).insert(new_id);
+                    new_id
+                }
+            };
+            let held_by =
+                host_params
+                    .query_players
+                    .iter()
+                    .find_map(|(p, _, _, _, _, gear, _, _)| {
+                        gear.and_then(|g| {
+                            g.held_item.as_ref().and_then(|h| {
+                                if host_params.query_net_id.get(h.entity).ok() == Some(&mid) {
+                                    Some(p.id)
+                                } else {
+                                    None
+                                }
+                            })
+                        })
+                    });
+            MovableObjectSync {
+                id: mid,
+                original_position: [
+                    orig.position.x as i32,
+                    orig.position.y as i32,
+                    orig.position.z as i32,
+                ],
+                tileset: orig.tileset.clone(),
+                tileuid: orig.tileuid,
+                current_position: [pos.x, pos.y, pos.z],
+                held_by,
+            }
+        })
+        .collect();
+
+    conn.send(NetworkMessage::Snapshot(Box::new(SnapshotMsg {
         tick,
         is_full_sync,
         app_state: *host_params.app_state.get(),
@@ -745,7 +805,8 @@ pub fn host_send_snapshots_system(
         breach_position,
         ghost_type,
         haunted_objects,
-    });
+        movable_objects,
+    })));
 }
 
 pub fn client_send_input_system(
@@ -772,12 +833,8 @@ pub fn client_send_input_system(
             movement: [input.movement.x, input.movement.y],
             run: input.run,
             interact: input.interact,
-            grab: input.grab,
-            drop: input.drop,
             use_right_hand: input.use_right_hand,
             use_left_hand: input.use_left_hand,
-            inventory_cycle: input.inventory_cycle,
-            inventory_swap: input.inventory_swap,
             target_position: input.target_position.map(|v| [v.x, v.y]),
             aim_direction: [input.aim_direction.x, input.aim_direction.y],
         });
@@ -794,7 +851,7 @@ pub fn client_send_input_system(
                 conn.send(ev.message.clone());
             }
             // Messages that we know we must NOT process:
-            NetworkMessage::Snapshot { .. } => {}
+            NetworkMessage::Snapshot(_) => {}
             // Other messages, we report them just in case:
             _ => {
                 trace!("Ignoring message - not sending to the host: {ev:?}");
@@ -812,6 +869,7 @@ pub struct SnapshotAppStates<'w> {
 }
 
 #[derive(SystemParam)]
+#[allow(clippy::type_complexity)]
 pub struct ClientSnapshotParams<'w, 's> {
     pub commands: Commands<'w, 's>,
     pub cli: Res<'w, CliOptions>,
@@ -896,6 +954,7 @@ pub struct ClientSnapshotParams<'w, 's> {
             Option<&'static mut ungearitems_core::components::emfmeter::EMFMeter>,
         ),
         (
+            Without<unbehavior::components::Movable>,
             Without<PlayerSprite>,
             Without<GhostTag>,
             Without<Behavior>,
@@ -928,8 +987,26 @@ pub struct ClientSnapshotParams<'w, 's> {
         's,
         (
             Entity,
-            &'static OriginalMapPosition,
+            &'static NetworkOriginalMapPosition,
             Option<&'static GhostInfluence>,
+        ),
+    >,
+    pub query_movable: Query<
+        'w,
+        's,
+        (
+            Entity,
+            &'static NetworkId,
+            &'static mut Position,
+            &'static NetworkOriginalMapPosition,
+            Option<&'static mut EquipmentPosition>,
+        ),
+        (
+            With<unbehavior::components::Movable>,
+            Without<PlayerSprite>,
+            Without<GhostTag>,
+            Without<Behavior>,
+            Without<GhostBreach>,
         ),
     >,
 }
@@ -1022,29 +1099,31 @@ pub fn client_apply_snapshots_system(
     }
 
     for ev in ev_reader.read() {
-        if let NetworkMessage::Snapshot {
-            tick: _,
-            is_full_sync,
-            app_state: server_app_state,
-            game_state: server_game_state,
-            players,
-            ghosts,
-            rooms,
-            map_tiles,
-            gear,
-            player_gear,
-            events,
-            evidences_found,
-            evidences_missing,
-            ghost_type_guess,
-            ghosts_discarded,
-            mission_result,
-            repellent_crafted_count,
-            breach_position,
-            ghost_type,
-            haunted_objects,
-        } = &ev.message
-        {
+        if let NetworkMessage::Snapshot(snapshot) = &ev.message {
+            let SnapshotMsg {
+                tick: _,
+                is_full_sync,
+                app_state: server_app_state,
+                game_state: server_game_state,
+                players,
+                ghosts,
+                rooms,
+                map_tiles,
+                gear,
+                player_gear,
+                events,
+                evidences_found,
+                evidences_missing,
+                ghost_type_guess,
+                ghosts_discarded,
+                mission_result,
+                repellent_crafted_count,
+                breach_position,
+                ghost_type,
+                haunted_objects,
+                movable_objects,
+            } = snapshot.as_ref();
+
             let is_full_sync = *is_full_sync;
             // Sync AppState - but allow independent Summary transition
             let dominated_by_server_app =
@@ -1167,6 +1246,58 @@ pub fn client_apply_snapshots_system(
                         .entity(entity)
                         .remove::<GhostInfluence>()
                         .remove::<SpectralInfluence>();
+                }
+            }
+
+            // Sync movable objects
+            let mut mov_orig_pos_lookup = std::collections::HashMap::new();
+            for (entity, _mid, _pos, orig, _eq) in params.query_movable.iter() {
+                mov_orig_pos_lookup.insert(
+                    (
+                        orig.position.x as i32,
+                        orig.position.y as i32,
+                        orig.position.z as i32,
+                        orig.tileset.clone(),
+                        orig.tileuid,
+                    ),
+                    entity,
+                );
+            }
+
+            for mov_sync in movable_objects {
+                let key = (
+                    mov_sync.original_position[0],
+                    mov_sync.original_position[1],
+                    mov_sync.original_position[2],
+                    mov_sync.tileset.clone(),
+                    mov_sync.tileuid,
+                );
+
+                if let Some(&entity) = mov_orig_pos_lookup.get(&key)
+                    && let Ok((_entity, id, mut pos, _orig, _eq_pos)) =
+                        params.query_movable.get_mut(entity)
+                {
+                    if *id == NetworkId::default() {
+                        params.commands.entity(entity).insert(mov_sync.id);
+                    }
+                    pos.x = mov_sync.current_position[0];
+                    pos.y = mov_sync.current_position[1];
+                    pos.z = mov_sync.current_position[2];
+
+                    match mov_sync.held_by {
+                        Some(_) => {
+                            params
+                                .commands
+                                .entity(entity)
+                                .remove::<unbehavior::components::FloorItemCollidable>();
+                        }
+                        None => {
+                            params
+                                .commands
+                                .entity(entity)
+                                .insert(unbehavior::components::FloorItemCollidable);
+                        }
+                    }
                 }
             }
 
@@ -1767,12 +1898,8 @@ pub fn host_apply_input_system(
                 movement,
                 run,
                 interact,
-                grab,
-                drop,
                 use_right_hand,
                 use_left_hand,
-                inventory_cycle,
-                inventory_swap,
                 target_position,
                 aim_direction,
             } => {
@@ -1781,12 +1908,8 @@ pub fn host_apply_input_system(
                         input.movement = Vec2::new(movement[0], movement[1]);
                         input.run = *run;
                         input.interact = *interact;
-                        input.grab = *grab;
-                        input.drop = *drop;
                         input.use_right_hand = *use_right_hand;
                         input.use_left_hand = *use_left_hand;
-                        input.inventory_cycle = *inventory_cycle;
-                        input.inventory_swap = *inventory_swap;
                         input.target_position = target_position.map(|v| Vec2::new(v[0], v[1]));
                         input.aim_direction = Vec2::new(aim_direction[0], aim_direction[1]);
                     }
@@ -1997,6 +2120,34 @@ pub fn host_apply_input_system(
                     }
                 }
             }
+            NetworkMessage::GrabRequest(msg) => {
+                for (_, id, mut input, _) in query_players.iter_mut() {
+                    if id == &msg.player_id {
+                        input.grab = true;
+                    }
+                }
+            }
+            NetworkMessage::DropRequest { player_id } => {
+                for (_, id, mut input, _) in query_players.iter_mut() {
+                    if id == player_id {
+                        input.drop = true;
+                    }
+                }
+            }
+            NetworkMessage::CycleInventoryRequest { player_id } => {
+                for (_, id, mut input, _) in query_players.iter_mut() {
+                    if id == player_id {
+                        input.inventory_cycle = true;
+                    }
+                }
+            }
+            NetworkMessage::SwapHandsRequest { player_id } => {
+                for (_, id, mut input, _) in query_players.iter_mut() {
+                    if id == player_id {
+                        input.inventory_swap = true;
+                    }
+                }
+            }
             NetworkMessage::PlayerLeft { player_id } => {
                 info!("Network: Received PlayerLeft from client {:?}", player_id);
                 for (entity, id, _, _) in query_player_pos.iter() {
@@ -2101,5 +2252,43 @@ pub fn client_process_pending_map(
         pending_map.map_filepath = None;
     } else {
         trace!("Network: Waiting for map asset to be ready: {}", path);
+    }
+}
+
+pub fn client_request_grab_system(
+    mut conn: ResMut<NetworkConn>,
+    cli: Res<CliOptions>,
+    local_id: Res<LocalPlayer>,
+    query_player: Query<&PlayerInput, With<MainPlayer>>,
+) {
+    if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        return;
+    }
+    if !conn.is_active() {
+        return;
+    }
+
+    let Some(player_id) = local_id.0 else {
+        return;
+    };
+
+    for input in query_player.iter() {
+        if input.grab {
+            conn.send(NetworkMessage::GrabRequest(
+                unnet_core::messages::GrabRequestMsg {
+                    player_id,
+                    target_id: NetworkId::default(),
+                },
+            ));
+        }
+        if input.drop {
+            conn.send(NetworkMessage::DropRequest { player_id });
+        }
+        if input.inventory_cycle {
+            conn.send(NetworkMessage::CycleInventoryRequest { player_id });
+        }
+        if input.inventory_swap {
+            conn.send(NetworkMessage::SwapHandsRequest { player_id });
+        }
     }
 }

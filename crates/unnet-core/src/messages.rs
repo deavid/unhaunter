@@ -97,6 +97,16 @@ pub struct HauntedObjectSync {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MovableObjectSync {
+    pub id: NetworkId,
+    pub original_position: [i32; 3],
+    pub tileset: String,
+    pub tileuid: u32,
+    pub current_position: [f32; 3],
+    pub held_by: Option<NetworkId>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GearSyncState {
     pub id: NetworkId,
     pub kind: ungear_core::types::gear::kind::GearKind,
@@ -131,6 +141,19 @@ pub struct MissionResult {
     pub costs_deducted_from_deposit: i64,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GrabRequestMsg {
+    pub player_id: NetworkId,
+    pub target_id: NetworkId,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GrabResponseMsg {
+    pub player_id: NetworkId,
+    pub target_id: NetworkId,
+    pub success: bool,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Message)]
 pub enum TransientEvent {
     PlaySound {
@@ -142,6 +165,31 @@ pub enum TransientEvent {
         particle_type: String,
         position: [f32; 3],
     },
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SnapshotMsg {
+    pub tick: u64,
+    pub is_full_sync: bool,
+    pub app_state: AppState,
+    pub game_state: GameState,
+    pub players: Vec<PlayerState>,
+    pub ghosts: Vec<GhostState>,
+    pub rooms: Vec<RoomSync>,
+    pub map_tiles: Vec<MapTileState>,
+    pub gear: Vec<GearSyncState>,
+    pub player_gear: Vec<PlayerGearState>,
+    pub events: Vec<TransientEvent>,
+    pub evidences_found: Vec<Evidence>,
+    pub evidences_missing: Vec<Evidence>,
+    pub ghost_type_guess: Option<GhostType>,
+    pub ghosts_discarded: Vec<GhostType>,
+    pub mission_result: Box<Option<MissionResult>>,
+    pub repellent_crafted_count: u32,
+    pub breach_position: Option<[f32; 3]>,
+    pub ghost_type: Option<GhostType>,
+    pub haunted_objects: Vec<HauntedObjectSync>,
+    pub movable_objects: Vec<MovableObjectSync>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -159,40 +207,15 @@ pub enum NetworkMessage {
         difficulty_id: String,
     },
     /// Periodic state update from Host to Client.
-    Snapshot {
-        tick: u64,
-        is_full_sync: bool,
-        app_state: AppState,
-        game_state: GameState,
-        players: Vec<PlayerState>,
-        ghosts: Vec<GhostState>,
-        rooms: Vec<RoomSync>,
-        map_tiles: Vec<MapTileState>,
-        gear: Vec<GearSyncState>,
-        player_gear: Vec<PlayerGearState>,
-        events: Vec<TransientEvent>,
-        evidences_found: Vec<Evidence>,
-        evidences_missing: Vec<Evidence>,
-        ghost_type_guess: Option<GhostType>,
-        ghosts_discarded: Vec<GhostType>,
-        mission_result: Box<Option<MissionResult>>,
-        repellent_crafted_count: u32,
-        breach_position: Option<[f32; 3]>,
-        ghost_type: Option<GhostType>,
-        haunted_objects: Vec<HauntedObjectSync>,
-    },
+    Snapshot(Box<SnapshotMsg>),
     /// Periodic input update from Client to Host.
     PlayerInput {
         player_id: NetworkId,
         movement: [f32; 2],
         run: bool,
         interact: bool,
-        grab: bool,
-        drop: bool,
         use_right_hand: bool,
         use_left_hand: bool,
-        inventory_cycle: bool,
-        inventory_swap: bool,
         target_position: Option<[f32; 2]>,
         aim_direction: [f32; 2],
     },
@@ -227,6 +250,16 @@ pub enum NetworkMessage {
         player_id: NetworkId,
         change: TruckInventoryChange,
     },
+    /// Client requests to grab a movable object.
+    GrabRequest(GrabRequestMsg),
+    /// Host responds to a grab request.
+    GrabResponse(GrabResponseMsg),
+    /// Client requests to drop their currently held object.
+    DropRequest { player_id: NetworkId },
+    /// Client requests to cycle their inventory.
+    CycleInventoryRequest { player_id: NetworkId },
+    /// Client requests to swap their hands.
+    SwapHandsRequest { player_id: NetworkId },
     /// Client requests to toggle an evidence state in the journal.
     RequestJournalEvidenceToggle {
         player_id: NetworkId,
