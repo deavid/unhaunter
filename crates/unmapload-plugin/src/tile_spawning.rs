@@ -143,8 +143,7 @@ pub(crate) fn process_and_spawn_tile(
     beh.flip(tile.flip_x);
 
     // Add board position component
-    entity
-        .insert(MapEntityFieldBPos(pos.to_board_position()))
+    entity.insert(MapEntityFieldBPos(pos.to_board_position()))
         .insert(OriginalMapPosition {
             position: pos.to_board_position(),
             tileset: beh.cfg().tileset.clone(),

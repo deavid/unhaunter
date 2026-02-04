@@ -97,16 +97,6 @@ pub struct HauntedObjectSync {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MovableObjectSync {
-    pub id: NetworkId,
-    pub original_position: [i32; 3],
-    pub tileset: String,
-    pub tileuid: u32,
-    pub current_position: [f32; 3],
-    pub held_by: Option<NetworkId>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GearSyncState {
     pub id: NetworkId,
     pub kind: ungear_core::types::gear::kind::GearKind,
@@ -155,132 +145,77 @@ pub enum TransientEvent {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct HelloMsg {
-    pub version: String,
-    pub previous_id: Option<NetworkId>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct WelcomeMsg {
-    pub id: NetworkId,
-    pub map_seed: u64,
-    pub map_filepath: String,
-    pub difficulty_id: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SnapshotMsg {
-    pub tick: u64,
-    pub is_full_sync: bool,
-    pub app_state: AppState,
-    pub game_state: GameState,
-    pub players: Vec<PlayerState>,
-    pub ghosts: Vec<GhostState>,
-    pub rooms: Vec<RoomSync>,
-    pub map_tiles: Vec<MapTileState>,
-    pub gear: Vec<GearSyncState>,
-    pub player_gear: Vec<PlayerGearState>,
-    pub events: Vec<TransientEvent>,
-    pub evidences_found: Vec<Evidence>,
-    pub evidences_missing: Vec<Evidence>,
-    pub ghost_type_guess: Option<GhostType>,
-    pub ghosts_discarded: Vec<GhostType>,
-    pub mission_result: Option<MissionResult>,
-    pub repellent_crafted_count: u32,
-    pub breach_position: Option<[f32; 3]>,
-    pub ghost_type: Option<GhostType>,
-    pub haunted_objects: Vec<HauntedObjectSync>,
-    pub movable_objects: Vec<MovableObjectSync>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PlayerInputMsg {
-    pub player_id: NetworkId,
-    pub movement: [f32; 2],
-    pub run: bool,
-    pub interact: bool,
-    pub grab: bool,
-    pub drop: bool,
-    pub use_right_hand: bool,
-    pub use_left_hand: bool,
-    pub inventory_cycle: bool,
-    pub inventory_swap: bool,
-    pub target_position: Option<[f32; 2]>,
-    pub aim_direction: [f32; 2],
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct InteractionRequestMsg {
-    pub player_id: NetworkId,
-    pub position: [i32; 3],
-    pub interaction_type: InteractionExecutionType,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct JournalUpdateMsg {
-    pub player_id: NetworkId,
-    pub ghost_type: Option<GhostType>,
-    pub evidences_found: Vec<Evidence>,
-    pub evidences_missing: Vec<Evidence>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CraftRepellentMsg {
-    pub player_id: NetworkId,
-    pub ghost_type: GhostType,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RequestTruckInventoryChangeMsg {
-    pub player_id: NetworkId,
-    pub change: TruckInventoryChange,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GrabRequestMsg {
-    pub player_id: NetworkId,
-    pub target_id: NetworkId,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GrabResponseMsg {
-    pub player_id: NetworkId,
-    pub target_id: NetworkId,
-    pub success: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RequestJournalEvidenceToggleMsg {
-    pub player_id: NetworkId,
-    pub evidence: Evidence,
-    pub discard: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RequestJournalGhostToggleMsg {
-    pub player_id: NetworkId,
-    pub ghost_type: GhostType,
-    pub discard: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum NetworkMessage {
     /// Initial handshake from Client to Host.
-    Hello(HelloMsg),
+    Hello {
+        version: String,
+        previous_id: Option<NetworkId>,
+    },
     /// Response from Host to Client.
-    Welcome(WelcomeMsg),
+    Welcome {
+        id: NetworkId,
+        map_seed: u64,
+        map_filepath: String,
+        difficulty_id: String,
+    },
     /// Periodic state update from Host to Client.
-    Snapshot(Box<SnapshotMsg>),
+    Snapshot {
+        tick: u64,
+        is_full_sync: bool,
+        app_state: AppState,
+        game_state: GameState,
+        players: Vec<PlayerState>,
+        ghosts: Vec<GhostState>,
+        rooms: Vec<RoomSync>,
+        map_tiles: Vec<MapTileState>,
+        gear: Vec<GearSyncState>,
+        player_gear: Vec<PlayerGearState>,
+        events: Vec<TransientEvent>,
+        evidences_found: Vec<Evidence>,
+        evidences_missing: Vec<Evidence>,
+        ghost_type_guess: Option<GhostType>,
+        ghosts_discarded: Vec<GhostType>,
+        mission_result: Box<Option<MissionResult>>,
+        repellent_crafted_count: u32,
+        breach_position: Option<[f32; 3]>,
+        ghost_type: Option<GhostType>,
+        haunted_objects: Vec<HauntedObjectSync>,
+    },
     /// Periodic input update from Client to Host.
-    PlayerInput(PlayerInputMsg),
+    PlayerInput {
+        player_id: NetworkId,
+        movement: [f32; 2],
+        run: bool,
+        interact: bool,
+        grab: bool,
+        drop: bool,
+        use_right_hand: bool,
+        use_left_hand: bool,
+        inventory_cycle: bool,
+        inventory_swap: bool,
+        target_position: Option<[f32; 2]>,
+        aim_direction: [f32; 2],
+    },
     /// Request to interact with a map tile.
-    InteractionRequest(InteractionRequestMsg),
+    InteractionRequest {
+        player_id: NetworkId,
+        position: [i32; 3],
+        interaction_type: InteractionExecutionType,
+    },
     /// Host sends the final mission summary.
     MissionSummary { result: MissionResult },
     /// Client updates their journal guess.
-    JournalUpdate(JournalUpdateMsg),
+    JournalUpdate {
+        player_id: NetworkId,
+        ghost_type: Option<GhostType>,
+        evidences_found: Vec<Evidence>,
+        evidences_missing: Vec<Evidence>,
+    },
     /// Client requests to craft repellent.
-    CraftRepellent(CraftRepellentMsg),
+    CraftRepellent {
+        player_id: NetworkId,
+        ghost_type: GhostType,
+    },
     /// Client requests to enter the truck/van.
     RequestTruckEntry { player_id: NetworkId },
     /// Client requests to exit the truck/van.
@@ -288,17 +223,22 @@ pub enum NetworkMessage {
     /// A player has left the mission (ended their game or disconnected)
     PlayerLeft { player_id: NetworkId },
     /// Client requests a change in their truck loadout.
-    RequestTruckInventoryChange(RequestTruckInventoryChangeMsg),
-    /// Client requests to grab a movable object.
-    GrabRequest(GrabRequestMsg),
-    /// Host responds to a grab request.
-    GrabResponse(GrabResponseMsg),
-    /// Client requests to drop their currently held object.
-    DropRequest { player_id: NetworkId },
+    RequestTruckInventoryChange {
+        player_id: NetworkId,
+        change: TruckInventoryChange,
+    },
     /// Client requests to toggle an evidence state in the journal.
-    RequestJournalEvidenceToggle(RequestJournalEvidenceToggleMsg),
+    RequestJournalEvidenceToggle {
+        player_id: NetworkId,
+        evidence: Evidence,
+        discard: bool,
+    },
     /// Client requests to toggle a ghost selection/discard in the journal.
-    RequestJournalGhostToggle(RequestJournalGhostToggleMsg),
+    RequestJournalGhostToggle {
+        player_id: NetworkId,
+        ghost_type: GhostType,
+        discard: bool,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

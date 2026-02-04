@@ -5,7 +5,7 @@ use bevy_persistent::Persistent;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
-use unnet_core::messages::{NetworkMessage, RequestJournalEvidenceToggleMsg, SendNetworkMessage};
+use unnet_core::messages::{NetworkMessage, SendNetworkMessage};
 use unnet_core::resources::LocalPlayer;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
@@ -112,13 +112,11 @@ pub(crate) fn keyboard_evidence(
                 NetMode::Join { .. } => {
                     if let Some(player_id) = local_id.0 {
                         ev_net.write(SendNetworkMessage(
-                            NetworkMessage::RequestJournalEvidenceToggle(
-                                RequestJournalEvidenceToggleMsg {
-                                    player_id,
-                                    evidence,
-                                    discard: false,
-                                },
-                            ),
+                            NetworkMessage::RequestJournalEvidenceToggle {
+                                player_id,
+                                evidence,
+                                discard: false,
+                            },
                         ));
                     }
                 }

@@ -5,7 +5,7 @@ use unbehavior::roomdb::RoomDB;
 use unevents_core::events::roomchanged::InteractionExecutionType;
 use unevents_core::events::sound::SoundEvent;
 use uninteraction_core::interaction::Authority;
-use unnet_core::messages::{InteractionRequestMsg, NetworkDataEvent, NetworkMessage};
+use unnet_core::messages::{NetworkDataEvent, NetworkMessage};
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::materials::CustomMaterial1;
 use unspatial_core::boardposition::BoardPosition;
@@ -206,11 +206,11 @@ impl InteractiveStuff<'_, '_> {
             if let Some(player_id) = self.local_player.0 {
                 trace!("Client: Requesting interaction at {:?}", item_bpos);
                 self.net_events.write(NetworkDataEvent {
-                    message: NetworkMessage::InteractionRequest(InteractionRequestMsg {
+                    message: NetworkMessage::InteractionRequest {
                         player_id,
                         position: [item_bpos.x as i32, item_bpos.y as i32, item_bpos.z as i32],
                         interaction_type: ietype,
-                    }),
+                    },
                 });
             }
             return false;

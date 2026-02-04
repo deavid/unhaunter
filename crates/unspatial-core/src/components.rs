@@ -1,5 +1,5 @@
-use crate::boardposition::BoardPosition;
 use bevy::prelude::*;
+use crate::boardposition::BoardPosition;
 
 /// Records the original map position of a movable entity for network correlation
 #[derive(Component, Debug, Clone)]
