@@ -5902,6 +5902,7 @@ dependencies = [
  "unevents-core",
  "unfoundation-core",
  "ungear-core",
+ "unmetrics-core",
  "unplayer-core",
  "unrender-std",
  "unsettings-core",

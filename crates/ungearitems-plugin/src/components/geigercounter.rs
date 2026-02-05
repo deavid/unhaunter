@@ -7,6 +7,9 @@ use unprofile_core::profile::PlayerProfileData;
 use unsound_core::emitter::SoundEmitter;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 use bevy::prelude::*;
 use rand::Rng as _;
@@ -51,6 +54,7 @@ pub(crate) fn update_geigercounter(
     haunt_state: Res<HauntState>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
+    let measure = metrics::GEIGER_UPDATE.time_measure();
     for (
         mut geiger,
         mut status,
@@ -218,6 +222,8 @@ pub(crate) fn update_geigercounter(
                 0.0
             };
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

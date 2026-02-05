@@ -15,6 +15,9 @@ use ungear_core::types::gear::utils::on_off;
 use ungearitems_core::components::recorder::Recorder;
 use unghost_core::types::evidence::Evidence;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 pub(crate) fn update_recorder(
     mut q_recorder: Query<(
@@ -32,6 +35,7 @@ pub(crate) fn update_recorder(
     difficulty: Res<CurrentDifficulty>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
+    let measure = metrics::SOUND_UPDATE.time_measure();
     for (mut recorder, mut status, mut sprite, toggle, pos, name, mut perceived_clarity) in
         q_recorder.iter_mut()
     {
@@ -211,6 +215,8 @@ pub(crate) fn update_recorder(
             0.0
         };
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

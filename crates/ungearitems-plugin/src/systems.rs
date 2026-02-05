@@ -4,14 +4,18 @@ use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic};
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
+use unmetrics_core::metrics::SendMetric;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
+
+use crate::metrics;
 
 pub(crate) fn system_electronic_interference(
     gs_audio: SoundEmitter,
     haunt_state: Res<HauntState>,
     mut q_electronic: Query<(&Position, &mut Electronic, &Toggleable)>,
 ) {
+    let measure = metrics::ELECTRONIC_INTERFERENCE.time_measure();
     let mut rng = random_seed::rng();
     let dt = gs_audio.time.delta_secs();
 
@@ -43,12 +47,15 @@ pub(crate) fn system_electronic_interference(
             electronic.glitch_intensity = 0.0;
         }
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn system_battery_drain(
     time: Res<Time>,
     mut q_battery: Query<(&mut Battery, &mut Toggleable)>,
 ) {
+    let measure = metrics::BATTERY_DRAIN.time_measure();
     let dt = time.delta_secs();
 
     for (mut battery, mut toggle) in q_battery.iter_mut() {
@@ -60,4 +67,6 @@ pub(crate) fn system_battery_drain(
             }
         }
     }
+
+    measure.end_ms();
 }

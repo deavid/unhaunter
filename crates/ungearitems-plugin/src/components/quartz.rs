@@ -8,6 +8,9 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use untags_core::tags::GhostTag;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 const MAX_CRACKS: u8 = 4;
 
@@ -72,6 +75,7 @@ pub(crate) fn update_quartz(
     )>,
     mut q_ghost: Query<(&Position, &mut GhostSprite), With<GhostTag>>,
 ) {
+    let measure = metrics::UPDATE_QUARTZ_AND_GHOST.time_measure();
     let dt = gs_audio.time.delta_secs();
     for (mut quartz, mut status, mut sprite, pos, _ep) in q_quartz.iter_mut() {
         // Update logic
@@ -115,6 +119,8 @@ pub(crate) fn update_quartz(
             _ => GearSpriteID::QuartzStone4.to_visual_key(),
         };
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

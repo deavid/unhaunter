@@ -26,6 +26,9 @@ use unghost_core::types::evidence::Evidence;
 use unlight_core::resources::light_grid::LightGrid;
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 pub(crate) fn update_spiritbox(
     mut q_spiritbox: Query<(
@@ -49,6 +52,7 @@ pub(crate) fn update_spiritbox(
     player_profile: Res<Persistent<PlayerProfileData>>,
     mut commands: Commands,
 ) {
+    let measure = metrics::SPIRITBOX_UPDATE.time_measure();
     for (
         entity,
         mut spiritbox,
@@ -259,6 +263,8 @@ pub(crate) fn update_spiritbox(
                 0.0
             };
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

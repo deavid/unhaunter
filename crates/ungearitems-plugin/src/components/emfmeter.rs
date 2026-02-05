@@ -7,10 +7,13 @@ use ungear_core::components::core::{
 };
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
+use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
 use unsound_core::emitter::SoundEmitter;
 use unsound_core::resources::SoundGrid;
 use unthermal_core::resources::ThermalGrid;
+
+use crate::metrics;
 
 use unghost_core::types::evidence::Evidence;
 use unspatial_core::position::Position;
@@ -44,6 +47,7 @@ pub(crate) fn update_emfmeter(
     player_profile: Res<Persistent<PlayerProfileData>>,
     cli: Res<untypes_core::cli::CliOptions>,
 ) {
+    let measure = metrics::EMF_UPDATE.time_measure();
     let is_host = untypes_core::cli::is_host(cli);
     for (
         mut emf,
@@ -225,6 +229,8 @@ pub(crate) fn update_emfmeter(
             };
         perceived_clarity.from_icon = perceived_clarity.from_status_text;
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

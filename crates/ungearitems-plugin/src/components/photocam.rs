@@ -4,6 +4,9 @@ use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::photocam::Photocam;
 use uninteraction_core::interaction::Toggleable;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 pub(crate) fn update_photocam(
     mut q_photocam: Query<
@@ -18,6 +21,7 @@ pub(crate) fn update_photocam(
         With<Photocam>,
     >,
 ) {
+    let measure = metrics::PHOTOCAM_UPDATE.time_measure();
     for (mut status, mut sprite, toggle, mut battery, electronic, name) in q_photocam.iter_mut() {
         // Update Battery Drain Rate
         battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
@@ -40,6 +44,8 @@ pub(crate) fn update_photocam(
         };
         status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

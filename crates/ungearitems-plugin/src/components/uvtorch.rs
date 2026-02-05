@@ -9,6 +9,9 @@ use uninteraction_core::interaction::Toggleable;
 use unrender_std::components::light::LightEmitter;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 pub(crate) trait UVTorchExt {
     fn calculate_output_power(&self, battery_level: f32, glitch_timer: f32) -> f32;
@@ -47,6 +50,7 @@ pub(crate) fn update_uvtorch(
     )>,
     mut ga: SoundEmitter,
 ) {
+    let measure = metrics::UVTORCH_UPDATE.time_measure();
     for (
         mut uvtorch,
         mut uvtorch_render,
@@ -120,6 +124,8 @@ pub(crate) fn update_uvtorch(
             status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
         }
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

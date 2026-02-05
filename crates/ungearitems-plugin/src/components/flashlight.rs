@@ -4,6 +4,9 @@ use uninteraction_core::interaction::{Toggleable, Triggered};
 use unrender_std::components::light::LightEmitter;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 use bevy::prelude::*;
 use enum_iterator::Sequence;
@@ -30,6 +33,7 @@ pub(crate) fn update_flashlight(
     mut ga: SoundEmitter,
     cli: Res<CliOptions>,
 ) {
+    let measure = metrics::FLASHLIGHT_UPDATE.time_measure();
     let is_host = is_host(cli);
     for (
         entity,
@@ -154,6 +158,8 @@ pub(crate) fn update_flashlight(
             );
         }
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

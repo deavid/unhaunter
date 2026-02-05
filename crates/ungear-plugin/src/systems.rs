@@ -22,6 +22,9 @@ use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
 use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::AppState;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 fn update_deployed_gear_sprites(
     mut commands: Commands,
@@ -29,6 +32,7 @@ fn update_deployed_gear_sprites(
     gear_assets: Res<GearAssets>,
     sprite_registry: Res<SpriteRegistry>,
 ) {
+    let measure = metrics::UPDATE_DEPLOYED_GEAR_SPRITES.time_measure();
     for (entity, pos, gear_sprite, sprite) in q_gear.iter_mut() {
         let index = sprite_registry.get(&gear_sprite.0);
         if let Some(mut sprite) = sprite {
@@ -54,6 +58,7 @@ fn update_deployed_gear_sprites(
             ));
         }
     }
+    measure.end_ms();
 }
 
 fn sound_playback_system(
@@ -65,10 +70,12 @@ fn sound_playback_system(
     time: Res<Time>,
     mut last_error_log: Local<f32>,
 ) {
+    let measure = metrics::SOUND_PLAYBACK.time_measure();
     let now = time.elapsed_secs();
     let mut can_log = now - *last_error_log > 1.0;
     for sound_event in sound_events.read() {
         let Some(player_position) = qp.iter().next() else {
+            measure.end_ms();
             return;
         };
         if !player_position.is_finite() && can_log {
@@ -108,6 +115,7 @@ fn sound_playback_system(
             sound.insert(Transform::from_translation(spos_vec));
         }
     }
+    measure.end_ms();
 }
 
 fn keyboard_gear(
@@ -133,7 +141,9 @@ fn update_gear_ui(
     sprite_registry: Res<SpriteRegistry>,
     looking_gear: Res<LookingGear>,
 ) {
+    let measure = metrics::UPDATE_GEAR_UI.time_measure();
     let Some(player_gear) = q_gear.iter().next() else {
+        measure.end_ms();
         return;
     };
 
@@ -202,6 +212,8 @@ fn update_gear_ui(
             Display::None
         };
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

@@ -4,6 +4,9 @@ use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::motionsensor::MotionSensor;
 use uninteraction_core::interaction::Toggleable;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 pub(crate) fn update_motionsensor(
     mut q_motionsensor: Query<
@@ -18,6 +21,7 @@ pub(crate) fn update_motionsensor(
         With<MotionSensor>,
     >,
 ) {
+    let measure = metrics::MOTIONSENSOR_UPDATE.time_measure();
     for (mut status, mut sprite, toggle, mut battery, electronic, name) in q_motionsensor.iter_mut()
     {
         // Update Battery Drain Rate
@@ -37,6 +41,8 @@ pub(crate) fn update_motionsensor(
         };
         status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

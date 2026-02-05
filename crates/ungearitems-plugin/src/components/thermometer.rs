@@ -12,10 +12,13 @@ use ungear_core::types::gear::utils::on_off;
 use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
+use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
+
+use crate::metrics;
 
 pub(crate) fn update_thermometer(
     mut q_thermometer: Query<(
@@ -35,6 +38,7 @@ pub(crate) fn update_thermometer(
     player_profile: Res<Persistent<PlayerProfileData>>,
     cli: Res<untypes_core::cli::CliOptions>,
 ) {
+    let measure = metrics::TEMPERATURE_UPDATE.time_measure();
     let is_host = untypes_core::cli::is_host(cli);
     for (
         mut thermometer,
@@ -161,6 +165,8 @@ pub(crate) fn update_thermometer(
             0.0
         };
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

@@ -7,6 +7,7 @@ use untypes_core::states::AppState;
 use super::systems;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unrender_std::assets::GearAssets;
+use crate::metrics;
 
 pub struct UnhaunterGearPlugin;
 
@@ -18,5 +19,6 @@ impl Plugin for UnhaunterGearPlugin {
             .add_message::<SoundEvent>();
 
         systems::app_setup(app);
+        metrics::register_all(app);
     }
 }

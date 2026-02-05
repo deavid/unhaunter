@@ -9,6 +9,9 @@ use uninteraction_core::interaction::Toggleable;
 use unrender_std::components::light::LightEmitter;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 pub(crate) fn update_redtorch(
     mut q_redtorch: Query<(
@@ -24,6 +27,7 @@ pub(crate) fn update_redtorch(
     )>,
     mut ga: SoundEmitter,
 ) {
+    let measure = metrics::REDTORCH_UPDATE.time_measure();
     for (
         mut redtorch,
         mut redtorch_render,
@@ -106,6 +110,8 @@ pub(crate) fn update_redtorch(
             status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
         }
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {
