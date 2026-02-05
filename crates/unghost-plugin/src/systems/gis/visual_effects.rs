@@ -5,6 +5,9 @@ use unfoundation_core::random_seed;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 use crate::components::interaction::{
     InteractionParticle, InteractionParticleType, LockIndicator, Locked, MotionBlur, Tween,
@@ -31,6 +34,7 @@ fn spawn_interaction_particles_system(
     asset_server: Res<AssetServer>,
     q_tweens: Query<(Entity, &Position, &Tween), Changed<Tween>>,
 ) {
+    let measure = metrics::GIS_SPAWN_PARTICLES.time_measure();
     for (entity, position, tween) in q_tweens.iter() {
         let progress = tween.timer.fraction();
 
@@ -60,6 +64,7 @@ fn spawn_interaction_particles_system(
             }
         }
     }
+    measure.end_ms();
 }
 
 use unrender_std::materials::CustomMaterial1;
@@ -77,6 +82,7 @@ fn motion_blur_system(
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     q_tweens: Query<&Tween>,
 ) {
+    let measure = metrics::GIS_MOTION_BLUR.time_measure();
     for (entity, position, mut motion_blur, mut sprite, mat) in q_blur.iter_mut() {
         // Calculate movement speed
         let movement_delta = position.distance(&motion_blur.previous_position);
@@ -110,6 +116,7 @@ fn motion_blur_system(
 
         motion_blur.previous_position = *position;
     }
+    measure.end_ms();
 }
 
 /// System that updates visual effect particles
@@ -124,6 +131,7 @@ fn update_interaction_particles_system(
         &mut Transform,
     )>,
 ) {
+    let measure = metrics::GIS_UPDATE_PARTICLES.time_measure();
     for (entity, mut position, mut particle, mut map_color, mut transform) in q_particles.iter_mut()
     {
         // Update particle lifetime
@@ -178,6 +186,7 @@ fn update_interaction_particles_system(
             }
         }
     }
+    measure.end_ms();
 }
 
 /// System that handles door lock visual indicators
@@ -189,6 +198,7 @@ fn door_lock_indicator_system(
     q_locked_doors: Query<Entity, Added<Locked>>,
     q_unlocked_doors: Query<Entity, (With<LockIndicator>, Without<Locked>)>,
 ) {
+    let measure = metrics::GIS_DOOR_LOCK_INDICATOR.time_measure();
     // Spawn lock indicators for newly locked doors
     for door_entity in q_locked_doors.iter() {
         commands.entity(door_entity).insert(LockIndicator::new());
@@ -213,6 +223,8 @@ fn door_lock_indicator_system(
         // Tint the sprite to indicate it's locked (reddish tint)
         sprite.color = Color::srgba(1.0, 0.7, 0.7, indicator.base_alpha * pulse_alpha);
     }
+
+    measure.end_ms();
 }
 
 /// Helper function to spawn trail particles for thrown objects

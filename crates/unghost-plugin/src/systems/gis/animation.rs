@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 use crate::components::interaction::{Locked, MotionBlur, Tween, TweenEase};
 
@@ -22,6 +25,7 @@ fn tween_animation_system(
     mut q_tweens: Query<(Entity, &mut Position, &mut Tween)>,
     q_motion_blur: Query<&MotionBlur>,
 ) {
+    let measure = metrics::GIS_TWEEN_ANIMATION.time_measure();
     for (entity, mut position, mut tween) in q_tweens.iter_mut() {
         // Add motion blur for thrown objects if not already present
         if tween.ease_fn == TweenEase::ParabolicArc && q_motion_blur.get(entity).is_err() {
@@ -45,6 +49,7 @@ fn tween_animation_system(
             // but for now we'll keep it simple and just end at the nudged position
         }
     }
+    measure.end_ms();
 }
 
 /// System that handles door lock timers and removes the Locked component when expired
@@ -56,6 +61,7 @@ fn door_lock_timer_system(
     time: Res<Time>,
     mut q_locked: Query<(Entity, &mut Locked)>,
 ) {
+    let measure = metrics::GIS_DOOR_LOCK_TIMER.time_measure();
     for (entity, mut locked) in q_locked.iter_mut() {
         // Tick the lock timer
         locked.0.tick(time.delta());
@@ -65,4 +71,5 @@ fn door_lock_timer_system(
             commands.entity(entity).remove::<Locked>();
         }
     }
+    measure.end_ms();
 }

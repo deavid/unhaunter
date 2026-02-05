@@ -17,6 +17,8 @@ use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::materials::{CustomMaterial1, UIPanelMaterial};
 
+use crate::metrics;
+
 #[cfg(not(target_arch = "wasm32"))]
 use bevy::ecs::system::NonSendMarker;
 
@@ -56,6 +58,7 @@ impl Plugin for UnhaunterRenderPlugin {
         crate::systems::animation::app_setup(app);
         crate::systems::board_sync::app_setup(app);
         crate::systems::hydration::app_setup(app);
+        metrics::register_all(app);
         app.add_systems(
             Startup,
             unrender_std::resources::sprite_registry::setup_sprite_registry,

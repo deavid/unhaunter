@@ -6,6 +6,9 @@ use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite}
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use unnoise_core::perlin::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 /// Helper function to calculate a noise-based multiplier value
 ///
@@ -39,6 +42,7 @@ fn update_ghost_behavior_dynamics_system(
     mut query: Query<(&GhostSprite, &mut GhostBehaviorDynamics)>,
     mut report_time: Local<f32>,
 ) {
+    let measure = metrics::GHOST_BEHAVIOR_DYNAMICS.time_measure();
     let elapsed_seconds = time.elapsed_secs();
     let evidence_visibility_recip = difficulty.0.evidence_visibility.recip();
     *report_time += time.delta_secs();
@@ -111,6 +115,7 @@ fn update_ghost_behavior_dynamics_system(
             *report_time = 0.0;
         }
     }
+    measure.end_ms();
 }
 
 fn sync_ghost_emitters(
@@ -123,6 +128,7 @@ fn sync_ghost_emitters(
         Option<&GhostBreach>,
     )>,
 ) {
+    let measure = metrics::GHOST_EMITTER_SYNC.time_measure();
     let freezing = haunt_state.ghost_dynamics.freezing_temp_clarity;
     let ghost_target_temp =
         unfoundation_core::utils::temperature::celsius_to_kelvin(1.0 - 4.0 * freezing);
@@ -149,6 +155,7 @@ fn sync_ghost_emitters(
         // Sound emitter logic (volume)
         sound.volume = 1.0;
     }
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut bevy::prelude::App) {

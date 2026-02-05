@@ -11,6 +11,9 @@ use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 // Simple debug toggle to make GIS interactions more frequent and verbose during development
 const GIS_DEBUG: bool = false;
@@ -46,6 +49,7 @@ fn ghost_interaction_selection_system(
     )>,
     mut ev_ghost_interaction: MessageWriter<GhostInteractionEvent>,
 ) {
+    let measure = metrics::GIS_SELECTION.time_measure();
     let mut rng = random_seed::rng();
 
     for (ghost_sprite, ghost_pos) in q_ghost.iter() {
@@ -128,11 +132,14 @@ fn ghost_interaction_selection_system(
                     }
 
                     // Only trigger one interaction per frame to avoid spam
+                    measure.end_ms();
                     return;
                 }
             }
         }
     }
+
+    measure.end_ms();
 }
 
 /// Finds a suitable target entity for the given interaction type.

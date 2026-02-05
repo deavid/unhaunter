@@ -4,6 +4,9 @@ use unrender_std::components::animation::AnimationTimer;
 use unrender_std::materials::CustomMaterial1;
 use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::AppState;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 fn animate_sprite(
     time: Res<Time>,
@@ -17,6 +20,7 @@ fn animate_sprite(
     >,
     mut materials: ResMut<Assets<CustomMaterial1>>,
 ) {
+    let measure = metrics::ANIMATE_SPRITE.time_measure();
     for (mut anim, mut sprite, mat) in query.iter_mut() {
         let delta = time.delta();
         if let Some(idx) = anim.tick(delta) {
@@ -32,6 +36,7 @@ fn animate_sprite(
             }
         }
     }
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

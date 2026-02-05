@@ -2,6 +2,9 @@ use bevy::prelude::*;
 use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 /// Synchronizes the map entity field with the current positions of entities.
 ///
@@ -19,6 +22,7 @@ fn sync_map_entity_field(
         Changed<Position>,
     >,
 ) {
+    let measure = metrics::SYNC_MAP_ENTITY_FIELD.time_measure();
     let map_size = board_topology.map_size;
     let mut to_update = Vec::new();
 
@@ -43,6 +47,8 @@ fn sync_map_entity_field(
             entity_vec.push(entity);
         }
     }
+
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

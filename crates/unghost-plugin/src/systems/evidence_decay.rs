@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::types::evidence::Evidence;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 const DECAY_START_THRESHOLD_SECONDS: f64 = 0.1; // 100ms
 const FULL_DECAY_DURATION_SECONDS: f64 = 10.0; // Time for clarity to go from 1.0 to 0.0 if not updated
@@ -10,6 +13,7 @@ fn decay_evidence_clarity_system(
     time: Res<Time>,
     mut last_report: Local<f64>,
 ) {
+    let measure = metrics::EVIDENCE_DECAY.time_measure();
     let current_game_time = time.elapsed_secs_f64();
     let delta_seconds_for_decay = time.delta_secs_f64();
 
@@ -50,6 +54,7 @@ fn decay_evidence_clarity_system(
             }
         }
     }
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

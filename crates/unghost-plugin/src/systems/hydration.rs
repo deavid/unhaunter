@@ -3,11 +3,15 @@ use unbehavior::behavior::{Behavior, Util};
 use unbehavior::components::InteractableByGhost;
 use unboard_core::components::spawning::HostileSpawnPoint;
 use untypes_core::hydration::HydrationStage;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 fn hydration_ghost_logic_system(
     mut q: Query<(Entity, &Behavior), With<HydrationStage<3>>>,
     mut commands: Commands,
 ) {
+    let measure = metrics::HYDRATION_GHOST_LOGIC.time_measure();
     for (entity, behavior) in q.iter_mut() {
         let mut cmd = commands.entity(entity);
 
@@ -35,6 +39,7 @@ fn hydration_ghost_logic_system(
             cmd.insert(InteractableByGhost);
         }
     }
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

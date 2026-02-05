@@ -4,12 +4,16 @@ use unbehavior::components;
 use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
 use untypes_core::hydration::HydrationStage;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 fn hydration_simulation_system(
     mut q: Query<(Entity, &Behavior, &unspatial_core::position::Position), With<HydrationStage<2>>>,
     mut roomdb: ResMut<RoomDB>,
     mut commands: Commands,
 ) {
+    let measure = metrics::HYDRATION_SIMULATION.time_measure();
     for (entity, behavior, pos) in q.iter_mut() {
         let mut cmd = commands.entity(entity);
 
@@ -28,6 +32,7 @@ fn hydration_simulation_system(
             roomdb.room_state.insert(name.clone(), TileState::Off);
         }
     }
+    measure.end_ms();
 }
 
 pub(crate) fn app_setup(app: &mut App) {

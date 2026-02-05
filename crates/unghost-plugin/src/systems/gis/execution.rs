@@ -11,6 +11,9 @@ use unevents_core::events::sound::SoundEvent;
 use unfoundation_core::random_seed;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unspatial_core::position::Position;
+use unmetrics_core::metrics::SendMetric;
+
+use crate::metrics;
 
 /// Enhanced destination validation with collision avoidance and path checking
 fn validate_destination_enhanced(
@@ -189,6 +192,7 @@ fn ghost_interaction_execution_system(
     board_topology: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
 ) {
+    let measure = metrics::GIS_EXECUTION.time_measure();
     for event in ev_ghost_interaction.read() {
         // Minimal one-line log for each received interaction event
         if let Some(p) = event.destination {
@@ -303,6 +307,8 @@ fn ghost_interaction_execution_system(
             }
         }
     }
+
+    measure.end_ms();
 }
 
 /// Execute toggle interaction (lights, switches)
