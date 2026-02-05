@@ -25,8 +25,10 @@ unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 unnoise-core = { path = "../unnoise-core" }
 unfog-core = { path = "../unfog-core" }
+unsettings-core = { path = "../unsettings-core" }
 
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
 bevy_platform = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }

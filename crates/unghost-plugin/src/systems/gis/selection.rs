@@ -9,9 +9,9 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::GhostSprite;
+use unmetrics_core::metrics::SendMetric;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::position::Position;
-use unmetrics_core::metrics::SendMetric;
 
 use crate::metrics;
 

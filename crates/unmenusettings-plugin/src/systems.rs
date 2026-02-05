@@ -301,6 +301,7 @@ fn menu_save_video_setting(
             v::ui_scale(s) => video_settings.ui_scale = s,
             v::font_scale(s) => video_settings.font_scale = s,
             v::max_upscale_factor(s) => video_settings.max_upscale_factor = s,
+            v::quality(s) => video_settings.quality = s,
         }
         if let Err(e) = video_settings.persist() {
             error!("Error persisting Video Settings: {e:?}");

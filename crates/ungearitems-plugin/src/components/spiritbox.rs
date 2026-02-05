@@ -24,9 +24,9 @@ pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::types::evidence::Evidence;
 use unlight_core::resources::light_grid::LightGrid;
+use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
-use unmetrics_core::metrics::SendMetric;
 
 use crate::metrics;
 

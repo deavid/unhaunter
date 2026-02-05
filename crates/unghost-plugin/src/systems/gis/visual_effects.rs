@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use rand::Rng;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
+use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::position::Position;
-use unmetrics_core::metrics::SendMetric;
 
 use crate::metrics;
 

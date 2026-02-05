@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
+use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
 use ndarray::{Array3, s};
 use rand::Rng;
@@ -20,6 +21,7 @@ use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::LightSensitive;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::collision::rebuild_collision_data;
+use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 use untypes_core::states::AppState;
@@ -91,6 +93,7 @@ fn spawn_miasma(
     ghost_assets: Res<unghost_core::assets::GhostAssets>,
     board_data: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
+    video_settings: Res<Persistent<VideoSettings>>,
     mut commands: Commands,
 ) {
     let measure = metrics::SPAWN_MIASMA.time_measure();
@@ -98,6 +101,7 @@ fn spawn_miasma(
     let Ok(vf) = q_vf.single() else {
         return;
     };
+    let quality_factor = video_settings.quality.to_quality_factor();
     const THRESHOLD: f32 = 0.000001;
     const DIST_FACTOR: f32 = 0.00001;
     const MIASMA_TARGET_SPRITE_COUNT: usize = 3;
@@ -136,7 +140,7 @@ fn spawn_miasma(
             miasma_sprite.despawn = true;
             continue;
         };
-        miasma_sprite.life -= dt / 10.0;
+        miasma_sprite.life -= dt / 10.0 / quality_factor;
         if miasma_sprite.life < 0.02 {
             miasma_sprite.despawn = true;
             continue;
@@ -168,6 +172,9 @@ fn spawn_miasma(
         .slice(s![min_x..=max_x, min_y..=max_y, z..=z])
         .indexed_iter()
     {
+        if rng.random_range(0.0..1.0) > quality_factor {
+            continue;
+        }
         let bp = (bp.0 + min_x, bp.1 + min_y, bp.2 + z);
         let collision = &bcf.0[bp];
         if !collision.player_free && !collision.see_through {

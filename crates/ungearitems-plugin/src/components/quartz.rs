@@ -5,10 +5,10 @@ use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::quartz::QuartzStoneData;
 use unghost_core::components::ghost_sprite::GhostSprite;
+use unmetrics_core::metrics::SendMetric;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use untags_core::tags::GhostTag;
-use unmetrics_core::metrics::SendMetric;
 
 use crate::metrics;
 

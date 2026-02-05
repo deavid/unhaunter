@@ -5,8 +5,8 @@ use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
-use unnoise_core::perlin::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
 use unmetrics_core::metrics::SendMetric;
+use unnoise_core::perlin::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
 
 use crate::metrics;
 

@@ -4,7 +4,7 @@ use strum::IntoEnumIterator;
 use unsettings_core::{
     audio::{AudioLevel, AudioSettings, AudioSettingsValue},
     game::{CameraControls, GameplaySettings, GameplaySettingsValue, MovementStyle},
-    video::{UpscaleFactorChoice, VideoSettings, VideoSettingsValue},
+    video::{UpscaleFactorChoice, VideoQuality, VideoSettings, VideoSettingsValue},
 };
 
 use crate::components::MenuEvent;
@@ -177,6 +177,8 @@ impl AudioSettingsMenu {
 
 #[derive(strum::Display, strum::EnumIter, Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum VideoSettingsMenu {
+    #[strum(to_string = "Quality")]
+    Quality,
     #[strum(to_string = "Upscale Factor")]
     UpscaleFactor,
 }
@@ -188,6 +190,7 @@ impl VideoSettingsMenu {
 
     pub(crate) fn setting_value(&self, video_settings: &Res<Persistent<VideoSettings>>) -> String {
         match self {
+            VideoSettingsMenu::Quality => video_settings.quality.to_string(),
             VideoSettingsMenu::UpscaleFactor => video_settings.max_upscale_factor.to_string(),
         }
     }
@@ -197,6 +200,18 @@ impl VideoSettingsMenu {
         video_settings: &Res<Persistent<VideoSettings>>,
     ) -> Vec<(String, MenuEvent)> {
         match self {
+            VideoSettingsMenu::Quality => VideoQuality::iter()
+                .map(|s| {
+                    (
+                        if s == video_settings.quality {
+                            format!("[{s}]")
+                        } else {
+                            s.to_string()
+                        },
+                        MenuEvent::SaveVideoSetting(VideoSettingsValue::quality(s)),
+                    )
+                })
+                .collect::<Vec<_>>(),
             VideoSettingsMenu::UpscaleFactor => UpscaleFactorChoice::iter()
                 .map(|s| {
                     (

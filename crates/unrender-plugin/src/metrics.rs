@@ -3,7 +3,8 @@ use bevy::{
     diagnostic::{Diagnostic, DiagnosticPath as DP, RegisterDiagnostic},
 };
 
-pub(crate) const SYNC_MAP_ENTITY_FIELD: DP = DP::const_new("unrender/systems/sync_map_entity_field");
+pub(crate) const SYNC_MAP_ENTITY_FIELD: DP =
+    DP::const_new("unrender/systems/sync_map_entity_field");
 pub(crate) const ANIMATE_SPRITE: DP = DP::const_new("unrender/systems/animate_sprite");
 pub(crate) const HYDRATION_SIMULATION: DP = DP::const_new("unrender/systems/hydration_simulation");
 

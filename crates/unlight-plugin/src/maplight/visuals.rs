@@ -178,6 +178,7 @@ pub(crate) fn apply_miasma_cloud_visuals(
     ld: &LightData,
     miasma: &MiasmaGrid,
     miasma_config: &MiasmaConfig,
+    quality_factor: f32,
     dst_color: &mut Color,
     opacity: &mut f32,
 ) {
@@ -213,7 +214,8 @@ pub(crate) fn apply_miasma_cloud_visuals(
     let miasma_visibility = average_pressure.max(0.0).sqrt()
         * miasma_config.miasma_visibility_factor
         * miasma_sprite.life.clamp(0.0, 1.0)
-        * (ld.magnitude().atan() / 1.1 + 0.4);
+        * (ld.magnitude().atan() / 1.1 + 0.4)
+        * (1.0 + (1.0 - quality_factor.clamp(0.1, 1.0)) * 0.35);
 
     *dst_color =
         dst_color.with_luminance((dst_color.luminance().sqrt() * 0.9 + 0.01).clamp(0.0, 1.0));

@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unrender_std::components::visuals::{Ethereal, SpectralInfluence, SpectralInfluenceType};
 use unmetrics_core::metrics::SendMetric;
+use unrender_std::components::visuals::{Ethereal, SpectralInfluence, SpectralInfluenceType};
 
 use crate::metrics;
 

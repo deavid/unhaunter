@@ -19,7 +19,9 @@ unevents-core = { path = "../unevents-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unbehavior = { path = "../unbehavior" }
+unsettings-core = { path = "../unsettings-core" }
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
 bevy_platform = { workspace = true }
 ndarray = { workspace = true }
 rand = { workspace = true }

@@ -10,8 +10,8 @@ use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEv
 use unevents_core::events::sound::SoundEvent;
 use unfoundation_core::random_seed;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
-use unspatial_core::position::Position;
 use unmetrics_core::metrics::SendMetric;
+use unspatial_core::position::Position;
 
 use crate::metrics;
 

@@ -1,5 +1,6 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
 use rand::Rng;
 
@@ -7,7 +8,6 @@ use unbehavior::behavior::{Behavior, Interactive};
 use unboard_core::components::mapcolor::MapColor;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
-use unfoundation_core::platform::plt::IS_WASM;
 use unfoundation_core::random_seed;
 use ungear_core::components::playergear::PlayerGear;
 use unlight_core::resources::light_grid::LightGrid;
@@ -21,6 +21,7 @@ use unrender_std::components::visuals::{
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::light::lerp_color;
+use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::orientation::Orientation;
@@ -73,10 +74,12 @@ pub(crate) fn apply_lighting_to_tiles_system(
     difficulty: Res<CurrentDifficulty>,
     mut visible: Local<HashSet<Entity>>,
     mouse_visibility: Res<MouseVisibility>,
+    video_settings: Res<Persistent<VideoSettings>>,
 ) {
     let bf = &grids.bf;
     let bef = &grids.bef;
     let miasma = &grids.miasma;
+    let video_quality = video_settings.quality.to_quality_factor();
 
     let measure = APPLY_LIGHTING.time_measure();
 
@@ -141,6 +144,8 @@ pub(crate) fn apply_lighting_to_tiles_system(
     let max_z = (player_ndidx.2 + 1).min(map_depth - 1);
     let mut entities = Vec::with_capacity(256);
 
+    let video_quality_recip = video_quality.recip().round() as usize;
+
     for z in min_z..=max_z {
         for x in min_x..=max_x {
             for y in min_y..=max_y {
@@ -148,9 +153,11 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 let dist = ((player_ndidx.0 as isize - x as isize).abs()
                     + (player_ndidx.1 as isize - y as isize).abs()
                     + (player_ndidx.2 as isize - z as isize).abs())
-                    as usize;
+                    as usize
+                    + 1;
                 let min_threshold = ((n * BIG_PRIME) ^ mask) % VSMALL_PRIME;
-                let skip_tile = min_threshold * dist / 9 > update_radius.saturating_sub(dist + 2);
+                let skip_tile = min_threshold * dist * video_quality_recip / 9
+                    > update_radius.saturating_sub(dist + 2);
                 if vf.visibility_field[(x, y, z)] > 0.00001 {
                     if skip_tile {
                         for &entity in &bef.0[(x, y, z)] {
@@ -204,7 +211,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
     }
 
     for entity in entities.iter() {
-        let min_threshold: f32 = rng.random::<f32>() / 10.0;
+        let min_threshold: f32 = rng.random::<f32>() / 10.0 / video_quality;
         if let Ok((
             _entity_id,
             pos,
@@ -599,7 +606,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 visible.insert(entity.to_owned());
             }
             let delta = orig_mat.data.delta(&new_mat.data);
-            let thr = if IS_WASM { 0.2 } else { 0.02 };
+            let thr = 0.02;
             let auto_hide = o_behavior
                 .map(|b| b.p.display.auto_hide)
                 .unwrap_or_default();

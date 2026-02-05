@@ -5832,6 +5832,7 @@ name = "unfog-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "bevy_platform",
  "ndarray",
  "rand 0.9.2",
@@ -5846,6 +5847,7 @@ dependencies = [
  "unnoise-core",
  "unplayer-core",
  "unrender-std",
+ "unsettings-core",
  "unspatial-core",
  "untypes-core",
 ]
@@ -6618,6 +6620,7 @@ name = "unthermal-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "bevy_platform",
  "ndarray",
  "rand 0.9.2",
@@ -6627,6 +6630,7 @@ dependencies = [
  "unevents-core",
  "unfoundation-core",
  "unmetrics-core",
+ "unsettings-core",
  "unspatial-core",
  "unthermal-core",
 ]

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unspatial_core::position::Position;
 use unmetrics_core::metrics::SendMetric;
+use unspatial_core::position::Position;
 
 use crate::metrics;
 

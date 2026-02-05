@@ -9,6 +9,8 @@ pub struct VideoSettings {
     pub ui_scale: Scale,
     pub font_scale: Scale,
     pub max_upscale_factor: UpscaleFactorChoice,
+    #[serde(default)]
+    pub quality: VideoQuality,
 }
 
 #[expect(non_camel_case_types)]
@@ -19,6 +21,39 @@ pub enum VideoSettingsValue {
     ui_scale(Scale),
     font_scale(Scale),
     max_upscale_factor(UpscaleFactorChoice),
+    quality(VideoQuality),
+}
+
+#[derive(
+    Reflect,
+    Component,
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Default,
+    Sequence,
+    strum::Display,
+    strum::EnumIter,
+)]
+pub enum VideoQuality {
+    Low,
+    Medium,
+    #[default]
+    High,
+}
+
+impl VideoQuality {
+    pub fn to_quality_factor(&self) -> f32 {
+        match self {
+            VideoQuality::High => 1.0,
+            VideoQuality::Medium => 0.3,
+            VideoQuality::Low => 0.1,
+        }
+    }
 }
 
 #[derive(
@@ -70,6 +105,7 @@ impl Default for VideoSettings {
             ui_scale: Scale::Scale100,
             font_scale: Scale::Scale100,
             max_upscale_factor: UpscaleFactorChoice::Upscale6x,
+            quality: VideoQuality::High,
         }
     }
 }

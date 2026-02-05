@@ -1,5 +1,6 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use unboard_core::components::mapcolor::MapColor;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
@@ -17,6 +18,7 @@ use unrender_std::components::visuals::{
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::light::lerp_color;
+use unsettings_core::video::VideoSettings;
 use unspatial_core::position::Position;
 
 use crate::maplight::definitions::{ActiveFlashlights, GridResources};
@@ -88,6 +90,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
     q_vf: Query<&VisibilityData, With<MainPlayer>>,
     difficulty: Res<CurrentDifficulty>,
     time: Res<Time>,
+    video_settings: Res<Persistent<VideoSettings>>,
 ) {
     let Ok(vf) = q_vf.single() else {
         return;
@@ -95,6 +98,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
     let bf = &grids.bf;
     let miasma = &grids.miasma;
     let miasma_config = &grids.miasma_config;
+    let quality_factor = video_settings.quality.to_quality_factor();
     let elapsed = time.elapsed_secs();
     let dt = time.delta_secs();
 
@@ -247,6 +251,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
                 &ld,
                 miasma,
                 miasma_config,
+                quality_factor,
                 &mut dst_color,
                 &mut opacity,
             );

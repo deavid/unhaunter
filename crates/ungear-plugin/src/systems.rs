@@ -11,6 +11,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
+use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats, MainPlayer};
 use unrender_std::assets::GearAssets;
 use unrender_std::components::game::GameSprite;
@@ -22,7 +23,6 @@ use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
 use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::AppState;
-use unmetrics_core::metrics::SendMetric;
 
 use crate::metrics;
 

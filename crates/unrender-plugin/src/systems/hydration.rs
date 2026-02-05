@@ -3,8 +3,8 @@ use unbehavior::behavior::{Behavior, Util};
 use unbehavior::components;
 use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
-use untypes_core::hydration::HydrationStage;
 use unmetrics_core::metrics::SendMetric;
+use untypes_core::hydration::HydrationStage;
 
 use crate::metrics;
 

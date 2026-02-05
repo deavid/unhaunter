@@ -111,10 +111,12 @@ fn unhide_player(
             // Using 'activate' for unhiding Remove the Hiding component
             commands.entity(player_entity).remove::<Hiding>();
 
-            commands.entity(player_entity).insert(AnimationTimer::from_range(
-                Timer::from_seconds(0.20, TimerMode::Repeating),
-                vec![32],
-            ));
+            commands
+                .entity(player_entity)
+                .insert(AnimationTimer::from_range(
+                    Timer::from_seconds(0.20, TimerMode::Repeating),
+                    vec![32],
+                ));
 
             if let Some(hiding_spot) = hiding.hiding_spot {
                 commands.entity(hiding_spot).despawn_related::<Children>();

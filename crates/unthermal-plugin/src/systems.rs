@@ -1,5 +1,6 @@
 use crate::metrics;
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use rand::Rng;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
@@ -10,6 +11,7 @@ use unevents_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEv
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
 use unmetrics_core::metrics::SendMetric;
+use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
@@ -22,8 +24,10 @@ pub fn temperature_update(
     qt: Query<(&Position, &Behavior)>,
     qe: Query<(&ThermalEmitter, &Position)>,
     difficulty: Res<CurrentDifficulty>,
+    video_settings: Res<Persistent<VideoSettings>>,
 ) {
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
+    let quality_factor = video_settings.quality.to_quality_factor();
 
     for (pos, bh) in qt.iter() {
         let h_out: f32 = bh.temp_heat_output();
@@ -72,7 +76,8 @@ pub fn temperature_update(
                 .get(p)
                 .copied()
                 .unwrap_or(0.0);
-            let activity_factor = (activity * 0.02).clamp(0.0, 1.0) + 0.001;
+            let activity_factor =
+                (activity * 0.02 * quality_factor).clamp(0.0, 1.0) + 0.001 * quality_factor;
 
             if rng.random_range(0.0..1.0) < activity_factor {
                 Some((p, *t))

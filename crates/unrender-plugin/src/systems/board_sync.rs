@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
+use unmetrics_core::metrics::SendMetric;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
-use unmetrics_core::metrics::SendMetric;
 
 use crate::metrics;
 

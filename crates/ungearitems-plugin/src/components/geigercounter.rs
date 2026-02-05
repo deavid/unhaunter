@@ -3,11 +3,11 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
+use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
 use unsound_core::emitter::SoundEmitter;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
-use unmetrics_core::metrics::SendMetric;
 
 use crate::metrics;
 

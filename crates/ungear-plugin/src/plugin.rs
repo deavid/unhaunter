@@ -5,9 +5,9 @@ use unplayer_core::resources::game_config::GameConfig;
 use untypes_core::states::AppState;
 
 use super::systems;
+use crate::metrics;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unrender_std::assets::GearAssets;
-use crate::metrics;
 
 pub struct UnhaunterGearPlugin;
 
