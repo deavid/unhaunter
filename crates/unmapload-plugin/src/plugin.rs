@@ -4,7 +4,7 @@ use unevents_core::events::loadlevel::{
     LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent, MapEntitiesReadyEvent,
     MapGeometryInitializedEvent,
 };
-use unmapload_core::assets::MapAssets;
+use unmapload_core::assets::{MapAssets, MissionAssets};
 use untypes_core::states::AppState;
 
 /// Plugin for map loading functionality
@@ -15,7 +15,11 @@ pub struct UnhaunterMapLoadPlugin;
 
 impl Plugin for UnhaunterMapLoadPlugin {
     fn build(&self, app: &mut App) {
-        app.add_loading_state(LoadingState::new(AppState::Loading).load_collection::<MapAssets>());
+        app.add_loading_state(
+            LoadingState::new(AppState::Loading)
+                .load_collection::<MapAssets>()
+                .load_collection::<MissionAssets>(),
+        );
         app.add_message::<LoadLevelEvent>()
             .add_message::<LevelLoadedEvent>()
             .add_message::<LevelReadyEvent>()

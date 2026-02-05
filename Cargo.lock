@@ -6224,6 +6224,7 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_platform",
  "ndarray",
+ "unassets-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
