@@ -1,6 +1,4 @@
-use bevy::color::palettes::css;
 use bevy::prelude::*;
-use unboard_core::components::mapcolor::MapColor;
 use unnet_core::messages::{NetworkDataEvent, NetworkMessage};
 use unnet_core::network_id::NetworkId;
 use unplayer_core::components::{Hiding, MainPlayer};
@@ -20,10 +18,7 @@ fn on_enter_truck(
         commands
             .entity(entity)
             .insert(InTruck)
-            .insert(Hiding { hiding_spot: None })
-            .insert(MapColor {
-                color: css::DARK_GRAY.with_alpha(0.5).into(),
-            });
+            .insert(Hiding { hiding_spot: None });
 
         // If client, notify host (Phase E.2 repurposed RequestTruckEntry)
         if !v_host {
@@ -46,10 +41,7 @@ fn on_exit_truck(
         commands
             .entity(entity)
             .remove::<InTruck>()
-            .remove::<Hiding>()
-            .insert(MapColor {
-                color: css::WHITE.with_alpha(1.0).into(),
-            });
+            .remove::<Hiding>();
 
         // If client, notify host to remove InTruck from Host's entity
         if !v_host {

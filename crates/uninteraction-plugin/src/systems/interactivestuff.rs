@@ -172,7 +172,7 @@ impl InteractiveStuff<'_, '_> {
         force_tuid: Option<u32>,
     ) -> bool {
         if ietype == InteractionExecutionType::ReadRoomState {
-            trace!(
+            warn!(
                 "execute_interaction: ReadRoomState is deprecated, use RoomStateSyncEvent instead."
             );
         }
@@ -284,6 +284,7 @@ impl InteractiveStuff<'_, '_> {
                         z: item_bpos.z as i32,
                         tileset: other_tileset,
                         tileuid: other_tileuid,
+                        cvo_key: other_behavior.key_cvo().to_key_string(),
                     });
             }
             if ietype == InteractionExecutionType::ChangeState
@@ -300,8 +301,9 @@ impl InteractiveStuff<'_, '_> {
             return true;
         }
         if let Some(ftuid) = force_tuid {
+            // This currently happens because the host seems to send an interaction per tile position.
             warn!(
-                "execute_interaction: No matching tuid {:?} found in cvo group {:?} for entity {:?}",
+                "execute_interaction: attempted to set sprite tuid {:?} to {:?} for entity {:?} but that variant does not exist for that sprite",
                 ftuid, cvo, entity
             );
         }

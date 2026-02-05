@@ -1,9 +1,7 @@
 use crate::components::player::Hiding;
-use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
-use unboard_core::components::mapcolor::MapColor;
 use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unrender_std::components::animation::AnimationTimer;
@@ -57,14 +55,9 @@ fn hide_player(
                 timer.reset();
 
                 // Add the Hiding component to the player
-                commands
-                    .entity(player_entity)
-                    .insert(Hiding {
-                        hiding_spot: Some(hiding_spot_entity),
-                    })
-                    .insert(MapColor {
-                        color: css::DARK_GRAY.with_alpha(0.5).into(),
-                    });
+                commands.entity(player_entity).insert(Hiding {
+                    hiding_spot: Some(hiding_spot_entity),
+                });
                 player_pos.x = (player_pos.x + hiding_spot_pos.x) / 2.0;
                 player_pos.y = (player_pos.y + hiding_spot_pos.y) / 2.0;
 
@@ -78,7 +71,7 @@ fn hide_player(
                     parent
                         .spawn(Sprite {
                             image: ga.asset_server.load("img/hiding_overlay.png"),
-                            color: css::WHITE.with_alpha(0.4).into(),
+                            color: Color::WHITE.with_alpha(0.4),
                             ..default()
                         })
                         .insert(
@@ -118,15 +111,10 @@ fn unhide_player(
             // Using 'activate' for unhiding Remove the Hiding component
             commands.entity(player_entity).remove::<Hiding>();
 
-            commands
-                .entity(player_entity)
-                .insert(AnimationTimer::from_range(
-                    Timer::from_seconds(0.20, TimerMode::Repeating),
-                    vec![32],
-                ))
-                .insert(MapColor {
-                    color: Color::WHITE.with_alpha(1.0),
-                });
+            commands.entity(player_entity).insert(AnimationTimer::from_range(
+                Timer::from_seconds(0.20, TimerMode::Repeating),
+                vec![32],
+            ));
 
             if let Some(hiding_spot) = hiding.hiding_spot {
                 commands.entity(hiding_spot).despawn_related::<Children>();

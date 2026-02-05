@@ -21,6 +21,11 @@ pub(crate) fn app_setup(app: &mut App) {
     grabdrop::app_setup(app);
     hide::app_setup(app);
 
+    app.add_systems(
+        Update,
+        styling::update_player_styling.run_if(in_state(AppState::InGame)),
+    );
+
     app.add_systems(PostUpdate, input::keyboard::player_input_clear_system);
 
     // Set up input and movement systems with proper ordering
@@ -63,11 +68,6 @@ pub(crate) fn app_setup(app: &mut App) {
                     .or(in_state(GameState::NpcHelp)),
             ),
         ),
-    );
-
-    app.add_systems(
-        Update,
-        styling::player_style_system.run_if(in_state(AppState::InGame)),
     );
 
     mouse::app_setup(app);

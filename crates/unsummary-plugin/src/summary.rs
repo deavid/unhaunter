@@ -715,6 +715,20 @@ pub(crate) fn finalize_profile_update(
     if sd.mission_successful {
         // Update global statistics
         player_profile.statistics.total_missions_completed += 1;
+
+        // If mission was successful AND ghost was expelled, increment evidence acknowledgment
+        if sd.ghosts_unhaunted > 0 {
+            for ghost in &sd.ghost_types {
+                for evidence in ghost.evidences() {
+                    let count_entry = player_profile
+                        .times_evidence_acknowledged_on_gear
+                        .entry(evidence)
+                        .or_insert(0);
+
+                    *count_entry += 1;
+                }
+            }
+        }
     }
 
     player_profile.statistics.total_play_time_seconds += sd.time_taken_secs as f64;

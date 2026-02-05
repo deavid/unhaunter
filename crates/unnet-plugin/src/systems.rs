@@ -1,5 +1,4 @@
 use crate::resources::{HandshakeState, NetworkConn};
-use bevy::color::palettes::css;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -454,7 +453,7 @@ pub struct HostSnapshotParams<'w, 's> {
             &'static NetworkId,
             &'static ungear_core::types::gear::kind::GearKind,
             &'static Position,
-            &'static Toggleable,
+            Option<&'static Toggleable>,
             Option<&'static DeployedGear>,
             Option<&'static Battery>,
             Option<&'static Flashlight>,
@@ -480,7 +479,7 @@ pub struct HostSnapshotParams<'w, 's> {
         (
             Entity,
             Option<&'static NetworkId>,
-            &'static Position,
+            Ref<'static, Position>,
             &'static NetworkOriginalMapPosition,
         ),
         With<unbehavior::components::Movable>,
@@ -611,6 +610,7 @@ pub fn host_send_snapshots_system(
                     unnet_core::messages::GearDetails::RepellentFlask {
                         qty: r.qty,
                         active: r.active,
+                        liquid_content: r.liquid_content,
                     }
                 } else if let Some(t) = thermometer {
                     unnet_core::messages::GearDetails::Thermometer { temp: t.temp }
@@ -624,7 +624,7 @@ pub fn host_send_snapshots_system(
                     id: *id,
                     kind: *kind,
                     position: [pos.x, pos.y, pos.z],
-                    is_on: toggle.is_on,
+                    is_on: toggle.map(|t| t.is_on).unwrap_or(false),
                     is_deployed: deployed.is_some(),
                     deployed_direction: deployed
                         .map(|d| [d.direction.dx, d.direction.dy])
@@ -668,6 +668,7 @@ pub fn host_send_snapshots_system(
                 z: pos.z as i32,
                 tileset: beh.cfg().tileset.clone(),
                 tileuid: beh.cfg().tileuid,
+                cvo_key: beh.key_cvo().to_key_string(),
             })
             .collect()
     } else {
@@ -704,7 +705,7 @@ pub fn host_send_snapshots_system(
     let movable_objects = host_params
         .query_movable
         .iter()
-        .map(|(entity, nid, pos, orig)| {
+        .filter_map(|(entity, nid, pos, orig)| {
             let mid = match nid {
                 Some(id) => *id,
                 None => {
@@ -730,17 +731,26 @@ pub fn host_send_snapshots_system(
                             })
                         })
                     });
-            MovableObjectSync {
-                id: mid,
-                original_position: [
-                    orig.position.x as i32,
-                    orig.position.y as i32,
-                    orig.position.z as i32,
-                ],
-                tileset: orig.tileset.clone(),
-                tileuid: orig.tileuid,
-                current_position: [pos.x, pos.y, pos.z],
-                held_by,
+            if pos.is_changed() {
+                debug!(
+                    "Host sending moved object: id={:?} orig={:?} cur={:?}",
+                    mid, orig.position, *pos
+                );
+
+                Some(MovableObjectSync {
+                    id: mid,
+                    original_position: [
+                        orig.position.x as i32,
+                        orig.position.y as i32,
+                        orig.position.z as i32,
+                    ],
+                    tileset: orig.tileset.clone(),
+                    tileuid: orig.tileuid,
+                    current_position: [pos.x, pos.y, pos.z],
+                    held_by,
+                })
+            } else {
+                None
             }
         })
         .collect();
@@ -873,6 +883,7 @@ pub struct SnapshotAppStates<'w> {
 pub struct ClientSnapshotParams<'w, 's> {
     pub commands: Commands<'w, 's>,
     pub cli: Res<'w, CliOptions>,
+    pub time: Res<'w, Time>,
     pub asset_server: Res<'w, AssetServer>,
     pub player_assets: Res<'w, PlayerAssets>,
     pub ghost_assets: Res<'w, GhostAssets>,
@@ -927,7 +938,7 @@ pub struct ClientSnapshotParams<'w, 's> {
     pub query_tiles: Query<
         'w,
         's,
-        (&'static Position, &'static Behavior),
+        &'static Behavior,
         (
             Without<PlayerSprite>,
             Without<GhostTag>,
@@ -944,7 +955,7 @@ pub struct ClientSnapshotParams<'w, 's> {
             Entity,
             &'static NetworkId,
             &'static mut Position,
-            &'static mut Toggleable,
+            Option<&'static mut Toggleable>,
             Option<&'static mut DeployedGear>,
             Option<&'static mut Battery>,
             Option<&'static mut Flashlight>,
@@ -996,7 +1007,7 @@ pub struct ClientSnapshotParams<'w, 's> {
         's,
         (
             Entity,
-            &'static NetworkId,
+            Option<&'static NetworkId>,
             &'static mut Position,
             &'static NetworkOriginalMapPosition,
             Option<&'static mut EquipmentPosition>,
@@ -1005,7 +1016,6 @@ pub struct ClientSnapshotParams<'w, 's> {
             With<unbehavior::components::Movable>,
             Without<PlayerSprite>,
             Without<GhostTag>,
-            Without<Behavior>,
             Without<GhostBreach>,
         ),
     >,
@@ -1068,7 +1078,10 @@ fn spawn_remote_player(params: &mut ClientSnapshotParams, id: NetworkId) -> Enti
         ))
         .insert(Stamina::default())
         .insert(unnavigation_core::components::waypoint::WaypointQueue::default())
-        .insert(PlayerGear::default());
+        .insert(PlayerGear::default())
+        .insert(MapColor {
+            color: Color::WHITE,
+        });
 
     ec.id()
 }
@@ -1078,6 +1091,25 @@ fn spawn_remote_gear(params: &mut ClientSnapshotParams, g_sync: &GearSyncState) 
         .gear_registry
         .spawn(&mut params.commands, g_sync.kind);
     params.commands.entity(entity).insert(g_sync.id);
+
+    // Apply immediate state to avoid race conditions (1-frame delay)
+    params.commands.entity(entity).insert(Position {
+        x: g_sync.position[0],
+        y: g_sync.position[1],
+        z: g_sync.position[2],
+        visual_priority: 0.0,
+    });
+    params.commands.entity(entity).insert(Toggleable {
+        is_on: g_sync.is_on,
+    });
+
+    if let unnet_core::messages::GearDetails::Flashlight(status) = &g_sync.details {
+        params.commands.entity(entity).insert(Flashlight {
+            status: status.clone(),
+            ..default()
+        });
+    }
+
     if g_sync.is_deployed {
         params
             .commands
@@ -1252,16 +1284,14 @@ pub fn client_apply_snapshots_system(
             // Sync movable objects
             let mut mov_orig_pos_lookup = std::collections::HashMap::new();
             for (entity, _mid, _pos, orig, _eq) in params.query_movable.iter() {
-                mov_orig_pos_lookup.insert(
-                    (
-                        orig.position.x as i32,
-                        orig.position.y as i32,
-                        orig.position.z as i32,
-                        orig.tileset.clone(),
-                        orig.tileuid,
-                    ),
-                    entity,
+                let key = (
+                    orig.position.x as i32,
+                    orig.position.y as i32,
+                    orig.position.z as i32,
+                    orig.tileset.clone(),
+                    orig.tileuid,
                 );
+                mov_orig_pos_lookup.insert(key, entity);
             }
 
             for mov_sync in movable_objects {
@@ -1277,7 +1307,7 @@ pub fn client_apply_snapshots_system(
                     && let Ok((_entity, id, mut pos, _orig, _eq_pos)) =
                         params.query_movable.get_mut(entity)
                 {
-                    if *id == NetworkId::default() {
+                    if id.is_none() {
                         params.commands.entity(entity).insert(mov_sync.id);
                     }
                     pos.x = mov_sync.current_position[0];
@@ -1298,6 +1328,11 @@ pub fn client_apply_snapshots_system(
                                 .insert(unbehavior::components::FloorItemCollidable);
                         }
                     }
+                } else {
+                    warn!(
+                        "Client: Could not find movable object for sync key {:?}",
+                        key
+                    );
                 }
             }
 
@@ -1388,20 +1423,14 @@ pub fn client_apply_snapshots_system(
                                     .commands
                                     .entity(p_entity)
                                     .insert(InTruck)
-                                    .insert(Hiding { hiding_spot: None })
-                                    .insert(MapColor {
-                                        color: css::DARK_GRAY.with_alpha(0.5).into(),
-                                    });
+                                    .insert(Hiding { hiding_spot: None });
                             }
                             (false, Some(_)) => {
                                 params
                                     .commands
                                     .entity(p_entity)
                                     .remove::<InTruck>()
-                                    .remove::<Hiding>()
-                                    .insert(MapColor {
-                                        color: css::WHITE.with_alpha(1.0).into(),
-                                    });
+                                    .remove::<Hiding>();
                             }
                             _ => {}
                         }
@@ -1459,7 +1488,7 @@ pub fn client_apply_snapshots_system(
                     g_entity,
                     _,
                     mut pos,
-                    mut toggle,
+                    toggle,
                     deployed,
                     battery,
                     flashlight,
@@ -1472,7 +1501,9 @@ pub fn client_apply_snapshots_system(
                     pos.x = g_sync.position[0];
                     pos.y = g_sync.position[1];
                     pos.z = g_sync.position[2];
-                    toggle.is_on = g_sync.is_on;
+                    if let Some(mut t) = toggle {
+                        t.is_on = g_sync.is_on;
+                    }
 
                     match (g_sync.is_deployed, deployed) {
                         (true, None) => {
@@ -1529,10 +1560,15 @@ pub fn client_apply_snapshots_system(
                                 ));
                             }
                         }
-                        unnet_core::messages::GearDetails::RepellentFlask { qty, active } => {
+                        unnet_core::messages::GearDetails::RepellentFlask {
+                            qty,
+                            active,
+                            liquid_content,
+                        } => {
                             if let Some(mut r) = repellent {
                                 r.qty = *qty;
                                 r.active = *active;
+                                r.liquid_content = *liquid_content;
                             }
                         }
                         unnet_core::messages::GearDetails::Thermometer { temp } => {
@@ -1585,6 +1621,22 @@ pub fn client_apply_snapshots_system(
                                 entity,
                             });
                         let new_held = gear.held_item.as_ref().map(|h| h.entity);
+
+                        // Derivation: Update EquipmentPosition on referenced gear
+                        if let Some(e) = gear.left_hand {
+                            params.commands.entity(e).insert(EquipmentPosition::Hand(
+                                unfoundation_core::types::gear::Hand::Left,
+                            ));
+                        }
+                        if let Some(e) = gear.right_hand {
+                            params.commands.entity(e).insert(EquipmentPosition::Hand(
+                                unfoundation_core::types::gear::Hand::Right,
+                            ));
+                        }
+                        for e in &gear.inventory {
+                            params.commands.entity(*e).insert(EquipmentPosition::Stowed);
+                        }
+
                         if old_left != gear.left_hand
                             || old_right != gear.right_hand
                             || old_held != new_held
@@ -1682,11 +1734,21 @@ pub fn client_apply_snapshots_system(
                         );
                     }
                     for &entity in entities {
-                        if let Some((_pos, _beh)) =
-                            params.query_tiles.get(entity).ok().filter(|(_, beh)| {
+                        if params
+                            .query_tiles
+                            .get(entity)
+                            .ok()
+                            .filter(|beh| {
+                                // Filter: Is this the correct sprite?
+                                let key_cvo = beh.key_cvo().to_key_string();
+                                if key_cvo != t_sync.cvo_key {
+                                    return false;
+                                }
+                                // Filter: Has this sprite changed? Does it require a change?
                                 beh.cfg().tileset != t_sync.tileset
                                     || beh.cfg().tileuid != t_sync.tileuid
                             })
+                            .is_some()
                         {
                             debug!(
                                 "Client: Applying map tile update at {:?} (tileset: {}, tileuid: {})",
@@ -1884,6 +1946,7 @@ pub fn host_apply_input_system(
     gear_registry: Res<GearSpawnerRegistry>,
     mut q_repellent: Query<&mut ungearitems_core::components::repellentflask::RepellentFlask>,
     q_gearkind: Query<&ungear_core::types::gear::kind::GearKind>,
+    query_net_id: Query<&NetworkId>,
     asset_server: Res<AssetServer>,
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
@@ -1964,10 +2027,7 @@ pub fn host_apply_input_system(
                             commands
                                 .entity(entity)
                                 .insert(InTruck)
-                                .insert(Hiding { hiding_spot: None })
-                                .insert(MapColor {
-                                    color: css::DARK_GRAY.with_alpha(0.5).into(),
-                                });
+                                .insert(Hiding { hiding_spot: None });
                         } else {
                             warn!(
                                 "Network: Rejected RequestTruckEntry for player {:?} - too far from van",
@@ -1988,10 +2048,7 @@ pub fn host_apply_input_system(
                         commands
                             .entity(entity)
                             .remove::<InTruck>()
-                            .remove::<Hiding>()
-                            .insert(MapColor {
-                                color: css::WHITE.with_alpha(1.0).into(),
-                            });
+                            .remove::<Hiding>();
                         break;
                     }
                 }
@@ -2030,6 +2087,26 @@ pub fn host_apply_input_system(
                                             &mut q_repellent,
                                             &q_gearkind,
                                         );
+
+                                    // Ensure any newly spawned gear has a NetworkId
+                                    let mut ensure_net_id = |entity: Entity| {
+                                        if query_net_id.get(entity).is_err() {
+                                            let mut rng = rand::rng();
+                                            let net_id =
+                                                NetworkId(rng.random_range(1000..u64::MAX));
+                                            commands.entity(entity).insert(net_id);
+                                            debug!(
+                                                "Network: Assigned {:?} to local entity {:?}",
+                                                net_id, entity
+                                            );
+                                        }
+                                    };
+                                    if let Some(e) = gear.left_hand {
+                                        ensure_net_id(e);
+                                    }
+                                    if let Some(e) = gear.right_hand {
+                                        ensure_net_id(e);
+                                    }
 
                                     if consumed_new_bottle {
                                         craft_tracker.craft();

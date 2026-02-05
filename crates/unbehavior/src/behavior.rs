@@ -248,6 +248,12 @@ pub struct SpriteCVOKey {
     pub orientation: Orientation,
 }
 
+impl SpriteCVOKey {
+    pub fn to_key_string(&self) -> String {
+        format!("{:?}/{}/{:?}", self.class, self.variant, self.orientation)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SpriteConfig {
     pub(crate) class: Class,

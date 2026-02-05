@@ -18,11 +18,7 @@ pub(crate) fn player_gear_usage_system(
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
     mut ga: SoundEmitter,
     cli: Res<CliOptions>,
-    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
-    if !q_in_truck.is_empty() {
-        return;
-    }
     let authority = if is_host(cli) {
         Authority::Host
     } else {

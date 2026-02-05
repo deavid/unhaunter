@@ -1,9 +1,7 @@
 use bevy::prelude::*;
 use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
-use unplayer_core::components::MainPlayer;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
-use untags_core::tags::PlayerTag;
 
 /// Synchronizes the map entity field with the current positions of entities.
 ///
@@ -16,58 +14,32 @@ use untags_core::tags::PlayerTag;
 fn sync_map_entity_field(
     mut board_entity_field: ResMut<BoardEntityField>,
     board_topology: Res<BoardTopology>,
-    player_query: Query<&Position, (With<PlayerTag>, With<MainPlayer>)>,
-    position_query: Query<&Position>,
-    mut map_entity_bpos_query: Query<&mut MapEntityFieldBPos>,
+    mut map_entity_bpos_query: Query<
+        (Entity, &Position, &mut MapEntityFieldBPos),
+        Changed<Position>,
+    >,
 ) {
-    let Ok(player_pos) = player_query.single() else {
-        return;
-    };
+    let map_size = board_topology.map_size;
+    let mut to_update = Vec::new();
 
-    let player_bpos = player_pos.to_board_position();
-    let (map_width, map_height, _map_depth) = board_topology.map_size;
-
-    // Define the update radius around player
-    let update_radius: usize = 8;
-    let min_x = player_bpos.ndidx().0.saturating_sub(update_radius);
-    let max_x = (player_bpos.ndidx().0 + update_radius).min(map_width - 1);
-    let min_y = player_bpos.ndidx().1.saturating_sub(update_radius);
-    let max_y = (player_bpos.ndidx().1 + update_radius).min(map_height - 1);
-    let z = player_bpos.ndidx().2;
-
-    let mut to_update = vec![];
-
-    // Process entities within the update radius
-    for x in min_x..=max_x {
-        for y in min_y..=max_y {
-            let entities = &board_entity_field.0[(x, y, z)];
-
-            for &entity in entities.iter() {
-                // Check if entity has a Position component
-                if let Ok(current_pos) = position_query.get(entity) {
-                    let current_bpos = current_pos.to_board_position();
-
-                    // Only update if the entity has a MapEntityFieldBPos component
-                    if let Ok(mut old_bpos) = map_entity_bpos_query.get_mut(entity)
-                        && old_bpos.0 != current_bpos
-                    {
-                        to_update.push((entity, current_bpos.clone(), old_bpos.0.clone()));
-
-                        // Update the stored BoardPosition
-                        old_bpos.0 = current_bpos;
-                    }
-                }
-            }
+    for (entity, pos, mut old_bpos) in map_entity_bpos_query.iter_mut() {
+        let current_bpos = pos.to_board_position_size(map_size);
+        if old_bpos.0 == current_bpos {
+            continue;
         }
+
+        to_update.push((entity, current_bpos.clone(), old_bpos.0.clone()));
+        old_bpos.0 = current_bpos;
     }
+
     for (entity, current_bpos, old_bpos) in to_update {
-        // Remove from the current position in the map_entity_field
         if let Some(entity_vec) = board_entity_field.0.get_mut(old_bpos.ndidx()) {
             entity_vec.retain(|&e| e != entity);
         }
 
-        // Add to the new position
-        if let Some(entity_vec) = board_entity_field.0.get_mut(current_bpos.ndidx()) {
+        if let Some(entity_vec) = board_entity_field.0.get_mut(current_bpos.ndidx())
+            && !entity_vec.contains(&entity)
+        {
             entity_vec.push(entity);
         }
     }

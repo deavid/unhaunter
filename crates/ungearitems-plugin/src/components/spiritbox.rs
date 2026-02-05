@@ -137,7 +137,7 @@ pub(crate) fn update_spiritbox(
                 let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
                 let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
                 let temp_clamped = (temp_c - 3.0).clamp(0.5, 10.0);
-                spiritbox.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0
+                spiritbox.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 5.5
                     * spiritbox_clarity.max(0.0);
             }
 

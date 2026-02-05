@@ -349,7 +349,9 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 // Players and characters need smoother color transitions than tiles
                 smooth_f = 3.0;
             }
-            let map_color = o_map_color.map(|x| x.color).unwrap_or_default();
+            let map_color = o_map_color
+                .map(|x| x.color)
+                .unwrap_or(Color::LinearRgba(LinearRgba::rgb(1.0, 1.0, 1.0)));
 
             if let Some(ethereal) = o_ethereal {
                 smooth_f = 299.0;
@@ -402,6 +404,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
 
             // remove brightness calculation for main tile:
             let mut dst_color = src_color_base;
+
             let difficulty_val = &difficulty.0;
 
             if let Some(am) = o_alpha_mod {
@@ -450,6 +453,11 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 apply_miasma_pressure(pos, miasma, bf, &mut opacity);
             }
 
+            if !is_tile {
+                let mc = map_color.to_linear().to_vec4();
+                let sc = dst_color.to_linear().to_vec4();
+                dst_color = LinearRgba::from_vec4(mc * sc * 0.9 + mc * 0.1).into();
+            }
             let prev_a = new_mat.data.color.alpha();
             dst_color.set_alpha(step_alpha_clamped(
                 opacity,

@@ -39,7 +39,7 @@ fn walkie_talk(
     mut hint_event_writer: MessageWriter<OnScreenHintEvent>,
     mut walkie_talking_writer: MessageWriter<WalkieTalkingEvent>,
     q_sound_state: Query<(Entity, &WalkieSoundState)>,
-    mut qt: Query<&mut Text, With<WalkieText>>,
+    mut qt: Query<(&mut Text, &mut Visibility), With<WalkieText>>,
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
@@ -58,8 +58,9 @@ fn walkie_talk(
             walkie_play.state = None;
             walkie_play.current_voice_line = None;
             walkie_play.urgent_pending = false;
-            for mut text in qt.iter_mut() {
+            for (mut text, mut vis) in qt.iter_mut() {
                 text.0 = "".to_string();
+                *vis = Visibility::Hidden;
             }
             stopwatch.reset();
             // Also despawn the sound
@@ -129,7 +130,12 @@ fn walkie_talk(
     };
     stopwatch.reset();
 
-    for mut text in qt.iter_mut() {
+    for (mut text, mut vis) in qt.iter_mut() {
+        if new_state.is_some() {
+            *vis = Visibility::Inherited;
+        } else {
+            *vis = Visibility::Hidden;
+        }
         text.0 = match new_state {
             Some(WalkieSoundState::Intro) => "**bzzrt**".to_string(),
             Some(WalkieSoundState::Talking) => {

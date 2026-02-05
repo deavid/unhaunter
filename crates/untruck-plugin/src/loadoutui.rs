@@ -11,6 +11,7 @@ use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
 use unnet_core::messages::{NetworkMessage, SendNetworkMessage, TruckInventoryChange};
+use unnet_core::network_id::NetworkId;
 use unnet_core::resources::LocalPlayer;
 use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::components::{MainPlayer, PlayerSprite};
@@ -526,6 +527,16 @@ fn button_clicked(
             }
             // Spawn item and put in hand or inventory
             let entity = gear_registry.spawn(&mut commands, *kind);
+
+            if !matches!(cli.net_mode, NetMode::Offline) {
+                // Ensure the entity has a NetworkId so it can be synced to clients.
+                // We use heavy_rng_seed to avoid needing a direct dependency on `rand`,
+                // and clamp to >1000 to avoid reserved IDs.
+                let rng_val = unfoundation_core::random_seed::heavy_rng_seed();
+                let net_id = NetworkId(rng_val.max(1000));
+                commands.entity(entity).insert(net_id);
+            }
+
             if p_gear.left_hand.is_none() {
                 p_gear.left_hand = Some(entity);
             } else if p_gear.right_hand.is_none() {

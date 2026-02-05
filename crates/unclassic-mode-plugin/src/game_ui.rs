@@ -78,6 +78,7 @@ fn setup_ui(
                     padding: UiRect::axes(Val::Px(10.0 * UI_SCALE), Val::Px(1.0 * UI_SCALE)),
                     ..default()
                 })
+                .insert(Visibility::Hidden)
                 .insert(WalkieText);
         });
 

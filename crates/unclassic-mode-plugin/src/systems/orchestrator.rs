@@ -6,6 +6,7 @@ use rand::prelude::IndexedRandom;
 use unassets_core::resources::upscale::UpscaleIndex;
 use unbehavior::components::Movable;
 use unbehavior::roomdb::RoomDB;
+use unboard_core::components::mapcolor::MapColor;
 use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
 use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
 use unboard_core::resources::board_topology::BoardTopology;
@@ -204,6 +205,9 @@ pub(crate) fn classic_mode_orchestrator(
 
         ec.insert(PlayerSprite::new(id_net, spawn_pos))
             .insert(id_net)
+            .insert(MapColor {
+                color: Color::WHITE,
+            })
             .insert(PlayerInputMapping {
                 controls: **p.control_settings,
             })

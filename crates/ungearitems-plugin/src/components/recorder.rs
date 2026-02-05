@@ -99,7 +99,7 @@ pub(crate) fn update_recorder(
             }
 
             if evp_recorded {
-                recorder.amt_recorded += dt * difficulty.0.equipment_sensitivity;
+                recorder.amt_recorded += dt * difficulty.0.equipment_sensitivity * 2.1;
             } else {
                 recorder.amt_recorded -= dt * 0.1;
             }

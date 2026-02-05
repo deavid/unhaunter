@@ -1,14 +1,13 @@
-use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
+use super::uibutton::TruckButtonState;
 use crate::types::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
-use bevy_persistent::Persistent;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
+use unghost_core::resources::ghost_guess::GhostGuess;
 use unnet_core::messages::{NetworkMessage, SendNetworkMessage};
 use unnet_core::resources::LocalPlayer;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
-use unprofile_core::profile::PlayerProfileData;
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::states::AppState;
 use unui_core::components::game_ui::EvidenceUI;
@@ -17,7 +16,7 @@ pub(crate) fn update_evidence_ui(
     q_gear: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
     q_sensor: Query<&EvidenceSensor>,
     mut qs: Query<Entity, With<EvidenceUI>>,
-    interaction_query: Query<&TruckUIButton, With<Button>>,
+    gg: Res<GhostGuess>,
     mut writer: TextUiWriter,
     looking_gear: Res<LookingGear>,
 ) {
@@ -32,11 +31,15 @@ pub(crate) fn update_evidence_ui(
                 .map(|s| s.evidence);
 
             let ev_state = match o_evidence {
-                Some(ev) => interaction_query
-                    .iter()
-                    .find(|t| t.class == TruckButtonType::Evidence(ev))
-                    .map(|t| t.status)
-                    .unwrap_or(TruckButtonState::Off),
+                Some(ev) => {
+                    if gg.evidences_found.contains(&ev) {
+                        TruckButtonState::Pressed
+                    } else if gg.evidences_missing.contains(&ev) {
+                        TruckButtonState::Discard
+                    } else {
+                        TruckButtonState::Off
+                    }
+                }
                 None => TruckButtonState::Off,
             };
             let status = EvidenceStatus::from_gearkind(o_evidence, ev_state);
@@ -65,12 +68,11 @@ pub(crate) fn keyboard_evidence(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     players: Query<(&PlayerInputMapping, &PlayerGear), With<MainPlayer>>,
     q_sensor: Query<&EvidenceSensor>,
-    mut interaction_query: Query<&mut TruckUIButton, With<Button>>,
     looking_gear: Res<LookingGear>,
-    mut profile_data: ResMut<Persistent<PlayerProfileData>>,
     cli: Res<CliOptions>,
     local_id: Res<LocalPlayer>,
     mut ev_net: MessageWriter<SendNetworkMessage>,
+    mut gg: ResMut<GhostGuess>,
 ) {
     for (input_mapping, playergear) in &players {
         let hand_entity = match looking_gear.hand() {
@@ -87,26 +89,12 @@ pub(crate) fn keyboard_evidence(
         if keyboard_input.just_pressed(input_mapping.controls.change_evidence) {
             match cli.net_mode {
                 NetMode::Offline | NetMode::Host { .. } => {
-                    for mut t in &mut interaction_query {
-                        if t.class == TruckButtonType::Evidence(evidence) {
-                            // Call pressed() first to change the button state
-                            t.pressed();
-
-                            // Track gear acknowledgment if button is now pressed (evidence found)
-                            if t.status == TruckButtonState::Pressed {
-                                const GEAR_HINT_THRESHOLD: u32 = 3; // Same threshold as journal
-                                let ack_count_entry = profile_data
-                                    .times_evidence_acknowledged_on_gear
-                                    .entry(evidence)
-                                    .or_insert(0);
-
-                                if *ack_count_entry < GEAR_HINT_THRESHOLD {
-                                    *ack_count_entry += 1;
-                                    profile_data.set_changed(); // Mark Persistent data as changed
-                                    // info!("Gear hint for {:?} acknowledged. New count: {}", evidence, *ack_count_entry);
-                                }
-                            }
-                        }
+                    if gg.evidences_found.contains(&evidence) {
+                        gg.evidences_found.remove(&evidence);
+                    } else {
+                        // If it was missing/discarded, we reset it to found.
+                        gg.evidences_missing.remove(&evidence);
+                        gg.evidences_found.insert(evidence);
                     }
                 }
                 NetMode::Join { .. } => {

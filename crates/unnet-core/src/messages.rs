@@ -26,6 +26,7 @@ pub enum GearDetails {
     RepellentFlask {
         qty: i32,
         active: bool,
+        liquid_content: Option<GhostType>,
     },
     None,
 }
@@ -80,6 +81,7 @@ pub struct MapTileState {
     pub z: i32,
     pub tileset: String,
     pub tileuid: u32,
+    pub cvo_key: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
