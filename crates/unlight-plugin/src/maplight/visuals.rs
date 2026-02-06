@@ -9,7 +9,7 @@ use unfog_core::resources::MiasmaConfig;
 use unlight_core::types::light::LightData;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::visuals::{
-    AlphaModulator, Ethereal, InfraredSensitive, SpectralClarity, UltravioletSensitive,
+    AlphaModulator, Emissive, Ethereal, InfraredSensitive, SpectralClarity, UltravioletSensitive,
 };
 use unrender_std::utils::light::lerp_color;
 use unspatial_core::boardposition::BoardPosition;
@@ -51,11 +51,12 @@ pub(crate) fn apply_miasma_pressure(
 pub(crate) fn apply_uv_visuals(
     uv_sens: &UltravioletSensitive,
     ld: &LightData,
+    visibility: f32,
     dst_color: &mut Color,
     opacity: &mut f32,
 ) {
-    *opacity = (*opacity + ld.ultraviolet * uv_sens.intensity).clamp(0.0, 1.3);
-    let f = (ld.ultraviolet * uv_sens.color_shift).clamp(0.0, 1.0);
+    *opacity = (*opacity + ld.ultraviolet * uv_sens.intensity * visibility).clamp(0.0, 1.3);
+    let f = (ld.ultraviolet * uv_sens.color_shift * visibility).clamp(0.0, 1.0);
     *dst_color = lerp_color(*dst_color, css::MEDIUM_SLATE_BLUE.into(), f);
 }
 
@@ -252,4 +253,32 @@ pub(crate) fn step_alpha_clamped(
     }
 
     (new_a * map_alpha).clamp(0.0, 1.0)
+}
+
+pub(crate) fn apply_emissive_visuals(
+    emissive: &Emissive,
+    ld_abs: &LightData,
+    elapsed: f32,
+    visibility: f32,
+    dst_color: &mut Color,
+) {
+    let mut boost = emissive.intensity;
+    if emissive.pulse_speed > 0.0 {
+        boost *= (elapsed * emissive.pulse_speed).sin() * 0.15 + 0.85;
+    }
+    // Phosphorescence/Fluorescence: Stimulus in, light out.
+    boost += ld_abs.magnitude() * emissive.light_reactivity;
+
+    // Apply visibility to the final boost.
+    // If we can't see the tile, we can't see its emission.
+    boost *= visibility;
+
+    let mut dcl = dst_color.to_linear();
+    let ecl = emissive.color.to_linear();
+
+    dcl.red += ecl.red * boost;
+    dcl.green += ecl.green * boost;
+    dcl.blue += ecl.blue * boost;
+
+    *dst_color = dcl.into();
 }

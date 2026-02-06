@@ -419,7 +419,13 @@ pub(crate) fn apply_lighting_to_tiles_system(
             }
 
             if let Some(uv_sens) = o_uv_sens {
-                apply_uv_visuals(uv_sens, &ld, &mut dst_color, &mut opacity);
+                apply_uv_visuals(
+                    uv_sens,
+                    &ld,
+                    vf.visibility_field[bpos.ndidx()],
+                    &mut dst_color,
+                    &mut opacity,
+                );
             }
 
             if let Some(ir_sens) = o_ir_sens {

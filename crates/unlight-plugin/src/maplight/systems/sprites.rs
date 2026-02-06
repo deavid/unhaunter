@@ -14,8 +14,8 @@ use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::MainPlayer;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive, ShadowCaster,
-    SpectralClarity, SpectralInfluence, UltravioletSensitive,
+    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, InfraredSensitive, LightSensitive,
+    ShadowCaster, SpectralClarity, SpectralInfluence, UltravioletSensitive,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -26,8 +26,9 @@ use unspatial_core::position::Position;
 use crate::maplight::definitions::{ActiveFlashlights, GridResources};
 use crate::maplight::sampler::{LightingSampler, SpectralParams};
 use crate::maplight::visuals::{
-    apply_alpha_modulator_visuals, apply_ecto_visuals, apply_ethereal_visuals, apply_ir_visuals,
-    apply_miasma_cloud_visuals, apply_uv_visuals, update_spectral_influence,
+    apply_alpha_modulator_visuals, apply_ecto_visuals, apply_emissive_visuals,
+    apply_ethereal_visuals, apply_ir_visuals, apply_miasma_cloud_visuals, apply_uv_visuals,
+    update_spectral_influence,
 };
 use crate::metrics;
 
@@ -82,6 +83,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
                 Option<&UVReactive>,
                 Option<&MiasmaSprite>,
                 Option<&AlphaModulator>,
+                Option<&Emissive>,
             ),
         ),
         Without<MapTileSprite>,
@@ -134,6 +136,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
             uv_reactive,
             o_miasma,
             o_alpha_mod,
+            o_emissive,
         ),
     ) in qt.iter_mut()
     {
@@ -178,14 +181,25 @@ pub(crate) fn apply_lighting_to_sprites_system(
         let ld = ld_abs.normalize();
 
         let mut dst_color = Color::srgb(r, g, b);
-        let mut smooth_a: f32 = 1.0;
+
+        // Apply MapColor as a multiplicative tint (Albedo)
+        if let Some(map_color) = o_color {
+            let mcl = map_color.color.to_linear();
+            let mut dcl = dst_color.to_linear();
+            dcl.red *= mcl.red;
+            dcl.green *= mcl.green;
+            dcl.blue *= mcl.blue;
+            dst_color = dcl.into();
+        }
+
+        let mut smooth_a: f32 = quality_factor;
 
         if let Some(uv_sens) = o_uv_sens {
-            apply_uv_visuals(uv_sens, &ld, &mut dst_color, &mut opacity);
+            apply_uv_visuals(uv_sens, &ld, visibility, &mut dst_color, &mut opacity);
         }
 
         if let Some(uv_react) = uv_reactive {
-            let uv_react = uv_react.0;
+            let uv_react = uv_react.0 * visibility;
             dst_color = lerp_color(
                 dst_color,
                 css::GREEN.into(),
@@ -207,6 +221,10 @@ pub(crate) fn apply_lighting_to_sprites_system(
 
         if let Some(am) = o_alpha_mod {
             apply_alpha_modulator_visuals(am, elapsed, &mut opacity);
+        }
+
+        if let Some(emissive) = o_emissive {
+            apply_emissive_visuals(emissive, &ld_abs, elapsed, visibility, &mut dst_color);
         }
 
         let difficulty_val = &difficulty.0;
@@ -264,6 +282,12 @@ pub(crate) fn apply_lighting_to_sprites_system(
                 &mut opacity,
             );
         }
+        let visibility2 = visibility * visibility;
+        let mut dcl = dst_color.to_linear();
+        dcl.red *= visibility2;
+        dcl.green *= visibility2;
+        dcl.blue *= visibility2;
+        dst_color = dcl.into();
 
         let old_a = (sprite_color.alpha()).clamp(0.0001, 1.0);
         dst_color.set_alpha(

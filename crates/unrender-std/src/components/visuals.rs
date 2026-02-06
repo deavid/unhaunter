@@ -107,20 +107,28 @@ pub struct EctoplasmVisuals {
     pub use_breach_curve: bool,
 }
 
-/// Component for entities that should glow (e.g., ghost breaches).
-#[derive(Component, Debug, Clone, Copy)]
-pub struct Luminescent {
-    /// Base intensity of the glow.
+/// Component for entities that should emit their own light (e.g., repellent particles, ghost orbs).
+/// This follows a PBR-like approach where MapColor is the Albedo (multiplicative)
+/// and Emissive is the additive glow.
+#[derive(Component, Debug, Clone, Copy, Reflect)]
+pub struct Emissive {
+    /// Additive color for the glow.
+    pub color: Color,
+    /// Constant intensity of the glow.
     pub intensity: f32,
-    /// Pulse frequency of the glow.
-    pub pulse: f32,
+    /// Light reactivity (fluorescence/phosphorescence): how much environment lighting stimulates this emission.
+    pub light_reactivity: f32,
+    /// Speed of the pulse oscillation (0.0 to disable).
+    pub pulse_speed: f32,
 }
 
-impl Default for Luminescent {
+impl Default for Emissive {
     fn default() -> Self {
         Self {
-            intensity: 1.0,
-            pulse: 1.0,
+            color: Color::WHITE,
+            intensity: 0.0,
+            light_reactivity: 0.0,
+            pulse_speed: 0.0,
         }
     }
 }

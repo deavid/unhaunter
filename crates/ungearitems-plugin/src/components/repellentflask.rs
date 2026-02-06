@@ -13,6 +13,7 @@ use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
+use unrender_std::components::visuals::Emissive;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
@@ -87,6 +88,12 @@ pub(crate) fn update_repellentflask(
                         .insert(MapColor {
                             color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
                         })
+                        .insert(Emissive {
+                            color: css::YELLOW.into(),
+                            intensity: 2.0,
+                            light_reactivity: 5.0,
+                            pulse_speed: 10.0,
+                        })
                         .insert(RepellentParticle::new(liquid_content))
                         .insert(SpriteLayer::default());
                 } else {
@@ -134,7 +141,13 @@ fn repellent_update(
     mut cmd: Commands,
     mut qgs: Query<(&Position, &mut GhostSprite)>,
     mut qrp: Query<
-        (&mut Position, &mut RepellentParticle, &mut MapColor, Entity),
+        (
+            &mut Position,
+            &mut RepellentParticle,
+            &mut MapColor,
+            Entity,
+            Option<&mut Emissive>,
+        ),
         Without<GhostSprite>,
     >,
     bf: Res<BoardTopology>,
@@ -150,13 +163,16 @@ fn repellent_update(
     let dt = time.delta_secs();
     const SPREAD: f32 = 0.1;
     const SPREAD_SHORT: f32 = 0.02;
-    if pressure_base.dim() != bf.map_size {
-        *pressure_base = Array3::from_elem(bf.map_size, 0.0);
-    }
+    let needs_rebuild = pressure_base.dim() != bf.map_size || bcf.is_changed();
+    if needs_rebuild {
+        if pressure_base.dim() != bf.map_size {
+            *pressure_base = Array3::from_elem(bf.map_size, 0.0);
+        }
 
-    pressure_base
-        .indexed_iter_mut()
-        .for_each(|(p, v)| *v = if bcf.0[p].player_free { 20.0 } else { 0.0 });
+        pressure_base
+            .indexed_iter_mut()
+            .for_each(|(p, v)| *v = if bcf.0[p].player_free { 20.0 } else { 0.0 });
+    }
     if positions.dim() != bf.map_size {
         *positions = Array3::from_elem(bf.map_size, Vec::with_capacity(8));
     }
@@ -165,7 +181,7 @@ fn repellent_update(
     const RADIUS: f32 = 0.7;
     let mut p_set = HashSet::with_capacity(1024);
 
-    for (r_pos, rep, _, _) in &qrp {
+    for (r_pos, rep, _, _, _) in &qrp {
         let bpos = r_pos.to_board_position();
         let life = 1.001 - rep.life_factor();
         let nidx = bpos.ndidx();
@@ -192,7 +208,7 @@ fn repellent_update(
         }
     }
 
-    for (mut r_pos, mut rep, mut mapcolor, entity) in &mut qrp {
+    for (mut r_pos, mut rep, mut mapcolor, entity, mut o_emissive) in &mut qrp {
         rep.life -= dt;
         if rep.life < 0.0 {
             cmd.entity(entity).despawn();
@@ -207,11 +223,25 @@ fn repellent_update(
 
         if rep.hit_correct {
             mapcolor.color = ELECTRIC_BLUE.with_alpha(alpha.cbrt());
+            if let Some(ref mut emissive) = o_emissive {
+                emissive.color = ELECTRIC_BLUE;
+            }
         } else if rep.hit_incorrect {
             mapcolor.color = BRIGHT_RED.with_alpha(alpha.cbrt());
+            if let Some(ref mut emissive) = o_emissive {
+                emissive.color = BRIGHT_RED;
+            }
         } else {
             mapcolor.color = RepellentParticle::DEFAULT_COLOR.with_alpha(alpha);
+            if let Some(ref mut emissive) = o_emissive {
+                emissive.color = css::YELLOW.into();
+            }
         }
+
+        if let Some(ref mut emissive) = o_emissive {
+            emissive.intensity = alpha * 0.2;
+        }
+
         let bpos = r_pos.to_board_position();
         let rr_pos = Position {
             x: r_pos.x + rng.random_range(-0.5..0.5),
