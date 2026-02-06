@@ -6764,6 +6764,7 @@ dependencies = [
  "unghost-core",
  "uninteraction-core",
  "unlight-core",
+ "unmetrics-core",
  "unplayer-core",
  "unprofile-core",
  "unrender-std",

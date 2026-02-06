@@ -4,15 +4,19 @@ use bevy_persistent::Persistent;
 
 use unbehavior::behavior::Behavior;
 use unbehavior::components::Door;
+use unbehavior::components::HidingSpot;
 use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
 use ungear_core::components::playergear::PlayerGear;
+use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerInputMapping, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
+
+use crate::metrics;
 
 const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;
 const ERRATIC_MOVEMENT_EARLY_SECONDS: f32 = 5.0;
@@ -380,7 +384,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&Position, Entity), Without<Hiding>>,
-    hiding_spots: Query<(&Position, &Behavior)>,
+    hiding_spots: Query<&Position, With<HidingSpot>>,
     ghost_query: Query<&unghost_core::components::ghost_sprite::GhostSprite>,
     mut near_hiding_timer: Local<Option<f32>>,
 ) {
@@ -388,19 +392,21 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
         *near_hiding_timer = None;
         return;
     }
+    let measure = metrics::TRIGGER_HUNT_ACTIVE_NEAR_HIDING_SPOT_NO_HIDE.time_measure();
     // Check if any ghost is actively hunting (hunting > 10.0)
     let hunt_active = ghost_query.iter().any(|g| g.hunting > 10.0);
     if !hunt_active {
         *near_hiding_timer = None;
+        measure.end_ms();
         return;
     }
     // Get player position (not hiding) - iterate all non-hiding players (First Responder)
     for (player_pos, _) in player_query.iter() {
-        // Find a hiding spot within 1.5 units
+        // Find a hiding spot nearby
+        // FIXME: This is slow on some maps / computers.
         let near_hiding = hiding_spots
             .iter()
-            .filter(|(_, behavior)| behavior.p.object.hidingspot)
-            .any(|(spot_pos, _)| player_pos.distance(spot_pos) < 1.5);
+            .any(|spot_pos| player_pos.distance2(spot_pos) < 3.0);
         if near_hiding {
             let now = time.elapsed_secs_f64() as f32;
             if let Some(start) = *near_hiding_timer {
@@ -421,6 +427,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
             *near_hiding_timer = None;
         }
     }
+    measure.end_ms();
 }
 
 /// Registers the locomotion and interaction systems to the Bevy app.

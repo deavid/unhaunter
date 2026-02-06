@@ -7,12 +7,15 @@ use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
 use unlight_core::types::light::LightData;
+use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::visuals::{
     AlphaModulator, Ethereal, InfraredSensitive, SpectralClarity, UltravioletSensitive,
 };
 use unrender_std::utils::light::lerp_color;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
+
+use crate::metrics;
 
 pub(crate) fn update_spectral_influence(
     si: &mut unrender_std::components::visuals::SpectralInfluence,
@@ -182,6 +185,7 @@ pub(crate) fn apply_miasma_cloud_visuals(
     dst_color: &mut Color,
     opacity: &mut f32,
 ) {
+    let measure = metrics::APPLY_MIASMA_CLOUD_VISUALS.time_measure();
     let bpos = pos.to_board_position();
     let mut total_pressure = 0.0;
     let mut total_weight = 0.0;
@@ -223,6 +227,7 @@ pub(crate) fn apply_miasma_cloud_visuals(
     *opacity *= miasma_visibility.clamp(0.0, 0.8)
         * miasma_sprite.visibility
         * (dst_color.luminance().sqrt() * 0.8 + 0.2);
+    measure.end_ms();
 }
 
 pub(crate) fn step_alpha_clamped(

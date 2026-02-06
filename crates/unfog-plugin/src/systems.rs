@@ -140,7 +140,7 @@ fn spawn_miasma(
             miasma_sprite.despawn = true;
             continue;
         };
-        miasma_sprite.life -= dt / 10.0 / quality_factor;
+        miasma_sprite.life -= dt / 10.0;
         if miasma_sprite.life < 0.02 {
             miasma_sprite.despawn = true;
             continue;
@@ -149,6 +149,7 @@ fn spawn_miasma(
 
         let vis = vf.visibility_field[bpos.ndidx()] + DIST_FACTOR / player_dst2;
         let target_count = ((f32::cbrt(*pressure) / 3.1 + 0.1).min(1.0)
+            * quality_factor
             * MIASMA_TARGET_SPRITE_COUNT as f32) as usize;
 
         let pos_count = count.entry(bpos).or_default();
@@ -186,7 +187,9 @@ fn spawn_miasma(
         if vis < THRESHOLD * 2.0 {
             continue;
         }
-        let target_count = ((miasma.pressure_field[bpos.ndidx()] / 1.1 + 0.1).min(1.0)
+        let target9_count = ((miasma.pressure_field[bpos.ndidx()] / 1.1 + 0.1).min(1.0)
+            / quality_factor
+            * 9.0
             * MIASMA_TARGET_SPRITE_COUNT as f32) as usize;
 
         let pos9_count = bpos
@@ -196,7 +199,7 @@ fn spawn_miasma(
 
         let pos_count = count.entry(bpos.clone()).or_default();
 
-        if pos9_count < target_count * 9 {
+        if pos9_count < target9_count {
             // Spawn miasma if too low
             let scale = rng.random_range(0.15..1.0_f32).sqrt() * 1.8;
             let mut pos = bpos

@@ -1,4 +1,5 @@
 pub(crate) mod focus_ring_system;
+pub(crate) mod metrics;
 pub mod plugin;
 pub(crate) mod triggers;
 pub(crate) mod walkie_level_stats;

@@ -1,6 +1,7 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use rand::Rng;
 use unboard_core::components::mapcolor::MapColor;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
@@ -9,6 +10,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::salt::UVReactive;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
+use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::MainPlayer;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
@@ -27,6 +29,7 @@ use crate::maplight::visuals::{
     apply_alpha_modulator_visuals, apply_ecto_visuals, apply_ethereal_visuals, apply_ir_visuals,
     apply_miasma_cloud_visuals, apply_uv_visuals, update_spectral_influence,
 };
+use crate::metrics;
 
 pub(crate) fn highlight_placement_tiles_system(
     qp: Query<(&Position, &PlayerGear, Has<MainPlayer>)>,
@@ -95,6 +98,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
     let Ok(vf) = q_vf.single() else {
         return;
     };
+    let measure = metrics::APPLY_LIGHTING_SPRITES.time_measure();
     let bf = &grids.bf;
     let miasma = &grids.miasma;
     let miasma_config = &grids.miasma_config;
@@ -143,6 +147,10 @@ pub(crate) fn apply_lighting_to_sprites_system(
         } else {
             continue;
         };
+        // Reduce the chances of refreshing the sprite color by the quality setting
+        if rng.random_range(0.0..2.0) > quality_factor {
+            continue;
+        }
         let bpos = pos.to_board_position_size(bf.map_size);
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
         let visibility: f32 = vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
@@ -281,4 +289,5 @@ pub(crate) fn apply_lighting_to_sprites_system(
             mat.data.color = smooth_color;
         }
     }
+    measure.end_ms();
 }

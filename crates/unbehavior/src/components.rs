@@ -27,6 +27,10 @@ pub struct FloorItemCollidable;
 #[derive(Component, Debug, Clone, Copy, Default)]
 pub struct Movable;
 
+/// Marker component for hiding spots.
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct HidingSpot;
+
 /// Marker component that identifies entities that ghosts can interact with.
 ///
 /// This component is automatically added to entities during map loading if they have:

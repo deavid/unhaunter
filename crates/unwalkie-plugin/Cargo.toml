@@ -31,6 +31,7 @@ untruck-core = { path = "../untruck-core" }
 unplayer-core = { path = "../unplayer-core" }
 unrender-std = { path = "../unrender-std" }
 unghost-core = { path = "../unghost-core" }
+unmetrics-core = { path = "../unmetrics-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

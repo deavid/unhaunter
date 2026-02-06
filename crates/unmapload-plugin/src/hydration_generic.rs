@@ -76,6 +76,11 @@ fn hydration_generic_logic_system(
         if behavior.p.object.movable {
             cmd.insert(components::Movable);
         }
+
+        // Add HidingSpot marker
+        if behavior.p.object.hidingspot {
+            cmd.insert(components::HidingSpot);
+        }
     }
 }
 
