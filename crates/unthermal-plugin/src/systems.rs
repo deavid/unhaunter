@@ -28,7 +28,7 @@ pub fn temperature_update(
     video_settings: Res<Persistent<VideoSettings>>,
 ) {
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
-    let quality_factor = video_settings.quality.to_quality_factor();
+    let quality_factor = video_settings.quality.to_quality_factor3();
 
     for (pos, bh) in qt.iter() {
         let h_out: f32 = bh.temp_heat_output();

@@ -101,7 +101,8 @@ fn spawn_miasma(
     let Ok(vf) = q_vf.single() else {
         return;
     };
-    let quality_factor = video_settings.quality.to_quality_factor();
+    let count_quality = video_settings.quality.to_quality_factor2();
+    let area_quality = video_settings.quality.to_quality_factor1();
     const THRESHOLD: f32 = 0.000001;
     const DIST_FACTOR: f32 = 0.00001;
     const MIASMA_TARGET_SPRITE_COUNT: usize = 3;
@@ -148,9 +149,9 @@ fn spawn_miasma(
         let player_dst2 = player_pos.distance2(&miasma_sprite.base_position);
 
         let vis = vf.visibility_field[bpos.ndidx()] + DIST_FACTOR / player_dst2;
-        let target_count = ((f32::cbrt(*pressure) / 3.1 + 0.1).min(1.0)
-            * quality_factor
-            * MIASMA_TARGET_SPRITE_COUNT as f32) as usize;
+        let target_f =
+            (f32::cbrt(*pressure) / 3.1 + 0.1).min(1.0) * MIASMA_TARGET_SPRITE_COUNT as f32;
+        let target_count = (target_f * count_quality).ceil() as usize;
 
         let pos_count = count.entry(bpos).or_default();
 
@@ -161,11 +162,12 @@ fn spawn_miasma(
         }
     }
     // Limit the number of cells to check to 15x15 around the player
-    const MAX_RADIUS: i64 = 15;
-    let min_x = (player_bpos.x - MAX_RADIUS).max(0) as usize;
-    let max_x = (player_bpos.x + MAX_RADIUS).min(board_data.map_size.0 as i64 - 1) as usize;
-    let min_y = (player_bpos.y - MAX_RADIUS).max(0) as usize;
-    let max_y = (player_bpos.y + MAX_RADIUS).min(board_data.map_size.1 as i64 - 1) as usize;
+    let max_radius = (15.0 * area_quality).max(4.0) as i64;
+    let visibility_boost = (1.0 / count_quality).sqrt();
+    let min_x = (player_bpos.x - max_radius).max(0) as usize;
+    let max_x = (player_bpos.x + max_radius).min(board_data.map_size.0 as i64 - 1) as usize;
+    let min_y = (player_bpos.y - max_radius).max(0) as usize;
+    let max_y = (player_bpos.y + max_radius).min(board_data.map_size.1 as i64 - 1) as usize;
     let z = player_bpos.z as usize;
 
     for (bp, vis) in vf
@@ -173,9 +175,6 @@ fn spawn_miasma(
         .slice(s![min_x..=max_x, min_y..=max_y, z..=z])
         .indexed_iter()
     {
-        if rng.random_range(0.0..1.0) > quality_factor {
-            continue;
-        }
         let bp = (bp.0 + min_x, bp.1 + min_y, bp.2 + z);
         let collision = &bcf.0[bp];
         if !collision.player_free && !collision.see_through {
@@ -187,10 +186,10 @@ fn spawn_miasma(
         if vis < THRESHOLD * 2.0 {
             continue;
         }
-        let target9_count = ((miasma.pressure_field[bpos.ndidx()] / 1.1 + 0.1).min(1.0)
-            / quality_factor
+        let target9_f = (miasma.pressure_field[bpos.ndidx()] / 1.1 + 0.1).min(1.0)
             * 9.0
-            * MIASMA_TARGET_SPRITE_COUNT as f32) as usize;
+            * MIASMA_TARGET_SPRITE_COUNT as f32;
+        let target9_count = (target9_f * count_quality).ceil() as usize;
 
         let pos9_count = bpos
             .iter_xy_neighbors(1, board_data.map_size)
@@ -224,7 +223,8 @@ fn spawn_miasma(
                     noise_offset_y: rng.random_range(0.0..1000.0),
                     visibility: (rng.random_range(0.9..1.0_f32) / scale / 1.3)
                         .powi(2)
-                        .clamp(0.3, 2.0),
+                        .clamp(0.3, 2.0)
+                        * visibility_boost,
                     time_alive: 0.0,
                     despawn: false,
                     life: 1.0 + rng.random_range(0.0..0.5),
@@ -252,10 +252,12 @@ fn animate_miasma_sprites(
     miasma: Res<MiasmaGrid>,
     noise_table: Res<PerlinNoise>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
+    video_settings: Res<Persistent<VideoSettings>>,
 ) {
     let measure = metrics::ANIMATE_MIASMA.time_measure();
 
     let dt = time.delta_secs();
+    let quality_factor = video_settings.quality.to_quality_factor2();
     const MOVEMENT_FACTOR: f32 = 1.01;
     for (mut pos, mut miasma_sprite) in query.iter_mut() {
         miasma_sprite.time_alive += dt;
@@ -281,18 +283,26 @@ fn animate_miasma_sprites(
         // We do *not* modify pos.z or pos.visual_priority here.  The Z position is set
         // during initialization and should remain constant.
         let bpos = pos.to_board_position();
-        let mut total_vel = Vec2::ZERO;
-        let mut total_w = 0.0001;
-        for bpos in bpos.iter_xy_neighbors(1, board_data.map_size) {
-            if !bcf.0[bpos.ndidx()].player_free {
-                continue;
+        let vel = if quality_factor > 0.4 {
+            let mut total_vel = Vec2::ZERO;
+            let mut total_w = 0.0001;
+            for bpos in bpos.iter_xy_neighbors(1, board_data.map_size) {
+                if !bcf.0[bpos.ndidx()].player_free {
+                    continue;
+                }
+                let w = (bpos.to_position().distance2(&pos) + 0.1).recip();
+                let vel = miasma.velocity_field[bpos.ndidx()];
+                total_vel += vel * w;
+                total_w += w;
             }
-            let w = (bpos.to_position().distance2(&pos) + 0.1).recip();
-            let vel = miasma.velocity_field[bpos.ndidx()];
-            total_vel += vel * w;
-            total_w += w;
-        }
-        let vel = total_vel / total_w;
+            total_vel / total_w
+        } else {
+            miasma
+                .velocity_field
+                .get(bpos.ndidx())
+                .copied()
+                .unwrap_or_default()
+        };
         const F: f32 = 0.1;
         miasma_sprite.direction /= 1.01;
         miasma_sprite.direction = miasma_sprite.direction * (1.0 - F) + vel * F;
@@ -330,12 +340,13 @@ fn update_miasma(
     q_player: Query<&Position, With<MainPlayer>>,
     fluid_emitter_query: Query<&FluidEmitter>,
     mut room_present: Local<Array3<bool>>,
+    video_settings: Res<Persistent<VideoSettings>>,
 ) {
     let measure = metrics::UPDATE_MIASMA.time_measure();
 
     let mut rng = random_seed::rng();
-    let mut arr = [0u8; 97];
-    rng.fill(&mut arr);
+    let quality_factor = video_settings.quality.to_quality_factor2();
+    let max_chunks = (8.0 * quality_factor).max(1.0) as usize;
 
     let dt = time.delta_secs();
     let emitters_remain = !fluid_emitter_query.is_empty();
@@ -370,7 +381,7 @@ fn update_miasma(
             let r = rng.random_range(1.0..3.0);
             dist < (r * r * r) as i64
         })
-        .take(8)
+        .take(max_chunks)
         .collect::<Vec<_>>();
 
     for chunk in &chunks {

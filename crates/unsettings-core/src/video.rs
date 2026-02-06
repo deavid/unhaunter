@@ -47,11 +47,25 @@ pub enum VideoQuality {
 }
 
 impl VideoQuality {
-    pub fn to_quality_factor(&self) -> f32 {
+    pub fn to_quality_factor3(&self) -> f32 {
         match self {
             VideoQuality::High => 1.0,
             VideoQuality::Medium => 0.3,
             VideoQuality::Low => 0.1,
+        }
+    }
+    pub fn to_quality_factor2(&self) -> f32 {
+        match self {
+            VideoQuality::High => 1.0,
+            VideoQuality::Medium => 0.5,
+            VideoQuality::Low => 0.25,
+        }
+    }
+    pub fn to_quality_factor1(&self) -> f32 {
+        match self {
+            VideoQuality::High => 1.0,
+            VideoQuality::Medium => 0.707,
+            VideoQuality::Low => 0.5,
         }
     }
 }

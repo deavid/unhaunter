@@ -102,7 +102,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
     let bf = &grids.bf;
     let miasma = &grids.miasma;
     let miasma_config = &grids.miasma_config;
-    let quality_factor = video_settings.quality.to_quality_factor();
+    let quality_factor = video_settings.quality.to_quality_factor3();
     let elapsed = time.elapsed_secs();
     let dt = time.delta_secs();
 

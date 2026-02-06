@@ -79,7 +79,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
     let bf = &grids.bf;
     let bef = &grids.bef;
     let miasma = &grids.miasma;
-    let video_quality = video_settings.quality.to_quality_factor();
+    let video_quality = video_settings.quality.to_quality_factor3();
 
     let measure = APPLY_LIGHTING.time_measure();
 
