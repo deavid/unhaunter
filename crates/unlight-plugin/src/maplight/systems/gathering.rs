@@ -71,15 +71,14 @@ pub(crate) fn gather_flashlights_system(
         let light_type = fl.light_type;
 
         if power > 0.0 {
-            let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
-            flashlights.push(FlashlightData {
-                pos: *pos,
-                dir: deployed_gear.direction,
-                power: power * FLASHLIGHT_POWER_FACTOR,
+            flashlights.push(FlashlightData::new(
+                *pos,
+                deployed_gear.direction,
+                power * FLASHLIGHT_POWER_FACTOR,
                 color,
                 light_type,
-                vis_field,
-            });
+                board_dim,
+            ));
         }
     }
 
@@ -119,15 +118,9 @@ pub(crate) fn gather_flashlights_system(
                         dz: fldir.dz / 1000.0,
                     };
                 }
-                let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
-                flashlights.push(FlashlightData {
-                    pos: *pos,
-                    dir: fldir,
-                    power,
-                    color,
-                    light_type,
-                    vis_field,
-                });
+                flashlights.push(FlashlightData::new(
+                    *pos, fldir, power, color, light_type, board_dim,
+                ));
             }
         }
     }

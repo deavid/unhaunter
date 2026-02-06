@@ -65,6 +65,19 @@ pub(crate) fn apply_lighting_to_tiles_system(
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(&Position, &Viewer, &Direction, &PlayerGear, Has<MainPlayer>)>,
+    q_special: Query<
+        Entity,
+        (
+            With<MapTileSprite>,
+            Or<(
+                With<Ethereal>,
+                With<EctoplasmVisuals>,
+                With<AlphaModulator>,
+                With<Interactive>,
+                With<LightSensitive>,
+            )>,
+        ),
+    >,
     active_flashlights: Res<ActiveFlashlights>,
     mut lg: ResMut<LightGrid>,
     grids: GridResources,
@@ -160,17 +173,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                     > update_radius.saturating_sub(dist + 2);
                 if vf.visibility_field[(x, y, z)] > 0.00001 {
                     if skip_tile {
-                        for &entity in &bef.0[(x, y, z)] {
-                            if let Ok(comp) = qt2.get(entity)
-                                && (comp.4.is_none()
-                                    || comp.7.is_some()
-                                    || comp.8.is_some()
-                                    || comp.10.0.is_some()
-                                    || comp.10.5.is_some())
-                            {
-                                entities.push(entity);
-                            }
-                        }
+                        // Skip
                     } else {
                         entities.extend_from_slice(&bef.0[(x, y, z)]);
                     }
@@ -179,36 +182,63 @@ pub(crate) fn apply_lighting_to_tiles_system(
         }
     }
 
-    for e in visible.iter() {
-        if let Ok((
-            _entity,
-            _pos,
-            _mat,
-            _vis,
-            o_behavior,
-            _o_spectral_influence,
-            o_interactive,
-            o_ethereal,
-            o_ecto_vis,
-            _o_spectral_clarity,
-            (o_light_sens, _o_ir_sens, _o_uv_sens, _o_map_color, _o_miasma, o_alpha_mod),
-        )) = qt2.get(*e)
-        {
-            // Ensure entities with hover state changes are always processed
-            // Also always process ghosts and breaches to ensure smooth oscillation
-            // And light sensitive entities (player) to ensure smooth lighting
-            if o_interactive.map(|x| x.hovered).unwrap_or_default()
-                || o_behavior.is_none()
-                || o_ethereal.is_some()
-                || o_ecto_vis.is_some()
-                || o_light_sens.is_some()
-                || o_alpha_mod.is_some()
-                || rng.random_range(0..100) < 15
-            {
-                entities.push(*e);
+    // --- Special Entity Updates (Always) ---
+    // Entities that are interactive, ethereal, etc. must update every frame
+    // to ensure smooth animation and responsiveness.
+    for entity in q_special.iter() {
+        if visible.contains(&entity) {
+            entities.push(entity);
+        }
+    }
+
+    // --- Flashlight Coverage Updates ---
+    // Tiles touched by active flashlights must update to ensure crisp edges.
+    // Iterating dense field might be faster than spatial query if N is small.
+    for fl in active_flashlights.list.iter() {
+        // Optimization: We could use bounding box, but iterating array is simd-fast.
+        // We only check if > 0.
+        // To speed this up, we can use the flashlight pos and direction to
+        // limit the iteration range.
+        let c_z = fl.pos.z as isize;
+
+        // Fallback to full simple box for now to rely on vis_field array access speed
+        // Actually, iterating 64x64 is tiny (4096).
+        // Let's just iterate the whole valid Z plane for the flashlight
+        let fl_z = c_z.clamp(0, map_depth as isize - 1) as usize;
+
+        // We use the pre-computed vis_field to just pick what is lit.
+        // Note: vis_field is 3D.
+        // Iterating only relevant Z slices.
+        for z in fl_z.saturating_sub(1)..=fl_z.min(map_depth - 1) {
+            // Only iterate a loose bounding box around the player/flashlight
+            // Because flashlights can be 200m long, we should arguably iterate the whole map
+            // or trust the pre-computed bounds.
+            // For now, let's just iterate the sub-volume likely to be affected.
+            // A 64x64 loop is cheap enough.
+            for x in 0..map_width {
+                for y in 0..map_height {
+                    if fl.vis_field[(x, y, z)] > 0.001 {
+                        entities.extend_from_slice(&bef.0[(x, y, z)]);
+                    }
+                }
             }
         }
     }
+
+    // --- Background Decay (Random Sample) ---
+    // Iterate visible set to find candidates for "turning off".
+    // We do NOT check components here to avoid O(N) query lookup overhead.
+    // Purely random sampling.
+    let decay_rate = 5; // 5% per frame -> ~0.3s to full sweep
+    for e in visible.iter() {
+        if rng.random_range(0..100) < decay_rate {
+            entities.push(*e);
+        }
+    }
+
+    // Sort and Deduplicate
+    entities.sort_unstable();
+    entities.dedup();
 
     for entity in entities.iter() {
         let min_threshold: f32 = rng.random::<f32>() / 10.0 / video_quality;

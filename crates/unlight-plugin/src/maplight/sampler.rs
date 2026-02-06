@@ -1,10 +1,12 @@
 use crate::maplight::definitions::FlashlightData;
 use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
 use ndarray::Array3;
+use std::cell::RefCell;
 use unboard_core::resources::board_topology::BoardTopology;
 use unfoundation_core::types::light::LightType;
 use unlight_core::resources::light_grid::LightGrid;
-use unlight_core::tonemapping;
+use unlight_core::tonemapping::{self, TonemappingParams};
 use unlight_core::types::light::{LightData, LightFieldData};
 use unrender_std::components::visuals::{LightSensitive, SpectralInfluence, SpectralInfluenceType};
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -30,6 +32,9 @@ pub(crate) struct LightingSampler<'a> {
     pub(crate) vf: &'a VisibilityData,
     pub(crate) exposure: f32,
     pub(crate) tutorial_light_factor: f32,
+    pub(crate) cache_tiles: RefCell<HashMap<BoardPosition, ((f32, f32, f32), LightData)>>,
+    pub(crate) cache_corners: RefCell<HashMap<BoardPosition, (f32, f32, Color, LightData)>>,
+    pub(crate) tonemap: TonemappingParams,
 }
 
 pub(crate) struct SpectralParams {
@@ -74,6 +79,13 @@ impl<'a> LightingSampler<'a> {
         difficulty: &Difficulty,
     ) -> Self {
         let tutorial_light_factor = calculate_tutorial_light_factor(difficulty);
+        let tonemap = TonemappingParams::new(
+            lg.exposure.current,
+            tonemapping::K_COLD,
+            tutorial_light_factor,
+            tonemapping::DARK_COLOR2,
+            tonemapping::BRIGHTNESS,
+        );
         Self {
             flashlights,
             bf,
@@ -81,6 +93,9 @@ impl<'a> LightingSampler<'a> {
             vf,
             exposure: lg.exposure.current,
             tutorial_light_factor,
+            cache_tiles: RefCell::new(HashMap::new()),
+            cache_corners: RefCell::new(HashMap::new()),
+            tonemap,
         }
     }
 
@@ -119,33 +134,51 @@ impl<'a> LightingSampler<'a> {
         let rpos_raw = target_pos;
         let bpos = target_pos.to_board_position();
         let p = bpos.ndidx_checked(self.bf.map_size)?;
+
+        let is_integer_tile = !is_light_sensitive
+            && (rpos_raw.x - bpos.x as f32).abs() < 0.01
+            && (rpos_raw.y - bpos.y as f32).abs() < 0.01;
+
+        if is_integer_tile && let Some(res) = self.cache_tiles.borrow().get(&bpos) {
+            return Some(*res);
+        }
+
         let mut lux_fl = [0_f32; 3];
         let mut lightdata = LightData::default();
         for flash in self.flashlights.iter() {
-            let flpos = &flash.pos;
-            let fldir = &flash.dir;
-            let flpower = flash.power;
+            let flvis = flash.vis_field[p];
+            if flvis < 0.000001 {
+                continue;
+            }
+
             let flcolor = &flash.color;
             let fltype = &flash.light_type;
-            let flvismap = &flash.vis_field;
 
-            let d2 = rpos_raw.distance2(flpos);
+            let d2 = rpos_raw.distance2(&flash.pos);
             let fl = if is_light_sensitive && d2 < 4.0 {
                 // Smooth, distance-only lighting for players/ghosts near light sources
                 // Using a 1/r falloff for proximity boost as requested.
                 let dist = d2.sqrt();
                 // flpower is already adjusted. The 2.0 factor provides a damped proximity boost.
-                flpower / (dist + 5.0) * 2.0
+                flash.power / (dist + 5.0) * 2.0
             } else {
-                let fldir = fldir.with_max_dist(200.0);
-                let focus = (fldir.distance() + 0.1).max(6.0) / 20.0;
-                let lpos = *flpos + fldir / (100.0 / focus + 20.0);
-                let mut lpos = lpos.unrotate_by_dir(&fldir);
-                let mut rpos = rpos_raw.unrotate_by_dir(&fldir);
-                rpos.x -= lpos.x;
-                rpos.y -= lpos.y;
-                lpos.x = 0.0;
-                lpos.y = 0.0;
+                let focus = flash.beam_focus;
+                let lpos_unrot = flash.lpos_unrot;
+                let mut rpos = Position {
+                    x: rpos_raw.x * flash.unrot_axes[0].dx
+                        + rpos_raw.y * flash.unrot_axes[1].dx
+                        + rpos_raw.z * flash.unrot_axes[2].dx,
+                    y: rpos_raw.x * flash.unrot_axes[0].dy
+                        + rpos_raw.y * flash.unrot_axes[1].dy
+                        + rpos_raw.z * flash.unrot_axes[2].dy,
+                    z: rpos_raw.x * flash.unrot_axes[0].dz
+                        + rpos_raw.y * flash.unrot_axes[1].dz
+                        + rpos_raw.z * flash.unrot_axes[2].dz,
+                    visual_priority: rpos_raw.visual_priority,
+                };
+
+                rpos.x -= lpos_unrot.x;
+                rpos.y -= lpos_unrot.y;
                 if rpos.x > 0.0 {
                     rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.3));
                     rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
@@ -155,12 +188,16 @@ impl<'a> LightingSampler<'a> {
                     rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                 }
 
-                let dist = (lpos.distance(&rpos) + 0.1)
-                    .powf((fldir.distance() / 200.0).clamp(0.2, 1.0).recip());
-                let flvis = flvismap[p];
-                flpower / (dist + FL_MIN_DST)
-                    * flvis.clamp(0.0001, 1.0)
-                    * (focus + 0.5).clamp(0.5, 8.0)
+                let emitter_pos = Position {
+                    x: 0.0,
+                    y: 0.0,
+                    z: lpos_unrot.z,
+                    visual_priority: 0.0,
+                };
+
+                let dist = (emitter_pos.distance(&rpos) + 0.1)
+                    .powf((flash.dir.distance() / 200.0).clamp(0.2, 1.0).recip());
+                flash.power_f / (dist + FL_MIN_DST) * flvis.clamp(0.0001, 1.0)
             };
             let flsrgba = flcolor.to_srgba();
             lux_fl[0] += fl * flsrgba.red;
@@ -170,7 +207,7 @@ impl<'a> LightingSampler<'a> {
             lightdata = lightdata.add(&ld);
         }
         let ambient_light = 0.0001 + self.tutorial_light_factor * 0.0001;
-        self.lf.get(bpos.ndidx()).map(|lf| {
+        let res = self.lf.get(bpos.ndidx()).map(|lf| {
             let r = (lf.lux * lf.color.0 + lux_fl[0] + ambient_light) / self.exposure;
             let g = (lf.lux * lf.color.1 + lux_fl[1] + ambient_light) / self.exposure;
             let b = (lf.lux * lf.color.2 + lux_fl[2] + ambient_light) / self.exposure;
@@ -186,7 +223,12 @@ impl<'a> LightingSampler<'a> {
                     lf.lux + ambient_light,
                 )),
             )
-        })
+        });
+
+        if is_integer_tile && let Some(r) = res {
+            self.cache_tiles.borrow_mut().insert(bpos, r);
+        }
+        res
     }
 
     pub(crate) fn f_vis(&self, v: f32) -> f32 {
@@ -206,6 +248,18 @@ impl<'a> LightingSampler<'a> {
         let x1 = x.ceil() as i64;
         let y1 = y.ceil() as i64;
 
+        let is_light_sensitive = o_light_sens.is_some();
+
+        // Corner cache for non-sensitive grid-aligned corners
+        let bpos_corner = target_pos.to_board_position();
+        let is_grid_corner = !is_light_sensitive
+            && (target_pos.x * 2.0).fract() == 0.0
+            && (target_pos.y * 2.0).fract() == 0.0;
+
+        if is_grid_corner && let Some(res) = self.cache_corners.borrow().get(&bpos_corner) {
+            return *res;
+        }
+
         let mut total_l = 0.0;
         let mut total_v = 0.0;
         let mut total_r = 0.0;
@@ -213,7 +267,6 @@ impl<'a> LightingSampler<'a> {
         let mut total_b = 0.0;
         let mut total_ld = LightData::default();
         let mut count = 0.0;
-        let is_light_sensitive = o_light_sens.is_some();
         for tx in [x0, x1] {
             for ty in [y0, y1] {
                 let bpos = BoardPosition { x: tx, y: ty, z };
@@ -234,7 +287,7 @@ impl<'a> LightingSampler<'a> {
                 }
             }
         }
-        if count > 0.0 {
+        let res = if count > 0.0 {
             (
                 total_l / count,
                 (total_v / count).clamp(0.0001, 1.0),
@@ -253,17 +306,15 @@ impl<'a> LightingSampler<'a> {
                 .fpos_gamma_color(target_pos, is_light_sensitive)
                 .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
             ((r + g + b) / 3.0, vis, Color::srgb(r, g, b), ld)
+        };
+        if is_grid_corner {
+            self.cache_corners.borrow_mut().insert(bpos_corner, res);
         }
+        res
     }
 
     pub(crate) fn calc_gamma(&self, lux: f32, tc: f32) -> f32 {
-        tonemapping::calc_gamma(
-            lux,
-            tc,
-            self.exposure,
-            tonemapping::K_COLD,
-            tonemapping::BRIGHTNESS,
-        )
+        tonemapping::calc_gamma(lux, tc, &self.tonemap)
     }
 
     pub(crate) fn calc_rgba(
@@ -279,13 +330,10 @@ impl<'a> LightingSampler<'a> {
             lux,
             visibility,
             bcolor,
-            self.exposure,
-            tonemapping::K_COLD,
-            self.tutorial_light_factor,
-            tonemapping::DARK_COLOR2,
             dst_color,
             is_tile,
             map_color_alpha,
+            &self.tonemap,
         )
     }
 }
