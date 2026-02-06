@@ -72,6 +72,10 @@ fn hydration_generic_logic_system(
             cmd.insert(components::FloorItemCollidable);
         }
 
+        if behavior.can_emit_light() {
+            cmd.insert(components::HeatEmitter);
+        }
+
         // Add Movable marker
         if behavior.p.object.movable {
             cmd.insert(components::Movable);

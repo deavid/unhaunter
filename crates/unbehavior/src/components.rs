@@ -14,6 +14,8 @@ pub struct Opaque;
 pub struct UVSurface;
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Light;
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct HeatEmitter;
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Door;
 #[derive(Component, Debug, Clone, PartialEq, Eq)]

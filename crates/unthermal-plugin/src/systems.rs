@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::Rng;
 use unbehavior::behavior::Behavior;
+use unbehavior::components::HeatEmitter;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::physics::ThermalEmitter;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
@@ -21,7 +22,7 @@ pub fn temperature_update(
     bf: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
     roomdb: Res<RoomDB>,
-    qt: Query<(&Position, &Behavior)>,
+    qt: Query<(&Position, &Behavior), With<HeatEmitter>>,
     qe: Query<(&ThermalEmitter, &Position)>,
     difficulty: Res<CurrentDifficulty>,
     video_settings: Res<Persistent<VideoSettings>>,
