@@ -67,36 +67,28 @@ pub fn temperature_update(
         }
     }
 
-    let mut rng = random_seed::rng();
-    let old_temps: Vec<(_, _)> = thermal_grid
-        .temperature_field
-        .indexed_iter()
-        .filter_map(|(p, t)| {
-            let activity = thermal_grid
-                .temperature_activity
-                .get(p)
-                .copied()
-                .unwrap_or(0.0);
-            let activity_factor =
-                (activity * 0.02 * quality_factor).clamp(0.0, 1.0) + 0.001 * quality_factor;
+    if thermal_grid.valid_tiles.is_empty() {
+        measure.end_ms();
+        return;
+    }
 
-            if rng.random_range(0.0..1.0) < activity_factor {
-                Some((p, *t))
-            } else {
-                None
-            }
-        })
-        .collect();
+    const SPEED_FACTOR: f32 = 0.2;
+    let budget =
+        (thermal_grid.valid_tiles.len() as f32 * quality_factor * SPEED_FACTOR).ceil() as usize;
+    let budget = budget.max(1);
+
     const OUTSIDE_CONDUCTIVITY: f32 = 1000000.0;
     const INSIDE_CONDUCTIVITY: f32 = 80000.0;
     const OTHER_CONDUCTIVITY: f32 = 20000.0;
     const WALL_CONDUCTIVITY: f32 = 0.00001;
-    let smooth: f32 = 1.0;
+    const SMOOTH: f32 = 1.0;
 
-    let mut energy_changes: std::collections::HashMap<(usize, usize, usize), Vec<f32>> =
-        std::collections::HashMap::new();
+    for _ in 0..budget {
+        let idx = thermal_grid.iterator_index % thermal_grid.valid_tiles.len();
+        thermal_grid.iterator_index += 1;
+        let p = thermal_grid.valid_tiles[idx];
 
-    for (p, temp) in old_temps.into_iter() {
+        let old_temp = thermal_grid.temperature_field[p];
         let cp = &bcf.0[p];
         let free = (cp.see_through, cp.see_through || cp.is_dynamic);
 
@@ -128,7 +120,18 @@ pub fn temperature_update(
             }
         }
 
-        for neigh in &neighbors {
+        let mut total_energy = 0.0;
+        let mut total_count = 0;
+        let mut total_temp_change = 0.0;
+
+        let self_thermal_mass = match free {
+            (true, true) => 0.9,
+            (false, false) => 0.00001,
+            _ => 1.0,
+        };
+        let temp_energy = old_temp.powi(3);
+
+        for neigh in neighbors {
             let neigh_ndidx = neigh.ndidx();
             let Some(neigh_free) = bcf
                 .0
@@ -146,7 +149,7 @@ pub fn temperature_update(
                 _ => OTHER_CONDUCTIVITY,
             };
 
-            let nis_outside = roomdb.room_tiles.get(neigh).is_none();
+            let nis_outside = roomdb.room_tiles.get(&neigh).is_none();
             if nis_outside && neigh_free.0 && !is_stair_connection {
                 neigh_k = OUTSIDE_CONDUCTIVITY;
             }
@@ -156,14 +159,7 @@ pub fn temperature_update(
                 .copied()
                 .unwrap_or(thermal_grid.ambient_temp);
 
-            let temp_energy = temp.powi(3);
             let neigh_energy = neigh_temp.powi(3);
-
-            let self_thermal_mass = match free {
-                (true, true) => 0.9,
-                (false, false) => 0.00001,
-                _ => 1.0,
-            };
 
             let neigh_thermal_mass = match neigh_free {
                 (true, true) => 0.9,
@@ -175,7 +171,7 @@ pub fn temperature_update(
             let mid_energy =
                 (temp_energy * self_thermal_mass + neigh_energy * neigh_thermal_mass) / total_mass;
 
-            let conductivity = (self_k.recip() + neigh_k.recip()).recip() / smooth;
+            let conductivity = (self_k.recip() + neigh_k.recip()).recip() / SMOOTH;
             let energy_diff =
                 (temp_energy + mid_energy * conductivity) / (conductivity + 1.0) - temp_energy;
 
@@ -189,10 +185,7 @@ pub fn temperature_update(
             );
 
             let self_energy_change = limited_energy_diff / self_thermal_mass;
-            let neigh_energy_change = -limited_energy_diff / neigh_thermal_mass;
-
             let new_energy1 = temp_energy + self_energy_change;
-            let new_energy2 = neigh_energy + neigh_energy_change;
 
             let adjusted_energy1 = if is_outside && nis_outside {
                 let k: f32 = 0.02;
@@ -202,45 +195,26 @@ pub fn temperature_update(
                 new_energy1
             };
 
-            let adjusted_energy2 = if is_outside && nis_outside {
-                let k: f32 = 0.02;
-                let ambient_energy = thermal_grid.ambient_temp.powi(3);
-                (new_energy2 + ambient_energy * k) / (1.00 + k)
-            } else {
-                new_energy2
-            };
-
-            energy_changes.entry(p).or_default().push(adjusted_energy1);
-            energy_changes
-                .entry(neigh_ndidx)
-                .or_default()
-                .push(adjusted_energy2);
+            total_energy += adjusted_energy1;
+            total_count += 1;
+            total_temp_change += (adjusted_energy1.cbrt() - old_temp).abs();
         }
-    }
 
-    for (pos_idx, energy_list) in energy_changes {
-        if !energy_list.is_empty() {
-            let old_temp = thermal_grid.temperature_field[pos_idx];
-            let avg_energy = energy_list.iter().sum::<f32>() / energy_list.len() as f32;
-
+        if total_count > 0 {
+            let avg_energy = total_energy / total_count as f32;
             if avg_energy.is_finite() && avg_energy > 0.0 {
                 let new_temp = avg_energy
                     .cbrt()
                     .clamp(celsius_to_kelvin(-50.0), celsius_to_kelvin(100.0));
-                thermal_grid.temperature_field[pos_idx] = new_temp;
-
-                let mut total_temp_change = 0.0;
-                for energy in &energy_list {
-                    total_temp_change += (energy.cbrt() - old_temp).abs();
-                }
+                thermal_grid.temperature_field[p] = new_temp;
 
                 let current_activity = thermal_grid
                     .temperature_activity
-                    .get(pos_idx)
+                    .get(p)
                     .copied()
                     .unwrap_or(0.0);
                 let new_activity = (current_activity / 1.05) + total_temp_change;
-                thermal_grid.temperature_activity[pos_idx] = new_activity;
+                thermal_grid.temperature_activity[p] = new_activity;
             }
         }
     }
@@ -256,13 +230,14 @@ pub fn init_thermal_grid_allocation(
     for ev in ev.read() {
         use ndarray::Array3;
         thermal_grid.temperature_field = Array3::from_elem(ev.map_size, bf.ambient_temp);
-        thermal_grid.temperature_field_prev = Array3::from_elem(ev.map_size, bf.ambient_temp);
         thermal_grid.temperature_activity = Array3::from_elem(ev.map_size, 0.0);
         thermal_grid.connectivity_scores = Array3::from_elem(
             ev.map_size,
             thermal_grid.temp_diffusion_config.default_score,
         );
         thermal_grid.ambient_temp = bf.ambient_temp;
+        thermal_grid.valid_tiles = Vec::new();
+        thermal_grid.iterator_index = 0;
     }
 }
 
@@ -294,4 +269,17 @@ pub fn init_thermal_grid_content(
         &mut thermal_grid.connectivity_scores,
         &config,
     );
+
+    // Populate valid tiles for simulation
+    thermal_grid.valid_tiles = bcf
+        .0
+        .indexed_iter()
+        .filter_map(|(pos, cp)| {
+            if cp.see_through || cp.player_free || cp.is_dynamic {
+                Some(pos)
+            } else {
+                None
+            }
+        })
+        .collect();
 }

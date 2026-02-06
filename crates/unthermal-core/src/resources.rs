@@ -31,8 +31,6 @@ impl Default for TemperatureDiffusionConfig {
 #[derive(Clone, Debug, Resource)]
 pub struct ThermalGrid {
     pub temperature_field: Array3<f32>,
-    /// Previous frame's temperature for gradient calculation
-    pub temperature_field_prev: Array3<f32>,
     /// Temperature activity/gradient magnitude per tile
     pub temperature_activity: Array3<f32>,
     /// Connectivity scores for temperature diffusion (one per tile)
@@ -40,17 +38,22 @@ pub struct ThermalGrid {
     /// Configuration for temperature diffusion system
     pub temp_diffusion_config: TemperatureDiffusionConfig,
     pub ambient_temp: f32,
+    /// List of indices of tiles that are valid for thermal simulation
+    pub valid_tiles: Vec<(usize, usize, usize)>,
+    /// Current index in the valid_tiles list for rolling updates
+    pub iterator_index: usize,
 }
 
 impl Default for ThermalGrid {
     fn default() -> Self {
         Self {
             temperature_field: Array3::default((0, 0, 0)),
-            temperature_field_prev: Array3::default((0, 0, 0)),
             temperature_activity: Array3::default((0, 0, 0)),
             connectivity_scores: Array3::default((0, 0, 0)),
             temp_diffusion_config: TemperatureDiffusionConfig::default(),
             ambient_temp: 288.15, // 15°C in Kelvin
+            valid_tiles: Vec::new(),
+            iterator_index: 0,
         }
     }
 }
