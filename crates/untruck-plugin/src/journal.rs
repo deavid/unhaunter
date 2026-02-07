@@ -46,6 +46,10 @@ fn force_discard_evidence_system(
         }
 
         if button_found {
+            // Update the model to reflect the discarded state
+            gg.evidences_found.remove(&event.0);
+            gg.evidences_missing.insert(event.0);
+
             // Force mark the GhostGuess as changed to trigger update systems
             gg.set_changed();
             debug!(
