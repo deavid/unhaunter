@@ -235,22 +235,18 @@ pub(crate) fn step_alpha_clamped(
     opacity: f32,
     prev_a: f32,
     smooth_a: f32,
-    is_special: bool,
+    _is_special: bool,
     map_alpha: f32,
 ) -> f32 {
-    const A_DELTA: f32 = 0.02;
+    const A_DELTA: f32 = 0.01;
     let f_a = 1.0 / (1.0 + smooth_a);
 
     let next_a = opacity * f_a + prev_a * (1.0 - f_a);
-    let mut new_a = if (next_a - opacity).abs() < A_DELTA {
+    let new_a = if (next_a - opacity).abs() < A_DELTA {
         opacity
     } else {
         next_a - A_DELTA * (next_a - opacity).signum()
     };
-    if is_special {
-        // For special entities, avoid linear stepping and just use the exponential lerp
-        new_a = opacity;
-    }
 
     (new_a * map_alpha).clamp(0.0, 1.0)
 }

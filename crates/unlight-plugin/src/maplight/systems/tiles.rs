@@ -624,7 +624,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 }
             }
 
-            let invisible = new_mat.data.color.alpha() < 0.005
+            let invisible = (is_tile && new_mat.data.color.alpha() < 0.005)
                 || o_behavior.map(|b| b.p.display.disable).unwrap_or_default();
             let new_vis = if invisible {
                 Visibility::Hidden
