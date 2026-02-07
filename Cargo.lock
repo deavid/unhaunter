@@ -6118,7 +6118,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
- "fastapprox",
  "ndarray",
  "unbehavior",
  "unfoundation-core",

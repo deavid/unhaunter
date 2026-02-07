@@ -301,7 +301,7 @@ pub fn propagate_from_wave_edges(
         let d = edge_data.wave_edge.distance_travelled;
         let p_lux = src_total / (d * d);
 
-        if p_lux < 0.01 {
+        if p_lux < 0.000001 {
             continue;
         }
 
@@ -370,7 +370,13 @@ pub fn propagate_from_wave_edges(
 
             // Scattering conversion: Turns take energy from the "beam" and give it to the "flood".
             let turn_factor = (1.0 - dot).clamp(0.0, 1.0);
-            let scatter_amount = next_edge.dir_src_lux * turn_factor * 0.5;
+            let scatter_amount = next_edge.dir_src_lux * turn_factor * 0.3;
+
+            if turn_factor > 0.1 {
+                // If we turned significantly, "snap" the IIR filters partially
+                // so we don't keep penalizing the same turn in the next few tiles.
+                next_edge.wave_edge.iir_mean_iir_mean_pos = next_edge.wave_edge.iir_mean_pos;
+            }
 
             next_edge.dir_src_lux = (next_edge.dir_src_lux - scatter_amount) * transparency;
             next_edge.diff_src_lux = (next_edge.diff_src_lux + scatter_amount) * transparency;
@@ -379,7 +385,7 @@ pub fn propagate_from_wave_edges(
             let n_d = next_edge.wave_edge.distance_travelled;
             let n_lux = (next_edge.dir_src_lux + next_edge.diff_src_lux) / (n_d * n_d);
 
-            if n_lux < 0.01 {
+            if n_lux < 0.000001 {
                 continue;
             }
 

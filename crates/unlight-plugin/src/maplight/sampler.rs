@@ -80,11 +80,10 @@ impl<'a> LightingSampler<'a> {
     ) -> Self {
         let tutorial_light_factor = calculate_tutorial_light_factor(difficulty);
         let tonemap = TonemappingParams::new(
-            lg.exposure.current,
-            tonemapping::K_COLD,
             tutorial_light_factor,
             tonemapping::DARK_COLOR2,
             tonemapping::BRIGHTNESS,
+            lg.exposure.current,
         );
         Self {
             flashlights,
@@ -214,9 +213,9 @@ impl<'a> LightingSampler<'a> {
 
             (
                 (
-                    tonemapping::artistic_tonemap(r),
-                    tonemapping::artistic_tonemap(g),
-                    tonemapping::artistic_tonemap(b),
+                    tonemapping::artistic_tonemap(r, self.exposure),
+                    tonemapping::artistic_tonemap(g, self.exposure),
+                    tonemapping::artistic_tonemap(b, self.exposure),
                 ),
                 lightdata.add(&LightData::from_type(
                     LightType::Visible,

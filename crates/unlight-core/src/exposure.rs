@@ -46,11 +46,9 @@ impl ExposureModel {
 
     pub fn update(&mut self, dt: f32) {
         let mut target = self.lux;
-        target = target.clamp(0.0, 100.0) * 4.0;
-        // Darken picture without touching night vision
-        target += target.sqrt() * 4.0 + 1.0;
-        // Minimum exp - controls how dark we can see
-        target = target.clamp(1.0, 100.0);
+        // Partial eye adaptation: sqrt-ish curve that allows more adaptation in dark
+        target = target.clamp(0.0, 100.0).powf(0.5) * 1.5 - 0.05;
+        target = target.clamp(0.05, 10.0);
 
         if !target.is_normal() {
             target = self.current;
