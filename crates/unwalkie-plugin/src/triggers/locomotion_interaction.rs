@@ -12,6 +12,7 @@ use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerInputMapping, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
+use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
@@ -332,9 +333,9 @@ fn trigger_struggling_with_hide_unhide(
 fn trigger_player_stays_hidden_too_long(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
+    game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    hiding_query: Query<Entity, With<Hiding>>,
+    hiding_query: Query<Entity, (With<Hiding>, Without<InTruck>)>,
     ghost_query: Query<&unghost_core::components::ghost_sprite::GhostSprite>,
     mut post_hunt_hidden_timer: Local<Option<f32>>,
 ) {
@@ -342,7 +343,11 @@ fn trigger_player_stays_hidden_too_long(
         *post_hunt_hidden_timer = None;
         return;
     }
-    // Only proceed if ANY player is hiding
+    if *game_state.get() != GameState::None {
+        *post_hunt_hidden_timer = None;
+        return;
+    }
+    // Only proceed if ANY player is hiding (and not in the truck)
     let any_player_hiding = !hiding_query.is_empty();
     if !any_player_hiding {
         *post_hunt_hidden_timer = None;
