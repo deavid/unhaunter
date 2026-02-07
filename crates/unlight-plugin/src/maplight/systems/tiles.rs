@@ -334,9 +334,9 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 o_light_sens,
             );
 
-            let ((mut r, mut g, mut b), light_data) = sampler
+            let ((mut r, mut g, mut b), _raw, light_data) = sampler
                 .fpos_gamma_color(*pos, o_light_sens.is_some())
-                .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+                .unwrap_or(((1.0, 1.0, 1.0), (1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
             if let Some(ls) = o_light_sens {
                 r = (r + ls.bias).max(0.05);
                 g = (g + ls.bias).max(0.05);

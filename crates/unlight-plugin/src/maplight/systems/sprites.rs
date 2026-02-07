@@ -160,9 +160,9 @@ pub(crate) fn apply_lighting_to_sprites_system(
         let mut opacity: f32 = map_color.alpha() * visibility;
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
 
-        let ((mut r, mut g, mut b), ld_abs) = sampler
+        let ((mut r, mut g, mut b), _raw, ld_abs) = sampler
             .fpos_gamma_color(*pos, o_light_sens.is_some())
-            .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+            .unwrap_or(((1.0, 1.0, 1.0), (1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
 
         if let Some(light_sens) = o_light_sens {
             r = (r + light_sens.bias).max(0.05);

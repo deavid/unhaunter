@@ -32,7 +32,7 @@ pub(crate) struct LightingSampler<'a> {
     pub(crate) vf: &'a VisibilityData,
     pub(crate) exposure: f32,
     pub(crate) tutorial_light_factor: f32,
-    pub(crate) cache_tiles: RefCell<HashMap<BoardPosition, ((f32, f32, f32), LightData)>>,
+    pub(crate) cache_tiles: RefCell<HashMap<BoardPosition, ((f32, f32, f32), (f32, f32, f32), LightData)>>,
     pub(crate) cache_corners: RefCell<HashMap<BoardPosition, (f32, f32, Color, LightData)>>,
     pub(crate) tonemap: TonemappingParams,
 }
@@ -124,11 +124,13 @@ impl<'a> LightingSampler<'a> {
         (*r + *g + *b) / 3.0
     }
 
+    /// Returns ((tonemapped_r, tonemapped_g, tonemapped_b), (raw_r, raw_g, raw_b), LightData).
+    /// Raw values are pre-tonemap, needed for correct averaging at corners.
     pub(crate) fn fpos_gamma_color(
         &self,
         target_pos: Position,
         is_light_sensitive: bool,
-    ) -> Option<((f32, f32, f32), LightData)> {
+    ) -> Option<((f32, f32, f32), (f32, f32, f32), LightData)> {
         let rpos_raw = target_pos;
         let bpos = target_pos.to_board_position();
         let p = bpos.ndidx_checked(self.bf.map_size)?;
@@ -250,6 +252,7 @@ impl<'a> LightingSampler<'a> {
                     tonemapping::artistic_tonemap(g, self.exposure),
                     tonemapping::artistic_tonemap(b, self.exposure),
                 ),
+                (r, g, b),
                 lightdata.add(&LightData::from_type(
                     LightType::Visible,
                     lf.lux + ambient_light,
@@ -292,11 +295,10 @@ impl<'a> LightingSampler<'a> {
             return *res;
         }
 
-        let mut total_l = 0.0;
         let mut total_v = 0.0;
-        let mut total_r = 0.0;
-        let mut total_g = 0.0;
-        let mut total_b = 0.0;
+        let mut total_raw_r = 0.0;
+        let mut total_raw_g = 0.0;
+        let mut total_raw_b = 0.0;
         let mut total_ld = LightData::default();
         let mut count = 0.0;
         for tx in [x0, x1] {
@@ -305,13 +307,16 @@ impl<'a> LightingSampler<'a> {
                 if let Some(p) = bpos.ndidx_checked(self.bf.map_size) {
                     let vis = self.f_vis(self.vf.visibility_field[p]);
                     if vis > 0.0001
-                        && let Some(((r, g, b), ld)) =
+                        && let Some((_tonemapped, (raw_r, raw_g, raw_b), ld)) =
                             self.fpos_gamma_color(bpos.to_position(), is_light_sensitive)
                     {
-                        total_r += r;
-                        total_g += g;
-                        total_b += b;
-                        total_l += (r + g + b) / 3.0;
+                        // Accumulate RAW (pre-tonemap) values to avoid Jensen's
+                        // inequality error. Tonemap is concave, so averaging
+                        // tonemapped values would produce corners darker than
+                        // correct, causing visible tile seams in bright areas.
+                        total_raw_r += raw_r;
+                        total_raw_g += raw_g;
+                        total_raw_b += raw_b;
                         total_v += vis;
                         total_ld = total_ld.add(&ld);
                         count += 1.0;
@@ -320,10 +325,17 @@ impl<'a> LightingSampler<'a> {
             }
         }
         let res = if count > 0.0 {
+            // Average raw values first, THEN tonemap the result
+            let avg_raw_r = total_raw_r / count;
+            let avg_raw_g = total_raw_g / count;
+            let avg_raw_b = total_raw_b / count;
+            let tm_r = tonemapping::artistic_tonemap(avg_raw_r, self.exposure);
+            let tm_g = tonemapping::artistic_tonemap(avg_raw_g, self.exposure);
+            let tm_b = tonemapping::artistic_tonemap(avg_raw_b, self.exposure);
             (
-                total_l / count,
+                (tm_r + tm_g + tm_b) / 3.0,
                 (total_v / count).clamp(0.0001, 1.0),
-                Color::srgb(total_r / count, total_g / count, total_b / count),
+                Color::srgb(tm_r, tm_g, tm_b),
                 total_ld.scale(1.0 / count),
             )
         } else {
@@ -334,9 +346,9 @@ impl<'a> LightingSampler<'a> {
                     .copied()
                     .unwrap_or(0.0),
             );
-            let ((r, g, b), ld) = self
+            let ((r, g, b), _raw, ld) = self
                 .fpos_gamma_color(target_pos, is_light_sensitive)
-                .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+                .unwrap_or(((1.0, 1.0, 1.0), (1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
             ((r + g + b) / 3.0, vis, Color::srgb(r, g, b), ld)
         };
         if is_grid_corner {
