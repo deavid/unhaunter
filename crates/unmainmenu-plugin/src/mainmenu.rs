@@ -173,6 +173,7 @@ pub(crate) fn manage_title_song(
     mut q_sound: Query<&mut MenuSound>,
     app_state: Res<State<AppState>>,
     audio_settings: Res<Persistent<AudioSettings>>,
+    global_volume: Res<bevy::audio::GlobalVolume>,
 ) {
     let should_play_song = !matches!(app_state.get(), AppState::InGame);
 
@@ -184,8 +185,9 @@ pub(crate) fn manage_title_song(
         }
     } else if should_play_song {
         // Only spawn the song if the volume is greater than 0
-        let desired_volume =
-            audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32();
+        let desired_volume = audio_settings.volume_music.as_f32()
+            * audio_settings.volume_master.as_f32()
+            * global_volume.volume.to_linear();
         if desired_volume > 0.0 {
             commands
                 .spawn(MenuSound::default())
@@ -209,17 +211,19 @@ pub(crate) fn despawn_sound(
     mut commands: Commands,
     mut qs: Query<(Entity, &mut AudioSink, &MenuSound)>,
     audio_settings: Res<Persistent<AudioSettings>>,
+    global_volume: Res<bevy::audio::GlobalVolume>,
 ) {
     for (entity, mut sink, menusound) in &mut qs {
         let vol = sink.volume().to_linear();
         let v = if menusound.despawn {
             vol / 1.02
         } else {
-            let desired_vol =
-                audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32();
+            let desired_vol = audio_settings.volume_music.as_f32()
+                * audio_settings.volume_master.as_f32()
+                * global_volume.volume.to_linear();
             const STEPS: f32 = 120.0;
             if vol < desired_vol / 2.0 {
-                vol * 1.02
+                f32::max(vol * 1.02, 0.002)
             } else {
                 (vol * STEPS + desired_vol) / (STEPS + 1.0)
             }
