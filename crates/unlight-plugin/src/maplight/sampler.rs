@@ -32,7 +32,8 @@ pub(crate) struct LightingSampler<'a> {
     pub(crate) vf: &'a VisibilityData,
     pub(crate) exposure: f32,
     pub(crate) tutorial_light_factor: f32,
-    pub(crate) cache_tiles: RefCell<HashMap<BoardPosition, ((f32, f32, f32), (f32, f32, f32), LightData)>>,
+    pub(crate) cache_tiles:
+        RefCell<HashMap<BoardPosition, ((f32, f32, f32), (f32, f32, f32), LightData)>>,
     pub(crate) cache_corners: RefCell<HashMap<BoardPosition, (f32, f32, Color, LightData)>>,
     pub(crate) tonemap: TonemappingParams,
 }

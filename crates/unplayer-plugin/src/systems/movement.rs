@@ -231,9 +231,7 @@ pub(crate) fn player_movement_system(
             }
 
             let dscreen = perspective::direction_to_screen_coord(delta);
-            anim.set_range(
-                CharacterAnimation::from_dir(dscreen.x, dscreen.y * 2.0).to_vec(),
-            );
+            anim.set_range(CharacterAnimation::from_dir(dscreen.x, dscreen.y * 2.0).to_vec());
             continue;
         }
 

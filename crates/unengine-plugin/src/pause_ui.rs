@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unrender_std::materials::UIPanelMaterial;
 use unnet_core::resources::HostGone;
+use unrender_std::materials::UIPanelMaterial;
 use untypes_core::states::{AppState, GameState};
 use unui_core::assets::UiAssets;
 
@@ -45,7 +45,10 @@ fn setup_ui(
     host_gone: Res<HostGone>,
 ) {
     let (p_text, p_sub_text) = if host_gone.0 {
-        ("Multiplayer Connection Lost", "Host has disconnected. Press Q to exit.")
+        (
+            "Multiplayer Connection Lost",
+            "Host has disconnected. Press Q to exit.",
+        )
     } else {
         ("Pause", "Press ESC to resume or Q to quit mission")
     };
