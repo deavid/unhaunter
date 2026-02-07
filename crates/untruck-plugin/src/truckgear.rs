@@ -5,7 +5,10 @@ use untruck_core::truckgear::TruckGear;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<TruckGear>();
-    app.add_systems(Update, initialize_truck_gear);
+    app.add_systems(
+        Update,
+        initialize_truck_gear.run_if(untypes_core::cli::is_host),
+    );
 }
 
 fn initialize_truck_gear(

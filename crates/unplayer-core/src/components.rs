@@ -64,11 +64,13 @@ impl PlayerInput {
         Self::default()
     }
 
-    /// Clear any existing movement input
+    /// Clear transient one-shot input events.
+    ///
+    /// Only clears events that should fire for exactly one frame (e.g., interact, grab).
+    /// Persistent state like `movement`, `run`, and `aim_direction` is NOT cleared here
+    /// because it must survive across frames for network sync — `client_send_input_system`
+    /// in unnet-plugin may run before or after the input systems that set these fields.
     pub fn clear(&mut self) {
-        self.movement = Vec2::ZERO;
-        self.target_position = None;
-        self.run = false;
         self.interact = false;
         self.grab = false;
         self.drop = false;
@@ -76,7 +78,6 @@ impl PlayerInput {
         self.use_left_hand = false;
         self.inventory_cycle = false;
         self.inventory_swap = false;
-        self.aim_direction = Vec2::ZERO;
     }
 }
 

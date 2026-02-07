@@ -28,6 +28,10 @@ pub enum GearDetails {
         active: bool,
         liquid_content: Option<GhostType>,
     },
+    SpiritBox {
+        charge: f32,
+        ghost_answer: bool,
+    },
     None,
 }
 
@@ -36,10 +40,13 @@ pub struct PlayerState {
     pub id: NetworkId,
     pub position: [f32; 3],
     pub orientation: [f32; 2], // dx, dy
+    pub target_position: Option<[f32; 2]>,
     pub is_hiding: bool,
     pub is_in_truck: bool,
     pub is_spectating: bool,
     pub stamina: f32,
+    pub health: f32,
+    pub sanity: f32,
     pub is_running: bool,
     pub frame: u16,
 }
@@ -60,6 +67,7 @@ pub struct GhostState {
     pub warp: f32,
     pub hunt_warning_active: bool,
     pub hunt_warning_intensity: f32,
+    pub hunt_target: bool,
     pub calm_time_secs: f32,
     pub repellent_hits_delta: f32,
     pub repellent_misses_delta: f32,

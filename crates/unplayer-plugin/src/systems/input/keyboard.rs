@@ -88,7 +88,21 @@ pub(crate) fn keyboard_input_system(
                 waypoint_queue.clear();
             }
 
+            // Keyboard is active, set movement direction
             player_input.movement = movement;
+        } else {
+            // No keyboard input. Only zero out movement if there are no active waypoints.
+            // If waypoints are active, waypoint_following_system will set movement.
+            // Writing zero here would race with client_send_input_system on the client,
+            // which is in a separate chain and may read the zero before waypoint_following
+            // can overwrite it.
+            let has_waypoints = waypoint_queues
+                .get(entity)
+                .map(|q| !q.is_empty())
+                .unwrap_or(false);
+            if !has_waypoints {
+                player_input.movement = movement;
+            }
         }
     }
 }

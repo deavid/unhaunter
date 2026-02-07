@@ -11,9 +11,7 @@ use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{
-    Hiding, PlayerDisconnected, PlayerSpectating, PlayerSprite,
-};
+use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerSpectating, PlayerSprite};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::boardposition::BoardPosition;
@@ -21,6 +19,7 @@ use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::PlayerTag;
+use untruck_core::components::in_truck::InTruck;
 
 use crate::components::fade_out::FadeOut;
 use crate::metrics::GHOST_MOVEMENT;
@@ -49,6 +48,7 @@ pub(crate) fn ghost_movement(
             With<PlayerTag>,
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
+            Without<InTruck>,
         ),
     >,
     roomdb: Res<RoomDB>,
@@ -158,7 +158,11 @@ pub(crate) fn ghost_movement(
                 let player_pos_l: Vec<(&Position, bool)> = qp
                     .iter()
                     .filter(|(_, p, _)| p.health > 0.0)
-                    .map(|(pos, _, hiding)| (pos, hiding.is_some()))
+                    .map(
+                        |(pos, _, hiding): (&Position, &PlayerSprite, Option<&Hiding>)| {
+                            (pos, hiding.is_some())
+                        },
+                    )
                     .collect();
                 if !player_pos_l.is_empty() {
                     let idx = rng.random_range(0..player_pos_l.len());

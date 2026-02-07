@@ -44,6 +44,7 @@ pub(crate) fn app_setup(app: &mut App) {
             input::mouse_interaction::mouse_out_interactive_system,
             // Waypoint systems handle all click-to-move and click-to-interact
             waypoint::waypoint_creation_system,
+            waypoint::remote_player_waypoint_system,
             waypoint::waypoint_following_system,
             waypoint::waypoint_queue_cleanup_system,
             // Interaction system runs before movement (Runs on all instances)

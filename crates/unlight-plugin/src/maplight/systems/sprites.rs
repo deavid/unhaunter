@@ -244,8 +244,8 @@ pub(crate) fn apply_lighting_to_sprites_system(
                 // Handle warning/hunt colors (copied from tile logic for now)
                 dst_color = if ethereal.warning_active {
                     lerp_color(
-                        css::RED.into(),
                         css::ALICE_BLUE.into(),
+                        css::RED.into(),
                         ethereal.warning_intensity.clamp(0.0, 1.0),
                     )
                 } else {

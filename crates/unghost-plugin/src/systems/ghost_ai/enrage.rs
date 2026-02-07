@@ -13,11 +13,10 @@ use unfoundation_core::utils::mean::MeanValue;
 use unfoundation_core::utils::time::PrintingTimer;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{
-    Hiding, PlayerDisconnected, PlayerSpectating, PlayerSprite,
-};
+use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerSpectating, PlayerSprite};
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
+use untruck_core::components::in_truck::InTruck;
 
 /// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = true;
@@ -44,6 +43,7 @@ pub(crate) fn ghost_enrage(
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
+            Without<InTruck>,
         ),
     >,
     mut gs_audio: SoundEmitter,
@@ -211,7 +211,11 @@ fn calculate_min_player_distance(
     ghost_position: &Position,
     q_player: &Query<
         (&mut PlayerSprite, &Position, Option<&Hiding>),
-        (Without<PlayerSpectating>, Without<PlayerDisconnected>),
+        (
+            Without<PlayerSpectating>,
+            Without<PlayerDisconnected>,
+            Without<InTruck>,
+        ),
     >,
 ) -> f32 {
     q_player
@@ -246,7 +250,11 @@ pub(crate) fn handle_hunting_phase(
     ghost_position: &Position,
     q_player: &mut Query<
         (&mut PlayerSprite, &Position, Option<&Hiding>),
-        (Without<PlayerSpectating>, Without<PlayerDisconnected>),
+        (
+            Without<PlayerSpectating>,
+            Without<PlayerDisconnected>,
+            Without<InTruck>,
+        ),
     >,
     time: &Res<Time>,
     difficulty: &Res<CurrentDifficulty>,
@@ -356,7 +364,11 @@ pub(crate) fn calculate_rage_update(
     ghost_position: &Position,
     q_player: &Query<
         (&mut PlayerSprite, &Position, Option<&Hiding>),
-        (Without<PlayerSpectating>, Without<PlayerDisconnected>),
+        (
+            Without<PlayerSpectating>,
+            Without<PlayerDisconnected>,
+            Without<InTruck>,
+        ),
     >,
     dynamics: &GhostBehaviorDynamics,
     avg_angry: &mut MeanValue,

@@ -56,6 +56,7 @@ pub(crate) fn waypoint_creation_system(
     }
 
     let Some((player_entity, player_pos, visibility_data)) = q_player.iter().next() else {
+        trace!("[WAYPOINT-TRACE] waypoint_creation_system: No MainPlayer entity found");
         return;
     };
 
@@ -91,9 +92,14 @@ pub(crate) fn waypoint_creation_system(
                 continue; // Skip this click
             }
 
-            debug!(
-                "waypoint_creation_system: Creating waypoint to interactive entity {:?} on floor {}",
-                interactive_entity, interactive_floor
+            trace!(
+                "[WAYPOINT-TRACE] waypoint_creation_system: Creating waypoint to interactive entity {:?} on floor {}, player_entity={:?}, player_pos=({:.2},{:.2},{:.2})",
+                interactive_entity,
+                interactive_floor,
+                player_entity,
+                player_pos.x,
+                player_pos.y,
+                player_pos.z
             );
 
             // Calculate the actual interaction point (e.g., door handle)
@@ -161,6 +167,11 @@ pub(crate) fn waypoint_creation_system(
         else {
             return;
         };
+
+        trace!(
+            "[WAYPOINT-TRACE] waypoint_creation_system: Ground click detected. player_entity={:?}, player_pos=({:.2},{:.2},{:.2}), target=({:.2},{:.2},{:.2})",
+            player_entity, player_pos.x, player_pos.y, player_pos.z, target.x, target.y, target.z
+        );
 
         // Ground clicks should clear existing waypoints
         clear_player_waypoints(
@@ -277,10 +288,15 @@ pub(crate) fn waypoint_following_system(
                 if should_complete_waypoint {
                     // Complete waypoint and stop moving
                     player_input.movement = Vec2::ZERO;
+                    trace!(
+                        "[WAYPOINT-TRACE] waypoint_following: COMPLETED waypoint, entity={:?}, setting movement=ZERO",
+                        player_entity
+                    );
                     complete_waypoint(&mut commands, player_entity, current_waypoint_entity);
                 } else {
                     // Continue moving towards waypoint
-                    player_input.movement = to_target.normalize();
+                    let normalized = to_target.normalize();
+                    player_input.movement = normalized;
                 }
             } else {
                 // Waypoint entity no longer exists, remove it from queue
@@ -405,7 +421,17 @@ fn create_pathfinding_waypoints(
         waypoint_queue.push(waypoint_entity);
     }
 
-    debug!("Created {} waypoints for pathfinding", path.len() - 1);
+    trace!(
+        "[WAYPOINT-TRACE] create_pathfinding_waypoints: Created {} waypoints for player_entity={:?}, from=({:.2},{:.2},{:.2}) to=({:.2},{:.2},{:.2})",
+        path.len() - 1,
+        player_entity,
+        start_pos.x,
+        start_pos.y,
+        start_pos.z,
+        target_pos.x,
+        target_pos.y,
+        target_pos.z
+    );
 }
 
 /// Helper function to create waypoints using pathfinding that end with an interaction
@@ -545,4 +571,59 @@ fn create_stair_waypoints(
     waypoint_queue.push(end_waypoint_entity);
 
     debug!("Created 2 waypoints for stair traversal");
+}
+
+/// System to update waypoints for remote players based on synced input
+pub(crate) fn remote_player_waypoint_system(
+    mut commands: Commands,
+    q_remote_players: Query<
+        (Entity, &Position, &PlayerInput),
+        (
+            With<PlayerSprite>,
+            Without<MainPlayer>,
+            Changed<PlayerInput>,
+        ),
+    >,
+    mut q_player_queue: Query<&mut WaypointQueue, With<PlayerSprite>>,
+    q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
+    q_main_player: Query<&VisibilityData, With<MainPlayer>>,
+    pathfinder: Pathfinder,
+) {
+    let visibility_data = VisibilityData::default();
+    let visibility = q_main_player.iter().next().unwrap_or(&visibility_data);
+
+    for (entity, pos, input) in q_remote_players.iter() {
+        // We only care if queue exists (it should)
+        if let Ok(mut queue) = q_player_queue.get_mut(entity) {
+            match input.target_position {
+                Some(target) => {
+                    let target_pos = Position {
+                        x: target.x,
+                        y: target.y,
+                        z: pos.z,
+                        visual_priority: 0.0,
+                    };
+                    // Use MainPlayer visibility to visualize the path from our perspective
+                    create_pathfinding_waypoints(
+                        &mut commands,
+                        &q_existing_waypoints,
+                        entity,
+                        *pos,
+                        target_pos,
+                        &mut queue,
+                        &pathfinder,
+                        visibility,
+                    );
+                }
+                None => {
+                    clear_player_waypoints(
+                        &mut commands,
+                        &q_existing_waypoints,
+                        entity,
+                        &mut queue,
+                    );
+                }
+            }
+        }
+    }
 }
