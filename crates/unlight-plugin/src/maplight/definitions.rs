@@ -37,7 +37,7 @@ impl FlashlightData {
         light_type: LightType,
         board_dim: (usize, usize, usize),
     ) -> Self {
-        let fldir = dir.with_max_dist(200.0);
+        let fldir = dir.with_max_dist(400.0);
 
         // Exact replication of unrotate_by_dir logic for precomputation
         let mut udir = Direction {
@@ -66,7 +66,7 @@ impl FlashlightData {
         ];
 
         let focus = (fldir.distance() + 0.1).max(6.0) / 20.0;
-        let lpos = pos + fldir / (100.0 / focus + 20.0);
+        let lpos = pos + fldir / 30.0;
 
         let lpos_unrot = Position {
             x: lpos.x * unrot_axes[0].dx + lpos.y * unrot_axes[1].dx + lpos.z * unrot_axes[2].dx,

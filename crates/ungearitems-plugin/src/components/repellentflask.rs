@@ -90,8 +90,8 @@ pub(crate) fn update_repellentflask(
                         })
                         .insert(Emissive {
                             color: css::YELLOW.into(),
-                            intensity: 2.0,
-                            light_reactivity: 5.0,
+                            intensity: 1.0,
+                            light_reactivity: 2.0,
                             pulse_speed: 10.0,
                         })
                         .insert(RepellentParticle::new(liquid_content))
@@ -239,7 +239,7 @@ fn repellent_update(
         }
 
         if let Some(ref mut emissive) = o_emissive {
-            emissive.intensity = alpha * 0.2;
+            emissive.intensity = alpha * 0.1;
         }
 
         let bpos = r_pos.to_board_position();

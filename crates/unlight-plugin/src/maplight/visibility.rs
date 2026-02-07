@@ -44,10 +44,11 @@ pub(crate) fn compute_visibility(
             let ncf = collision_field[np];
             let npds = npos.to_position().distance_zf(pos_start, Z_FACTOR);
             let npref = npos.distance(&pos2) / 2.0;
-            let f = if npds < 1.5 {
+            let threshold = 2.0;
+            let f = if npds < threshold {
                 1.0
             } else {
-                ((npds - pds) / npref).clamp(0.0, 1.0).powf(2.0)
+                ((npds - pds) / npref).clamp(0.0, 1.0).powf(1.0)
             };
             let mut dst_f = src_f * f;
             if dst_f < 0.00001 {
@@ -56,14 +57,14 @@ pub(crate) fn compute_visibility(
             let k = if let Some(roomdb) = roomdb.as_ref() {
                 match roomdb.room_tiles.get(&npos).is_some() {
                     // Decrease view range inside the location
-                    true => 6.0,
+                    true => 7.0,
                     false => 8.0,
                 }
             } else {
                 // For deployed gear
-                3.0
+                7.0
             };
-            dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
+            dst_f /= 1.0 + ((npds - threshold) / k).clamp(0.0, 6.0);
             let vf_np = &mut vis_field[np];
             // Apply a visibility penalty to collision tiles that are in positive X or Y direction
             let mut visibility_factor = 1.0;

@@ -10,7 +10,7 @@ use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::AppState;
 use unui_core::resources::MouseVisibility;
 
-const AIM_MAX_DISTANCE: f32 = 8.0;
+const AIM_MAX_DISTANCE: f32 = 12.0;
 
 fn mouse_aim_system(
     q_window: Query<&Window, With<PrimaryWindow>>,

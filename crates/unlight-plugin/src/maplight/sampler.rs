@@ -129,7 +129,6 @@ impl<'a> LightingSampler<'a> {
         target_pos: Position,
         is_light_sensitive: bool,
     ) -> Option<((f32, f32, f32), LightData)> {
-        const FL_MIN_DST: f32 = 0.1;
         let rpos_raw = target_pos;
         let bpos = target_pos.to_board_position();
         let p = bpos.ndidx_checked(self.bf.map_size)?;
@@ -178,13 +177,20 @@ impl<'a> LightingSampler<'a> {
 
                 rpos.x -= lpos_unrot.x;
                 rpos.y -= lpos_unrot.y;
-                if rpos.x > 0.0 {
-                    rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.3));
-                    rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
-                }
-                if rpos.x < 0.0 {
-                    rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 4.0));
-                    rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
+
+                // Built-in softness and minimum width
+                const MIN_SPREAD: f32 = 2.5;
+
+                // 1. Bright Hotspot Logic
+                let mut spot_rpos = rpos;
+                if spot_rpos.x >= 0.0 {
+                    spot_rpos.x = fastapprox::faster::pow(spot_rpos.x, 1.0 / focus.clamp(1.0, 1.3));
+                    spot_rpos.y /= spot_rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + MIN_SPREAD;
+                } else {
+                    spot_rpos.x =
+                        -fastapprox::faster::pow(-spot_rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 4.0));
+                    spot_rpos.y *= -spot_rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
+                    spot_rpos.y /= MIN_SPREAD;
                 }
 
                 let emitter_pos = Position {
@@ -194,9 +200,36 @@ impl<'a> LightingSampler<'a> {
                     visual_priority: 0.0,
                 };
 
-                let dist = (emitter_pos.distance(&rpos) + 0.1)
-                    .powf((flash.dir.distance() / 200.0).clamp(0.2, 1.0).recip());
-                flash.power_f / (dist + FL_MIN_DST) * flvis.clamp(0.0001, 1.0)
+                let dist = (emitter_pos.distance(&spot_rpos) + 0.5)
+                    .powf((flash.dir.distance() / 200.0).clamp(0.5, 1.0).recip());
+                let spot_fl = flash.power_f / (dist + 0.5);
+
+                // 2. Faint Cone / Spotlight Beam Logic
+                let beam_len = flash.dir.distance() / 30.0;
+                let x_player_rel = rpos.x + beam_len;
+                let mut cone_fl = 0.0;
+                if x_player_rel > 0.0 && rpos.x < 0.0 {
+                    let progress = (x_player_rel / beam_len).clamp(0.0, 1.0);
+
+                    // Dynamic narrowing: narrower angle as we aim further (150-400 magnitude)
+                    let range_factor = ((flash.dir.distance() - 150.0) / 250.0).clamp(0.0, 1.0);
+                    let angle_multiplier = 1.0 - (range_factor * 0.6); // Up to 60% narrower at max range
+
+                    // Cone width scales with distance, but is suppressed at long range to focus the beam
+                    let cone_width = (progress * 15.0 + 5.0) * angle_multiplier;
+
+                    let dz = rpos.z - lpos_unrot.z;
+                    let lateral_dist = (rpos.y * rpos.y + dz * dz).sqrt();
+                    let angular_falloff =
+                        (1.0 - (lateral_dist / cone_width)).clamp(0.0, 1.0).powi(2);
+
+                    // Intensity is shifted to the "later parts" (closer to hotspot)
+                    // Peaks around 66% of the way to the hotspot and fades quickly at the player
+                    let intensity_mod = progress.powi(2) * (1.0 - progress) * 6.75;
+                    cone_fl = flash.power_f * 0.20 * intensity_mod * angular_falloff;
+                }
+
+                (spot_fl + cone_fl) * flvis.clamp(0.0001, 1.0)
             };
             let flsrgba = flcolor.to_srgba();
             lux_fl[0] += fl * flsrgba.red;

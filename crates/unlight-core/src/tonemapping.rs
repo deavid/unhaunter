@@ -20,8 +20,8 @@ pub fn artistic_tonemap(x: f32, exposure: f32) -> f32 {
     let compressed = x.powf(1.5) / (x.powf(1.5) + k);
     // Bloom: when over-exposed (x >> adapted level), allow output > 1.0
     // for blinding/washout effect.
-    let bloom = (x - 1.0).max(0.0) * 0.5;
-    compressed + bloom
+    let bloom = x.cbrt() - 1.0;
+    compressed + bloom.max(0.0)
 }
 
 pub struct TonemappingParams {
