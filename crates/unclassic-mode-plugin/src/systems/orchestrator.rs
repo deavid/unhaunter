@@ -29,7 +29,7 @@ use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::{GameSound, GameSprite, MapTileSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive,
+    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, InfraredSensitive, LightSensitive,
     ResolutionFactor, ShadowCaster, SpectralClarity, UltravioletSensitive, Viewer,
 };
 use unrender_std::materials::CustomMaterial1;
@@ -397,6 +397,7 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(SpriteLayer(10.0))
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(Ethereal::default())
+        .insert(Emissive::default())
         .insert(p.haunt_state.ghost_dynamics)
         .insert(GhostTag)
         .insert(ghost_id_net)

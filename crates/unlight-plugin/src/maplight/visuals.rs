@@ -130,10 +130,23 @@ pub(crate) fn apply_ethereal_visuals(
         .cbrt();
     *opacity = *opacity * (1.0 - k_hit) + orig_opacity.cbrt() * k_hit;
 
-    *dst_color = srgba
+    let mut final_color = srgba
         .with_red(r * ld.visible + e_rl * 1.1 + ethereal.miss_delta / 2.0)
-        .with_green(g * ld.visible + e_uv + e_rl + ethereal.miss_delta / 2.5)
-        .into();
+        .with_green(g * ld.visible + e_uv + e_rl + ethereal.miss_delta / 2.5);
+
+    if ethereal.warning_active || ethereal.hunt_target {
+        // Make the ghost bright red and pulsing during a hunt/warning
+        let pulse = (elapsed * 8.0).sin() * 0.5 + 0.5;
+        let base_intensity = if ethereal.hunt_target { 1.0 } else { ethereal.warning_intensity };
+        let intensity = base_intensity.max(0.5) + pulse * 0.2;
+
+        final_color = final_color.with_red((final_color.red + intensity).max(1.0));
+        final_color = final_color.with_green(final_color.green * 0.2);
+        final_color = final_color.with_blue(final_color.blue * 0.2);
+
+        *opacity = opacity.max(0.9);
+    }
+    *dst_color = final_color.into();
     *dst_color = dst_color.with_luminance((dst_color.luminance() - e_infra / 2.0).clamp(0.0, 1.0));
 }
 

@@ -230,32 +230,15 @@ pub(crate) fn apply_lighting_to_sprites_system(
         let difficulty_val = &difficulty.0;
 
         if let Some(ethereal) = o_ethereal {
-            if !ethereal.warning_active && !ethereal.hunt_target {
-                apply_ethereal_visuals(
-                    ethereal,
-                    o_spectral_clarity,
-                    &ld,
-                    difficulty_val,
-                    elapsed,
-                    &mut opacity,
-                    &mut dst_color,
-                );
-            } else {
-                // Handle warning/hunt colors (copied from tile logic for now)
-                dst_color = if ethereal.warning_active {
-                    lerp_color(
-                        css::ALICE_BLUE.into(),
-                        css::RED.into(),
-                        ethereal.warning_intensity.clamp(0.0, 1.0),
-                    )
-                } else {
-                    lerp_color(
-                        css::RED.into(),
-                        css::ALICE_BLUE.into(),
-                        (ethereal.calm_time_secs / 10.0).clamp(0.0, 1.0),
-                    )
-                };
-            }
+            apply_ethereal_visuals(
+                ethereal,
+                o_spectral_clarity,
+                &ld,
+                difficulty_val,
+                elapsed,
+                &mut opacity,
+                &mut dst_color,
+            );
         }
 
         if let Some(_ecto) = o_ecto_vis.filter(|e| e.use_breach_curve) {
@@ -284,9 +267,14 @@ pub(crate) fn apply_lighting_to_sprites_system(
         }
         let visibility2 = visibility * visibility;
         let mut dcl = dst_color.to_linear();
-        dcl.red *= visibility2;
-        dcl.green *= visibility2;
-        dcl.blue *= visibility2;
+        let is_hunting = o_ethereal
+            .map(|e| e.warning_active || e.hunt_target)
+            .unwrap_or(false);
+        if !is_hunting {
+            dcl.red *= visibility2;
+            dcl.green *= visibility2;
+            dcl.blue *= visibility2;
+        }
         dst_color = dcl.into();
 
         let old_a = (sprite_color.alpha()).clamp(0.0001, 1.0);

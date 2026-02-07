@@ -15,8 +15,8 @@ use unlight_core::types::light::LightData;
 use unplayer_core::components::MainPlayer;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive, SpectralClarity,
-    SpectralInfluence, UltravioletSensitive, Viewer,
+    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, InfraredSensitive, LightSensitive,
+    SpectralClarity, SpectralInfluence, UltravioletSensitive, Viewer,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -32,8 +32,9 @@ use unui_core::resources::MouseVisibility;
 use crate::maplight::definitions::{ActiveFlashlights, GridResources};
 use crate::maplight::sampler::{LightingSampler, SpectralParams};
 use crate::maplight::visuals::{
-    apply_alpha_modulator_visuals, apply_ecto_visuals, apply_ethereal_visuals, apply_ir_visuals,
-    apply_miasma_pressure, apply_uv_visuals, step_alpha_clamped, update_spectral_influence,
+    apply_alpha_modulator_visuals, apply_ecto_visuals, apply_emissive_visuals,
+    apply_ethereal_visuals, apply_ir_visuals, apply_miasma_pressure, apply_uv_visuals,
+    step_alpha_clamped, update_spectral_influence,
 };
 use crate::metrics::APPLY_LIGHTING;
 use unmetrics_core::metrics::SendMetric;
@@ -59,6 +60,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 Option<&MapColor>,
                 Option<&MiasmaSprite>,
                 Option<&AlphaModulator>,
+                Option<&Emissive>,
             ),
         ),
         With<MapTileSprite>,
@@ -253,7 +255,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
             o_ethereal,
             o_ecto_vis,
             o_spectral_clarity,
-            (o_light_sens, o_ir_sens, o_uv_sens, o_map_color, o_miasma, o_alpha_mod),
+            (o_light_sens, o_ir_sens, o_uv_sens, o_map_color, o_miasma, o_alpha_mod, o_emissive),
         )) = qt2.get_mut(*entity)
         {
             // --- Per-Entity Spectral & Visual Processing ---
@@ -494,6 +496,16 @@ pub(crate) fn apply_lighting_to_tiles_system(
 
             if let Some(_miasma_sprite) = o_miasma {
                 apply_miasma_pressure(pos, miasma, bf, &mut opacity);
+            }
+
+            if let Some(emissive) = o_emissive {
+                apply_emissive_visuals(
+                    emissive,
+                    &light_data,
+                    elapsed,
+                    vf.visibility_field[bpos.ndidx()],
+                    &mut dst_color,
+                );
             }
 
             if !is_tile {
