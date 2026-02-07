@@ -37,9 +37,11 @@ use unnet_core::messages::{
     TransientEvent,
 };
 use unnet_core::network_id::NetworkId;
-use unnet_core::resources::LocalPlayer;
+use unnet_core::resources::{HostGone, LocalPlayer, MissionEndRequested};
 use unplayer_core::assets::PlayerAssets;
-use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite, Stamina};
+use unplayer_core::components::{
+    Hiding, MainPlayer, PlayerInput, PlayerSpectating, PlayerSprite, Stamina,
+};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
@@ -283,6 +285,32 @@ pub fn host_handle_disconnects_system(
     }
 }
 
+pub fn client_connection_monitor_system(
+    conn: Res<NetworkConn>,
+    cli: Res<CliOptions>,
+    mut game_next_state: ResMut<NextState<GameState>>,
+    current_app_state: Res<State<AppState>>,
+    mut host_gone: ResMut<HostGone>,
+) {
+    if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        host_gone.0 = false;
+        return;
+    }
+    if *current_app_state.get() != AppState::InGame {
+        host_gone.0 = false;
+        return;
+    }
+    if matches!(*conn, NetworkConn::Disconnected) {
+        if !host_gone.0 {
+            warn!("Network: Lost connection to host. Triggering Pause UI.");
+            game_next_state.set(GameState::Pause);
+            host_gone.0 = true;
+        }
+    } else {
+        host_gone.0 = false;
+    }
+}
+
 pub fn handshake_handler_system(
     mut conn: ResMut<NetworkConn>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
@@ -430,6 +458,7 @@ pub struct HostSnapshotParams<'w, 's> {
             Option<&'static PlayerGear>,
             Option<&'static Stamina>,
             &'static AnimationTimer,
+            Option<&'static PlayerSpectating>,
         ),
     >,
     pub query_ghosts: Query<
@@ -469,6 +498,7 @@ pub struct HostSnapshotParams<'w, 's> {
     pub ghost_guess: Res<'w, GhostGuess>,
     pub summary_data: Res<'w, SummaryData>,
     pub changed_tiles: ResMut<'w, unnet_core::resources::ChangedTiles>,
+    pub mission_end_requested: Res<'w, MissionEndRequested>,
     pub repellent_craft_tracker: Res<'w, RepellentCraftTracker>,
     pub query_breach: Query<'w, 's, &'static Position, With<GhostBreach>>,
     pub query_influence:
@@ -505,7 +535,7 @@ pub fn host_send_snapshots_system(
         .query_players
         .iter()
         .map(
-            |(p, pos, dir, hiding, in_truck, _, stamina, anim)| PlayerState {
+            |(p, pos, dir, hiding, in_truck, _, stamina, anim, spectating)| PlayerState {
                 id: p.id,
                 position: [pos.x, pos.y, pos.z],
                 orientation: [dir.dx, dir.dy],
@@ -514,6 +544,7 @@ pub fn host_send_snapshots_system(
                 stamina: stamina.map(|s| s.current).unwrap_or(100.0),
                 is_running: stamina.map(|s| s.running).unwrap_or(false),
                 frame: anim.idx() as u16,
+                is_spectating: spectating.is_some(),
             },
         )
         .collect();
@@ -521,7 +552,7 @@ pub fn host_send_snapshots_system(
     let player_gear = host_params
         .query_players
         .iter()
-        .filter_map(|(p, _, _, _, _, gear, _, _)| {
+        .filter_map(|(p, _, _, _, _, gear, _, _, _)| {
             gear.map(|g| PlayerGearState {
                 player_id: p.id,
                 left_hand: g
@@ -720,7 +751,7 @@ pub fn host_send_snapshots_system(
                 host_params
                     .query_players
                     .iter()
-                    .find_map(|(p, _, _, _, _, gear, _, _)| {
+                    .find_map(|(p, _, _, _, _, gear, _, _, _)| {
                         gear.and_then(|g| {
                             g.held_item.as_ref().and_then(|h| {
                                 if host_params.query_net_id.get(h.entity).ok() == Some(&mid) {
@@ -760,6 +791,7 @@ pub fn host_send_snapshots_system(
         is_full_sync,
         app_state: *host_params.app_state.get(),
         game_state: *host_params.game_state.get(),
+        can_end_mission: host_params.mission_end_requested.0,
         players,
         ghosts,
         rooms,
@@ -908,6 +940,7 @@ pub struct ClientSnapshotParams<'w, 's> {
             Option<&'static mut PlayerGear>,
             Option<&'static MainPlayer>,
             &'static mut Stamina,
+            Option<&'static PlayerSpectating>,
         ),
         (
             With<PlayerSprite>,
@@ -978,6 +1011,7 @@ pub struct ClientSnapshotParams<'w, 's> {
     pub query_buttons: Query<'w, 's, &'static mut TruckUIButton>,
     pub summary_data: ResMut<'w, SummaryData>,
     pub repellent_craft_tracker: ResMut<'w, RepellentCraftTracker>,
+    pub mission_end_requested: ResMut<'w, MissionEndRequested>,
     pub query_breach: Query<
         'w,
         's,
@@ -1137,6 +1171,7 @@ pub fn client_apply_snapshots_system(
                 is_full_sync,
                 app_state: server_app_state,
                 game_state: server_game_state,
+                can_end_mission,
                 players,
                 ghosts,
                 rooms,
@@ -1158,8 +1193,10 @@ pub fn client_apply_snapshots_system(
 
             let is_full_sync = *is_full_sync;
             // Sync AppState - but allow independent Summary transition
-            let dominated_by_server_app =
-                matches!(server_app_state, AppState::Loading | AppState::MainMenu);
+            let dominated_by_server_app = matches!(
+                server_app_state,
+                AppState::Loading | AppState::MainMenu | AppState::Summary
+            );
             let local_in_summary = *params.states.current_app_state.get() == AppState::Summary;
 
             if dominated_by_server_app
@@ -1167,6 +1204,10 @@ pub fn client_apply_snapshots_system(
                     && *server_app_state != *params.states.current_app_state.get())
             {
                 params.states.app_next_state.set(*server_app_state);
+                // If the server forced us into Summary, we must exit any in-game state (like Truck)
+                if *server_app_state == AppState::Summary {
+                    params.states.game_next_state.set(GameState::None);
+                }
             }
 
             // Sync GameState - but NOT Truck state (that's per-player)
@@ -1186,6 +1227,9 @@ pub fn client_apply_snapshots_system(
                 params.states.game_next_state.set(*server_game_state);
             }
             // If local_in_truck is true, we keep our local Truck state
+
+            // Sync MissionEndRequested
+            params.mission_end_requested.0 = *can_end_mission;
 
             // Sync repellent craft count
             params.repellent_craft_tracker.crafted_count = *repellent_crafted_count;
@@ -1358,7 +1402,7 @@ pub fn client_apply_snapshots_system(
                         let is_main = params
                             .query_players
                             .get(entity)
-                            .map(|q| q.7.is_some())
+                            .map(|q| q.8.is_some())
                             .unwrap_or(false);
                         if !is_main {
                             params.commands.entity(entity).despawn();
@@ -1389,6 +1433,7 @@ pub fn client_apply_snapshots_system(
                     _,
                     main_player,
                     mut stamina,
+                    spectating,
                 )) = params.query_players.get_mut(p_entity)
                 {
                     let old_pos = *pos;
@@ -1399,6 +1444,16 @@ pub fn client_apply_snapshots_system(
                     if main_player.is_none() {
                         dir.dx = p_state.orientation[0];
                         dir.dy = p_state.orientation[1];
+                    }
+
+                    // Spectating
+                    if p_state.is_spectating && spectating.is_none() {
+                        params.commands.entity(p_entity).insert(PlayerSpectating);
+                    } else if !p_state.is_spectating && spectating.is_some() {
+                        params
+                            .commands
+                            .entity(p_entity)
+                            .remove::<PlayerSpectating>();
                     }
 
                     // 2.4 Hiding
@@ -1592,7 +1647,7 @@ pub fn client_apply_snapshots_system(
 
             // Update player gear
             for pg_state in player_gear {
-                for (_, id, _, _, _, _, _, gear, _, _) in params.query_players.iter_mut() {
+                for (_, id, _, _, _, _, _, gear, _, _, _) in params.query_players.iter_mut() {
                     if *id == pg_state.player_id
                         && let Some(mut gear) = gear
                     {
@@ -1927,34 +1982,50 @@ pub fn client_apply_snapshots_system(
     }
 }
 
-pub fn host_apply_input_system(
-    mut commands: Commands,
-    cli: Res<CliOptions>,
-    mut ev_reader: MessageReader<NetworkDataEvent>,
-    mut query_players: Query<
-        (Entity, &NetworkId, &mut PlayerInput, &mut PlayerGear),
+#[derive(SystemParam)]
+#[allow(clippy::type_complexity)]
+pub struct HostApplyInputParams<'w, 's> {
+    pub commands: Commands<'w, 's>,
+    pub cli: Res<'w, CliOptions>,
+    pub ev_reader: MessageReader<'w, 's, NetworkDataEvent>,
+    pub query_players: Query<
+        'w,
+        's,
+        (
+            Entity,
+            &'static NetworkId,
+            &'static mut PlayerInput,
+            &'static mut PlayerGear,
+        ),
         Without<MainPlayer>,
     >,
-    query_van: Query<(&Position, &Behavior)>,
-    query_player_pos: Query<
-        (Entity, &NetworkId, &Position, Has<InTruck>),
+    pub query_van: Query<'w, 's, (&'static Position, &'static Behavior)>,
+    pub query_player_pos: Query<
+        'w,
+        's,
+        (Entity, &'static NetworkId, &'static Position, Has<InTruck>),
         (With<PlayerSprite>, Without<MainPlayer>),
     >,
-    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
-    board_field: Res<BoardEntityField>,
-    mut craft_tracker: ResMut<RepellentCraftTracker>,
-    gear_registry: Res<GearSpawnerRegistry>,
-    mut q_repellent: Query<&mut ungearitems_core::components::repellentflask::RepellentFlask>,
-    q_gearkind: Query<&ungear_core::types::gear::kind::GearKind>,
-    query_net_id: Query<&NetworkId>,
-    asset_server: Res<AssetServer>,
-    audio_settings: Res<Persistent<AudioSettings>>,
-) {
-    if !matches!(cli.net_mode, NetMode::Host { .. }) {
+    pub ev_interaction: MessageWriter<'w, ExecuteInteractionEvent>,
+    pub board_field: Res<'w, BoardEntityField>,
+    pub craft_tracker: ResMut<'w, RepellentCraftTracker>,
+    pub gear_registry: Res<'w, GearSpawnerRegistry>,
+    pub q_repellent:
+        Query<'w, 's, &'static mut ungearitems_core::components::repellentflask::RepellentFlask>,
+    pub q_gearkind: Query<'w, 's, &'static ungear_core::types::gear::kind::GearKind>,
+    pub query_net_id: Query<'w, 's, &'static NetworkId>,
+    pub asset_server: Res<'w, AssetServer>,
+    pub audio_settings: Res<'w, Persistent<AudioSettings>>,
+    pub ev_mission: MessageWriter<'w, unevents_core::events::mission::MissionEvent>,
+    pub mission_end_requested: Res<'w, unnet_core::resources::MissionEndRequested>,
+}
+
+pub fn host_apply_input_system(mut params: HostApplyInputParams) {
+    if !matches!(params.cli.net_mode, NetMode::Host { .. }) {
         return;
     }
 
-    for ev in ev_reader.read() {
+    for ev in params.ev_reader.read() {
         match &ev.message {
             NetworkMessage::PlayerInput {
                 player_id,
@@ -1966,7 +2037,7 @@ pub fn host_apply_input_system(
                 target_position,
                 aim_direction,
             } => {
-                for (_entity, id, mut input, _) in query_players.iter_mut() {
+                for (_entity, id, mut input, _) in params.query_players.iter_mut() {
                     if id == player_id {
                         input.movement = Vec2::new(movement[0], movement[1]);
                         input.run = *run;
@@ -1990,13 +2061,14 @@ pub fn host_apply_input_system(
                 if rel_x >= 0
                     && rel_y >= 0
                     && rel_z >= 0
-                    && rel_x < board_field.0.shape()[0] as i64
-                    && rel_y < board_field.0.shape()[1] as i64
-                    && rel_z < board_field.0.shape()[2] as i64
+                    && rel_x < params.board_field.0.shape()[0] as i64
+                    && rel_y < params.board_field.0.shape()[1] as i64
+                    && rel_z < params.board_field.0.shape()[2] as i64
                 {
-                    let entities = &board_field.0[[rel_x as usize, rel_y as usize, rel_z as usize]];
+                    let entities =
+                        &params.board_field.0[[rel_x as usize, rel_y as usize, rel_z as usize]];
                     for &entity in entities {
-                        ev_interaction.write(ExecuteInteractionEvent {
+                        params.ev_interaction.write(ExecuteInteractionEvent {
                             entity,
                             ietype: interaction_type.clone(),
                             force_tuid: None,
@@ -2009,10 +2081,10 @@ pub fn host_apply_input_system(
                     "Network: Received RequestTruckEntry from client {:?}",
                     player_id
                 );
-                for (entity, id, p_pos, _) in query_player_pos.iter() {
+                for (entity, id, p_pos, _) in params.query_player_pos.iter() {
                     if id == player_id {
                         let mut near_van = false;
-                        for (v_pos, v_beh) in query_van.iter() {
+                        for (v_pos, v_beh) in params.query_van.iter() {
                             if v_beh.is_van_entry() && p_pos.distance(v_pos) < 2.0 {
                                 near_van = true;
                                 break;
@@ -2024,7 +2096,8 @@ pub fn host_apply_input_system(
                                 "Network: RequestTruckEntry validated for player {:?}. Adding InTruck.",
                                 player_id
                             );
-                            commands
+                            params
+                                .commands
                                 .entity(entity)
                                 .insert(InTruck)
                                 .insert(Hiding { hiding_spot: None });
@@ -2043,14 +2116,26 @@ pub fn host_apply_input_system(
                     "Network: Received RequestTruckExit from client {:?}",
                     player_id
                 );
-                for (entity, id, _, _) in query_player_pos.iter() {
+                for (entity, id, _, _) in params.query_player_pos.iter() {
                     if id == player_id {
-                        commands
+                        params
+                            .commands
                             .entity(entity)
                             .remove::<InTruck>()
                             .remove::<Hiding>();
                         break;
                     }
+                }
+            }
+            NetworkMessage::RequestEndMission => {
+                debug!("Network: Received RequestEndMission from client. Validating.");
+                if params.mission_end_requested.0 {
+                    info!("Network: RequestEndMission validated. Ending mission.");
+                    params
+                        .ev_mission
+                        .write(unevents_core::events::mission::MissionEvent::End);
+                } else {
+                    warn!("Network: RequestEndMission received but conditions not met.");
                 }
             }
             NetworkMessage::CraftRepellent {
@@ -2063,7 +2148,7 @@ pub fn host_apply_input_system(
                 );
                 // 1. Validate player is in truck
                 let mut p_data = None;
-                for (entity, id, _, is_in_truck) in query_player_pos.iter() {
+                for (entity, id, _, is_in_truck) in params.query_player_pos.iter() {
                     if id == player_id {
                         p_data = Some((entity, is_in_truck));
                         break;
@@ -2073,28 +2158,28 @@ pub fn host_apply_input_system(
                 if let Some((_entity, is_in_truck)) = p_data {
                     if is_in_truck {
                         // 2. Validate craft limits
-                        if craft_tracker.can_craft() {
+                        if params.craft_tracker.can_craft() {
                             // 3. Perform craft
                             // Find the gear for this player
-                            for (_e, id, _, mut gear) in query_players.iter_mut() {
+                            for (_e, id, _, mut gear) in params.query_players.iter_mut() {
                                 if id == player_id {
                                     let consumed_new_bottle =
                                         untruck_plugin::craft_repellent::craft_repellent(
-                                            &mut commands,
-                                            &gear_registry,
+                                            &mut params.commands,
+                                            &params.gear_registry,
                                             &mut gear,
                                             *ghost_type,
-                                            &mut q_repellent,
-                                            &q_gearkind,
+                                            &mut params.q_repellent,
+                                            &params.q_gearkind,
                                         );
 
                                     // Ensure any newly spawned gear has a NetworkId
                                     let mut ensure_net_id = |entity: Entity| {
-                                        if query_net_id.get(entity).is_err() {
+                                        if params.query_net_id.get(entity).is_err() {
                                             let mut rng = rand::rng();
                                             let net_id =
                                                 NetworkId(rng.random_range(1000..u64::MAX));
-                                            commands.entity(entity).insert(net_id);
+                                            params.commands.entity(entity).insert(net_id);
                                             debug!(
                                                 "Network: Assigned {:?} to local entity {:?}",
                                                 net_id, entity
@@ -2109,23 +2194,31 @@ pub fn host_apply_input_system(
                                     }
 
                                     if consumed_new_bottle {
-                                        craft_tracker.craft();
+                                        params.craft_tracker.craft();
                                         info!(
                                             "Network: Crafted repellent for remote player {:?}",
                                             player_id
                                         );
 
                                         // Play sound at player position
-                                        commands
+                                        params
+                                            .commands
                                             .spawn(AudioPlayer::new(
-                                                asset_server
+                                                params
+                                                    .asset_server
                                                     .load("sounds/effects-dingdingding.ogg"),
                                             ))
                                             .insert(PlaybackSettings {
                                                 mode: bevy::audio::PlaybackMode::Despawn,
                                                 volume: bevy::audio::Volume::Linear(
-                                                    1.0 * audio_settings.volume_master.as_f32()
-                                                        * audio_settings.volume_effects.as_f32(),
+                                                    1.0 * params
+                                                        .audio_settings
+                                                        .volume_master
+                                                        .as_f32()
+                                                        * params
+                                                            .audio_settings
+                                                            .volume_effects
+                                                            .as_f32(),
                                                 ),
                                                 ..Default::default()
                                             });
@@ -2153,17 +2246,17 @@ pub fn host_apply_input_system(
                 }
             }
             NetworkMessage::RequestTruckInventoryChange { player_id, change } => {
-                for (_entity, id, _input, mut p_gear) in query_players.iter_mut() {
+                for (_entity, id, _input, mut p_gear) in params.query_players.iter_mut() {
                     if id == player_id {
                         match change {
                             unnet_core::messages::TruckInventoryChange::RemoveLeftHand => {
                                 if let Some(e) = p_gear.left_hand.take() {
-                                    commands.entity(e).despawn();
+                                    params.commands.entity(e).despawn();
                                 }
                             }
                             unnet_core::messages::TruckInventoryChange::RemoveRightHand => {
                                 if let Some(e) = p_gear.right_hand.take() {
-                                    commands.entity(e).despawn();
+                                    params.commands.entity(e).despawn();
                                 }
                             }
                             unnet_core::messages::TruckInventoryChange::RemoveInventoryIndex(
@@ -2171,15 +2264,16 @@ pub fn host_apply_input_system(
                             ) => {
                                 if *idx < p_gear.inventory.len() {
                                     let e = p_gear.inventory.remove(*idx);
-                                    commands.entity(e).despawn();
+                                    params.commands.entity(e).despawn();
                                 }
                             }
                             unnet_core::messages::TruckInventoryChange::AddItem(kind) => {
                                 if *kind != ungear_core::types::gear::kind::GearKind::None {
-                                    let entity = gear_registry.spawn(&mut commands, *kind);
+                                    let entity =
+                                        params.gear_registry.spawn(&mut params.commands, *kind);
                                     let mut rng = rand::rng();
                                     let net_id = NetworkId(rng.random_range(1000..u64::MAX));
-                                    commands.entity(entity).insert(net_id);
+                                    params.commands.entity(entity).insert(net_id);
 
                                     if p_gear.left_hand.is_none() {
                                         p_gear.left_hand = Some(entity);
@@ -2188,7 +2282,7 @@ pub fn host_apply_input_system(
                                     } else if p_gear.inventory.len() < 2 {
                                         p_gear.inventory.push(entity);
                                     } else {
-                                        commands.entity(entity).despawn();
+                                        params.commands.entity(entity).despawn();
                                     }
                                 }
                             }
@@ -2198,28 +2292,28 @@ pub fn host_apply_input_system(
                 }
             }
             NetworkMessage::GrabRequest(msg) => {
-                for (_, id, mut input, _) in query_players.iter_mut() {
+                for (_, id, mut input, _) in params.query_players.iter_mut() {
                     if id == &msg.player_id {
                         input.grab = true;
                     }
                 }
             }
             NetworkMessage::DropRequest { player_id } => {
-                for (_, id, mut input, _) in query_players.iter_mut() {
+                for (_, id, mut input, _) in params.query_players.iter_mut() {
                     if id == player_id {
                         input.drop = true;
                     }
                 }
             }
             NetworkMessage::CycleInventoryRequest { player_id } => {
-                for (_, id, mut input, _) in query_players.iter_mut() {
+                for (_, id, mut input, _) in params.query_players.iter_mut() {
                     if id == player_id {
                         input.inventory_cycle = true;
                     }
                 }
             }
             NetworkMessage::SwapHandsRequest { player_id } => {
-                for (_, id, mut input, _) in query_players.iter_mut() {
+                for (_, id, mut input, _) in params.query_players.iter_mut() {
                     if id == player_id {
                         input.inventory_swap = true;
                     }
@@ -2227,10 +2321,10 @@ pub fn host_apply_input_system(
             }
             NetworkMessage::PlayerLeft { player_id } => {
                 info!("Network: Received PlayerLeft from client {:?}", player_id);
-                for (entity, id, _, _) in query_player_pos.iter() {
+                for (entity, id, _, _) in params.query_player_pos.iter() {
                     if id == player_id {
                         info!("Network: Despawning player entity for {:?}", id);
-                        commands.entity(entity).despawn();
+                        params.commands.entity(entity).despawn();
                         break;
                     }
                 }

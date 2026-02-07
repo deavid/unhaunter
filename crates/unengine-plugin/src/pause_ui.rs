@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unrender_std::materials::UIPanelMaterial;
+use unnet_core::resources::HostGone;
 use untypes_core::states::{AppState, GameState};
 use unui_core::assets::UiAssets;
 
@@ -17,11 +18,12 @@ fn keyboard(
     mut game_next_state: ResMut<NextState<GameState>>,
     mut next_state: ResMut<NextState<AppState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    host_gone: Res<HostGone>,
 ) {
     if *game_state.get() != GameState::Pause {
         return;
     }
-    if keyboard_input.just_pressed(KeyCode::Escape) {
+    if keyboard_input.just_pressed(KeyCode::Escape) && !host_gone.0 {
         game_next_state.set(GameState::None);
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
@@ -40,7 +42,13 @@ fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     ui_assets: Res<UiAssets>,
+    host_gone: Res<HostGone>,
 ) {
+    let (p_text, p_sub_text) = if host_gone.0 {
+        ("Multiplayer Connection Lost", "Host has disconnected. Press Q to exit.")
+    } else {
+        ("Pause", "Press ESC to resume or Q to quit mission")
+    };
     const MARGIN_PERCENT: f32 = 0.5;
     const MARGIN: UiRect = UiRect::percent(
         MARGIN_PERCENT,
@@ -80,7 +88,7 @@ fn setup_ui(
                 })
                 .with_children(|mid_blk| {
                     mid_blk
-                        .spawn(Text::new("Pause"))
+                        .spawn(Text::new(p_text))
                         .insert(TextFont {
                             font: ui_assets.font_londrina_light.clone(),
                             font_size: 35.0 * FONT_SCALE,
@@ -97,7 +105,7 @@ fn setup_ui(
                         ..default()
                     });
                     mid_blk
-                        .spawn(Text::new("Press ESC to resume or Q to quit mission"))
+                        .spawn(Text::new(p_sub_text))
                         .insert(TextFont {
                             font: ui_assets.font_londrina_light.clone(),
                             font_size: 20.0 * FONT_SCALE,

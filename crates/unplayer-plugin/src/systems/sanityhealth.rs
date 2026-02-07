@@ -2,11 +2,12 @@ use crate::components::player::Stamina;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unbehavior::roomdb::RoomDB;
-use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
+use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::MainPlayer;
+use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;
@@ -26,7 +27,7 @@ pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
 
 fn lose_sanity(
     time: Res<Time>,
-    mut qp: Query<(&mut PlayerSprite, &Position), Without<InTruck>>,
+    mut qp: Query<(&mut PlayerSprite, &Position), (Without<InTruck>, Without<PlayerSpectating>)>,
     thermal_grid: Res<ThermalGrid>,
     sound_grid: Res<SoundGrid>,
     lg: Res<LightGrid>,
@@ -91,7 +92,7 @@ fn lose_sanity(
 
 fn recover_sanity(
     time: Res<Time>,
-    mut qp: Query<&mut PlayerSprite, With<InTruck>>,
+    mut qp: Query<&mut PlayerSprite, (With<InTruck>, Without<PlayerSpectating>)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     // Players recover sanity while in the truck.
@@ -115,31 +116,48 @@ fn recover_sanity(
 }
 
 fn visual_health(
-    qp: Query<&PlayerSprite, With<MainPlayer>>,
+    qp: Query<(&PlayerSprite, Has<PlayerSpectating>), With<MainPlayer>>,
     mut qb: Query<(
         Option<&mut ImageNode>,
         &mut BackgroundColor,
         &DamageBackground,
     )>,
 ) {
-    for player in &qp {
-        let health = (player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
-        let crazyness = (1.0 - player.sanity / 100.0).clamp(0.0, 1.0);
-        for (mut o_uiimage, mut bgcolor, dmg) in &mut qb {
-            let rhealth = (1.0 - health).powf(dmg.exp);
-            let crazyness = crazyness.powf(dmg.exp);
-            let alpha = ((rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7 + crazyness)
-                .clamp(0.0, 1.0);
-            let rhealth2 = (1.0 - alpha * 0.9).clamp(0.0001, 1.0);
-            let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
-            let dst_color = Color::srgba(red, 0.0, 0.0, alpha);
-            let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
-            let new_color = lerp_color(old_color, dst_color, 0.2);
-            if old_color != new_color {
-                if let Some(uiimage) = o_uiimage.as_mut() {
-                    uiimage.color = new_color;
-                } else {
-                    bgcolor.0 = new_color;
+    for (player_sprite, is_spectating) in &qp {
+        if is_spectating {
+            // Spectator visual effect (desaturated/blue tint)
+            for (mut o_uiimage, mut bgcolor, _dmg) in &mut qb {
+                // Ignore dmg.exp for spectator, use fixed visual
+                let dst_color = Color::srgba(0.0, 0.0, 0.2, 0.4);
+                let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
+                let new_color = lerp_color(old_color, dst_color, 0.1);
+                if old_color != new_color {
+                    if let Some(uiimage) = o_uiimage.as_mut() {
+                        uiimage.color = new_color;
+                    } else {
+                        bgcolor.0 = new_color;
+                    }
+                }
+            }
+        } else {
+            let health = (player_sprite.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
+            let crazyness = (1.0 - player_sprite.sanity / 100.0).clamp(0.0, 1.0);
+            for (mut o_uiimage, mut bgcolor, dmg) in &mut qb {
+                let rhealth = (1.0 - health).powf(dmg.exp);
+                let crazyness = crazyness.powf(dmg.exp);
+                let alpha = ((rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7 + crazyness)
+                    .clamp(0.0, 1.0);
+                let rhealth2 = (1.0 - alpha * 0.9).clamp(0.0001, 1.0);
+                let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
+                let dst_color = Color::srgba(red, 0.0, 0.0, alpha);
+                let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
+                let new_color = lerp_color(old_color, dst_color, 0.2);
+                if old_color != new_color {
+                    if let Some(uiimage) = o_uiimage.as_mut() {
+                        uiimage.color = new_color;
+                    } else {
+                        bgcolor.0 = new_color;
+                    }
                 }
             }
         }
@@ -170,48 +188,51 @@ fn update_player_stamina(
 }
 
 fn handle_player_death(
-    mut player_query: Query<&mut PlayerSprite>,
+    mut commands: Commands,
+    mut player_query: Query<
+        (Entity, &mut PlayerSprite, Has<MainPlayer>),
+        Without<PlayerSpectating>,
+    >,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     mut summary_data: ResMut<SummaryData>,
-    mut next_app_state: ResMut<NextState<AppState>>,
     board_topology: Res<BoardTopology>,
-    _board_collision: Res<BoardCollisionField>,
     difficulty_res: Res<CurrentDifficulty>,
 ) {
-    for player in player_query.iter_mut() {
+    for (entity, player, is_main) in player_query.iter_mut() {
         if player.health <= 0.0 {
-            let initial_deposit_held = player_profile.progression.insurance_deposit;
+            info!("Player {:?} died! Entering spectate mode.", entity);
+            commands.entity(entity).insert(PlayerSpectating);
 
-            player_profile.progression.insurance_deposit = 0;
-            player_profile.statistics.total_deaths += 1; // Global deaths
+            if is_main {
+                let initial_deposit_held = player_profile.progression.insurance_deposit;
 
-            // Record death for specific map and difficulty
-            let map_path_str = board_topology.map_path.clone();
+                player_profile.progression.insurance_deposit = 0;
+                player_profile.statistics.total_deaths += 1; // Global deaths
 
-            let current_difficulty_variant = difficulty_res.0.difficulty;
+                // Record death for specific map and difficulty
+                let map_path_str = board_topology.map_path.clone();
 
-            let map_specific_stats = player_profile
-                .map_statistics
-                .entry(map_path_str.clone())
-                .or_default()
-                .entry(current_difficulty_variant)
-                .or_default();
-            map_specific_stats.total_deaths += 1;
+                let current_difficulty_variant = difficulty_res.0.difficulty;
 
-            if let Err(e) = player_profile.persist() {
-                error!("Failed to persist PlayerProfileData after death: {:?}", e);
+                let map_specific_stats = player_profile
+                    .map_statistics
+                    .entry(map_path_str.clone())
+                    .or_default()
+                    .entry(current_difficulty_variant)
+                    .or_default();
+                map_specific_stats.total_deaths += 1;
+
+                if let Err(e) = player_profile.persist() {
+                    error!("Failed to persist PlayerProfileData after death: {:?}", e);
+                }
+
+                summary_data.map_path = map_path_str;
+                summary_data.deposit_originally_held = initial_deposit_held;
+                summary_data.deposit_returned_to_bank = 0;
+                summary_data.costs_deducted_from_deposit = initial_deposit_held;
+                summary_data.money_earned = 0;
+                summary_data.grade_achieved = Grade::NA;
             }
-
-            summary_data.map_path = map_path_str;
-            summary_data.deposit_originally_held = initial_deposit_held;
-            summary_data.deposit_returned_to_bank = 0;
-            summary_data.costs_deducted_from_deposit = initial_deposit_held;
-            summary_data.money_earned = 0;
-            summary_data.grade_achieved = Grade::NA;
-
-            next_app_state.set(AppState::Summary);
-
-            break;
         }
     }
 }

@@ -2,12 +2,23 @@ use bevy::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
 use unnet_core::network_id::NetworkId;
 use unplayer_core::components::Hiding;
+use unplayer_core::components::MainPlayer;
+use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 
 pub(crate) fn update_player_styling(
-    mut query: Query<(&NetworkId, &mut MapColor, Has<Hiding>), With<PlayerSprite>>,
+    mut query: Query<
+        (
+            &NetworkId,
+            &mut MapColor,
+            Has<Hiding>,
+            Has<MainPlayer>,
+            Has<PlayerSpectating>,
+        ),
+        With<PlayerSprite>,
+    >,
 ) {
-    for (id, mut map_color, is_hiding) in query.iter_mut() {
+    for (id, mut map_color, is_hiding, is_main, is_spectating) in query.iter_mut() {
         let mut color = match id.0 {
             0 => Color::from(bevy::color::palettes::tailwind::GREEN_400),
             1 => Color::from(bevy::color::palettes::tailwind::YELLOW_400),
@@ -16,11 +27,15 @@ pub(crate) fn update_player_styling(
             _ => Color::from(bevy::color::palettes::tailwind::ORANGE_400),
         };
 
-        if is_hiding {
-            color.set_alpha(0.5);
+        let alpha = if is_spectating {
+            if is_main { 0.5 } else { 0.0 }
+        } else if is_hiding {
+            0.5
         } else {
-            color.set_alpha(1.0);
-        }
+            1.0
+        };
+
+        color.set_alpha(alpha);
 
         if map_color.color != color {
             map_color.color = color;

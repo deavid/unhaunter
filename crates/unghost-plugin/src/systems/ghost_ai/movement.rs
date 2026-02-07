@@ -11,7 +11,9 @@ use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{Hiding, PlayerSprite};
+use unplayer_core::components::{
+    Hiding, PlayerDisconnected, PlayerSpectating, PlayerSprite,
+};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::boardposition::BoardPosition;
@@ -41,7 +43,14 @@ pub(crate) fn ghost_movement(
             Without<FadeOut>,
         ),
     >,
-    qp: Query<(&Position, &PlayerSprite, Option<&Hiding>), With<PlayerTag>>,
+    qp: Query<
+        (&Position, &PlayerSprite, Option<&Hiding>),
+        (
+            With<PlayerTag>,
+            Without<PlayerSpectating>,
+            Without<PlayerDisconnected>,
+        ),
+    >,
     roomdb: Res<RoomDB>,
     mut summary: ResMut<SummaryData>,
     bf: Res<BoardTopology>,

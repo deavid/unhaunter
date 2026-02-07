@@ -13,6 +13,7 @@ use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerInput;
+use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial_core::direction::Direction;
@@ -31,7 +32,16 @@ const DIR_MAG3: f32 = DIR_MAG2 * 40.0;
 const DIR_RED: f32 = 1.001;
 
 pub(crate) fn player_interaction_system(
-    players: Query<(&Position, &PlayerInput, Option<&Hiding>, Option<&InTruck>), With<MainPlayer>>,
+    players: Query<
+        (
+            &Position,
+            &PlayerInput,
+            Option<&Hiding>,
+            Option<&InTruck>,
+            Option<&PlayerSpectating>,
+        ),
+        With<MainPlayer>,
+    >,
     interactables: Query<
         (
             Entity,
@@ -45,8 +55,8 @@ pub(crate) fn player_interaction_system(
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
 ) {
-    for (pos, player_input, hiding, in_truck) in players.iter() {
-        if in_truck.is_some() || hiding.is_some() {
+    for (pos, player_input, hiding, in_truck, spectating) in players.iter() {
+        if in_truck.is_some() || hiding.is_some() || spectating.is_some() {
             continue;
         }
         if player_input.interact {
@@ -111,6 +121,7 @@ pub(crate) fn player_movement_system(
         Option<&InTruck>,
         &mut Stamina,
         Option<&MainPlayer>,
+        Has<PlayerSpectating>,
     )>,
     colhand: CollisionHandler,
     interactables: Query<
@@ -150,6 +161,7 @@ pub(crate) fn player_movement_system(
         in_truck,
         mut stamina,
         main_player,
+        is_spectating,
     ) in players.iter_mut()
     {
         if in_truck.is_some() {
@@ -175,7 +187,7 @@ pub(crate) fn player_movement_system(
         }
 
         let mut col_delta;
-        if hiding.is_none() {
+        if hiding.is_none() && !is_spectating {
             col_delta = colhand.delta(&pos);
             if col_delta.is_finite() {
                 pos.x -= col_delta.x;
@@ -205,6 +217,25 @@ pub(crate) fn player_movement_system(
         d.dx -= col_delta_n.x * col_dotp;
         d.dy -= col_delta_n.y * col_dotp;
         let delta = d / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0;
+
+        if is_spectating {
+            let spectate_speed = PLAYER_SPEED * difficulty.0.player_speed * 2.0;
+            pos.x += d.dx * spectate_speed * dt;
+            pos.y += d.dy * spectate_speed * dt;
+
+            // Update orientation immediately
+            if d.distance() > 0.001 {
+                dir.dx = d.dx;
+                dir.dy = d.dy;
+                dir.dz = 0.0;
+            }
+
+            let dscreen = perspective::direction_to_screen_coord(delta);
+            anim.set_range(
+                CharacterAnimation::from_dir(dscreen.x, dscreen.y * 2.0).to_vec(),
+            );
+            continue;
+        }
 
         // Speed Penalty Based on Held Object Weight
         let speed_penalty = if player_gear.held_item.is_some() {

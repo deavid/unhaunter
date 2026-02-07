@@ -283,6 +283,7 @@ fn hold_button_system(
     }
 }
 
+use unnet_core::resources::MissionEndRequested;
 fn truckui_event_handle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -299,19 +300,21 @@ fn truckui_event_handle(
     cli: Res<untypes_core::cli::CliOptions>,
     loc_player: Res<unnet_core::resources::LocalPlayer>,
     mut ev_send_net: MessageWriter<unnet_core::messages::SendNetworkMessage>,
+    mission_end_requested: Res<MissionEndRequested>,
 ) {
     for ev in ev_truckui.read() {
         match ev {
             TruckUIEvent::EndMission => {
-                if let (Some(player_id), true) = (
-                    loc_player.0,
-                    matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. }),
-                ) {
-                    ev_send_net.write(unnet_core::messages::SendNetworkMessage(
-                        unnet_core::messages::NetworkMessage::PlayerLeft { player_id },
-                    ));
+                if !mission_end_requested.0 {
+                    continue;
                 }
-                ev_mission.write(MissionEvent::End);
+                if matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
+                    ev_send_net.write(unnet_core::messages::SendNetworkMessage(
+                        unnet_core::messages::NetworkMessage::RequestEndMission,
+                    ));
+                } else {
+                    ev_mission.write(MissionEvent::End);
+                }
             }
             TruckUIEvent::ExitTruck => {
                 if let (Some(player_id), true) = (
@@ -415,6 +418,20 @@ fn update_craft_button_text(
     }
 }
 
+fn update_end_mission_button_status(
+    mission_end_req: Res<unnet_core::resources::MissionEndRequested>,
+    mut q_button: Query<&mut TruckUIButton, With<Button>>,
+) {
+    if !mission_end_req.is_changed() {
+        return;
+    }
+    for mut button in &mut q_button {
+        if matches!(button.class, TruckButtonType::EndMission) {
+            button.disabled = !mission_end_req.0;
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     // Initialize the RepellentCraftTracker resource
     app.init_resource::<RepellentCraftTracker>();
@@ -429,6 +446,7 @@ pub(crate) fn app_setup(app: &mut App) {
             hold_button_system,
             truckui_event_handle.after(hold_button_system),
             update_craft_button_text,
+            update_end_mission_button_status,
         )
             .run_if(in_state(GameState::Truck)),
     );

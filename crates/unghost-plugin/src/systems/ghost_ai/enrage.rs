@@ -13,7 +13,9 @@ use unfoundation_core::utils::mean::MeanValue;
 use unfoundation_core::utils::time::PrintingTimer;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{Hiding, PlayerSprite};
+use unplayer_core::components::{
+    Hiding, PlayerDisconnected, PlayerSpectating, PlayerSprite,
+};
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
@@ -37,7 +39,13 @@ pub(crate) fn ghost_enrage(
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
-    mut q_player: Query<(&mut PlayerSprite, &Position, Option<&Hiding>)>,
+    mut q_player: Query<
+        (&mut PlayerSprite, &Position, Option<&Hiding>),
+        (
+            Without<PlayerSpectating>,
+            Without<PlayerDisconnected>,
+        ),
+    >,
     mut gs_audio: SoundEmitter,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
@@ -201,7 +209,10 @@ fn handle_salty_trace_spawning_simple(
 /// Calculate minimum distance to any alive player
 fn calculate_min_player_distance(
     ghost_position: &Position,
-    q_player: &Query<(&mut PlayerSprite, &Position, Option<&Hiding>)>,
+    q_player: &Query<
+        (&mut PlayerSprite, &Position, Option<&Hiding>),
+        (Without<PlayerSpectating>, Without<PlayerDisconnected>),
+    >,
 ) -> f32 {
     q_player
         .iter()
@@ -233,7 +244,10 @@ pub(crate) struct HuntingResult {
 pub(crate) fn handle_hunting_phase(
     ghost: &mut GhostSprite,
     ghost_position: &Position,
-    q_player: &mut Query<(&mut PlayerSprite, &Position, Option<&Hiding>)>,
+    q_player: &mut Query<
+        (&mut PlayerSprite, &Position, Option<&Hiding>),
+        (Without<PlayerSpectating>, Without<PlayerDisconnected>),
+    >,
     time: &Res<Time>,
     difficulty: &Res<CurrentDifficulty>,
     dt: f32,
@@ -340,7 +354,10 @@ pub(crate) fn handle_warning_phases(
 pub(crate) fn calculate_rage_update(
     ghost: &mut GhostSprite,
     ghost_position: &Position,
-    q_player: &Query<(&mut PlayerSprite, &Position, Option<&Hiding>)>,
+    q_player: &Query<
+        (&mut PlayerSprite, &Position, Option<&Hiding>),
+        (Without<PlayerSpectating>, Without<PlayerDisconnected>),
+    >,
     dynamics: &GhostBehaviorDynamics,
     avg_angry: &mut MeanValue,
     difficulty: &Res<CurrentDifficulty>,

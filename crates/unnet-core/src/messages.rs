@@ -38,6 +38,7 @@ pub struct PlayerState {
     pub orientation: [f32; 2], // dx, dy
     pub is_hiding: bool,
     pub is_in_truck: bool,
+    pub is_spectating: bool,
     pub stamina: f32,
     pub is_running: bool,
     pub frame: u16,
@@ -175,6 +176,7 @@ pub struct SnapshotMsg {
     pub is_full_sync: bool,
     pub app_state: AppState,
     pub game_state: GameState,
+    pub can_end_mission: bool,
     pub players: Vec<PlayerState>,
     pub ghosts: Vec<GhostState>,
     pub rooms: Vec<RoomSync>,
@@ -245,6 +247,8 @@ pub enum NetworkMessage {
     RequestTruckEntry { player_id: NetworkId },
     /// Client requests to exit the truck/van.
     RequestTruckExit { player_id: NetworkId },
+    /// Client requests to end the mission globally.
+    RequestEndMission,
     /// A player has left the mission (ended their game or disconnected)
     PlayerLeft { player_id: NetworkId },
     /// Client requests a change in their truck loadout.

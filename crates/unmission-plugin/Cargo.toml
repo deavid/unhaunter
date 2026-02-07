@@ -16,6 +16,10 @@ unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 unsummary-core = { path = "../unsummary-core" }
 unprofile-core = { path = "../unprofile-core" }
+unplayer-core = { path = "../unplayer-core" }
+unnet-core = { path = "../unnet-core" }
+untruck-core = { path = "../untruck-core" }
+unspatial-core = { path = "../unspatial-core" }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

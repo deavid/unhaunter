@@ -12,6 +12,10 @@ pub struct MainPlayer;
 #[derive(Component, Debug, Clone, Default)]
 pub struct PlayerDisconnected;
 
+/// Component added to players who are spectating (dead or finished).
+#[derive(Component, Debug, Clone, Default)]
+pub struct PlayerSpectating;
+
 /// Component that acts as a virtual joystick for player movement.
 /// All input systems write to this component, and the movement system reads from it.
 #[derive(Component, Debug, Default, Clone)]

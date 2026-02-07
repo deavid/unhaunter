@@ -5799,6 +5799,7 @@ dependencies = [
  "unengine-core",
  "unevents-core",
  "unfoundation-core",
+ "unnet-core",
  "unnoise-core",
  "unrender-std",
  "unspatial-core",
@@ -6297,8 +6298,12 @@ dependencies = [
  "bevy-persistent",
  "unboard-core",
  "unevents-core",
+ "unnet-core",
+ "unplayer-core",
  "unprofile-core",
+ "unspatial-core",
  "unsummary-core",
+ "untruck-core",
  "untypes-core",
 ]
 

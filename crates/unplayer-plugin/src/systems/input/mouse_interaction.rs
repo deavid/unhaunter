@@ -6,7 +6,7 @@ use bevy::{
 use unbehavior::components::Interactive;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interaction::{Authority, Toggleable, Triggered};
-use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSpectating, PlayerSprite};
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
@@ -14,7 +14,7 @@ use untypes_core::cli::{CliOptions, is_host};
 
 pub(crate) fn player_gear_usage_system(
     mut commands: Commands,
-    q_players: Query<(&PlayerGear, &PlayerInput), With<PlayerSprite>>,
+    q_players: Query<(&PlayerGear, &PlayerInput), (With<PlayerSprite>, Without<PlayerSpectating>)>,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
     mut ga: SoundEmitter,
     cli: Res<CliOptions>,
@@ -69,7 +69,14 @@ pub(crate) fn player_gear_usage_system(
 
 pub(crate) fn mouse_scroll_gear_system(
     mut scroll_events: MessageReader<MouseWheel>,
-    mut q_player: Query<&mut PlayerInput, (With<PlayerSprite>, With<MainPlayer>)>,
+    mut q_player: Query<
+        &mut PlayerInput,
+        (
+            With<PlayerSprite>,
+            With<MainPlayer>,
+            Without<PlayerSpectating>,
+        ),
+    >,
     q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
     if !q_in_truck.is_empty() {
@@ -87,8 +94,13 @@ pub(crate) fn mouse_scroll_gear_system(
 pub(crate) fn mouse_over_interactive_system(
     mut events: MessageReader<Pointer<Over>>,
     mut q_interactive: Query<&mut Interactive>,
+    q_spectator: Query<(), (With<MainPlayer>, With<PlayerSpectating>)>,
 ) {
+    let is_spectator = !q_spectator.is_empty();
     for event in events.read() {
+        if is_spectator {
+            continue;
+        }
         if let Ok(mut interactive) = q_interactive.get_mut(event.entity) {
             interactive.hovered = true;
         }
@@ -98,8 +110,13 @@ pub(crate) fn mouse_over_interactive_system(
 pub(crate) fn mouse_out_interactive_system(
     mut events: MessageReader<Pointer<Out>>,
     mut q_interactive: Query<&mut Interactive>,
+    q_spectator: Query<(), (With<MainPlayer>, With<PlayerSpectating>)>,
 ) {
+    let is_spectator = !q_spectator.is_empty();
     for event in events.read() {
+        if is_spectator {
+            continue;
+        }
         if let Ok(mut interactive) = q_interactive.get_mut(event.entity) {
             interactive.hovered = false;
         }
