@@ -12,7 +12,7 @@ use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::resources::light_grid::LightGrid;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::MainPlayer;
+use unplayer_core::components::{MainPlayer, PlayerSpectating};
 use unrender_std::components::light::LightEmitter;
 use unrender_std::components::visuals::Viewer;
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -47,6 +47,7 @@ pub(crate) fn player_visibility_system(
 pub(crate) fn gather_flashlights_system(
     q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
     qp: Query<(&Position, &Direction, &PlayerGear)>,
+    q_spectator: Query<&Position, (With<MainPlayer>, With<PlayerSpectating>)>,
     q_flashlight: Query<(&LightEmitter, &Toggleable)>,
     grids: GridResources,
     mut active_flashlights: ResMut<ActiveFlashlights>,
@@ -123,6 +124,24 @@ pub(crate) fn gather_flashlights_system(
                 ));
             }
         }
+    }
+
+    if let Ok(pos) = q_spectator.single() {
+        // Fictional flashlight for spectator that always points down
+        // Using a slightly tilted direction to avoid degenerate matrix in FlashlightData
+        let dir = Direction {
+            dx: 0.001,
+            dy: 0.0001,
+            dz: -0.0001,
+        };
+        flashlights.push(FlashlightData::new(
+            *pos,
+            dir,
+            32.0,
+            Color::srgb(1.0, 0.04, 0.001),
+            LightType::Red,
+            board_dim,
+        ));
     }
 
     for flash in flashlights.iter_mut() {

@@ -261,6 +261,22 @@ fn handle_player_death(
     }
 }
 
+pub(crate) fn debug_kill_spectator(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut player_query: Query<&mut PlayerSprite, With<MainPlayer>>,
+) {
+    let shift =
+        keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight);
+    let ctrl = keyboard_input.pressed(KeyCode::ControlLeft)
+        || keyboard_input.pressed(KeyCode::ControlRight);
+
+    if shift && ctrl && keyboard_input.just_pressed(KeyCode::KeyK) {
+        for mut player in player_query.iter_mut() {
+            player.health = -10.0;
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
@@ -270,6 +286,7 @@ pub(crate) fn app_setup(app: &mut App) {
             visual_health,
             update_player_stamina,
             handle_player_death,
+            debug_kill_spectator,
         )
             .run_if(in_state(AppState::InGame)),
     );
