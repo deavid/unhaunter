@@ -5,6 +5,7 @@ use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
+use ungear_core::components::playergear::PlayerGear;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSpectating;
@@ -190,7 +191,12 @@ fn update_player_stamina(
 fn handle_player_death(
     mut commands: Commands,
     mut player_query: Query<
-        (Entity, &mut PlayerSprite, Has<MainPlayer>),
+        (
+            Entity,
+            &mut PlayerSprite,
+            Has<MainPlayer>,
+            Option<&mut PlayerGear>,
+        ),
         Without<PlayerSpectating>,
     >,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
@@ -198,10 +204,28 @@ fn handle_player_death(
     board_topology: Res<BoardTopology>,
     difficulty_res: Res<CurrentDifficulty>,
 ) {
-    for (entity, player, is_main) in player_query.iter_mut() {
+    for (entity, player, is_main, mut gear) in player_query.iter_mut() {
         if player.health <= 0.0 {
             info!("Player {:?} died! Entering spectate mode.", entity);
             commands.entity(entity).insert(PlayerSpectating);
+
+            // Despawn all gear
+            if let Some(ref mut gear) = gear {
+                if let Some(e) = gear.left_hand {
+                    commands.entity(e).despawn();
+                }
+                if let Some(e) = gear.right_hand {
+                    commands.entity(e).despawn();
+                }
+                for e in gear.inventory.iter() {
+                    commands.entity(*e).despawn();
+                }
+                if let Some(h) = &gear.held_item {
+                    commands.entity(h.entity).despawn();
+                }
+                // Empty the inventory
+                **gear = PlayerGear::default();
+            }
 
             if is_main {
                 let initial_deposit_held = player_profile.progression.insurance_deposit;

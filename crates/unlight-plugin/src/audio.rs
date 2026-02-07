@@ -6,6 +6,7 @@ use unbehavior::roomdb::RoomDB;
 use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use unfoundation_core::types::sound::SoundType;
 use unplayer_core::components::MainPlayer;
+use unplayer_core::components::PlayerSpectating;
 use unrender_std::components::game::GameSound;
 use unrender_std::components::visuals::Viewer;
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -96,14 +97,17 @@ fn calculate_ambient_sound_volumes(
 /// 7. Updates the actual AudioSink volumes for GameSound entities
 fn update_ambient_sound_volumes(
     mut game_sound_query: Query<(&GameSound, &mut AudioSink)>,
-    player_query: Query<(&Position, &Viewer, &VisibilityData), With<MainPlayer>>,
+    player_query: Query<
+        (&Position, &Viewer, &VisibilityData, Has<PlayerSpectating>),
+        With<MainPlayer>,
+    >,
     roomdb: Res<RoomDB>,
     audio_settings: Res<Persistent<AudioSettings>>,
     ambient_mute_controller: Res<AmbientMuteController>,
     global_volume: Res<bevy::audio::GlobalVolume>,
 ) {
     // Get player position and viewer data
-    let Ok((player_pos, viewer, visibility_data)) = player_query.single() else {
+    let Ok((player_pos, viewer, visibility_data, is_spectating)) = player_query.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -115,7 +119,7 @@ fn update_ambient_sound_volumes(
     // Calculate HeartBeat volume based on health (analog/fuzzy logic)
     // HeartBeat should get louder as health gets lower
     let health_ratio = (viewer.health / 100.0).clamp(0.0, 1.0);
-    let heartbeat_volume = if health_ratio < 0.5 {
+    let heartbeat_volume = if !is_spectating && health_ratio < 0.5 {
         // Health is below 50%, calculate heartbeat intensity
         let health_deficit = 1.0 - health_ratio; // 0.5 to 1.0
         let intensity: f32 = ((health_deficit - 0.5) * 2.0).clamp(0.0, 1.0); // 0.0 to 1.0 when health 50% to 0%
@@ -127,7 +131,7 @@ fn update_ambient_sound_volumes(
     // Calculate Insane volume based on sanity (analog/fuzzy logic)
     // Insane sounds should get louder as sanity gets lower
     let sanity_ratio = (viewer.sanity / 100.0).clamp(0.0, 1.0);
-    let insane_volume = if sanity_ratio < 0.7 {
+    let insane_volume = if !is_spectating && sanity_ratio < 0.7 {
         // Sanity is below 70%, calculate insane sound intensity
         let sanity_deficit = 1.0 - sanity_ratio; // 0.3 to 1.0
         let intensity: f32 = ((sanity_deficit - 0.3) / 0.7).clamp(0.0, 1.0); // 0.0 to 1.0 when sanity 70% to 0%
