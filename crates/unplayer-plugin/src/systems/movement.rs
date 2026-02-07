@@ -223,6 +223,13 @@ pub(crate) fn player_movement_system(
             pos.x += d.dx * spectate_speed * dt;
             pos.y += d.dy * spectate_speed * dt;
 
+            // Apply collision detection for spectators (keeps them in bounds)
+            col_delta = colhand.spectator_delta(&pos);
+            if col_delta.is_finite() {
+                pos.x -= col_delta.x;
+                pos.y -= col_delta.y;
+            }
+
             // Update orientation immediately
             if d.distance() > 0.001 {
                 dir.dx = d.dx;
