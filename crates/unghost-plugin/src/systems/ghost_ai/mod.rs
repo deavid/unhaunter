@@ -144,9 +144,9 @@ pub(crate) fn ghost_scale_glitch_system(
             let glitch_intensity = ghost.repellent_hits_delta.clamp(0.0, 1.0);
 
             // Generate random scale variations
-            let scale_x = base_scale + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8
-                - glitch_intensity * 0.2;
-            let scale_y = base_scale + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8;
+            let scale_x = base_scale + rng.random_range(-glitch_intensity..glitch_intensity) * 0.4
+                - glitch_intensity * 0.1;
+            let scale_y = base_scale + rng.random_range(-glitch_intensity..glitch_intensity) * 0.4;
             let scale_z = base_scale; // Keep Z scale consistent
 
             // Apply the glitch scale
@@ -156,8 +156,8 @@ pub(crate) fn ghost_scale_glitch_system(
         } else if ghost.repellent_misses_delta > 0.0 {
             let glitch_intensity = ghost.repellent_misses_delta.clamp(0.0, 1.0);
             // Generate random scale variations
-            let scale_x = base_scale + glitch_intensity * 0.15;
-            let scale_y = base_scale + glitch_intensity * 0.1;
+            let scale_x = base_scale + glitch_intensity * 0.075;
+            let scale_y = base_scale + glitch_intensity * 0.05;
             let scale_z = base_scale; // Keep Z scale consistent
 
             // Apply the glitch scale
