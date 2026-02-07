@@ -23,6 +23,9 @@ struct Args {
 
     #[clap(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
+
+    #[clap(long, action)]
+    mute: bool,
 }
 
 fn main() {
@@ -92,5 +95,6 @@ fn main() {
         map_path: final_map_path,
         difficulty_id: args.difficulty,
         verbose: args.verbose,
+        mute: args.mute,
     });
 }

@@ -100,6 +100,7 @@ fn update_ambient_sound_volumes(
     roomdb: Res<RoomDB>,
     audio_settings: Res<Persistent<AudioSettings>>,
     ambient_mute_controller: Res<AmbientMuteController>,
+    global_volume: Res<bevy::audio::GlobalVolume>,
 ) {
     // Get player position and viewer data
     let Ok((player_pos, viewer, visibility_data)) = player_query.single() else {
@@ -144,7 +145,8 @@ fn update_ambient_sound_volumes(
 
     // Original IIR smoothing constant (simple and robust)
     const SMOOTH: f32 = 60.0;
-    let volume_factor = 2.0 * master_volume_setting * ambient_volume_setting;
+    let volume_factor =
+        2.0 * master_volume_setting * ambient_volume_setting * global_volume.volume.to_linear();
 
     // Update each ambient sound entity
     for (game_sound, mut audio_sink) in &mut game_sound_query {

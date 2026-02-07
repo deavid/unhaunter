@@ -20,6 +20,7 @@ pub struct CliOptions {
     pub map_path: Option<String>,
     pub difficulty_id: Option<String>,
     pub verbose: u8,
+    pub mute: bool,
 }
 
 pub fn is_host(cli: Res<CliOptions>) -> bool {

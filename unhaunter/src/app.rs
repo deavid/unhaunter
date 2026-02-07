@@ -43,29 +43,39 @@ pub fn app_run(cli_options: CliOptions) {
 
     let filter = crate::log_filter::build_log_filter(cli_options.verbose);
 
-    app.insert_resource(cli_options);
-    app.add_plugins(
-        DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: format!("Unhaunter {}", plt::VERSION),
-                    resolution: default_resolution(),
-                    // Enabling VSync might make it easier in WASM? (It doesn't)
-                    present_mode: bevy::window::PresentMode::AutoVsync,
-                    ..default()
-                }),
-                ..default()
-            })
-            .set(bevy::log::LogPlugin {
-                level: bevy::log::Level::TRACE,
-                filter,
+    app.insert_resource(cli_options.clone());
+    let mut default_plugins = DefaultPlugins
+        .set(WindowPlugin {
+            primary_window: Some(Window {
+                title: format!("Unhaunter {}", plt::VERSION),
+                resolution: default_resolution(),
+                // Enabling VSync might make it easier in WASM? (It doesn't)
+                present_mode: bevy::window::PresentMode::AutoVsync,
                 ..default()
             }),
-    )
-    .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
-    .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
-        1.0 / 15.0,
-    )));
+            ..default()
+        })
+        .set(bevy::log::LogPlugin {
+            level: bevy::log::Level::TRACE,
+            filter,
+            ..default()
+        });
+
+    if cli_options.mute {
+        info!("Audio muted via command line flag.");
+        default_plugins = default_plugins.set(bevy::audio::AudioPlugin {
+            global_volume: bevy::audio::GlobalVolume {
+                volume: bevy::audio::Volume::Linear(0.0),
+            },
+            ..default()
+        });
+    }
+
+    app.add_plugins(default_plugins)
+        .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
+        .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
+            1.0 / 15.0,
+        )));
 
     app.add_plugins(FrameTimeDiagnosticsPlugin::new(1024));
     // app.add_plugins(LogDiagnosticsPlugin::default());
