@@ -1,9 +1,7 @@
-use crate::metrics::COMPUTE_VISIBILITY;
 use ndarray::Array3;
 use std::collections::VecDeque;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::types::fielddata::CollisionFieldData;
-use unmetrics_core::metrics::SendMetric;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
@@ -14,7 +12,6 @@ pub(crate) fn compute_visibility(
     roomdb: Option<&mut RoomDB>,
     pre_fill: bool,
 ) {
-    let measure = COMPUTE_VISIBILITY.time_measure();
     if pre_fill {
         vis_field.fill(-0.001);
     }
@@ -108,5 +105,4 @@ pub(crate) fn compute_visibility(
             }
         }
     }
-    measure.end_ms();
 }

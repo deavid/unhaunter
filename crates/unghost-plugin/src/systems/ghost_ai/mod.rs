@@ -29,17 +29,24 @@ pub(crate) fn ghost_fade_out_system(
         &mut MapColor,
         &Position,
         Option<&GhostSprite>,
+        Option<&mut GhostBehaviorDynamics>,
     )>,
     mut ga: SoundEmitter,
     mut ev_snapshot_events: MessageWriter<unnet_core::messages::TransientEvent>,
 ) {
     let mut rng = random_seed::rng();
-    for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {
+    for (entity, mut fade_out, mut map_color, position, ghost_sprite, o_dynamics) in
+        query.iter_mut()
+    {
         fade_out.timer.tick(ga.time.delta());
         let rem_f = fade_out.timer.remaining_secs() / fade_out.timer.duration().as_secs_f32();
 
         // Fade out the sprite
         map_color.color.set_alpha(rem_f);
+
+        if let Some(mut dynamics) = o_dynamics {
+            dynamics.visual_alpha_multiplier = rem_f;
+        }
 
         // Emit smoke particles while fading
         if fade_out.timer.remaining_secs() > 0.0 && rng.random_bool(((1.0 - rem_f) / 3.0) as f64) {

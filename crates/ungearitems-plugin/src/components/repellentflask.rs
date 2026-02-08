@@ -19,6 +19,7 @@ use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
+use untypes_core::cli::{CliOptions, NetMode};
 
 use crate::metrics;
 
@@ -45,7 +46,9 @@ pub(crate) fn update_repellentflask(
     _gs_audio: SoundEmitter,
     mut summary: ResMut<SummaryData>,
     mut commands: Commands,
+    cli: Res<CliOptions>,
 ) {
+    let is_host = !matches!(cli.net_mode, NetMode::Join { .. });
     for (entity, mut repellent, mut status, mut sprite, pos, ep, triggered) in
         q_repellent.iter_mut()
     {
@@ -61,14 +64,20 @@ pub(crate) fn update_repellentflask(
         if repellent.active {
             let mut rng = random_seed::rng();
             if rng.random_range(0.0..1.0) <= 0.5 {
-                if repellent.qty == RepellentFlask::MAX_QTY {
-                    summary.repellent_used_amt += 1;
+                if is_host {
+                    if repellent.qty == RepellentFlask::MAX_QTY {
+                        summary.repellent_used_amt += 1;
+                    }
+                    repellent.qty -= 1;
+                    if repellent.qty <= 0 {
+                        repellent.qty = 0;
+                        repellent.active = false;
+                    }
                 }
-                repellent.qty -= 1;
-                if repellent.qty <= 0 {
-                    repellent.qty = 0;
-                    repellent.active = false;
-                } else if let Some(liquid_content) = repellent.liquid_content {
+
+                if repellent.qty > 0
+                    && let Some(liquid_content) = repellent.liquid_content
+                {
                     let mut pos = *pos;
                     pos.z += 0.2;
                     let spread: f32 = if matches!(ep, EquipmentPosition::Deployed) {
@@ -96,9 +105,6 @@ pub(crate) fn update_repellentflask(
                         })
                         .insert(RepellentParticle::new(liquid_content))
                         .insert(SpriteLayer::default());
-                } else {
-                    repellent.qty = 0;
-                    repellent.active = false;
                 }
             }
         }

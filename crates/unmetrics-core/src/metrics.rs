@@ -3,7 +3,7 @@ use bevy::{diagnostic::DiagnosticsStore, prelude::*};
 use bevy_platform::time::Instant;
 use std::sync::{LazyLock, Mutex, mpsc};
 
-const CHANNEL_CAPACITY: usize = 2048;
+const CHANNEL_CAPACITY: usize = 32768;
 
 pub static DIAGNOSTIC_CHANNEL: LazyLock<StaticChannel> = LazyLock::new(StaticChannel::default);
 

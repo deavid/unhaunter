@@ -71,6 +71,8 @@ pub struct GhostState {
     pub calm_time_secs: f32,
     pub repellent_hits_delta: f32,
     pub repellent_misses_delta: f32,
+    pub repellent_hits: i64,
+    pub class: GhostType,
     pub freezing_temp_clarity: f32,
     pub floating_orbs_clarity: f32,
     pub uv_ectoplasm_clarity: f32,

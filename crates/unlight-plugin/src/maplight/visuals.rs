@@ -7,15 +7,12 @@ use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
 use unlight_core::types::light::LightData;
-use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::visuals::{
     AlphaModulator, Emissive, Ethereal, InfraredSensitive, SpectralClarity, UltravioletSensitive,
 };
 use unrender_std::utils::light::lerp_color;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
-
-use crate::metrics;
 
 pub(crate) fn update_spectral_influence(
     si: &mut unrender_std::components::visuals::SpectralInfluence,
@@ -137,7 +134,11 @@ pub(crate) fn apply_ethereal_visuals(
     if ethereal.warning_active || ethereal.hunt_target {
         // Make the ghost bright red and pulsing during a hunt/warning
         let pulse = (elapsed * 8.0).sin() * 0.5 + 0.5;
-        let base_intensity = if ethereal.hunt_target { 1.0 } else { ethereal.warning_intensity };
+        let base_intensity = if ethereal.hunt_target {
+            1.0
+        } else {
+            ethereal.warning_intensity
+        };
         let intensity = base_intensity.max(0.5) + pulse * 0.2;
 
         final_color = final_color.with_red((final_color.red + intensity).max(1.0));
@@ -199,7 +200,6 @@ pub(crate) fn apply_miasma_cloud_visuals(
     dst_color: &mut Color,
     opacity: &mut f32,
 ) {
-    let measure = metrics::APPLY_MIASMA_CLOUD_VISUALS.time_measure();
     let bpos = pos.to_board_position();
     let mut total_pressure = 0.0;
     let mut total_weight = 0.0;
@@ -241,7 +241,6 @@ pub(crate) fn apply_miasma_cloud_visuals(
     *opacity *= miasma_visibility.clamp(0.0, 0.8)
         * miasma_sprite.visibility
         * (dst_color.luminance().sqrt() * 0.8 + 0.2);
-    measure.end_ms();
 }
 
 pub(crate) fn step_alpha_clamped(

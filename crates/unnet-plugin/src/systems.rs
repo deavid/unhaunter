@@ -43,10 +43,11 @@ use unplayer_core::components::{
     Hiding, MainPlayer, PlayerInput, PlayerSpectating, PlayerSprite, Stamina,
 };
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
-use unrender_std::components::game::GameSprite;
+use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::{
-    LightSensitive, ResolutionFactor, ShadowCaster, SpectralInfluence,
+    AlphaModulator, LightSensitive, ResolutionFactor, ShadowCaster, SpectralInfluence,
+    UltravioletSensitive,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -601,6 +602,8 @@ pub fn host_send_snapshots_system(
             calm_time_secs: ghost.calm_time_secs,
             repellent_hits_delta: ghost.repellent_hits_delta,
             repellent_misses_delta: ghost.repellent_misses_delta,
+            repellent_hits: ghost.repellent_hits,
+            class: ghost.class,
             freezing_temp_clarity: dynamics.freezing_temp_clarity,
             floating_orbs_clarity: dynamics.floating_orbs_clarity,
             uv_ectoplasm_clarity: dynamics.uv_ectoplasm_clarity,
@@ -1074,6 +1077,52 @@ pub struct ClientSnapshotParams<'w, 's> {
     >,
 }
 
+fn spawn_breach_locally(params: &mut ClientSnapshotParams, snapshot_pos: [f32; 3]) {
+    let breach_img_size = Vec2::new(32.0, 64.0);
+    let anchor = unghost_core::assets::GHOST_BREACH_ANCHOR;
+    let sprite_anchor = Vec2::new(
+        breach_img_size.x * (anchor.x + 0.5),
+        breach_img_size.y * (0.5 - anchor.y),
+    );
+    let mesh_handle = params
+        .meshes
+        .add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
+
+    let mut material = CustomMaterial1::from_texture(params.ghost_assets.breach.clone());
+    material.data.color = Color::BLACK.with_alpha(0.0).into();
+    material.data.y_anchor = anchor.y;
+    let material_handle = params.materials1.add(material);
+
+    let pos = Position {
+        x: snapshot_pos[0],
+        y: snapshot_pos[1],
+        z: snapshot_pos[2],
+        visual_priority: 0.0,
+    };
+
+    params
+        .commands
+        .spawn(Mesh2d(mesh_handle))
+        .insert(MeshMaterial2d(material_handle))
+        .insert(pos)
+        .insert(GameSprite)
+        .insert(MapTileSprite)
+        .insert(SpriteLayer(0.01))
+        .insert(GhostBreach)
+        .insert(LightSensitive {
+            exposure_factor: 1.1,
+            bias: 0.02,
+        })
+        .insert(UltravioletSensitive {
+            intensity: 1.0,
+            color_shift: 1.0,
+        })
+        .insert(AlphaModulator {
+            frequency: 0.92,
+            amplitude: 0.5,
+        });
+}
+
 fn spawn_remote_player(params: &mut ClientSnapshotParams, id: NetworkId) -> Entity {
     let player_rf = 1.0;
     let player_image = params.player_assets.character.clone();
@@ -1256,20 +1305,17 @@ pub fn client_apply_snapshots_system(
             // Sync breach position
             match breach_position {
                 Some(snapshot_pos) => {
-                    if let Ok((_entity, mut pos, _bpos)) = params.query_breach.single_mut() {
+                    if let Ok((_entity, mut pos, _o_bpos)) = params.query_breach.single_mut() {
                         pos.x = snapshot_pos[0];
                         pos.y = snapshot_pos[1];
                         pos.z = snapshot_pos[2];
                     } else if !is_full_sync {
-                        // Avoid warning too much during loading
-                        warn!("Client: Received breach position but no local breach found.");
+                        spawn_breach_locally(&mut params, *snapshot_pos);
                     }
                 }
                 None => {
-                    if params.query_breach.single().is_ok()
-                        && *params.states.current_game_state.get() != GameState::None
-                    {
-                        warn!("Client: No breach position in snapshot, but local breach exists.");
+                    for (entity, _, _) in params.query_breach.iter() {
+                        params.commands.entity(entity).despawn();
                     }
                 }
             }
@@ -1405,27 +1451,25 @@ pub fn client_apply_snapshots_system(
                 .map(|(e, id)| (*id, e))
                 .collect();
 
-            if is_full_sync {
-                let mut seen_ids = std::collections::HashSet::new();
-                for p in players {
-                    seen_ids.insert(p.id);
-                }
-                for g in gear {
-                    seen_ids.insert(g.id);
-                }
-                for g in ghosts {
-                    seen_ids.insert(g.id);
-                }
-                for (entity, id) in params.query_net_entities.iter() {
-                    if !seen_ids.contains(id) {
-                        let is_main = params
-                            .query_players
-                            .get(entity)
-                            .map(|q| q.8.is_some())
-                            .unwrap_or(false);
-                        if !is_main {
-                            params.commands.entity(entity).despawn();
-                        }
+            let mut seen_ids = std::collections::HashSet::new();
+            for p in players {
+                seen_ids.insert(p.id);
+            }
+            for g in gear {
+                seen_ids.insert(g.id);
+            }
+            for g in ghosts {
+                seen_ids.insert(g.id);
+            }
+            for (entity, id) in params.query_net_entities.iter() {
+                if !seen_ids.contains(id) {
+                    let is_main = params
+                        .query_players
+                        .get(entity)
+                        .map(|q| q.8.is_some())
+                        .unwrap_or(false);
+                    if !is_main {
+                        params.commands.entity(entity).despawn();
                     }
                 }
             }
@@ -1762,6 +1806,8 @@ pub fn client_apply_snapshots_system(
                         ghost.calm_time_secs = g_state.calm_time_secs;
                         ghost.repellent_hits_delta = g_state.repellent_hits_delta;
                         ghost.repellent_misses_delta = g_state.repellent_misses_delta;
+                        ghost.repellent_hits = g_state.repellent_hits;
+                        ghost.class = g_state.class;
 
                         dynamics.freezing_temp_clarity = g_state.freezing_temp_clarity;
                         dynamics.floating_orbs_clarity = g_state.floating_orbs_clarity;
