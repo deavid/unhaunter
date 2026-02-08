@@ -20,14 +20,17 @@ fn trigger_almost_ready_to_craft_repellent_system(
     time: Res<Time>,
     mut clear_evidences: Local<HashSet<Evidence>>,
     mut repellent_crafted: Local<bool>,
+    mut first_ready_time: Local<Option<f64>>,
     q_gear: Query<&GearKind>,
 ) {
     if *app_state != AppState::InGame {
         clear_evidences.clear();
         *repellent_crafted = false;
+        *first_ready_time = None;
         return;
     }
     if *repellent_crafted {
+        *first_ready_time = None;
         return;
     }
     // Check if player already has a repellent flask
@@ -46,6 +49,7 @@ fn trigger_almost_ready_to_craft_repellent_system(
         {
             // If player already has a repellent flask, no need to prompt to craft.
             *repellent_crafted = true;
+            *first_ready_time = None;
             return;
         }
     }
@@ -91,14 +95,21 @@ fn trigger_almost_ready_to_craft_repellent_system(
     }
 
     if compatible_ghosts.len() != 1 {
+        *first_ready_time = None;
         return;
     }
 
     // All conditions met: trigger the prompt
-    walkie_play.set(
-        WalkieEvent::JournalPointsToOneGhostNoCraft,
-        time.elapsed_secs_f64(),
-    );
+    let current_time = time.elapsed_secs_f64();
+    if first_ready_time.is_none() {
+        *first_ready_time = Some(current_time);
+    }
+
+    if current_time - first_ready_time.unwrap() < 15.0 {
+        return;
+    }
+
+    walkie_play.set(WalkieEvent::JournalPointsToOneGhostNoCraft, current_time);
 }
 
 pub(crate) fn app_setup(app: &mut App) {

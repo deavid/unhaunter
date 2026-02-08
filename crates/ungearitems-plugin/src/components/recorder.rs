@@ -43,15 +43,7 @@ pub(crate) fn update_recorder(
         recorder.frame_counter = recorder.frame_counter.wrapping_add(1);
 
         // Update Sprite
-        sprite.0 = if !toggle.is_on {
-            GearSpriteID::RecorderOff.to_visual_key()
-        } else if recorder.display_glitch_timer > 0.0 && rng.random_range(0.0..1.0) < 0.4 {
-            match rng.random_range(0..3) {
-                0 => GearSpriteID::RecorderOff.to_visual_key(),
-                1 => GearSpriteID::Recorder4.to_visual_key(), // Show max reading
-                _ => GearSpriteID::Recorder1.to_visual_key(),
-            }
-        } else {
+        let mut op_sprite = {
             // Normal operation
             let f = rng.random_range(0.5..2.0);
 
@@ -73,6 +65,41 @@ pub(crate) fn update_recorder(
             } else {
                 GearSpriteID::Recorder4.to_visual_key()
             }
+        };
+
+        // Apply notification sequence if recordings exist
+        if toggle.is_on && recorder.evp_recorded_count > 0 && recorder.display_glitch_timer <= 0.0 {
+            let sec = gs_audio.time.elapsed_secs();
+            let cycle_time = 3.09; // 0.49 (blinks) + 0.3 (pause) + 2.0 (normal) + 0.3 (pause)
+            let t = sec % cycle_time;
+            if t < 0.49 {
+                // 3 fast blinks (70ms phases): 0, 1, 0, 1, 0, 1, 0
+                if (t % 0.14) < 0.07 {
+                    op_sprite = GearSpriteID::Recorder1.to_visual_key();
+                } else {
+                    op_sprite = GearSpriteID::Recorder4.to_visual_key();
+                }
+            } else if t < 0.79 {
+                // Pause 300ms
+                op_sprite = GearSpriteID::Recorder1.to_visual_key();
+            } else if t < 2.79 {
+                // Normal operation 2s - keep op_sprite as is
+            } else {
+                // Final pause 300ms
+                op_sprite = GearSpriteID::Recorder1.to_visual_key();
+            }
+        }
+
+        sprite.0 = if !toggle.is_on {
+            GearSpriteID::RecorderOff.to_visual_key()
+        } else if recorder.display_glitch_timer > 0.0 && rng.random_range(0.0..1.0) < 0.4 {
+            match rng.random_range(0..3) {
+                0 => GearSpriteID::RecorderOff.to_visual_key(),
+                1 => GearSpriteID::Recorder4.to_visual_key(), // Show max reading
+                _ => GearSpriteID::Recorder1.to_visual_key(),
+            }
+        } else {
+            op_sprite
         };
 
         // Update Logic
@@ -97,13 +124,15 @@ pub(crate) fn update_recorder(
             let mut evp_recorded = false;
             if let Some(ghost_pos) = haunt_state.ghost_warning_position {
                 let dist2 = pos.distance2(&ghost_pos);
-                if dist2 < 2.0 * 2.0 {
+                if dist2 < 2.0 * 2.0 && haunt_state.evidences.contains(&Evidence::EVPRecording) {
                     evp_recorded = true;
                 }
             }
 
             if evp_recorded {
-                recorder.amt_recorded += dt * difficulty.0.equipment_sensitivity * 2.1;
+                let clarity = haunt_state.ghost_dynamics.evp_recording_clarity.max(0.0);
+                recorder.amt_recorded +=
+                    dt * difficulty.0.equipment_sensitivity * 2.1 * clarity;
             } else {
                 recorder.amt_recorded -= dt * 0.1;
             }

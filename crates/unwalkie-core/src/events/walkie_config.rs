@@ -177,7 +177,7 @@ impl WalkieEvent {
             WalkieEvent::DidNotSwitchStartingGearInHotspot => WalkieEventPriority::Medium,
             WalkieEvent::DidNotCycleToOtherGear => WalkieEventPriority::Medium,
             // --- Evidence Gathering ---
-            WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Low,
+            WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::VeryHigh,
             WalkieEvent::JournalConflictingEvidence => WalkieEventPriority::Medium,
 
             // --- Evidence Confirmation Events ---
