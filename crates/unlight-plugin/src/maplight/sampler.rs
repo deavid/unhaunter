@@ -186,6 +186,13 @@ impl<'a> LightingSampler<'a> {
 
                 // 1. Bright Hotspot Logic
                 let mut spot_rpos = rpos;
+
+                // Constrain the beam spread (Y axis) to avoid 180 degrees opening.
+                // Making Y larger effectively narrows the beam.
+                let spot_dist = lpos_unrot.distance(&Position::new_i64(0, 0, 0));
+                spot_rpos.y *= spot_dist / 40.0;
+                spot_rpos.y = spot_rpos.y.abs().powf(1.4);
+
                 if spot_rpos.x >= 0.0 {
                     spot_rpos.x = fastapprox::faster::pow(spot_rpos.x, 1.0 / focus.clamp(1.0, 1.3));
                     spot_rpos.y /= spot_rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + MIN_SPREAD;

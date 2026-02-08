@@ -75,7 +75,7 @@ pub(crate) fn update_redtorch(
             color.blue += k * 0.3;
             redtorch_render.color = Color::Srgba(color);
         } else {
-            redtorch_render.color = Color::srgb(1.0, 0.20, 0.07);
+            redtorch_render.color = Color::srgb(1.0, 0.05, 0.005);
         }
 
         // Update Sprite

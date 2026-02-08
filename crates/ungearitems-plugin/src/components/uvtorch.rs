@@ -26,7 +26,7 @@ impl UVTorchExt for UVTorch {
 
         match self.enabled {
             false => 0.0,
-            true => 2.0 * (battery_level.sqrt() + 0.05),
+            true => 4.0 * (battery_level.sqrt() + 0.05),
         }
     }
 
@@ -89,7 +89,7 @@ pub(crate) fn update_uvtorch(
             color.green += k * 0.4;
             uvtorch_render.color = Color::Srgba(color);
         } else {
-            uvtorch_render.color = Color::srgb(0.60, 0.25, 1.00);
+            uvtorch_render.color = Color::srgb(0.40, 0.01, 1.00);
         }
 
         // Update Sprite
