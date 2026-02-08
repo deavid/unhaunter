@@ -8,13 +8,11 @@ use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::str::FromStr;
 use unassets_core::resources::maps::Maps;
-use unassets_core::resources::upscale::UpscaleIndex;
 use unbehavior::behavior::{Behavior, Interactive};
 use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
-use unmetrics_core::metrics::SendMetric;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::LoadLevelEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomStateSyncEvent};
@@ -32,6 +30,7 @@ use unghost_core::components::ghost_influence::GhostInfluence;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::ghost_guess::GhostGuess;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
+use unmetrics_core::metrics::SendMetric;
 use unnet_core::messages::{
     GearSyncState, GhostState, HauntedObjectSync, MapTileState, MovableObjectSync,
     NetworkDataEvent, NetworkMessage, PlayerGearState, PlayerState, RoomSync, SnapshotMsg,
@@ -54,8 +53,7 @@ use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::quadcc::QuadCC;
 use unsettings_core::audio::AudioSettings;
-use unsettings_core::controls::ControlKeys;
-use unsettings_core::video::VideoSettings;
+
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
 use unspatial_core::components::NetworkOriginalMapPosition;
 use unspatial_core::perspective;
@@ -72,7 +70,7 @@ use untypes_core::states::{AppState, GameState};
 
 use crate::metrics;
 
-pub fn startup_network_system(
+pub(crate) fn startup_network_system(
     cli: Res<CliOptions>,
     mut conn: ResMut<NetworkConn>,
     mut local_id: ResMut<LocalPlayer>,
@@ -113,6 +111,9 @@ pub fn startup_network_system(
                     if let Err(e) = stream.set_nonblocking(true) {
                         error!("Failed to set stream non-blocking: {}", e);
                     } else {
+                        if let Err(e) = stream.set_nodelay(true) {
+                            error!("Failed to set TCP_NODELAY: {}", e);
+                        }
                         info!("Network: Connected to {}", address);
                         *conn = NetworkConn::Active {
                             stream,
@@ -132,7 +133,7 @@ pub fn startup_network_system(
     measure.end_ms();
 }
 
-pub fn network_io_system(
+pub(crate) fn network_io_system(
     mut conn: ResMut<NetworkConn>,
     mut ev_writer: MessageWriter<NetworkDataEvent>,
     mut ev_disconnect: MessageWriter<unnet_core::messages::NetworkDisconnectEvent>,
@@ -163,6 +164,9 @@ pub fn network_io_system(
                     error!("Failed to set client stream non-blocking: {}", e);
                     *conn = NetworkConn::Listening(listener);
                 } else {
+                    if let Err(e) = stream.set_nodelay(true) {
+                        error!("Failed to set TCP_NODELAY for client: {}", e);
+                    }
                     *conn = NetworkConn::Active {
                         stream,
                         read_buffer: String::new(),
@@ -278,7 +282,7 @@ pub fn network_io_system(
     measure.end_ms();
 }
 
-pub fn host_handle_disconnects_system(
+pub(crate) fn host_handle_disconnects_system(
     mut ev_disconnect: MessageReader<unnet_core::messages::NetworkDisconnectEvent>,
     query_players: Query<
         (Entity, &NetworkId),
@@ -303,7 +307,7 @@ pub fn host_handle_disconnects_system(
     measure.end_ms();
 }
 
-pub fn client_connection_monitor_system(
+pub(crate) fn client_connection_monitor_system(
     conn: Res<NetworkConn>,
     cli: Res<CliOptions>,
     mut game_next_state: ResMut<NextState<GameState>>,
@@ -333,7 +337,7 @@ pub fn client_connection_monitor_system(
     measure.end_ms();
 }
 
-pub fn handshake_handler_system(
+pub(crate) fn handshake_handler_system(
     mut conn: ResMut<NetworkConn>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
     cli: Res<CliOptions>,
@@ -468,7 +472,7 @@ pub fn handshake_handler_system(
 
 #[derive(SystemParam)]
 #[allow(clippy::type_complexity)]
-pub struct HostSnapshotParams<'w, 's> {
+pub(crate) struct HostSnapshotParams<'w, 's> {
     pub commands: Commands<'w, 's>,
     pub query_players: Query<
         'w,
@@ -542,7 +546,7 @@ pub struct HostSnapshotParams<'w, 's> {
     >,
 }
 
-pub fn host_send_snapshots_system(
+pub(crate) fn host_send_snapshots_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
     mut host_params: HostSnapshotParams,
@@ -894,7 +898,7 @@ pub fn host_send_snapshots_system(
     measure.end_ms();
 }
 
-pub fn client_send_input_system(
+pub(crate) fn client_send_input_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
     local_id: Res<LocalPlayer>,
@@ -951,7 +955,7 @@ pub fn client_send_input_system(
 }
 
 #[derive(SystemParam)]
-pub struct SnapshotAppStates<'w> {
+pub(crate) struct SnapshotAppStates<'w> {
     pub game_next_state: ResMut<'w, NextState<GameState>>,
     pub current_game_state: Res<'w, State<GameState>>,
     pub current_app_state: Res<'w, State<AppState>>,
@@ -960,21 +964,15 @@ pub struct SnapshotAppStates<'w> {
 
 #[derive(SystemParam)]
 #[allow(clippy::type_complexity)]
-pub struct ClientSnapshotParams<'w, 's> {
+pub(crate) struct ClientSnapshotParams<'w, 's> {
     pub commands: Commands<'w, 's>,
     pub cli: Res<'w, CliOptions>,
-    pub local_player: Res<'w, LocalPlayer>,
-    pub time: Res<'w, Time>,
     pub asset_server: Res<'w, AssetServer>,
     pub player_assets: Res<'w, PlayerAssets>,
     pub ghost_assets: Res<'w, GhostAssets>,
     pub gear_registry: Res<'w, GearSpawnerRegistry>,
-    pub upscale_idx: Res<'w, UpscaleIndex>,
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
     pub meshes: ResMut<'w, Assets<Mesh>>,
-    pub video_settings: Res<'w, Persistent<VideoSettings>>,
-    pub audio_settings: Res<'w, Persistent<AudioSettings>>,
-    pub control_settings: Res<'w, Persistent<ControlKeys>>,
     pub query_players: Query<
         'w,
         's,
@@ -1249,7 +1247,7 @@ fn spawn_remote_gear(params: &mut ClientSnapshotParams, g_sync: &GearSyncState) 
     entity
 }
 
-pub fn client_apply_snapshots_system(
+pub(crate) fn client_apply_snapshots_system(
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut params: ClientSnapshotParams,
 ) {
@@ -2103,7 +2101,7 @@ pub fn client_apply_snapshots_system(
 
 #[derive(SystemParam)]
 #[allow(clippy::type_complexity)]
-pub struct HostApplyInputParams<'w, 's> {
+pub(crate) struct HostApplyInputParams<'w, 's> {
     pub commands: Commands<'w, 's>,
     pub cli: Res<'w, CliOptions>,
     pub network_conn: Option<ResMut<'w, NetworkConn>>,
@@ -2140,7 +2138,7 @@ pub struct HostApplyInputParams<'w, 's> {
     pub mission_end_requested: Res<'w, unnet_core::resources::MissionEndRequested>,
 }
 
-pub fn host_apply_input_system(mut params: HostApplyInputParams) {
+pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
     let measure = metrics::HOST_APPLY_INPUT.time_measure();
     if !matches!(params.cli.net_mode, NetMode::Host { .. }) {
         measure.end_ms();
@@ -2474,7 +2472,7 @@ pub fn host_apply_input_system(mut params: HostApplyInputParams) {
     measure.end_ms();
 }
 
-pub fn host_send_summary_system(
+pub(crate) fn host_send_summary_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
     summary_data: Res<SummaryData>,
@@ -2511,7 +2509,7 @@ pub fn host_send_summary_system(
     measure.end_ms();
 }
 
-pub fn autostart_net_game(
+pub(crate) fn autostart_net_game(
     cli: Res<CliOptions>,
     mut ev_load_level: MessageWriter<LoadLevelEvent>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
@@ -2551,7 +2549,7 @@ pub fn autostart_net_game(
     measure.end_ms();
 }
 
-pub fn client_process_pending_map(
+pub(crate) fn client_process_pending_map(
     mut pending_map: ResMut<crate::resources::PendingMapLoad>,
     maps: Res<Maps>,
     mut ev_load_level: MessageWriter<LoadLevelEvent>,
@@ -2576,7 +2574,7 @@ pub fn client_process_pending_map(
     measure.end_ms();
 }
 
-pub fn client_request_grab_system(
+pub(crate) fn client_request_grab_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
     local_id: Res<LocalPlayer>,

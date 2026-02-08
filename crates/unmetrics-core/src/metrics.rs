@@ -1,7 +1,8 @@
-use bevy::diagnostic::{DiagnosticMeasurement, DiagnosticPath};
-use bevy::{diagnostic::DiagnosticsStore, prelude::*};
+use bevy::diagnostic::{DiagnosticMeasurement, DiagnosticPath, DiagnosticsStore};
+use bevy::prelude::*;
+use bevy_platform::collections::{HashMap, HashSet};
 use bevy_platform::time::Instant;
-use std::sync::{LazyLock, Mutex, mpsc};
+use std::sync::{mpsc, LazyLock, Mutex};
 
 const CHANNEL_CAPACITY: usize = 32768;
 
@@ -29,17 +30,29 @@ impl Default for StaticChannel {
     }
 }
 
-pub fn receive_data(mut diag_store: ResMut<DiagnosticsStore>) {
+pub fn receive_data(
+    mut diag_store: ResMut<DiagnosticsStore>,
+    mut remembered_paths: Local<HashSet<DiagnosticPath>>,
+) {
     let rx_guard = DIAGNOSTIC_CHANNEL
         .rx
         .try_lock()
         .expect("unmetrics-core::receive_data was unable to lock for reading messages");
 
+    let mut frame_data: HashMap<DiagnosticPath, f64> = HashMap::default();
+    let now = Instant::now();
+
     for data in rx_guard.try_iter() {
-        if let Some(diag) = diag_store.get_mut(&data.path) {
+        *frame_data.entry(data.path.clone()).or_insert(0.0) += data.value;
+        remembered_paths.insert(data.path);
+    }
+
+    for path in remembered_paths.iter() {
+        if let Some(diag) = diag_store.get_mut(path) {
+            let value = frame_data.get(path).cloned().unwrap_or(0.0);
             diag.add_measurement(DiagnosticMeasurement {
-                time: data.time,
-                value: data.value,
+                time: now,
+                value,
             });
         }
     }
