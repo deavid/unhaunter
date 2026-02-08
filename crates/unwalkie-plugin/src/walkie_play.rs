@@ -54,6 +54,25 @@ fn walkie_talk(
         // Already playing a sound
         if walkie_play.urgent_pending {
             // Stop all sounds, clean up the state.
+
+            // Since the event was interrupted, we want to allow it to be played again later.
+            // We revert the stats for this event so it doesn't count as "consumed".
+            if let Some(interrupted_event) = walkie_play.event.clone() {
+                let mut remove = false;
+                if let Some(stats) = walkie_play.played_events.get_mut(&interrupted_event) {
+                    if stats.count > 1 {
+                        stats.count -= 1;
+                        // Allow immediate retry once the channel is free
+                        stats.last_played = 0.0;
+                    } else {
+                        remove = true;
+                    }
+                }
+                if remove {
+                    walkie_play.played_events.remove(&interrupted_event);
+                }
+            }
+
             walkie_play.event = None;
             walkie_play.state = None;
             walkie_play.current_voice_line = None;
