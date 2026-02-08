@@ -2,6 +2,7 @@ use crate::components::truck::TruckUI;
 use crate::components::truck_ui_button::TruckUIButton;
 use crate::craft_repellent::craft_repellent;
 use crate::uibutton::TruckButtonType;
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
@@ -12,9 +13,12 @@ use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
+use unnet_core::network_id::NetworkId;
+use unnet_core::resources::MissionEndRequested;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::audio::AudioSettings;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
+use untypes_core::cli::NetMode;
 use untypes_core::states::{AppState, GameState};
 
 // Component to mark the progress bar for hold buttons
@@ -283,7 +287,15 @@ fn hold_button_system(
     }
 }
 
-use unnet_core::resources::MissionEndRequested;
+#[derive(SystemParam)]
+struct TruckNetParams<'w, 's> {
+    cli: Res<'w, untypes_core::cli::CliOptions>,
+    loc_player: Res<'w, unnet_core::resources::LocalPlayer>,
+    ev_send_net: MessageWriter<'w, unnet_core::messages::SendNetworkMessage>,
+    mission_end_requested: Res<'w, MissionEndRequested>,
+    q_net_id: Query<'w, 's, &'static NetworkId>,
+}
+
 fn truckui_event_handle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -297,45 +309,59 @@ fn truckui_event_handle(
     mut q_repellent: Query<&mut RepellentFlask>,
     q_gearkind: Query<&GearKind>,
     mut ev_mission: MessageWriter<MissionEvent>,
-    cli: Res<untypes_core::cli::CliOptions>,
-    loc_player: Res<unnet_core::resources::LocalPlayer>,
-    mut ev_send_net: MessageWriter<unnet_core::messages::SendNetworkMessage>,
-    mission_end_requested: Res<MissionEndRequested>,
+    mut net_params: TruckNetParams,
 ) {
     for ev in ev_truckui.read() {
         match ev {
             TruckUIEvent::EndMission => {
-                if !mission_end_requested.0 {
+                if !net_params.mission_end_requested.0 {
                     continue;
                 }
-                if matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
-                    ev_send_net.write(unnet_core::messages::SendNetworkMessage(
-                        unnet_core::messages::NetworkMessage::RequestEndMission,
-                    ));
+                if matches!(
+                    net_params.cli.net_mode,
+                    untypes_core::cli::NetMode::Join { .. }
+                ) {
+                    net_params
+                        .ev_send_net
+                        .write(unnet_core::messages::SendNetworkMessage(
+                            unnet_core::messages::NetworkMessage::RequestEndMission,
+                        ));
                 } else {
                     ev_mission.write(MissionEvent::End);
                 }
             }
             TruckUIEvent::ExitTruck => {
                 if let (Some(player_id), true) = (
-                    loc_player.0,
-                    matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. }),
+                    net_params.loc_player.0,
+                    matches!(
+                        net_params.cli.net_mode,
+                        untypes_core::cli::NetMode::Join { .. }
+                    ),
                 ) {
-                    ev_send_net.write(unnet_core::messages::SendNetworkMessage(
-                        unnet_core::messages::NetworkMessage::RequestTruckExit { player_id },
-                    ));
+                    net_params
+                        .ev_send_net
+                        .write(unnet_core::messages::SendNetworkMessage(
+                            unnet_core::messages::NetworkMessage::RequestTruckExit { player_id },
+                        ));
                 }
                 game_next_state.set(GameState::None);
             }
             TruckUIEvent::CraftRepellent => {
-                if matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
-                    if let (Some(player_id), Some(ghost_type)) = (loc_player.0, gg.ghost_type) {
-                        ev_send_net.write(unnet_core::messages::SendNetworkMessage(
-                            unnet_core::messages::NetworkMessage::CraftRepellent {
-                                player_id,
-                                ghost_type,
-                            },
-                        ));
+                if matches!(
+                    net_params.cli.net_mode,
+                    untypes_core::cli::NetMode::Join { .. }
+                ) {
+                    if let (Some(player_id), Some(ghost_type)) =
+                        (net_params.loc_player.0, gg.ghost_type)
+                    {
+                        net_params
+                            .ev_send_net
+                            .write(unnet_core::messages::SendNetworkMessage(
+                                unnet_core::messages::NetworkMessage::CraftRepellent {
+                                    player_id,
+                                    ghost_type,
+                                },
+                            ));
                         // Client optimistic local exit
                         game_next_state.set(GameState::None);
                     }
@@ -355,6 +381,24 @@ fn truckui_event_handle(
                         // Only count as a craft if we actually consumed a new bottle
                         if consumed_new_bottle {
                             craft_tracker.craft();
+                        }
+
+                        if !matches!(net_params.cli.net_mode, NetMode::Offline) {
+                            // Ensure the entity has a NetworkId so it can be synced to clients.
+                            let mut ensure_id = |o_entity: Option<Entity>| {
+                                if let Some(entity) = o_entity
+                                    && net_params.q_net_id.get(entity).is_err()
+                                {
+                                    let rng_val = unfoundation_core::random_seed::heavy_rng_seed();
+                                    let net_id = NetworkId(rng_val.max(1000));
+                                    commands.entity(entity).insert(net_id);
+                                }
+                            };
+                            ensure_id(gear.left_hand);
+                            ensure_id(gear.right_hand);
+                            for e in &gear.inventory {
+                                ensure_id(Some(*e));
+                            }
                         }
 
                         commands
