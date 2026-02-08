@@ -47,6 +47,15 @@ pub(crate) fn app_setup(app: &mut App) {
             waypoint::remote_player_waypoint_system,
             waypoint::waypoint_following_system,
             waypoint::waypoint_queue_cleanup_system,
+        )
+            .chain()
+            .in_set(unplayer_core::PlayerInputSet)
+            .run_if(in_state(AppState::InGame)),
+    );
+
+    app.add_systems(
+        Update,
+        (
             // Interaction system runs before movement (Runs on all instances)
             movement::player_interaction_system,
             // Movement system runs after input and waypoints
@@ -56,6 +65,7 @@ pub(crate) fn app_setup(app: &mut App) {
             keyboard::stairs_player.run_if(is_host),
         )
             .chain()
+            .after(unplayer_core::PlayerInputSet)
             .run_if(in_state(AppState::InGame)),
     );
 

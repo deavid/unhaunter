@@ -6,16 +6,34 @@ This was tested with RTT: ~60ms
 
 - Noticeable lag - 60ms is quite noticeable specially to move.
 - Doors not syncing properly when joining late, that was a hassle.
-- Host slows down a lot
-  - Can't reproduce. TCP_NODELAY might have been the issue. Needs re-testing.
-- Trying to activate gear from the client, pressing [R] or Right click was painful as it was not reponsive, or it was
-  bouncy (activates then deactivates)
 - On the client, When hiding:
   - The "eye icon" does not seem to disappear after stop hiding.
   - The client seems to be able to move even when hidden.
 - When the other player is hiding, they should be way more transparent to make it clear.
+
+PARTIALLY FIXED:
+
+- Trying to activate gear from the client, pressing [R] or Right click was painful as it was not reponsive, or it was
+  bouncy (activates then deactivates)
+  - Fixes in place but still with problems
+  - More fixes, and better, but... we can't get this to work properly. For now, good enough.
+
+MIGHT BE FIXED - aditional testing required:
+
+- Host slows down a lot
+  - Fixed - probably by adding TCP_NODELAY and a few optimizations.
+  - Can't reproduce. TCP_NODELAY might have been the issue. Needs re-testing.
+
+FIXED - needs more verification:
+
 - Impossible to control whether listening should happen in IPv4 or IPv6. We need to listen on BOTH at the same time. Do
   we have a flag to provide a list of source IP addresses for the listening part?
+  - Fixed, socket listening reworked.
+  - Now we see an error of address already in use, after opening IPv6 successfully and attempting IPv4.
+    - This needs additional checking. It is possible that the host has some "if open in IPv4 by default open IPv6" or
+      vice-versa.
+- Errors for despawining on the client: See Appendix A
+  - Fixed: These seem gone after the fixes.
 
 ## Dedicated Server
 

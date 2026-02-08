@@ -230,6 +230,8 @@ pub enum NetworkMessage {
         interact: bool,
         use_right_hand: bool,
         use_left_hand: bool,
+        target_right_hand: Option<(bool, GearDetails)>,
+        target_left_hand: Option<(bool, GearDetails)>,
         target_position: Option<[f32; 2]>,
         aim_direction: [f32; 2],
     },

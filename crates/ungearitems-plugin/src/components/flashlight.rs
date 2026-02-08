@@ -64,9 +64,8 @@ pub(crate) fn update_flashlight(
         // Sync Toggleable with FlashlightStatus
         if is_host {
             toggle.is_on = flashlight.status != FlashlightStatus::Off;
-        } else if !toggle.is_on && flashlight.status != FlashlightStatus::Off {
-            // If the host says it's off, it's off.
-            flashlight.status = FlashlightStatus::Off;
+        } else if flashlight.status != FlashlightStatus::Off {
+            toggle.is_on = true;
         }
 
         // Update Logic

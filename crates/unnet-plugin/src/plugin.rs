@@ -1,9 +1,9 @@
 use crate::systems::{
     autostart_net_game, client_apply_snapshots_system, client_connection_monitor_system,
     client_process_pending_map, client_request_grab_system, client_send_input_system,
-    handshake_handler_system, host_apply_input_system, host_handle_disconnects_system,
-    host_send_snapshots_system, host_send_summary_system, network_io_system,
-    startup_network_system,
+    client_sync_intended_gear_state, delayed_despawn_system, handshake_handler_system,
+    host_apply_input_system, host_handle_disconnects_system, host_send_snapshots_system,
+    host_send_summary_system, network_io_system, startup_network_system,
 };
 use bevy::prelude::*;
 use unnet_core::messages::NetworkDataEvent;
@@ -53,9 +53,14 @@ impl Plugin for UnhaunterNetPlugin {
                 client_send_input_system,
                 client_apply_snapshots_system,
                 client_connection_monitor_system,
+                delayed_despawn_system,
             )
                 .chain()
                 .run_if(in_state(AppState::InGame)),
+        );
+        app.add_systems(
+            PostUpdate,
+            client_sync_intended_gear_state.run_if(in_state(AppState::InGame)),
         );
     }
 }

@@ -34,6 +34,8 @@ impl Plugin for UnhaunterGearItemsPlugin {
             (
                 crate::systems::system_electronic_interference,
                 crate::systems::system_battery_drain,
+                crate::systems::system_apply_gear_intent_from_input
+                    .after(unplayer_core::PlayerInputSet),
             ),
         );
 

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use unfoundation_core::types::gear::Hand;
+use unnet_core::messages::GearDetails;
 use unnet_core::network_id::NetworkId;
 use unsettings_core::controls::ControlKeys;
 use unspatial_core::direction::Direction;
@@ -49,6 +50,12 @@ pub struct PlayerInput {
     /// Whether the player wants to use the item in their left hand.
     pub use_left_hand: bool,
 
+    /// Predicted target state for the item in the right hand.
+    pub target_right_hand: Option<(bool, GearDetails)>,
+
+    /// Predicted target state for the item in the left hand.
+    pub target_left_hand: Option<(bool, GearDetails)>,
+
     /// Cycle inventory.
     pub inventory_cycle: bool,
 
@@ -76,6 +83,8 @@ impl PlayerInput {
         self.drop = false;
         self.use_right_hand = false;
         self.use_left_hand = false;
+        self.target_right_hand = None;
+        self.target_left_hand = None;
         self.inventory_cycle = false;
         self.inventory_swap = false;
     }

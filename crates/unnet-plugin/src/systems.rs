@@ -32,11 +32,11 @@ use unghost_core::resources::ghost_guess::GhostGuess;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unmetrics_core::metrics::SendMetric;
 use unnet_core::messages::{
-    GearSyncState, GhostState, HauntedObjectSync, MapTileState, MovableObjectSync,
+    GearDetails, GearSyncState, GhostState, HauntedObjectSync, MapTileState, MovableObjectSync,
     NetworkDataEvent, NetworkMessage, PlayerGearState, PlayerState, RoomSync, SnapshotMsg,
     TransientEvent,
 };
-use unnet_core::network_id::NetworkId;
+use unnet_core::network_id::{NetworkId, ToBeDespawned};
 use unnet_core::resources::{HostGone, LocalPlayer, MissionEndRequested};
 use unplayer_core::assets::PlayerAssets;
 use unplayer_core::components::{
@@ -69,6 +69,48 @@ use untypes_core::difficulty::Difficulty;
 use untypes_core::states::{AppState, GameState};
 
 use crate::metrics;
+
+#[derive(Component, Debug)]
+pub(crate) struct LastSyncedGearState {
+    pub is_on: bool,
+    pub details: GearDetails,
+}
+
+pub(crate) fn extract_gear_details(
+    flashlight: Option<&Flashlight>,
+    sage: Option<&ungearitems_core::components::sage::SageBundleData>,
+    repellent: Option<&ungearitems_core::components::repellentflask::RepellentFlask>,
+    thermometer: Option<&ungearitems_core::components::thermometer::Thermometer>,
+    emfm: Option<&ungearitems_core::components::emfmeter::EMFMeter>,
+    spiritbox: Option<&ungearitems_core::components::spiritbox::SpiritBox>,
+) -> GearDetails {
+    if let Some(f) = flashlight {
+        GearDetails::Flashlight(f.status.clone())
+    } else if let Some(s) = sage {
+        GearDetails::Sage {
+            consumed: s.consumed,
+            is_active: s.is_active,
+            remaining_secs: s.burn_timer.remaining_secs(),
+        }
+    } else if let Some(r) = repellent {
+        GearDetails::RepellentFlask {
+            qty: r.qty,
+            active: r.active,
+            liquid_content: r.liquid_content,
+        }
+    } else if let Some(t) = thermometer {
+        GearDetails::Thermometer { temp: t.temp }
+    } else if let Some(e) = emfm {
+        GearDetails::EMF { level: e.emf }
+    } else if let Some(s) = spiritbox {
+        GearDetails::SpiritBox {
+            charge: s.charge,
+            ghost_answer: s.ghost_answer,
+        }
+    } else {
+        GearDetails::None
+    }
+}
 
 pub(crate) fn startup_network_system(
     cli: Res<CliOptions>,
@@ -707,32 +749,8 @@ pub(crate) fn host_send_snapshots_system(
                 emfm,
                 spiritbox,
             )| {
-                let details = if let Some(f) = flashlight {
-                    unnet_core::messages::GearDetails::Flashlight(f.status.clone())
-                } else if let Some(s) = sage {
-                    unnet_core::messages::GearDetails::Sage {
-                        consumed: s.consumed,
-                        is_active: s.is_active,
-                        remaining_secs: s.burn_timer.remaining_secs(),
-                    }
-                } else if let Some(r) = repellent {
-                    unnet_core::messages::GearDetails::RepellentFlask {
-                        qty: r.qty,
-                        active: r.active,
-                        liquid_content: r.liquid_content,
-                    }
-                } else if let Some(t) = thermometer {
-                    unnet_core::messages::GearDetails::Thermometer { temp: t.temp }
-                } else if let Some(e) = emfm {
-                    unnet_core::messages::GearDetails::EMF { level: e.emf }
-                } else if let Some(s) = spiritbox {
-                    unnet_core::messages::GearDetails::SpiritBox {
-                        charge: s.charge,
-                        ghost_answer: s.ghost_answer,
-                    }
-                } else {
-                    unnet_core::messages::GearDetails::None
-                };
+                let details =
+                    extract_gear_details(flashlight, sage, repellent, thermometer, emfm, spiritbox);
 
                 GearSyncState {
                     id: *id,
@@ -934,6 +952,52 @@ pub(crate) fn host_send_snapshots_system(
     measure.end_ms();
 }
 
+pub(crate) fn client_sync_intended_gear_state(
+    mut commands: Commands,
+    mut q_player: Query<(&PlayerGear, &mut PlayerInput), With<MainPlayer>>,
+    q_gear: Query<(
+        &Toggleable,
+        Option<&Flashlight>,
+        Option<&ungearitems_core::components::sage::SageBundleData>,
+        Option<&ungearitems_core::components::repellentflask::RepellentFlask>,
+        Option<&ungearitems_core::components::thermometer::Thermometer>,
+        Option<&ungearitems_core::components::emfmeter::EMFMeter>,
+        Option<&ungearitems_core::components::spiritbox::SpiritBox>,
+    )>,
+    cli: Res<CliOptions>,
+    time: Res<Time>,
+) {
+    if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        return;
+    }
+    for (gear, mut input) in q_player.iter_mut() {
+        if input.use_right_hand
+            && let Some(entity) = gear.right_hand
+            && let Ok((toggle, f, s, r, t, e, sb)) = q_gear.get(entity)
+        {
+            let details = extract_gear_details(f, s, r, t, e, sb);
+            input.target_right_hand = Some((toggle.is_on, details.clone()));
+            let mut pending =
+                unnet_core::components::PendingGearState::new(time.elapsed_secs_f64());
+            pending.target_on = Some(toggle.is_on);
+            pending.target_details = Some(details);
+            commands.entity(entity).insert(pending);
+        }
+        if input.use_left_hand
+            && let Some(entity) = gear.left_hand
+            && let Ok((toggle, f, s, r, t, e, sb)) = q_gear.get(entity)
+        {
+            let details = extract_gear_details(f, s, r, t, e, sb);
+            input.target_left_hand = Some((toggle.is_on, details.clone()));
+            let mut pending =
+                unnet_core::components::PendingGearState::new(time.elapsed_secs_f64());
+            pending.target_on = Some(toggle.is_on);
+            pending.target_details = Some(details);
+            commands.entity(entity).insert(pending);
+        }
+    }
+}
+
 pub(crate) fn client_send_input_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
@@ -964,6 +1028,8 @@ pub(crate) fn client_send_input_system(
             interact: input.interact,
             use_right_hand: input.use_right_hand,
             use_left_hand: input.use_left_hand,
+            target_right_hand: input.target_right_hand.clone(),
+            target_left_hand: input.target_left_hand.clone(),
             target_position: input.target_position.map(|v| [v.x, v.y]),
             aim_direction: [input.aim_direction.x, input.aim_direction.y],
         });
@@ -1003,6 +1069,7 @@ pub(crate) struct SnapshotAppStates<'w> {
 pub(crate) struct ClientSnapshotParams<'w, 's> {
     pub commands: Commands<'w, 's>,
     pub cli: Res<'w, CliOptions>,
+    pub time: Res<'w, Time>,
     pub asset_server: Res<'w, AssetServer>,
     pub player_assets: Res<'w, PlayerAssets>,
     pub ghost_assets: Res<'w, GhostAssets>,
@@ -1077,6 +1144,8 @@ pub(crate) struct ClientSnapshotParams<'w, 's> {
             Option<&'static mut ungearitems_core::components::thermometer::Thermometer>,
             Option<&'static mut ungearitems_core::components::emfmeter::EMFMeter>,
             Option<&'static mut ungearitems_core::components::spiritbox::SpiritBox>,
+            Option<&'static mut LastSyncedGearState>,
+            Option<&'static unnet_core::components::PendingGearState>,
         ),
         (
             Without<unbehavior::components::Movable>,
@@ -1087,6 +1156,7 @@ pub(crate) struct ClientSnapshotParams<'w, 's> {
         ),
     >,
     pub query_net_entities: Query<'w, 's, (Entity, &'static NetworkId)>,
+    pub query_tbd: Query<'w, 's, Entity, With<ToBeDespawned>>,
     pub ev_sound: MessageWriter<'w, SoundEvent>,
     pub ghost_guess: ResMut<'w, GhostGuess>,
     pub query_buttons: Query<'w, 's, &'static mut TruckUIButton>,
@@ -1262,6 +1332,10 @@ fn spawn_remote_gear(params: &mut ClientSnapshotParams, g_sync: &GearSyncState) 
     });
     params.commands.entity(entity).insert(Toggleable {
         is_on: g_sync.is_on,
+    });
+    params.commands.entity(entity).insert(LastSyncedGearState {
+        is_on: g_sync.is_on,
+        details: g_sync.details.clone(),
     });
 
     if let unnet_core::messages::GearDetails::Flashlight(status) = &g_sync.details {
@@ -1522,6 +1596,11 @@ pub(crate) fn client_apply_snapshots_system(
             for g in ghosts {
                 seen_ids.insert(g.id);
             }
+            for m in movable_objects {
+                seen_ids.insert(m.id);
+            }
+            let tbd_entities: std::collections::HashSet<Entity> = params.query_tbd.iter().collect();
+
             for (entity, id) in params.query_net_entities.iter() {
                 if !seen_ids.contains(id) {
                     let is_main = params
@@ -1529,9 +1608,14 @@ pub(crate) fn client_apply_snapshots_system(
                         .get(entity)
                         .map(|q| q.8.is_some())
                         .unwrap_or(false);
-                    if !is_main {
-                        params.commands.entity(entity).despawn();
+                    if !is_main && !tbd_entities.contains(&entity) {
+                        params
+                            .commands
+                            .entity(entity)
+                            .insert(ToBeDespawned { in_frames: 2 });
                     }
+                } else {
+                    params.commands.entity(entity).remove::<ToBeDespawned>();
                 }
             }
 
@@ -1687,13 +1771,49 @@ pub(crate) fn client_apply_snapshots_system(
                     thermometer,
                     emf_meter,
                     spiritbox,
+                    mut last_synced,
+                    pending_state,
                 )) = params.query_gear.get_mut(g_entity)
                 {
                     pos.x = g_sync.position[0];
                     pos.y = g_sync.position[1];
                     pos.z = g_sync.position[2];
-                    if let Some(mut t) = toggle {
-                        t.is_on = g_sync.is_on;
+
+                    let mut mask_on = false;
+                    let mut mask_details = false;
+                    if let Some(pending) = pending_state
+                        && params.time.elapsed_secs_f64() - pending.sent_at_secs < 0.25
+                    {
+                        if let Some(target_on) = pending.target_on
+                            && target_on != g_sync.is_on
+                        {
+                            mask_on = true;
+                        }
+                        if let Some(target_details) = &pending.target_details
+                            && target_details != &g_sync.details
+                        {
+                            mask_details = true;
+                        }
+                    }
+
+                    let details_changed = if let Some(ref last) = last_synced {
+                        last.details != g_sync.details
+                    } else {
+                        true
+                    };
+                    let is_on_changed = if let Some(ref last) = last_synced {
+                        last.is_on != g_sync.is_on
+                    } else {
+                        true
+                    };
+
+                    if is_on_changed || details_changed {
+                        if !mask_on && let Some(mut t) = toggle {
+                            t.is_on = g_sync.is_on;
+                        }
+                        if let Some(ref mut last) = last_synced {
+                            last.is_on = g_sync.is_on;
+                        }
                     }
 
                     match (g_sync.is_deployed, deployed) {
@@ -1729,63 +1849,76 @@ pub(crate) fn client_apply_snapshots_system(
                         b.level = g_sync.battery;
                     }
 
-                    match &g_sync.details {
-                        unnet_core::messages::GearDetails::Flashlight(status) => {
-                            if let Some(mut f) = flashlight {
-                                f.status = status.clone();
+                    if (is_on_changed || details_changed) && !mask_details {
+                        match &g_sync.details {
+                            unnet_core::messages::GearDetails::Flashlight(status) => {
+                                if let Some(mut f) = flashlight {
+                                    f.status = status.clone();
+                                }
                             }
-                        }
-                        unnet_core::messages::GearDetails::Sage {
-                            consumed,
-                            is_active,
-                            remaining_secs,
-                        } => {
-                            if let Some(mut s) = sage {
-                                s.consumed = *consumed;
-                                s.is_active = *is_active;
+                            unnet_core::messages::GearDetails::Sage {
+                                consumed,
+                                is_active,
+                                remaining_secs,
+                            } => {
+                                if let Some(mut s) = sage {
+                                    s.consumed = *consumed;
+                                    s.is_active = *is_active;
 
-                                let elapsed =
-                                    s.burn_timer.duration().as_secs_f32() - remaining_secs;
-                                s.burn_timer.set_elapsed(std::time::Duration::from_secs_f32(
-                                    elapsed.max(0.0),
-                                ));
+                                    let elapsed =
+                                        s.burn_timer.duration().as_secs_f32() - remaining_secs;
+                                    s.burn_timer.set_elapsed(std::time::Duration::from_secs_f32(
+                                        elapsed.max(0.0),
+                                    ));
+                                }
                             }
-                        }
-                        unnet_core::messages::GearDetails::RepellentFlask {
-                            qty,
-                            active,
-                            liquid_content,
-                        } => {
-                            if let Some(mut r) = repellent {
-                                r.qty = *qty;
-                                r.active = *active;
-                                r.liquid_content = *liquid_content;
+                            unnet_core::messages::GearDetails::RepellentFlask {
+                                qty,
+                                active,
+                                liquid_content,
+                            } => {
+                                if let Some(mut r) = repellent {
+                                    r.qty = *qty;
+                                    r.active = *active;
+                                    r.liquid_content = *liquid_content;
+                                }
                             }
-                        }
-                        unnet_core::messages::GearDetails::Thermometer { temp } => {
-                            if let Some(mut t) = thermometer {
-                                t.temp = *temp;
+                            unnet_core::messages::GearDetails::Thermometer { temp } => {
+                                if let Some(mut t) = thermometer {
+                                    t.temp = *temp;
+                                }
                             }
-                        }
-                        unnet_core::messages::GearDetails::EMF { level } => {
-                            if let Some(mut e) = emf_meter {
-                                e.emf = *level;
-                                e.emf_level =
+                            unnet_core::messages::GearDetails::EMF { level } => {
+                                if let Some(mut e) = emf_meter {
+                                    e.emf = *level;
+                                    e.emf_level =
                                     ungearitems_core::components::emfmeter::EMFLevel::from_milligauss(
                                         e.emf,
                                     );
+                                }
                             }
-                        }
-                        unnet_core::messages::GearDetails::SpiritBox {
-                            charge,
-                            ghost_answer,
-                        } => {
-                            if let Some(mut s) = spiritbox {
-                                s.charge = *charge;
-                                s.ghost_answer = *ghost_answer;
+                            unnet_core::messages::GearDetails::SpiritBox {
+                                charge,
+                                ghost_answer,
+                            } => {
+                                if let Some(mut s) = spiritbox {
+                                    s.charge = *charge;
+                                    s.ghost_answer = *ghost_answer;
+                                }
                             }
+                            unnet_core::messages::GearDetails::None => {}
                         }
-                        unnet_core::messages::GearDetails::None => {}
+                        if let Some(ref mut last) = last_synced {
+                            last.details = g_sync.details.clone();
+                        } else {
+                            params
+                                .commands
+                                .entity(g_entity)
+                                .insert(LastSyncedGearState {
+                                    is_on: g_sync.is_on,
+                                    details: g_sync.details.clone(),
+                                });
+                        }
                     }
                 }
             }
@@ -2190,6 +2323,8 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                 interact,
                 use_right_hand,
                 use_left_hand,
+                target_right_hand,
+                target_left_hand,
                 target_position,
                 aim_direction,
             } => {
@@ -2202,6 +2337,8 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                         input.interact = *interact;
                         input.use_right_hand = *use_right_hand;
                         input.use_left_hand = *use_left_hand;
+                        input.target_right_hand = target_right_hand.clone();
+                        input.target_left_hand = target_left_hand.clone();
                         input.target_position = target_position.map(|v| Vec2::new(v[0], v[1]));
                         input.aim_direction = Vec2::new(aim_direction[0], aim_direction[1]);
                     }
@@ -2608,6 +2745,19 @@ pub(crate) fn client_process_pending_map(
         trace!("Network: Waiting for map asset to be ready: {}", path);
     }
     measure.end_ms();
+}
+
+pub(crate) fn delayed_despawn_system(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut ToBeDespawned)>,
+) {
+    for (entity, mut tbd) in query.iter_mut() {
+        if tbd.in_frames == 0 {
+            commands.entity(entity).despawn();
+        } else {
+            tbd.in_frames -= 1;
+        }
+    }
 }
 
 pub(crate) fn client_request_grab_system(
