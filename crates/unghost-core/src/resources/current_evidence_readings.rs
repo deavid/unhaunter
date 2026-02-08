@@ -46,8 +46,14 @@ impl CurrentEvidenceReadings {
         }
 
         // Ramping up
-        const RAMP_UP_DURATION_SECONDS: f32 = 5.0; // Time to go from current to target
-        let increase_this_frame = (1.0 / RAMP_UP_DURATION_SECONDS) * delta_time_secs;
+        // Different evidence types have different "sensitivity" (ramp-up time).
+        // Transient/Environmental evidence (UV, Orbs, RedLight) takes longer to confirm
+        // to prevent accidental "glances" from triggering the Walkie.
+        let ramp_up_duration_seconds: f32 = match evidence {
+            Evidence::UVEctoplasm | Evidence::RLPresence | Evidence::FloatingOrbs => 12.0,
+            _ => 6.0,
+        };
+        let increase_this_frame = (1.0 / ramp_up_duration_seconds) * delta_time_secs;
         reading.clarity = (reading.clarity + increase_this_frame).min(target_clarity);
 
         reading.last_updated_time = current_game_time_secs;

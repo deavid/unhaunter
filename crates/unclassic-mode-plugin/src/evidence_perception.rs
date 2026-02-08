@@ -11,12 +11,13 @@ use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::resources::light_grid::LightGrid;
 use unrender_std::components::light::LightEmitter;
+use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
 
 fn update_current_evidence_readings_from_player_perception_system(
     mut evidence_readings: ResMut<CurrentEvidenceReadings>,
-    player_query: Query<(&PlayerGear, &Position), With<PlayerTag>>,
+    player_query: Query<(&PlayerGear, &Position, Option<&VisibilityData>), With<PlayerTag>>,
     looking_gear: Res<LookingGear>,
     q_evidence_sensor: Query<(
         &EvidenceSensor,
@@ -31,7 +32,7 @@ fn update_current_evidence_readings_from_player_perception_system(
     light_grid: Res<LightGrid>,
     time: Res<Time>,
 ) {
-    let Some((player_gear, player_pos)) = player_query.iter().next() else {
+    let Some((player_gear, player_pos, vis_data)) = player_query.iter().next() else {
         return;
     };
 
@@ -122,14 +123,45 @@ fn update_current_evidence_readings_from_player_perception_system(
     // Check all deployed gear with minimal visibility requirements.
     for (entity, gear_pos, _deployed) in q_deployed_gear.iter() {
         let dist = player_pos.distance(gear_pos);
+
+        // Strict Floor Check: Gear on a different floor (Z-level) is ignored.
+        // Assuming integer Z levels, a difference of >= 0.5 means a different floor.
+        if (player_pos.z - gear_pos.z).abs() >= 0.5 {
+            continue;
+        }
+
         // Approx 10 tiles ~ 15-20 meters.
-        if dist < 12.0 {
-            // Visible nearby. Status text is small, readable if very close.
-            let can_read_status = dist < 2.5;
-            // Sound is audible if nearby.
-            let can_hear = dist < 12.0;
-            // Icon is the gear sprite itself.
-            let can_see_icon = dist < 12.0;
+        // The player needs to be somewhat close to validly "perceive" the evidence.
+        if dist < 8.0 {
+            let mut is_visible = true;
+            // Check visibility against obstructions (walls)
+            if let Some(vis) = vis_data {
+                let bpos = gear_pos.to_board_position();
+                let dims = vis.visibility_field.dim();
+                if let Some(v_idx) = bpos.ndidx_checked(dims) {
+                    if let Some(v) = vis.visibility_field.get(v_idx) {
+                        // Visibility is 0.0 to 1.0. Typically < 0.0 is uninitialized, 0.0 is occlusion.
+                        if *v <= 0.0 {
+                            is_visible = false;
+                        }
+                    } else {
+                        is_visible = false;
+                    }
+                } else {
+                    // Out of bounds
+                    is_visible = false;
+                }
+            }
+
+            // Visible nearby. Status text is small, readable if very close and visible.
+            let can_read_status = is_visible && dist < 2.5;
+            // Sound is audible if nearby. Reduced to require closer proximity.
+            // Sound flows through walls to some extent, but we count it only if somewhat close.
+            // But if it's completely invisible (thick wall), maybe we should suppress?
+            // For now, let's keep sound independent of visibility but rely on distance and floor check.
+            let can_hear = dist < 6.5;
+            // Icon is the gear sprite itself. Reduced significantly so player must be close to "see" the reading.
+            let can_see_icon = is_visible && dist < 4.5;
 
             process_gear(entity, can_read_status, can_see_icon, can_hear);
         }
