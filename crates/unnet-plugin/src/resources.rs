@@ -19,7 +19,7 @@ pub(crate) struct PendingMapLoad {
 pub(crate) enum NetworkConn {
     #[default]
     Disconnected,
-    Listening(std::net::TcpListener),
+    Listening(Vec<std::net::TcpListener>),
     Active {
         stream: TcpStream,
         read_buffer: String,
@@ -27,7 +27,7 @@ pub(crate) enum NetworkConn {
         handshake: HandshakeState,
         associated_id: Option<unnet_core::network_id::NetworkId>,
         needs_full_sync: bool,
-        host_listener: Option<std::net::TcpListener>,
+        host_listeners: Vec<std::net::TcpListener>,
     },
 }
 

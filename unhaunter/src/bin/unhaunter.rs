@@ -13,6 +13,9 @@ struct Args {
     host: Option<u16>,
 
     #[clap(long)]
+    bind: Vec<String>,
+
+    #[clap(long)]
     join: Option<String>,
 
     #[clap(long)]
@@ -39,7 +42,15 @@ fn main() {
     }
 
     let net_mode = if let Some(port) = args.host {
-        untypes_core::cli::NetMode::Host { port }
+        let mut bind_addresses = args.bind.clone();
+        if bind_addresses.is_empty() {
+            bind_addresses.push("::".to_string());
+            bind_addresses.push("0.0.0.0".to_string());
+        }
+        untypes_core::cli::NetMode::Host {
+            port,
+            bind_addresses,
+        }
     } else if let Some(address) = args.join {
         untypes_core::cli::NetMode::Join { address }
     } else {

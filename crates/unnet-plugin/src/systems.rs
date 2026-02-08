@@ -5,7 +5,7 @@ use bevy_persistent::Persistent;
 use rand::Rng;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
-use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::net::{TcpListener, TcpStream};
 use std::str::FromStr;
 use unassets_core::resources::maps::Maps;
 use unbehavior::behavior::{Behavior, Interactive};
@@ -81,27 +81,37 @@ pub(crate) fn startup_network_system(
             *conn = NetworkConn::Disconnected;
             local_id.0 = Some(NetworkId(1));
         }
-        NetMode::Host { port } => {
+        NetMode::Host {
+            port,
+            bind_addresses,
+        } => {
             local_id.0 = Some(NetworkId(1));
-            let addrs = [
-                // FIXME: We need to liston on both IPv6 + IPv4
-                SocketAddr::from(([0, 0, 0, 0], *port)),
-                SocketAddr::from(([0, 0, 0, 0, 0, 0, 0, 0], *port)),
-            ];
-            match TcpListener::bind(&addrs[..]) {
-                Ok(listener) => {
-                    let addr = listener
-                        .local_addr()
-                        .map(|a| a.to_string())
-                        .unwrap_or_else(|_| "unknown".to_string());
-                    if let Err(e) = listener.set_nonblocking(true) {
-                        error!("Failed to set listener non-blocking: {}", e);
-                    } else {
-                        info!("Network: Listening on {}", addr);
-                        *conn = NetworkConn::Listening(listener);
+            let mut listeners = Vec::new();
+            for addr_str in bind_addresses {
+                let addrs = format!("{}:{}", addr_str, port);
+                match TcpListener::bind(&addrs) {
+                    Ok(listener) => {
+                        let addr = listener
+                            .local_addr()
+                            .map(|a| a.to_string())
+                            .unwrap_or_else(|_| "unknown".to_string());
+                        if let Err(e) = listener.set_nonblocking(true) {
+                            error!("Failed to set listener non-blocking: {}", e);
+                        } else {
+                            info!("Network: Listening on {}", addr);
+                            listeners.push(listener);
+                        }
+                    }
+                    Err(e) => {
+                        error!("Network: Failed to bind to {}: {}", addrs, e);
                     }
                 }
-                Err(e) => error!("Network: Failed to bind to port {}: {}", port, e),
+            }
+            if listeners.is_empty() {
+                error!("Network: Failed to bind to any address on port {}", port);
+                *conn = NetworkConn::Disconnected;
+            } else {
+                *conn = NetworkConn::Listening(listeners);
             }
         }
         NetMode::Join { address } => {
@@ -122,7 +132,7 @@ pub(crate) fn startup_network_system(
                             handshake: HandshakeState::None,
                             associated_id: None,
                             needs_full_sync: false,
-                            host_listener: None,
+                            host_listeners: Vec::new(),
                         };
                     }
                 }
@@ -157,35 +167,40 @@ pub(crate) fn network_io_system(
         NetworkConn::Disconnected => {
             *conn = NetworkConn::Disconnected;
         }
-        NetworkConn::Listening(listener) => match listener.accept() {
-            Ok((stream, addr)) => {
-                info!("Network: Client connected from {}", addr);
-                if let Err(e) = stream.set_nonblocking(true) {
-                    error!("Failed to set client stream non-blocking: {}", e);
-                    *conn = NetworkConn::Listening(listener);
-                } else {
-                    if let Err(e) = stream.set_nodelay(true) {
-                        error!("Failed to set TCP_NODELAY for client: {}", e);
+        NetworkConn::Listening(listeners) => {
+            let mut new_conn = None;
+            for listener in &listeners {
+                match listener.accept() {
+                    Ok((stream, addr)) => {
+                        info!("Network: Client connected from {}", addr);
+                        if let Err(e) = stream.set_nonblocking(true) {
+                            error!("Failed to set client stream non-blocking: {}", e);
+                        } else {
+                            if let Err(e) = stream.set_nodelay(true) {
+                                error!("Failed to set TCP_NODELAY for client: {}", e);
+                            }
+                            new_conn = Some(stream);
+                            break;
+                        }
                     }
-                    *conn = NetworkConn::Active {
-                        stream,
-                        read_buffer: String::new(),
-                        write_queue: VecDeque::new(),
-                        handshake: HandshakeState::None,
-                        associated_id: None,
-                        needs_full_sync: false,
-                        host_listener: Some(listener),
-                    };
+                    Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
+                    Err(e) => error!("Network: Accept error: {}", e),
                 }
             }
-            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                *conn = NetworkConn::Listening(listener);
+            if let Some(stream) = new_conn {
+                *conn = NetworkConn::Active {
+                    stream,
+                    read_buffer: String::new(),
+                    write_queue: VecDeque::new(),
+                    handshake: HandshakeState::None,
+                    associated_id: None,
+                    needs_full_sync: false,
+                    host_listeners: listeners,
+                };
+            } else {
+                *conn = NetworkConn::Listening(listeners);
             }
-            Err(e) => {
-                error!("Network: Accept error: {}", e);
-                *conn = NetworkConn::Listening(listener);
-            }
-        },
+        }
         NetworkConn::Active {
             stream,
             mut read_buffer,
@@ -193,8 +208,27 @@ pub(crate) fn network_io_system(
             handshake,
             associated_id,
             needs_full_sync,
-            host_listener,
+            host_listeners,
         } => {
+            // Gracefully reject new connections while active
+            for listener in &host_listeners {
+                loop {
+                    match listener.accept() {
+                        Ok((_, addr)) => {
+                            warn!(
+                                "Network: Rejecting connection from {} (already connected)",
+                                addr
+                            );
+                        }
+                        Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
+                        Err(e) => {
+                            error!("Network: Accept error (while active): {}", e);
+                            break;
+                        }
+                    }
+                }
+            }
+
             let mut closed = false;
             // --- Read ---
             loop {
@@ -262,9 +296,9 @@ pub(crate) fn network_io_system(
                 if let Some(id) = associated_id {
                     ev_disconnect.write(unnet_core::messages::NetworkDisconnectEvent { id });
                 }
-                if let Some(listener) = host_listener {
+                if !host_listeners.is_empty() {
                     info!("Network: Re-entering Listening state.");
-                    *conn = NetworkConn::Listening(listener);
+                    *conn = NetworkConn::Listening(host_listeners);
                 } else {
                     *conn = NetworkConn::Disconnected;
                 }
@@ -276,7 +310,7 @@ pub(crate) fn network_io_system(
                     handshake,
                     associated_id,
                     needs_full_sync,
-                    host_listener,
+                    host_listeners,
                 };
             }
         }
