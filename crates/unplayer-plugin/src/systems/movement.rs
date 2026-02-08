@@ -110,6 +110,7 @@ pub(crate) fn player_interaction_system(
 /// and click-to-move input to use the same movement implementation.
 pub(crate) fn player_movement_system(
     time: Res<Time>,
+    cli: Res<untypes_core::cli::CliOptions>,
     mut players: Query<(
         &mut Position,
         &mut Direction,
@@ -142,6 +143,7 @@ pub(crate) fn player_movement_system(
     mut last_error_log: Local<f32>,
     mouse_visibility: Res<MouseVisibility>,
 ) {
+    let is_host = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
     let dt = time.delta_secs() * 60.0;
     let now = time.elapsed_secs();
     let mut can_log = false;
@@ -164,10 +166,14 @@ pub(crate) fn player_movement_system(
         is_spectating,
     ) in players.iter_mut()
     {
+        let is_main_player = main_player.is_some();
+        if !is_host && !is_main_player {
+            continue;
+        }
+
         if in_truck.is_some() {
             continue;
         }
-        let is_main_player = main_player.is_some();
 
         if !dir.is_finite() {
             if can_log {

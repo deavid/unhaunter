@@ -13,6 +13,9 @@ pub(crate) enum HandshakeState {
 #[derive(Resource, Default, Debug)]
 pub(crate) struct PendingMapLoad {
     pub map_filepath: Option<String>,
+    /// Set to true when the map load is triggered; consumed by
+    /// `client_send_input_system` to send a `RequestFullSync` once in `InGame`.
+    pub needs_full_sync_request: bool,
 }
 
 #[derive(Resource, Default)]

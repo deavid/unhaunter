@@ -366,6 +366,7 @@ fn execute_door_slam_interaction(
             sound_file: "sounds/door-close.ogg".to_string(),
             volume: 1.5, // Louder than normal door close to simulate slam
             position: Some(*position),
+            broadcast: true,
         });
     } else {
         error!(
@@ -402,6 +403,7 @@ fn execute_door_creak_interaction(
             sound_file: "sounds/door_creak_slow.ogg".to_string(),
             volume: 0.7,
             position: Some(*position),
+            broadcast: true,
         });
     } else {
         error!(
@@ -450,6 +452,7 @@ fn execute_throw_interaction(
                 sound_file: "sounds/object_throw_generic.ogg".to_string(),
                 volume: 0.8,
                 position: Some(*current_position),
+                broadcast: true,
             });
         } else {
             warn!(
@@ -523,6 +526,7 @@ fn execute_nudge_interaction(
             sound_file: "sounds/object_nudge_1.ogg".to_string(),
             volume: 0.6,
             position: Some(*current_position),
+            broadcast: true,
         });
     } else {
         error!(
@@ -571,6 +575,7 @@ fn execute_haunted_move_interaction(
                 sound_file: "sounds/object_drag_wood.ogg".to_string(),
                 volume: 0.9,
                 position: Some(*current_position),
+                broadcast: true,
             });
         } else {
             warn!(
@@ -609,6 +614,7 @@ fn execute_lock_interaction(
             sound_file: "sounds/door_lock_heavy.ogg".to_string(),
             volume: 0.9,
             position: Some(*position),
+            broadcast: true,
         });
     } else {
         error!(
@@ -647,6 +653,7 @@ fn execute_trip_breaker_interaction(
             sound_file: "sounds/switch-on-2.ogg".to_string(),
             volume: 1.0,
             position: Some(*position),
+            broadcast: true,
         });
 
         // Spawn electrical sparks visual effect

@@ -50,17 +50,15 @@ impl Plugin for UnhaunterNetPlugin {
             (
                 host_send_snapshots_system,
                 client_request_grab_system,
+                client_sync_intended_gear_state,
                 client_send_input_system,
                 client_apply_snapshots_system,
                 client_connection_monitor_system,
                 delayed_despawn_system,
             )
                 .chain()
+                .after(unplayer_core::PlayerInputSet)
                 .run_if(in_state(AppState::InGame)),
-        );
-        app.add_systems(
-            PostUpdate,
-            client_sync_intended_gear_state.run_if(in_state(AppState::InGame)),
         );
     }
 }

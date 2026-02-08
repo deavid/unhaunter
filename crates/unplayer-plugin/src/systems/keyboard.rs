@@ -6,10 +6,19 @@ use unspatial_core::orientation::Orientation;
 use unspatial_core::position::Position;
 
 pub(crate) fn stairs_player(
-    mut players: Query<(&mut Position, &PlayerSprite)>,
+    cli: Res<untypes_core::cli::CliOptions>,
+    mut players: Query<(
+        &mut Position,
+        &PlayerSprite,
+        Option<&unplayer_core::components::MainPlayer>,
+    )>,
     stairs: Query<(&Position, &Stairs, &Behavior), Without<PlayerSprite>>,
 ) {
-    for (mut player_pos, _player_sprite) in players.iter_mut() {
+    let is_host = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+    for (mut player_pos, _player_sprite, main_player) in players.iter_mut() {
+        if !is_host && main_player.is_none() {
+            continue;
+        }
         let player_bpos = player_pos.to_board_position();
         let mut in_stairs = false;
 

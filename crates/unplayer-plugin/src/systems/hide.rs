@@ -3,11 +3,19 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
 use ungear_core::components::playergear::PlayerGear;
+use unnet_core::messages::{NetworkMessage, SendNetworkMessage};
+use unnet_core::network_id::NetworkId;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unrender_std::components::animation::AnimationTimer;
 use unrender_std::components::visuals::ResolutionFactor;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
+
+/// Component to tag the hiding overlay visual, linking it to the player.
+#[derive(Component)]
+struct HidingOverlay {
+    player: Entity,
+}
 
 /// Allows the player to hide in a designated hiding spot.
 ///
@@ -19,7 +27,13 @@ fn hide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
-        (Entity, &PlayerInputMapping, &mut Position, &PlayerGear),
+        (
+            Entity,
+            &NetworkId,
+            &PlayerInputMapping,
+            &mut Position,
+            &PlayerGear,
+        ),
         (With<MainPlayer>, Without<Hiding>, Without<Behavior>),
     >,
     hiding_spots: Query<
@@ -28,8 +42,11 @@ fn hide_player(
     >,
     mut ga: SoundEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
+    mut ev_net: MessageWriter<SendNetworkMessage>,
 ) {
-    for (player_entity, input_mapping, mut player_pos, player_gear) in players.iter_mut() {
+    for (player_entity, player_net_id, input_mapping, mut player_pos, player_gear) in
+        players.iter_mut()
+    {
         // Get the player's hold timer or create a new one
         let timer = hold_timers
             .entry(player_entity)
@@ -64,6 +81,11 @@ fn hide_player(
                 // Play "Hide" sound effect
                 ga.play_audio("sounds/hide-rustle.ogg".into(), 1.0, &player_pos);
 
+                // Notify server
+                ev_net.write(SendNetworkMessage(NetworkMessage::RequestHide {
+                    player_id: *player_net_id,
+                }));
+
                 let upscale_f = rf.map(|r| r.0).unwrap_or(1.0);
 
                 // Add Visual Overlay
@@ -78,7 +100,10 @@ fn hide_player(
                             // Position relative to parent
                             Transform::from_xyz(0.0, 0.0, 0.02)
                                 .with_scale(Vec3::splat(0.20 * upscale_f)),
-                        );
+                        )
+                        .insert(HidingOverlay {
+                            player: player_entity,
+                        });
                 });
             }
         } else {
@@ -96,17 +121,12 @@ fn unhide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
-        (
-            Entity,
-            &PlayerInputMapping,
-            &mut Transform,
-            &mut Visibility,
-            &Hiding,
-        ),
-        With<MainPlayer>,
+        (Entity, &NetworkId, &PlayerInputMapping, &Hiding),
+        (With<MainPlayer>, With<PlayerSprite>),
     >,
+    mut ev_net: MessageWriter<SendNetworkMessage>,
 ) {
-    for (player_entity, input_mapping, _, _visibility, hiding) in players.iter_mut() {
+    for (player_entity, player_net_id, input_mapping, _) in players.iter_mut() {
         if keyboard_input.just_pressed(input_mapping.controls.activate) {
             // Using 'activate' for unhiding Remove the Hiding component
             commands.entity(player_entity).remove::<Hiding>();
@@ -118,9 +138,26 @@ fn unhide_player(
                     vec![32],
                 ));
 
-            if let Some(hiding_spot) = hiding.hiding_spot {
-                commands.entity(hiding_spot).despawn_related::<Children>();
-            }
+            // Notify server
+            ev_net.write(SendNetworkMessage(NetworkMessage::RequestUnhide {
+                player_id: *player_net_id,
+            }));
+        }
+    }
+}
+
+/// System to cleanup hiding overlays when the player stops hiding.
+///
+/// This handles cleaning up visuals regardless of how the player stopped hiding
+/// (input or network sync).
+fn cleanup_hiding_overlays(
+    mut commands: Commands,
+    overlays: Query<(Entity, &HidingOverlay)>,
+    players: Query<&Hiding>,
+) {
+    for (overlay_entity, overlay) in overlays.iter() {
+        if !players.contains(overlay.player) {
+            commands.entity(overlay_entity).despawn();
         }
     }
 }
@@ -128,6 +165,7 @@ fn unhide_player(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (hide_player, unhide_player).run_if(in_state(untypes_core::states::GameState::None)),
+        (hide_player, unhide_player, cleanup_hiding_overlays)
+            .run_if(in_state(untypes_core::states::GameState::None)),
     );
 }

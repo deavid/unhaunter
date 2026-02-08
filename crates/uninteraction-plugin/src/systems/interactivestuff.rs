@@ -194,6 +194,7 @@ impl InteractiveStuff<'_, '_> {
                     sound_file,
                     volume: 1.0,
                     position: Some(*item_pos),
+                    broadcast: true,
                 });
             }
             // Each instance handles their own truck entry locally
@@ -296,6 +297,7 @@ impl InteractiveStuff<'_, '_> {
                     sound_file,
                     volume: 1.0,
                     position: Some(*item_pos),
+                    broadcast: true,
                 });
             }
             return true;

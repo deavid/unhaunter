@@ -103,6 +103,7 @@ fn grab_object(
                             sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
                             volume: 1.0,
                             position: Some(*player_pos),
+                            broadcast: true,
                         });
                     }
                 } else if let Some(behavior) = behavior
@@ -115,6 +116,7 @@ fn grab_object(
                         sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
                         volume: 1.0,
                         position: Some(*player_pos),
+                        broadcast: true,
                     });
                 }
             }
@@ -157,6 +159,7 @@ fn drop_object(
                     sound_file: "sounds/item-drop-clunk.ogg".to_string(),
                     volume: 1.0,
                     position: Some(*player_pos),
+                    broadcast: true,
                 });
                 continue;
             }
@@ -172,6 +175,7 @@ fn drop_object(
                     sound_file: "sounds/item-drop-clunk.ogg".to_string(),
                     volume: 1.0,
                     position: Some(*player_pos),
+                    broadcast: true,
                 });
                 if !player_gear.inventory.is_empty() {
                     let next_item = player_gear.inventory.remove(0);

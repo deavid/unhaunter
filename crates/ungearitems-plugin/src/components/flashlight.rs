@@ -13,7 +13,7 @@ use enum_iterator::Sequence;
 use rand::Rng;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 pub(crate) use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
-use untypes_core::cli::{CliOptions, is_host};
+use untypes_core::cli::CliOptions;
 
 pub(crate) fn update_flashlight(
     mut commands: Commands,
@@ -31,10 +31,9 @@ pub(crate) fn update_flashlight(
         &ItemName,
     )>,
     mut ga: SoundEmitter,
-    cli: Res<CliOptions>,
+    _cli: Res<CliOptions>,
 ) {
     let measure = metrics::FLASHLIGHT_UPDATE.time_measure();
-    let is_host = is_host(cli);
     for (
         entity,
         mut flashlight,
@@ -62,16 +61,13 @@ pub(crate) fn update_flashlight(
         }
 
         // Sync Toggleable with FlashlightStatus
-        if is_host {
-            toggle.is_on = flashlight.status != FlashlightStatus::Off;
-        } else if flashlight.status != FlashlightStatus::Off {
-            toggle.is_on = true;
-        }
+        toggle.is_on = flashlight.status != FlashlightStatus::Off;
 
         // Update Logic
         flashlight.frame_counter += 1;
         flashlight.frame_counter %= 210;
-        if is_host {
+        // if is_host { -- Enable simulation on client for prediction
+        {
             if flashlight.frame_counter.is_multiple_of(5) {
                 flashlight.rand = random_seed::rng().random_range(0..12);
                 const HS_MASS: f32 = 2.0;

@@ -7,7 +7,7 @@ use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unmetrics_core::metrics::SendMetric;
 use unnet_core::messages::GearDetails;
-use unplayer_core::components::PlayerInput;
+use unplayer_core::components::{MainPlayer, PlayerInput};
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
@@ -76,19 +76,25 @@ pub(crate) fn system_battery_drain(
     measure.end_ms();
 }
 
+/// Applies gear state from `PlayerInput.target_*_hand` to gear components.
+/// Only runs for non-MainPlayer entities (remote players on the host).
+/// The client sends its gear state every frame; the host copies it here.
 pub(crate) fn system_apply_gear_intent_from_input(
     mut commands: Commands,
-    q_players: Query<(&PlayerGear, &PlayerInput)>,
+    q_players: Query<(&PlayerGear, &PlayerInput), Without<MainPlayer>>,
+    mut q_toggleable: Query<&mut Toggleable>,
     mut q_flashlight: Query<(&mut Flashlight, &Battery)>,
     mut q_sage: Query<&mut ungearitems_core::components::sage::SageBundleData>,
     mut q_repellent: Query<&mut RepellentFlask>,
 ) {
     for (pg, pi) in q_players.iter() {
-        // Right hand
-        if pi.use_right_hand
-            && let Some((_on, details)) = &pi.target_right_hand
+        // Right hand — apply full state (not just on click)
+        if let Some((on, details)) = &pi.target_right_hand
             && let Some(entity) = pg.right_hand
         {
+            if let Ok(mut toggle) = q_toggleable.get_mut(entity) {
+                toggle.is_on = *on;
+            }
             match details {
                 GearDetails::Flashlight(status) => {
                     if let Ok((mut flashlight, battery)) = q_flashlight.get_mut(entity) {
@@ -118,11 +124,13 @@ pub(crate) fn system_apply_gear_intent_from_input(
                 _ => {}
             }
         }
-        // Left hand
-        if pi.use_left_hand
-            && let Some((_on, details)) = &pi.target_left_hand
+        // Left hand — apply full state (not just on click)
+        if let Some((on, details)) = &pi.target_left_hand
             && let Some(entity) = pg.left_hand
         {
+            if let Ok(mut toggle) = q_toggleable.get_mut(entity) {
+                toggle.is_on = *on;
+            }
             match details {
                 GearDetails::Flashlight(status) => {
                     if let Ok((mut flashlight, battery)) = q_flashlight.get_mut(entity) {

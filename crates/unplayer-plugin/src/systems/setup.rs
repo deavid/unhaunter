@@ -16,7 +16,6 @@ use crate::systems::walk_target_indicator;
 use crate::systems::waypoint;
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::is_host;
     hydration::app_setup(app);
     grabdrop::app_setup(app);
     hide::app_setup(app);
@@ -59,10 +58,10 @@ pub(crate) fn app_setup(app: &mut App) {
             // Interaction system runs before movement (Runs on all instances)
             movement::player_interaction_system,
             // Movement system runs after input and waypoints
-            // Gated by is_host: Only the host simulates movement.
-            movement::player_movement_system.run_if(is_host),
-            // Stairs system runs last
-            keyboard::stairs_player.run_if(is_host),
+            // On the client, it only runs for the MainPlayer. On the host, it runs for all players.
+            movement::player_movement_system,
+            // Stairs system runs last. Also gated similarly.
+            keyboard::stairs_player,
         )
             .chain()
             .after(unplayer_core::PlayerInputSet)

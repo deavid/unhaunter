@@ -140,9 +140,15 @@ pub(crate) fn update_emfmeter(
                     let mut new_emf = (avg_temp - emf.temp_l1).abs() * 3.0;
                     emf.emf -= 0.2 * difficulty.0.equipment_sensitivity;
                     emf.emf /= 1.4_f32.powf(difficulty.0.equipment_sensitivity);
-                    let emf5_evidence = haunt_state.ghost_dynamics.emf_level5_clarity.max(-0.2);
-                    new_emf = f32::tanh(new_emf / (20.0 + emf5_evidence * 20.0))
-                        * (15.0 + emf5_evidence * 30.0);
+
+                    if haunt_state.evidences.contains(&Evidence::EMFLevel5) {
+                        let emf5_evidence = haunt_state.ghost_dynamics.emf_level5_clarity.max(-0.2);
+                        new_emf = f32::tanh(new_emf / (15.0 + emf5_evidence * 10.0))
+                            * (10.0 + emf5_evidence * 20.0);
+                    } else {
+                        // Capped at Level 4 (threshold is 10.0). EMF5 threshold is 20.0.
+                        new_emf = f32::tanh(new_emf / 5.0) * 15.0;
+                    }
                     emf.emf = emf.emf.max(new_emf);
                     emf.emf_level = EMFLevel::from_milligauss(emf.emf);
                 }

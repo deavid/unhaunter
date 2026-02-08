@@ -16,4 +16,6 @@ pub struct SoundEvent {
     pub volume: f32,
     /// The position in the game world where the sound is originating from.
     pub position: Option<Position>,
+    /// Whether this sound should be broadcasted to other players in multiplayer.
+    pub broadcast: bool,
 }

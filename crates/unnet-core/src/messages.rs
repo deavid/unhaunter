@@ -225,6 +225,7 @@ pub enum NetworkMessage {
     /// Periodic input update from Client to Host.
     PlayerInput {
         player_id: NetworkId,
+        o_position: Option<[f32; 3]>,
         movement: [f32; 2],
         run: bool,
         interact: bool,
@@ -259,6 +260,10 @@ pub enum NetworkMessage {
     RequestTruckEntry { player_id: NetworkId },
     /// Client requests to exit the truck/van.
     RequestTruckExit { player_id: NetworkId },
+    /// Client requests to hide.
+    RequestHide { player_id: NetworkId },
+    /// Client requests to unhide.
+    RequestUnhide { player_id: NetworkId },
     /// Client requests to end the mission globally.
     RequestEndMission,
     /// A player has left the mission (ended their game or disconnected)
@@ -290,6 +295,8 @@ pub enum NetworkMessage {
         ghost_type: GhostType,
         discard: bool,
     },
+    /// Client requests a full state sync after map load.
+    RequestFullSync { player_id: NetworkId },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

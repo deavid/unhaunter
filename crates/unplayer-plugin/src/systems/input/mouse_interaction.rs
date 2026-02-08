@@ -15,7 +15,7 @@ use untypes_core::cli::{CliOptions, is_host};
 pub(crate) fn player_gear_usage_system(
     mut commands: Commands,
     mut q_players: Query<
-        (&PlayerGear, &mut PlayerInput),
+        (&PlayerGear, &mut PlayerInput, Option<&MainPlayer>),
         (With<PlayerSprite>, Without<PlayerSpectating>),
     >,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
@@ -24,29 +24,40 @@ pub(crate) fn player_gear_usage_system(
 ) {
     let is_host = is_host(cli);
 
-    for (player_gear, player_input) in q_players.iter_mut() {
+    for (player_gear, player_input, main_player) in q_players.iter_mut() {
+        let is_main = main_player.is_some();
         if player_input.use_right_hand
             && let Some(entity) = player_gear.right_hand
         {
             debug!(
-                "player_gear_usage_system: Toggling right-hand item {:?} on entity {:?} (host={:?})",
-                player_gear.right_hand, entity, is_host
+                "player_gear_usage_system: Processing right-hand item {:?} (is_main={:?}, host={:?})",
+                entity, is_main, is_host
             );
             if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
-                let target_on = player_input
-                    .target_right_hand
-                    .as_ref()
-                    .map(|(on, _)| *on)
-                    .unwrap_or(!toggle.is_on);
+                let target_on = if is_main {
+                    !toggle.is_on
+                } else {
+                    player_input
+                        .target_right_hand
+                        .as_ref()
+                        .map(|(on, _)| *on)
+                        .unwrap_or(toggle.is_on)
+                };
 
                 if toggle.is_on != target_on {
                     toggle.is_on = target_on;
-                    if is_host {
-                        if let Some(pos) = pos {
+                    if let Some(pos) = pos {
+                        if is_main {
                             ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
-                        } else {
-                            ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
+                        } else if is_host {
+                            // Host plays sound locally for remote player click
+                            // but we don't broadcast it back to the client
+                            ga.play_audio_local("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         }
+                    } else if is_main {
+                        ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
+                    } else if is_host {
+                        ga.play_audio_nopos_local("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }
             }
@@ -56,24 +67,34 @@ pub(crate) fn player_gear_usage_system(
             && let Some(entity) = player_gear.left_hand
         {
             debug!(
-                "player_gear_usage_system: Toggling left-hand item {:?} on entity {:?} (host={:?})",
-                player_gear.left_hand, entity, is_host
+                "player_gear_usage_system: Processing left-hand item {:?} (is_main={:?}, host={:?})",
+                entity, is_main, is_host
             );
             if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
-                let target_on = player_input
-                    .target_left_hand
-                    .as_ref()
-                    .map(|(on, _)| *on)
-                    .unwrap_or(!toggle.is_on);
+                let target_on = if is_main {
+                    !toggle.is_on
+                } else {
+                    player_input
+                        .target_left_hand
+                        .as_ref()
+                        .map(|(on, _)| *on)
+                        .unwrap_or(toggle.is_on)
+                };
 
                 if toggle.is_on != target_on {
                     toggle.is_on = target_on;
-                    if is_host {
-                        if let Some(pos) = pos {
+                    if let Some(pos) = pos {
+                        if is_main {
                             ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
-                        } else {
-                            ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
+                        } else if is_host {
+                            // Host plays sound locally for remote player click
+                            // but we don't broadcast it back to the client
+                            ga.play_audio_local("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         }
+                    } else if is_main {
+                        ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
+                    } else if is_host {
+                        ga.play_audio_nopos_local("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }
             }

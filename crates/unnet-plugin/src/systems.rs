@@ -617,7 +617,7 @@ pub(crate) struct HostSnapshotParams<'w, 's> {
         (
             Entity,
             Option<&'static NetworkId>,
-            Ref<'static, Position>,
+            &'static Position,
             &'static NetworkOriginalMapPosition,
         ),
         With<unbehavior::components::Movable>,
@@ -770,6 +770,7 @@ pub(crate) fn host_send_snapshots_system(
 
     let mut events: Vec<unnet_core::messages::TransientEvent> = ev_sound
         .read()
+        .filter(|ev| ev.broadcast)
         .map(|ev| unnet_core::messages::TransientEvent::PlaySound {
             sound_file: ev.sound_file.clone(),
             volume: ev.volume,
@@ -838,7 +839,7 @@ pub(crate) fn host_send_snapshots_system(
         host_params
             .query_movable
             .iter()
-            .filter_map(|(entity, nid, pos, orig)| {
+            .map(|(entity, nid, pos, orig)| {
                 let mid = match nid {
                     Some(id) => *id,
                     None => {
@@ -862,26 +863,18 @@ pub(crate) fn host_send_snapshots_system(
                         })
                     },
                 );
-                if pos.is_changed() {
-                    debug!(
-                        "Host sending moved object: id={:?} orig={:?} cur={:?}",
-                        mid, orig.position, *pos
-                    );
-
-                    Some(MovableObjectSync {
-                        id: mid,
-                        original_position: [
-                            orig.position.x as i32,
-                            orig.position.y as i32,
-                            orig.position.z as i32,
-                        ],
-                        tileset: orig.tileset.clone(),
-                        tileuid: orig.tileuid,
-                        current_position: [pos.x, pos.y, pos.z],
-                        held_by,
-                    })
-                } else {
-                    None
+                // Sending all objects: For some reason, sending only if is_changed causes issues on the client on high RTT
+                MovableObjectSync {
+                    id: mid,
+                    original_position: [
+                        orig.position.x as i32,
+                        orig.position.y as i32,
+                        orig.position.z as i32,
+                    ],
+                    tileset: orig.tileset.clone(),
+                    tileuid: orig.tileuid,
+                    current_position: [pos.x, pos.y, pos.z],
+                    held_by,
                 }
             })
             .collect();
@@ -953,7 +946,6 @@ pub(crate) fn host_send_snapshots_system(
 }
 
 pub(crate) fn client_sync_intended_gear_state(
-    mut commands: Commands,
     mut q_player: Query<(&PlayerGear, &mut PlayerInput), With<MainPlayer>>,
     q_gear: Query<(
         &Toggleable,
@@ -965,35 +957,25 @@ pub(crate) fn client_sync_intended_gear_state(
         Option<&ungearitems_core::components::spiritbox::SpiritBox>,
     )>,
     cli: Res<CliOptions>,
-    time: Res<Time>,
 ) {
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         return;
     }
+    // Send current gear state every frame (not just on click).
+    // The host copies this state directly onto the remote player's gear,
+    // mirroring the client-authoritative pattern used for player position.
     for (gear, mut input) in q_player.iter_mut() {
-        if input.use_right_hand
-            && let Some(entity) = gear.right_hand
+        if let Some(entity) = gear.right_hand
             && let Ok((toggle, f, s, r, t, e, sb)) = q_gear.get(entity)
         {
             let details = extract_gear_details(f, s, r, t, e, sb);
-            input.target_right_hand = Some((toggle.is_on, details.clone()));
-            let mut pending =
-                unnet_core::components::PendingGearState::new(time.elapsed_secs_f64());
-            pending.target_on = Some(toggle.is_on);
-            pending.target_details = Some(details);
-            commands.entity(entity).insert(pending);
+            input.target_right_hand = Some((toggle.is_on, details));
         }
-        if input.use_left_hand
-            && let Some(entity) = gear.left_hand
+        if let Some(entity) = gear.left_hand
             && let Ok((toggle, f, s, r, t, e, sb)) = q_gear.get(entity)
         {
             let details = extract_gear_details(f, s, r, t, e, sb);
-            input.target_left_hand = Some((toggle.is_on, details.clone()));
-            let mut pending =
-                unnet_core::components::PendingGearState::new(time.elapsed_secs_f64());
-            pending.target_on = Some(toggle.is_on);
-            pending.target_details = Some(details);
-            commands.entity(entity).insert(pending);
+            input.target_left_hand = Some((toggle.is_on, details));
         }
     }
 }
@@ -1002,8 +984,10 @@ pub(crate) fn client_send_input_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
     local_id: Res<LocalPlayer>,
-    query_player: Query<&PlayerInput, With<MainPlayer>>,
+    query_player: Query<(&PlayerInput, &Position), With<MainPlayer>>,
     mut ev_net_data: MessageReader<NetworkDataEvent>,
+    mut pending_map: ResMut<crate::resources::PendingMapLoad>,
+    mut local_tick: Local<u64>,
 ) {
     let measure = metrics::CLIENT_SEND_INPUT.time_measure();
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
@@ -1020,9 +1004,25 @@ pub(crate) fn client_send_input_system(
         return;
     };
 
-    for input in query_player.iter() {
+    *local_tick += 1;
+
+    // After the client finishes loading the map and enters InGame, request a
+    // full state sync so doors, tiles, etc. reflect the host's current state.
+    if pending_map.needs_full_sync_request {
+        info!("Network: Sending RequestFullSync to host");
+        conn.send(NetworkMessage::RequestFullSync { player_id });
+        pending_map.needs_full_sync_request = false;
+    }
+
+    for (input, pos) in query_player.iter() {
+        let o_position = if *local_tick < 10 {
+            None
+        } else {
+            Some([pos.x, pos.y, pos.z])
+        };
         conn.send(NetworkMessage::PlayerInput {
             player_id,
+            o_position,
             movement: [input.movement.x, input.movement.y],
             run: input.run,
             interact: input.interact,
@@ -1042,6 +1042,8 @@ pub(crate) fn client_send_input_system(
             NetworkMessage::CraftRepellent { .. }
             | NetworkMessage::RequestTruckEntry { .. }
             | NetworkMessage::RequestTruckExit { .. }
+            | NetworkMessage::RequestHide { .. }
+            | NetworkMessage::RequestUnhide { .. }
             | NetworkMessage::InteractionRequest { .. } => {
                 conn.send(ev.message.clone());
             }
@@ -1069,7 +1071,6 @@ pub(crate) struct SnapshotAppStates<'w> {
 pub(crate) struct ClientSnapshotParams<'w, 's> {
     pub commands: Commands<'w, 's>,
     pub cli: Res<'w, CliOptions>,
-    pub time: Res<'w, Time>,
     pub asset_server: Res<'w, AssetServer>,
     pub player_assets: Res<'w, PlayerAssets>,
     pub ghost_assets: Res<'w, GhostAssets>,
@@ -1145,7 +1146,6 @@ pub(crate) struct ClientSnapshotParams<'w, 's> {
             Option<&'static mut ungearitems_core::components::emfmeter::EMFMeter>,
             Option<&'static mut ungearitems_core::components::spiritbox::SpiritBox>,
             Option<&'static mut LastSyncedGearState>,
-            Option<&'static unnet_core::components::PendingGearState>,
         ),
         (
             Without<unbehavior::components::Movable>,
@@ -1333,16 +1333,63 @@ fn spawn_remote_gear(params: &mut ClientSnapshotParams, g_sync: &GearSyncState) 
     params.commands.entity(entity).insert(Toggleable {
         is_on: g_sync.is_on,
     });
-    params.commands.entity(entity).insert(LastSyncedGearState {
-        is_on: g_sync.is_on,
-        details: g_sync.details.clone(),
-    });
+    // Do NOT insert LastSyncedGearState here. Applying it in the next frame
+    // via the main sync loop ensures that all gear-specific components
+    // (which might have just been added by the registry builder) are
+    // correctly updated with the server's data.
 
-    if let unnet_core::messages::GearDetails::Flashlight(status) = &g_sync.details {
-        params.commands.entity(entity).insert(Flashlight {
-            status: status.clone(),
-            ..default()
-        });
+    match &g_sync.details {
+        GearDetails::Flashlight(status) => {
+            params.commands.entity(entity).insert(Flashlight {
+                status: status.clone(),
+                ..default()
+            });
+        }
+        GearDetails::RepellentFlask {
+            qty,
+            active,
+            liquid_content,
+        } => {
+            params.commands.entity(entity).insert(
+                ungearitems_core::components::repellentflask::RepellentFlask {
+                    qty: *qty,
+                    active: *active,
+                    liquid_content: *liquid_content,
+                },
+            );
+        }
+        GearDetails::Thermometer { temp } => {
+            params.commands.entity(entity).insert(
+                ungearitems_core::components::thermometer::Thermometer {
+                    temp: *temp,
+                    ..default()
+                },
+            );
+        }
+        GearDetails::EMF { level } => {
+            params.commands.entity(entity).insert(
+                ungearitems_core::components::emfmeter::EMFMeter {
+                    emf: *level,
+                    emf_level: ungearitems_core::components::emfmeter::EMFLevel::from_milligauss(
+                        *level,
+                    ),
+                    ..default()
+                },
+            );
+        }
+        GearDetails::SpiritBox {
+            charge,
+            ghost_answer,
+        } => {
+            params.commands.entity(entity).insert(
+                ungearitems_core::components::spiritbox::SpiritBox {
+                    charge: *charge,
+                    ghost_answer: *ghost_answer,
+                    ..default()
+                },
+            );
+        }
+        _ => {}
     }
 
     if g_sync.is_deployed {
@@ -1360,12 +1407,19 @@ fn spawn_remote_gear(params: &mut ClientSnapshotParams, g_sync: &GearSyncState) 
 pub(crate) fn client_apply_snapshots_system(
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut params: ClientSnapshotParams,
+    mut local_tick: Local<u64>,
 ) {
     let measure = metrics::CLIENT_APPLY_SNAPSHOTS.time_measure();
     if !matches!(params.cli.net_mode, NetMode::Join { .. }) {
         measure.end_ms();
         return;
     }
+    *local_tick += 1;
+    let mut net_to_entity: std::collections::HashMap<NetworkId, Entity> = params
+        .query_net_entities
+        .iter()
+        .map(|(e, id)| (*id, e))
+        .collect();
 
     for ev in ev_reader.read() {
         if let NetworkMessage::Snapshot(snapshot) = &ev.message {
@@ -1393,6 +1447,31 @@ pub(crate) fn client_apply_snapshots_system(
                 haunted_objects,
                 movable_objects,
             } = snapshot.as_ref();
+
+            // Identify MainPlayer and their held items for client-side prediction
+            let mut main_player_net_id = None;
+            let mut main_player_predictive_entities = std::collections::HashSet::new();
+            for (_, id, _, _, _, _, _, gear, main_player, _, _, _, _) in params.query_players.iter()
+            {
+                if main_player.is_some() {
+                    main_player_net_id = Some(*id);
+                    if let Some(gear) = gear {
+                        if let Some(e) = gear.left_hand {
+                            main_player_predictive_entities.insert(e);
+                        }
+                        if let Some(e) = gear.right_hand {
+                            main_player_predictive_entities.insert(e);
+                        }
+                        for &e in &gear.inventory {
+                            main_player_predictive_entities.insert(e);
+                        }
+                        if let Some(held) = &gear.held_item {
+                            main_player_predictive_entities.insert(held.entity);
+                        }
+                    }
+                    break;
+                }
+            }
 
             let is_full_sync = *is_full_sync;
             // Sync AppState - but allow independent Summary transition
@@ -1554,9 +1633,16 @@ pub(crate) fn client_apply_snapshots_system(
                     if id.is_none() {
                         params.commands.entity(entity).insert(mov_sync.id);
                     }
-                    pos.x = mov_sync.current_position[0];
-                    pos.y = mov_sync.current_position[1];
-                    pos.z = mov_sync.current_position[2];
+
+                    let is_held_by_main = (main_player_net_id.is_some()
+                        && main_player_net_id == mov_sync.held_by)
+                        || main_player_predictive_entities.contains(&entity);
+
+                    if !is_held_by_main {
+                        pos.x = mov_sync.current_position[0];
+                        pos.y = mov_sync.current_position[1];
+                        pos.z = mov_sync.current_position[2];
+                    }
 
                     match mov_sync.held_by {
                         Some(_) => {
@@ -1579,12 +1665,6 @@ pub(crate) fn client_apply_snapshots_system(
                     );
                 }
             }
-
-            let mut net_to_entity: std::collections::HashMap<NetworkId, Entity> = params
-                .query_net_entities
-                .iter()
-                .map(|(e, id)| (*id, e))
-                .collect();
 
             let mut seen_ids = std::collections::HashSet::new();
             for p in players {
@@ -1626,8 +1706,13 @@ pub(crate) fn client_apply_snapshots_system(
                 } else {
                     debug!("Spawning remote player {:?}", p_state.id);
                     let ent = spawn_remote_player(&mut params, p_state.id);
+                    // Insert into net_to_entity immediately to prevent duplicate
+                    // spawns when multiple snapshots are processed in the same
+                    // frame. The entity was created via Commands (deferred) so it
+                    // won't be queryable until next frame, but
+                    // spawn_remote_player already applied initial state.
                     net_to_entity.insert(p_state.id, ent);
-                    ent
+                    continue;
                 };
 
                 if let Ok((
@@ -1647,11 +1732,11 @@ pub(crate) fn client_apply_snapshots_system(
                 )) = params.query_players.get_mut(p_entity)
                 {
                     let old_pos = *pos;
-                    pos.x = p_state.position[0];
-                    pos.y = p_state.position[1];
-                    pos.z = p_state.position[2];
+                    if main_player.is_none() || *local_tick < 10 {
+                        pos.x = p_state.position[0];
+                        pos.y = p_state.position[1];
+                        pos.z = p_state.position[2];
 
-                    if main_player.is_none() {
                         dir.dx = p_state.orientation[0];
                         dir.dy = p_state.orientation[1];
                     }
@@ -1667,17 +1752,19 @@ pub(crate) fn client_apply_snapshots_system(
                     }
 
                     // 2.4 Hiding
-                    match (p_state.is_hiding, hiding) {
-                        (true, None) => {
-                            params
-                                .commands
-                                .entity(p_entity)
-                                .insert(Hiding { hiding_spot: None });
+                    if main_player.is_none() {
+                        match (p_state.is_hiding, hiding) {
+                            (true, None) => {
+                                params
+                                    .commands
+                                    .entity(p_entity)
+                                    .insert(Hiding { hiding_spot: None });
+                            }
+                            (false, Some(_)) => {
+                                params.commands.entity(p_entity).remove::<Hiding>();
+                            }
+                            _ => {}
                         }
-                        (false, Some(_)) => {
-                            params.commands.entity(p_entity).remove::<Hiding>();
-                        }
-                        _ => {}
                     }
 
                     // InTruck visuals for remote players
@@ -1717,29 +1804,32 @@ pub(crate) fn client_apply_snapshots_system(
                         // The range and stamina.running are enough for local reproduction.
                     }
 
-                    let animation_speed_factor = if p_state.is_running { 1.5 } else { 1.0 };
-                    let velocity = Vec2::new(pos.x - old_pos.x, pos.y - old_pos.y);
-                    if velocity.length_squared() > 0.00001 {
-                        let dscreen = perspective::direction_to_screen_coord(
-                            unspatial_core::direction::Direction {
-                                dx: velocity.x,
-                                dy: velocity.y,
-                                dz: 0.0,
-                            },
-                        );
-                        anim.set_range(
-                            CharacterAnimation::from_dir(
-                                dscreen.x * 60.0 * animation_speed_factor,
-                                dscreen.y * 120.0 * animation_speed_factor,
-                            )
-                            .to_vec(),
-                        );
-                    } else {
-                        let dscreen =
-                            perspective::direction_to_screen_coord(*dir).normalize_or_zero();
-                        anim.set_range(
-                            CharacterAnimation::from_dir(dscreen.x * 0.5, dscreen.y * 0.5).to_vec(),
-                        );
+                    if main_player.is_none() {
+                        let animation_speed_factor = if p_state.is_running { 1.5 } else { 1.0 };
+                        let velocity = Vec2::new(pos.x - old_pos.x, pos.y - old_pos.y);
+                        if velocity.length_squared() > 0.00001 {
+                            let dscreen = perspective::direction_to_screen_coord(
+                                unspatial_core::direction::Direction {
+                                    dx: velocity.x,
+                                    dy: velocity.y,
+                                    dz: 0.0,
+                                },
+                            );
+                            anim.set_range(
+                                CharacterAnimation::from_dir(
+                                    dscreen.x * 60.0 * animation_speed_factor,
+                                    dscreen.y * 120.0 * animation_speed_factor,
+                                )
+                                .to_vec(),
+                            );
+                        } else {
+                            let dscreen =
+                                perspective::direction_to_screen_coord(*dir).normalize_or_zero();
+                            anim.set_range(
+                                CharacterAnimation::from_dir(dscreen.x * 0.5, dscreen.y * 0.5)
+                                    .to_vec(),
+                            );
+                        }
                     }
                 }
             }
@@ -1754,8 +1844,14 @@ pub(crate) fn client_apply_snapshots_system(
                         g_sync.id, g_sync.kind
                     );
                     let ent = spawn_remote_gear(&mut params, g_sync);
+                    // Insert into net_to_entity immediately to prevent duplicate
+                    // spawns when multiple snapshots are processed in the same
+                    // frame. The entity was created via Commands (deferred) so it
+                    // won't be queryable until next frame, but
+                    // spawn_remote_gear already applied initial state from
+                    // g_sync.
                     net_to_entity.insert(g_sync.id, ent);
-                    ent
+                    continue;
                 };
 
                 if let Ok((
@@ -1772,28 +1868,15 @@ pub(crate) fn client_apply_snapshots_system(
                     emf_meter,
                     spiritbox,
                     mut last_synced,
-                    pending_state,
                 )) = params.query_gear.get_mut(g_entity)
                 {
-                    pos.x = g_sync.position[0];
-                    pos.y = g_sync.position[1];
-                    pos.z = g_sync.position[2];
+                    let is_owned_by_main_player =
+                        main_player_predictive_entities.contains(&g_entity);
 
-                    let mut mask_on = false;
-                    let mut mask_details = false;
-                    if let Some(pending) = pending_state
-                        && params.time.elapsed_secs_f64() - pending.sent_at_secs < 0.25
-                    {
-                        if let Some(target_on) = pending.target_on
-                            && target_on != g_sync.is_on
-                        {
-                            mask_on = true;
-                        }
-                        if let Some(target_details) = &pending.target_details
-                            && target_details != &g_sync.details
-                        {
-                            mask_details = true;
-                        }
+                    if !is_owned_by_main_player {
+                        pos.x = g_sync.position[0];
+                        pos.y = g_sync.position[1];
+                        pos.z = g_sync.position[2];
                     }
 
                     let details_changed = if let Some(ref last) = last_synced {
@@ -1808,7 +1891,7 @@ pub(crate) fn client_apply_snapshots_system(
                     };
 
                     if is_on_changed || details_changed {
-                        if !mask_on && let Some(mut t) = toggle {
+                        if !is_owned_by_main_player && let Some(mut t) = toggle {
                             t.is_on = g_sync.is_on;
                         }
                         if let Some(ref mut last) = last_synced {
@@ -1849,10 +1932,10 @@ pub(crate) fn client_apply_snapshots_system(
                         b.level = g_sync.battery;
                     }
 
-                    if (is_on_changed || details_changed) && !mask_details {
+                    if is_on_changed || details_changed {
                         match &g_sync.details {
                             unnet_core::messages::GearDetails::Flashlight(status) => {
-                                if let Some(mut f) = flashlight {
+                                if !is_owned_by_main_player && let Some(mut f) = flashlight {
                                     f.status = status.clone();
                                 }
                             }
@@ -2125,6 +2208,7 @@ pub(crate) fn client_apply_snapshots_system(
                                 z: p[2],
                                 visual_priority: 0.0,
                             }),
+                            broadcast: false,
                         });
                     }
                     TransientEvent::SpawnParticle {
@@ -2283,16 +2367,12 @@ pub(crate) struct HostApplyInputParams<'w, 's> {
             &'static NetworkId,
             &'static mut PlayerInput,
             &'static mut PlayerGear,
+            &'static mut Position,
+            Has<InTruck>,
         ),
-        Without<MainPlayer>,
+        (With<PlayerSprite>, Without<MainPlayer>, Without<Behavior>),
     >,
-    pub query_van: Query<'w, 's, (&'static Position, &'static Behavior)>,
-    pub query_player_pos: Query<
-        'w,
-        's,
-        (Entity, &'static NetworkId, &'static Position, Has<InTruck>),
-        (With<PlayerSprite>, Without<MainPlayer>),
-    >,
+    pub query_van: Query<'w, 's, (&'static Position, &'static Behavior), Without<PlayerSprite>>,
     pub ev_interaction: MessageWriter<'w, ExecuteInteractionEvent>,
     pub board_field: Res<'w, BoardEntityField>,
     pub craft_tracker: ResMut<'w, RepellentCraftTracker>,
@@ -2318,6 +2398,7 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
         match &ev.message {
             NetworkMessage::PlayerInput {
                 player_id,
+                o_position,
                 movement,
                 run,
                 interact,
@@ -2329,9 +2410,14 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                 aim_direction,
             } => {
                 let mut found_player = false;
-                for (_entity, id, mut input, _) in params.query_players.iter_mut() {
+                for (_entity, id, mut input, _, mut pos, _) in params.query_players.iter_mut() {
                     if id == player_id {
                         found_player = true;
+                        if let Some(position) = o_position {
+                            pos.x = position[0];
+                            pos.y = position[1];
+                            pos.z = position[2];
+                        }
                         input.movement = Vec2::new(movement[0], movement[1]);
                         input.run = *run;
                         input.interact = *interact;
@@ -2382,7 +2468,7 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                     "Network: Received RequestTruckEntry from client {:?}",
                     player_id
                 );
-                for (entity, id, p_pos, _) in params.query_player_pos.iter() {
+                for (entity, id, _, _, p_pos, _) in params.query_players.iter() {
                     if id == player_id {
                         let mut near_van = false;
                         for (v_pos, v_beh) in params.query_van.iter() {
@@ -2417,13 +2503,37 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                     "Network: Received RequestTruckExit from client {:?}",
                     player_id
                 );
-                for (entity, id, _, _) in params.query_player_pos.iter() {
+                for (entity, id, _, _, _, _) in params.query_players.iter() {
                     if id == player_id {
                         params
                             .commands
                             .entity(entity)
                             .remove::<InTruck>()
                             .remove::<Hiding>();
+                        break;
+                    }
+                }
+            }
+            NetworkMessage::RequestHide { player_id } => {
+                debug!("Network: Received RequestHide from client {:?}", player_id);
+                for (entity, id, _, _, _, _) in params.query_players.iter() {
+                    if id == player_id {
+                        params
+                            .commands
+                            .entity(entity)
+                            .insert(Hiding { hiding_spot: None });
+                        break;
+                    }
+                }
+            }
+            NetworkMessage::RequestUnhide { player_id } => {
+                debug!(
+                    "Network: Received RequestUnhide from client {:?}",
+                    player_id
+                );
+                for (entity, id, _, _, _, _) in params.query_players.iter() {
+                    if id == player_id {
+                        params.commands.entity(entity).remove::<Hiding>();
                         break;
                     }
                 }
@@ -2449,7 +2559,7 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                 );
                 // 1. Validate player is in truck
                 let mut p_data = None;
-                for (entity, id, _, is_in_truck) in params.query_player_pos.iter() {
+                for (entity, id, _, _, _, is_in_truck) in params.query_players.iter() {
                     if id == player_id {
                         p_data = Some((entity, is_in_truck));
                         break;
@@ -2462,7 +2572,7 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                         if params.craft_tracker.can_craft() {
                             // 3. Perform craft
                             // Find the gear for this player
-                            for (_e, id, _, mut gear) in params.query_players.iter_mut() {
+                            for (_e, id, _, mut gear, _pos, _) in params.query_players.iter_mut() {
                                 if id == player_id {
                                     let consumed_new_bottle =
                                         untruck_plugin::craft_repellent::craft_repellent(
@@ -2547,7 +2657,7 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                 }
             }
             NetworkMessage::RequestTruckInventoryChange { player_id, change } => {
-                for (_entity, id, _input, mut p_gear) in params.query_players.iter_mut() {
+                for (_entity, id, _input, mut p_gear, _pos, _) in params.query_players.iter_mut() {
                     if id == player_id {
                         match change {
                             unnet_core::messages::TruckInventoryChange::RemoveLeftHand => {
@@ -2602,28 +2712,28 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                 }
             }
             NetworkMessage::GrabRequest(msg) => {
-                for (_, id, mut input, _) in params.query_players.iter_mut() {
+                for (_, id, mut input, _, _pos, _) in params.query_players.iter_mut() {
                     if id == &msg.player_id {
                         input.grab = true;
                     }
                 }
             }
             NetworkMessage::DropRequest { player_id } => {
-                for (_, id, mut input, _) in params.query_players.iter_mut() {
+                for (_, id, mut input, _, _pos, _) in params.query_players.iter_mut() {
                     if id == player_id {
                         input.drop = true;
                     }
                 }
             }
             NetworkMessage::CycleInventoryRequest { player_id } => {
-                for (_, id, mut input, _) in params.query_players.iter_mut() {
+                for (_, id, mut input, _, _pos, _) in params.query_players.iter_mut() {
                     if id == player_id {
                         input.inventory_cycle = true;
                     }
                 }
             }
             NetworkMessage::SwapHandsRequest { player_id } => {
-                for (_, id, mut input, _) in params.query_players.iter_mut() {
+                for (_, id, mut input, _, _pos, _) in params.query_players.iter_mut() {
                     if id == player_id {
                         input.inventory_swap = true;
                     }
@@ -2631,12 +2741,25 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
             }
             NetworkMessage::PlayerLeft { player_id } => {
                 info!("Network: Received PlayerLeft from client {:?}", player_id);
-                for (entity, id, _, _) in params.query_player_pos.iter() {
+                for (entity, id, _, _, _, _) in params.query_players.iter() {
                     if id == player_id {
                         info!("Network: Despawning player entity for {:?}", id);
                         params.commands.entity(entity).despawn();
                         break;
                     }
+                }
+            }
+            NetworkMessage::RequestFullSync { player_id } => {
+                info!(
+                    "Network: Received RequestFullSync from client {:?}",
+                    player_id
+                );
+                if let Some(conn) = &mut params.network_conn
+                    && let NetworkConn::Active {
+                        needs_full_sync, ..
+                    } = &mut **conn
+                {
+                    *needs_full_sync = true;
                 }
             }
             _ => {}
@@ -2741,6 +2864,7 @@ pub(crate) fn client_process_pending_map(
             map_filepath: path.clone(),
         });
         pending_map.map_filepath = None;
+        pending_map.needs_full_sync_request = true;
     } else {
         trace!("Network: Waiting for map asset to be ready: {}", path);
     }
