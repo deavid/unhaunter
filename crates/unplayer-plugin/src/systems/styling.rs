@@ -30,7 +30,7 @@ pub(crate) fn update_player_styling(
         let alpha = if is_spectating {
             if is_main { 0.5 } else { 0.0 }
         } else if is_hiding {
-            0.5
+            0.2
         } else {
             1.0
         };
