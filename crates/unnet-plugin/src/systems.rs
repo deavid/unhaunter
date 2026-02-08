@@ -198,7 +198,7 @@ pub(crate) fn network_io_system(
             let mut closed = false;
             // --- Read ---
             loop {
-                let mut buf = [0u8; 4096];
+                let mut buf = [0u8; 65536];
                 match (&stream).read(&mut buf) {
                     Ok(0) => {
                         info!("Network: Connection closed by peer");
@@ -222,21 +222,23 @@ pub(crate) fn network_io_system(
             }
 
             while let Some(pos) = read_buffer.find('\n') {
-                let line = read_buffer[..pos].trim();
-                if !line.is_empty() {
-                    match serde_json::from_str::<NetworkMessage>(line) {
-                        Ok(message) => {
-                            ev_writer.write(NetworkDataEvent { message });
-                        }
-                        Err(e) => {
-                            error!(
-                                "Network: Failed to parse JSON message: {}. Line: {}",
-                                e, line
-                            );
+                {
+                    let line = read_buffer[..pos].trim();
+                    if !line.is_empty() {
+                        match serde_json::from_str::<NetworkMessage>(line) {
+                            Ok(message) => {
+                                ev_writer.write(NetworkDataEvent { message });
+                            }
+                            Err(e) => {
+                                error!(
+                                    "Network: Failed to parse JSON message: {}. Line: {}",
+                                    e, line
+                                );
+                            }
                         }
                     }
                 }
-                read_buffer = read_buffer[pos + 1..].to_string();
+                read_buffer.replace_range(..pos + 1, "");
             }
 
             if !closed {

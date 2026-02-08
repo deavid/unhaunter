@@ -7,18 +7,20 @@ This was tested with RTT: ~60ms
 - Noticeable lag - 60ms is quite noticeable specially to move.
 - Doors not syncing properly when joining late, that was a hassle.
 - Host slows down a lot
-- Trying to activate gear from  the client, pressing [R] or Right click was painful as it was not reponsive, or it was bouncy (activates then deactivates)
+  - Can't reproduce. TCP_NODELAY might have been the issue. Needs re-testing.
+- Trying to activate gear from the client, pressing [R] or Right click was painful as it was not reponsive, or it was
+  bouncy (activates then deactivates)
 - On the client, When hiding:
   - The "eye icon" does not seem to disappear after stop hiding.
-  - The client seems to be able to move even  when hidden.
+  - The client seems to be able to move even when hidden.
 - When the other player is hiding, they should be way more transparent to make it clear.
-- Impossible to control whether listening should happen in IPv4 or IPv6. We need to listen on BOTH at the same time. Do we have a flag to provide a list of source IP addresses for the listening part?
+- Impossible to control whether listening should happen in IPv4 or IPv6. We need to listen on BOTH at the same time. Do
+  we have a flag to provide a list of source IP addresses for the listening part?
 
 ## Dedicated Server
 
 We should put as a first priority making a dedicated server that supports at least 1-4 players. With this testing would
 be much easier since we could directly deploy in a VPS and test as a client.
-
 
 ## Appendix A: Logs from Client crashes
 
