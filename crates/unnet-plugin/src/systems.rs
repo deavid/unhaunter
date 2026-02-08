@@ -5,7 +5,7 @@ use bevy_persistent::Persistent;
 use rand::Rng;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::str::FromStr;
 use unassets_core::resources::maps::Maps;
 use unassets_core::resources::upscale::UpscaleIndex;
@@ -80,9 +80,16 @@ pub fn startup_network_system(
         }
         NetMode::Host { port } => {
             local_id.0 = Some(NetworkId(1));
-            let addr = format!("0.0.0.0:{}", port);
-            match TcpListener::bind(&addr) {
+            let addrs = [
+                SocketAddr::from(([0, 0, 0, 0, 0, 0, 0, 0], *port)),
+                SocketAddr::from(([0, 0, 0, 0], *port)),
+            ];
+            match TcpListener::bind(&addrs[..]) {
                 Ok(listener) => {
+                    let addr = listener
+                        .local_addr()
+                        .map(|a| a.to_string())
+                        .unwrap_or_else(|_| "unknown".to_string());
                     if let Err(e) = listener.set_nonblocking(true) {
                         error!("Failed to set listener non-blocking: {}", e);
                     } else {
@@ -90,7 +97,7 @@ pub fn startup_network_system(
                         *conn = NetworkConn::Listening(listener);
                     }
                 }
-                Err(e) => error!("Network: Failed to bind to {}: {}", addr, e),
+                Err(e) => error!("Network: Failed to bind to port {}: {}", port, e),
             }
         }
         NetMode::Join { address } => {
