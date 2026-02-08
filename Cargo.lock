@@ -6350,6 +6350,7 @@ dependencies = [
  "ungearitems-core",
  "unghost-core",
  "uninteraction-core",
+ "unmetrics-core",
  "unnavigation-core",
  "unnet-core",
  "unplayer-core",

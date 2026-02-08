@@ -14,6 +14,7 @@ use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
+use unmetrics_core::metrics::SendMetric;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::LoadLevelEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomStateSyncEvent};
@@ -69,11 +70,14 @@ use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::{AppState, GameState};
 
+use crate::metrics;
+
 pub fn startup_network_system(
     cli: Res<CliOptions>,
     mut conn: ResMut<NetworkConn>,
     mut local_id: ResMut<LocalPlayer>,
 ) {
+    let measure = metrics::STARTUP_NETWORK_SYSTEM.time_measure();
     match &cli.net_mode {
         NetMode::Offline => {
             *conn = NetworkConn::Disconnected;
@@ -82,8 +86,9 @@ pub fn startup_network_system(
         NetMode::Host { port } => {
             local_id.0 = Some(NetworkId(1));
             let addrs = [
-                SocketAddr::from(([0, 0, 0, 0, 0, 0, 0, 0], *port)),
+                // FIXME: We need to liston on both IPv6 + IPv4
                 SocketAddr::from(([0, 0, 0, 0], *port)),
+                SocketAddr::from(([0, 0, 0, 0, 0, 0, 0, 0], *port)),
             ];
             match TcpListener::bind(&addrs[..]) {
                 Ok(listener) => {
@@ -124,6 +129,7 @@ pub fn startup_network_system(
             }
         }
     }
+    measure.end_ms();
 }
 
 pub fn network_io_system(
@@ -132,6 +138,7 @@ pub fn network_io_system(
     mut ev_disconnect: MessageWriter<unnet_core::messages::NetworkDisconnectEvent>,
     mut ev_send: MessageReader<unnet_core::messages::SendNetworkMessage>,
 ) {
+    let measure = metrics::NETWORK_IO.time_measure();
     let mut current_conn = std::mem::replace(&mut *conn, NetworkConn::Disconnected);
 
     // Process outgoing messages from events
@@ -268,6 +275,7 @@ pub fn network_io_system(
             }
         }
     }
+    measure.end_ms();
 }
 
 pub fn host_handle_disconnects_system(
@@ -281,6 +289,7 @@ pub fn host_handle_disconnects_system(
     >,
     mut commands: Commands,
 ) {
+    let measure = metrics::HOST_HANDLE_DISCONNECTS.time_measure();
     for ev in ev_disconnect.read() {
         for (entity, id) in query_players.iter() {
             if id == &ev.id {
@@ -291,6 +300,7 @@ pub fn host_handle_disconnects_system(
             }
         }
     }
+    measure.end_ms();
 }
 
 pub fn client_connection_monitor_system(
@@ -300,12 +310,15 @@ pub fn client_connection_monitor_system(
     current_app_state: Res<State<AppState>>,
     mut host_gone: ResMut<HostGone>,
 ) {
+    let measure = metrics::CLIENT_CONNECTION_MONITOR.time_measure();
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         host_gone.0 = false;
+        measure.end_ms();
         return;
     }
     if *current_app_state.get() != AppState::InGame {
         host_gone.0 = false;
+        measure.end_ms();
         return;
     }
     if matches!(*conn, NetworkConn::Disconnected) {
@@ -317,6 +330,7 @@ pub fn client_connection_monitor_system(
     } else {
         host_gone.0 = false;
     }
+    measure.end_ms();
 }
 
 pub fn handshake_handler_system(
@@ -332,6 +346,7 @@ pub fn handshake_handler_system(
         With<unplayer_core::components::PlayerDisconnected>,
     >,
 ) {
+    let measure = metrics::HANDSHAKE_HANDLER.time_measure();
     let mut to_send = Vec::new();
     let mut new_handshake = None;
     let mut associate_id = None;
@@ -448,6 +463,7 @@ pub fn handshake_handler_system(
     for msg in to_send {
         conn.send(msg);
     }
+    measure.end_ms();
 }
 
 #[derive(SystemParam)]
@@ -533,10 +549,13 @@ pub fn host_send_snapshots_system(
     mut ev_sound: MessageReader<SoundEvent>,
     mut ev_transient: MessageReader<unnet_core::messages::TransientEvent>,
 ) {
+    let measure = metrics::HOST_SEND_SNAPSHOTS.time_measure();
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
+        measure.end_ms();
         return;
     }
     if !conn.is_active() {
+        measure.end_ms();
         return;
     }
 
@@ -872,6 +891,7 @@ pub fn host_send_snapshots_system(
         haunted_objects,
         movable_objects,
     })));
+    measure.end_ms();
 }
 
 pub fn client_send_input_system(
@@ -881,14 +901,18 @@ pub fn client_send_input_system(
     query_player: Query<&PlayerInput, With<MainPlayer>>,
     mut ev_net_data: MessageReader<NetworkDataEvent>,
 ) {
+    let measure = metrics::CLIENT_SEND_INPUT.time_measure();
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        measure.end_ms();
         return;
     }
     if !conn.is_active() {
+        measure.end_ms();
         return;
     }
 
     let Some(player_id) = local_id.0 else {
+        measure.end_ms();
         return;
     };
 
@@ -923,6 +947,7 @@ pub fn client_send_input_system(
             }
         }
     }
+    measure.end_ms();
 }
 
 #[derive(SystemParam)]
@@ -1228,7 +1253,9 @@ pub fn client_apply_snapshots_system(
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut params: ClientSnapshotParams,
 ) {
+    let measure = metrics::CLIENT_APPLY_SNAPSHOTS.time_measure();
     if !matches!(params.cli.net_mode, NetMode::Join { .. }) {
+        measure.end_ms();
         return;
     }
 
@@ -2071,6 +2098,7 @@ pub fn client_apply_snapshots_system(
             params.states.game_next_state.set(GameState::None);
         }
     }
+    measure.end_ms();
 }
 
 #[derive(SystemParam)]
@@ -2113,7 +2141,9 @@ pub struct HostApplyInputParams<'w, 's> {
 }
 
 pub fn host_apply_input_system(mut params: HostApplyInputParams) {
+    let measure = metrics::HOST_APPLY_INPUT.time_measure();
     if !matches!(params.cli.net_mode, NetMode::Host { .. }) {
+        measure.end_ms();
         return;
     }
 
@@ -2441,6 +2471,7 @@ pub fn host_apply_input_system(mut params: HostApplyInputParams) {
             _ => {}
         }
     }
+    measure.end_ms();
 }
 
 pub fn host_send_summary_system(
@@ -2448,7 +2479,9 @@ pub fn host_send_summary_system(
     cli: Res<CliOptions>,
     summary_data: Res<SummaryData>,
 ) {
+    let measure = metrics::HOST_SEND_SUMMARY.time_measure();
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
+        measure.end_ms();
         return;
     }
     info!("Network: Sending MissionSummary to clients");
@@ -2475,6 +2508,7 @@ pub fn host_send_summary_system(
             costs_deducted_from_deposit: summary_data.costs_deducted_from_deposit,
         },
     });
+    measure.end_ms();
 }
 
 pub fn autostart_net_game(
@@ -2482,10 +2516,13 @@ pub fn autostart_net_game(
     mut ev_load_level: MessageWriter<LoadLevelEvent>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
 ) {
+    let measure = metrics::AUTOSTART_NET_GAME.time_measure();
     if matches!(cli.net_mode, NetMode::Offline) {
+        measure.end_ms();
         return;
     }
     if matches!(cli.net_mode, NetMode::Join { .. }) {
+        measure.end_ms();
         return;
     }
 
@@ -2511,6 +2548,7 @@ pub fn autostart_net_game(
     } else if matches!(cli.net_mode, NetMode::Host { .. }) {
         warn!("NetMode::Host active but no --map provided. Staying in Main Menu.");
     }
+    measure.end_ms();
 }
 
 pub fn client_process_pending_map(
@@ -2518,8 +2556,10 @@ pub fn client_process_pending_map(
     maps: Res<Maps>,
     mut ev_load_level: MessageWriter<LoadLevelEvent>,
 ) {
+    let measure = metrics::CLIENT_PROCESS_PENDING_MAP.time_measure();
     // Clone path to avoid holding borrow on pending_map
     let Some(path) = pending_map.map_filepath.clone() else {
+        measure.end_ms();
         return;
     };
 
@@ -2533,6 +2573,7 @@ pub fn client_process_pending_map(
     } else {
         trace!("Network: Waiting for map asset to be ready: {}", path);
     }
+    measure.end_ms();
 }
 
 pub fn client_request_grab_system(
@@ -2541,14 +2582,18 @@ pub fn client_request_grab_system(
     local_id: Res<LocalPlayer>,
     query_player: Query<&PlayerInput, With<MainPlayer>>,
 ) {
+    let measure = metrics::CLIENT_REQUEST_GRAB.time_measure();
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        measure.end_ms();
         return;
     }
     if !conn.is_active() {
+        measure.end_ms();
         return;
     }
 
     let Some(player_id) = local_id.0 else {
+        measure.end_ms();
         return;
     };
 
@@ -2571,4 +2616,5 @@ pub fn client_request_grab_system(
             conn.send(NetworkMessage::SwapHandsRequest { player_id });
         }
     }
+    measure.end_ms();
 }

@@ -13,6 +13,7 @@ pub struct UnhaunterNetPlugin;
 
 impl Plugin for UnhaunterNetPlugin {
     fn build(&self, app: &mut App) {
+        crate::metrics::register_all(app);
         app.init_resource::<crate::resources::NetworkConn>();
         app.init_resource::<unnet_core::resources::LocalPlayer>();
         app.init_resource::<unnet_core::resources::ChangedTiles>();
