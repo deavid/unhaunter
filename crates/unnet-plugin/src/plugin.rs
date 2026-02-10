@@ -1,13 +1,6 @@
-use crate::systems::{
-    autostart_net_game, client_apply_snapshots_system, client_connection_monitor_system,
-    client_process_pending_map, client_request_grab_system, client_send_input_system,
-    client_sync_intended_gear_state, delayed_despawn_system, handshake_handler_system,
-    host_apply_input_system, host_handle_disconnects_system, host_send_snapshots_system,
-    host_send_summary_system, network_io_system, startup_network_system,
-};
+use super::systems;
 use bevy::prelude::*;
 use unnet_core::messages::NetworkDataEvent;
-use untypes_core::states::AppState;
 
 pub struct UnhaunterNetPlugin;
 
@@ -26,40 +19,6 @@ impl Plugin for UnhaunterNetPlugin {
         app.add_message::<unnet_core::messages::SendNetworkMessage>();
         app.add_message::<unnet_core::messages::TransientEvent>();
 
-        app.add_systems(Startup, startup_network_system);
-        app.add_systems(OnEnter(AppState::MainMenu), autostart_net_game);
-        app.add_systems(OnEnter(AppState::Summary), host_send_summary_system);
-
-        app.add_systems(
-            Update,
-            client_process_pending_map.run_if(in_state(AppState::MainMenu)),
-        );
-
-        app.add_systems(
-            PreUpdate,
-            (
-                network_io_system,
-                host_handle_disconnects_system,
-                handshake_handler_system,
-                host_apply_input_system.run_if(in_state(AppState::InGame)),
-            )
-                .chain(),
-        );
-
-        app.add_systems(
-            Update,
-            (
-                host_send_snapshots_system,
-                client_request_grab_system,
-                client_sync_intended_gear_state,
-                client_send_input_system,
-                client_apply_snapshots_system,
-                client_connection_monitor_system,
-                delayed_despawn_system,
-            )
-                .chain()
-                .after(unplayer_core::PlayerInputSet)
-                .run_if(in_state(AppState::InGame)),
-        );
+        systems::setup::app_setup(app);
     }
 }
