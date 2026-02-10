@@ -1,4 +1,4 @@
-use crate::resources::NetworkConn;
+use crate::resources::{HandshakeState, NetworkConn};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use rand::prelude::*;
@@ -126,7 +126,11 @@ pub(crate) fn host_send_snapshots_system(
         measure.end_ms();
         return;
     }
-    if !conn.is_active() {
+    let NetworkConn::Host { clients, .. } = &mut *conn else {
+        measure.end_ms();
+        return;
+    };
+    if clients.is_empty() {
         measure.end_ms();
         return;
     }
@@ -270,32 +274,28 @@ pub(crate) fn host_send_snapshots_system(
 
     events.extend(ev_transient.read().cloned());
 
-    let mut is_full_sync = false;
-    if let NetworkConn::Active {
-        needs_full_sync, ..
-    } = &mut *conn
-        && *needs_full_sync
-    {
-        is_full_sync = true;
-        *needs_full_sync = false;
-    }
+    let any_needs_full = clients
+        .iter()
+        .any(|c| c.handshake == HandshakeState::Completed && c.needs_full_sync);
 
-    let map_tiles = if is_full_sync {
-        host_params.changed_tiles.0.clear();
-        host_params
-            .query_map_tiles
-            .iter()
-            .map(|(pos, beh): (&Position, &Behavior)| MapTileState {
-                x: pos.x as i32,
-                y: pos.y as i32,
-                z: pos.z as i32,
-                tileset: beh.cfg().tileset.clone(),
-                tileuid: beh.cfg().tileuid,
-                cvo_key: beh.key_cvo().to_key_string(),
-            })
-            .collect()
+    let delta_tiles: Vec<MapTileState> = host_params.changed_tiles.0.drain(..).collect();
+    let full_tiles: Option<Vec<MapTileState>> = if any_needs_full {
+        Some(
+            host_params
+                .query_map_tiles
+                .iter()
+                .map(|(pos, beh)| MapTileState {
+                    x: pos.x as i32,
+                    y: pos.y as i32,
+                    z: pos.z as i32,
+                    tileset: beh.cfg().tileset.clone(),
+                    tileuid: beh.cfg().tileuid,
+                    cvo_key: beh.key_cvo().to_key_string(),
+                })
+                .collect(),
+        )
     } else {
-        host_params.changed_tiles.0.drain(..).collect()
+        None
     };
 
     let breach_position = host_params
@@ -368,16 +368,16 @@ pub(crate) fn host_send_snapshots_system(
             })
             .collect();
 
-    conn.send(NetworkMessage::Snapshot(Box::new(SnapshotMsg {
+    let base_snapshot = SnapshotMsg {
         tick,
-        is_full_sync,
+        is_full_sync: false,
         app_state: *host_params.app_state.get(),
         game_state: *host_params.game_state.get(),
         can_end_mission: host_params.mission_end_requested.0,
         players,
         ghosts,
         rooms,
-        map_tiles,
+        map_tiles: delta_tiles,
         gear,
         player_gear,
         events,
@@ -430,7 +430,26 @@ pub(crate) fn host_send_snapshots_system(
         ghost_type,
         haunted_objects,
         movable_objects,
-    })));
+    };
+
+    for client in clients.iter_mut() {
+        if client.handshake != HandshakeState::Completed {
+            continue;
+        }
+        if client.needs_full_sync {
+            let mut full_snap = base_snapshot.clone();
+            full_snap.is_full_sync = true;
+            full_snap.map_tiles = full_tiles.clone().unwrap_or_default();
+            client.needs_full_sync = false;
+            client
+                .write_queue
+                .push_back(NetworkMessage::Snapshot(Box::new(full_snap)));
+        } else {
+            client
+                .write_queue
+                .push_back(NetworkMessage::Snapshot(Box::new(base_snapshot.clone())));
+        }
+    }
     measure.end_ms();
 }
 
@@ -445,7 +464,7 @@ pub(crate) fn host_send_summary_system(
         return;
     }
     info!("Network: Sending MissionSummary to clients");
-    conn.send(NetworkMessage::MissionSummary {
+    conn.host_broadcast(NetworkMessage::MissionSummary {
         result: unnet_core::messages::MissionResult {
             time_taken_secs: summary_data.time_taken_secs,
             ghost_types: summary_data.ghost_types.clone(),

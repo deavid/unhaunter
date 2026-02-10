@@ -20,10 +20,11 @@ fn on_enter_truck(
             .insert(InTruck)
             .insert(Hiding { hiding_spot: None });
 
-        // If client, notify host (Phase E.2 repurposed RequestTruckEntry)
+        // If client, notify host
         if !v_host {
             ev_net.write(NetworkDataEvent {
                 message: NetworkMessage::RequestTruckEntry { player_id: *id },
+                source: None,
             });
         }
     }
@@ -47,6 +48,7 @@ fn on_exit_truck(
         if !v_host {
             ev_net.write(NetworkDataEvent {
                 message: NetworkMessage::RequestTruckExit { player_id: *id },
+                source: None,
             });
         }
     }

@@ -310,6 +310,9 @@ pub enum TruckInventoryChange {
 #[derive(Debug, Clone, Message)]
 pub struct NetworkDataEvent {
     pub message: NetworkMessage,
+    /// On the host, identifies which client sent this message.
+    /// On the client (and for local passthrough messages), this is always None.
+    pub source: Option<NetworkId>,
 }
 
 #[derive(Debug, Clone, Message)]

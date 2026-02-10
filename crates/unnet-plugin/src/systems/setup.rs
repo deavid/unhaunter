@@ -1,8 +1,14 @@
-use super::client_input::*;
-use super::client_sync::*;
-use super::connection::*;
-use super::host_input::*;
-use super::host_sync::*;
+use super::client_input::{
+    client_process_pending_map, client_request_grab_system, client_send_input_system,
+    client_sync_intended_gear_state,
+};
+use super::client_sync::{client_apply_snapshots_system, delayed_despawn_system};
+use super::connection::{
+    autostart_net_game, client_connection_monitor_system, handshake_handler_system,
+    host_handle_disconnects_system, network_io_system, startup_network_system,
+};
+use super::host_input::host_apply_input_system;
+use super::host_sync::{host_send_snapshots_system, host_send_summary_system};
 use bevy::prelude::*;
 use untypes_core::states::AppState;
 

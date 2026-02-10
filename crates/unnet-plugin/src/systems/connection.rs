@@ -1,6 +1,6 @@
 use crate::resources::{HandshakeState, NetworkConn};
 use bevy::prelude::*;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::str::FromStr;
@@ -58,7 +58,10 @@ pub(crate) fn startup_network_system(
                 error!("Network: Failed to bind to any address on port {}", port);
                 *conn = NetworkConn::Disconnected;
             } else {
-                *conn = NetworkConn::Listening(listeners);
+                *conn = NetworkConn::Host {
+                    listeners,
+                    clients: Vec::new(),
+                };
             }
         }
         NetMode::Join { address } => {
@@ -72,15 +75,11 @@ pub(crate) fn startup_network_system(
                             error!("Failed to set TCP_NODELAY: {}", e);
                         }
                         info!("Network: Connected to {}", address);
-                        *conn = NetworkConn::Active {
+                        *conn = NetworkConn::Client {
                             stream,
                             read_buffer: String::new(),
                             write_queue: VecDeque::new(),
                             handshake: HandshakeState::None,
-                            installation_id: None,
-                            associated_id: None,
-                            needs_full_sync: false,
-                            host_listeners: Vec::new(),
                         };
                     }
                 }
@@ -96,96 +95,116 @@ pub(crate) fn network_io_system(
     mut ev_writer: MessageWriter<NetworkDataEvent>,
     mut ev_disconnect: MessageWriter<unnet_core::messages::NetworkDisconnectEvent>,
     mut ev_send: MessageReader<unnet_core::messages::SendNetworkMessage>,
+    mut player_registry: ResMut<crate::resources::PlayerRegistry>,
 ) {
     let measure = metrics::NETWORK_IO.time_measure();
-    let mut current_conn = std::mem::replace(&mut *conn, NetworkConn::Disconnected);
+    let send_msgs: Vec<NetworkMessage> = ev_send.read().map(|m| m.0.clone()).collect();
 
-    // Process outgoing messages from events
-    if let NetworkConn::Active {
-        ref mut write_queue,
-        ..
-    } = current_conn
-    {
-        for msg in ev_send.read() {
-            write_queue.push_back(msg.0.clone());
-        }
-    }
+    match &mut *conn {
+        NetworkConn::Disconnected => {}
+        NetworkConn::Host { listeners, clients } => {
+            // 1a. Enqueue event-based messages to ALL clients
+            for msg in &send_msgs {
+                for client in clients.iter_mut() {
+                    client.write_queue.push_back(msg.clone());
+                }
+            }
 
-    match current_conn {
-        NetworkConn::Disconnected => {
-            *conn = NetworkConn::Disconnected;
-        }
-        NetworkConn::Listening(listeners) => {
-            let mut new_conn = None;
-            for listener in &listeners {
-                match listener.accept() {
-                    Ok((stream, addr)) => {
-                        info!("Network: Client connected from {}", addr);
-                        if let Err(e) = stream.set_nonblocking(true) {
-                            error!("Failed to set client stream non-blocking: {}", e);
-                        } else {
+            // 2. Accept new connections from listeners
+            for listener in listeners.iter() {
+                loop {
+                    match listener.accept() {
+                        Ok((stream, addr)) => {
+                            info!("Network: Client connected from {}", addr);
+                            if let Err(e) = stream.set_nonblocking(true) {
+                                error!("Failed to set client stream non-blocking: {}", e);
+                                continue;
+                            }
                             if let Err(e) = stream.set_nodelay(true) {
                                 error!("Failed to set TCP_NODELAY for client: {}", e);
                             }
-                            new_conn = Some(stream);
-                            break;
-                        }
-                    }
-                    Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
-                    Err(e) => error!("Network: Accept error: {}", e),
-                }
-            }
-            if let Some(stream) = new_conn {
-                *conn = NetworkConn::Active {
-                    stream,
-                    read_buffer: String::new(),
-                    write_queue: VecDeque::new(),
-                    installation_id: None,
-                    handshake: HandshakeState::None,
-                    associated_id: None,
-                    needs_full_sync: false,
-                    host_listeners: listeners,
-                };
-            } else {
-                *conn = NetworkConn::Listening(listeners);
-            }
-        }
-        NetworkConn::Active {
-            stream,
-            mut read_buffer,
-            installation_id,
-            mut write_queue,
-            handshake,
-            associated_id,
-            needs_full_sync,
-            host_listeners,
-        } => {
-            // Gracefully reject new connections while active
-            for listener in &host_listeners {
-                loop {
-                    match listener.accept() {
-                        Ok((_, addr)) => {
-                            warn!(
-                                "Network: Rejecting connection from {} (already connected)",
-                                addr
-                            );
+                            clients.push(crate::resources::ClientConnection {
+                                stream,
+                                read_buffer: String::new(),
+                                write_queue: VecDeque::new(),
+                                handshake: HandshakeState::None,
+                                installation_id: None,
+                                associated_id: None,
+                                needs_full_sync: false,
+                            });
                         }
                         Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
                         Err(e) => {
-                            error!("Network: Accept error (while active): {}", e);
+                            error!("Network: Accept error: {}", e);
                             break;
                         }
                     }
                 }
             }
 
+            // 3. Read/write each client
+            let mut to_remove = Vec::new();
+            for (idx, client) in clients.iter_mut().enumerate() {
+                let closed = do_client_io(client, &mut ev_writer, &mut player_registry);
+                if closed {
+                    to_remove.push(idx);
+                }
+            }
+
+            // Phase 2: Handle duplicate connections (same NetworkId)
+            let mut seen_ids: HashMap<NetworkId, usize> = HashMap::new();
+            let mut duplicates_to_remove = Vec::new();
+            for (idx, client) in clients.iter().enumerate() {
+                if to_remove.contains(&idx) {
+                    continue;
+                }
+                if let Some(id) = client.associated_id {
+                    if let Some(&prev_idx) = seen_ids.get(&id) {
+                        // Keep the newer connection (higher index), close the older one
+                        duplicates_to_remove.push(prev_idx);
+                        warn!(
+                            "Network: Closing stale connection index {} for {:?} (superseded)",
+                            prev_idx, id
+                        );
+                    }
+                    seen_ids.insert(id, idx);
+                }
+            }
+
+            // Combine and remove
+            let mut all_removals: Vec<(usize, bool)> =
+                to_remove.iter().map(|&i| (i, true)).collect();
+            all_removals.extend(duplicates_to_remove.iter().map(|&i| (i, false)));
+            all_removals.sort_by_key(|k| k.0);
+            all_removals.dedup_by_key(|k| k.0);
+
+            for (idx, emit_disconnect) in all_removals.into_iter().rev() {
+                let removed = clients.remove(idx);
+                if emit_disconnect && let Some(id) = removed.associated_id {
+                    ev_disconnect.write(unnet_core::messages::NetworkDisconnectEvent { id });
+                }
+                info!("Network: Client {:?} disconnected", removed.associated_id);
+            }
+        }
+        NetworkConn::Client {
+            stream,
+            read_buffer,
+            write_queue,
+            ..
+        } => {
+            // 1a. Enqueue event-based messages
+            for msg in &send_msgs {
+                write_queue.push_back(msg.clone());
+            }
+
+            // 2. Read/write the single connection
             let mut closed = false;
             // --- Read ---
             loop {
                 let mut buf = [0u8; 65536];
-                match (&stream).read(&mut buf) {
+                match (stream).read(&mut buf) {
                     Ok(0) => {
-                        info!("Network: Connection closed by peer");
+                        info!("Network: Connection closed by host");
                         closed = true;
                         break;
                     }
@@ -211,7 +230,10 @@ pub(crate) fn network_io_system(
                     if !line.is_empty() {
                         match serde_json::from_str::<NetworkMessage>(line) {
                             Ok(message) => {
-                                ev_writer.write(NetworkDataEvent { message });
+                                ev_writer.write(NetworkDataEvent {
+                                    message,
+                                    source: None,
+                                });
                             }
                             Err(e) => {
                                 error!(
@@ -231,7 +253,7 @@ pub(crate) fn network_io_system(
                     match serde_json::to_string(&msg) {
                         Ok(mut json) => {
                             json.push('\n');
-                            if let Err(e) = (&stream).write_all(json.as_bytes()) {
+                            if let Err(e) = (stream).write_all(json.as_bytes()) {
                                 error!("Network: Write error: {}", e);
                                 closed = true;
                                 break;
@@ -243,30 +265,100 @@ pub(crate) fn network_io_system(
             }
 
             if closed {
-                if let Some(id) = associated_id {
-                    ev_disconnect.write(unnet_core::messages::NetworkDisconnectEvent { id });
-                }
-                if !host_listeners.is_empty() {
-                    info!("Network: Re-entering Listening state.");
-                    *conn = NetworkConn::Listening(host_listeners);
-                } else {
-                    *conn = NetworkConn::Disconnected;
-                }
-            } else {
-                *conn = NetworkConn::Active {
-                    stream,
-                    read_buffer,
-                    write_queue,
-                    handshake,
-                    installation_id,
-                    associated_id,
-                    needs_full_sync,
-                    host_listeners,
-                };
+                *conn = NetworkConn::Disconnected;
             }
         }
     }
     measure.end_ms();
+}
+
+fn do_client_io(
+    client: &mut crate::resources::ClientConnection,
+    ev_writer: &mut MessageWriter<NetworkDataEvent>,
+    player_registry: &mut crate::resources::PlayerRegistry,
+) -> bool {
+    let mut closed = false;
+    // --- Read ---
+    loop {
+        let mut buf = [0u8; 65536];
+        match (&client.stream).read(&mut buf) {
+            Ok(0) => {
+                info!("Network: Connection closed by peer");
+                closed = true;
+                break;
+            }
+            Ok(n) => {
+                if let Ok(s) = std::str::from_utf8(&buf[..n]) {
+                    client.read_buffer.push_str(s);
+                }
+            }
+            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                break;
+            }
+            Err(e) => {
+                error!("Network: Read error: {}", e);
+                closed = true;
+                break;
+            }
+        }
+    }
+
+    while let Some(pos) = client.read_buffer.find('\n') {
+        {
+            let line = client.read_buffer[..pos].trim();
+            if !line.is_empty() {
+                match serde_json::from_str::<NetworkMessage>(line) {
+                    Ok(message) => match &message {
+                        NetworkMessage::Hello {
+                            installation_id, ..
+                        } if client.handshake == HandshakeState::None => {
+                            let id = player_registry.get_or_assign(*installation_id);
+                            client.associated_id = Some(id);
+                            client.installation_id = Some(*installation_id);
+                            ev_writer.write(NetworkDataEvent {
+                                message,
+                                source: Some(id),
+                            });
+                        }
+                        _ if client.handshake == HandshakeState::Completed => {
+                            ev_writer.write(NetworkDataEvent {
+                                message,
+                                source: client.associated_id,
+                            });
+                        }
+                        _ => {
+                            warn!("Dropping pre-handshake message from unidentified client");
+                        }
+                    },
+                    Err(e) => {
+                        error!(
+                            "Network: Failed to parse JSON message: {}. Line: {}",
+                            e, line
+                        );
+                    }
+                }
+            }
+        }
+        client.read_buffer.replace_range(..pos + 1, "");
+    }
+
+    if !closed {
+        // --- Write ---
+        while let Some(msg) = client.write_queue.pop_front() {
+            match serde_json::to_string(&msg) {
+                Ok(mut json) => {
+                    json.push('\n');
+                    if let Err(e) = (&client.stream).write_all(json.as_bytes()) {
+                        error!("Network: Write error: {}", e);
+                        closed = true;
+                        break;
+                    }
+                }
+                Err(e) => error!("Network: Serialization error: {}", e),
+            }
+        }
+    }
+    closed
 }
 
 pub(crate) fn handshake_handler_system(
@@ -281,88 +373,92 @@ pub(crate) fn handshake_handler_system(
         (Entity, &NetworkId),
         With<unplayer_core::components::PlayerDisconnected>,
     >,
-    mut player_registry: ResMut<crate::resources::PlayerRegistry>,
     runtime_installation_id: Res<unprofile_core::profile::RuntimeInstallationId>,
 ) {
     let measure = metrics::HANDSHAKE_HANDLER.time_measure();
-    let mut to_send = Vec::new();
-    let mut new_handshake = None;
-    let mut associate_id = None;
-    let mut new_installation_id = None;
 
-    if let NetworkConn::Active { handshake, .. } = &*conn {
-        // Client side automatic Hello
-        if matches!(cli.net_mode, NetMode::Join { .. }) && *handshake == HandshakeState::None {
-            debug!("Network: Sending Hello...");
-            to_send.push(NetworkMessage::Hello {
-                version: "0.1.0".to_string(),
-                installation_id: runtime_installation_id.0,
-            });
-            new_handshake = Some(HandshakeState::HelloSent);
-        }
-
-        let mut events = Vec::new();
-        for ev in ev_reader.read() {
-            events.push(ev.message.clone());
-        }
-
-        for msg in events {
-            match msg {
-                NetworkMessage::Hello {
+    match &mut *conn {
+        NetworkConn::Disconnected => {}
+        NetworkConn::Host { clients, .. } => {
+            for ev in ev_reader.read() {
+                let Some(source_id) = ev.source else {
+                    continue;
+                };
+                if let NetworkMessage::Hello {
                     version,
                     installation_id,
-                } => {
+                } = &ev.message
+                {
                     debug!(
                         "Network: Received Hello (version: {}, install_id: {:?})",
                         version, installation_id
                     );
-                    if matches!(cli.net_mode, NetMode::Host { .. }) {
-                        let id = player_registry.get_or_assign(installation_id);
-                        debug!("Network: Sending Welcome to {:?}...", id);
-
-                        // Check if we can re-associate with an existing disconnected entity
-                        for (entity, disc_id) in query_disconnected.iter() {
-                            if disc_id == &id {
-                                debug!(
-                                    "Network: Re-associating connection with entity {:?}",
-                                    entity
-                                );
-                                commands
-                                    .entity(entity)
-                                    .remove::<unplayer_core::components::PlayerDisconnected>();
+                    // Find client by associated_id
+                    for client in clients.iter_mut() {
+                        if client.associated_id == Some(source_id) {
+                            // Check if we can re-associate with an existing disconnected entity
+                            for (entity, disc_id) in query_disconnected.iter() {
+                                if disc_id == &source_id {
+                                    debug!(
+                                        "Network: Re-associating connection with entity {:?}",
+                                        entity
+                                    );
+                                    commands
+                                        .entity(entity)
+                                        .remove::<unplayer_core::components::PlayerDisconnected>();
+                                }
                             }
-                        }
 
-                        let seed = unfoundation_core::random_seed::heavy_rng_seed();
-                        to_send.push(NetworkMessage::Welcome {
-                            id,
-                            map_seed: seed,
-                            map_filepath: cli.map_path.clone().unwrap_or_default(),
-                            difficulty_id: cli
-                                .difficulty_id
-                                .clone()
-                                .unwrap_or("medium".to_string()),
-                        });
-                        new_handshake = Some(HandshakeState::Completed);
-                        associate_id = Some(id);
-                        new_installation_id = Some(installation_id);
+                            let seed = unfoundation_core::random_seed::heavy_rng_seed();
+                            client.write_queue.push_back(NetworkMessage::Welcome {
+                                id: source_id,
+                                map_seed: seed,
+                                map_filepath: cli.map_path.clone().unwrap_or_default(),
+                                difficulty_id: cli
+                                    .difficulty_id
+                                    .clone()
+                                    .unwrap_or("medium".to_string()),
+                            });
+                            client.handshake = HandshakeState::Completed;
+                            client.needs_full_sync = true;
+                            break;
+                        }
                     }
                 }
-                NetworkMessage::Welcome {
+            }
+        }
+        NetworkConn::Client {
+            handshake,
+            write_queue,
+            ..
+        } => {
+            // Client side automatic Hello
+            if matches!(cli.net_mode, NetMode::Join { .. }) && *handshake == HandshakeState::None {
+                debug!("Network: Sending Hello...");
+                write_queue.push_back(NetworkMessage::Hello {
+                    version: "0.1.0".to_string(),
+                    installation_id: runtime_installation_id.0,
+                });
+                *handshake = HandshakeState::HelloSent;
+            }
+
+            for ev in ev_reader.read() {
+                if let NetworkMessage::Welcome {
                     id,
                     map_seed,
                     map_filepath,
                     difficulty_id,
-                } => {
+                } = &ev.message
+                {
                     info!(
                         "Network: Received Welcome (Your ID: {:?}, Seed: {}, Map: {})",
                         id, map_seed, map_filepath
                     );
                     if matches!(cli.net_mode, NetMode::Join { .. }) {
-                        local_id.0 = Some(id);
-                        new_handshake = Some(HandshakeState::Completed);
+                        local_id.0 = Some(*id);
+                        *handshake = HandshakeState::Completed;
                         // Apply difficulty
-                        if let Ok(d) = Difficulty::from_str(&difficulty_id) {
+                        if let Ok(d) = Difficulty::from_str(difficulty_id) {
                             *current_difficulty = CurrentDifficulty::new(d);
                         }
                         // Store map path for later loading (after assets are ready)
@@ -377,35 +473,8 @@ pub(crate) fn handshake_handler_system(
                         }
                     }
                 }
-                _ => {}
             }
         }
-    }
-
-    if let (
-        Some(hs),
-        NetworkConn::Active {
-            handshake,
-            associated_id,
-            needs_full_sync,
-            installation_id,
-            ..
-        },
-    ) = (new_handshake, &mut *conn)
-    {
-        *handshake = hs;
-        if let Some(id) = associate_id {
-            *associated_id = Some(id);
-            if hs == HandshakeState::Completed {
-                *needs_full_sync = true;
-            }
-        }
-        if let Some(iid) = new_installation_id {
-            *installation_id = Some(iid);
-        }
-    }
-    for msg in to_send {
-        conn.send(msg);
     }
     measure.end_ms();
 }
@@ -453,7 +522,7 @@ pub(crate) fn client_connection_monitor_system(
         measure.end_ms();
         return;
     }
-    if matches!(*conn, NetworkConn::Disconnected) {
+    if !matches!(*conn, NetworkConn::Client { .. }) {
         if !host_gone.0 {
             warn!("Network: Lost connection to host. Triggering Pause UI.");
             game_next_state.set(GameState::Pause);

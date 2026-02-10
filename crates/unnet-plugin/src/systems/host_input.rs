@@ -370,11 +370,14 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                         // Issue 2 Fix: Force full sync when inventory changes relative to the truck
                         // This ensures clients process the despawned entities correctly
                         if let Some(conn) = &mut params.network_conn
-                            && let NetworkConn::Active {
-                                needs_full_sync, ..
-                            } = &mut **conn
+                            && let NetworkConn::Host { clients, .. } = &mut **conn
                         {
-                            *needs_full_sync = true;
+                            for client in clients.iter_mut() {
+                                if client.associated_id == Some(*player_id) {
+                                    client.needs_full_sync = true;
+                                    break;
+                                }
+                            }
                         }
                         break;
                     }
@@ -424,11 +427,15 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                     player_id
                 );
                 if let Some(conn) = &mut params.network_conn
-                    && let NetworkConn::Active {
-                        needs_full_sync, ..
-                    } = &mut **conn
+                    && let NetworkConn::Host { clients, .. } = &mut **conn
                 {
-                    *needs_full_sync = true;
+                    // Find the client that sent this request
+                    for client in clients.iter_mut() {
+                        if client.associated_id == Some(*player_id) {
+                            client.needs_full_sync = true;
+                            break;
+                        }
+                    }
                 }
             }
             _ => {}

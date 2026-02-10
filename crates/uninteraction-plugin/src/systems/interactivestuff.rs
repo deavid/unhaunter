@@ -212,6 +212,7 @@ impl InteractiveStuff<'_, '_> {
                         position: [item_bpos.x as i32, item_bpos.y as i32, item_bpos.z as i32],
                         interaction_type: ietype,
                     },
+                    source: None,
                 });
             }
             return false;

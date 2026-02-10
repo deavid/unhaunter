@@ -80,7 +80,7 @@ pub(crate) fn client_send_input_system(
     // full state sync so doors, tiles, etc. reflect the host's current state.
     if pending_map.needs_full_sync_request {
         info!("Network: Sending RequestFullSync to host");
-        conn.send(NetworkMessage::RequestFullSync { player_id });
+        conn.client_send(NetworkMessage::RequestFullSync { player_id });
         pending_map.needs_full_sync_request = false;
     }
 
@@ -90,7 +90,7 @@ pub(crate) fn client_send_input_system(
         } else {
             Some([pos.x, pos.y, pos.z])
         };
-        conn.send(NetworkMessage::PlayerInput {
+        conn.client_send(NetworkMessage::PlayerInput {
             player_id,
             o_position,
             movement: [input.movement.x, input.movement.y],
@@ -115,7 +115,7 @@ pub(crate) fn client_send_input_system(
             | NetworkMessage::RequestHide { .. }
             | NetworkMessage::RequestUnhide { .. }
             | NetworkMessage::InteractionRequest { .. } => {
-                conn.send(ev.message.clone());
+                conn.client_send(ev.message.clone());
             }
             // Messages that we know we must NOT process:
             NetworkMessage::Snapshot(_) => {}
@@ -177,7 +177,7 @@ pub(crate) fn client_request_grab_system(
 
     for input in query_player.iter() {
         if input.grab {
-            conn.send(NetworkMessage::GrabRequest(
+            conn.client_send(NetworkMessage::GrabRequest(
                 unnet_core::messages::GrabRequestMsg {
                     player_id,
                     target_id: NetworkId::default(),
@@ -185,13 +185,13 @@ pub(crate) fn client_request_grab_system(
             ));
         }
         if input.drop {
-            conn.send(NetworkMessage::DropRequest { player_id });
+            conn.client_send(NetworkMessage::DropRequest { player_id });
         }
         if input.inventory_cycle {
-            conn.send(NetworkMessage::CycleInventoryRequest { player_id });
+            conn.client_send(NetworkMessage::CycleInventoryRequest { player_id });
         }
         if input.inventory_swap {
-            conn.send(NetworkMessage::SwapHandsRequest { player_id });
+            conn.client_send(NetworkMessage::SwapHandsRequest { player_id });
         }
     }
     measure.end_ms();
