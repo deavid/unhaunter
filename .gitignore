@@ -12,3 +12,4 @@ flamegraph.svg
 /dist
 index.scip
 assets/upscaled
+player*.uuid
