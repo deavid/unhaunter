@@ -372,6 +372,7 @@ fn do_client_io(
 pub(crate) fn handshake_handler_system(
     mut conn: ResMut<NetworkConn>,
     mut ev_reader: MessageReader<NetworkDataEvent>,
+    mut ev_player_joined: MessageWriter<unnet_core::messages::PlayerJoinedEvent>,
     cli: Res<CliOptions>,
     mut local_id: ResMut<LocalPlayer>,
     mut pending_map: ResMut<crate::resources::PendingMapLoad>,
@@ -420,6 +421,8 @@ pub(crate) fn handshake_handler_system(
 
                             client.handshake = HandshakeState::Completed;
                             client.needs_full_sync = true;
+                            ev_player_joined
+                                .write(unnet_core::messages::PlayerJoinedEvent { id: source_id });
 
                             let seed = unfoundation_core::random_seed::heavy_rng_seed();
                             welcomes_to_send.push((

@@ -125,17 +125,18 @@ pub(crate) fn classic_mode_orchestrator(
         .meshes
         .add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
 
-    let mut player_ids_to_spawn = vec![1_usize];
-    if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Offline) {
-        player_ids_to_spawn.push(2);
-    }
+    let player_ids_to_spawn: Vec<usize> = match p.cli.net_mode {
+        untypes_core::cli::NetMode::Offline => vec![1],
+        untypes_core::cli::NetMode::Host { .. } => vec![1],
+        untypes_core::cli::NetMode::Join { .. } => vec![],
+    };
 
     for (idx, id) in player_ids_to_spawn.into_iter().enumerate() {
-        let is_main_player = match p.cli.net_mode {
-            untypes_core::cli::NetMode::Offline => true,
-            untypes_core::cli::NetMode::Host { .. } => id == 1,
-            untypes_core::cli::NetMode::Join { .. } => id == 2,
-        };
+        // In the new model:
+        // - Offline: always the main player (only player).
+        // - Host: spawns only id=1, which is always the main player.
+        // - Join: spawns nothing (vec is empty), so this loop body never runs.
+        let is_main_player = true;
 
         let mut player_gear = PlayerGear::default();
         if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
@@ -461,6 +462,172 @@ pub(crate) fn classic_mode_orchestrator(
     );
 
     ev_level_ready.write(LevelReadyEvent { open_van });
+}
+
+/// Spawns a player entity when a remote client completes handshake (host only).
+pub(crate) fn spawn_joined_player(
+    mut p: ClassicModeSystemParam,
+    mut commands: Commands,
+    mut ev_joined: MessageReader<unnet_core::messages::PlayerJoinedEvent>,
+    existing_players: Query<&NetworkId, With<PlayerTag>>,
+    q_player_spawns: Query<&Position, With<PlayerSpawnPoint>>,
+) {
+    for ev in ev_joined.read() {
+        let new_id = ev.id;
+
+        // Skip if entity already exists (reconnect case)
+        if existing_players.iter().any(|id| *id == new_id) {
+            info!("Player {:?} already has an entity, skipping spawn", new_id);
+            continue;
+        }
+
+        // Pick a spawn point. Try to find one not too close to existing players.
+        let player_spawn_points: Vec<Position> = q_player_spawns.iter().copied().collect();
+        if player_spawn_points.is_empty() {
+            error!(
+                "No player spawn points found, cannot spawn joined player {:?}",
+                new_id
+            );
+            continue;
+        }
+
+        // Use NetworkId to pick a deterministic spawn point. Host is NetworkId(1) → index 0,
+        // first client is NetworkId(2) → index 1, etc. This is stable regardless of join/leave order.
+        let spawn_idx = (new_id.0 as usize - 1) % player_spawn_points.len();
+        let spawn_pos = player_spawn_points[spawn_idx];
+
+        info!(
+            "Spawning player {:?} at {:?} (spawn point index {})",
+            new_id, spawn_pos, spawn_idx
+        );
+
+        // --- Gear ---
+        let mut player_gear = PlayerGear::default();
+        let mut gear_id_counter = new_id.0 * 1000;
+        if p.difficulty.0.player_gear.left_hand.is_some() {
+            let gear_entity = p
+                .gear_registry
+                .spawn(&mut commands, p.difficulty.0.player_gear.left_hand);
+            player_gear.left_hand = Some(gear_entity);
+            commands
+                .entity(gear_entity)
+                .insert(NetworkId(gear_id_counter));
+            gear_id_counter += 1;
+        }
+        if p.difficulty.0.player_gear.right_hand.is_some() {
+            let gear_entity = p
+                .gear_registry
+                .spawn(&mut commands, p.difficulty.0.player_gear.right_hand);
+            player_gear.right_hand = Some(gear_entity);
+            commands
+                .entity(gear_entity)
+                .insert(NetworkId(gear_id_counter));
+            gear_id_counter += 1;
+        }
+        for kind in &p.difficulty.0.player_gear.inventory {
+            if kind.is_some() {
+                let gear_entity = p.gear_registry.spawn(&mut commands, *kind);
+                player_gear.inventory.push(gear_entity);
+                commands
+                    .entity(gear_entity)
+                    .insert(NetworkId(gear_id_counter));
+                gear_id_counter += 1;
+            }
+        }
+
+        // --- Visual setup ---
+        let mut player_image = p.player_assets.character.clone();
+        let mut player_rf = 1.0;
+        if let Some(resolved) = p.upscale_idx.resolve(
+            "img/characters-model1-demo.png",
+            p.video_settings.max_upscale_factor.factor(),
+        ) {
+            player_image = p.asset_server.load(resolved.path);
+            player_rf = resolved.factor;
+        }
+
+        let sprite_size = Vec2::new(32.0 * player_rf, 32.0 * player_rf);
+        let anchor = unplayer_core::assets::PLAYER_ANCHOR;
+        let sprite_anchor = Vec2::new(
+            sprite_size.x * (anchor.x + 0.5),
+            sprite_size.y * (0.5 - anchor.y),
+        );
+        let src_mesh_handle = p
+            .meshes
+            .add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
+
+        let spawn_scoord = perspective::to_screen_coord(spawn_pos);
+
+        let mut material = CustomMaterial1::from_texture(player_image);
+        material.data.sheet_cols = 16;
+        material.data.sheet_rows = 4;
+        material.data.sprite_width = 32.0 * player_rf;
+        material.data.sprite_height = 32.0 * player_rf;
+        material.data.upscale_factor = player_rf;
+        material.data.y_anchor = anchor.y;
+
+        let material_handle = p.materials1.add(material);
+
+        let mut ec = commands.spawn(Mesh2d(src_mesh_handle));
+        ec.insert(MeshMaterial2d(material_handle))
+            .insert(
+                Transform::from_xyz(spawn_scoord[0], spawn_scoord[1], spawn_scoord[2])
+                    .with_scale(Vec3::new(1.0 / player_rf, 1.0 / player_rf, 1.0 / player_rf)),
+            )
+            .insert(ResolutionFactor(player_rf))
+            .insert(GameSprite)
+            .insert(MapTileSprite)
+            .insert(SpriteLayer(0.00001));
+
+        // Remote player: no MainPlayer, no Viewer, no SpatialListener.
+        // Use explicit ControlKeys::NONE — ControlKeys::default() is WASD, not NONE!
+        ec.insert(PlayerSprite::new(new_id, spawn_pos))
+            .insert(new_id)
+            .insert(MapColor {
+                color: Color::WHITE,
+            })
+            .insert(PlayerInputMapping {
+                controls: unsettings_core::controls::ControlKeys::NONE,
+            })
+            .insert(PlayerInput::default())
+            .insert(VisibilityData::default())
+            .insert(PlayerTag)
+            .insert(ShadowCaster::default())
+            .insert(spawn_pos)
+            .insert(MapEntityFieldBPos(spawn_pos.to_board_position()))
+            .insert(Movable)
+            .insert(LightSensitive {
+                exposure_factor: 1.1,
+                bias: 0.01,
+            })
+            .insert(Direction::new_right())
+            .insert(AnimationTimer::from_range(
+                Timer::from_seconds(0.20, TimerMode::Repeating),
+                CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
+            ))
+            .insert(Stamina::default())
+            .insert(unnavigation_core::components::waypoint::WaypointQueue::default());
+
+        ec.insert(player_gear);
+
+        let player_ent_id = ec
+            .with_children(|parent| {
+                parent
+                    .spawn(Sprite {
+                        image: p.ghost_assets.focus_ring_vignette.clone(),
+                        color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                        ..default()
+                    })
+                    .insert(
+                        Transform::from_scale(Vec3::splat(1.1 * player_rf))
+                            .with_translation(Vec3::new(0.0, 0.1, 0.01)),
+                    )
+                    .insert(FocusRing::default());
+            })
+            .id();
+
+        p.board_entity_field.0[spawn_pos.to_board_position().ndidx()].push(player_ent_id);
+    }
 }
 
 fn spawn_ambient_sounds(p: &ClassicModeSystemParam, commands: &mut Commands) {

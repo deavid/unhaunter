@@ -163,23 +163,6 @@ pub struct PlayerInputMapping {
     pub controls: ControlKeys,
 }
 
-impl PlayerInputMapping {
-    pub fn new(id: NetworkId) -> Self {
-        Self {
-            controls: Self::default_controls(id),
-        }
-    }
-
-    /// Returns the default `ControlKeys` for the given player ID.
-    fn default_controls(id: NetworkId) -> ControlKeys {
-        match id.0 {
-            1 => ControlKeys::WASD,
-            2 => ControlKeys::IJKL,
-            _ => ControlKeys::NONE,
-        }
-    }
-}
-
 impl PlayerSprite {
     /// Creates a new `PlayerSprite` with the specified ID.
     pub fn new(id: NetworkId, spawn_position: Position) -> Self {

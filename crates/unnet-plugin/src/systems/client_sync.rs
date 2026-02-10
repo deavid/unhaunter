@@ -1,6 +1,8 @@
+use bevy::audio::SpatialListener;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use rand::prelude::*;
+use unassets_core::resources::upscale::UpscaleIndex;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
@@ -41,6 +43,7 @@ use unrender_std::components::visuals::{
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::quadcc::QuadCC;
+use unsettings_core::video::VideoSettings;
 
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
 use unspatial_core::components::NetworkOriginalMapPosition;
@@ -80,6 +83,11 @@ pub(crate) struct ClientSnapshotParams<'w, 's> {
     pub gear_registry: Res<'w, GearSpawnerRegistry>,
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
     pub meshes: ResMut<'w, Assets<Mesh>>,
+    pub upscale_idx: Res<'w, UpscaleIndex>,
+    pub video_settings: Res<'w, bevy_persistent::Persistent<VideoSettings>>,
+    pub audio_settings: Res<'w, bevy_persistent::Persistent<unsettings_core::audio::AudioSettings>>,
+    pub control_settings:
+        Res<'w, bevy_persistent::Persistent<unsettings_core::controls::ControlKeys>>,
     pub query_players: Query<
         'w,
         's,
@@ -255,9 +263,21 @@ pub(crate) fn spawn_breach_locally(params: &mut ClientSnapshotParams, snapshot_p
         });
 }
 
-pub(crate) fn spawn_remote_player(params: &mut ClientSnapshotParams, id: NetworkId) -> Entity {
-    let player_rf = 1.0;
-    let player_image = params.player_assets.character.clone();
+pub(crate) fn spawn_remote_player(
+    params: &mut ClientSnapshotParams,
+    id: NetworkId,
+    initial_pos: Position,
+) -> Entity {
+    let mut player_image = params.player_assets.character.clone();
+    let mut player_rf = 1.0;
+    if let Some(resolved) = params.upscale_idx.resolve(
+        "img/characters-model1-demo.png",
+        params.video_settings.max_upscale_factor.factor(),
+    ) {
+        player_image = params.asset_server.load(resolved.path);
+        player_rf = resolved.factor;
+    }
+
     let sprite_size = Vec2::new(32.0 * player_rf, 32.0 * player_rf);
     let anchor = unplayer_core::assets::PLAYER_ANCHOR;
     let sprite_anchor = Vec2::new(
@@ -290,16 +310,14 @@ pub(crate) fn spawn_remote_player(params: &mut ClientSnapshotParams, id: Network
         .insert(unrender_std::components::game::MapTileSprite)
         .insert(SpriteLayer(0.00001));
 
-    ec.insert(PlayerSprite::new(id, Position::new_i64(0, 0, 0)))
+    ec.insert(PlayerSprite::new(id, initial_pos))
         .insert(id)
         .insert(PlayerInput::default())
         .insert(VisibilityData::default())
         .insert(PlayerTag)
         .insert(ShadowCaster::default())
-        .insert(Position::new_i64(0, 0, 0))
-        .insert(MapEntityFieldBPos(
-            Position::new_i64(0, 0, 0).to_board_position(),
-        ))
+        .insert(initial_pos)
+        .insert(MapEntityFieldBPos(BoardPosition::default()))
         .insert(unbehavior::components::Movable)
         .insert(LightSensitive {
             exposure_factor: 1.1,
@@ -316,6 +334,20 @@ pub(crate) fn spawn_remote_player(params: &mut ClientSnapshotParams, id: Network
         .insert(MapColor {
             color: Color::WHITE,
         });
+
+    ec.with_children(|parent| {
+        parent
+            .spawn(Sprite {
+                image: params.ghost_assets.focus_ring_vignette.clone(),
+                color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                ..default()
+            })
+            .insert(
+                Transform::from_scale(Vec3::splat(1.1 * player_rf))
+                    .with_translation(Vec3::new(0.0, 0.1, 0.01)),
+            )
+            .insert(unrender_std::components::focus_ring::FocusRing::default());
+    });
 
     ec.id()
 }
@@ -413,6 +445,7 @@ pub(crate) fn spawn_remote_gear(
 pub(crate) fn client_apply_snapshots_system(
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut params: ClientSnapshotParams,
+    local_player: Res<unnet_core::resources::LocalPlayer>,
     mut local_tick: Local<u64>,
 ) {
     let measure = metrics::CLIENT_APPLY_SNAPSHOTS.time_measure();
@@ -714,13 +747,39 @@ pub(crate) fn client_apply_snapshots_system(
                     *e
                 } else {
                     debug!("Spawning remote player {:?}", p_state.id);
-                    let ent = spawn_remote_player(&mut params, p_state.id);
+                    let initial_pos = Position {
+                        x: p_state.position[0],
+                        y: p_state.position[1],
+                        z: p_state.position[2],
+                        visual_priority: 0.0,
+                    };
+                    let ent = spawn_remote_player(&mut params, p_state.id, initial_pos);
                     // Insert into net_to_entity immediately to prevent duplicate
                     // spawns when multiple snapshots are processed in the same
                     // frame. The entity was created via Commands (deferred) so it
                     // won't be queryable until next frame, but
                     // spawn_remote_player already applied initial state.
                     net_to_entity.insert(p_state.id, ent);
+
+                    // If this is OUR player, tag it as MainPlayer
+                    if local_player.0 == Some(p_state.id) {
+                        info!("Tagging spawned player {:?} as MainPlayer", p_state.id);
+                        params
+                            .commands
+                            .entity(ent)
+                            .insert(unplayer_core::components::MainPlayer)
+                            .insert(unrender_std::components::visuals::Viewer {
+                                id: p_state.id,
+                                ..default()
+                            })
+                            .insert(SpatialListener::new(
+                                -params.audio_settings.sound_output.to_ear_offset(),
+                            ))
+                            .insert(unplayer_core::components::PlayerInputMapping {
+                                controls: **params.control_settings,
+                            });
+                    }
+
                     continue;
                 };
 

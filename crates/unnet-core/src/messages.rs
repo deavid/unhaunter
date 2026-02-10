@@ -320,5 +320,11 @@ pub struct NetworkDisconnectEvent {
     pub id: NetworkId,
 }
 
+/// Emitted on the host when a client completes handshake and is ready to play.
+#[derive(Debug, Clone, Message)]
+pub struct PlayerJoinedEvent {
+    pub id: NetworkId,
+}
+
 #[derive(Debug, Clone, Message)]
 pub struct SendNetworkMessage(pub NetworkMessage);
