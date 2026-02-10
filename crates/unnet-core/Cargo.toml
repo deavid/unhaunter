@@ -19,3 +19,4 @@ untypes-core = { path = "../untypes-core" }
 ungear-core = { path = "../ungear-core" }
 ungearitems-core = { path = "../ungearitems-core" }
 unghost-core = { path = "../unghost-core" }
+uuid = { workspace = true }

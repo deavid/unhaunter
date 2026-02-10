@@ -211,7 +211,7 @@ pub enum NetworkMessage {
     /// Initial handshake from Client to Host.
     Hello {
         version: String,
-        previous_id: Option<NetworkId>,
+        installation_id: uuid::Uuid,
     },
     /// Response from Host to Client.
     Welcome {

@@ -172,6 +172,7 @@ pub(crate) fn startup_network_system(
                             read_buffer: String::new(),
                             write_queue: VecDeque::new(),
                             handshake: HandshakeState::None,
+                            installation_id: None,
                             associated_id: None,
                             needs_full_sync: false,
                             host_listeners: Vec::new(),
@@ -234,6 +235,7 @@ pub(crate) fn network_io_system(
                     stream,
                     read_buffer: String::new(),
                     write_queue: VecDeque::new(),
+                    installation_id: None,
                     handshake: HandshakeState::None,
                     associated_id: None,
                     needs_full_sync: false,
@@ -246,6 +248,7 @@ pub(crate) fn network_io_system(
         NetworkConn::Active {
             stream,
             mut read_buffer,
+            installation_id,
             mut write_queue,
             handshake,
             associated_id,
@@ -350,6 +353,7 @@ pub(crate) fn network_io_system(
                     read_buffer,
                     write_queue,
                     handshake,
+                    installation_id,
                     associated_id,
                     needs_full_sync,
                     host_listeners,
@@ -427,11 +431,14 @@ pub(crate) fn handshake_handler_system(
         (Entity, &NetworkId),
         With<unplayer_core::components::PlayerDisconnected>,
     >,
+    mut player_registry: ResMut<crate::resources::PlayerRegistry>,
+    runtime_installation_id: Res<unprofile_core::profile::RuntimeInstallationId>,
 ) {
     let measure = metrics::HANDSHAKE_HANDLER.time_measure();
     let mut to_send = Vec::new();
     let mut new_handshake = None;
     let mut associate_id = None;
+    let mut new_installation_id = None;
 
     if let NetworkConn::Active { handshake, .. } = &*conn {
         // Client side automatic Hello
@@ -439,7 +446,7 @@ pub(crate) fn handshake_handler_system(
             debug!("Network: Sending Hello...");
             to_send.push(NetworkMessage::Hello {
                 version: "0.1.0".to_string(),
-                previous_id: local_id.0,
+                installation_id: runtime_installation_id.0,
             });
             new_handshake = Some(HandshakeState::HelloSent);
         }
@@ -453,14 +460,14 @@ pub(crate) fn handshake_handler_system(
             match msg {
                 NetworkMessage::Hello {
                     version,
-                    previous_id,
+                    installation_id,
                 } => {
                     debug!(
-                        "Network: Received Hello (version: {}, prev_id: {:?})",
-                        version, previous_id
+                        "Network: Received Hello (version: {}, install_id: {:?})",
+                        version, installation_id
                     );
                     if matches!(cli.net_mode, NetMode::Host { .. }) {
-                        let id = previous_id.unwrap_or(NetworkId(2)); // Client is always 2 in MVP
+                        let id = player_registry.get_or_assign(installation_id);
                         debug!("Network: Sending Welcome to {:?}...", id);
 
                         // Check if we can re-associate with an existing disconnected entity
@@ -488,6 +495,7 @@ pub(crate) fn handshake_handler_system(
                         });
                         new_handshake = Some(HandshakeState::Completed);
                         associate_id = Some(id);
+                        new_installation_id = Some(installation_id);
                     }
                 }
                 NetworkMessage::Welcome {
@@ -530,6 +538,7 @@ pub(crate) fn handshake_handler_system(
             handshake,
             associated_id,
             needs_full_sync,
+            installation_id,
             ..
         },
     ) = (new_handshake, &mut *conn)
@@ -540,6 +549,9 @@ pub(crate) fn handshake_handler_system(
             if hs == HandshakeState::Completed {
                 *needs_full_sync = true;
             }
+        }
+        if let Some(iid) = new_installation_id {
+            *installation_id = Some(iid);
         }
     }
     for msg in to_send {

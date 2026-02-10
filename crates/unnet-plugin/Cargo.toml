@@ -11,6 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+unprofile-core = { path = "../unprofile-core" }
 unnet-core = { path = "../unnet-core" }
 untypes-core = { path = "../untypes-core" }
 unplayer-core = { path = "../unplayer-core" }
@@ -37,3 +38,4 @@ rand = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 serde_json = { workspace = true }
+uuid = { workspace = true }

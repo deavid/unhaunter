@@ -6330,6 +6330,7 @@ dependencies = [
  "ungearitems-core",
  "unghost-core",
  "untypes-core",
+ "uuid",
 ]
 
 [[package]]
@@ -6354,6 +6355,7 @@ dependencies = [
  "unnavigation-core",
  "unnet-core",
  "unplayer-core",
+ "unprofile-core",
  "unrender-std",
  "unsettings-core",
  "unspatial-core",
@@ -6362,6 +6364,7 @@ dependencies = [
  "untruck-core",
  "untruck-plugin",
  "untypes-core",
+ "uuid",
 ]
 
 [[package]]
