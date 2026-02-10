@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 use unfoundation_core::random_seed;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
@@ -41,7 +41,7 @@ impl RoarType {
 
         roar_sounds
             .get(random_seed::rng().random_range(0..roar_sounds.len()))
-            .map(|s| s.to_string())
+            .map(|s: &&str| s.to_string())
     }
 
     pub(crate) fn get_volume(&self) -> f32 {

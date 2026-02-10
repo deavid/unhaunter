@@ -24,7 +24,7 @@ use untypes_core::cli::{CliOptions, NetMode};
 use crate::metrics;
 
 use bevy::{color::palettes::css, prelude::*};
-use rand::Rng;
+use rand::RngExt;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 pub(crate) use ungearitems_core::components::repellentflask::RepellentFlask;
 

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, StatusText};

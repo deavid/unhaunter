@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;

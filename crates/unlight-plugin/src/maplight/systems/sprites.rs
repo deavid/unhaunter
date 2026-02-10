@@ -1,7 +1,7 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use rand::Rng;
+use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;

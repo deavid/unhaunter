@@ -3,7 +3,7 @@ use super::roar::{RoarDecision, RoarReason, RoarType, execute_roar_decision};
 use crate::components::fade_out::FadeOut;
 use crate::metrics::GHOST_ENRAGE;
 use bevy::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use undifficulty_core::current_difficulty::CurrentDifficulty;

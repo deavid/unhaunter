@@ -19,7 +19,7 @@ use unghost_core::types::evidence::Evidence;
 use unspatial_core::position::Position;
 
 use bevy::prelude::*;
-use rand::Rng as _;
+use rand::RngExt;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;

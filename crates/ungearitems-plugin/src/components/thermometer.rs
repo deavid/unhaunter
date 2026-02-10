@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use rand::Rng;
+use rand::RngExt;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;

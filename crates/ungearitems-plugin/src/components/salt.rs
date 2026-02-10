@@ -1,7 +1,7 @@
 use crate::metrics;
 
 use bevy::prelude::*;
-use rand::Rng as _;
+use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;

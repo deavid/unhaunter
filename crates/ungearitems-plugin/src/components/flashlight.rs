@@ -10,7 +10,7 @@ use crate::metrics;
 
 use bevy::prelude::*;
 use enum_iterator::Sequence;
-use rand::Rng;
+use rand::RngExt;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 pub(crate) use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 use untypes_core::cli::CliOptions;

@@ -12,7 +12,7 @@ use unspatial_core::position::Position;
 use crate::metrics;
 
 use bevy::prelude::*;
-use rand::Rng as _;
+use rand::RngExt;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, PerceivedClarity, StatusText,

@@ -3,6 +3,7 @@ use bevy_platform::collections::HashMap;
 use bevy_platform::collections::HashSet;
 use bevy_platform::time::Instant;
 use rand::Rng;
+use rand::RngExt;
 use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
 use unboard_core::resources::board_topology::BoardTopology;

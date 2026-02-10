@@ -1,6 +1,7 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use rand::Rng;
+use rand::RngExt;
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::difficulty_settings::DifficultyStruct;
 use unfog_core::components::MiasmaSprite;

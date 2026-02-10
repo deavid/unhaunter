@@ -1,6 +1,7 @@
 use crate::components::interaction::Locked;
 use bevy::prelude::*;
 use rand::Rng;
+use rand::RngExt;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::{Door, InteractableByGhost};
 use unbehavior::state::TileState;

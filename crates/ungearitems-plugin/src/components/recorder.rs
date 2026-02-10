@@ -9,7 +9,7 @@ use unsound_core::emitter::SoundEmitter;
 use unsound_core::resources::SoundGrid;
 
 use bevy::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 use ungearitems_core::components::recorder::Recorder;
@@ -131,8 +131,7 @@ pub(crate) fn update_recorder(
 
             if evp_recorded {
                 let clarity = haunt_state.ghost_dynamics.evp_recording_clarity.max(0.0);
-                recorder.amt_recorded +=
-                    dt * difficulty.0.equipment_sensitivity * 2.1 * clarity;
+                recorder.amt_recorded += dt * difficulty.0.equipment_sensitivity * 2.1 * clarity;
             } else {
                 recorder.amt_recorded -= dt * 0.1;
             }

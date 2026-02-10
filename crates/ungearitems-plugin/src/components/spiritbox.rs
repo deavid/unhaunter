@@ -16,7 +16,7 @@ use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use rand::Rng;
+use rand::RngExt;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;

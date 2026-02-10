@@ -2,7 +2,7 @@ use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
-use rand::Rng;
+use rand::RngExt;
 
 use unbehavior::behavior::{Behavior, Interactive};
 use unboard_core::components::mapcolor::MapColor;

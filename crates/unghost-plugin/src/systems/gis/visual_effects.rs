@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unmetrics_core::metrics::SendMetric;
