@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::Rng; // Import the Rng trait
+use rand::prelude::*;
 use std::f32::consts::TAU;
 use unfoundation_core::random_seed;
 

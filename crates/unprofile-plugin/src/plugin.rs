@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy_persistent::prelude::*;
 use std::path::Path;
-use unprofile_core::profile::PlayerProfileData;
+use unprofile_core::profile::{PlayerProfileData, RuntimeInstallationId};
+use untypes_core::cli::CliOptions;
+use uuid::Uuid;
 
 pub struct UnhaunterProfilePlugin;
 
@@ -43,7 +45,72 @@ impl Plugin for UnhaunterProfilePlugin {
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Startup, recover_stuck_insurance_deposit);
+    app.add_systems(
+        Startup,
+        (initialize_installation_id, recover_stuck_insurance_deposit),
+    );
+}
+
+fn initialize_installation_id(
+    mut commands: Commands,
+    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
+    cli: Res<CliOptions>,
+) {
+    if player_profile.installation_id.is_nil() {
+        // TODO: WASM support for generating UUIDs might need a different approach
+        // for better entropy, but as multiplayer is not yet supported on WASM,
+        // this is acceptable for now.
+        player_profile.installation_id = Uuid::new_v4();
+        if let Err(e) = player_profile.persist() {
+            error!(
+                "Failed to persist PlayerProfileData with new installation_id: {:?}",
+                e
+            );
+        }
+    }
+
+    let mut installation_id = player_profile.installation_id;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Some(path_str) = &cli.installation_id_file {
+        let path = Path::new(path_str);
+        match std::fs::read_to_string(path) {
+            Ok(content) => {
+                let content = content.trim();
+                match Uuid::parse_str(content) {
+                    Ok(uuid) => {
+                        if uuid.is_nil() {
+                            eprintln!("ERROR: Override UUID from {} cannot be nil (all zeros).", path_str);
+                            std::process::exit(1);
+                        }
+                        info!(
+                            "Using installation ID override from file {}: {}",
+                            path_str, uuid
+                        );
+                        installation_id = uuid;
+                    }
+                    Err(e) => {
+                        eprintln!(
+                            "ERROR: Failed to parse UUID from installation-id-file {}: {:?}",
+                            path_str, e
+                        );
+                        std::process::exit(1);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("ERROR: Failed to read installation-id-file {}: {:?}", path_str, e);
+                std::process::exit(1);
+            }
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    if cli.installation_id_file.is_some() {
+        warn!("installation-id-file is not supported on WASM");
+    }
+
+    commands.insert_resource(RuntimeInstallationId(installation_id));
 }
 
 fn recover_stuck_insurance_deposit(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {

@@ -24,6 +24,9 @@ struct Args {
     #[clap(long)]
     difficulty: Option<String>,
 
+    #[clap(long)]
+    installation_id_file: Option<String>,
+
     #[clap(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
@@ -105,6 +108,7 @@ fn main() {
         net_mode,
         map_path: final_map_path,
         difficulty_id: args.difficulty,
+        installation_id_file: args.installation_id_file,
         verbose: args.verbose,
         mute: args.mute,
     });

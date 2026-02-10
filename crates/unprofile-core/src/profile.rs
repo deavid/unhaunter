@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use unfoundation_core::types::grade::Grade;
 use unghost_core::types::evidence::Evidence;
 use untypes_core::difficulty::Difficulty;
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
@@ -126,6 +127,8 @@ pub struct WalkieEventStats {
 #[serde(deny_unknown_fields)]
 pub struct PlayerProfileData {
     #[serde(default)]
+    pub installation_id: Uuid,
+    #[serde(default)]
     pub progression: ProgressionData,
     #[serde(default)]
     pub achievements: AchievementData,
@@ -141,6 +144,9 @@ pub struct PlayerProfileData {
     #[serde(default)]
     pub times_evidence_acknowledged_in_journal: HashMap<Evidence, u32>,
 }
+
+#[derive(Resource, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RuntimeInstallationId(pub Uuid);
 
 impl PlayerProfileData {
     /// Gets the best grade achieved for a specific map and difficulty.

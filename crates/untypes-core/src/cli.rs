@@ -20,6 +20,7 @@ pub struct CliOptions {
     pub net_mode: NetMode,
     pub map_path: Option<String>,
     pub difficulty_id: Option<String>,
+    pub installation_id_file: Option<String>,
     pub verbose: u8,
     pub mute: bool,
 }

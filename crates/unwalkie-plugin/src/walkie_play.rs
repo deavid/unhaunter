@@ -121,7 +121,7 @@ fn walkie_talk(
                     .get(&walkie_event)
                     .copied()
                     .unwrap_or_default();
-                use rand::Rng;
+                use rand::prelude::*;
                 let mut rng = random_seed::rng();
                 let dice = rng.random_range(0..=saved_count.pow(2));
                 debug!(

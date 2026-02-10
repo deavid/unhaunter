@@ -1,7 +1,7 @@
 use std::f64::consts::PI;
 
 use bevy::prelude::*;
-use rand::Rng;
+use rand::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};

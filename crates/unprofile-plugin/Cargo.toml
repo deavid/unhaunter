@@ -16,4 +16,6 @@ bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 dirs = { workspace = true }
 unprofile-core = { path = "../unprofile-core" }
+untypes-core = { path = "../untypes-core" }
+uuid = { workspace = true }
 ron = { workspace = true }

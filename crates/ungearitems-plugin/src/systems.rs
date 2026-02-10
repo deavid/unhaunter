@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::Rng;
+use rand::prelude::*;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic};
 use ungear_core::components::playergear::PlayerGear;

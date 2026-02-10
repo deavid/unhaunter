@@ -1,6 +1,6 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
-use rand::Rng;
+use rand::prelude::*;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};

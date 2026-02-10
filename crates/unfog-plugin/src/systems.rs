@@ -3,7 +3,7 @@ use bevy::sprite::Anchor;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
 use ndarray::{Array3, s};
-use rand::Rng;
+use rand::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::chunk::{CellIterator, ChunkIterator};

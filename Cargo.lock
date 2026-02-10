@@ -6460,6 +6460,7 @@ dependencies = [
  "unfoundation-core",
  "unghost-core",
  "untypes-core",
+ "uuid",
 ]
 
 [[package]]
@@ -6471,6 +6472,8 @@ dependencies = [
  "dirs",
  "ron 0.12.0",
  "unprofile-core",
+ "untypes-core",
+ "uuid",
 ]
 
 [[package]]

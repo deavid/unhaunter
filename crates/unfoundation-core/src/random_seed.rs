@@ -9,7 +9,7 @@ use std::{
     hash::{DefaultHasher, Hash, Hasher},
 };
 
-use rand::{RngCore, SeedableRng};
+use rand::prelude::*;
 
 /// Generates a seed based on the current system time.
 ///

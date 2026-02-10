@@ -1,7 +1,7 @@
 use std::{f32::consts::TAU, time::Duration};
 
 use bevy::prelude::*;
-use rand::Rng; // Import the Rng trait
+use rand::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unfoundation_core::random_seed;

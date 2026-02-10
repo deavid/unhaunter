@@ -2,7 +2,7 @@ use crate::resources::{HandshakeState, NetworkConn};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use rand::Rng;
+use rand::prelude::*;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -843,7 +843,7 @@ pub(crate) fn host_send_snapshots_system(
                 let mid = match nid {
                     Some(id) => *id,
                     None => {
-                        use rand::Rng;
+                        use rand::prelude::*;
                         let mut rng = rand::rng();
                         let new_id = NetworkId(rng.random_range(1000..u64::MAX));
                         host_params.commands.entity(entity).insert(new_id);

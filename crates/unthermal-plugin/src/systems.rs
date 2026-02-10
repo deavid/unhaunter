@@ -1,7 +1,7 @@
 use crate::metrics;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use rand::Rng;
+use rand::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::HeatEmitter;
 use unbehavior::roomdb::RoomDB;

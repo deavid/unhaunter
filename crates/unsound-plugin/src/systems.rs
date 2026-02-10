@@ -1,6 +1,6 @@
 use crate::metrics;
 use bevy::prelude::*;
-use rand::Rng;
+use rand::prelude::*;
 use std::mem::swap;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::physics::SoundEmitter;

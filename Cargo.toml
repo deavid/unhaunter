@@ -128,6 +128,7 @@ ndarray = "0.17"
 sha2 = "0.10"
 rayon = "1.11"
 crossbeam-channel = "0.5"
+uuid = { version = "1.13", features = ["v4", "serde"] }
 
 # winit is not for WASM, and needs to be in sync with bevy version
 winit = "0.30"
