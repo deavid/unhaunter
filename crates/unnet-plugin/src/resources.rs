@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use std::collections::VecDeque;
 use unnet_core::messages::NetworkMessage;
+use unnet_core::network_id::NetworkId;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum HandshakeState {
@@ -24,7 +25,7 @@ pub(crate) struct ClientConnection {
     pub write_queue: VecDeque<NetworkMessage>,
     pub handshake: HandshakeState,
     pub installation_id: Option<uuid::Uuid>,
-    pub associated_id: Option<unnet_core::network_id::NetworkId>,
+    pub associated_id: Option<NetworkId>,
     pub needs_full_sync: bool,
 }
 
@@ -64,21 +65,35 @@ impl NetworkConn {
         }
     }
 
-    /// Broadcast a message to ALL connected clients. Does nothing if not Host.
+    /// Broadcast a message to ALL connected clients that have completed handshake. Does nothing if not Host.
     pub(crate) fn host_broadcast(&mut self, msg: NetworkMessage) {
         if let Self::Host { clients, .. } = self {
             for client in clients.iter_mut() {
-                client.write_queue.push_back(msg.clone());
+                if client.handshake == HandshakeState::Completed {
+                    client.write_queue.push_back(msg.clone());
+                }
             }
         }
     }
 
+    /// Send a message to a specific client that has completed handshake.
+    pub(crate) fn host_send_to(&mut self, id: NetworkId, msg: NetworkMessage) {
+        if let Self::Host { clients, .. } = self {
+            for client in clients.iter_mut() {
+                if client.associated_id == Some(id) && client.handshake == HandshakeState::Completed
+                {
+                    client.write_queue.push_back(msg);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 #[derive(Resource, Debug)]
 pub(crate) struct PlayerRegistry {
     /// Maps installation_id (UUID) -> assigned NetworkId
-    pub uuid_to_network_id: std::collections::HashMap<uuid::Uuid, unnet_core::network_id::NetworkId>,
+    pub uuid_to_network_id: std::collections::HashMap<uuid::Uuid, NetworkId>,
     /// The next NetworkId to assign to a new player
     pub next_id: u64,
 }
@@ -93,11 +108,11 @@ impl Default for PlayerRegistry {
 }
 
 impl PlayerRegistry {
-    pub(crate) fn get_or_assign(&mut self, uuid: uuid::Uuid) -> unnet_core::network_id::NetworkId {
+    pub(crate) fn get_or_assign(&mut self, uuid: uuid::Uuid) -> NetworkId {
         if let Some(&id) = self.uuid_to_network_id.get(&uuid) {
             return id;
         }
-        let id = unnet_core::network_id::NetworkId(self.next_id);
+        let id = NetworkId(self.next_id);
         self.next_id += 1;
         self.uuid_to_network_id.insert(uuid, id);
         id

@@ -1,5 +1,6 @@
-use crate::resources::{HandshakeState, NetworkConn};
+use crate::resources::{ClientConnection, HandshakeState, NetworkConn, PlayerRegistry};
 use bevy::prelude::*;
+use std::collections::hash_map::Entry;
 use std::collections::{HashMap, VecDeque};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -100,16 +101,14 @@ pub(crate) fn network_io_system(
     let measure = metrics::NETWORK_IO.time_measure();
     let send_msgs: Vec<NetworkMessage> = ev_send.read().map(|m| m.0.clone()).collect();
 
+    // 1a. Enqueue event-based messages to ALL clients
+    for msg in &send_msgs {
+        conn.host_broadcast(msg.clone());
+    }
+
     match &mut *conn {
         NetworkConn::Disconnected => {}
         NetworkConn::Host { listeners, clients } => {
-            // 1a. Enqueue event-based messages to ALL clients
-            for msg in &send_msgs {
-                for client in clients.iter_mut() {
-                    client.write_queue.push_back(msg.clone());
-                }
-            }
-
             // 2. Accept new connections from listeners
             for listener in listeners.iter() {
                 loop {
@@ -159,15 +158,19 @@ pub(crate) fn network_io_system(
                     continue;
                 }
                 if let Some(id) = client.associated_id {
-                    if let Some(&prev_idx) = seen_ids.get(&id) {
-                        // Keep the newer connection (higher index), close the older one
-                        duplicates_to_remove.push(prev_idx);
-                        warn!(
-                            "Network: Closing stale connection index {} for {:?} (superseded)",
-                            prev_idx, id
-                        );
+                    match seen_ids.entry(id) {
+                        Entry::Occupied(_) => {
+                            // Kick the newcomer (current idx), keep the old one
+                            duplicates_to_remove.push(idx);
+                            error!(
+                                "Network: Duplicate connection attempt for {:?}. Kicking newcomer.",
+                                id
+                            );
+                        }
+                        Entry::Vacant(v) => {
+                            v.insert(idx);
+                        }
                     }
-                    seen_ids.insert(id, idx);
                 }
             }
 
@@ -190,7 +193,7 @@ pub(crate) fn network_io_system(
             stream,
             read_buffer,
             write_queue,
-            ..
+            handshake,
         } => {
             // 1a. Enqueue event-based messages
             for msg in &send_msgs {
@@ -265,6 +268,11 @@ pub(crate) fn network_io_system(
             }
 
             if closed {
+                if *handshake == HandshakeState::HelloSent {
+                    error!(
+                        "Network: Connection closed by host during handshake. You may already be connected from another instance."
+                    );
+                }
                 *conn = NetworkConn::Disconnected;
             }
         }
@@ -273,9 +281,9 @@ pub(crate) fn network_io_system(
 }
 
 fn do_client_io(
-    client: &mut crate::resources::ClientConnection,
+    client: &mut ClientConnection,
     ev_writer: &mut MessageWriter<NetworkDataEvent>,
-    player_registry: &mut crate::resources::PlayerRegistry,
+    player_registry: &mut PlayerRegistry,
 ) -> bool {
     let mut closed = false;
     // --- Read ---
@@ -376,6 +384,7 @@ pub(crate) fn handshake_handler_system(
     runtime_installation_id: Res<unprofile_core::profile::RuntimeInstallationId>,
 ) {
     let measure = metrics::HANDSHAKE_HANDLER.time_measure();
+    let mut welcomes_to_send = Vec::new();
 
     match &mut *conn {
         NetworkConn::Disconnected => {}
@@ -409,18 +418,22 @@ pub(crate) fn handshake_handler_system(
                                 }
                             }
 
-                            let seed = unfoundation_core::random_seed::heavy_rng_seed();
-                            client.write_queue.push_back(NetworkMessage::Welcome {
-                                id: source_id,
-                                map_seed: seed,
-                                map_filepath: cli.map_path.clone().unwrap_or_default(),
-                                difficulty_id: cli
-                                    .difficulty_id
-                                    .clone()
-                                    .unwrap_or("medium".to_string()),
-                            });
                             client.handshake = HandshakeState::Completed;
                             client.needs_full_sync = true;
+
+                            let seed = unfoundation_core::random_seed::heavy_rng_seed();
+                            welcomes_to_send.push((
+                                source_id,
+                                NetworkMessage::Welcome {
+                                    id: source_id,
+                                    map_seed: seed,
+                                    map_filepath: cli.map_path.clone().unwrap_or_default(),
+                                    difficulty_id: cli
+                                        .difficulty_id
+                                        .clone()
+                                        .unwrap_or("medium".to_string()),
+                                },
+                            ));
                             break;
                         }
                     }
@@ -476,6 +489,11 @@ pub(crate) fn handshake_handler_system(
             }
         }
     }
+
+    for (id, msg) in welcomes_to_send {
+        conn.host_send_to(id, msg);
+    }
+
     measure.end_ms();
 }
 
