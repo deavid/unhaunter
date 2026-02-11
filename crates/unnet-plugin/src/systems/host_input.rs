@@ -11,7 +11,7 @@ use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unmetrics_core::metrics::SendMetric;
 use unnet_core::messages::{NetworkDataEvent, NetworkMessage};
 use unnet_core::network_id::NetworkId;
-use unnet_core::resources::MissionEndRequested;
+use unnet_core::resources::{CurrentMapSeed, LobbyData, MissionEndRequested};
 use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite};
 use unsettings_core::audio::AudioSettings;
 use unspatial_core::position::Position;
@@ -54,6 +54,8 @@ pub(crate) struct HostApplyInputParams<'w, 's> {
     pub audio_settings: Res<'w, Persistent<AudioSettings>>,
     pub ev_mission: MessageWriter<'w, unevents_core::events::mission::MissionEvent>,
     pub mission_end_requested: Res<'w, MissionEndRequested>,
+    pub lobby_data: Option<Res<'w, LobbyData>>,
+    pub current_map_seed: Option<Res<'w, CurrentMapSeed>>,
 }
 
 pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
@@ -65,6 +67,44 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
 
     for ev in params.ev_reader.read() {
         match &ev.message {
+            NetworkMessage::RequestLateJoin { player_id } => {
+                let seed = params.current_map_seed.as_deref().map(|s| s.0).unwrap_or(0);
+                let map_path = params
+                    .lobby_data
+                    .as_deref()
+                    .and_then(|l| l.selected_map.clone())
+                    .unwrap_or_default();
+                let diff_id = params
+                    .lobby_data
+                    .as_deref()
+                    .and_then(|l| l.selected_difficulty.clone())
+                    .unwrap_or_default();
+
+                debug!(
+                    "Sending Late Join StartMission to {:?} (Map: {}, Diff: {}, Seed: {})",
+                    player_id, map_path, diff_id, seed
+                );
+
+                if let Some(conn) = params.network_conn.as_deref_mut() {
+                    conn.host_send_to(
+                        *player_id,
+                        NetworkMessage::StartMission {
+                            map_seed: seed,
+                            map_filepath: map_path,
+                            difficulty_id: diff_id,
+                        },
+                    );
+
+                    // Set needs_full_sync = true
+                    if let NetworkConn::Host { clients, .. } = &mut *conn
+                        && let Some(client) = clients
+                            .iter_mut()
+                            .find(|c| c.associated_id == Some(*player_id))
+                    {
+                        client.needs_full_sync = true;
+                    }
+                }
+            }
             NetworkMessage::PlayerInput {
                 player_id,
                 o_position,

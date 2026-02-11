@@ -27,6 +27,8 @@ pub(crate) struct ClientConnection {
     pub installation_id: Option<uuid::Uuid>,
     pub associated_id: Option<NetworkId>,
     pub needs_full_sync: bool,
+    pub last_heartbeat: f32,
+    pub client_app_state: Option<untypes_core::states::AppState>,
 }
 
 #[derive(Resource, Default)]

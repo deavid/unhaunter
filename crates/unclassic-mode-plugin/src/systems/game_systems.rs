@@ -42,9 +42,6 @@ fn camera_follow_system(
         return;
     }
     let in_game = *game_state.get() == GameState::None;
-    if *game_state.get() == GameState::Pause {
-        return;
-    }
     let dt = time.delta_secs() * 60.0;
     for (mut transform, mut cam_dir) in camera.iter_mut() {
         for (player, p_transform, _p_dir) in pc.iter() {

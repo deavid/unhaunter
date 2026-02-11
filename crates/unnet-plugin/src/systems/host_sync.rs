@@ -372,7 +372,12 @@ pub(crate) fn host_send_snapshots_system(
         tick,
         is_full_sync: false,
         app_state: *host_params.app_state.get(),
-        game_state: *host_params.game_state.get(),
+        // Pause is a local-only state; broadcast None instead so clients aren't affected
+        game_state: if *host_params.game_state.get() == GameState::Pause {
+            GameState::None
+        } else {
+            *host_params.game_state.get()
+        },
         can_end_mission: host_params.mission_end_requested.0,
         players,
         ghosts,

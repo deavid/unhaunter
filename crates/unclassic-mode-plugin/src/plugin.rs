@@ -14,8 +14,7 @@ impl Plugin for ClassicModePlugin {
                 crate::systems::orchestrator::classic_mode_orchestrator
                     .run_if(on_message::<unevents_core::events::loadlevel::MapEntitiesReadyEvent>),
                 crate::systems::orchestrator::spawn_joined_player
-                    .run_if(in_state(untypes_core::states::AppState::InGame))
-                    .run_if(on_message::<unnet_core::messages::PlayerJoinedEvent>),
+                    .run_if(in_state(untypes_core::states::AppState::InGame)),
                 crate::systems::orchestrator::sync_ghost_visuals,
             ),
         );

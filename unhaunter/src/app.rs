@@ -13,6 +13,7 @@ use ungearitems_plugin::plugin::UnhaunterGearItemsPlugin;
 use unghost_plugin::plugin::UnhaunterGhostPlugin;
 use uninteraction_plugin::plugin::UnhaunterInteractionPlugin;
 use unlight_plugin::plugin::UnhaunterLightPlugin;
+use unlobby_plugin::plugin::UnhaunterLobbyPlugin;
 use unmainmenu_plugin::plugin::UnhaunterMenuPlugin;
 use unmanual_plugin::plugin::UnhaunterManualPlugin;
 use unmaphub_plugin::plugin::UnhaunterMapHubPlugin;
@@ -94,6 +95,7 @@ pub fn app_run(cli_options: CliOptions) {
         SoundPlugin,
         UnhaunterRenderPlugin,
         UnhaunterManualPlugin,
+        UnhaunterLobbyPlugin,
         UnhaunterSummaryPlugin,
         UnhaunterGearPlugin,
         UnhaunterInteractionPlugin,

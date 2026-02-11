@@ -10,6 +10,7 @@ use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use unmenu_core::templates;
 use unprofile_core::profile::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
+use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::states::{AppState, MapHubState};
 use unui_core::assets::UiAssets;
 
@@ -17,6 +18,7 @@ use unui_core::assets::UiAssets;
 pub(crate) enum MenuID {
     Campaign,
     CustomMission,
+    MultiplayerLobby,
     Manual,
     Settings,
     #[cfg(not(target_arch = "wasm32"))]
@@ -28,6 +30,7 @@ impl std::fmt::Display for MenuID {
         let text = match &self {
             MenuID::Campaign => "Campaign",
             MenuID::CustomMission => "Custom Mission",
+            MenuID::MultiplayerLobby => "Multiplayer Lobby",
             MenuID::Manual => "Manual",
             MenuID::Settings => "Settings",
             #[cfg(not(target_arch = "wasm32"))]
@@ -68,15 +71,26 @@ pub(crate) fn setup_ui(
     mut commands: Commands,
     ui_assets: Res<UiAssets>,
     player_profile: Res<Persistent<PlayerProfileData>>,
+    cli: Res<CliOptions>,
 ) {
-    let menu_items = vec![
-        (MenuID::Campaign, MenuID::Campaign.to_string()),
-        (MenuID::CustomMission, MenuID::CustomMission.to_string()),
+    let mut menu_items = if matches!(cli.net_mode, NetMode::Offline) {
+        vec![
+            (MenuID::Campaign, MenuID::Campaign.to_string()),
+            (MenuID::CustomMission, MenuID::CustomMission.to_string()),
+        ]
+    } else {
+        vec![(
+            MenuID::MultiplayerLobby,
+            MenuID::MultiplayerLobby.to_string(),
+        )]
+    };
+
+    menu_items.extend(vec![
         (MenuID::Manual, MenuID::Manual.to_string()),
         (MenuID::Settings, MenuID::Settings.to_string()),
         #[cfg(not(target_arch = "wasm32"))]
         (MenuID::Quit, MenuID::Quit.to_string()),
-    ];
+    ]);
 
     debug!("Setting up main menu with items: {:?}", menu_items);
 
@@ -146,6 +160,10 @@ pub(crate) fn menu_event(
                     next_app_state.set(AppState::MapHub);
                     next_map_hub_state.set(MapHubState::DifficultySelection);
                     info!("Transitioning to MapHub/DifficultySelection state (for Custom Mission)");
+                }
+                MenuID::MultiplayerLobby => {
+                    next_app_state.set(AppState::Lobby);
+                    info!("Transitioning to Lobby state");
                 }
                 MenuID::Manual => {
                     next_app_state.set(AppState::UserManual);

@@ -13,6 +13,10 @@ pub struct MainPlayer;
 #[derive(Component, Debug, Clone, Default)]
 pub struct PlayerDisconnected;
 
+/// Marks a player entity that is connected but unresponsive (no heartbeat for >5s).
+#[derive(Component, Debug, Clone, Default)]
+pub struct PlayerInactive;
+
 /// Component added to players who are spectating (dead or finished).
 #[derive(Component, Debug, Clone, Default)]
 pub struct PlayerSpectating;

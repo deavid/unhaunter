@@ -6,17 +6,289 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::str::FromStr;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unevents_core::events::loadlevel::LoadLevelEvent;
 use unmetrics_core::metrics::SendMetric;
-use unnet_core::messages::{NetworkDataEvent, NetworkMessage};
+use unnet_core::messages::{NetworkDataEvent, NetworkMessage, SendNetworkMessage};
 use unnet_core::network_id::NetworkId;
-use unnet_core::resources::{HostGone, LocalPlayer};
+use unnet_core::resources::{HostGone, LobbyData, LocalPlayer};
+use unplayer_core::components::PlayerInactive;
 use untags_core::tags::PlayerTag;
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::{AppState, GameState};
 
 use crate::metrics;
+use unghost_core::resources::ghost_guess::GhostGuess;
+use unnet_core::messages::PlayerJoinedEvent;
+use unnet_core::resources::LobbyPlayer;
+use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerSpectating};
+use unsummary_core::summary::SummaryData;
+use untruck_core::types::repellent_tracker::RepellentCraftTracker;
+
+pub(crate) fn session_roster_system(
+    mut lobby_data: ResMut<LobbyData>,
+    mut ev_player_joined: MessageReader<PlayerJoinedEvent>,
+    cli: Res<CliOptions>,
+    local_player: Res<LocalPlayer>,
+) {
+    if !matches!(cli.net_mode, NetMode::Host { .. }) {
+        return;
+    }
+
+    let mut changed = false;
+
+    // Update player list based on PlayerJoinedEvent
+    let mut players_to_add = vec![];
+    for ev in ev_player_joined.read() {
+        if let Some(player) = lobby_data.players.iter_mut().find(|p| p.id == ev.id) {
+            if !player.connected {
+                player.connected = true;
+                changed = true;
+            }
+        } else {
+            players_to_add.push(ev.id);
+        }
+    }
+    for id in players_to_add {
+        let next_tint = (lobby_data.players.len() % 9) as u8;
+        lobby_data.players.push(LobbyPlayer {
+            id,
+            tint_color_index: next_tint,
+            connected: true,
+        });
+        changed = true;
+    }
+
+    // Ensure host is always in the list
+    if let Some(host_id) = local_player.0
+        && !lobby_data.players.iter().any(|p| p.id == host_id)
+    {
+        lobby_data.players.insert(
+            0,
+            LobbyPlayer {
+                id: host_id,
+                tint_color_index: 0,
+                connected: true,
+            },
+        );
+        changed = true;
+    }
+
+    if !changed {
+        lobby_data.bypass_change_detection();
+    }
+}
+
+pub(crate) fn lobby_broadcast_state_system(
+    lobby_data: Res<LobbyData>,
+    mut ev_send: MessageWriter<SendNetworkMessage>,
+    cli: Res<CliOptions>,
+    time: Res<Time>,
+    mut last_broadcast: Local<f32>,
+) {
+    if !matches!(cli.net_mode, NetMode::Host { .. }) {
+        return;
+    }
+
+    // Periodically broadcast state (every 500ms)
+    if time.elapsed_secs() - *last_broadcast > 0.5 {
+        ev_send.write(SendNetworkMessage(NetworkMessage::LobbyState {
+            players: lobby_data.players.clone(),
+            selected_map: lobby_data.selected_map.clone(),
+            selected_difficulty: lobby_data.selected_difficulty.clone(),
+        }));
+        *last_broadcast = time.elapsed_secs();
+    }
+}
+
+pub(crate) fn client_heartbeat_system(
+    mut conn: ResMut<NetworkConn>,
+    current_app_state: Res<State<AppState>>,
+    cli: Res<CliOptions>,
+) {
+    if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        return;
+    }
+    // Only send if connected (Client variant)
+    if let NetworkConn::Client {
+        handshake: HandshakeState::Completed,
+        write_queue,
+        ..
+    } = &mut *conn
+    {
+        write_queue.push_back(NetworkMessage::Heartbeat {
+            app_state: *current_app_state.get(),
+        });
+    }
+}
+
+pub(crate) fn host_liveness_system(
+    conn: Res<NetworkConn>,
+    mut commands: Commands,
+    time: Res<Time>,
+    query_inactive: Query<Entity, With<PlayerInactive>>,
+    query_players: Query<(Entity, &NetworkId), With<PlayerTag>>,
+) {
+    if let NetworkConn::Host { clients, .. } = &*conn {
+        let now = time.elapsed_secs();
+
+        for client in clients {
+            if let Some(player_id) = client.associated_id {
+                let inactive = (now - client.last_heartbeat) > 5.0;
+
+                // Find entity
+                let entity = query_players
+                    .iter()
+                    .find(|(_, id)| *id == &player_id)
+                    .map(|(e, _)| e);
+
+                if let Some(entity) = entity {
+                    let is_inactive_comp = query_inactive.contains(entity);
+                    if inactive && !is_inactive_comp {
+                        commands.entity(entity).insert(PlayerInactive);
+                        info!(
+                            "Player {:?} marked INACTIVE (last hearbeat {}s ago)",
+                            player_id,
+                            now - client.last_heartbeat
+                        );
+                    } else if !inactive && is_inactive_comp {
+                        commands.entity(entity).remove::<PlayerInactive>();
+                        info!("Player {:?} marked ACTIVE", player_id);
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub(crate) fn host_process_heartbeats_system(
+    mut conn: ResMut<NetworkConn>,
+    mut ev_reader: MessageReader<NetworkDataEvent>,
+    time: Res<Time>,
+) {
+    let now = time.elapsed_secs();
+    for ev in ev_reader.read() {
+        if let (NetworkMessage::Heartbeat { app_state }, Some(source_id)) = (&ev.message, ev.source)
+        {
+            // Update the client connection
+            if let NetworkConn::Host { clients, .. } = &mut *conn
+                && let Some(client) = clients
+                    .iter_mut()
+                    .find(|c| c.associated_id == Some(source_id))
+            {
+                client.last_heartbeat = now;
+                client.client_app_state = Some(*app_state);
+            }
+        }
+    }
+}
+
+pub(crate) fn host_status_updater_system(
+    mut ev_send: MessageWriter<SendNetworkMessage>,
+    app_state: Res<State<AppState>>,
+    conn: Res<NetworkConn>,
+    cli: Res<CliOptions>,
+    summary_data: Res<SummaryData>,
+    ghost_guess: Res<GhostGuess>,
+    repellent_tracker: Res<RepellentCraftTracker>,
+    query_spectating: Query<Entity, With<PlayerSpectating>>,
+    query_players: Query<(Entity, &NetworkId), With<PlayerTag>>,
+    mut lobby_data: ResMut<LobbyData>,
+) {
+    if !matches!(cli.net_mode, NetMode::Host { .. }) {
+        return;
+    }
+
+    // Update local lobby data
+    lobby_data.host_app_state = Some(*app_state.get());
+    lobby_data.mission_elapsed_secs = summary_data.time_taken_secs;
+    lobby_data.evidences_found_count = ghost_guess.evidences_found.len() as u32;
+    lobby_data.repellent_used = repellent_tracker.crafted_count;
+
+    // Build player statuses
+    let mut player_statuses = Vec::new();
+    if let NetworkConn::Host { clients, .. } = &*conn {
+        for client in clients {
+            if let Some(id) = client.associated_id {
+                let is_alive = query_players
+                    .iter()
+                    .find(|(_, net_id)| **net_id == id)
+                    .map(|(e, _)| !query_spectating.contains(e))
+                    .unwrap_or(true);
+
+                player_statuses.push(unnet_core::messages::PlayerStatusInfo {
+                    id,
+                    is_alive,
+                    is_in_lobby: client
+                        .client_app_state
+                        .map(|s| s == AppState::Lobby || s == AppState::MainMenu)
+                        .unwrap_or(false),
+                });
+            }
+        }
+    }
+
+    // Include the host (local player) in player_statuses as well
+    // The host is always id 1
+    let host_is_alive = query_players
+        .iter()
+        .find(|(_, net_id)| **net_id == NetworkId(1))
+        .map(|(e, _)| !query_spectating.contains(e))
+        .unwrap_or(true);
+
+    player_statuses.push(unnet_core::messages::PlayerStatusInfo {
+        id: NetworkId(1),
+        is_alive: host_is_alive,
+        is_in_lobby: *app_state.get() == AppState::Lobby || *app_state.get() == AppState::MainMenu,
+    });
+
+    // Also update host's local lobby_data with the player statuses so they show up in UI
+    lobby_data.player_statuses = player_statuses.clone();
+
+    ev_send.write(SendNetworkMessage(NetworkMessage::HostStatus {
+        app_state: *app_state.get(),
+        match_time_elapsed: summary_data.time_taken_secs,
+        evidences_found: ghost_guess.evidences_found.len() as u32,
+        repellent_used: repellent_tracker.crafted_count,
+        player_statuses,
+    }));
+}
+
+pub(crate) fn client_state_bootstrap_system(
+    mut ev_reader: MessageReader<NetworkDataEvent>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    mut lobby_data: ResMut<LobbyData>,
+    current_state: Res<State<AppState>>,
+    cli: Res<CliOptions>,
+) {
+    if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        return;
+    }
+
+    for ev in ev_reader.read() {
+        match &ev.message {
+            NetworkMessage::HostStatus {
+                app_state,
+                match_time_elapsed,
+                evidences_found,
+                repellent_used,
+                player_statuses,
+            } => {
+                lobby_data.host_app_state = Some(*app_state);
+                lobby_data.mission_elapsed_secs = *match_time_elapsed;
+                lobby_data.evidences_found_count = *evidences_found;
+                lobby_data.repellent_used = *repellent_used;
+                lobby_data.player_statuses = player_statuses.clone();
+            }
+            NetworkMessage::Snapshot(msg) => {
+                // If host went to Lobby, follow
+                if msg.app_state == AppState::Lobby && *current_state.get() != AppState::Lobby {
+                    next_app_state.set(AppState::Lobby);
+                }
+            }
+            _ => {}
+        }
+    }
+}
 
 pub(crate) fn startup_network_system(
     cli: Res<CliOptions>,
@@ -130,6 +402,8 @@ pub(crate) fn network_io_system(
                                 installation_id: None,
                                 associated_id: None,
                                 needs_full_sync: false,
+                                last_heartbeat: 0.0,
+                                client_app_state: None,
                             });
                         }
                         Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
@@ -383,6 +657,10 @@ pub(crate) fn handshake_handler_system(
         With<unplayer_core::components::PlayerDisconnected>,
     >,
     runtime_installation_id: Res<unprofile_core::profile::RuntimeInstallationId>,
+    current_app_state: Res<State<AppState>>,
+    summary_data: Res<SummaryData>,
+    ghost_guess: Res<GhostGuess>,
+    repellent_tracker: Res<RepellentCraftTracker>,
 ) {
     let measure = metrics::HANDSHAKE_HANDLER.time_measure();
     let mut welcomes_to_send = Vec::new();
@@ -415,7 +693,8 @@ pub(crate) fn handshake_handler_system(
                                     );
                                     commands
                                         .entity(entity)
-                                        .remove::<unplayer_core::components::PlayerDisconnected>();
+                                        .remove::<PlayerDisconnected>()
+                                        .remove::<Hiding>();
                                 }
                             }
 
@@ -424,17 +703,16 @@ pub(crate) fn handshake_handler_system(
                             ev_player_joined
                                 .write(unnet_core::messages::PlayerJoinedEvent { id: source_id });
 
-                            let seed = unfoundation_core::random_seed::heavy_rng_seed();
+                            welcomes_to_send
+                                .push((source_id, NetworkMessage::LobbyWelcome { id: source_id }));
                             welcomes_to_send.push((
                                 source_id,
-                                NetworkMessage::Welcome {
-                                    id: source_id,
-                                    map_seed: seed,
-                                    map_filepath: cli.map_path.clone().unwrap_or_default(),
-                                    difficulty_id: cli
-                                        .difficulty_id
-                                        .clone()
-                                        .unwrap_or("medium".to_string()),
+                                NetworkMessage::HostStatus {
+                                    app_state: *current_app_state.get(),
+                                    match_time_elapsed: summary_data.time_taken_secs,
+                                    evidences_found: ghost_guess.evidences_found.len() as u32,
+                                    repellent_used: repellent_tracker.crafted_count,
+                                    player_statuses: vec![], // Will be updated by next broadcast
                                 },
                             ));
                             break;
@@ -459,35 +737,44 @@ pub(crate) fn handshake_handler_system(
             }
 
             for ev in ev_reader.read() {
-                if let NetworkMessage::Welcome {
-                    id,
-                    map_seed,
-                    map_filepath,
-                    difficulty_id,
-                } = &ev.message
-                {
-                    info!(
-                        "Network: Received Welcome (Your ID: {:?}, Seed: {}, Map: {})",
-                        id, map_seed, map_filepath
-                    );
-                    if matches!(cli.net_mode, NetMode::Join { .. }) {
-                        local_id.0 = Some(*id);
-                        *handshake = HandshakeState::Completed;
-                        // Apply difficulty
-                        if let Ok(d) = Difficulty::from_str(difficulty_id) {
-                            *current_difficulty = CurrentDifficulty::new(d);
-                        }
-                        // Store map path for later loading (after assets are ready)
-                        if !map_filepath.is_empty() {
-                            info!(
-                                "Network: Will load map '{}' after asset loading completes",
-                                map_filepath
-                            );
-                            pending_map.map_filepath = Some(map_filepath.clone());
-                        } else {
-                            warn!("Network: Host sent empty map filepath!");
+                match &ev.message {
+                    NetworkMessage::LobbyWelcome { id } => {
+                        info!("Network: Received LobbyWelcome (Your ID: {:?})", id);
+                        if matches!(cli.net_mode, NetMode::Join { .. }) {
+                            local_id.0 = Some(*id);
+                            *handshake = HandshakeState::Completed;
                         }
                     }
+                    NetworkMessage::Welcome {
+                        id,
+                        map_seed,
+                        map_filepath,
+                        difficulty_id,
+                    } => {
+                        info!(
+                            "Network: Received Welcome (Your ID: {:?}, Seed: {}, Map: {})",
+                            id, map_seed, map_filepath
+                        );
+                        if matches!(cli.net_mode, NetMode::Join { .. }) {
+                            local_id.0 = Some(*id);
+                            *handshake = HandshakeState::Completed;
+                            // Apply difficulty
+                            if let Ok(d) = Difficulty::from_str(difficulty_id) {
+                                *current_difficulty = CurrentDifficulty::new(d);
+                            }
+                            // Store map path for later loading (after assets are ready)
+                            if !map_filepath.is_empty() {
+                                info!(
+                                    "Network: Will load map '{}' after asset loading completes",
+                                    map_filepath
+                                );
+                                pending_map.map_filepath = Some(map_filepath.clone());
+                            } else {
+                                warn!("Network: Host sent empty map filepath!");
+                            }
+                        }
+                    }
+                    _ => {}
                 }
             }
         }
@@ -500,6 +787,58 @@ pub(crate) fn handshake_handler_system(
     measure.end_ms();
 }
 
+pub(crate) fn client_lobby_state_handler(
+    mut ev_reader: MessageReader<NetworkDataEvent>,
+    mut lobby_data: ResMut<LobbyData>,
+    cli: Res<CliOptions>,
+) {
+    if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        return;
+    }
+    for ev in ev_reader.read() {
+        if let NetworkMessage::LobbyState {
+            players,
+            selected_map,
+            selected_difficulty,
+        } = &ev.message
+        {
+            lobby_data.players = players.clone();
+            lobby_data.selected_map = selected_map.clone();
+            lobby_data.selected_difficulty = selected_difficulty.clone();
+        }
+    }
+}
+
+pub(crate) fn client_start_mission_handler(
+    mut ev_reader: MessageReader<NetworkDataEvent>,
+    mut pending_map: ResMut<crate::resources::PendingMapLoad>,
+    mut current_difficulty: ResMut<CurrentDifficulty>,
+    cli: Res<CliOptions>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+) {
+    if !matches!(cli.net_mode, NetMode::Join { .. }) {
+        return;
+    }
+    for ev in ev_reader.read() {
+        if let NetworkMessage::StartMission {
+            map_seed: _,
+            map_filepath,
+            difficulty_id,
+        } = &ev.message
+        {
+            info!("Network: Received StartMission for map: {}", map_filepath);
+            // Apply difficulty
+            if let Ok(d) = Difficulty::from_str(difficulty_id) {
+                *current_difficulty = CurrentDifficulty::new(d);
+            }
+            // Store map path for later loading
+            pending_map.map_filepath = Some(map_filepath.clone());
+            // Transition to Loading
+            next_app_state.set(AppState::Loading);
+        }
+    }
+}
+
 pub(crate) fn host_handle_disconnects_system(
     mut ev_disconnect: MessageReader<unnet_core::messages::NetworkDisconnectEvent>,
     query_players: Query<
@@ -510,6 +849,7 @@ pub(crate) fn host_handle_disconnects_system(
         ),
     >,
     mut commands: Commands,
+    mut lobby_data: ResMut<LobbyData>,
 ) {
     let measure = metrics::HOST_HANDLE_DISCONNECTS.time_measure();
     for ev in ev_disconnect.read() {
@@ -518,8 +858,13 @@ pub(crate) fn host_handle_disconnects_system(
                 info!("Network: Marking player {:?} as disconnected", id);
                 commands
                     .entity(entity)
-                    .insert(unplayer_core::components::PlayerDisconnected);
+                    .insert(PlayerDisconnected)
+                    .insert(Hiding { hiding_spot: None });
             }
+        }
+        // Update LobbyData
+        if let Some(player) = lobby_data.players.iter_mut().find(|p| p.id == ev.id) {
+            player.connected = false;
         }
     }
     measure.end_ms();
@@ -531,35 +876,54 @@ pub(crate) fn client_connection_monitor_system(
     mut game_next_state: ResMut<NextState<GameState>>,
     current_app_state: Res<State<AppState>>,
     mut host_gone: ResMut<HostGone>,
+    lobby_data: Res<LobbyData>,
+    time: Res<Time>,
+    mut grace_timer: Local<Option<f32>>,
 ) {
     let measure = metrics::CLIENT_CONNECTION_MONITOR.time_measure();
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         host_gone.0 = false;
+        *grace_timer = None;
         measure.end_ms();
         return;
     }
     if *current_app_state.get() != AppState::InGame {
         host_gone.0 = false;
+        *grace_timer = None;
         measure.end_ms();
         return;
     }
-    if !matches!(*conn, NetworkConn::Client { .. }) {
+
+    let host_disconnected = !matches!(*conn, NetworkConn::Client { .. });
+    let host_left_mission = lobby_data
+        .host_app_state
+        .is_some_and(|s| s != AppState::InGame);
+
+    if host_disconnected {
+        // TCP disconnect is instant
         if !host_gone.0 {
-            warn!("Network: Lost connection to host. Triggering Pause UI.");
+            warn!("Network: Lost TCP connection to host. Triggering Pause UI.");
+            game_next_state.set(GameState::Pause);
+            host_gone.0 = true;
+        }
+        *grace_timer = None;
+    } else if host_left_mission {
+        // Host left mission has 2s grace period
+        let now = time.elapsed_secs();
+        let start_time = grace_timer.get_or_insert(now);
+        if now - *start_time > 1.0 && !host_gone.0 {
+            warn!("Network: Host left mission. Triggering Pause UI.");
             game_next_state.set(GameState::Pause);
             host_gone.0 = true;
         }
     } else {
         host_gone.0 = false;
+        *grace_timer = None;
     }
     measure.end_ms();
 }
 
-pub(crate) fn autostart_net_game(
-    cli: Res<CliOptions>,
-    mut ev_load_level: MessageWriter<LoadLevelEvent>,
-    mut current_difficulty: ResMut<CurrentDifficulty>,
-) {
+pub(crate) fn autostart_net_game(cli: Res<CliOptions>, mut lobby_data: ResMut<LobbyData>) {
     let measure = metrics::AUTOSTART_NET_GAME.time_measure();
     if matches!(cli.net_mode, NetMode::Offline) {
         measure.end_ms();
@@ -571,26 +935,15 @@ pub(crate) fn autostart_net_game(
     }
 
     if let Some(map_filepath) = &cli.map_path {
-        info!("Autostarting networked game with map: {}", map_filepath);
+        info!("Pre-populating lobby with map: {}", map_filepath);
+        lobby_data.selected_map = Some(map_filepath.clone());
 
         if let Some(diff_id) = &cli.difficulty_id {
-            match Difficulty::from_str(diff_id) {
-                Ok(d) => {
-                    info!("Applying difficulty: {}", d);
-                    *current_difficulty = CurrentDifficulty::new(d);
-                }
-                Err(_) => {
-                    warn!("Invalid difficulty ID: {}. Using default.", diff_id);
-                    *current_difficulty = CurrentDifficulty::default();
-                }
-            }
+            lobby_data.selected_difficulty = Some(diff_id.clone());
         }
-
-        ev_load_level.write(LoadLevelEvent {
-            map_filepath: map_filepath.clone(),
-        });
     } else if matches!(cli.net_mode, NetMode::Host { .. }) {
-        warn!("NetMode::Host active but no --map provided. Staying in Main Menu.");
+        warn!("NetMode::Host active but no --map provided.");
     }
+    info!("Network: Autostarting host.");
     measure.end_ms();
 }

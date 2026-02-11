@@ -1,0 +1,522 @@
+use std::str::FromStr;
+
+use bevy::prelude::*;
+use bevy_persistent::Persistent;
+use unassets_core::resources::maps::Maps;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
+use unengine_core::MenuUI;
+use unevents_core::events::loadlevel::LoadLevelEvent;
+use unfoundation_core::colors;
+use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unmenu_core::components::MenuMouseTracker;
+use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
+use unmenu_core::templates;
+use unnet_core::messages::{NetworkMessage, SendNetworkMessage};
+use unnet_core::resources::{CurrentMapSeed, LobbyData, LocalPlayer};
+use unprofile_core::profile::PlayerProfileData;
+use untypes_core::cli::{CliOptions, NetMode};
+use untypes_core::difficulty::Difficulty;
+use untypes_core::states::{AppState, LobbyScreen};
+use unui_core::assets::UiAssets;
+
+#[derive(Component)]
+pub(crate) struct LobbyMainUI;
+
+#[derive(Component)]
+pub(crate) struct LobbyMapPreview;
+
+#[derive(Component)]
+pub(crate) struct LobbyMapInfo;
+
+#[derive(Component)]
+pub(crate) struct LobbyDifficultyInfo;
+
+#[derive(Component)]
+pub(crate) struct LobbyPlayerList;
+
+#[derive(Clone, Copy, Component, Debug, PartialEq, Eq)]
+pub(crate) enum LobbyMenuAction {
+    SelectMap,
+    SelectDifficulty,
+    StartMission,
+    ExitLobby,
+}
+
+#[derive(Resource, Default)]
+pub(crate) struct StateEntryTimer(pub f32);
+
+pub(crate) fn setup_ui(
+    mut commands: Commands,
+    ui_assets: Res<UiAssets>,
+    cli: Res<CliOptions>,
+    player_profile: Res<Persistent<PlayerProfileData>>,
+    q_ui: Query<Entity, With<LobbyMainUI>>,
+    time: Res<Time>,
+    mut entry_timer: ResMut<StateEntryTimer>,
+) {
+    *entry_timer = StateEntryTimer(time.elapsed_secs());
+    if !q_ui.is_empty() {
+        return;
+    }
+    let is_host = !matches!(cli.net_mode, NetMode::Join { .. });
+
+    let root = commands
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                position_type: PositionType::Absolute,
+                ..default()
+            },
+            MenuUI,
+            LobbyMainUI,
+        ))
+        .id();
+
+    commands.entity(root).with_children(|p| {
+        templates::create_background(p, &ui_assets);
+        templates::create_logo(p, &ui_assets);
+        templates::create_player_status_bar(p, &ui_assets, &player_profile);
+
+        // Sidebar strip for primary navigation
+        let mut strip = templates::create_menu_strip::<LobbyMenuAction>(p, &ui_assets, &[], 0);
+        strip.insert(MenuMouseTracker::default());
+
+        strip.with_children(|s| {
+            // Re-introducing Title without a subtitle breadcrumb
+            s.spawn(Text::new("Multiplayer Lobby"))
+                .insert(TextFont {
+                    font: ui_assets.font_londrina_light.clone(),
+                    font_size: 48.0 * FONT_SCALE,
+                    ..default()
+                })
+                .insert(TextColor(Color::WHITE))
+                .insert(Node {
+                    margin: UiRect::bottom(Val::Px(24.0 * UI_SCALE)),
+                    ..default()
+                });
+
+            let items = [
+                (LobbyMenuAction::SelectMap, "Select Map"),
+                (LobbyMenuAction::SelectDifficulty, "Select Difficulty"),
+                (LobbyMenuAction::StartMission, "Start Mission"),
+                (LobbyMenuAction::ExitLobby, "Exit Lobby"),
+            ];
+
+            let mut menu_idx = 0;
+            for (action, label) in items {
+                // Always create StartMission for everyone (visiblity controlled in update_display)
+                if is_host
+                    || action == LobbyMenuAction::ExitLobby
+                    || action == LobbyMenuAction::StartMission
+                {
+                    templates::create_menu_item(s, label, menu_idx, false, &ui_assets)
+                        .insert(action);
+                    menu_idx += 1;
+                }
+            }
+        });
+
+        // Right content area - Informational only (no MenuRoot here)
+        let mut content = templates::create_informational_content_area(p, &ui_assets);
+        content.with_children(|c| {
+            // Left column: Map Preview + Details
+            c.spawn(Node {
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(60.0),
+                row_gap: Val::Px(10.0 * UI_SCALE),
+                ..default()
+            })
+            .with_children(|left| {
+                left.spawn((
+                    ImageNode { ..default() },
+                    Node {
+                        width: Val::Percent(100.0),
+                        aspect_ratio: Some(16.0 / 9.0),
+                        ..default()
+                    },
+                    LobbyMapPreview,
+                ));
+
+                left.spawn((
+                    Text::new(""),
+                    TextFont {
+                        font: ui_assets.font_titillium_regular.clone(),
+                        font_size: 18.0 * FONT_SCALE,
+                        ..default()
+                    },
+                    TextColor(Color::WHITE),
+                    LobbyMapInfo,
+                ));
+
+                left.spawn((
+                    Text::new(""),
+                    TextFont {
+                        font: ui_assets.font_titillium_light.clone(),
+                        font_size: 16.0 * FONT_SCALE,
+                        ..default()
+                    },
+                    TextColor(colors::MENU_ITEM_COLOR_ON),
+                    LobbyDifficultyInfo,
+                ));
+            });
+
+            // Right column: Player List
+            c.spawn(Node {
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(40.0),
+                padding: UiRect::left(Val::Px(20.0 * UI_SCALE)),
+                row_gap: Val::Px(8.0 * UI_SCALE),
+                ..default()
+            })
+            .with_children(|right| {
+                right.spawn((
+                    Text::new("Players"),
+                    TextFont {
+                        font: ui_assets.font_londrina_light.clone(),
+                        font_size: 32.0 * FONT_SCALE,
+                        ..default()
+                    },
+                    TextColor(Color::WHITE),
+                ));
+
+                right.spawn((
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        row_gap: Val::Px(4.0 * UI_SCALE),
+                        ..default()
+                    },
+                    LobbyPlayerList,
+                ));
+            });
+        });
+
+        let help_text = if is_host {
+            "[ESC]: Back to Menu | [Click]: Select | [Enter]: Confirm".to_string()
+        } else {
+            "[ESC]: Back to Menu".to_string()
+        };
+        templates::create_help_text(p, &ui_assets, Some(help_text));
+    });
+}
+
+pub(crate) fn cleanup_ui(mut commands: Commands, q: Query<Entity, With<LobbyMainUI>>) {
+    for e in q.iter() {
+        commands.entity(e).despawn();
+    }
+}
+
+pub(crate) fn handle_clicks(
+    mut ev_clicks: MessageReader<MenuItemClicked>,
+    mut ev_escape: MessageReader<MenuEscapeEvent>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_lobby_state: ResMut<NextState<LobbyScreen>>,
+    q_actions: Query<(
+        &unmenu_core::components::MenuItemInteractive,
+        &LobbyMenuAction,
+    )>,
+    lobby_data: Res<LobbyData>,
+    mut cli: ResMut<CliOptions>,
+    mut current_difficulty: ResMut<CurrentDifficulty>,
+    mut ev_send: MessageWriter<SendNetworkMessage>,
+    mut ev_load_level: MessageWriter<LoadLevelEvent>,
+    time: Res<Time>,
+    entry_timer: Res<StateEntryTimer>,
+    mut current_map_seed: ResMut<CurrentMapSeed>,
+    local_player: Res<LocalPlayer>,
+) {
+    // 0.1s guard to avoid "state bounce" from the previous screen's click event
+    if time.elapsed_secs() - entry_timer.0 < 0.1 {
+        ev_clicks.read().for_each(|_| {}); // Drain events
+        ev_escape.read().for_each(|_| {});
+        return;
+    }
+
+    if ev_escape.read().next().is_some() {
+        next_app_state.set(AppState::MainMenu);
+    }
+
+    for ev in ev_clicks.read() {
+        if ev.state != AppState::Lobby {
+            continue;
+        }
+
+        // Find the action associated with the clicked item
+        let action = q_actions
+            .iter()
+            .find(|(interactive, _)| interactive.identifier == ev.pos)
+            .map(|(_, action)| action);
+
+        match action {
+            Some(LobbyMenuAction::SelectMap) => {
+                if !matches!(cli.net_mode, NetMode::Join { .. }) {
+                    next_lobby_state.set(LobbyScreen::MapSelection);
+                }
+            }
+            Some(LobbyMenuAction::SelectDifficulty) => {
+                if !matches!(cli.net_mode, NetMode::Join { .. }) {
+                    next_lobby_state.set(LobbyScreen::DifficultySelection);
+                }
+            }
+            Some(LobbyMenuAction::StartMission) => {
+                let is_join = matches!(cli.net_mode, NetMode::Join { .. });
+                let host_in_mission = lobby_data.host_app_state == Some(AppState::InGame);
+
+                if is_join && host_in_mission {
+                    if let Some(pid) = local_player.0 {
+                        ev_send.write(SendNetworkMessage(NetworkMessage::RequestLateJoin {
+                            player_id: pid,
+                        }));
+                    }
+                } else if !is_join
+                    && let (Some(map_filepath), true) = (&lobby_data.selected_map, !is_join)
+                {
+                    let difficulty_id = lobby_data
+                        .selected_difficulty
+                        .clone()
+                        .unwrap_or_else(|| "standard-challenge".to_string());
+                    let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
+                    current_map_seed.0 = map_seed;
+
+                    info!(
+                        "Host starting mission: map={}, diff={}, seed={}",
+                        map_filepath, difficulty_id, map_seed
+                    );
+
+                    cli.map_path = Some(map_filepath.clone());
+                    cli.difficulty_id = Some(difficulty_id.clone());
+
+                    if let Ok(diff_enum) = Difficulty::from_str(&difficulty_id) {
+                        *current_difficulty = CurrentDifficulty::new(diff_enum);
+                    }
+
+                    ev_send.write(SendNetworkMessage(NetworkMessage::StartMission {
+                        map_seed,
+                        map_filepath: map_filepath.clone(),
+                        difficulty_id,
+                    }));
+
+                    ev_load_level.write(LoadLevelEvent {
+                        map_filepath: map_filepath.clone(),
+                    });
+                    next_app_state.set(AppState::Loading);
+                }
+            }
+            Some(LobbyMenuAction::ExitLobby) => {
+                next_app_state.set(AppState::MainMenu);
+            }
+            None => {}
+        }
+    }
+}
+
+pub(crate) fn update_display(
+    lobby_data: Res<LobbyData>,
+    maps: Res<Maps>,
+    ui_assets: Res<UiAssets>,
+    asset_server: Res<AssetServer>,
+    local_player: Res<LocalPlayer>,
+    mut q_preview: Query<&mut ImageNode, With<LobbyMapPreview>>,
+    mut q_map_info: Query<&mut Text, (With<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
+    mut q_diff_info: Query<&mut Text, (With<LobbyDifficultyInfo>, Without<LobbyMapInfo>)>,
+    q_player_list: Query<Entity, With<LobbyPlayerList>>,
+    q_children: Query<&Children>,
+    mut commands: Commands,
+    mut q_menu_items: Query<(&LobbyMenuAction, &mut Visibility, &Children)>,
+    mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
+    cli: Res<CliOptions>,
+) {
+    let is_host = matches!(cli.net_mode, NetMode::Host { .. } | NetMode::Offline);
+    let host_in_mission = lobby_data.host_app_state == Some(AppState::InGame);
+
+    // Update Menu Items (Start/Join Mission)
+    for (action, mut vis, children) in q_menu_items.iter_mut() {
+        if *action == LobbyMenuAction::StartMission {
+            if is_host {
+                *vis = Visibility::Inherited;
+            } else if host_in_mission {
+                *vis = Visibility::Inherited;
+                for child in children {
+                    if let Some(mut text) = q_text
+                        .get_mut(*child)
+                        .ok()
+                        .filter(|t| t.as_str() != "Join Mission")
+                    {
+                        **text = "Join Mission".to_string();
+                    }
+                }
+            } else {
+                *vis = Visibility::Hidden;
+                for child in children {
+                    if let Some(mut text) = q_text
+                        .get_mut(*child)
+                        .ok()
+                        .filter(|t| t.as_str() != "Start Mission")
+                    {
+                        **text = "Start Mission".to_string();
+                    }
+                }
+            }
+        } else if *action == LobbyMenuAction::SelectMap
+            || *action == LobbyMenuAction::SelectDifficulty
+        {
+            if host_in_mission {
+                *vis = Visibility::Hidden;
+            } else {
+                *vis = Visibility::Inherited;
+            }
+        }
+    }
+
+    if !lobby_data.is_changed() && !maps.is_changed() && !local_player.is_changed() {
+        return;
+    }
+
+    // Update Map Preview & Info
+    let map_data = lobby_data.selected_map.as_ref().and_then(|path| {
+        maps.maps
+            .iter()
+            .find(|m| &m.path == path)
+            .map(|m| &m.mission_data)
+    });
+
+    if let Ok(mut img) = q_preview.single_mut() {
+        let path = map_data
+            .map(|m| m.preview_image_path.clone())
+            .filter(|p| !p.is_empty())
+            .unwrap_or_else(|| "img/placeholder_mission.png".to_string());
+        img.image = asset_server.load(path);
+    }
+
+    if let Ok(mut text) = q_map_info.single_mut() {
+        if host_in_mission {
+            let map_name = map_data
+                .map(|m| m.display_name.as_str())
+                .unwrap_or("Unknown Map");
+            let minutes = (lobby_data.mission_elapsed_secs / 60.0).floor();
+            let seconds = (lobby_data.mission_elapsed_secs % 60.0).floor();
+
+            text.0 = format!(
+                "MISSION IN PROGRESS\n\nMap: {}\nTime: {:02}:{:02}\nEvidence Found: {}\nRepellent Used: {}",
+                map_name,
+                minutes,
+                seconds,
+                lobby_data.evidences_found_count,
+                lobby_data.repellent_used
+            );
+        } else if let Some(m) = map_data {
+            text.0 = format!(
+                "{}\n{}\n\n{}",
+                m.display_name, m.location_name, m.flavor_text
+            );
+        } else {
+            text.0 = "No map selected".to_string();
+        }
+    }
+
+    // Update Difficulty Info
+    if let Ok(mut text) = q_diff_info.single_mut() {
+        if host_in_mission {
+            let mut status_lines = vec!["Player Status:".to_string()];
+            for (idx, player) in lobby_data.players.iter().enumerate() {
+                let status = lobby_data
+                    .player_statuses
+                    .iter()
+                    .find(|s| s.id == player.id);
+                let state = match status {
+                    Some(s) if !s.is_alive => "DEAD / SPECTATING",
+                    Some(s) if s.is_in_lobby => "IN LOBBY",
+                    _ => "ACTIVE IN MISSION",
+                };
+                let is_local = local_player.0 == Some(player.id);
+                let name = if is_local {
+                    "You".to_string()
+                } else if idx == 0 {
+                    "Host".to_string()
+                } else {
+                    format!("Player {}", player.id.0)
+                };
+                status_lines.push(format!("- {}: {}", name, state));
+            }
+            text.0 = status_lines.join("\n");
+        } else {
+            let diff_str = lobby_data
+                .selected_difficulty
+                .as_deref()
+                .unwrap_or("standard-challenge");
+            if let Ok(diff) = Difficulty::from_str(diff_str) {
+                text.0 = format!(
+                    "Difficulty: {}\n{}",
+                    diff.difficulty_name(),
+                    diff.difficulty_description()
+                );
+            } else {
+                text.0 = format!("Difficulty: {}", diff_str);
+            }
+        }
+    }
+
+    // Update Player List (Rebuild if changed)
+    if let Ok(list_entity) = q_player_list.single() {
+        if let Ok(children) = q_children.get(list_entity) {
+            for child in children {
+                if let Ok(mut entity_cmd) = commands.get_entity(*child) {
+                    entity_cmd.despawn();
+                }
+            }
+        }
+        commands.entity(list_entity).with_children(|p| {
+            for (player_idx, player) in lobby_data.players.iter().enumerate() {
+                let is_local = local_player.0 == Some(player.id);
+                let prefix = if is_local { "\u{25BA} " } else { "" }; // ►
+                let host_suffix = if player_idx == 0 { " (Host)" } else { "" };
+
+                p.spawn(Node {
+                    flex_direction: FlexDirection::Row,
+                    align_items: AlignItems::Center,
+                    column_gap: Val::Px(8.0 * UI_SCALE),
+                    ..default()
+                })
+                .with_children(|row| {
+                    // Colored box
+                    let color = colors::player_color(player.tint_color_index as usize);
+                    row.spawn((
+                        Node {
+                            width: Val::Px(16.0 * UI_SCALE),
+                            height: Val::Px(16.0 * UI_SCALE),
+                            border: if is_local {
+                                UiRect::all(Val::Px(2.0 * UI_SCALE))
+                            } else {
+                                UiRect::ZERO
+                            },
+                            ..default()
+                        },
+                        BackgroundColor(color),
+                        BorderColor::all(Color::WHITE),
+                    ));
+
+                    // Player label
+                    row.spawn((
+                        Text::new(format!(
+                            "{}Player {}{}",
+                            prefix,
+                            player_idx + 1,
+                            host_suffix
+                        )),
+                        TextFont {
+                            font: ui_assets.font_titillium_regular.clone(),
+                            font_size: 20.0 * FONT_SCALE,
+                            ..default()
+                        },
+                        TextColor(if is_local {
+                            colors::MENU_ITEM_COLOR_ON
+                        } else {
+                            Color::WHITE
+                        }),
+                    ));
+                });
+            }
+        });
+    }
+}

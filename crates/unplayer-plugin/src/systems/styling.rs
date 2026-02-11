@@ -1,12 +1,15 @@
 use bevy::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
+use unfoundation_core::colors;
 use unnet_core::network_id::NetworkId;
+use unnet_core::resources::LobbyData;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 
 pub(crate) fn update_player_styling(
+    lobby_data: Option<Res<LobbyData>>,
     mut query: Query<
         (
             &NetworkId,
@@ -19,13 +22,23 @@ pub(crate) fn update_player_styling(
     >,
 ) {
     for (id, mut map_color, is_hiding, is_main, is_spectating) in query.iter_mut() {
-        let mut color = match id.0 {
-            0 => Color::from(bevy::color::palettes::tailwind::GREEN_400),
-            1 => Color::from(bevy::color::palettes::tailwind::YELLOW_400),
-            2 => Color::from(bevy::color::palettes::tailwind::BLUE_400),
-            3 => Color::from(bevy::color::palettes::tailwind::PURPLE_400),
-            _ => Color::from(bevy::color::palettes::tailwind::ORANGE_400),
-        };
+        let tint_index = lobby_data
+            .as_ref()
+            .and_then(|ld| {
+                ld.players
+                    .iter()
+                    .find(|p| p.id == *id)
+                    .map(|p| p.tint_color_index as usize)
+            })
+            .unwrap_or(id.0 as usize % 9);
+
+        let mut color = colors::player_color(tint_index);
+
+        // Make the in-mission tint lighter (20% brighter) so it doesn't overpower the sprite details.
+        if let Color::Hsla(mut hsla) = color {
+            hsla.lightness = (hsla.lightness * 1.2).min(1.0);
+            color = Color::Hsla(hsla);
+        }
 
         let alpha = if is_spectating {
             if is_main { 0.5 } else { 0.0 }

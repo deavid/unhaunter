@@ -21,6 +21,8 @@ use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unnet_core::network_id::NetworkId;
+use unnet_core::resources::LobbyData;
+use unplayer_core::components::PlayerDisconnected;
 use unplayer_core::components::{
     MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite, Stamina,
 };
@@ -140,37 +142,8 @@ pub(crate) fn classic_mode_orchestrator(
 
         let mut player_gear = PlayerGear::default();
         if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
-            let mut gear_id_counter = id as u64 * 1000;
-            if p.difficulty.0.player_gear.left_hand.is_some() {
-                let gear_entity = p
-                    .gear_registry
-                    .spawn(&mut commands, p.difficulty.0.player_gear.left_hand);
-                player_gear.left_hand = Some(gear_entity);
-                commands
-                    .entity(gear_entity)
-                    .insert(NetworkId(gear_id_counter));
-                gear_id_counter += 1;
-            }
-            if p.difficulty.0.player_gear.right_hand.is_some() {
-                let gear_entity = p
-                    .gear_registry
-                    .spawn(&mut commands, p.difficulty.0.player_gear.right_hand);
-                player_gear.right_hand = Some(gear_entity);
-                commands
-                    .entity(gear_entity)
-                    .insert(NetworkId(gear_id_counter));
-                gear_id_counter += 1;
-            }
-            for kind in &p.difficulty.0.player_gear.inventory {
-                if kind.is_some() {
-                    let gear_entity = p.gear_registry.spawn(&mut commands, *kind);
-                    player_gear.inventory.push(gear_entity);
-                    commands
-                        .entity(gear_entity)
-                        .insert(NetworkId(gear_id_counter));
-                    gear_id_counter += 1;
-                }
-            }
+            player_gear =
+                spawn_initial_gear(&mut commands, &p.gear_registry, &p.difficulty, id as u64);
         }
 
         // Pick a spawn point for this player. Use index-based selection to avoid spawning on top of each other.
@@ -465,19 +438,73 @@ pub(crate) fn classic_mode_orchestrator(
 }
 
 /// Spawns a player entity when a remote client completes handshake (host only).
+fn spawn_initial_gear(
+    commands: &mut Commands,
+    gear_registry: &GearSpawnerRegistry,
+    difficulty: &CurrentDifficulty,
+    player_id: u64,
+) -> PlayerGear {
+    let mut player_gear = PlayerGear::default();
+    let mut gear_id_counter = player_id * 1000;
+
+    if difficulty.0.player_gear.left_hand.is_some() {
+        let gear_entity = gear_registry.spawn(commands, difficulty.0.player_gear.left_hand);
+        player_gear.left_hand = Some(gear_entity);
+        commands
+            .entity(gear_entity)
+            .insert(NetworkId(gear_id_counter));
+        gear_id_counter += 1;
+    }
+    if difficulty.0.player_gear.right_hand.is_some() {
+        let gear_entity = gear_registry.spawn(commands, difficulty.0.player_gear.right_hand);
+        player_gear.right_hand = Some(gear_entity);
+        commands
+            .entity(gear_entity)
+            .insert(NetworkId(gear_id_counter));
+        gear_id_counter += 1;
+    }
+    for kind in &difficulty.0.player_gear.inventory {
+        if kind.is_some() {
+            let gear_entity = gear_registry.spawn(commands, *kind);
+            player_gear.inventory.push(gear_entity);
+            commands
+                .entity(gear_entity)
+                .insert(NetworkId(gear_id_counter));
+            gear_id_counter += 1;
+        }
+    }
+    player_gear
+}
+
 pub(crate) fn spawn_joined_player(
     mut p: ClassicModeSystemParam,
     mut commands: Commands,
-    mut ev_joined: MessageReader<unnet_core::messages::PlayerJoinedEvent>,
+    lobby_data: Res<LobbyData>,
     existing_players: Query<&NetworkId, With<PlayerTag>>,
     q_player_spawns: Query<&Position, With<PlayerSpawnPoint>>,
+    q_disconnected: Query<(Entity, &NetworkId), With<PlayerDisconnected>>,
 ) {
-    for ev in ev_joined.read() {
-        let new_id = ev.id;
+    if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Host { .. }) {
+        return;
+    }
+
+    for player in &lobby_data.players {
+        if !player.connected {
+            continue;
+        }
+        let new_id = player.id;
 
         // Skip if entity already exists (reconnect case)
         if existing_players.iter().any(|id| *id == new_id) {
-            info!("Player {:?} already has an entity, skipping spawn", new_id);
+            for (entity, disc_id) in q_disconnected.iter() {
+                if disc_id == &new_id {
+                    info!("Removing Disconnected state for player {:?}", new_id);
+                    commands
+                        .entity(entity)
+                        .remove::<PlayerDisconnected>()
+                        .remove::<unplayer_core::components::Hiding>();
+                }
+            }
             continue;
         }
 
@@ -502,38 +529,8 @@ pub(crate) fn spawn_joined_player(
         );
 
         // --- Gear ---
-        let mut player_gear = PlayerGear::default();
-        let mut gear_id_counter = new_id.0 * 1000;
-        if p.difficulty.0.player_gear.left_hand.is_some() {
-            let gear_entity = p
-                .gear_registry
-                .spawn(&mut commands, p.difficulty.0.player_gear.left_hand);
-            player_gear.left_hand = Some(gear_entity);
-            commands
-                .entity(gear_entity)
-                .insert(NetworkId(gear_id_counter));
-            gear_id_counter += 1;
-        }
-        if p.difficulty.0.player_gear.right_hand.is_some() {
-            let gear_entity = p
-                .gear_registry
-                .spawn(&mut commands, p.difficulty.0.player_gear.right_hand);
-            player_gear.right_hand = Some(gear_entity);
-            commands
-                .entity(gear_entity)
-                .insert(NetworkId(gear_id_counter));
-            gear_id_counter += 1;
-        }
-        for kind in &p.difficulty.0.player_gear.inventory {
-            if kind.is_some() {
-                let gear_entity = p.gear_registry.spawn(&mut commands, *kind);
-                player_gear.inventory.push(gear_entity);
-                commands
-                    .entity(gear_entity)
-                    .insert(NetworkId(gear_id_counter));
-                gear_id_counter += 1;
-            }
-        }
+        let player_gear =
+            spawn_initial_gear(&mut commands, &p.gear_registry, &p.difficulty, new_id.0);
 
         // --- Visual setup ---
         let mut player_image = p.player_assets.character.clone();

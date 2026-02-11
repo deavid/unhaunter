@@ -10,6 +10,7 @@ use unghost_core::types::ghost::types::GhostType;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
 use unsummary_core::summary::{ActiveMissionEvaluator, SummaryData};
+use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::states::AppState;
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
@@ -40,15 +41,13 @@ pub(crate) fn cleanup(
 pub(crate) fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
-    game_state: Res<State<GameState>>,
+    _game_state: Res<State<GameState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
     qp: Query<&PlayerSprite>,
     difficulty: Res<CurrentDifficulty>,
+    mut death_timer: Local<Option<f32>>,
 ) {
-    if *game_state == GameState::Pause {
-        return;
-    }
     sd.difficulty = difficulty.clone();
     sd.time_taken_secs += time.delta_secs();
     let total_sanity: f32 = qp.iter().map(|x| x.sanity).sum();
@@ -59,9 +58,16 @@ pub(crate) fn update_time(
     if player_count > 0 {
         sd.average_sanity = total_sanity / player_count as f32;
     }
-    if alive_count == 0 {
-        app_next_state.set(AppState::Summary);
-        game_next_state.set(GameState::None);
+
+    if player_count > 0 && alive_count == 0 {
+        let now = time.elapsed_secs();
+        let start = death_timer.get_or_insert(now);
+        if now - *start > 1.0 {
+            app_next_state.set(AppState::Summary);
+            game_next_state.set(GameState::None);
+        }
+    } else {
+        *death_timer = None;
     }
 }
 
@@ -70,6 +76,7 @@ pub(crate) fn keyboard(
     mut app_next_state: ResMut<NextState<AppState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    cli: Res<CliOptions>,
 ) {
     if *app_state.get() != AppState::Summary {
         return;
@@ -78,7 +85,11 @@ pub(crate) fn keyboard(
         | keyboard_input.just_pressed(KeyCode::NumpadEnter)
         | keyboard_input.just_pressed(KeyCode::Enter)
     {
-        app_next_state.set(AppState::MissionSelect);
+        if matches!(cli.net_mode, NetMode::Offline) {
+            app_next_state.set(AppState::MissionSelect);
+        } else {
+            app_next_state.set(AppState::Lobby);
+        }
         game_next_state.set(GameState::None);
     }
 }

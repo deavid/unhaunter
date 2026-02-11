@@ -30,6 +30,10 @@ pub struct MenuMouseTracker {
 #[derive(Component, Debug)]
 pub struct PrincipalMenuText;
 
+/// A component that marks an entity as a disabled menu item
+#[derive(Component, Debug)]
+pub struct MenuItemDisabled;
+
 /// A component that marks an entity as the background for a menu
 #[derive(Component, Debug)]
 pub struct MenuBackground;

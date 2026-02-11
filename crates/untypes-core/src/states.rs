@@ -6,6 +6,7 @@ pub enum AppState {
     #[default]
     Loading,
     MainMenu,
+    Lobby,
     SettingsMenu,
     InGame,
     Summary,
@@ -29,4 +30,13 @@ pub enum MapHubState {
     DifficultySelection,
     #[default]
     None,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, States, Default, Serialize, Deserialize)]
+pub enum LobbyScreen {
+    #[default]
+    None,
+    Main,
+    MapSelection,
+    DifficultySelection,
 }

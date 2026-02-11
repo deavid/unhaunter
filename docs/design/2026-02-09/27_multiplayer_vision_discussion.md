@@ -65,22 +65,40 @@ later.
 
 **Milestone:** 3-4 players in a mission, still CLI-launched.
 
+**Status (2025-06):** COMPLETE. N-player multiplayer works end-to-end. Plans 21 (N-client plumbing) and 22 (dynamic
+player spawning) implemented. Players can host with `--host` and join with `--join <ip>`. All players see each other,
+movement syncs, missions complete successfully more or less okay.
+
 ### Phase 2: In-Game Session Setup (Lobby)
 
-Replace CLI flags with an in-game flow:
+**Refined design (2025-06 conversation):**
 
-1. Player opens game normally (main menu)
-2. Chooses "Host Game" or "Join Game"
-3. Host picks port, sees "waiting for players" screen, picks map + difficulty
-4. Client enters IP:port (or room code), sees lobby, sees other players
-5. Host hits "Start Mission"
+Connection still happens via CLI flags (`--host`, `--join <ip>`). No IP input UI needed for now. A separate future track
+(unhaunter.com) will provide UI-based player discovery, but reuses the same lobby once connected.
 
-Protocol change: Split the `Welcome` message into two phases:
+Flow:
 
-- **Pre-mission phase:** `LobbyState { players, map, difficulty }` keeps everyone in sync
-- **Mission start:** `StartMission` message (today's `Welcome` payload)
+1. Player launches with `--host` or `--join <ip>`. Connection established before main menu.
+2. MainMenu is modified in networked mode: hide Campaign and Custom Mission. Add "Multiplayer Lobby" menu option.
+3. Players can navigate menus freely (Options, Manual, etc.). When ready, click "Multiplayer Lobby" to enter the lobby.
+4. Lobby shows connected players (identified by tint colors — no names needed yet).
+5. Host picks map + difficulty using the existing map selection UI (thumbnails, descriptions, difficulty picker already
+   built for Custom Mission / Classic Mode).
+6. Map and difficulty selection is visible to all clients in real-time.
+7. No "ready" mechanism for now — host clicks Start, all players are pulled into the mission.
+8. Mission end → Summary screen → Back to Lobby (NOT MainMenu). Connection stays alive for multi-mission sessions.
 
-**Milestone:** Players host/join via game menu, see each other, start together.
+Protocol change: Split the `Welcome` message into phases:
+
+- **`LobbyWelcome`:** Sent on initial connection (player identity, assignment).
+- **`LobbyState`:** Ongoing sync of `{ players, selected_map, selected_difficulty }`.
+- **`StartMission`:** Triggers game start (carries today's `Welcome` payload).
+
+Known risk: Game re-entrancy (mission end → lobby → new mission) requires careful cleanup. There are occasional 1-frame
+ndarray size mismatch crashes between missions, likely a system gating issue during map load transitions.
+
+**Milestone:** Players host/join via game menu, see each other in lobby, host selects map, start together, return to
+lobby after mission.
 
 ### Phase 3: Dedicated Server
 
@@ -394,6 +412,49 @@ Each step builds on the last. Nothing thrown away.
 - Dedicated game server: modest. 2D tile-based simulation is ~2-5% of a core per instance. $5 VPS handles 10+ concurrent
   games.
 - Cost only matters if you get popular — the best problem to have.
+
+---
+
+## Lobby Design Notes (2025-06 Conversation)
+
+### Two-Track Multiplayer Access
+
+1. **CLI flags (current + lobby):** `--host` / `--join <ip>` for infrastructure-less direct play. Requires one player to
+   have a reachable IP (or relay). This is the near-term path.
+2. **unhaunter.com (future):** A coordination and relay service. Hosts announce themselves to unhaunter.com and receive
+   a room code. Friends join using that room code, and unhaunter.com acts as a relay automatically. Hosts are private by
+   default — the room code is shared out-of-band (Discord, etc.). Optionally, hosts could choose to be listed publicly.
+   The in-game lobby is the same once connected; only the connection mechanism differs.
+
+### Player Identity
+
+- Tint colors are sufficient for now to distinguish players.
+- Player names deferred. Random name generation was considered but deferred — text input for settings is not yet built.
+- Full identity system (profiles, persistent names) is a future concern.
+
+### WASM
+
+- WASM is explicitly excluded from multiplayer for now. Transport abstraction (Phase 5) would enable it later, but it's
+  not a priority.
+
+### Communication Gap
+
+- The "walkie talkie" system is currently just pre-recorded contextual advice voice lines, NOT player-to-player
+  communication.
+- Real text chat or voice chat is a significant gap for playing with strangers. For friends, external voice (Discord
+  etc.) suffices.
+- This reinforces the "friends-first" multiplayer approach for the near term.
+
+### Disconnect UX
+
+- Some disconnection UI exists (connection lost messages). Not perfect but functional for now.
+
+### Mission Re-entrancy Risk
+
+- Returning from mission → lobby → new mission exercises game state cleanup paths that have edge cases.
+- Known issue: occasional 1-frame ndarray size mismatch crashes during map load transitions between missions.
+  - Likely cause: a system running before the new map data is fully loaded, probably a state gating issue.
+  - Same risk exists in solo play. Not a prerequisite for lobby work — will be fixed if it becomes bothersome.
 
 ---
 

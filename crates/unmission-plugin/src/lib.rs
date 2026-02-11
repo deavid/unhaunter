@@ -4,6 +4,7 @@ use unboard_core::resources::board_topology::BoardTopology;
 use unevents_core::events::mission::MissionEvent;
 use unnet_core::resources::MissionEndRequested;
 use unplayer_core::components::PlayerDisconnected;
+use unplayer_core::components::PlayerInactive;
 use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
@@ -30,6 +31,7 @@ pub fn evaluate_mission_end(
             Has<InTruck>,
             Has<PlayerSpectating>,
             Has<PlayerDisconnected>,
+            Has<PlayerInactive>,
         ),
         With<PlayerSprite>,
     >,
@@ -45,8 +47,8 @@ pub fn evaluate_mission_end(
     let mut players_in_truck = 0;
     let mut any_connected = false;
 
-    for (_, in_truck, spectating, disconnected) in query_players.iter() {
-        if disconnected {
+    for (_, in_truck, spectating, disconnected, inactive) in query_players.iter() {
+        if disconnected || inactive {
             continue;
         }
         any_connected = true;

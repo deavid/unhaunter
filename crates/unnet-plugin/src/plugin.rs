@@ -13,6 +13,7 @@ impl Plugin for UnhaunterNetPlugin {
         app.init_resource::<unnet_core::resources::ChangedTiles>();
         app.init_resource::<unnet_core::resources::MissionEndRequested>();
         app.init_resource::<unnet_core::resources::HostGone>();
+        app.init_resource::<unnet_core::resources::LobbyData>();
         app.init_resource::<crate::resources::PendingMapLoad>();
         app.add_message::<NetworkDataEvent>();
         app.add_message::<unnet_core::messages::NetworkDisconnectEvent>();

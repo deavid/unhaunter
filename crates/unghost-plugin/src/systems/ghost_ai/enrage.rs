@@ -13,7 +13,7 @@ use unfoundation_core::utils::mean::MeanValue;
 use unfoundation_core::utils::time::PrintingTimer;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerSpectating, PlayerSprite};
+use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite};
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
@@ -43,6 +43,7 @@ pub(crate) fn ghost_enrage(
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
+            Without<PlayerInactive>,
             Without<InTruck>,
         ),
     >,
@@ -214,6 +215,7 @@ fn calculate_min_player_distance(
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
+            Without<PlayerInactive>,
             Without<InTruck>,
         ),
     >,
@@ -253,6 +255,7 @@ pub(crate) fn handle_hunting_phase(
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
+            Without<PlayerInactive>,
             Without<InTruck>,
         ),
     >,
@@ -367,6 +370,7 @@ pub(crate) fn calculate_rage_update(
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
+            Without<PlayerInactive>,
             Without<InTruck>,
         ),
     >,

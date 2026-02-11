@@ -26,8 +26,9 @@ pub(crate) fn keyboard_input_system(
     q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
     game_settings: Res<Persistent<GameplaySettings>>,
     q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
+    game_state: Res<State<untypes_core::states::GameState>>,
 ) {
-    if !q_in_truck.is_empty() {
+    if !q_in_truck.is_empty() || *game_state == untypes_core::states::GameState::Pause {
         return;
     }
     for (entity, _player, input_mapping, mut player_input) in players.iter_mut() {

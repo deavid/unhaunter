@@ -1,4 +1,5 @@
 use crate::network_id::NetworkId;
+use crate::resources::LobbyPlayer;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use unevents_core::events::roomchanged::InteractionExecutionType;
@@ -207,6 +208,13 @@ pub struct SnapshotMsg {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PlayerStatusInfo {
+    pub id: NetworkId,
+    pub is_alive: bool,
+    pub is_in_lobby: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum NetworkMessage {
     /// Initial handshake from Client to Host.
     Hello {
@@ -216,6 +224,31 @@ pub enum NetworkMessage {
     /// Response from Host to Client.
     Welcome {
         id: NetworkId,
+        map_seed: u64,
+        map_filepath: String,
+        difficulty_id: String,
+    },
+    /// Sent on successful handshake (replaces current Welcome for identity)
+    LobbyWelcome { id: NetworkId },
+    /// Client periodically sends this to confirm liveness
+    Heartbeat { app_state: AppState },
+    /// Sent by host to a newly connected client immediately after LobbyWelcome.
+    /// Also broadcast periodically so lobby clients know what the host is doing.
+    HostStatus {
+        app_state: AppState,
+        match_time_elapsed: f32,
+        evidences_found: u32,
+        repellent_used: u32,
+        player_statuses: Vec<PlayerStatusInfo>,
+    },
+    /// Broadcast periodically from host to all clients while in lobby
+    LobbyState {
+        players: Vec<LobbyPlayer>,
+        selected_map: Option<String>,
+        selected_difficulty: Option<String>,
+    },
+    /// Host -> all clients: start the mission now
+    StartMission {
         map_seed: u64,
         map_filepath: String,
         difficulty_id: String,
@@ -266,6 +299,8 @@ pub enum NetworkMessage {
     RequestUnhide { player_id: NetworkId },
     /// Client requests to end the mission globally.
     RequestEndMission,
+    /// Client requests to join a mission already in progress.
+    RequestLateJoin { player_id: NetworkId },
     /// A player has left the mission (ended their game or disconnected)
     PlayerLeft { player_id: NetworkId },
     /// Client requests a change in their truck loadout.

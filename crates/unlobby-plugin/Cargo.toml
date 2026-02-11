@@ -1,0 +1,26 @@
+[package]
+name = "unlobby-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+enum-iterator = { workspace = true }
+unfoundation-core = { path = "../unfoundation-core" }
+unengine-core = { path = "../unengine-core" }
+unui-core = { path = "../unui-core" }
+untypes-core = { path = "../untypes-core" }
+unmenu-core = { path = "../unmenu-core" }
+unnet-core = { path = "../unnet-core" }
+unassets-core = { path = "../unassets-core" }
+undifficulty-core = { path = "../undifficulty-core" }
+unprofile-core = { path = "../unprofile-core" }
+unevents-core = { path = "../unevents-core" }
+bevy-persistent = { workspace = true }

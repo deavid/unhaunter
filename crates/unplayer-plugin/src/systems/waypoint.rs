@@ -45,9 +45,10 @@ pub(crate) fn waypoint_creation_system(
     mouse_visibility: Res<MouseVisibility>,
     pathfinder: Pathfinder,
     q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
+    game_state: Res<State<untypes_core::states::GameState>>,
 ) {
-    // Skip if local player is in truck
-    if !q_in_truck.is_empty() {
+    // Skip if local player is in truck or game is paused
+    if !q_in_truck.is_empty() || *game_state == untypes_core::states::GameState::Pause {
         return;
     }
     // Only process clicks when mouse is visible

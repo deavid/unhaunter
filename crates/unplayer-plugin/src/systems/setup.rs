@@ -75,7 +75,8 @@ pub(crate) fn app_setup(app: &mut App) {
             in_state(AppState::InGame).and(
                 in_state(GameState::None)
                     .or(in_state(GameState::Truck))
-                    .or(in_state(GameState::NpcHelp)),
+                    .or(in_state(GameState::NpcHelp))
+                    .or(in_state(GameState::Pause)),
             ),
         ),
     );

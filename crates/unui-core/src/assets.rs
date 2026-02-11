@@ -25,15 +25,17 @@ pub struct UiAssets {
     pub vignette: Handle<Image>,
 
     // Fonts
-    #[asset(path = "fonts/londrina_solid/LondrinaSolid-Thin.ttf")]
-    pub font_londrina_thin: Handle<Font>,
+    // NOTE: Using several weights for the Londrina seem to confuse the font loader and replaces onto the same asset different
+    // weights.
+    // TODO: Investigate if the new system supports  multiple weights and we maybe only need to keep track of 1 asset but with multiple weights.
+    // #[asset(path = "fonts/londrina_solid/LondrinaSolid-Thin.ttf")]
+    // pub font_londrina_thin: Handle<Font>,
     #[asset(path = "fonts/londrina_solid/LondrinaSolid-Light.ttf")]
     pub font_londrina_light: Handle<Font>,
-    #[asset(path = "fonts/londrina_solid/LondrinaSolid-Regular.ttf")]
-    pub font_londrina_regular: Handle<Font>,
-    #[asset(path = "fonts/londrina_solid/LondrinaSolid-Black.ttf")]
-    pub font_londrina_black: Handle<Font>,
-
+    // #[asset(path = "fonts/londrina_solid/LondrinaSolid-Regular.ttf")]
+    // pub font_londrina_regular: Handle<Font>,
+    // #[asset(path = "fonts/londrina_solid/LondrinaSolid-Black.ttf")]
+    // pub font_londrina_black: Handle<Font>,
     #[asset(path = "fonts/syne/static/Syne-Regular.ttf")]
     pub font_syne_regular: Handle<Font>,
     #[asset(path = "fonts/syne/static/Syne-Medium.ttf")]

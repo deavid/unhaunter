@@ -52,12 +52,12 @@ pub fn keyboard_state_transitions(
         return;
     }
 
-    let in_game = *game_state.get() == GameState::None;
+    let can_pause = *game_state.get() == GameState::None;
     if *game_state.get() == GameState::Pause {
         return;
     }
 
-    if keyboard_input.just_pressed(KeyCode::Escape) && in_game {
+    if keyboard_input.just_pressed(KeyCode::Escape) && can_pause {
         game_next_state.set(GameState::Pause);
     }
 }

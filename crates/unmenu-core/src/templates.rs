@@ -39,6 +39,7 @@ pub fn create_logo(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
             ..default()
         },
         ZIndex(0),
+        bevy::picking::Pickable::IGNORE,
     ));
 }
 
@@ -124,6 +125,34 @@ pub fn create_menu_item<'a>(
                 }))
                 .insert(PrincipalMenuText);
         });
+
+    entity_cmd
+}
+
+/// Creates a disabled menu item within a strip
+pub fn create_menu_item_disabled<'a>(
+    strip: &'a mut ChildSpawnerCommands,
+    text: impl Into<String>,
+    ui_assets: &UiAssets,
+) -> EntityCommands<'a> {
+    let text: String = text.into();
+    let mut entity_cmd = strip.spawn(Node {
+        padding: UiRect::all(Val::Px(10.0 * UI_SCALE)),
+        margin: UiRect::vertical(Val::Px(5.0 * UI_SCALE)),
+        ..default()
+    });
+
+    entity_cmd.insert(MenuItemDisabled).with_children(|parent| {
+        parent
+            .spawn(Text::new(text))
+            .insert(TextFont {
+                font: ui_assets.font_londrina_light.clone(),
+                font_size: 38.0 * FONT_SCALE,
+                ..default()
+            })
+            .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
+            .insert(PrincipalMenuText);
+    });
 
     entity_cmd
 }
@@ -294,6 +323,36 @@ pub fn create_breadcrumb_navigation<'a>(
                         .insert(TextColor(colors::MENU_ITEM_COLOR_ON)); // Orange color for current item
                 });
         });
+
+    entity_cmd
+}
+
+/// Creates a standard content area for informational displays (non-selectable)
+pub fn create_informational_content_area<'a>(
+    parent: &'a mut ChildSpawnerCommands,
+    _ui_assets: &UiAssets,
+) -> EntityCommands<'a> {
+    let content_bg_color = Color::Srgba(Srgba {
+        red: 0.0,
+        green: 0.0,
+        blue: 0.0,
+        alpha: 0.5,
+    });
+
+    let mut entity_cmd = parent.spawn(Node {
+        position_type: PositionType::Absolute,
+        left: Val::Px(350.0 * UI_SCALE),
+        top: Val::Px(100.0 * UI_SCALE),
+        right: Val::Px(50.0 * UI_SCALE),
+        height: Val::Percent(80.0),
+        flex_direction: FlexDirection::Row,
+        padding: UiRect::all(Val::Px(15.0 * UI_SCALE)),
+        ..default()
+    });
+
+    entity_cmd
+        .insert(BackgroundColor(content_bg_color))
+        .insert(MenuContentArea);
 
     entity_cmd
 }

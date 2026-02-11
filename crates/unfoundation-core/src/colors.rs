@@ -1,5 +1,5 @@
 use bevy::{
-    color::{Color, palettes::css},
+    color::{Color, Hsla, palettes::css},
     ui::BorderColor,
 };
 
@@ -28,6 +28,18 @@ pub const BUTTON_END_MISSION_FGCOLOR: Color = Color::srgba(0.388, 0.200, 0.169, 
 pub const BUTTON_END_MISSION_TXTCOLOR: Color = Color::srgba(0.851, 0.522, 0.275, 1.0);
 pub const DIALOG_TEXT_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.7);
 pub const DIALOG_BOLD_TEXT_COLOR: Color = Color::srgba(0.0, 0.8, 1.0, 0.9);
+
+pub fn player_color(index: usize) -> Color {
+    let i = index as f32;
+    // Math: Hue(i) = (23 + (i * 3 + (i / 3)) * 40) % 360
+    // Simplified for 9 players with stride 3:
+    // 0: 23, 1: 143, 2: 263
+    // 3: 63, 4: 183, 5: 303
+    // 6: 103, 7: 223, 8: 343
+    let hue = (23.0 + (i * 120.0 + (i / 3.0).floor() * 40.0)) % 360.0;
+    Color::Hsla(Hsla::new(hue, 0.8, 0.6, 1.0))
+}
+
 pub const MENU_ITEM_COLOR_ON: Color = Color::Srgba(css::ORANGE_RED);
 pub const MENU_ITEM_COLOR_OFF: Color = Color::Srgba(css::GRAY);
 pub const MENU_DESC_TEXT_COLOR: Color = Color::srgba(0.8, 0.94, 0.98, 1.0);

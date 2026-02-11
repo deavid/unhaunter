@@ -89,6 +89,7 @@ High-level game flow and specific gameplay mechanics. Logic is contained in \`Pl
 - **\`unsummary-plugin\`**: End-of-mission summary screen systems.
 - **\`unmapload-plugin\`**: Map loading orchestration and setup.
 - **\`unmainmenu-plugin\`**: Main menu UI and logic.
+- **\`unlobby-plugin\`**: Multiplayer lobby UI and mission preparation.
 - **\`unmenu-plugin\`**: Core menu systems and shared menu components.
 - **\`unmenusettings-plugin\`**: Settings menu implementation.
 - **\`unmaphub-plugin\`**: Map selection hub.

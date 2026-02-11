@@ -532,23 +532,26 @@ pub(crate) fn client_apply_snapshots_system(
                 }
             }
 
-            // Sync GameState - but NOT Truck state (that's per-player)
+            // Sync GameState - but NOT Truck or Pause states (those are per-player local)
             // Only sync if Host is in a "global" state that affects everyone
-            let dominated_by_server =
-                matches!(server_game_state, GameState::Pause | GameState::NpcHelp);
+            let dominated_by_server = matches!(server_game_state, GameState::NpcHelp);
             let local_in_truck = *params.states.current_game_state.get() == GameState::Truck;
+            let local_in_pause = *params.states.current_game_state.get() == GameState::Pause;
             let server_in_truck = *server_game_state == GameState::Truck;
+            let server_in_pause = *server_game_state == GameState::Pause;
 
             if dominated_by_server
                 || (!local_in_truck
+                    && !local_in_pause
                     && !server_in_truck
+                    && !server_in_pause
                     && *server_game_state != *params.states.current_game_state.get())
             {
-                // Only sync if we're not locally in the truck
-                // This allows Client to stay in Truck while Host is in None
+                // Only sync if we're not locally in Truck or Pause
+                // This allows Client to stay in Truck/Pause while Host is in None
                 params.states.game_next_state.set(*server_game_state);
             }
-            // If local_in_truck is true, we keep our local Truck state
+            // If local_in_truck or local_in_pause is true, we keep our local state
 
             // Sync MissionEndRequested
             params.mission_end_requested.0 = *can_end_mission;

@@ -19,6 +19,7 @@ fn keyboard(
     mut next_state: ResMut<NextState<AppState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     host_gone: Res<HostGone>,
+    cli: Res<untypes_core::cli::CliOptions>,
 ) {
     if *game_state.get() != GameState::Pause {
         return;
@@ -28,7 +29,11 @@ fn keyboard(
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
         game_next_state.set(GameState::None);
-        next_state.set(AppState::MissionSelect);
+        if matches!(cli.net_mode, untypes_core::cli::NetMode::Offline) {
+            next_state.set(AppState::MissionSelect);
+        } else {
+            next_state.set(AppState::Lobby);
+        }
     }
 }
 
@@ -46,8 +51,8 @@ fn setup_ui(
 ) {
     let (p_text, p_sub_text) = if host_gone.0 {
         (
-            "Multiplayer Connection Lost",
-            "Host has disconnected. Press Q to exit.",
+            "Mission Unavailable",
+            "Host has left the mission or disconnected. Press Q to exit.",
         )
     } else {
         ("Pause", "Press ESC to resume or Q to quit mission")

@@ -6106,6 +6106,7 @@ dependencies = [
  "unghost-plugin",
  "uninteraction-plugin",
  "unlight-plugin",
+ "unlobby-plugin",
  "unmainmenu-plugin",
  "unmanual-plugin",
  "unmaphub-plugin",
@@ -6234,6 +6235,25 @@ dependencies = [
  "unrender-std",
  "unsettings-core",
  "unspatial-core",
+ "untypes-core",
+ "unui-core",
+]
+
+[[package]]
+name = "unlobby-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "enum-iterator",
+ "unassets-core",
+ "undifficulty-core",
+ "unengine-core",
+ "unevents-core",
+ "unfoundation-core",
+ "unmenu-core",
+ "unnet-core",
+ "unprofile-core",
  "untypes-core",
  "unui-core",
 ]

@@ -114,8 +114,9 @@ pub(crate) fn mouse_scroll_gear_system(
         ),
     >,
     q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
+    game_state: Res<State<untypes_core::states::GameState>>,
 ) {
-    if !q_in_truck.is_empty() {
+    if !q_in_truck.is_empty() || *game_state == untypes_core::states::GameState::Pause {
         return;
     }
     for event in scroll_events.read() {
