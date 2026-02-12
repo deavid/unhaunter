@@ -32,10 +32,10 @@ pub(crate) fn update_sage(
     cli: Res<CliOptions>,
     mut ev_snapshot_events: MessageWriter<unnet_core::messages::TransientEvent>,
 ) {
-    let is_host = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+    let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
 
     for (entity, mut sage, mut status, mut sprite, pos, _ep, triggered) in q_sage.iter_mut() {
-        if is_host && triggered.is_some() && !sage.is_active && !sage.consumed {
+        if is_authority && triggered.is_some() && !sage.is_active && !sage.consumed {
             sage.is_active = true;
             sage.burn_timer.reset();
 
@@ -45,7 +45,7 @@ pub(crate) fn update_sage(
             commands.entity(entity).remove::<Triggered>();
         }
 
-        if is_host && sage.is_active && !sage.consumed {
+        if is_authority && sage.is_active && !sage.consumed {
             sage.burn_timer.tick(gs_audio.time.delta());
 
             // Spawn smoke particles

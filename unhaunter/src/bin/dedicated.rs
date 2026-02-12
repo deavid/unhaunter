@@ -9,14 +9,11 @@ struct Args {
     #[clap(long, action)]
     draft_maps: bool,
 
-    #[clap(long)]
-    host: Option<u16>,
+    #[clap(long, default_value_t = 5000)]
+    host: u16,
 
     #[clap(long)]
     bind: Vec<String>,
-
-    #[clap(long)]
-    join: Option<String>,
 
     #[clap(long)]
     map: Option<String>,
@@ -29,9 +26,6 @@ struct Args {
 
     #[clap(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
-
-    #[clap(long, action)]
-    mute: bool,
 }
 
 fn main() {
@@ -44,20 +38,15 @@ fn main() {
         }
     }
 
-    let net_mode = if let Some(port) = args.host {
-        let mut bind_addresses = args.bind.clone();
-        if bind_addresses.is_empty() {
-            bind_addresses.push("::".to_string());
-            bind_addresses.push("0.0.0.0".to_string());
-        }
-        untypes_core::cli::NetMode::Host {
-            port,
-            bind_addresses,
-        }
-    } else if let Some(address) = args.join {
-        untypes_core::cli::NetMode::Join { address }
-    } else {
-        untypes_core::cli::NetMode::Offline
+    let mut bind_addresses = args.bind.clone();
+    if bind_addresses.is_empty() {
+        bind_addresses.push("::".to_string());
+        bind_addresses.push("0.0.0.0".to_string());
+    }
+
+    let net_mode = untypes_core::cli::NetMode::Host {
+        port: args.host,
+        bind_addresses,
     };
 
     // --- Validation ---
@@ -103,14 +92,14 @@ fn main() {
     }
     // ------------------
 
-    unhaunter::wasm::app_run(CliOptions {
+    unhaunter::app::app_run(CliOptions {
         include_draft_maps: args.draft_maps,
         net_mode,
         map_path: final_map_path,
         difficulty_id: args.difficulty,
         installation_id_file: args.installation_id_file,
         verbose: args.verbose,
-        mute: args.mute,
-        dedicated: false,
+        mute: true,
+        dedicated: true,
     });
 }

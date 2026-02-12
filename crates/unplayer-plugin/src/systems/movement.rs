@@ -53,7 +53,7 @@ pub(crate) fn player_interaction_system(
         Without<PlayerSprite>,
     >,
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
-    mut ev_npc: MessageWriter<NpcHelpEvent>,
+    mut ev_npc: Option<MessageWriter<NpcHelpEvent>>,
 ) {
     for (pos, player_input, hiding, in_truck, spectating) in players.iter() {
         if in_truck.is_some() || hiding.is_some() || spectating.is_some() {
@@ -82,8 +82,10 @@ pub(crate) fn player_interaction_system(
                 for (entity, _, _, behavior, _) in
                     interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
                 {
-                    if behavior.is_npc() {
-                        ev_npc.write(NpcHelpEvent::new(entity));
+                    if behavior.is_npc()
+                        && let Some(ev) = ev_npc.as_mut()
+                    {
+                        ev.write(NpcHelpEvent::new(entity));
                     }
                     ev_interaction.write(ExecuteInteractionEvent {
                         entity,
@@ -141,9 +143,9 @@ pub(crate) fn player_movement_system(
     miasma: Res<MiasmaGrid>,
     mut avg_running: Local<f32>,
     mut last_error_log: Local<f32>,
-    mouse_visibility: Res<MouseVisibility>,
+    mouse_visibility: Option<Res<MouseVisibility>>,
 ) {
-    let is_host = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+    let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
     let dt = time.delta_secs() * 60.0;
     let now = time.elapsed_secs();
     let mut can_log = false;
@@ -167,7 +169,7 @@ pub(crate) fn player_movement_system(
     ) in players.iter_mut()
     {
         let is_main_player = main_player.is_some();
-        if !is_host && !is_main_player {
+        if !is_authority && !is_main_player {
             continue;
         }
 
@@ -315,7 +317,12 @@ pub(crate) fn player_movement_system(
             .to_vec(),
         );
 
-        if is_main_player && mouse_visibility.is_visible {
+        if is_main_player
+            && mouse_visibility
+                .as_ref()
+                .map(|m| m.is_visible)
+                .unwrap_or(false)
+        {
             // Let mouse_aim_system handle Direction for MainPlayer
         } else if player_input.aim_direction.length_squared() > 0.001 {
             dir.dx = player_input.aim_direction.x;

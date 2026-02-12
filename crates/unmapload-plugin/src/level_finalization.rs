@@ -11,7 +11,7 @@ use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unevents_core::events::loadlevel::LevelReadyEvent;
+use unmapload_core::events::loadlevel::LevelReadyEvent;
 use unevents_core::events::roomchanged::{RoomChangedEvent, RoomStateSyncEvent};
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::components::visuals::ResolutionFactor;
@@ -194,13 +194,12 @@ fn rebuild_collision_on_level_ready(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use bevy::prelude::on_message;
-    use unevents_core::events::loadlevel::LevelReadyEvent;
+    use unmapload_core::events::loadlevel::LevelReadyEvent;
 
     app.add_systems(Update, process_pre_meshes).add_systems(
         Update,
         (rebuild_collision_on_level_ready, after_level_ready)
             .chain()
-            .run_if(on_message::<LevelReadyEvent>),
+            .run_if(bevy::prelude::on_message::<LevelReadyEvent>),
     );
 }

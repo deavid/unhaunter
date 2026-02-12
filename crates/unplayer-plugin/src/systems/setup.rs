@@ -15,9 +15,49 @@ use crate::systems::viewer_sync;
 use crate::systems::walk_target_indicator;
 use crate::systems::waypoint;
 
-pub(crate) fn app_setup(app: &mut App) {
+pub(crate) fn app_setup_core(app: &mut App) {
     hydration::app_setup(app);
     grabdrop::app_setup(app);
+
+    // Configure the authoritative logic set
+    app.configure_sets(
+        Update,
+        unplayer_core::authoritative::PlayerAuthoritativeLogicSet
+            .run_if(untypes_core::cli::is_authority)
+            .after(unplayer_core::PlayerInputSet),
+    );
+
+    // Interaction request handling (Authoritative on Host)
+    app.add_systems(
+        Update,
+        (
+            // Interaction system runs before movement (Runs on all instances)
+            movement::player_interaction_system,
+            // Movement system runs after input and waypoints
+            // On the client, it only runs for the MainPlayer. On the host, it runs for all players.
+            movement::player_movement_system,
+        )
+            .chain()
+            .after(unplayer_core::PlayerInputSet)
+            .after(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
+            .run_if(in_state(AppState::InGame)),
+    );
+
+    app.add_systems(PostUpdate, input::keyboard::player_input_clear_system);
+
+    // Gear toggle system must run on all instances (including dedicated server)
+    // so that the host can process toggle requests from clients.
+    app.add_systems(
+        Update,
+        input::mouse_interaction::player_gear_usage_system
+            .in_set(unplayer_core::PlayerInputSet)
+            .run_if(in_state(AppState::InGame)),
+    );
+
+    sanityhealth::app_setup(app);
+}
+
+pub(crate) fn app_setup_client(app: &mut App) {
     hide::app_setup(app);
 
     app.add_systems(
@@ -25,16 +65,12 @@ pub(crate) fn app_setup(app: &mut App) {
         styling::update_player_styling.run_if(in_state(AppState::InGame)),
     );
 
-    app.add_systems(PostUpdate, input::keyboard::player_input_clear_system);
-
     // Set up input and movement systems with proper ordering
     app.add_systems(
         Update,
         (
             // Input systems run first (Always run on all instances to gather input)
             input::keyboard::keyboard_input_system,
-            // Gear usage system (predictive on client, authoritative on host)
-            input::mouse_interaction::player_gear_usage_system,
             // Walk target indicator system (kept for compatibility)
             walk_target_indicator::manage_walk_target_indicator,
             // Mouse interaction systems (gear only, clicks handled by waypoint system)
@@ -54,16 +90,8 @@ pub(crate) fn app_setup(app: &mut App) {
 
     app.add_systems(
         Update,
-        (
-            // Interaction system runs before movement (Runs on all instances)
-            movement::player_interaction_system,
-            // Movement system runs after input and waypoints
-            // On the client, it only runs for the MainPlayer. On the host, it runs for all players.
-            movement::player_movement_system,
-            // Stairs system runs last. Also gated similarly.
-            keyboard::stairs_player,
-        )
-            .chain()
+        // Stairs system runs last. Also gated similarly.
+        keyboard::stairs_player
             .after(unplayer_core::PlayerInputSet)
             .run_if(in_state(AppState::InGame)),
     );
@@ -82,5 +110,4 @@ pub(crate) fn app_setup(app: &mut App) {
     );
 
     mouse::app_setup(app);
-    sanityhealth::app_setup(app);
 }

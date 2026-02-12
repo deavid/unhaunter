@@ -9,6 +9,7 @@ use unrender_core::materials::CustomMaterial1;
 pub enum AtlasData {
     Sheet((Handle<TextureAtlasLayout>, CustomMaterial1)),
     Tiles(Vec<(Handle<Image>, CustomMaterial1)>),
+    Headless,
 }
 
 #[derive(Debug, Clone)]

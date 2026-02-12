@@ -39,16 +39,16 @@ pub(crate) fn update_emfmeter(
         &mut PerceivedClarity,
     )>,
     mut gs_audio: SoundEmitter,
-    miasma: Res<MiasmaGrid>,
-    tg: Res<ThermalGrid>,
-    sg: Res<SoundGrid>,
+    miasma: If<Res<MiasmaGrid>>,
+    tg: If<Res<ThermalGrid>>,
+    sg: If<Res<SoundGrid>>,
     difficulty: Res<CurrentDifficulty>,
     haunt_state: Res<HauntState>,
-    player_profile: Res<Persistent<PlayerProfileData>>,
+    player_profile: If<Res<Persistent<PlayerProfileData>>>,
     cli: Res<untypes_core::cli::CliOptions>,
 ) {
     let measure = metrics::EMF_UPDATE.time_measure();
-    let is_host = untypes_core::cli::is_host(cli);
+    let is_authority = untypes_core::cli::is_authority(cli);
     for (
         mut emf,
         mut status,
@@ -66,7 +66,7 @@ pub(crate) fn update_emfmeter(
         emf.frame_counter = emf.frame_counter.wrapping_add(1);
 
         // Update Battery Drain Rate
-        if is_host {
+        if is_authority {
             battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
         }
 
@@ -89,7 +89,7 @@ pub(crate) fn update_emfmeter(
 
         // Update Logic
         if toggle.is_on {
-            if is_host {
+            {
                 const K: f32 = 0.5;
                 const F: f32 = 0.95;
                 for _ in 0..20 {
@@ -155,7 +155,7 @@ pub(crate) fn update_emfmeter(
             }
 
             let sec = gs_audio.time.elapsed_secs();
-            if emf.last_meter_update_secs + 0.5 < sec || !is_host {
+            if emf.last_meter_update_secs + 0.5 < sec {
                 // Update blinking_hint_active
                 const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
                 if emf.emf_level == EMFLevel::EMF5 {

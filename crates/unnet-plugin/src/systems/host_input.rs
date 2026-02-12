@@ -9,15 +9,19 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unmetrics_core::metrics::SendMetric;
-use unnet_core::messages::{NetworkDataEvent, NetworkMessage};
+use unnet_core::messages::{NetworkDataEvent, NetworkMessage, SendNetworkMessage};
 use unnet_core::network_id::NetworkId;
-use unnet_core::resources::{CurrentMapSeed, LobbyData, MissionEndRequested};
+use unnet_core::resources::{CurrentMapSeed, LobbyData, MissionEndRequested, RoomOwner};
 use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite};
 use unsettings_core::audio::AudioSettings;
 use unspatial_core::position::Position;
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use untruck_core::components::in_truck::InTruck;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 use untypes_core::cli::{CliOptions, NetMode};
+use untypes_core::difficulty::Difficulty;
+use untypes_core::states::AppState;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 
 use crate::metrics;
 
@@ -28,6 +32,7 @@ pub(crate) struct HostApplyInputParams<'w, 's> {
     pub cli: Res<'w, CliOptions>,
     pub network_conn: Option<ResMut<'w, NetworkConn>>,
     pub ev_reader: MessageReader<'w, 's, NetworkDataEvent>,
+    pub ev_send: MessageWriter<'w, SendNetworkMessage>,
     pub query_players: Query<
         'w,
         's,
@@ -53,9 +58,13 @@ pub(crate) struct HostApplyInputParams<'w, 's> {
     pub asset_server: Res<'w, AssetServer>,
     pub audio_settings: Res<'w, Persistent<AudioSettings>>,
     pub ev_mission: MessageWriter<'w, unevents_core::events::mission::MissionEvent>,
+    pub ev_load_level: MessageWriter<'w, LoadLevelEvent>,
     pub mission_end_requested: Res<'w, MissionEndRequested>,
-    pub lobby_data: Option<Res<'w, LobbyData>>,
     pub current_map_seed: Option<Res<'w, CurrentMapSeed>>,
+    pub room_owner: Option<Res<'w, RoomOwner>>,
+    pub lobby_data: Option<ResMut<'w, LobbyData>>,
+    pub next_app_state: ResMut<'w, NextState<AppState>>,
+    pub current_difficulty: ResMut<'w, CurrentDifficulty>,
 }
 
 pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
@@ -77,8 +86,8 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                 let diff_id = params
                     .lobby_data
                     .as_deref()
-                    .and_then(|l| l.selected_difficulty.clone())
-                    .unwrap_or_default();
+                    .map(|l| l.selected_difficulty.clone())
+                    .unwrap_or_else(|| "standard-challenge".to_string());
 
                 debug!(
                     "Sending Late Join StartMission to {:?} (Map: {}, Diff: {}, Seed: {})",
@@ -117,6 +126,8 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                 target_left_hand,
                 target_position,
                 aim_direction,
+                sanity,
+                mean_sound,
             } => {
                 let mut found_player = false;
                 for (_entity, id, mut input, _, mut pos, _) in params.query_players.iter_mut() {
@@ -136,6 +147,8 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                         input.target_left_hand = target_left_hand.clone();
                         input.target_position = target_position.map(|v| Vec2::new(v[0], v[1]));
                         input.aim_direction = Vec2::new(aim_direction[0], aim_direction[1]);
+                        input.sanity = *sanity;
+                        input.mean_sound = *mean_sound;
                     }
                 }
                 if !found_player {
@@ -321,27 +334,29 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                                         );
 
                                         // Play sound at player position
-                                        params
-                                            .commands
-                                            .spawn(AudioPlayer::new(
-                                                params
-                                                    .asset_server
-                                                    .load("sounds/effects-dingdingding.ogg"),
-                                            ))
-                                            .insert(PlaybackSettings {
-                                                mode: bevy::audio::PlaybackMode::Despawn,
-                                                volume: bevy::audio::Volume::Linear(
-                                                    1.0 * params
-                                                        .audio_settings
-                                                        .volume_master
-                                                        .as_f32()
-                                                        * params
+                                        if !params.cli.is_headless() {
+                                            params
+                                                .commands
+                                                .spawn(AudioPlayer::new(
+                                                    params
+                                                        .asset_server
+                                                        .load("sounds/effects-dingdingding.ogg"),
+                                                ))
+                                                .insert(PlaybackSettings {
+                                                    mode: bevy::audio::PlaybackMode::Despawn,
+                                                    volume: bevy::audio::Volume::Linear(
+                                                        1.0 * params
                                                             .audio_settings
-                                                            .volume_effects
-                                                            .as_f32(),
-                                                ),
-                                                ..Default::default()
-                                            });
+                                                            .volume_master
+                                                            .as_f32()
+                                                            * params
+                                                                .audio_settings
+                                                                .volume_effects
+                                                                .as_f32(),
+                                                    ),
+                                                    ..Default::default()
+                                                });
+                                        }
                                     }
 
                                     // Client should close UI themselves upon receiving the update,
@@ -475,6 +490,65 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                             client.needs_full_sync = true;
                             break;
                         }
+                    }
+                }
+            }
+            NetworkMessage::RequestSelectMap {
+                player_id,
+                map_filepath,
+            } => {
+                if params.room_owner.as_deref() == Some(&RoomOwner(*player_id))
+                    && let Some(lobby_data) = params.lobby_data.as_mut()
+                {
+                    lobby_data.selected_map = Some(map_filepath.clone());
+                }
+            }
+            NetworkMessage::RequestSelectDifficulty {
+                player_id,
+                difficulty_id,
+            } => {
+                if params.room_owner.as_deref() == Some(&RoomOwner(*player_id))
+                    && let Some(lobby_data) = params.lobby_data.as_mut()
+                {
+                    lobby_data.selected_difficulty = difficulty_id.clone();
+                }
+            }
+            NetworkMessage::RequestStartMission { player_id } => {
+                if params.room_owner.as_deref() == Some(&RoomOwner(*player_id)) {
+                    let mut rng = rand::rng();
+                    let new_seed: u64 = rng.random();
+                    params.commands.insert_resource(CurrentMapSeed(new_seed));
+
+                    let map = params
+                        .lobby_data
+                        .as_ref()
+                        .and_then(|ld| ld.selected_map.clone())
+                        .unwrap_or_default();
+                    let diff = params
+                        .lobby_data
+                        .as_ref()
+                        .map(|ld| ld.selected_difficulty.clone())
+                        .unwrap_or_else(|| "standard-challenge".to_string());
+
+                    params
+                        .ev_send
+                        .write(SendNetworkMessage(NetworkMessage::StartMission {
+                            map_filepath: map.clone(),
+                            map_seed: new_seed,
+                            difficulty_id: diff.clone(),
+                        }));
+
+                    // Note: The transition to InGame state should happen after the map is loaded.
+                    // For dedicated server, we trigger the load and transition to Loading.
+                    if params.cli.is_headless() {
+                        use std::str::FromStr;
+                        if let Ok(d) = Difficulty::from_str(&diff) {
+                            *params.current_difficulty = CurrentDifficulty::new(d);
+                        }
+                        params.ev_load_level.write(LoadLevelEvent {
+                            map_filepath: map,
+                        });
+                        params.next_app_state.set(AppState::Loading);
                     }
                 }
             }

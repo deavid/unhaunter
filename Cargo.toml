@@ -193,6 +193,10 @@ uninteraction-plugin = { path = "crates/uninteraction-plugin" }
 name = "unhaunter_game"
 path = "unhaunter/src/bin/unhaunter.rs"
 
+[[bin]]
+name = "unhaunter_dedicated"
+path = "unhaunter/src/bin/dedicated.rs"
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "unhaunter/src/lib.rs"

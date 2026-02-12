@@ -160,12 +160,15 @@ fn sync_ghost_emitters(
 
 pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
     use untypes_core::cli::{CliOptions, NetMode};
-    let is_host = |cli: Res<CliOptions>| -> bool { !matches!(cli.net_mode, NetMode::Join { .. }) };
+    let is_authority =
+        |cli: Res<CliOptions>| -> bool { !matches!(cli.net_mode, NetMode::Join { .. }) };
 
     app.add_systems(
         bevy::prelude::Update,
-        (update_ghost_behavior_dynamics_system, sync_ghost_emitters)
-            .chain()
-            .run_if(is_host),
+        (
+            update_ghost_behavior_dynamics_system.run_if(is_authority),
+            sync_ghost_emitters,
+        )
+            .chain(),
     );
 }

@@ -1,3 +1,4 @@
+use crate::metrics;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy_persistent::Persistent;
@@ -9,10 +10,11 @@ use unbehavior::roomdb::RoomDB;
 use unboard_core::components::chunk::{CellIterator, ChunkIterator};
 use unboard_core::components::physics::FluidEmitter;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unevents_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unfog_core::components::MiasmaSprite;
+use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
 use unfoundation_core::random_seed;
+use unmapload_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unmetrics_core::metrics::SendMetric;
 use unnoise_core::perlin::PerlinNoise;
 use unplayer_core::components::MainPlayer;
@@ -24,10 +26,6 @@ use unrender_std::utils::collision::rebuild_collision_data;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
-use untypes_core::states::AppState;
-
-use crate::metrics;
-use unfog_core::miasma::MiasmaGrid;
 
 pub(crate) fn init_miasma_grid(
     mut miasma: ResMut<MiasmaGrid>,
@@ -39,7 +37,7 @@ pub(crate) fn init_miasma_grid(
     }
 }
 
-fn initialize_miasma(
+pub(crate) fn initialize_miasma(
     board_data: Res<BoardTopology>,
     mut bcf: ResMut<BoardCollisionField>,
     mut miasma: ResMut<MiasmaGrid>,
@@ -84,7 +82,7 @@ fn initialize_miasma(
     trace!("Done: Miasma Init");
 }
 
-fn spawn_miasma(
+pub(crate) fn spawn_miasma(
     time: Res<Time>,
     miasma: Res<MiasmaGrid>,
     q_vf: Query<&VisibilityData, With<MainPlayer>>,
@@ -245,7 +243,7 @@ fn spawn_miasma(
     measure.end_ms();
 }
 
-fn animate_miasma_sprites(
+pub(crate) fn animate_miasma_sprites(
     time: Res<Time>,
     board_data: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
@@ -330,7 +328,7 @@ fn animate_miasma_sprites(
     measure.end_ms();
 }
 
-fn update_miasma(
+pub(crate) fn update_miasma(
     board_data: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
     mut miasma: ResMut<MiasmaGrid>,
@@ -641,18 +639,4 @@ fn update_miasma(
     miasma.velocity_field = new_velocities;
 
     measure.end_ms();
-}
-
-pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, init_miasma_grid);
-    app.add_systems(
-        Update,
-        initialize_miasma
-            .run_if(on_message::<LevelReadyEvent>)
-            .after(init_miasma_grid),
-    );
-    app.add_systems(
-        Update,
-        (spawn_miasma, animate_miasma_sprites, update_miasma).run_if(in_state(AppState::InGame)),
-    );
 }

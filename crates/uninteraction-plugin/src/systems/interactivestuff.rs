@@ -31,7 +31,7 @@ use bevy::prelude::*;
 pub struct InteractiveStuff<'w, 's> {
     /// Database of sprites for map tiles. Used to retrieve alternative sprites for
     /// interactive objects.
-    pub bf: Res<'w, SpriteDB>,
+    pub bf: Option<Res<'w, SpriteDB>>,
     /// Used to spawn sound effects and potentially other entities related to
     /// interactions.
     pub commands: Commands<'w, 's>,
@@ -41,7 +41,7 @@ pub struct InteractiveStuff<'w, 's> {
     pub asset_server: Res<'w, AssetServer>,
     /// Access to the materials used for rendering map tiles. Used to update tile
     /// visuals when object states change.
-    pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
+    pub materials1: Option<ResMut<'w, Assets<CustomMaterial1>>>,
     /// ID of the local player.
     pub local_player: Res<'w, unnet_core::resources::LocalPlayer>,
     /// Database of room data, used to track the state of rooms and update interactive
@@ -64,16 +64,30 @@ impl InteractiveStuff<'_, '_> {
         tuid: &(String, u32),
         current_behavior: &Behavior,
     ) {
-        let other = self.bf.map_tile.get(tuid).unwrap();
+        let Some(bf) = self.bf.as_ref() else {
+            return;
+        };
+        let other = bf
+            .map_tile
+            .get(tuid)
+            .expect("Tile UID not found in SpriteDB");
         let mut beh = other.behavior.clone();
         beh.flip(current_behavior.p.flip);
 
         let mut e_commands = self.commands.get_entity(entity).unwrap();
-        let b = other.bundle.clone();
-        let mat = self.materials1.get(&b.material).unwrap().clone();
-        let mat = self.materials1.add(mat);
-        e_commands.insert(MeshMaterial2d(mat));
+
+        // Update behavior (logic)
         e_commands.insert(beh);
+
+        // Update visuals (renderer) - only if materials are available
+        if let Some(materials1) = self.materials1.as_mut() {
+            let b = other.bundle.clone();
+            if let Some(mat) = materials1.get(&b.material) {
+                let mat = mat.clone();
+                let mat = materials1.add(mat);
+                e_commands.insert(MeshMaterial2d(mat));
+            }
+        }
     }
 
     /// Synchronizes the entity's state with the current RoomDB state.
@@ -113,11 +127,13 @@ impl InteractiveStuff<'_, '_> {
 
         // We need to find the correct variant for this state.
         let cvo = behavior.key_cvo();
-        let variants = self.bf.cvo_idx.get(&cvo).cloned().unwrap_or_default();
+        let Some(bf) = self.bf.as_ref() else {
+            return false;
+        };
+        let variants = bf.cvo_idx.get(&cvo).cloned().unwrap_or_default();
 
         for variant_tuid in variants.iter() {
-            let is_match = self
-                .bf
+            let is_match = bf
                 .map_tile
                 .get(variant_tuid)
                 .map(|other| other.behavior.state() == *main_room_state)
@@ -218,7 +234,10 @@ impl InteractiveStuff<'_, '_> {
             return false;
         }
 
-        let variants = self.bf.cvo_idx.get(&cvo).cloned().unwrap_or_default();
+        let Some(bf) = self.bf.as_ref() else {
+            return false;
+        };
+        let variants = bf.cvo_idx.get(&cvo).cloned().unwrap_or_default();
         for other_tuid in variants.iter() {
             if let Some(ftuid) = force_tuid {
                 if other_tuid.1 != ftuid {
@@ -228,7 +247,7 @@ impl InteractiveStuff<'_, '_> {
                 continue;
             }
             let (beh_state, other_tileset, other_tileuid, other_behavior) = {
-                let other = self.bf.map_tile.get(other_tuid).unwrap();
+                let other = bf.map_tile.get(other_tuid).unwrap();
                 (
                     other.behavior.state(),
                     other.behavior.cfg().tileset.clone(),

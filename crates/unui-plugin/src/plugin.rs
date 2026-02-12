@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use unevents_core::events::hint::OnScreenHintEvent;
 use untypes_core::states::AppState;
 use unui_core::assets::UiAssets;
+use unui_core::events::hint::OnScreenHintEvent;
 
 pub struct UnhaunterUiPlugin;
 

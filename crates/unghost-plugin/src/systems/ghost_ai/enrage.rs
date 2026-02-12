@@ -13,7 +13,9 @@ use unfoundation_core::utils::mean::MeanValue;
 use unfoundation_core::utils::time::PrintingTimer;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite};
+use unplayer_core::components::{
+    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite,
+};
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
@@ -53,7 +55,7 @@ pub(crate) fn ghost_enrage(
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
     roomdb: Res<RoomDB>,
-    mut ev_ambient_mute: MessageWriter<AmbientSoundMuteEvent>,
+    mut ev_ambient_mute: Option<MessageWriter<AmbientSoundMuteEvent>>,
 ) {
     let measure = GHOST_ENRAGE.time_measure();
 
@@ -311,7 +313,7 @@ pub(crate) fn handle_warning_phases(
     ghost: &mut GhostSprite,
     dt: f32,
     time: &Res<Time>,
-    ev_ambient_mute: &mut MessageWriter<AmbientSoundMuteEvent>,
+    o_ev_ambient_mute: &mut Option<MessageWriter<AmbientSoundMuteEvent>>,
 ) -> WarningResult {
     let mut result = WarningResult {
         roar_triggered: false,
@@ -343,7 +345,9 @@ pub(crate) fn handle_warning_phases(
         // Send stronger mute event when hunt is about to start (anticipatory)
         if ghost.hunt_warning_timer <= 0.5 && ghost.hunt_warning_timer > 0.5 - dt {
             // Send stronger/faster mute for actual hunt start
-            ev_ambient_mute.write(AmbientSoundMuteEvent::default());
+            if let Some(ev_ambient_mute) = o_ev_ambient_mute {
+                ev_ambient_mute.write(AmbientSoundMuteEvent::default());
+            }
 
             // Trigger hunt after warning period
             ghost.hunt_warning_active = false;
@@ -462,7 +466,7 @@ pub(crate) fn trigger_hunt_start(
     ghost: &mut GhostSprite,
     _rage_result: &RageUpdateResult,
     difficulty: &Res<CurrentDifficulty>,
-    ev_ambient_mute: &mut MessageWriter<AmbientSoundMuteEvent>,
+    o_ev_ambient_mute: &mut Option<MessageWriter<AmbientSoundMuteEvent>>,
 ) {
     // Start Pre-Warning Phase (anticipatory audio muting)
     ghost.pre_warning_timer = 3.0;
@@ -474,7 +478,9 @@ pub(crate) fn trigger_hunt_start(
     ghost.hunt_warning_active = false;
 
     // Send anticipatory mute event BEFORE the hunt warning begins
-    ev_ambient_mute.write(AmbientSoundMuteEvent::default());
+    if let Some(ev_ambient_mute) = o_ev_ambient_mute {
+        ev_ambient_mute.write(AmbientSoundMuteEvent::default());
+    }
 }
 
 /// Determine roar decision based on current state

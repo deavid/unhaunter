@@ -32,83 +32,90 @@ struct FloorLevel {
 pub(crate) fn bevy_load_map(
     map: tiled::Map,
     asset_server: &AssetServer,
-    texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
+    o_texture_atlases: &mut Option<ResMut<Assets<TextureAtlasLayout>>>,
     tilesetdb: &mut ResMut<MapTileSetDb>,
     upscale_idx: &UpscaleIndex,
     video_settings: &VideoSettings,
+    headless: bool,
 ) -> (Vec<(usize, MapLayer)>, FloorLevelMapping) {
     // Preload all tilesets referenced:
     for tileset in map.tilesets().iter() {
         let mut factor = 1.0;
         // If an image is included, this is a tilemap. If no image is included this is a
         // sprite collection. Sprite collections are not supported right now.
-        let data = if let Some(image) = &tileset.image {
-            let img_src = resolve_tiled_image_path(&image.source);
-            let img_src_str = img_src.to_string_lossy();
+        let data = if let Some(texture_atlases) = o_texture_atlases
+            && !headless
+        {
+            if let Some(image) = &tileset.image {
+                let img_src = resolve_tiled_image_path(&image.source);
+                let img_src_str = img_src.to_string_lossy();
 
-            let (loading_src, f) = if let Some(resolved) =
-                upscale_idx.resolve(&img_src_str, video_settings.max_upscale_factor.factor())
-            {
-                (PathBuf::from(resolved.path), resolved.factor)
+                let (loading_src, f) = if let Some(resolved) =
+                    upscale_idx.resolve(&img_src_str, video_settings.max_upscale_factor.factor())
+                {
+                    (PathBuf::from(resolved.path), resolved.factor)
+                } else {
+                    (img_src, 1.0)
+                };
+                factor = f;
+
+                let texture: Handle<Image> = asset_server.load(loading_src);
+                let rows = tileset.tilecount / tileset.columns;
+                let atlas1 = TextureAtlasLayout::from_grid(
+                    UVec2::new(
+                        (tileset.tile_width as f32 * factor) as u32,
+                        (tileset.tile_height as f32 * factor) as u32,
+                    ),
+                    tileset.columns,
+                    rows,
+                    Some(UVec2::new(
+                        (tileset.spacing as f32 * factor) as u32,
+                        (tileset.spacing as f32 * factor) as u32,
+                    )),
+                    Some(UVec2::new(
+                        (tileset.margin as f32 * factor) as u32,
+                        (tileset.margin as f32 * factor) as u32,
+                    )),
+                );
+                let mut cmat = CustomMaterial1::from_texture(texture);
+                cmat.data.sheet_rows = rows;
+                cmat.data.sheet_cols = tileset.columns;
+                cmat.data.sheet_idx = 0;
+                cmat.data.sprite_width = tileset.tile_width as f32 * factor;
+                cmat.data.sprite_height = tileset.tile_height as f32 * factor;
+                cmat.data.padding = tileset.spacing as f32 * factor;
+                cmat.data.margin = tileset.margin as f32 * factor;
+                cmat.data.upscale_factor = factor;
+                let atlas1_handle = texture_atlases.add(atlas1);
+                AtlasData::Sheet((atlas1_handle.clone(), cmat))
             } else {
-                (img_src, 1.0)
-            };
-            factor = f;
+                let mut images: Vec<(Handle<Image>, CustomMaterial1)> = vec![];
+                for (_tileid, tile) in tileset.tiles() {
+                    // tile.collision
+                    if let Some(image) = &tile.image {
+                        let img_src = resolve_tiled_image_path(&image.source);
+                        let img_src_str = img_src.to_string_lossy();
 
-            let texture: Handle<Image> = asset_server.load(loading_src);
-            let rows = tileset.tilecount / tileset.columns;
-            let atlas1 = TextureAtlasLayout::from_grid(
-                UVec2::new(
-                    (tileset.tile_width as f32 * factor) as u32,
-                    (tileset.tile_height as f32 * factor) as u32,
-                ),
-                tileset.columns,
-                rows,
-                Some(UVec2::new(
-                    (tileset.spacing as f32 * factor) as u32,
-                    (tileset.spacing as f32 * factor) as u32,
-                )),
-                Some(UVec2::new(
-                    (tileset.margin as f32 * factor) as u32,
-                    (tileset.margin as f32 * factor) as u32,
-                )),
-            );
-            let mut cmat = CustomMaterial1::from_texture(texture);
-            cmat.data.sheet_rows = rows;
-            cmat.data.sheet_cols = tileset.columns;
-            cmat.data.sheet_idx = 0;
-            cmat.data.sprite_width = tileset.tile_width as f32 * factor;
-            cmat.data.sprite_height = tileset.tile_height as f32 * factor;
-            cmat.data.padding = tileset.spacing as f32 * factor;
-            cmat.data.margin = tileset.margin as f32 * factor;
-            cmat.data.upscale_factor = factor;
-            let atlas1_handle = texture_atlases.add(atlas1);
-            AtlasData::Sheet((atlas1_handle.clone(), cmat))
-        } else {
-            let mut images: Vec<(Handle<Image>, CustomMaterial1)> = vec![];
-            for (_tileid, tile) in tileset.tiles() {
-                // tile.collision
-                if let Some(image) = &tile.image {
-                    let img_src = resolve_tiled_image_path(&image.source);
-                    let img_src_str = img_src.to_string_lossy();
-
-                    let (loading_src, f) = if let Some(resolved) = upscale_idx
-                        .resolve(&img_src_str, video_settings.max_upscale_factor.factor())
-                    {
-                        (PathBuf::from(resolved.path), resolved.factor)
-                    } else {
-                        (img_src, 1.0)
-                    };
-                    factor = f;
-                    let img_handle: Handle<Image> = asset_server.load(loading_src);
-                    let mut cmat = CustomMaterial1::from_texture(img_handle.clone());
-                    cmat.data.sprite_width = (image.width as f32) * factor;
-                    cmat.data.sprite_height = (image.height as f32) * factor;
-                    cmat.data.upscale_factor = factor;
-                    images.push((img_handle, cmat));
+                        let (loading_src, f) = if let Some(resolved) = upscale_idx
+                            .resolve(&img_src_str, video_settings.max_upscale_factor.factor())
+                        {
+                            (PathBuf::from(resolved.path), resolved.factor)
+                        } else {
+                            (img_src, 1.0)
+                        };
+                        factor = f;
+                        let img_handle: Handle<Image> = asset_server.load(loading_src);
+                        let mut cmat = CustomMaterial1::from_texture(img_handle.clone());
+                        cmat.data.sprite_width = (image.width as f32) * factor;
+                        cmat.data.sprite_height = (image.height as f32) * factor;
+                        cmat.data.upscale_factor = factor;
+                        images.push((img_handle, cmat));
+                    }
                 }
+                AtlasData::Tiles(images)
             }
-            AtlasData::Tiles(images)
+        } else {
+            AtlasData::Headless
         };
 
         // NOTE: tile.offset_x/y is used when drawing, instead we want the center point.

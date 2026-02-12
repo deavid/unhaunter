@@ -4,10 +4,17 @@ use bevy_asset_loader::prelude::*;
 use unassets_core::resources::maps::Maps;
 use untypes_core::states::{AppState, GameState};
 
-pub struct UnhaunterEnginePlugin;
+pub struct UnhaunterEngineCorePlugin;
 
-impl Plugin for UnhaunterEnginePlugin {
+impl Plugin for UnhaunterEngineCorePlugin {
     fn build(&self, app: &mut App) {
+        let is_headless = app
+            .world()
+            .get_resource::<untypes_core::cli::CliOptions>()
+            .map(|cli| cli.dedicated)
+            .unwrap_or(false);
+
+        app.add_message::<unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild>();
         app.init_state::<AppState>()
             .init_state::<GameState>()
             .init_resource::<Maps>()
@@ -15,11 +22,22 @@ impl Plugin for UnhaunterEnginePlugin {
                 LoadingState::new(AppState::Loading).continue_to_state(AppState::MainMenu),
             );
 
-        app.init_resource::<unnoise_core::perlin::PerlinNoise>();
+        if is_headless {
+            app.insert_resource(unnoise_core::perlin::PerlinNoise::new_low_mem(1));
+        } else {
+            app.init_resource::<unnoise_core::perlin::PerlinNoise>();
+        }
 
+        crate::boardfield_update::app_setup(app);
+    }
+}
+
+pub struct UnhaunterEnginePlugin;
+
+impl Plugin for UnhaunterEnginePlugin {
+    fn build(&self, app: &mut App) {
         systems::app_setup(app);
         crate::pause_ui::app_setup(app);
         crate::hide_mouse::app_setup(app);
-        crate::boardfield_update::app_setup(app);
     }
 }

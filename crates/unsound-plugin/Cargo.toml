@@ -18,6 +18,7 @@ unevents-core = { path = "../unevents-core" }
 unboard-core = { path = "../unboard-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 unbehavior = { path = "../unbehavior" }
+unmapload-core = { path = "../unmapload-core" }
 
 bevy = { workspace = true }
 rand = { workspace = true }

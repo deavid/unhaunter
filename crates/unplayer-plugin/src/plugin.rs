@@ -5,6 +5,15 @@ use unplayer_core::assets::PlayerAssets;
 use unplayer_core::resources::game_config::GameConfig;
 use untypes_core::states::AppState;
 
+pub struct UnhaunterPlayerCorePlugin;
+
+impl Plugin for UnhaunterPlayerCorePlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<GameConfig>();
+        systems::setup::app_setup_core(app);
+    }
+}
+
 pub struct UnhaunterPlayerPlugin;
 
 impl Plugin for UnhaunterPlayerPlugin {
@@ -12,7 +21,6 @@ impl Plugin for UnhaunterPlayerPlugin {
         app.add_loading_state(
             LoadingState::new(AppState::Loading).load_collection::<PlayerAssets>(),
         );
-        app.init_resource::<GameConfig>();
-        systems::setup::app_setup(app);
+        systems::setup::app_setup_client(app);
     }
 }

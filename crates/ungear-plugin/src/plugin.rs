@@ -9,16 +9,23 @@ use crate::metrics;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unrender_std::assets::GearAssets;
 
+pub struct UnhaunterGearCorePlugin;
+
+impl Plugin for UnhaunterGearCorePlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<GameConfig>()
+            .init_resource::<GearSpawnerRegistry>()
+            .add_message::<SoundEvent>();
+
+        metrics::register_all(app);
+    }
+}
+
 pub struct UnhaunterGearPlugin;
 
 impl Plugin for UnhaunterGearPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(LoadingState::new(AppState::Loading).load_collection::<GearAssets>());
-        app.init_resource::<GameConfig>()
-            .init_resource::<GearSpawnerRegistry>()
-            .add_message::<SoundEvent>();
-
         systems::app_setup(app);
-        metrics::register_all(app);
     }
 }

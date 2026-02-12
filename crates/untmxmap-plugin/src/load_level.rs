@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use unassets_core::assets::{tmxmap::TmxMap, tsxsheet::TsxSheet};
 use unassets_core::resources::maps::Maps;
 use unassets_core::resources::upscale::UpscaleIndex;
-use unevents_core::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
+use unmapload_core::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
 use unsettings_core::video::VideoSettings;
 use untiled_core::tiled::MapTileSetDb;
 
@@ -13,12 +13,13 @@ fn load_level_handler(
     mut evw: MessageWriter<LevelLoadedEvent>,
     asset_server: Res<AssetServer>,
     mut tilesetdb: ResMut<MapTileSetDb>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    mut texture_atlases: Option<ResMut<Assets<TextureAtlasLayout>>>,
     maps: Res<Maps>,
     tmx_assets: Res<Assets<TmxMap>>,
     tsx_assets: Res<Assets<TsxSheet>>,
     upscale_idx: Res<UpscaleIndex>,
     video_settings: Res<Persistent<VideoSettings>>,
+    cli: Res<untypes_core::cli::CliOptions>,
 ) {
     let mut ev_iter = ev.read();
     let Some(load_event) = ev_iter.next() else {
@@ -35,6 +36,7 @@ fn load_level_handler(
         &mut tilesetdb,
         &upscale_idx,
         &video_settings,
+        cli.is_headless(),
     );
 
     evw.write(LevelLoadedEvent {

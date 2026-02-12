@@ -22,5 +22,6 @@ unnet-core = { path = "../unnet-core" }
 unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unprofile-core = { path = "../unprofile-core" }
+unmapload-core = { path = "../unmapload-core" }
 unevents-core = { path = "../unevents-core" }
 bevy-persistent = { workspace = true }

@@ -40,6 +40,15 @@ pub(crate) fn app_setup(app: &mut App) {
     if !cfg!(debug_assertions) {
         return;
     }
+    let is_headless = app
+        .world()
+        .get_resource::<untypes_core::cli::CliOptions>()
+        .map(|cli| cli.dedicated)
+        .unwrap_or(false);
+
+    if is_headless {
+        return;
+    }
 
     app.add_systems(
         Update,

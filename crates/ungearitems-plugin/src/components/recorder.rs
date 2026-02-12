@@ -30,10 +30,10 @@ pub(crate) fn update_recorder(
         &mut PerceivedClarity,
     )>,
     mut gs_audio: SoundEmitter,
-    sg: Res<SoundGrid>,
+    sg: If<Res<SoundGrid>>,
     haunt_state: Res<HauntState>,
     difficulty: Res<CurrentDifficulty>,
-    player_profile: Res<Persistent<PlayerProfileData>>,
+    player_profile: If<Res<Persistent<PlayerProfileData>>>,
 ) {
     let measure = metrics::SOUND_UPDATE.time_measure();
     for (mut recorder, mut status, mut sprite, toggle, pos, name, mut perceived_clarity) in

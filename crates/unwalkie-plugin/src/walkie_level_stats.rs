@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unevents_core::events::loadlevel::LevelReadyEvent;
+use unmapload_core::events::loadlevel::LevelReadyEvent;
 use unprofile_core::profile::PlayerProfileData;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;

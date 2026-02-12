@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
+use crate::events::truck::TruckUIEvent;
 use crate::types::truck_button::{TruckButtonState, TruckButtonType};
-use unevents_core::events::truck::TruckUIEvent;
 use unfoundation_core::colors;
 use unghost_core::types::evidence::Evidence;
 

@@ -14,9 +14,9 @@ pub(crate) fn stairs_player(
     )>,
     stairs: Query<(&Position, &Stairs, &Behavior), Without<PlayerSprite>>,
 ) {
-    let is_host = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+    let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
     for (mut player_pos, _player_sprite, main_player) in players.iter_mut() {
-        if !is_host && main_player.is_none() {
+        if !is_authority && main_player.is_none() {
             continue;
         }
         let player_bpos = player_pos.to_board_position();

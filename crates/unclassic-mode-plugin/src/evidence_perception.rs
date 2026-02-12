@@ -18,7 +18,7 @@ use untags_core::tags::PlayerTag;
 fn update_current_evidence_readings_from_player_perception_system(
     mut evidence_readings: ResMut<CurrentEvidenceReadings>,
     player_query: Query<(&PlayerGear, &Position, Option<&VisibilityData>), With<PlayerTag>>,
-    looking_gear: Res<LookingGear>,
+    looking_gear: If<Res<LookingGear>>,
     q_evidence_sensor: Query<(
         &EvidenceSensor,
         &Toggleable,

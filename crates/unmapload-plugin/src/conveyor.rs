@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unevents_core::events::loadlevel::MapEntitiesReadyEvent;
+use unmapload_core::events::loadlevel::MapEntitiesReadyEvent;
 use unmapload_core::components::PendingTiledLayerProperties;
 use untypes_core::hydration::HydrationStage;
 

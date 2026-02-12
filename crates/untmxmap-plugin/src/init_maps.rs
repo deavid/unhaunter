@@ -43,6 +43,7 @@ fn map_index_preload(
     idx_assets: Res<Assets<AssetIdx>>,
     mut mapsidx: ResMut<MapAssetIndexHandle>,
     mut upscale_idx: ResMut<UpscaleIndex>,
+    cli: Res<CliOptions>,
 ) {
     if mapsidx.idxprocessed {
         return;
@@ -57,34 +58,36 @@ fn map_index_preload(
         return;
     };
 
-    for path in &upscale_list.assets {
-        // Expected format: "upscaled/zoom0Nx_{original_path}"
-        if !path.starts_with("upscaled/zoom0") {
-            continue;
-        }
-        let rest = &path["upscaled/zoom0".len()..];
-        let Some(factor_char) = rest.chars().next() else {
-            continue;
-        };
-        let Some(factor) = factor_char.to_digit(10) else {
-            continue;
-        };
-        if !rest.get(1..3).map(|s| s == "x_").unwrap_or(false) {
-            continue;
-        }
-        let original_path = &rest[3..];
-        upscale_idx
-            .available
-            .entry(original_path.to_string())
-            .or_default()
-            .insert(factor, path.clone());
+    if !cli.dedicated {
+        for path in &upscale_list.assets {
+            // Expected format: "upscaled/zoom0Nx_{original_path}"
+            if !path.starts_with("upscaled/zoom0") {
+                continue;
+            }
+            let rest = &path["upscaled/zoom0".len()..];
+            let Some(factor_char) = rest.chars().next() else {
+                continue;
+            };
+            let Some(factor) = factor_char.to_digit(10) else {
+                continue;
+            };
+            if !rest.get(1..3).map(|s| s == "x_").unwrap_or(false) {
+                continue;
+            }
+            let original_path = &rest[3..];
+            upscale_idx
+                .available
+                .entry(original_path.to_string())
+                .or_default()
+                .insert(factor, path.clone());
 
-        let handle: Handle<Image> = asset_server.load(path);
-        mapsidx.upscaled.push(PreLoad {
-            handle,
-            path: path.clone(),
-            processed: false,
-        });
+            let handle: Handle<Image> = asset_server.load(path);
+            mapsidx.upscaled.push(PreLoad {
+                handle,
+                path: path.clone(),
+                processed: false,
+            });
+        }
     }
 
     for path in &maps.assets {

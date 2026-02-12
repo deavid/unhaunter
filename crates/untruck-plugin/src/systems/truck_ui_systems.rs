@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::mission::MissionEvent;
-use unevents_core::events::truck::TruckUIEvent;
+use untruck_core::events::truck::TruckUIEvent;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
@@ -32,7 +32,7 @@ fn cleanup(mut commands: Commands, qtui: Query<Entity, With<TruckUI>>) {
 }
 
 // Initialize the repellent craft tracker when entering a mission
-fn init_repellent_tracker(
+pub(crate) fn init_repellent_tracker(
     mut craft_tracker: ResMut<RepellentCraftTracker>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -40,7 +40,7 @@ fn init_repellent_tracker(
 }
 
 // Reset the repellent craft tracker when leaving the game
-fn reset_repellent_tracker(mut craft_tracker: ResMut<RepellentCraftTracker>) {
+pub(crate) fn reset_repellent_tracker(mut craft_tracker: ResMut<RepellentCraftTracker>) {
     craft_tracker.reset(0);
 }
 
@@ -477,9 +477,6 @@ fn update_end_mission_button_status(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    // Initialize the RepellentCraftTracker resource
-    app.init_resource::<RepellentCraftTracker>();
-
     app.add_systems(OnExit(AppState::InGame), cleanup);
     app.add_systems(OnEnter(GameState::Truck), show_ui);
     app.add_systems(OnExit(GameState::Truck), hide_ui);
@@ -494,6 +491,4 @@ pub(crate) fn app_setup(app: &mut App) {
         )
             .run_if(in_state(GameState::Truck)),
     );
-    app.add_systems(OnEnter(AppState::InGame), init_repellent_tracker);
-    app.add_systems(OnExit(AppState::InGame), reset_repellent_tracker);
 }

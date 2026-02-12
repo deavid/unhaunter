@@ -23,7 +23,7 @@ pub struct PlayerSpectating;
 
 /// Component that acts as a virtual joystick for player movement.
 /// All input systems write to this component, and the movement system reads from it.
-#[derive(Component, Debug, Default, Clone)]
+#[derive(Component, Debug, Clone)]
 pub struct PlayerInput {
     /// The desired movement direction and magnitude.
     /// This is a normalized Vec2 where:
@@ -68,6 +68,34 @@ pub struct PlayerInput {
 
     /// The desired aiming direction and magnitude.
     pub aim_direction: Vec2,
+
+    /// Player current sanity. Reported by the client.
+    pub sanity: f32,
+
+    /// Mean sound level around the player. Reported by the client.
+    pub mean_sound: f32,
+}
+
+impl Default for PlayerInput {
+    fn default() -> Self {
+        Self {
+            movement: Vec2::ZERO,
+            target_position: None,
+            run: false,
+            interact: false,
+            grab: false,
+            drop: false,
+            use_right_hand: false,
+            use_left_hand: false,
+            target_right_hand: None,
+            target_left_hand: None,
+            inventory_cycle: false,
+            inventory_swap: false,
+            aim_direction: Vec2::ZERO,
+            sanity: 100.0,
+            mean_sound: 0.0,
+        }
+    }
 }
 
 impl PlayerInput {

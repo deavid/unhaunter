@@ -1,11 +1,35 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use unevents_core::events::truck::TruckUIEvent;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use untruck_core::assets::TruckAssets;
+use untruck_core::events::truck::TruckUIEvent;
+use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 use untypes_core::states::AppState;
 
 use super::loadoutui::EventButtonClicked;
+
+pub struct UnhaunterTruckCorePlugin;
+
+impl Plugin for UnhaunterTruckCorePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_message::<TruckUIEvent>()
+            .add_message::<EventButtonClicked>()
+            .init_resource::<GhostGuess>()
+            .init_resource::<RepellentCraftTracker>();
+
+        app.add_systems(
+            OnEnter(AppState::InGame),
+            super::systems::truck_ui_systems::init_repellent_tracker,
+        );
+        app.add_systems(
+            OnExit(AppState::InGame),
+            super::systems::truck_ui_systems::reset_repellent_tracker,
+        );
+
+        super::journal::app_setup_core(app);
+        super::systems::in_truck_manager::app_setup(app);
+    }
+}
 
 pub struct UnhaunterTruckPlugin;
 
@@ -14,9 +38,6 @@ impl Plugin for UnhaunterTruckPlugin {
         app.add_loading_state(
             LoadingState::new(AppState::Loading).load_collection::<TruckAssets>(),
         );
-        app.add_message::<TruckUIEvent>()
-            .add_message::<EventButtonClicked>()
-            .init_resource::<GhostGuess>();
 
         super::hydration::app_setup(app);
         super::evidence::app_setup(app);

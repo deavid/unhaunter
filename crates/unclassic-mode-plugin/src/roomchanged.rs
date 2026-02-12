@@ -60,6 +60,5 @@ fn roomchanged_event(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_message::<RoomChangedEvent>()
-        .add_systems(Update, roomchanged_event);
+    app.add_systems(Update, roomchanged_event);
 }

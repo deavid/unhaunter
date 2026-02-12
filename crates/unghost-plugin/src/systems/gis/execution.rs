@@ -162,10 +162,10 @@ use crate::components::interaction::{Locked, Tween};
 
 /// Registers execution systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::is_host;
+    use untypes_core::cli::is_authority;
     app.add_systems(
         bevy::prelude::Update,
-        ghost_interaction_execution_system.run_if(is_host),
+        ghost_interaction_execution_system.run_if(is_authority),
     );
 }
 
@@ -191,6 +191,7 @@ fn ghost_interaction_execution_system(
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_topology: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
+    cli: Res<untypes_core::cli::CliOptions>,
 ) {
     let measure = metrics::GIS_EXECUTION.time_measure();
     for event in ev_ghost_interaction.read() {
@@ -303,6 +304,7 @@ fn ghost_interaction_execution_system(
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
+                    &cli,
                 );
             }
         }
@@ -638,6 +640,7 @@ fn execute_trip_breaker_interaction(
         Option<&RoomState>,
     )>,
     target: Entity,
+    cli: &untypes_core::cli::CliOptions,
 ) {
     // Get the behavior component to execute the interaction
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
@@ -657,7 +660,9 @@ fn execute_trip_breaker_interaction(
         });
 
         // Spawn electrical sparks visual effect
-        visual_effects::spawn_electrical_sparks(commands, asset_server, *position);
+        if !cli.is_headless() {
+            visual_effects::spawn_electrical_sparks(commands, asset_server, *position);
+        }
     } else {
         error!(
             "GIS execution -> TripBreaker interaction for {:?} FAILED: target entity not found or missing components",

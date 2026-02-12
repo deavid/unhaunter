@@ -50,25 +50,54 @@ pub fn apply_perspective(
     measure.end_ms();
 }
 
-/// Plugin for initializing board-related resources and systems.
-pub struct UnhaunterRenderPlugin;
+/// Core plugin for initializing board-related resources and simulation systems.
+pub struct UnhaunterRenderCorePlugin;
 
-impl Plugin for UnhaunterRenderPlugin {
+impl Plugin for UnhaunterRenderCorePlugin {
     fn build(&self, app: &mut App) {
-        crate::systems::animation::app_setup(app);
+        let cli = app.world().get_resource::<untypes_core::cli::CliOptions>();
+        let headless = cli.map(|c| c.dedicated).unwrap_or(false);
+
         crate::systems::board_sync::app_setup(app);
         crate::systems::hydration::app_setup(app);
         metrics::register_all(app);
-        app.add_systems(
-            Startup,
-            unrender_std::resources::sprite_registry::setup_sprite_registry,
-        );
+
         app.init_resource::<BoardTopology>()
             .init_resource::<BoardEntityField>()
             .init_resource::<BoardCollisionField>()
             .init_resource::<SpriteDB>()
-            .init_resource::<RoomDB>()
-            .add_systems(Update, apply_perspective);
+            .init_resource::<RoomDB>();
+
+        if headless {
+            // In headless mode, register stub Assets<T> for the resources LoadLevelSystemParam requires
+            app.init_asset::<CustomMaterial1>();
+            app.init_asset::<Mesh>();
+            app.init_asset::<Image>();
+            app.init_asset::<TextureAtlasLayout>();
+            app.init_asset::<bevy::audio::AudioSource>();
+        }
+    }
+}
+
+/// Plugin for initializing board-related visual systems and materials.
+pub struct UnhaunterRenderPlugin;
+
+impl Plugin for UnhaunterRenderPlugin {
+    fn build(&self, app: &mut App) {
+        let cli = app.world().get_resource::<untypes_core::cli::CliOptions>();
+        let headless = cli.map(|c| c.dedicated).unwrap_or(false);
+
+        if headless {
+            return;
+        }
+
+        crate::systems::animation::app_setup(app);
+
+        app.add_systems(
+            Startup,
+            unrender_std::resources::sprite_registry::setup_sprite_registry,
+        );
+        app.add_systems(Update, apply_perspective);
         app.register_diagnostic(Diagnostic::new(APPLY_PERSPECTIVE).with_suffix("ms"));
 
         app.add_plugins(bevy::sprite_render::Material2dPlugin::<CustomMaterial1>::default())

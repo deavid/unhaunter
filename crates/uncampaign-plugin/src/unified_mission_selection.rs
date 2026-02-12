@@ -23,7 +23,7 @@ use bevy_persistent::Persistent;
 use unassets_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unevents_core::events::loadlevel::LoadLevelEvent;
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::FONT_SCALE;
 use unmenu_core::components::MenuMouseTracker;

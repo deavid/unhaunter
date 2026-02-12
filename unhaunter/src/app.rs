@@ -3,16 +3,16 @@ use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
-use unclassic_mode_plugin::plugin::ClassicModePlugin;
+use unclassic_mode_plugin::plugin::{ClassicModeCorePlugin, ClassicModePlugin};
 use undifficulty_plugin::plugin::UnhaunterDifficultyPlugin;
-use unengine_plugin::plugin::UnhaunterEnginePlugin;
-use unfog_plugin::plugin::UnhaunterFogPlugin;
+use unengine_plugin::plugin::{UnhaunterEngineCorePlugin, UnhaunterEnginePlugin};
+use unfog_plugin::plugin::{UnhaunterFogCorePlugin, UnhaunterFogPlugin};
 use unfps_plugin::plugin::UnhaunterFpsPlugin;
-use ungear_plugin::plugin::UnhaunterGearPlugin;
+use ungear_plugin::plugin::{UnhaunterGearCorePlugin, UnhaunterGearPlugin};
 use ungearitems_plugin::plugin::UnhaunterGearItemsPlugin;
-use unghost_plugin::plugin::UnhaunterGhostPlugin;
-use uninteraction_plugin::plugin::UnhaunterInteractionPlugin;
-use unlight_plugin::plugin::UnhaunterLightPlugin;
+use unghost_plugin::plugin::{UnhaunterGhostCorePlugin, UnhaunterGhostPlugin};
+use uninteraction_plugin::plugin::UnhaunterInteractionCorePlugin;
+use unlight_plugin::plugin::{UnhaunterLightCorePlugin, UnhaunterLightPlugin};
 use unlobby_plugin::plugin::UnhaunterLobbyPlugin;
 use unmainmenu_plugin::plugin::UnhaunterMenuPlugin;
 use unmanual_plugin::plugin::UnhaunterManualPlugin;
@@ -23,21 +23,21 @@ use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
 use unmetrics_plugin::plugin::UnmetricsPlugin;
 use unmission_plugin::MissionPlugin;
 use unnet_plugin::plugin::UnhaunterNetPlugin;
-use unnpc_plugin::plugin::UnhaunterNPCPlugin;
+use unnpc_plugin::plugin::{UnhaunterNPCCorePlugin, UnhaunterNPCPlugin};
 use unpicking_plugin::plugin::CustomSpritePickingPlugin;
-use unplayer_plugin::plugin::UnhaunterPlayerPlugin;
+use unplayer_plugin::plugin::{UnhaunterPlayerCorePlugin, UnhaunterPlayerPlugin};
 use unprofile_plugin::plugin::UnhaunterProfilePlugin;
-use unrender_plugin::plugin::UnhaunterRenderPlugin;
+use unrender_plugin::plugin::{UnhaunterRenderCorePlugin, UnhaunterRenderPlugin};
 use unsettings_plugin::plugin::UnhaunterSettingsPlugin;
 use unsound_plugin::plugin::SoundPlugin;
-use unsummary_plugin::plugin::UnhaunterSummaryPlugin;
+use unsummary_plugin::plugin::{UnhaunterSummaryCorePlugin, UnhaunterSummaryPlugin};
 use unthermal_plugin::plugin::ThermalPlugin;
 use untmxmap_plugin::plugin::UnhaunterTmxMapPlugin;
-use untruck_plugin::plugin::UnhaunterTruckPlugin;
+use untruck_plugin::plugin::{UnhaunterTruckCorePlugin, UnhaunterTruckPlugin};
 use untypes_core::cli::CliOptions;
 use untypes_core::platform::plt;
 use unui_plugin::plugin::UnhaunterUiPlugin;
-use unwalkie_plugin::plugin::UnhaunterWalkiePlugin;
+use unwalkie_plugin::plugin::{UnhaunterWalkieCorePlugin, UnhaunterWalkiePlugin};
 
 pub fn app_run(cli_options: CliOptions) {
     let mut app = App::new();
@@ -45,84 +45,116 @@ pub fn app_run(cli_options: CliOptions) {
     let filter = crate::log_filter::build_log_filter(cli_options.verbose);
 
     app.insert_resource(cli_options.clone());
-    let mut default_plugins = DefaultPlugins
-        .set(WindowPlugin {
+
+    if cli_options.dedicated {
+        app.add_plugins((
+            MinimalPlugins,
+            bevy::log::LogPlugin {
+                level: bevy::log::Level::TRACE,
+                filter,
+                ..default()
+            },
+            bevy::asset::AssetPlugin::default(),
+            bevy::diagnostic::DiagnosticsPlugin,
+            bevy::state::app::StatesPlugin,
+            bevy::transform::TransformPlugin,
+        ));
+    } else {
+        let mut default_plugins = DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: format!("Unhaunter {}", plt::VERSION),
                 resolution: default_resolution(),
-                // Enabling VSync might make it easier in WASM? (It doesn't)
                 present_mode: bevy::window::PresentMode::AutoVsync,
                 ..default()
             }),
             ..default()
-        })
-        .set(bevy::log::LogPlugin {
+        });
+
+        if cli_options.mute {
+            info!("Audio muted via command line flag.");
+            default_plugins = default_plugins.set(bevy::audio::AudioPlugin {
+                global_volume: bevy::audio::GlobalVolume {
+                    volume: bevy::audio::Volume::Linear(0.0),
+                },
+                ..default()
+            });
+        }
+
+        app.add_plugins(default_plugins.set(bevy::log::LogPlugin {
             level: bevy::log::Level::TRACE,
             filter,
             ..default()
-        });
+        }));
 
-    if cli_options.mute {
-        info!("Audio muted via command line flag.");
-        default_plugins = default_plugins.set(bevy::audio::AudioPlugin {
-            global_volume: bevy::audio::GlobalVolume {
-                volume: bevy::audio::Volume::Linear(0.0),
-            },
-            ..default()
-        });
+        app.add_plugins((
+            FrameTimeDiagnosticsPlugin::new(1024),
+            CustomSpritePickingPlugin,
+        ));
     }
 
-    app.add_plugins(default_plugins)
-        .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
+    app.insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
         .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
             1.0 / 15.0,
         )));
 
-    app.add_plugins(FrameTimeDiagnosticsPlugin::new(1024));
-    // app.add_plugins(LogDiagnosticsPlugin::default());
-
-    // Add picking support for our custom sprites
-    app.add_plugins(CustomSpritePickingPlugin);
-
+    // Common plugins (Logic, Core, Hardware-agnostic)
     app.add_plugins((
         UnhaunterFpsPlugin,
         UnhaunterSettingsPlugin,
         UnhaunterDifficultyPlugin,
-        UnhaunterUiPlugin,
-        UnhaunterEnginePlugin,
+        UnhaunterEngineCorePlugin,
+        UnhaunterSummaryCorePlugin,
         UnmetricsPlugin,
         ThermalPlugin,
-        SoundPlugin,
-        UnhaunterRenderPlugin,
-        UnhaunterManualPlugin,
-        UnhaunterLobbyPlugin,
-        UnhaunterSummaryPlugin,
-        UnhaunterGearPlugin,
-        UnhaunterInteractionPlugin,
+        UnhaunterRenderCorePlugin,
+        UnhaunterGearCorePlugin,
+        UnhaunterInteractionCorePlugin,
         MissionPlugin,
-    ));
-    app.add_plugins((
         UnhaunterGearItemsPlugin,
-        UnhaunterMapHubPlugin,
-        UnhaunterTruckPlugin,
-        UnhaunterPlayerPlugin,
-        UnhaunterGhostPlugin,
-        UnhaunterMenuPlugin,
-        UnhaunterLightPlugin,
-        UnhaunterNPCPlugin,
-        UnhaunterNetPlugin,
     ));
     app.add_plugins((
+        UnhaunterTruckCorePlugin,
+        UnhaunterPlayerCorePlugin,
+        UnhaunterGhostCorePlugin,
+        UnhaunterLightCorePlugin,
+        UnhaunterNPCCorePlugin,
+        UnhaunterNetPlugin,
         UnhaunterTmxMapPlugin,
-        UnhaunterMenuSettingsPlugin,
-        UnhaunterFogPlugin,
-        UnhaunterWalkiePlugin,
-        UnhaunterCoreMenuPlugin,
+        UnhaunterFogCorePlugin,
+        UnhaunterWalkieCorePlugin,
         UnhaunterMapLoadPlugin,
-        ClassicModePlugin,
-        UnhaunterCampaignPlugin,
+        ClassicModeCorePlugin,
         UnhaunterProfilePlugin,
     ));
+
+    // Client-side only plugins (UI, Graphics, Sound, Input)
+    if !cli_options.dedicated {
+        app.add_plugins((
+            UnhaunterUiPlugin,
+            UnhaunterManualPlugin,
+            UnhaunterSummaryPlugin,
+            UnhaunterPlayerPlugin,
+            UnhaunterEnginePlugin,
+            UnhaunterMenuPlugin,
+            UnhaunterTruckPlugin,
+            UnhaunterWalkiePlugin,
+            UnhaunterNPCPlugin,
+            UnhaunterMenuSettingsPlugin,
+            UnhaunterCoreMenuPlugin,
+            ClassicModePlugin,
+        ));
+        app.add_plugins((
+            UnhaunterGhostPlugin,
+            SoundPlugin,
+            UnhaunterLightPlugin,
+            UnhaunterFogPlugin,
+            UnhaunterRenderPlugin,
+            UnhaunterGearPlugin,
+            UnhaunterLobbyPlugin,
+            UnhaunterMapHubPlugin,
+            UnhaunterCampaignPlugin,
+        ));
+    }
 
     app.run();
 }

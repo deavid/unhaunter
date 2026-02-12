@@ -5,20 +5,26 @@ use unwalkie_core::resources::WalkiePlay;
 
 use crate::metrics;
 
-pub struct UnhaunterWalkiePlugin;
+pub struct UnhaunterWalkieCorePlugin;
 
-impl Plugin for UnhaunterWalkiePlugin {
+impl Plugin for UnhaunterWalkieCorePlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<WalkieTalkingEvent>();
         app.init_resource::<WalkiePlay>();
         app.init_resource::<PotentialIDTimer>();
 
-        crate::walkie_play::app_setup(app);
+        metrics::register_all(app);
+    }
+}
+
+pub struct UnhaunterWalkiePlugin;
+
+impl Plugin for UnhaunterWalkiePlugin {
+    fn build(&self, app: &mut App) {
         crate::triggers::setup::app_setup(app);
+        crate::focus_ring_system::app_setup(app);
+        crate::walkie_play::app_setup(app);
         crate::walkie_stats::app_setup(app);
         crate::walkie_level_stats::setup_walkie_level_systems(app);
-        crate::focus_ring_system::app_setup(app);
-
-        metrics::register_all(app);
     }
 }

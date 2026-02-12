@@ -15,29 +15,39 @@ impl PerlinNoise {
     pub fn new(seed: u32) -> Self {
         const SIZE: usize = 4000;
         const RESOLUTION: f32 = 0.01;
+        Self::new_with_size(seed, SIZE, RESOLUTION)
+    }
 
+    /// Create a new PerlinNoise with a small precomputed lookup table to save memory
+    pub fn new_low_mem(seed: u32) -> Self {
+        const SIZE: usize = 512;
+        const RESOLUTION: f32 = 0.01;
+        Self::new_with_size(seed, SIZE, RESOLUTION)
+    }
+
+    fn new_with_size(seed: u32, size: usize, resolution: f32) -> Self {
         let perlin = Perlin::new(seed);
-        let mut values = vec![vec![0.0; SIZE]; SIZE];
+        let mut values = vec![vec![0.0; size]; size];
 
         for (x, row) in values.iter_mut().enumerate() {
             for (y, value) in row.iter_mut().enumerate() {
-                *value =
-                    perlin.get([x as f64 * RESOLUTION as f64, y as f64 * RESOLUTION as f64]) as f32;
+                *value = perlin.get([x as f64 * resolution as f64, y as f64 * resolution as f64])
+                    as f32;
             }
         }
 
         debug!(
             "Precomputed Perlin noise lookup table initialized: {}x{} at resolution {} (~{} MB)",
-            SIZE,
-            SIZE,
-            RESOLUTION,
-            (SIZE * SIZE * 4) / 1_000_000
+            size,
+            size,
+            resolution,
+            (size * size * 4) / 1_000_000
         );
 
         Self {
             values,
-            resolution: RESOLUTION,
-            size: SIZE,
+            resolution,
+            size,
         }
     }
 

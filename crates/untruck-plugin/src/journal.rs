@@ -4,10 +4,10 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unevents_core::events::truck::TruckUIEvent;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unghost_core::types::evidence::Evidence;
+use untruck_core::events::truck::TruckUIEvent;
 use unghost_core::types::ghost::types::GhostType;
 use unnet_core::messages::{NetworkDataEvent, NetworkMessage, SendNetworkMessage};
 use unnet_core::resources::LocalPlayer;
@@ -410,16 +410,18 @@ fn host_handle_journal_messages_system(
     }
 }
 
-pub(crate) fn app_setup(app: &mut App) {
-    app.add_message::<ForceDiscardEvidenceEvent>()
-        .add_systems(Update, ghost_guess_system)
-        .add_systems(
-            Update,
-            (
-                force_discard_evidence_system,
-                host_handle_journal_messages_system,
-            )
-                .run_if(in_state(AppState::InGame)),
+pub(crate) fn app_setup_core(app: &mut App) {
+    app.add_message::<ForceDiscardEvidenceEvent>().add_systems(
+        Update,
+        (
+            force_discard_evidence_system,
+            host_handle_journal_messages_system,
         )
+            .run_if(in_state(AppState::InGame)),
+    );
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, ghost_guess_system)
         .add_systems(Update, button_system.run_if(in_state(AppState::InGame)));
 }

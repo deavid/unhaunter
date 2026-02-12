@@ -8,6 +8,7 @@ use unfoundation_core::types::grade::Grade;
 use ungear_core::components::playergear::PlayerGear;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::MainPlayer;
+use unplayer_core::components::PlayerInput;
 use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
@@ -28,7 +29,14 @@ pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
 
 fn lose_sanity(
     time: Res<Time>,
-    mut qp: Query<(&mut PlayerSprite, &Position), (Without<InTruck>, Without<PlayerSpectating>)>,
+    mut qp: Query<
+        (&mut PlayerSprite, &Position),
+        (
+            With<MainPlayer>,
+            Without<InTruck>,
+            Without<PlayerSpectating>,
+        ),
+    >,
     thermal_grid: Res<ThermalGrid>,
     sound_grid: Res<SoundGrid>,
     lg: Res<LightGrid>,
@@ -81,6 +89,16 @@ fn lose_sanity(
             ps.crazyness = 0.0;
         }
         ps.sanity = calculate_sanity(ps.crazyness);
+    }
+}
+
+fn health_regen(
+    time: Res<Time>,
+    mut qp: Query<&mut PlayerSprite, (Without<InTruck>, Without<PlayerSpectating>)>,
+    difficulty: Res<CurrentDifficulty>,
+) {
+    let dt = time.delta_secs();
+    for mut ps in &mut qp {
         if ps.health < 100.0 && ps.health > 0.0 {
             ps.health += (0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0)
                 * difficulty.0.health_recovery_rate;
@@ -93,7 +111,7 @@ fn lose_sanity(
 
 fn recover_sanity(
     time: Res<Time>,
-    mut qp: Query<&mut PlayerSprite, (With<InTruck>, Without<PlayerSpectating>)>,
+    mut qp: Query<&mut PlayerSprite, (With<MainPlayer>, With<InTruck>, Without<PlayerSpectating>)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     // Players recover sanity while in the truck.
@@ -188,25 +206,22 @@ fn update_player_stamina(
     }
 }
 
-fn handle_player_death(
+use unnet_core::messages::PlayerDiedEvent;
+
+fn detect_and_apply_death(
     mut commands: Commands,
     mut player_query: Query<
-        (
-            Entity,
-            &mut PlayerSprite,
-            Has<MainPlayer>,
-            Option<&mut PlayerGear>,
-        ),
+        (Entity, &mut PlayerSprite, Option<&mut PlayerGear>),
         Without<PlayerSpectating>,
     >,
-    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
-    mut summary_data: ResMut<SummaryData>,
-    board_topology: Res<BoardTopology>,
-    difficulty_res: Res<CurrentDifficulty>,
+    mut ev_death: MessageWriter<PlayerDiedEvent>,
 ) {
-    for (entity, player, is_main, mut gear) in player_query.iter_mut() {
+    for (entity, player, mut gear) in player_query.iter_mut() {
         if player.health <= 0.0 {
-            info!("Player {:?} died! Entering spectate mode.", entity);
+            info!(
+                "Player {:?} ({:?}) died! Entering spectate mode.",
+                entity, player.id
+            );
             commands.entity(entity).insert(PlayerSpectating);
 
             // Despawn all gear
@@ -226,43 +241,54 @@ fn handle_player_death(
                 // Empty the inventory
                 **gear = PlayerGear::default();
             }
+            ev_death.write(PlayerDiedEvent { id: player.id });
+        }
+    }
+}
 
-            if is_main {
-                let initial_deposit_held = player_profile.progression.insurance_deposit;
+fn update_profile_death_stats(
+    mut ev_death: MessageReader<PlayerDiedEvent>,
+    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
+    local_player: Res<unnet_core::resources::LocalPlayer>,
+    mut summary_data: ResMut<SummaryData>,
+    board_topology: Res<BoardTopology>,
+    difficulty_res: Res<CurrentDifficulty>,
+) {
+    for ev in ev_death.read() {
+        if local_player.0 == Some(ev.id) {
+            // It's us!
+            let initial_deposit_held = player_profile.progression.insurance_deposit;
 
-                player_profile.progression.insurance_deposit = 0;
-                player_profile.statistics.total_deaths += 1; // Global deaths
+            player_profile.progression.insurance_deposit = 0;
+            player_profile.statistics.total_deaths += 1;
 
-                // Record death for specific map and difficulty
-                let map_path_str = board_topology.map_path.clone();
+            let map_path_str = board_topology.map_path.clone();
+            let current_difficulty_variant = difficulty_res.0.difficulty;
 
-                let current_difficulty_variant = difficulty_res.0.difficulty;
+            let map_specific_stats = player_profile
+                .map_statistics
+                .entry(map_path_str.clone())
+                .or_default()
+                .entry(current_difficulty_variant)
+                .or_default();
+            map_specific_stats.total_deaths += 1;
 
-                let map_specific_stats = player_profile
-                    .map_statistics
-                    .entry(map_path_str.clone())
-                    .or_default()
-                    .entry(current_difficulty_variant)
-                    .or_default();
-                map_specific_stats.total_deaths += 1;
-
-                if let Err(e) = player_profile.persist() {
-                    error!("Failed to persist PlayerProfileData after death: {:?}", e);
-                }
-
-                summary_data.map_path = map_path_str;
-                summary_data.deposit_originally_held = initial_deposit_held;
-                summary_data.deposit_returned_to_bank = 0;
-                summary_data.costs_deducted_from_deposit = initial_deposit_held;
-                summary_data.money_earned = 0;
-                summary_data.grade_achieved = Grade::NA;
+            if let Err(e) = player_profile.persist() {
+                error!("Failed to persist PlayerProfileData after death: {:?}", e);
             }
+
+            summary_data.map_path = map_path_str;
+            summary_data.deposit_originally_held = initial_deposit_held;
+            summary_data.deposit_returned_to_bank = 0;
+            summary_data.costs_deducted_from_deposit = initial_deposit_held;
+            summary_data.money_earned = 0;
+            summary_data.grade_achieved = Grade::NA;
         }
     }
 }
 
 pub(crate) fn debug_kill_spectator(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
+    keyboard_input: If<Res<ButtonInput<KeyCode>>>,
     mut player_query: Query<&mut PlayerSprite, With<MainPlayer>>,
 ) {
     let shift =
@@ -277,15 +303,28 @@ pub(crate) fn debug_kill_spectator(
     }
 }
 
+pub(crate) fn server_apply_client_sanity(
+    mut q_player: Query<(&PlayerInput, &mut PlayerSprite), Without<MainPlayer>>,
+) {
+    for (input, mut sprite) in &mut q_player {
+        sprite.sanity = input.sanity;
+        sprite.mean_sound = input.mean_sound;
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
+    use untypes_core::cli::{is_authority, is_headless};
     app.add_systems(
         Update,
         (
-            lose_sanity,
+            lose_sanity.run_if(not(is_headless)),
             recover_sanity,
-            visual_health,
+            health_regen.run_if(is_authority),
+            server_apply_client_sanity.run_if(is_authority),
+            visual_health.run_if(not(is_headless)),
             update_player_stamina,
-            handle_player_death,
+            detect_and_apply_death.run_if(is_authority),
+            update_profile_death_stats.run_if(not(is_headless)),
             debug_kill_spectator,
         )
             .run_if(in_state(AppState::InGame)),

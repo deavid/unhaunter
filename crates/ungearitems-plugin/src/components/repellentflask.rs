@@ -48,7 +48,7 @@ pub(crate) fn update_repellentflask(
     mut commands: Commands,
     cli: Res<CliOptions>,
 ) {
-    let is_host = !matches!(cli.net_mode, NetMode::Join { .. });
+    let is_authority = !matches!(cli.net_mode, NetMode::Join { .. });
     for (entity, mut repellent, mut status, mut sprite, pos, ep, triggered) in
         q_repellent.iter_mut()
     {
@@ -64,7 +64,7 @@ pub(crate) fn update_repellentflask(
         if repellent.active {
             let mut rng = random_seed::rng();
             if rng.random_range(0.0..1.0) <= 0.5 {
-                if is_host {
+                if is_authority {
                     if repellent.qty == RepellentFlask::MAX_QTY {
                         summary.repellent_used_amt += 1;
                     }

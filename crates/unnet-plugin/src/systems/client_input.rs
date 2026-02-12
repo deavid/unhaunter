@@ -1,14 +1,14 @@
 use crate::resources::NetworkConn;
 use bevy::prelude::*;
 use unassets_core::resources::maps::Maps;
-use unevents_core::events::loadlevel::LoadLevelEvent;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interaction::Toggleable;
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unmetrics_core::metrics::SendMetric;
 use unnet_core::messages::{NetworkDataEvent, NetworkMessage};
 use unnet_core::network_id::NetworkId;
 use unnet_core::resources::LocalPlayer;
-use unplayer_core::components::{MainPlayer, PlayerInput};
+use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unspatial_core::position::Position;
 use untypes_core::cli::{CliOptions, NetMode};
 
@@ -54,7 +54,7 @@ pub(crate) fn client_send_input_system(
     mut conn: ResMut<NetworkConn>,
     cli: Res<CliOptions>,
     local_id: Res<LocalPlayer>,
-    query_player: Query<(&PlayerInput, &Position), With<MainPlayer>>,
+    query_player: Query<(&PlayerInput, &Position, &PlayerSprite), With<MainPlayer>>,
     mut ev_net_data: MessageReader<NetworkDataEvent>,
     mut pending_map: ResMut<crate::resources::PendingMapLoad>,
     mut local_tick: Local<u64>,
@@ -84,7 +84,7 @@ pub(crate) fn client_send_input_system(
         pending_map.needs_full_sync_request = false;
     }
 
-    for (input, pos) in query_player.iter() {
+    for (input, pos, sprite) in query_player.iter() {
         let o_position = if *local_tick < 10 {
             None
         } else {
@@ -102,6 +102,8 @@ pub(crate) fn client_send_input_system(
             target_left_hand: input.target_left_hand.clone(),
             target_position: input.target_position.map(|v| [v.x, v.y]),
             aim_direction: [input.aim_direction.x, input.aim_direction.y],
+            sanity: sprite.sanity,
+            mean_sound: sprite.mean_sound,
         });
     }
 
@@ -114,7 +116,10 @@ pub(crate) fn client_send_input_system(
             | NetworkMessage::RequestTruckExit { .. }
             | NetworkMessage::RequestHide { .. }
             | NetworkMessage::RequestUnhide { .. }
-            | NetworkMessage::InteractionRequest { .. } => {
+            | NetworkMessage::InteractionRequest { .. }
+            | NetworkMessage::RequestSelectMap { .. }
+            | NetworkMessage::RequestSelectDifficulty { .. }
+            | NetworkMessage::RequestStartMission { .. } => {
                 conn.client_send(ev.message.clone());
             }
             // Messages that we know we must NOT process:

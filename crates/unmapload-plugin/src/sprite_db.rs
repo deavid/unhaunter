@@ -118,6 +118,16 @@ pub(crate) fn populate_sprite_db(
                         resolution_factor: ResolutionFactor(tileset.factor),
                     }
                 }
+                AtlasData::Headless => TileSpriteBundle {
+                    mesh: PreMesh::Image {
+                        sprite_anchor: Vec2::ZERO,
+                        image_handle: Handle::default(),
+                    },
+                    material: MeshMaterial2d(Handle::default()),
+                    transform,
+                    visibility: Visibility::Hidden,
+                    resolution_factor: ResolutionFactor(1.0),
+                },
             };
 
             // Store the tile data in the sprite database

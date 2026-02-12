@@ -7,27 +7,34 @@ use crate::summary::{
     store_mission_id, update_score, update_time, update_ui,
 };
 
+pub struct UnhaunterSummaryCorePlugin;
+
+impl Plugin for UnhaunterSummaryCorePlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<SummaryData>()
+            .add_systems(FixedUpdate, update_time.run_if(in_state(AppState::InGame)));
+    }
+}
+
 pub struct UnhaunterSummaryPlugin;
 
 impl Plugin for UnhaunterSummaryPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<SummaryData>()
-            .add_systems(
-                OnEnter(AppState::Summary),
-                (
-                    setup,
-                    store_mission_id,
-                    calculate_rewards_and_grades,
-                    setup_ui,
-                    finalize_profile_update,
-                )
-                    .chain(),
+        app.add_systems(
+            OnEnter(AppState::Summary),
+            (
+                setup,
+                store_mission_id,
+                calculate_rewards_and_grades,
+                setup_ui,
+                finalize_profile_update,
             )
-            .add_systems(OnExit(AppState::Summary), cleanup)
-            .add_systems(FixedUpdate, update_time.run_if(in_state(AppState::InGame)))
-            .add_systems(
-                Update,
-                (keyboard, update_ui, update_score).run_if(in_state(AppState::Summary)),
-            );
+                .chain(),
+        )
+        .add_systems(OnExit(AppState::Summary), cleanup)
+        .add_systems(
+            Update,
+            (keyboard, update_ui, update_score).run_if(in_state(AppState::Summary)),
+        );
     }
 }

@@ -13,7 +13,7 @@ use unboard_core::resources::board_topology::{
 };
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unevents_core::events::loadlevel::{LevelLoadedEvent, MapGeometryInitializedEvent};
+use unmapload_core::events::loadlevel::{LevelLoadedEvent, MapGeometryInitializedEvent};
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::{GameSound, GameSprite};
 use unrender_std::materials::CustomMaterial1;
@@ -44,6 +44,7 @@ pub(crate) struct LoadLevelSystemParam<'w> {
     pub roomdb: ResMut<'w, RoomDB>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub loading_status: ResMut<'w, LevelLoadingStatus>,
+    pub cli: Res<'w, untypes_core::cli::CliOptions>,
 }
 
 /// Loads a new level based on the `LevelLoadedEvent`.
@@ -183,6 +184,6 @@ fn load_level_handler(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         PostUpdate,
-        load_level_handler.run_if(on_message::<LevelLoadedEvent>),
+        load_level_handler.run_if(bevy::prelude::on_message::<LevelLoadedEvent>),
     );
 }

@@ -122,7 +122,16 @@ pub(crate) fn handle_input(
     cli: Res<CliOptions>,
     time: Res<Time>,
     entry_timer: Res<StateEntryTimer>,
+    local_player: Res<unnet_core::resources::LocalPlayer>,
+    room_owner: Option<Res<unnet_core::resources::RoomOwner>>,
+    mut ev_send: MessageWriter<unnet_core::messages::SendNetworkMessage>,
 ) {
+    let is_room_owner = match (local_player.0, room_owner) {
+        (Some(lp), Some(ro)) => lp == ro.0,
+        (Some(_), None) => cli.is_authority() && !cli.is_headless(),
+        _ => false,
+    };
+
     // 0.1s guard to avoid "state bounce" from the previous screen's click event
     if time.elapsed_secs() - entry_timer.0 < 0.1 {
         ev_clicks.read().for_each(|_| {}); // Drain events
@@ -135,11 +144,22 @@ pub(crate) fn handle_input(
     }
 
     for ev in ev_clicks.read() {
-        if matches!(cli.net_mode, NetMode::Join { .. }) {
+        if !is_room_owner {
             continue;
         }
         if let Some(diff) = mapping.difficulties.get(ev.pos) {
-            lobby_data.selected_difficulty = Some(diff.to_string());
+            if matches!(cli.net_mode, NetMode::Join { .. }) {
+                if let Some(pid) = local_player.0 {
+                    ev_send.write(unnet_core::messages::SendNetworkMessage(
+                        unnet_core::messages::NetworkMessage::RequestSelectDifficulty {
+                            player_id: pid,
+                            difficulty_id: diff.to_string(),
+                        },
+                    ));
+                }
+            } else {
+                lobby_data.selected_difficulty = diff.to_string();
+            }
             next_lobby_state.set(LobbyScreen::Main);
         }
     }

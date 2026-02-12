@@ -23,10 +23,24 @@ pub struct CliOptions {
     pub installation_id_file: Option<String>,
     pub verbose: u8,
     pub mute: bool,
+    pub dedicated: bool,
 }
 
-pub fn is_host(cli: Res<CliOptions>) -> bool {
-    !matches!(cli.net_mode, NetMode::Join { .. })
+impl CliOptions {
+    pub fn is_headless(&self) -> bool {
+        self.dedicated
+    }
+    pub fn is_authority(&self) -> bool {
+        !matches!(self.net_mode, NetMode::Join { .. })
+    }
+}
+
+pub fn is_authority(cli: Res<CliOptions>) -> bool {
+    cli.is_authority()
+}
+
+pub fn is_headless(cli: Res<CliOptions>) -> bool {
+    cli.is_headless()
 }
 
 pub fn is_client(cli: Res<CliOptions>) -> bool {

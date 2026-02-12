@@ -34,6 +34,7 @@ unrender-std = { path = "../unrender-std" }
 unassets-core = { path = "../unassets-core" }
 unsettings-core = { path = "../unsettings-core" }
 unnavigation-core = { path = "../unnavigation-core" }
+unmapload-core = { path = "../unmapload-core" }
 rand = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

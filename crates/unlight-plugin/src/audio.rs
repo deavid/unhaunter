@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
 use unbehavior::roomdb::RoomDB;
-use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use unfoundation_core::types::sound::SoundType;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSpectating;
@@ -180,7 +179,6 @@ fn update_ambient_sound_volumes(
 /// Registers the mute controller resource, mute events, and ambient sound volume systems.
 pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<AmbientMuteController>();
-    app.add_message::<AmbientSoundMuteEvent>();
     app.add_systems(
         Update,
         (

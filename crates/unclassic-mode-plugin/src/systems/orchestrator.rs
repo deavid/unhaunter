@@ -11,7 +11,6 @@ use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitt
 use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unevents_core::events::loadlevel::{LevelReadyEvent, MapEntitiesReadyEvent};
 use unfoundation_core::random_seed;
 use unfoundation_core::types::sound::SoundType;
 use ungear_core::components::playergear::PlayerGear;
@@ -20,6 +19,7 @@ use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
+use unmapload_core::events::loadlevel::{LevelReadyEvent, MapEntitiesReadyEvent};
 use unnet_core::network_id::NetworkId;
 use unnet_core::resources::LobbyData;
 use unplayer_core::components::PlayerDisconnected;
@@ -50,17 +50,17 @@ pub(crate) struct ClassicModeSystemParam<'w> {
     pub cli: Res<'w, untypes_core::cli::CliOptions>,
     pub asset_server: Res<'w, AssetServer>,
     pub haunt_state: ResMut<'w, HauntState>,
-    pub player_assets: Res<'w, unplayer_core::assets::PlayerAssets>,
-    pub ghost_assets: Res<'w, unghost_core::assets::GhostAssets>,
+    pub player_assets: Option<Res<'w, unplayer_core::assets::PlayerAssets>>,
+    pub ghost_assets: Option<Res<'w, unghost_core::assets::GhostAssets>>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub gear_registry: Res<'w, GearSpawnerRegistry>,
     pub upscale_idx: Res<'w, UpscaleIndex>,
-    pub video_settings: Res<'w, Persistent<VideoSettings>>,
-    pub materials1: ResMut<'w, Assets<unrender_std::materials::CustomMaterial1>>,
-    pub meshes: ResMut<'w, Assets<Mesh>>,
-    pub images: Res<'w, Assets<Image>>,
-    pub audio_settings: Res<'w, Persistent<unsettings_core::audio::AudioSettings>>,
-    pub control_settings: Res<'w, Persistent<unsettings_core::controls::ControlKeys>>,
+    pub video_settings: Option<Res<'w, Persistent<VideoSettings>>>,
+    pub materials1: Option<ResMut<'w, Assets<unrender_std::materials::CustomMaterial1>>>,
+    pub meshes: Option<ResMut<'w, Assets<Mesh>>>,
+    pub images: Option<Res<'w, Assets<Image>>>,
+    pub audio_settings: Option<Res<'w, Persistent<unsettings_core::audio::AudioSettings>>>,
+    pub control_settings: Option<Res<'w, Persistent<unsettings_core::controls::ControlKeys>>>,
     pub board_topology: Res<'w, BoardTopology>,
     pub board_entity_field: ResMut<'w, unboard_core::resources::board_topology::BoardEntityField>,
     pub roomdb: Res<'w, RoomDB>,
@@ -97,13 +97,20 @@ pub(crate) fn classic_mode_orchestrator(
     let mut rng = random_seed::rng();
     let player_position = player_spawn_points.choose(&mut rng).copied().unwrap();
 
-    let mut player_image = p.player_assets.character.clone();
+    let mut player_image = p
+        .player_assets
+        .as_ref()
+        .map(|a| a.character.clone())
+        .unwrap_or_default();
     let mut player_rf = 1.0;
 
-    if let Some(resolved) = p.upscale_idx.resolve(
-        "img/characters-model1-demo.png",
-        p.video_settings.max_upscale_factor.factor(),
-    ) {
+    if !p.cli.is_headless()
+        && let Some(video_settings) = &p.video_settings
+        && let Some(resolved) = p.upscale_idx.resolve(
+            "img/characters-model1-demo.png",
+            video_settings.max_upscale_factor.factor(),
+        )
+    {
         player_image = p.asset_server.load(resolved.path);
         player_rf = resolved.factor;
     }
@@ -123,13 +130,21 @@ pub(crate) fn classic_mode_orchestrator(
         sprite_size.x * (anchor.x + 0.5),
         sprite_size.y * (0.5 - anchor.y),
     );
-    let src_mesh_handle = p
-        .meshes
-        .add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
+
+    let mut src_mesh_handle = Handle::default();
+    if let Some(meshes) = &mut p.meshes {
+        src_mesh_handle = meshes.add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
+    }
 
     let player_ids_to_spawn: Vec<usize> = match p.cli.net_mode {
         untypes_core::cli::NetMode::Offline => vec![1],
-        untypes_core::cli::NetMode::Host { .. } => vec![1],
+        untypes_core::cli::NetMode::Host { .. } => {
+            if p.cli.is_headless() {
+                vec![]
+            } else {
+                vec![1]
+            }
+        }
         untypes_core::cli::NetMode::Join { .. } => vec![],
     };
 
@@ -154,26 +169,36 @@ pub(crate) fn classic_mode_orchestrator(
 
         let spawn_scoord = perspective::to_screen_coord(spawn_pos);
 
-        let mut material = CustomMaterial1::from_texture(player_image.clone());
-        material.data.sheet_cols = 16;
-        material.data.sheet_rows = 4;
-        material.data.sprite_width = 32.0 * player_rf;
-        material.data.sprite_height = 32.0 * player_rf;
-        material.data.upscale_factor = player_rf;
-        material.data.y_anchor = anchor.y;
+        let mut ec = commands.spawn(spawn_pos);
 
-        let material_handle = p.materials1.add(material);
+        if !p.cli.is_headless() {
+            let mut material = CustomMaterial1::from_texture(player_image.clone());
+            material.data.sheet_cols = 16;
+            material.data.sheet_rows = 4;
+            material.data.sprite_width = 32.0 * player_rf;
+            material.data.sprite_height = 32.0 * player_rf;
+            material.data.upscale_factor = player_rf;
+            material.data.y_anchor = anchor.y;
 
-        let mut ec = commands.spawn(Mesh2d(src_mesh_handle.clone()));
-        ec.insert(MeshMaterial2d(material_handle))
-            .insert(
-                Transform::from_xyz(spawn_scoord[0], spawn_scoord[1], spawn_scoord[2])
-                    .with_scale(Vec3::new(1.0 / player_rf, 1.0 / player_rf, 1.0 / player_rf)),
-            )
-            .insert(ResolutionFactor(player_rf))
-            .insert(GameSprite)
-            .insert(MapTileSprite)
-            .insert(SpriteLayer(0.00001));
+            if let Some(materials1) = &mut p.materials1 {
+                let material_handle = materials1.add(material);
+
+                ec.insert(Mesh2d(src_mesh_handle.clone()))
+                    .insert(MeshMaterial2d(material_handle))
+                    .insert(
+                        Transform::from_xyz(spawn_scoord[0], spawn_scoord[1], spawn_scoord[2])
+                            .with_scale(Vec3::new(
+                                1.0 / player_rf,
+                                1.0 / player_rf,
+                                1.0 / player_rf,
+                            )),
+                    )
+                    .insert(ResolutionFactor(player_rf))
+                    .insert(GameSprite)
+                    .insert(MapTileSprite)
+                    .insert(SpriteLayer(0.00001));
+            }
+        }
 
         let id_net = NetworkId(id as u64);
 
@@ -181,9 +206,6 @@ pub(crate) fn classic_mode_orchestrator(
             .insert(id_net)
             .insert(MapColor {
                 color: Color::WHITE,
-            })
-            .insert(PlayerInputMapping {
-                controls: **p.control_settings,
             })
             .insert(PlayerInput::default())
             .insert(VisibilityData::default())
@@ -204,23 +226,33 @@ pub(crate) fn classic_mode_orchestrator(
             .insert(Stamina::default())
             .insert(unnavigation_core::components::waypoint::WaypointQueue::default());
 
+        if let Some(control_settings) = &p.control_settings {
+            ec.insert(PlayerInputMapping {
+                controls: ***control_settings,
+            });
+        }
+
         if is_main_player {
-            ec.insert(MainPlayer)
-                .insert(Viewer {
-                    id: id_net,
-                    ..default()
-                })
-                .insert(SpatialListener::new(
-                    -p.audio_settings.sound_output.to_ear_offset(),
+            ec.insert(MainPlayer).insert(Viewer {
+                id: id_net,
+                ..default()
+            });
+
+            if let Some(audio_settings) = &p.audio_settings {
+                ec.insert(SpatialListener::new(
+                    -audio_settings.sound_output.to_ear_offset(),
                 ));
+            }
         }
         ec.insert(player_gear);
 
-        let player_ent_id = ec
-            .with_children(|parent| {
+        if !p.cli.is_headless()
+            && let Some(ghost_assets) = &p.ghost_assets
+        {
+            ec.with_children(|parent| {
                 parent
                     .spawn(Sprite {
-                        image: p.ghost_assets.focus_ring_vignette.clone(),
+                        image: ghost_assets.focus_ring_vignette.clone(),
                         color: Color::srgba(1.0, 1.0, 1.0, 0.0),
                         ..default()
                     })
@@ -229,8 +261,9 @@ pub(crate) fn classic_mode_orchestrator(
                             .with_translation(Vec3::new(0.0, 0.1, 0.01)),
                     )
                     .insert(FocusRing::default());
-            })
-            .id();
+            });
+        }
+        let player_ent_id = ec.id();
 
         p.board_entity_field.0[player_position.to_board_position().ndidx()].push(player_ent_id);
     }
@@ -248,40 +281,50 @@ pub(crate) fn classic_mode_orchestrator(
     commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));
 
     let breach_id = {
-        let breach_img_size = p
-            .images
-            .get(p.ghost_assets.breach.id())
-            .map(|img| {
-                Vec2::new(
-                    img.texture_descriptor.size.width as f32,
-                    img.texture_descriptor.size.height as f32,
-                )
-            })
-            .unwrap_or(Vec2::new(128.0, 128.0));
+        let mut breach_img_size = Vec2::new(128.0, 128.0);
+        if let Some(ghost_assets) = &p.ghost_assets
+            && let Some(images) = &p.images
+            && let Some(img) = images.get(ghost_assets.breach.id())
+        {
+            breach_img_size = Vec2::new(
+                img.texture_descriptor.size.width as f32,
+                img.texture_descriptor.size.height as f32,
+            );
+        }
 
         let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
         let sprite_anchor = Vec2::new(
             breach_img_size.x * (anchor.x + 0.5),
             breach_img_size.y * (0.5 - anchor.y),
         );
-        let mesh_handle = p
-            .meshes
-            .add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
 
-        let mut material = CustomMaterial1::from_texture(p.ghost_assets.breach.clone());
-        material.data.color = Color::NONE.into();
-        material.data.y_anchor = anchor.y;
-        let material_handle = p.materials1.add(material);
+        let mut ec = commands.spawn(ghost_spawn);
+        if !p.cli.is_headless()
+            && let (Some(meshes), Some(materials1), Some(ghost_assets)) =
+                (&mut p.meshes, &mut p.materials1, &p.ghost_assets)
+        {
+            let mesh_handle = meshes.add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
+            let mut material = CustomMaterial1::from_texture(ghost_assets.breach.clone());
+            material.data.color = Color::NONE.into();
+            material.data.y_anchor = anchor.y;
+            let material_handle = materials1.add(material);
 
-        let breach_id = commands
-            .spawn(Mesh2d(mesh_handle))
-            .insert(MeshMaterial2d(material_handle))
-            .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
-            .insert(GameSprite)
-            .insert(MapTileSprite)
-            .insert(SpriteLayer(0.01))
-            .insert(GhostBreach)
-            .insert(ghost_spawn)
+            ec.insert(Mesh2d(mesh_handle))
+                .insert(MeshMaterial2d(material_handle))
+                .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
+                .insert(GameSprite)
+                .insert(MapTileSprite)
+                .insert(SpriteLayer(0.01))
+                .insert(AlphaModulator {
+                    frequency: 0.92,
+                    amplitude: 0.5,
+                })
+                .insert(EctoplasmVisuals {
+                    use_breach_curve: true,
+                });
+        }
+
+        ec.insert(GhostBreach)
             .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
             .insert(LightSensitive {
                 exposure_factor: 1.1,
@@ -291,23 +334,20 @@ pub(crate) fn classic_mode_orchestrator(
                 intensity: 1.0,
                 color_shift: 1.0,
             })
-            .insert(AlphaModulator {
-                frequency: 0.92,
-                amplitude: 0.5,
-            })
-            .insert(EctoplasmVisuals {
-                use_breach_curve: true,
-            })
             .insert(ThermalEmitter {
                 room_restricted: true,
                 ..default()
             })
             .insert(FluidEmitter::default())
-            .insert(SoundEmitter::default())
-            .with_children(|parent| {
+            .insert(SoundEmitter::default());
+
+        if !p.cli.is_headless()
+            && let Some(ghost_assets) = &p.ghost_assets
+        {
+            ec.with_children(|parent| {
                 parent
                     .spawn(Sprite {
-                        image: p.ghost_assets.focus_ring_vignette.clone(),
+                        image: ghost_assets.focus_ring_vignette.clone(),
                         color: Color::srgba(1.0, 1.0, 1.0, 0.0),
                         ..default()
                     })
@@ -316,69 +356,86 @@ pub(crate) fn classic_mode_orchestrator(
                             .with_translation(Vec3::new(0.0, 0.0, 0.01)),
                     )
                     .insert(FocusRing::default());
-            })
-            .id();
+            });
+        }
+        let breach_id = ec.id();
 
         p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(breach_id);
         breach_id
     };
 
-    let mut ghost_image = p.ghost_assets.ghost.clone();
+    let mut ghost_image = p
+        .ghost_assets
+        .as_ref()
+        .map(|a| a.ghost.clone())
+        .unwrap_or_default();
     let mut ghost_rf = 1.0;
-    if let Some(resolved) = p.upscale_idx.resolve(
-        "img/ghost.png",
-        p.video_settings.max_upscale_factor.factor(),
-    ) {
+
+    if !p.cli.is_headless()
+        && let Some(video_settings) = &p.video_settings
+        && let Some(resolved) = p
+            .upscale_idx
+            .resolve("img/ghost.png", video_settings.max_upscale_factor.factor())
+    {
         ghost_image = p.asset_server.load(resolved.path);
         ghost_rf = resolved.factor;
     }
 
-    let ghost_img_size = p
-        .images
-        .get(ghost_image.id())
-        .map(|img| {
-            Vec2::new(
-                img.texture_descriptor.size.width as f32,
-                img.texture_descriptor.size.height as f32,
-            )
-        })
-        .unwrap_or(Vec2::new(128.0, 128.0));
+    let mut ghost_img_size = Vec2::new(128.0, 128.0);
+    if let Some(images) = &p.images
+        && let Some(img) = images.get(ghost_image.id())
+    {
+        ghost_img_size = Vec2::new(
+            img.texture_descriptor.size.width as f32,
+            img.texture_descriptor.size.height as f32,
+        );
+    }
 
     let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
     let sprite_anchor = Vec2::new(
         ghost_img_size.x * (anchor.x + 0.5),
         ghost_img_size.y * (0.5 - anchor.y),
     );
-    let mesh_handle = p
-        .meshes
-        .add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));
-
-    let mut material = CustomMaterial1::from_texture(ghost_image);
-    material.data.color = Color::NONE.into();
-    material.data.y_anchor = anchor.y;
-    let material_handle = p.materials1.add(material);
 
     let ghost_id_net = NetworkId(0); // Ghost is always 0 in MVP
-    let ghost_id = commands
-        .spawn(Mesh2d(mesh_handle))
-        .insert(MeshMaterial2d(material_handle))
-        .insert(
-            Transform::from_xyz(-1000.0, -1000.0, -1000.0).with_scale(Vec3::splat(1.0 / ghost_rf)),
-        )
-        .insert(GameSprite)
-        .insert(MapTileSprite)
-        .insert(ResolutionFactor(ghost_rf))
-        .insert(SpriteLayer(10.0))
-        .insert(ghost_sprite.with_breachid(breach_id))
-        .insert(Ethereal::default())
-        .insert(Emissive::default())
+    let mut ec = commands.spawn(ghost_spawn);
+    if !p.cli.is_headless()
+        && let (Some(meshes), Some(materials1)) = (&mut p.meshes, &mut p.materials1)
+    {
+        let mesh_handle = meshes.add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));
+        let mut material = CustomMaterial1::from_texture(ghost_image);
+        material.data.color = Color::NONE.into();
+        material.data.y_anchor = anchor.y;
+        let material_handle = materials1.add(material);
+
+        ec.insert(Mesh2d(mesh_handle))
+            .insert(MeshMaterial2d(material_handle))
+            .insert(
+                Transform::from_xyz(-1000.0, -1000.0, -1000.0)
+                    .with_scale(Vec3::splat(1.0 / ghost_rf)),
+            )
+            .insert(GameSprite)
+            .insert(MapTileSprite)
+            .insert(ResolutionFactor(ghost_rf))
+            .insert(SpriteLayer(10.0))
+            .insert(Ethereal::default())
+            .insert(Emissive::default())
+            .insert(SpectralClarity::default())
+            .insert(AlphaModulator {
+                frequency: 1.0,
+                amplitude: 0.5,
+            })
+            .insert(EctoplasmVisuals {
+                use_breach_curve: false,
+            });
+    }
+
+    ec.insert(ghost_sprite.with_breachid(breach_id))
         .insert(p.haunt_state.ghost_dynamics)
         .insert(GhostTag)
         .insert(ghost_id_net)
-        .insert(ghost_spawn)
         .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
         .insert(Movable)
-        .insert(SpectralClarity::default())
         .insert(LightSensitive {
             exposure_factor: 0.5,
             bias: 0.01,
@@ -391,23 +448,20 @@ pub(crate) fn classic_mode_orchestrator(
             intensity: 1.0,
             ..default()
         })
-        .insert(AlphaModulator {
-            frequency: 1.0,
-            amplitude: 0.5,
-        })
-        .insert(EctoplasmVisuals {
-            use_breach_curve: false,
-        })
         .insert(ThermalEmitter {
             room_restricted: true,
             ..default()
         })
         .insert(FluidEmitter::default())
-        .insert(SoundEmitter::default())
-        .with_children(|parent| {
+        .insert(SoundEmitter::default());
+
+    if !p.cli.is_headless()
+        && let Some(ghost_assets) = &p.ghost_assets
+    {
+        ec.with_children(|parent| {
             parent
                 .spawn(Sprite {
-                    image: p.ghost_assets.focus_ring_vignette.clone(),
+                    image: ghost_assets.focus_ring_vignette.clone(),
                     color: Color::srgba(1.0, 1.0, 1.0, 0.0),
                     ..default()
                 })
@@ -416,12 +470,15 @@ pub(crate) fn classic_mode_orchestrator(
                         .with_translation(Vec3::new(0.0, 0.0, 0.01)),
                 )
                 .insert(FocusRing::default());
-        })
-        .id();
+        });
+    }
+    let ghost_id = ec.id();
 
     p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(ghost_id);
 
-    spawn_ambient_sounds(&p, &mut commands);
+    if !p.cli.is_headless() {
+        spawn_ambient_sounds(&p, &mut commands);
+    }
 
     crate::influence_system::assign_ghost_influence(
         &mut commands,
@@ -533,12 +590,20 @@ pub(crate) fn spawn_joined_player(
             spawn_initial_gear(&mut commands, &p.gear_registry, &p.difficulty, new_id.0);
 
         // --- Visual setup ---
-        let mut player_image = p.player_assets.character.clone();
+        let mut player_image = p
+            .player_assets
+            .as_ref()
+            .map(|a| a.character.clone())
+            .unwrap_or_default();
         let mut player_rf = 1.0;
-        if let Some(resolved) = p.upscale_idx.resolve(
-            "img/characters-model1-demo.png",
-            p.video_settings.max_upscale_factor.factor(),
-        ) {
+
+        if !p.cli.is_headless()
+            && let Some(video_settings) = &p.video_settings
+            && let Some(resolved) = p.upscale_idx.resolve(
+                "img/characters-model1-demo.png",
+                video_settings.max_upscale_factor.factor(),
+            )
+        {
             player_image = p.asset_server.load(resolved.path);
             player_rf = resolved.factor;
         }
@@ -549,32 +614,44 @@ pub(crate) fn spawn_joined_player(
             sprite_size.x * (anchor.x + 0.5),
             sprite_size.y * (0.5 - anchor.y),
         );
-        let src_mesh_handle = p
-            .meshes
-            .add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
+
+        let mut src_mesh_handle = Handle::default();
+        if let Some(meshes) = &mut p.meshes {
+            src_mesh_handle = meshes.add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
+        }
 
         let spawn_scoord = perspective::to_screen_coord(spawn_pos);
 
-        let mut material = CustomMaterial1::from_texture(player_image);
-        material.data.sheet_cols = 16;
-        material.data.sheet_rows = 4;
-        material.data.sprite_width = 32.0 * player_rf;
-        material.data.sprite_height = 32.0 * player_rf;
-        material.data.upscale_factor = player_rf;
-        material.data.y_anchor = anchor.y;
+        let mut ec = commands.spawn(spawn_pos);
 
-        let material_handle = p.materials1.add(material);
+        if !p.cli.is_headless() {
+            let mut material = CustomMaterial1::from_texture(player_image);
+            material.data.sheet_cols = 16;
+            material.data.sheet_rows = 4;
+            material.data.sprite_width = 32.0 * player_rf;
+            material.data.sprite_height = 32.0 * player_rf;
+            material.data.upscale_factor = player_rf;
+            material.data.y_anchor = anchor.y;
 
-        let mut ec = commands.spawn(Mesh2d(src_mesh_handle));
-        ec.insert(MeshMaterial2d(material_handle))
-            .insert(
-                Transform::from_xyz(spawn_scoord[0], spawn_scoord[1], spawn_scoord[2])
-                    .with_scale(Vec3::new(1.0 / player_rf, 1.0 / player_rf, 1.0 / player_rf)),
-            )
-            .insert(ResolutionFactor(player_rf))
-            .insert(GameSprite)
-            .insert(MapTileSprite)
-            .insert(SpriteLayer(0.00001));
+            if let Some(materials1) = &mut p.materials1 {
+                let material_handle = materials1.add(material);
+
+                ec.insert(Mesh2d(src_mesh_handle))
+                    .insert(MeshMaterial2d(material_handle))
+                    .insert(
+                        Transform::from_xyz(spawn_scoord[0], spawn_scoord[1], spawn_scoord[2])
+                            .with_scale(Vec3::new(
+                                1.0 / player_rf,
+                                1.0 / player_rf,
+                                1.0 / player_rf,
+                            )),
+                    )
+                    .insert(ResolutionFactor(player_rf))
+                    .insert(GameSprite)
+                    .insert(MapTileSprite)
+                    .insert(SpriteLayer(0.00001));
+            }
+        }
 
         // Remote player: no MainPlayer, no Viewer, no SpatialListener.
         // Use explicit ControlKeys::NONE — ControlKeys::default() is WASD, not NONE!
@@ -607,11 +684,13 @@ pub(crate) fn spawn_joined_player(
 
         ec.insert(player_gear);
 
-        let player_ent_id = ec
-            .with_children(|parent| {
+        if !p.cli.is_headless()
+            && let Some(ghost_assets) = &p.ghost_assets
+        {
+            ec.with_children(|parent| {
                 parent
                     .spawn(Sprite {
-                        image: p.ghost_assets.focus_ring_vignette.clone(),
+                        image: ghost_assets.focus_ring_vignette.clone(),
                         color: Color::srgba(1.0, 1.0, 1.0, 0.0),
                         ..default()
                     })
@@ -620,8 +699,9 @@ pub(crate) fn spawn_joined_player(
                             .with_translation(Vec3::new(0.0, 0.1, 0.01)),
                     )
                     .insert(FocusRing::default());
-            })
-            .id();
+            });
+        }
+        let player_ent_id = ec.id();
 
         p.board_entity_field.0[spawn_pos.to_board_position().ndidx()].push(player_ent_id);
     }

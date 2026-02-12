@@ -6,14 +6,14 @@ use unassets_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unengine_core::MenuUI;
-use unevents_core::events::loadlevel::LoadLevelEvent;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
 use unnet_core::messages::{NetworkMessage, SendNetworkMessage};
-use unnet_core::resources::{CurrentMapSeed, LobbyData, LocalPlayer};
+use unnet_core::resources::{CurrentMapSeed, LobbyData, LocalPlayer, RoomOwner};
 use unprofile_core::profile::PlayerProfileData;
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
@@ -48,18 +48,24 @@ pub(crate) struct StateEntryTimer(pub f32);
 
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    ui_assets: Res<UiAssets>,
+    ui_assets: If<Res<UiAssets>>,
     cli: Res<CliOptions>,
     player_profile: Res<Persistent<PlayerProfileData>>,
     q_ui: Query<Entity, With<LobbyMainUI>>,
     time: Res<Time>,
     mut entry_timer: ResMut<StateEntryTimer>,
+    local_player: Res<LocalPlayer>,
+    room_owner: Option<Res<RoomOwner>>,
 ) {
     *entry_timer = StateEntryTimer(time.elapsed_secs());
     if !q_ui.is_empty() {
         return;
     }
-    let is_host = !matches!(cli.net_mode, NetMode::Join { .. });
+    let is_room_owner = match (local_player.0, room_owner) {
+        (Some(lp), Some(ro)) => lp == ro.0,
+        (Some(_), None) => cli.is_authority() && !cli.is_headless(),
+        _ => false,
+    };
 
     let root = commands
         .spawn((
@@ -107,7 +113,7 @@ pub(crate) fn setup_ui(
             let mut menu_idx = 0;
             for (action, label) in items {
                 // Always create StartMission for everyone (visiblity controlled in update_display)
-                if is_host
+                if is_room_owner
                     || action == LobbyMenuAction::ExitLobby
                     || action == LobbyMenuAction::StartMission
                 {
@@ -192,7 +198,7 @@ pub(crate) fn setup_ui(
             });
         });
 
-        let help_text = if is_host {
+        let help_text = if is_room_owner {
             "[ESC]: Back to Menu | [Click]: Select | [Enter]: Confirm".to_string()
         } else {
             "[ESC]: Back to Menu".to_string()
@@ -208,8 +214,8 @@ pub(crate) fn cleanup_ui(mut commands: Commands, q: Query<Entity, With<LobbyMain
 }
 
 pub(crate) fn handle_clicks(
-    mut ev_clicks: MessageReader<MenuItemClicked>,
-    mut ev_escape: MessageReader<MenuEscapeEvent>,
+    mut ev_clicks: If<MessageReader<MenuItemClicked>>,
+    mut ev_escape: If<MessageReader<MenuEscapeEvent>>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_lobby_state: ResMut<NextState<LobbyScreen>>,
     q_actions: Query<(
@@ -225,7 +231,14 @@ pub(crate) fn handle_clicks(
     entry_timer: Res<StateEntryTimer>,
     mut current_map_seed: ResMut<CurrentMapSeed>,
     local_player: Res<LocalPlayer>,
+    room_owner: Option<Res<RoomOwner>>,
 ) {
+    let is_room_owner = match (local_player.0, room_owner) {
+        (Some(lp), Some(ro)) => lp == ro.0,
+        (Some(_), None) => cli.is_authority() && !cli.is_headless(),
+        _ => false,
+    };
+
     // 0.1s guard to avoid "state bounce" from the previous screen's click event
     if time.elapsed_secs() - entry_timer.0 < 0.1 {
         ev_clicks.read().for_each(|_| {}); // Drain events
@@ -250,12 +263,12 @@ pub(crate) fn handle_clicks(
 
         match action {
             Some(LobbyMenuAction::SelectMap) => {
-                if !matches!(cli.net_mode, NetMode::Join { .. }) {
+                if is_room_owner {
                     next_lobby_state.set(LobbyScreen::MapSelection);
                 }
             }
             Some(LobbyMenuAction::SelectDifficulty) => {
-                if !matches!(cli.net_mode, NetMode::Join { .. }) {
+                if is_room_owner {
                     next_lobby_state.set(LobbyScreen::DifficultySelection);
                 }
             }
@@ -269,38 +282,43 @@ pub(crate) fn handle_clicks(
                             player_id: pid,
                         }));
                     }
-                } else if !is_join
-                    && let (Some(map_filepath), true) = (&lobby_data.selected_map, !is_join)
-                {
-                    let difficulty_id = lobby_data
-                        .selected_difficulty
-                        .clone()
-                        .unwrap_or_else(|| "standard-challenge".to_string());
-                    let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
-                    current_map_seed.0 = map_seed;
+                } else if is_room_owner {
+                    if is_join {
+                        // Client is RoomOwner, send request to start
+                        if let Some(pid) = local_player.0 {
+                            ev_send.write(SendNetworkMessage(
+                                NetworkMessage::RequestStartMission { player_id: pid },
+                            ));
+                        }
+                    } else if let (Some(map_filepath), true) = (&lobby_data.selected_map, !is_join)
+                    {
+                        let difficulty_id = lobby_data.selected_difficulty.clone();
+                        let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
+                        current_map_seed.0 = map_seed;
 
-                    info!(
-                        "Host starting mission: map={}, diff={}, seed={}",
-                        map_filepath, difficulty_id, map_seed
-                    );
+                        info!(
+                            "Host starting mission: map={}, diff={}, seed={}",
+                            map_filepath, difficulty_id, map_seed
+                        );
 
-                    cli.map_path = Some(map_filepath.clone());
-                    cli.difficulty_id = Some(difficulty_id.clone());
+                        cli.map_path = Some(map_filepath.clone());
+                        cli.difficulty_id = Some(difficulty_id.clone());
 
-                    if let Ok(diff_enum) = Difficulty::from_str(&difficulty_id) {
-                        *current_difficulty = CurrentDifficulty::new(diff_enum);
+                        if let Ok(diff_enum) = Difficulty::from_str(&difficulty_id) {
+                            *current_difficulty = CurrentDifficulty::new(diff_enum);
+                        }
+
+                        ev_send.write(SendNetworkMessage(NetworkMessage::StartMission {
+                            map_seed,
+                            map_filepath: map_filepath.clone(),
+                            difficulty_id,
+                        }));
+
+                        ev_load_level.write(LoadLevelEvent {
+                            map_filepath: map_filepath.clone(),
+                        });
+                        next_app_state.set(AppState::Loading);
                     }
-
-                    ev_send.write(SendNetworkMessage(NetworkMessage::StartMission {
-                        map_seed,
-                        map_filepath: map_filepath.clone(),
-                        difficulty_id,
-                    }));
-
-                    ev_load_level.write(LoadLevelEvent {
-                        map_filepath: map_filepath.clone(),
-                    });
-                    next_app_state.set(AppState::Loading);
                 }
             }
             Some(LobbyMenuAction::ExitLobby) => {
@@ -314,9 +332,10 @@ pub(crate) fn handle_clicks(
 pub(crate) fn update_display(
     lobby_data: Res<LobbyData>,
     maps: Res<Maps>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: If<Res<UiAssets>>,
     asset_server: Res<AssetServer>,
     local_player: Res<LocalPlayer>,
+    cli: Res<CliOptions>,
     mut q_preview: Query<&mut ImageNode, With<LobbyMapPreview>>,
     mut q_map_info: Query<&mut Text, (With<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
     mut q_diff_info: Query<&mut Text, (With<LobbyDifficultyInfo>, Without<LobbyMapInfo>)>,
@@ -325,15 +344,19 @@ pub(crate) fn update_display(
     mut commands: Commands,
     mut q_menu_items: Query<(&LobbyMenuAction, &mut Visibility, &Children)>,
     mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
-    cli: Res<CliOptions>,
+    room_owner: Option<Res<RoomOwner>>,
 ) {
-    let is_host = matches!(cli.net_mode, NetMode::Host { .. } | NetMode::Offline);
+    let is_room_owner = match (local_player.0, room_owner) {
+        (Some(lp), Some(ro)) => lp == ro.0,
+        (Some(_), None) => cli.is_authority() && !cli.is_headless(),
+        _ => false,
+    };
     let host_in_mission = lobby_data.host_app_state == Some(AppState::InGame);
 
     // Update Menu Items (Start/Join Mission)
     for (action, mut vis, children) in q_menu_items.iter_mut() {
         if *action == LobbyMenuAction::StartMission {
-            if is_host {
+            if is_room_owner {
                 *vis = Visibility::Inherited;
             } else if host_in_mission {
                 *vis = Visibility::Inherited;
@@ -441,10 +464,7 @@ pub(crate) fn update_display(
             }
             text.0 = status_lines.join("\n");
         } else {
-            let diff_str = lobby_data
-                .selected_difficulty
-                .as_deref()
-                .unwrap_or("standard-challenge");
+            let diff_str = &lobby_data.selected_difficulty;
             if let Ok(diff) = Difficulty::from_str(diff_str) {
                 text.0 = format!(
                     "Difficulty: {}\n{}",

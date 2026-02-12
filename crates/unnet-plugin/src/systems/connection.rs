@@ -29,6 +29,8 @@ pub(crate) fn session_roster_system(
     mut ev_player_joined: MessageReader<PlayerJoinedEvent>,
     cli: Res<CliOptions>,
     local_player: Res<LocalPlayer>,
+    mut commands: Commands,
+    room_owner: Option<Res<unnet_core::resources::RoomOwner>>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -56,6 +58,12 @@ pub(crate) fn session_roster_system(
             connected: true,
         });
         changed = true;
+
+        // Dedicated server: Assign first client as RoomOwner if none exists
+        if cli.is_headless() && room_owner.is_none() {
+            commands.insert_resource(unnet_core::resources::RoomOwner(id));
+            info!("Network: First client {:?} assigned as RoomOwner", id);
+        }
     }
 
     // Ensure host is always in the list
@@ -84,6 +92,7 @@ pub(crate) fn lobby_broadcast_state_system(
     cli: Res<CliOptions>,
     time: Res<Time>,
     mut last_broadcast: Local<f32>,
+    room_owner: Option<Res<unnet_core::resources::RoomOwner>>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -95,6 +104,7 @@ pub(crate) fn lobby_broadcast_state_system(
             players: lobby_data.players.clone(),
             selected_map: lobby_data.selected_map.clone(),
             selected_difficulty: lobby_data.selected_difficulty.clone(),
+            room_owner: room_owner.map(|r| r.0),
         }));
         *last_broadcast = time.elapsed_secs();
     }
@@ -294,18 +304,31 @@ pub(crate) fn startup_network_system(
     cli: Res<CliOptions>,
     mut conn: ResMut<NetworkConn>,
     mut local_id: ResMut<LocalPlayer>,
+    mut commands: Commands,
+    mut player_registry: ResMut<PlayerRegistry>,
 ) {
     let measure = metrics::STARTUP_NETWORK_SYSTEM.time_measure();
+    if cli.is_headless() {
+        player_registry.next_id = 1;
+    } else {
+        player_registry.next_id = 2;
+    }
     match &cli.net_mode {
         NetMode::Offline => {
             *conn = NetworkConn::Disconnected;
             local_id.0 = Some(NetworkId(1));
+            commands.insert_resource(unnet_core::resources::RoomOwner(NetworkId(1)));
         }
         NetMode::Host {
             port,
             bind_addresses,
         } => {
-            local_id.0 = Some(NetworkId(1));
+            if cli.is_headless() {
+                local_id.0 = None;
+            } else {
+                local_id.0 = Some(NetworkId(1));
+                commands.insert_resource(unnet_core::resources::RoomOwner(NetworkId(1)));
+            }
             let mut listeners = Vec::new();
             for addr_str in bind_addresses {
                 let addrs = format!("{}:{}", addr_str, port);
@@ -791,6 +814,7 @@ pub(crate) fn client_lobby_state_handler(
     mut ev_reader: MessageReader<NetworkDataEvent>,
     mut lobby_data: ResMut<LobbyData>,
     cli: Res<CliOptions>,
+    mut commands: Commands,
 ) {
     if !matches!(cli.net_mode, NetMode::Join { .. }) {
         return;
@@ -800,11 +824,15 @@ pub(crate) fn client_lobby_state_handler(
             players,
             selected_map,
             selected_difficulty,
+            room_owner,
         } = &ev.message
         {
             lobby_data.players = players.clone();
             lobby_data.selected_map = selected_map.clone();
             lobby_data.selected_difficulty = selected_difficulty.clone();
+            if let Some(id) = room_owner {
+                commands.insert_resource(unnet_core::resources::RoomOwner(*id));
+            }
         }
     }
 }
@@ -850,8 +878,12 @@ pub(crate) fn host_handle_disconnects_system(
     >,
     mut commands: Commands,
     mut lobby_data: ResMut<LobbyData>,
+    cli: Res<CliOptions>,
+    room_owner: Option<Res<unnet_core::resources::RoomOwner>>,
 ) {
     let measure = metrics::HOST_HANDLE_DISCONNECTS.time_measure();
+    let mut current_room_owner = room_owner.map(|r| r.0);
+
     for ev in ev_disconnect.read() {
         for (entity, id) in query_players.iter() {
             if id == &ev.id {
@@ -865,6 +897,25 @@ pub(crate) fn host_handle_disconnects_system(
         // Update LobbyData
         if let Some(player) = lobby_data.players.iter_mut().find(|p| p.id == ev.id) {
             player.connected = false;
+        }
+
+        // Dedicated server: If RoomOwner disconnected, assign a new one
+        if cli.is_headless() && current_room_owner == Some(ev.id) {
+            let next_owner = lobby_data
+                .players
+                .iter()
+                .find(|p| p.connected)
+                .map(|p| p.id);
+
+            if let Some(new_id) = next_owner {
+                commands.insert_resource(unnet_core::resources::RoomOwner(new_id));
+                info!("Network: RoomOwner disconnected, new owner: {:?}", new_id);
+                current_room_owner = Some(new_id);
+            } else {
+                commands.remove_resource::<unnet_core::resources::RoomOwner>();
+                info!("Network: RoomOwner disconnected, no players left.");
+                current_room_owner = None;
+            }
         }
     }
     measure.end_ms();
@@ -923,27 +974,64 @@ pub(crate) fn client_connection_monitor_system(
     measure.end_ms();
 }
 
-pub(crate) fn autostart_net_game(cli: Res<CliOptions>, mut lobby_data: ResMut<LobbyData>) {
+pub(crate) fn autostart_net_game(
+    cli: Res<CliOptions>,
+    mut lobby_data: ResMut<LobbyData>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+) {
     let measure = metrics::AUTOSTART_NET_GAME.time_measure();
     if matches!(cli.net_mode, NetMode::Offline) {
         measure.end_ms();
         return;
     }
-    if matches!(cli.net_mode, NetMode::Join { .. }) {
-        measure.end_ms();
+    // Host and Join are handled. Offline behaves normally.
+    match cli.net_mode {
+        NetMode::Host { .. } => {
+            if let Some(map_filepath) = &cli.map_path {
+                info!("Pre-populating lobby with map: {}", map_filepath);
+                lobby_data.selected_map = Some(map_filepath.clone());
+
+                if let Some(diff_id) = &cli.difficulty_id {
+                    lobby_data.selected_difficulty = diff_id.clone();
+                }
+            }
+            if cli.is_headless() {
+                info!("Network: Dedicated server. Entering Lobby.");
+                next_app_state.set(AppState::Lobby);
+            }
+        }
+        NetMode::Join { .. } => {
+            if cli.is_headless() {
+                info!("Network: Autostarting client join. Entering Lobby.");
+                next_app_state.set(AppState::Lobby);
+            }
+        }
+        NetMode::Offline => {}
+    }
+
+    measure.end_ms();
+}
+
+pub(crate) fn headless_summary_reset_system(
+    mut next_state: ResMut<NextState<AppState>>,
+    cli: Res<CliOptions>,
+    time: Res<Time>,
+    mut timer: Local<f32>,
+    app_state: Res<State<AppState>>,
+) {
+    if !cli.dedicated {
         return;
     }
 
-    if let Some(map_filepath) = &cli.map_path {
-        info!("Pre-populating lobby with map: {}", map_filepath);
-        lobby_data.selected_map = Some(map_filepath.clone());
-
-        if let Some(diff_id) = &cli.difficulty_id {
-            lobby_data.selected_difficulty = Some(diff_id.clone());
-        }
-    } else if matches!(cli.net_mode, NetMode::Host { .. }) {
-        warn!("NetMode::Host active but no --map provided.");
+    if *app_state.get() != AppState::Summary {
+        *timer = 0.0;
+        return;
     }
-    info!("Network: Autostarting host.");
-    measure.end_ms();
+
+    *timer += time.delta_secs();
+    if *timer > 0.5 {
+        info!("Headless: Mission summary period ended. Returning to Lobby.");
+        next_state.set(AppState::Lobby);
+        *timer = 0.0;
+    }
 }

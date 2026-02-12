@@ -228,13 +228,14 @@ fn swap_hands(mut players: Query<(&mut PlayerGear, &PlayerInput)>, mut commands:
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::is_host;
+    use unplayer_core::authoritative::PlayerAuthoritativeLogicSet;
     app.add_systems(
         Update,
         (sync_held_gear_position, update_held_object_position),
     );
     app.add_systems(
         Update,
-        (grab_object, drop_object, cycle_inventory, swap_hands).run_if(is_host),
+        (grab_object, drop_object, cycle_inventory, swap_hands)
+            .in_set(PlayerAuthoritativeLogicSet),
     );
 }

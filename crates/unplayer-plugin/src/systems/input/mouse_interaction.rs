@@ -10,7 +10,7 @@ use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSpectating, Playe
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::cli::{CliOptions, is_host};
+use untypes_core::cli::{CliOptions, is_authority};
 
 pub(crate) fn player_gear_usage_system(
     mut commands: Commands,
@@ -22,7 +22,7 @@ pub(crate) fn player_gear_usage_system(
     mut ga: SoundEmitter,
     cli: Res<CliOptions>,
 ) {
-    let is_host = is_host(cli);
+    let is_authority = is_authority(cli);
 
     for (player_gear, player_input, main_player) in q_players.iter_mut() {
         let is_main = main_player.is_some();
@@ -31,7 +31,7 @@ pub(crate) fn player_gear_usage_system(
         {
             debug!(
                 "player_gear_usage_system: Processing right-hand item {:?} (is_main={:?}, host={:?})",
-                entity, is_main, is_host
+                entity, is_main, is_authority
             );
             if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
                 let target_on = if is_main {
@@ -49,14 +49,14 @@ pub(crate) fn player_gear_usage_system(
                     if let Some(pos) = pos {
                         if is_main {
                             ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
-                        } else if is_host {
+                        } else if is_authority {
                             // Host plays sound locally for remote player click
                             // but we don't broadcast it back to the client
                             ga.play_audio_local("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         }
                     } else if is_main {
                         ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
-                    } else if is_host {
+                    } else if is_authority {
                         ga.play_audio_nopos_local("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }
@@ -68,7 +68,7 @@ pub(crate) fn player_gear_usage_system(
         {
             debug!(
                 "player_gear_usage_system: Processing left-hand item {:?} (is_main={:?}, host={:?})",
-                entity, is_main, is_host
+                entity, is_main, is_authority
             );
             if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
                 let target_on = if is_main {
@@ -86,14 +86,14 @@ pub(crate) fn player_gear_usage_system(
                     if let Some(pos) = pos {
                         if is_main {
                             ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
-                        } else if is_host {
+                        } else if is_authority {
                             // Host plays sound locally for remote player click
                             // but we don't broadcast it back to the client
                             ga.play_audio_local("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         }
                     } else if is_main {
                         ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
-                    } else if is_host {
+                    } else if is_authority {
                         ga.play_audio_nopos_local("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }

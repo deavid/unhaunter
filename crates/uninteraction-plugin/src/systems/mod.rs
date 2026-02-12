@@ -9,7 +9,7 @@ use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::RoomStateSyncEvent;
 use uninteraction_core::interaction::{Authority, ExecuteInteractionEvent};
 use unspatial_core::position::Position;
-use untypes_core::cli::{CliOptions, is_host};
+use untypes_core::cli::{CliOptions, is_authority};
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
@@ -57,7 +57,7 @@ fn interaction_event_handler(
     mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
 ) {
-    let authority = if is_host(cli) {
+    let authority = if is_authority(cli) {
         Authority::Host
     } else {
         Authority::Client

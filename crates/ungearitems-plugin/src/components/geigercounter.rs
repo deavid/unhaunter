@@ -49,10 +49,10 @@ pub(crate) fn update_geigercounter(
         &mut PerceivedClarity,
     )>,
     mut gs_audio: SoundEmitter,
-    sg: Res<SoundGrid>,
+    sg: If<Res<SoundGrid>>,
     difficulty: Res<CurrentDifficulty>,
     haunt_state: Res<HauntState>,
-    player_profile: Res<Persistent<PlayerProfileData>>,
+    player_profile: If<Res<Persistent<PlayerProfileData>>>,
 ) {
     let measure = metrics::GEIGER_UPDATE.time_measure();
     for (

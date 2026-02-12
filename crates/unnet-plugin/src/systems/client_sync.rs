@@ -865,9 +865,12 @@ pub(crate) fn client_apply_snapshots_system(
                     }
 
                     // Sync Health & Sanity
-                    // This ensures the client sees damage and sanity drain on the main player
+                    // This ensures the client sees damage on the main player.
+                    // Sanity is client-authoritative, so we only sync it for remote players.
                     player_sprite.health = p_state.health;
-                    player_sprite.sanity = p_state.sanity;
+                    if main_player.is_none() {
+                        player_sprite.sanity = p_state.sanity;
+                    }
                     if main_player.is_none() {
                         player_input.target_position =
                             p_state.target_position.map(|t| Vec2::new(t[0], t[1]));

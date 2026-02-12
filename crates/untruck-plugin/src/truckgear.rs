@@ -1,13 +1,13 @@
 use bevy::prelude::*;
-use unevents_core::events::loadlevel::LevelLoadedEvent;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
+use unmapload_core::events::loadlevel::LevelLoadedEvent;
 use untruck_core::truckgear::TruckGear;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<TruckGear>();
     app.add_systems(
         Update,
-        initialize_truck_gear.run_if(untypes_core::cli::is_host),
+        initialize_truck_gear.run_if(untypes_core::cli::is_authority),
     );
 }
 

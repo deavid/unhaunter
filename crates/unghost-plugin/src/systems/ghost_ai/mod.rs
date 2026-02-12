@@ -187,16 +187,16 @@ pub(crate) fn ghost_scale_glitch_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::is_host;
+    use untypes_core::cli::is_authority;
 
     app.add_systems(
         Update,
         (
-            ghost_movement.run_if(is_host),
-            ghost_enrage.run_if(is_host),
-            ghost_fade_out_system.run_if(is_host),
-            update_ghost_warning_field.run_if(is_host),
-            ghost_scale_glitch_system.run_if(is_host),
+            ghost_movement.run_if(is_authority),
+            ghost_enrage.run_if(is_authority),
+            ghost_fade_out_system.run_if(is_authority),
+            update_ghost_warning_field,
+            ghost_scale_glitch_system.run_if(is_authority),
         ),
     );
 

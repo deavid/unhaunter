@@ -39,7 +39,7 @@ pub(crate) fn update_thermometer(
     cli: Res<untypes_core::cli::CliOptions>,
 ) {
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
-    let is_host = untypes_core::cli::is_host(cli);
+    let is_authority = untypes_core::cli::is_authority(cli);
     for (
         mut thermometer,
         mut status,
@@ -56,7 +56,7 @@ pub(crate) fn update_thermometer(
         thermometer.frame_counter = thermometer.frame_counter.wrapping_add(1);
 
         // Update Battery Drain Rate
-        if is_host {
+        if is_authority {
             battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
         }
 
@@ -68,7 +68,7 @@ pub(crate) fn update_thermometer(
 
         // Update Logic
         if toggle.is_on {
-            if is_host {
+            if is_authority {
                 const K: f32 = 0.7;
                 let pos = Position {
                     x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),

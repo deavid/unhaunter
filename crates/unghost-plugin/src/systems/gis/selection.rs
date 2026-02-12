@@ -21,10 +21,10 @@ const GIS_DEBUG: bool = false;
 
 /// Registers selection systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::is_host;
+    use untypes_core::cli::is_authority;
     app.add_systems(
         bevy::prelude::Update,
-        ghost_interaction_selection_system.run_if(is_host),
+        ghost_interaction_selection_system.run_if(is_authority),
     );
 }
 

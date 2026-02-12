@@ -45,11 +45,11 @@ pub(crate) fn update_spiritbox(
         Option<&mut SpiritBoxInternal>,
     )>,
     mut gs_audio: SoundEmitter,
-    tg: Res<ThermalGrid>,
-    sg: Res<SoundGrid>,
+    tg: If<Res<ThermalGrid>>,
+    sg: If<Res<SoundGrid>>,
     q_ghost: Query<(&GhostSprite, &Position, &GhostBehaviorDynamics)>,
-    lg: Res<LightGrid>,
-    player_profile: Res<Persistent<PlayerProfileData>>,
+    lg: If<Res<LightGrid>>,
+    player_profile: If<Res<Persistent<PlayerProfileData>>>,
     mut commands: Commands,
 ) {
     let measure = metrics::SPIRITBOX_UPDATE.time_measure();

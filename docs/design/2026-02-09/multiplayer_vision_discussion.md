@@ -65,9 +65,9 @@ later.
 
 **Milestone:** 3-4 players in a mission, still CLI-launched.
 
-**Status (2025-06):** COMPLETE. N-player multiplayer works end-to-end. Plans 21 (N-client plumbing) and 22 (dynamic
-player spawning) implemented. Players can host with `--host` and join with `--join <ip>`. All players see each other,
-movement syncs, missions complete successfully more or less okay.
+**Status (2026-02):** COMPLETE. N-player multiplayer works end-to-end. Plans 21 (N-client plumbing) and 22 (dynamic
+player spawning) implemented, committed, tested. Players can host with `--host` and join with `--join <ip>`. All players
+see each other, movement syncs, missions complete successfully.
 
 ### Phase 2: In-Game Session Setup (Lobby)
 
@@ -100,6 +100,12 @@ ndarray size mismatch crashes between missions, likely a system gating issue dur
 **Milestone:** Players host/join via game menu, see each other in lobby, host selects map, start together, return to
 lobby after mission.
 
+**Status (2026-02):** COMPLETE. Plans 23 (lobby protocol + `AppState::Lobby` + `unlobby-plugin`), 24 (lobby UI polish
+with `unmenu-core` templates, `LobbyScreen` sub-states, mouse support, map/difficulty selection screens), and 25
+(session layer — state-independent roster, `HostStatus`, heartbeat, late join, disconnect resilience) all implemented,
+committed, tested. The full flow works: connect → main menu → lobby → select map/difficulty → start mission → summary →
+back to lobby. Multi-mission sessions with persistent connections work.
+
 ### Phase 3: Dedicated Server
 
 A host that doesn't render and doesn't have a local player. If Phase 1 is designed right (host player isn't
@@ -111,6 +117,9 @@ special-cased), this is almost free:
 - Bevy supports headless mode (`MinimalPlugins`)
 
 A cheap VPS could run many concurrent instances — the simulation isn't heavy for a tile-based 2D game.
+
+**Decision (2026-02):** Going straight to dedicated server instead of building a relay first. See "Relay vs. Dedicated
+Server" section below for the reasoning.
 
 **Milestone:** A headless binary that can be run on a VPS.
 
@@ -398,7 +407,7 @@ Run headless Unhaunter on the VPS. Zero NAT problems.
 - VPS runs actual game simulation (CPU usage, though minimal for 2D tile game)
 - A $5/month VPS could handle 10+ concurrent games
 
-### Recommended Path
+### Recommended Path (Original, 2026-02-09)
 
 1. **Now:** Simple TCP relay on VPS. Weekend project. Solves NAT immediately.
 2. **Later (UDP migration):** Add hole punching with relay fallback. Relay evolves from TCP forwarder to STUN+TURN.
@@ -406,12 +415,51 @@ Run headless Unhaunter on the VPS. Zero NAT problems.
 
 Each step builds on the last. Nothing thrown away.
 
+### Revised Decision (2026-02-12): Dedicated Server First
+
+After further analysis, the relay approach was reconsidered. A dumb relay has an abuse problem: if it's open on the
+internet, anyone can use it as a general-purpose TCP proxy. Defenses (PoW, installation ID scoring) require the relay to
+become protocol-aware, which is already halfway to a dedicated server.
+
+Comparison:
+
+|                       | Relay                                  | Dedicated Server               |
+| --------------------- | -------------------------------------- | ------------------------------ |
+| Abuse prevention      | Hard — doesn't understand protocol     | Free — only valid game traffic |
+| NAT problem           | Solved                                 | Solved                         |
+| CPU cost              | Near-zero (forwarding)                 | Modest (running simulation)    |
+| Bandwidth             | 2× (relays between host+client)        | 1× (server IS the host)        |
+| Who hosts game logic? | A player's machine (latency advantage) | VPS (fair for everyone)        |
+| Complexity to build   | New service + auth layer               | Host code already exists       |
+| "Who can host?"       | Still need a player to host            | Nobody needs to host           |
+
+The dedicated server solves NAT + fairness + abuse + "who hosts?" in one shot. Plans 21-22 already made the host player
+not special-cased, so a dedicated server is a host that spawns zero players. The lobby (Plans 23-25) already handles
+map/difficulty selection and late join.
+
+The main work is:
+
+1. Headless build configuration (skip rendering/audio/input plugins)
+2. Config mechanism (map, difficulty, max players, port — CLI flags or TOML)
+3. Auto-start behavior (listen, start when triggered)
+4. Run on VPS, give friends the IP
+
 ### Cost Reality
 
 - Relay: negligible. $5/month VPS handles dozens of concurrent games.
 - Dedicated game server: modest. 2D tile-based simulation is ~2-5% of a core per instance. $5 VPS handles 10+ concurrent
   games.
 - Cost only matters if you get popular — the best problem to have.
+
+### Concerns for Dedicated Server
+
+- **Compute worry:** Uncertain how much CPU a headless Unhaunter instance actually uses. The simulation includes thermal
+  diffusion, light propagation, ghost AI, EMF fields — potentially heavier than "just a tile game." Needs profiling.
+- **Authority model clarity:** The current networking is described as "a bit of a mess in regard of who controls what
+  and how it is controlled." Before building a dedicated server, the authority boundaries need to be clearly mapped:
+  what runs only on the server, what runs only on the client, what runs on both and how conflicts are resolved.
+- **Open question:** Can the host-side simulation be simplified/throttled for a dedicated server? E.g., skip visual
+  systems entirely, reduce tick rate for less-critical simulations.
 
 ---
 
@@ -458,6 +506,25 @@ Each step builds on the last. Nothing thrown away.
 
 ---
 
+## Identity Without Accounts (2026-02-12)
+
+A progression that doesn't require accounts:
+
+**Tier 1 (current):** Installation ID (UUID). Generated on first launch. Persists locally. Sent in `Hello`.
+
+**Tier 2 (soon):** Keypair identity. On first launch, generate an ed25519 keypair. The public key IS the identity. Sign
+`Hello` messages with it. Server verifies. Nobody can impersonate — only the key holder has the private key. No
+server-side storage needed. FOSS-friendly, transparent.
+
+**Tier 3 (eventually):** Server-side reputation. The VPS keeps a simple log:
+`public_key → {first_seen, games_played, last_seen}`. Not an account — no signup, no password, no email. Just a record.
+New keys get brief probation. Keys with 50+ games get full trust. Banned keys get rejected.
+
+This bridges naturally to the agency concept: an agency could be a keypair that signs member keys, creating a trust
+chain without central authority.
+
+---
+
 ## Summary of Key Insights
 
 1. **The game's multiplayer identity is team building through attention** — becoming competent together, developing
@@ -477,8 +544,33 @@ Each step builds on the last. Nothing thrown away.
 
 6. **Agencies are fluid contact groups with history**, not rigid guilds.
 
-7. **A TCP relay solves the NAT problem immediately** for near-zero cost. UDP + hole punching can come later as an
-   upgrade, with the relay as fallback.
+7. **Dedicated server over relay.** A relay has abuse and complexity problems that a dedicated server avoids. The
+   dedicated server also solves NAT, fairness, and "who hosts?" simultaneously. UDP + hole punching can come later as an
+   optimization for direct-connect mode.
 
 8. **Build social connective tissue before infrastructure.** The 5-player problem is solved by human connection tools,
    not better servers.
+
+9. **Identity = keypair.** No accounts needed for trust, banning, or reputation. Installation IDs evolve into
+   cryptographic identity naturally.
+
+---
+
+## Implementation Status (2026-02-12)
+
+| Plan | Description                                              | Status   |
+| ---- | -------------------------------------------------------- | -------- |
+| 21   | Multi-client support (N players)                         | COMPLETE |
+| 22   | Dynamic player spawning & client identity                | COMPLETE |
+| 23   | Multiplayer lobby (protocol + state + crate)             | COMPLETE |
+| 24   | Lobby UI polish (unmenu-core templates)                  | COMPLETE |
+| 25   | Session layer (roster, heartbeat, late join, disconnect) | COMPLETE |
+
+### Next: Dedicated Server
+
+The immediate next step. Requires an exploratory analysis of:
+
+- Current authority model: which systems run where, what the actual server-side compute looks like
+- Headless Bevy configuration for Unhaunter's plugin set
+- Whether the simulation can be simplified for headless operation
+- Profiling estimates for per-instance resource usage

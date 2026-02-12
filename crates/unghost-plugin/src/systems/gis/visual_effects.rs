@@ -33,7 +33,11 @@ fn spawn_interaction_particles_system(
     time: Res<Time>,
     asset_server: Res<AssetServer>,
     q_tweens: Query<(Entity, &Position, &Tween), Changed<Tween>>,
+    cli: Res<untypes_core::cli::CliOptions>,
 ) {
+    if cli.is_headless() {
+        return;
+    }
     let measure = metrics::GIS_SPAWN_PARTICLES.time_measure();
     for (entity, position, tween) in q_tweens.iter() {
         let progress = tween.timer.fraction();
@@ -197,7 +201,11 @@ fn door_lock_indicator_system(
     mut q_indicators: Query<(Entity, &mut LockIndicator, &mut Sprite)>,
     q_locked_doors: Query<Entity, Added<Locked>>,
     q_unlocked_doors: Query<Entity, (With<LockIndicator>, Without<Locked>)>,
+    cli: Res<untypes_core::cli::CliOptions>,
 ) {
+    if cli.is_headless() {
+        return;
+    }
     let measure = metrics::GIS_DOOR_LOCK_INDICATOR.time_measure();
     // Spawn lock indicators for newly locked doors
     for door_entity in q_locked_doors.iter() {

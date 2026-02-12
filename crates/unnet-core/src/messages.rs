@@ -245,7 +245,8 @@ pub enum NetworkMessage {
     LobbyState {
         players: Vec<LobbyPlayer>,
         selected_map: Option<String>,
-        selected_difficulty: Option<String>,
+        selected_difficulty: String,
+        room_owner: Option<NetworkId>,
     },
     /// Host -> all clients: start the mission now
     StartMission {
@@ -268,6 +269,8 @@ pub enum NetworkMessage {
         target_left_hand: Option<(bool, GearDetails)>,
         target_position: Option<[f32; 2]>,
         aim_direction: [f32; 2],
+        sanity: f32,
+        mean_sound: f32,
     },
     /// Request to interact with a map tile.
     InteractionRequest {
@@ -332,6 +335,18 @@ pub enum NetworkMessage {
     },
     /// Client requests a full state sync after map load.
     RequestFullSync { player_id: NetworkId },
+    /// Client requests to select a map in the lobby.
+    RequestSelectMap {
+        player_id: NetworkId,
+        map_filepath: String,
+    },
+    /// Client requests to select a difficulty level in the lobby.
+    RequestSelectDifficulty {
+        player_id: NetworkId,
+        difficulty_id: String,
+    },
+    /// Client requests to start the mission from the lobby.
+    RequestStartMission { player_id: NetworkId },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -358,6 +373,11 @@ pub struct NetworkDisconnectEvent {
 /// Emitted on the host when a client completes handshake and is ready to play.
 #[derive(Debug, Clone, Message)]
 pub struct PlayerJoinedEvent {
+    pub id: NetworkId,
+}
+
+#[derive(Debug, Clone, Message)]
+pub struct PlayerDiedEvent {
     pub id: NetworkId,
 }
 
