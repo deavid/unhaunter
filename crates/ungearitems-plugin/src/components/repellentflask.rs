@@ -1,5 +1,3 @@
-use bevy_platform::collections::HashSet;
-use fastapprox::faster;
 use ndarray::Array3;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
@@ -15,7 +13,6 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::Emissive;
 use unsound_core::emitter::SoundEmitter;
-use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
@@ -160,7 +157,6 @@ fn repellent_update(
     bf: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
     difficulty: Res<CurrentDifficulty>,
-    mut pressure_base: Local<Array3<f32>>,
     mut positions: Local<Array3<Vec<Vec3>>>,
     mut positions_dirty: Local<Vec<(usize, usize, usize)>>,
     time: Res<Time>,
@@ -182,49 +178,17 @@ fn repellent_update(
     let dt = time.delta_secs();
     const SPREAD: f32 = 0.1;
     const SPREAD_SHORT: f32 = 0.02;
-    let needs_rebuild = pressure_base.dim() != bf.map_size || bcf.is_changed();
-    if needs_rebuild {
-        if pressure_base.dim() != bf.map_size {
-            *pressure_base = Array3::from_elem(bf.map_size, 0.0);
-        }
-
-        pressure_base
-            .indexed_iter_mut()
-            .for_each(|(p, v)| *v = if bcf.0[p].player_free { 20.0 } else { 0.0 });
-    }
     if positions.dim() != bf.map_size {
         *positions = Array3::from_elem(bf.map_size, Vec::with_capacity(8));
     }
-    // positions.iter_mut().for_each(|v| v.clear());
 
-    const RADIUS: f32 = 0.7;
-    let mut p_set = HashSet::with_capacity(1024);
-
-    for (r_pos, rep, _, _, _) in &qrp {
+    // Collect particle positions per cell for same-cell repulsion
+    for (r_pos, _rep, _, _, _) in &qrp {
         let bpos = r_pos.to_board_position();
-        let life = 1.001 - rep.life_factor();
         let nidx = bpos.ndidx();
-        let Some(pres) = pressure_base.get_mut(nidx) else {
-            continue;
-        };
-        *pres += life;
-        p_set.insert(nidx);
-        positions[nidx].push(r_pos.to_vec3());
-        positions_dirty.push(nidx);
-    }
-    let mut pressure: Array3<f32> = Array3::from_elem(bf.map_size, 0.0);
-    for &p in p_set.iter() {
-        let pres = pressure_base[p];
-        if !(0.0001..=19.0).contains(&pres) {
-            // Skip cells that don't have anything on them or are walls
-            continue;
-        }
-        let bpos = BoardPosition::from_ndidx(p);
-        for nb in bpos.iter_xy_neighbors(2, bf.map_size) {
-            let dist2 = nb.distance2(&bpos) * RADIUS;
-            let exponent: f32 = -0.5 * dist2;
-            let gauss = faster::exp(exponent);
-            pressure[nb.ndidx()] += gauss * pres;
+        if let Some(cell) = positions.get_mut(nidx) {
+            cell.push(r_pos.to_vec3());
+            positions_dirty.push(nidx);
         }
     }
 
@@ -236,9 +200,6 @@ fn repellent_update(
         }
         let life_factor = rep.life_factor();
         let rev_factor = 1.01 - life_factor;
-
-        // Handle color transition
-        let life_factor = rep.life_factor();
         let alpha = life_factor.cbrt() / 2.0 + 0.01;
 
         if rep.hit_correct {
@@ -263,24 +224,10 @@ fn repellent_update(
         }
 
         let bpos = r_pos.to_board_position();
-        let rr_pos = Position {
-            x: r_pos.x + rng.random_range(-0.5..0.5),
-            y: r_pos.y + rng.random_range(-0.5..0.5),
-            z: r_pos.z + rng.random_range(-0.5..0.5),
-            visual_priority: r_pos.visual_priority,
-        };
         let ndidx = bpos.ndidx();
 
+        // Same-cell particle repulsion
         let mut total_force = Direction::zero();
-        for nb in bpos.iter_xy_neighbors(2, bf.map_size) {
-            let npos = nb.to_position();
-            let vector = rr_pos.delta(npos);
-            let dist2 = vector.distance2();
-            let psi = pressure[nb.ndidx()] / (0.2 + dist2) * 3.0;
-
-            total_force.dx += vector.dx * psi;
-            total_force.dy += vector.dy * psi;
-        }
         let v_pos = r_pos.to_vec3();
         for &s_p in positions[ndidx].iter() {
             let dist2 = v_pos.distance_squared(s_p) + 0.1;
@@ -291,8 +238,6 @@ fn repellent_update(
         }
         total_force.dx += rng.random_range(-0.1..0.1);
         total_force.dy += rng.random_range(-0.1..0.1);
-
-        // total_force = total_force.normalized().mul(total_force.distance().sqrt());
         const PRESSURE_FORCE_SCALE: f32 = 1e-5;
         rep.dir = rep
             .dir
