@@ -1,6 +1,6 @@
-use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
+use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
 use std::time::Duration;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
 use unclassic_mode_plugin::plugin::{ClassicModeCorePlugin, ClassicModePlugin};
@@ -48,7 +48,11 @@ pub fn app_run(cli_options: CliOptions) {
 
     if cli_options.dedicated {
         app.add_plugins((
-            MinimalPlugins,
+            MinimalPlugins
+                .set(ScheduleRunnerPlugin::run_loop(Duration::from_millis(10)))
+                .set(TaskPoolPlugin {
+                    task_pool_options: TaskPoolOptions::with_num_threads(4),
+                }),
             bevy::log::LogPlugin {
                 level: bevy::log::Level::TRACE,
                 filter,

@@ -82,6 +82,7 @@ pub(crate) fn client_send_input_system(
         info!("Network: Sending RequestFullSync to host");
         conn.client_send(NetworkMessage::RequestFullSync { player_id });
         pending_map.needs_full_sync_request = false;
+        *local_tick = 0;
     }
 
     for (input, pos, sprite) in query_player.iter() {

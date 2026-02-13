@@ -513,6 +513,9 @@ pub(crate) fn client_apply_snapshots_system(
             }
 
             let is_full_sync = *is_full_sync;
+            if is_full_sync {
+                *local_tick = 0;
+            }
             // Sync AppState - but allow independent Summary transition
             let dominated_by_server_app = matches!(
                 server_app_state,

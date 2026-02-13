@@ -143,7 +143,12 @@ pub(crate) fn host_liveness_system(
 
         for client in clients {
             if let Some(player_id) = client.associated_id {
-                let inactive = (now - client.last_heartbeat) > 5.0;
+                let heartbeat_timeout = (now - client.last_heartbeat) > 5.0;
+                let input_timeout = (now - client.last_input) > 60.0;
+                let left_mission = client
+                    .client_app_state
+                    .is_some_and(|s| s != AppState::InGame);
+                let inactive = heartbeat_timeout || input_timeout || left_mission;
 
                 // Find entity
                 let entity = query_players
@@ -156,9 +161,10 @@ pub(crate) fn host_liveness_system(
                     if inactive && !is_inactive_comp {
                         commands.entity(entity).insert(PlayerInactive);
                         info!(
-                            "Player {:?} marked INACTIVE (last hearbeat {}s ago)",
+                            "Player {:?} marked INACTIVE (HB: {:.1}s, Input: {:.1}s ago)",
                             player_id,
-                            now - client.last_heartbeat
+                            now - client.last_heartbeat,
+                            now - client.last_input
                         );
                     } else if !inactive && is_inactive_comp {
                         commands.entity(entity).remove::<PlayerInactive>();
@@ -177,8 +183,7 @@ pub(crate) fn host_process_heartbeats_system(
 ) {
     let now = time.elapsed_secs();
     for ev in ev_reader.read() {
-        if let (NetworkMessage::Heartbeat { app_state }, Some(source_id)) = (&ev.message, ev.source)
-        {
+        if let Some(source_id) = ev.source {
             // Update the client connection
             if let NetworkConn::Host { clients, .. } = &mut *conn
                 && let Some(client) = clients
@@ -186,7 +191,35 @@ pub(crate) fn host_process_heartbeats_system(
                     .find(|c| c.associated_id == Some(source_id))
             {
                 client.last_heartbeat = now;
-                client.client_app_state = Some(*app_state);
+                match &ev.message {
+                    NetworkMessage::Heartbeat { app_state } => {
+                        client.client_app_state = Some(*app_state);
+                    }
+                    NetworkMessage::PlayerInput {
+                        movement,
+                        run,
+                        interact,
+                        use_right_hand,
+                        use_left_hand,
+                        target_position,
+                        ..
+                    } => {
+                        let is_moving = movement[0].abs() > 0.001 || movement[1].abs() > 0.001;
+                        let is_active = is_moving
+                            || *run
+                            || *interact
+                            || *use_right_hand
+                            || *use_left_hand
+                            || target_position.is_some();
+                        if is_active {
+                            client.last_input = now;
+                        }
+                    }
+                    _ => {
+                        // Any other message from client to host counts as activity
+                        client.last_input = now;
+                    }
+                }
             }
         }
     }
@@ -392,7 +425,14 @@ pub(crate) fn network_io_system(
     mut ev_disconnect: MessageWriter<unnet_core::messages::NetworkDisconnectEvent>,
     mut ev_send: MessageReader<unnet_core::messages::SendNetworkMessage>,
     mut player_registry: ResMut<crate::resources::PlayerRegistry>,
+    time: Res<Time>,
+    mut recv_buffer: Local<Vec<u8>>,
+    mut last_connection_check: Local<f32>,
 ) {
+    if recv_buffer.len() != 65536 {
+        *recv_buffer = vec![0u8; 65536];
+    }
+    let now = time.elapsed_secs();
     let measure = metrics::NETWORK_IO.time_measure();
     let send_msgs: Vec<NetworkMessage> = ev_send.read().map(|m| m.0.clone()).collect();
 
@@ -405,34 +445,39 @@ pub(crate) fn network_io_system(
         NetworkConn::Disconnected => {}
         NetworkConn::Host { listeners, clients } => {
             // 2. Accept new connections from listeners
-            for listener in listeners.iter() {
-                loop {
-                    match listener.accept() {
-                        Ok((stream, addr)) => {
-                            info!("Network: Client connected from {}", addr);
-                            if let Err(e) = stream.set_nonblocking(true) {
-                                error!("Failed to set client stream non-blocking: {}", e);
-                                continue;
+            // Throttling acceptance (every 200ms) to avoid spamming syscalls on high-FPS dedicated servers
+            if now - *last_connection_check > 0.2 {
+                *last_connection_check = now;
+                for listener in listeners.iter() {
+                    loop {
+                        match listener.accept() {
+                            Ok((stream, addr)) => {
+                                info!("Network: Client connected from {}", addr);
+                                if let Err(e) = stream.set_nonblocking(true) {
+                                    error!("Failed to set client stream non-blocking: {}", e);
+                                    continue;
+                                }
+                                if let Err(e) = stream.set_nodelay(true) {
+                                    error!("Failed to set TCP_NODELAY for client: {}", e);
+                                }
+                                clients.push(crate::resources::ClientConnection {
+                                    stream,
+                                    read_buffer: String::new(),
+                                    write_queue: VecDeque::new(),
+                                    handshake: HandshakeState::None,
+                                    installation_id: None,
+                                    associated_id: None,
+                                    needs_full_sync: false,
+                                    last_heartbeat: now,
+                                    last_input: now,
+                                    client_app_state: None,
+                                });
                             }
-                            if let Err(e) = stream.set_nodelay(true) {
-                                error!("Failed to set TCP_NODELAY for client: {}", e);
+                            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
+                            Err(e) => {
+                                error!("Network: Accept error: {}", e);
+                                break;
                             }
-                            clients.push(crate::resources::ClientConnection {
-                                stream,
-                                read_buffer: String::new(),
-                                write_queue: VecDeque::new(),
-                                handshake: HandshakeState::None,
-                                installation_id: None,
-                                associated_id: None,
-                                needs_full_sync: false,
-                                last_heartbeat: 0.0,
-                                client_app_state: None,
-                            });
-                        }
-                        Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
-                        Err(e) => {
-                            error!("Network: Accept error: {}", e);
-                            break;
                         }
                     }
                 }
@@ -441,7 +486,12 @@ pub(crate) fn network_io_system(
             // 3. Read/write each client
             let mut to_remove = Vec::new();
             for (idx, client) in clients.iter_mut().enumerate() {
-                let closed = do_client_io(client, &mut ev_writer, &mut player_registry);
+                let closed = do_client_io(
+                    client,
+                    &mut ev_writer,
+                    &mut player_registry,
+                    &mut recv_buffer,
+                );
                 if closed {
                     to_remove.push(idx);
                 }
@@ -501,15 +551,14 @@ pub(crate) fn network_io_system(
             let mut closed = false;
             // --- Read ---
             loop {
-                let mut buf = [0u8; 65536];
-                match (stream).read(&mut buf) {
+                match (stream).read(&mut recv_buffer) {
                     Ok(0) => {
                         info!("Network: Connection closed by host");
                         closed = true;
                         break;
                     }
                     Ok(n) => {
-                        if let Ok(s) = std::str::from_utf8(&buf[..n]) {
+                        if let Ok(s) = std::str::from_utf8(&recv_buffer[..n]) {
                             read_buffer.push_str(s);
                         }
                     }
@@ -581,19 +630,19 @@ fn do_client_io(
     client: &mut ClientConnection,
     ev_writer: &mut MessageWriter<NetworkDataEvent>,
     player_registry: &mut PlayerRegistry,
+    recv_buffer: &mut [u8],
 ) -> bool {
     let mut closed = false;
     // --- Read ---
     loop {
-        let mut buf = [0u8; 65536];
-        match (&client.stream).read(&mut buf) {
+        match (&client.stream).read(recv_buffer) {
             Ok(0) => {
                 info!("Network: Connection closed by peer");
                 closed = true;
                 break;
             }
             Ok(n) => {
-                if let Ok(s) = std::str::from_utf8(&buf[..n]) {
+                if let Ok(s) = std::str::from_utf8(&recv_buffer[..n]) {
                     client.read_buffer.push_str(s);
                 }
             }

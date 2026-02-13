@@ -20,6 +20,7 @@ use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untypes_core::cli::{CliOptions, NetMode};
+use untypes_core::states::AppState;
 
 use crate::metrics;
 
@@ -161,9 +162,21 @@ fn repellent_update(
     difficulty: Res<CurrentDifficulty>,
     mut pressure_base: Local<Array3<f32>>,
     mut positions: Local<Array3<Vec<Vec3>>>,
+    mut positions_dirty: Local<Vec<(usize, usize, usize)>>,
     time: Res<Time>,
 ) {
     let measure = metrics::REPELLENT_UPDATE.time_measure();
+
+    // Cleaning previous frame data relative to positions
+    for idx in positions_dirty.drain(..) {
+        if let Some(cell) = positions.get_mut(idx) {
+            cell.clear();
+        }
+    }
+
+    if qrp.is_empty() {
+        return;
+    }
 
     let mut rng = random_seed::rng();
     let dt = time.delta_secs();
@@ -182,7 +195,7 @@ fn repellent_update(
     if positions.dim() != bf.map_size {
         *positions = Array3::from_elem(bf.map_size, Vec::with_capacity(8));
     }
-    positions.iter_mut().for_each(|v| v.clear());
+    // positions.iter_mut().for_each(|v| v.clear());
 
     const RADIUS: f32 = 0.7;
     let mut p_set = HashSet::with_capacity(1024);
@@ -197,6 +210,7 @@ fn repellent_update(
         *pres += life;
         p_set.insert(nidx);
         positions[nidx].push(r_pos.to_vec3());
+        positions_dirty.push(nidx);
     }
     let mut pressure: Array3<f32> = Array3::from_elem(bf.map_size, 0.0);
     for &p in p_set.iter() {
@@ -382,5 +396,5 @@ fn repellent_update(
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_repellentflask);
-    app.add_systems(Update, repellent_update);
+    app.add_systems(Update, repellent_update.run_if(in_state(AppState::InGame)));
 }

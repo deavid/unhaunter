@@ -170,7 +170,9 @@ fn tmxmap_preload(
             });
         }
     }
-    maps.maps.sort_by_key(|x| x.path.clone());
+    if cleanup_needed {
+        maps.maps.sort_by_key(|x| x.path.clone());
+    }
     for sheet in &mut mapsidx.sheets {
         if !sheet.processed {
             maps.sheets.push(Sheet {

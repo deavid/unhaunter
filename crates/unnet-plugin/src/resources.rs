@@ -28,6 +28,7 @@ pub(crate) struct ClientConnection {
     pub associated_id: Option<NetworkId>,
     pub needs_full_sync: bool,
     pub last_heartbeat: f32,
+    pub last_input: f32,
     pub client_app_state: Option<untypes_core::states::AppState>,
 }
 
