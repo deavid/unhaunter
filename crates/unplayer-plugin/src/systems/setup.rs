@@ -43,7 +43,10 @@ pub(crate) fn app_setup_core(app: &mut App) {
             .run_if(in_state(AppState::InGame)),
     );
 
-    app.add_systems(PostUpdate, input::keyboard::player_input_clear_system);
+    app.add_systems(
+        PostUpdate,
+        input::keyboard::player_input_clear_system.run_if(in_state(AppState::InGame)),
+    );
 
     // Gear toggle system must run on all instances (including dedicated server)
     // so that the host can process toggle requests from clients.

@@ -1,3 +1,4 @@
+use bevy::ecs::schedule::ExecutorKind;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
@@ -9,7 +10,7 @@ use unengine_plugin::plugin::{UnhaunterEngineCorePlugin, UnhaunterEnginePlugin};
 use unfog_plugin::plugin::{UnhaunterFogCorePlugin, UnhaunterFogPlugin};
 use unfps_plugin::plugin::UnhaunterFpsPlugin;
 use ungear_plugin::plugin::{UnhaunterGearCorePlugin, UnhaunterGearPlugin};
-use ungearitems_plugin::plugin::UnhaunterGearItemsPlugin;
+use ungearitems_plugin::plugin::{UnhaunterGearItemsCorePlugin, UnhaunterGearItemsPlugin};
 use unghost_plugin::plugin::{UnhaunterGhostCorePlugin, UnhaunterGhostPlugin};
 use uninteraction_plugin::plugin::UnhaunterInteractionCorePlugin;
 use unlight_plugin::plugin::{UnhaunterLightCorePlugin, UnhaunterLightPlugin};
@@ -49,9 +50,11 @@ pub fn app_run(cli_options: CliOptions) {
     if cli_options.dedicated {
         app.add_plugins((
             MinimalPlugins
-                .set(ScheduleRunnerPlugin::run_loop(Duration::from_millis(10)))
+                .set(ScheduleRunnerPlugin::run_loop(Duration::from_micros(
+                    16_666,
+                )))
                 .set(TaskPoolPlugin {
-                    task_pool_options: TaskPoolOptions::with_num_threads(4),
+                    task_pool_options: TaskPoolOptions::with_num_threads(1),
                 }),
             bevy::log::LogPlugin {
                 level: bevy::log::Level::TRACE,
@@ -63,6 +66,14 @@ pub fn app_run(cli_options: CliOptions) {
             bevy::state::app::StatesPlugin,
             bevy::transform::TransformPlugin,
         ));
+        // Force the Update schedule to run systems one-by-one
+        app.edit_schedule(Update, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
+        // You can also do this for FixedUpdate if you use it
+        .edit_schedule(FixedUpdate, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        });
     } else {
         let mut default_plugins = DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
@@ -103,7 +114,6 @@ pub fn app_run(cli_options: CliOptions) {
 
     // Common plugins (Logic, Core, Hardware-agnostic)
     app.add_plugins((
-        UnhaunterFpsPlugin,
         UnhaunterSettingsPlugin,
         UnhaunterDifficultyPlugin,
         UnhaunterEngineCorePlugin,
@@ -124,12 +134,14 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterTmxMapPlugin,
         UnhaunterMapLoadPlugin,
         UnhaunterClassicModeCorePlugin,
-        UnhaunterGearItemsPlugin,
+        UnhaunterGearItemsCorePlugin,
     ));
 
     // Client-side only plugins (UI, Graphics, Sound, Input)
     if !cli_options.dedicated {
         app.add_plugins((
+            UnhaunterGearItemsPlugin,
+            UnhaunterFpsPlugin,
             UnhaunterThermalPlugin,
             UnhaunterFogCorePlugin,
             UnhaunterWalkieCorePlugin,

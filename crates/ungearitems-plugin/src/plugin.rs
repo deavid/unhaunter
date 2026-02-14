@@ -1,6 +1,21 @@
 use crate::metrics;
 use bevy::prelude::*;
 
+pub struct UnhaunterGearItemsCorePlugin;
+
+impl Plugin for UnhaunterGearItemsCorePlugin {
+    fn build(&self, app: &mut App) {
+        crate::registration::register_all(app);
+
+        app.add_systems(
+            Update,
+            (crate::systems::system_apply_gear_intent_from_input
+                .after(unplayer_core::PlayerInputSet),)
+                .run_if(in_state(untypes_core::states::AppState::InGame)),
+        );
+    }
+}
+
 pub struct UnhaunterGearItemsPlugin;
 
 impl Plugin for UnhaunterGearItemsPlugin {
@@ -30,12 +45,9 @@ impl Plugin for UnhaunterGearItemsPlugin {
             (
                 crate::systems::system_electronic_interference,
                 crate::systems::system_battery_drain,
-                crate::systems::system_apply_gear_intent_from_input
-                    .after(unplayer_core::PlayerInputSet),
-            ),
+            )
+                .run_if(in_state(untypes_core::states::AppState::InGame)),
         );
-
-        crate::registration::register_all(app);
 
         metrics::register_all(app);
     }

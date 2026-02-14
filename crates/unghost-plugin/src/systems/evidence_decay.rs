@@ -58,5 +58,10 @@ fn decay_evidence_clarity_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, decay_evidence_clarity_system);
+    app.add_systems(
+        Update,
+        decay_evidence_clarity_system.run_if(bevy::prelude::in_state(
+            untypes_core::states::AppState::InGame,
+        )),
+    );
 }

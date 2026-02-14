@@ -14,7 +14,9 @@ use untypes_core::cli::{CliOptions, is_authority};
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (interaction_event_handler, room_state_sync_system).chain(),
+        (interaction_event_handler, room_state_sync_system)
+            .chain()
+            .run_if(in_state(untypes_core::states::AppState::InGame)),
     );
 }
 

@@ -229,13 +229,15 @@ fn swap_hands(mut players: Query<(&mut PlayerGear, &PlayerInput)>, mut commands:
 
 pub(crate) fn app_setup(app: &mut App) {
     use unplayer_core::authoritative::PlayerAuthoritativeLogicSet;
+    use untypes_core::states::AppState;
     app.add_systems(
         Update,
-        (sync_held_gear_position, update_held_object_position),
+        (sync_held_gear_position, update_held_object_position).run_if(in_state(AppState::InGame)),
     );
     app.add_systems(
         Update,
         (grab_object, drop_object, cycle_inventory, swap_hands)
-            .in_set(PlayerAuthoritativeLogicSet),
+            .in_set(PlayerAuthoritativeLogicSet)
+            .run_if(in_state(AppState::InGame)),
     );
 }

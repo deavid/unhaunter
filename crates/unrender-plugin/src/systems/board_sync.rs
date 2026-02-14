@@ -52,5 +52,8 @@ fn sync_map_entity_field(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, sync_map_entity_field);
+    app.add_systems(
+        Update,
+        sync_map_entity_field.run_if(in_state(untypes_core::states::AppState::InGame)),
+    );
 }

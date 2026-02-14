@@ -188,6 +188,7 @@ pub(crate) fn ghost_scale_glitch_system(
 
 pub(crate) fn app_setup(app: &mut App) {
     use untypes_core::cli::is_authority;
+    use untypes_core::states::AppState;
 
     app.add_systems(
         Update,
@@ -197,10 +198,14 @@ pub(crate) fn app_setup(app: &mut App) {
             ghost_fade_out_system.run_if(is_authority),
             update_ghost_warning_field,
             ghost_scale_glitch_system.run_if(is_authority),
-        ),
+        )
+            .run_if(in_state(AppState::InGame)),
     );
 
-    app.add_systems(Update, (ghost_visual_sync, ghost_influence_visual_sync));
+    app.add_systems(
+        Update,
+        (ghost_visual_sync, ghost_influence_visual_sync).run_if(in_state(AppState::InGame)),
+    );
 
     // Initialize dynamic behavior update system
     crate::systems::dynamic_behavior_update::app_setup(app);

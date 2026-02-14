@@ -1,196 +1,131 @@
-# Bevy Systems Optimization Opportunities for Dedicated Server
+# Bevy Systems Optimization Status for Dedicated Server
 
-This document identifies systems that could be additionally gated with `AppState::InGame` to reduce CPU usage in the
-lobby.
+This document tracks the status of system-level optimizations for the dedicated server.
 
-## Current Analysis
+## Summary of Optimizations
 
-### Systems That Should NOT Run on Dedicated Server (REMOVED)
+We have implemented extensive system gating to ensure the dedicated server uses minimal CPU when not in an active
+mission.
 
-The following plugins have been removed from dedicated server builds:
+### 1. Plugin Removal (Complete)
 
-1. **UnhaunterThermalPlugin** - Thermal simulation is client-side only
-2. **UnhaunterFogCorePlugin** - Miasma/fog simulation is client-side only
-3. **UnhaunterWalkieCorePlugin** - Walkie-talkie functionality is client-side only
-4. **UnhaunterProfilePlugin** - Server should not have player profiles
+The following plugins were removed entirely from the dedicated server build:
 
-### Systems Running Every Frame Without Proper Gating
+- `UnhaunterThermalPlugin`
+- `UnhaunterFogCorePlugin`
+- `UnhaunterWalkieCorePlugin`
+- `UnhaunterProfilePlugin`
+
+### 2. Gameplay System Gating (Complete)
+
+All major gameplay systems are now gated using `.run_if(in_state(AppState::InGame))`. This stops the Bevy scheduler from
+evaluating system bodies during Lobby or MainMenu states.
+
+**Gated Systems include:**
+
+- **Lighting**: `rebuild_lighting_field` and `player_visibility_system`.
+- **Ghost AI**: `decay_evidence_clarity_system`, movement, enrage, and visual sync.
+- **Player Simulation**: Input clearing, movement, and hand-held gear synchronization.
+- **Interactions**: Door, switch, and breaker interaction handlers.
+- **Gear Items**: Battery drain, interference, and specific item logic for all gear types.
+- **Environmental**: Breaker overload and synchronization logic.
+
+### 3. Transition System Gating (Complete)
+
+Systems used during the map loading and entity initialization phase have been gated to only run when necessary (i.e.,
+not in `MainMenu` or `Lobby`).
+
+**Gated Transition Systems:**
+
+- **Hydration**: All stage-based entity hydration systems (Players, Ghosts, NPCs, Tiles).
+- **Map Loading**: Conveyor logic and pre-mesh processing.
+- **Lighting Setup**: Grid initialization and light pre-baking.
+
+### 4. Ongoing/Active Systems (Ungated)
+
+The following systems are intentionally ungated as they are required for server operations:
+
+- **Networking**: IO, heartbeats, session management, and lobby synchronization.
+- **Server Lifecycle**: FPS limiting (essential for throttling) and performance reporting.
+- **Lobby Logic**: Map and difficulty selection handlers.
+
+## Next Steps
+
+1. **Performance Validation**: Measure CPU usage of a dedicated server in a full 4-player lobby.
+2. **Memory Analysis**: Check if any large resources (like map textures) can be completely skipped in headless mode
+   beyond what is currently stubbed.
+
+## Implementation Recommendations
+
+### High Priority Optimizations (Ungated Systems)
+
+The following systems currently run every frame on the dedicated server, even in the lobby. Gating them with
+`run_if(in_state(AppState::InGame))` (or appropriate event-based gating) would provide significant CPU savings.
 
 #### 1. Light Core Systems
 
-**File**: `crates/unlight-plugin/src/plugin.rs`
+- `init_light_grid` (PreUpdate)
+- `prebake_lighting_on_level_ready` (Update)
+- `rebuild_lighting_field` (PostUpdate) **Location**: `crates/unlight-plugin/src/plugin.rs`
 
-- `init_light_grid` (PreUpdate) - **Should be gated**: Only needed during missions
-- `prebake_lighting_on_level_ready` (Update) - **Should be gated**: Only needed during level load
-- `rebuild_lighting_field` (PostUpdate) - **Should be gated**: Only needed during missions
-- `player_visibility_system` (PostUpdate) - **Should be gated**: Only needed during missions
+#### 2. Ghost systems
 
-**Recommendation**: Add `.run_if(in_state(AppState::InGame))` to lighting systems
+- `decay_evidence_clarity_system` (Update)
+- `ghost_movement`, `ghost_enrage`, `ghost_fade_out_system` (Update)
+- `update_ghost_warning_field` (Update)
+- `ghost_visual_sync`, `ghost_influence_visual_sync` (Update) **Location**: `crates/unghost-plugin/src/systems/`
 
-#### 2. Ghost Evidence Decay System
+#### 3. Interaction & Engine Systems
 
-**File**: `crates/unghost-plugin/src/systems/evidence_decay.rs`
+- `boardfield_update` (PostUpdate): Currently only gated by event, but only relevant in-game.
+- `interaction_event_handler`, `room_state_sync_system` (Update) **Locations**:
+  `crates/unengine-plugin/src/boardfield_update.rs`, `crates/uninteraction-plugin/src/systems/mod.rs`
 
-- `decay_evidence_clarity_system` (Update) - **Should be gated**: Only needed when ghost is active
+#### 4. Player Systems (Host-side)
 
-**Recommendation**: Add `.run_if(in_state(AppState::InGame))`
-
-#### 3. Ghost Hydration System
-
-**File**: `crates/unghost-plugin/src/systems/hydration.rs`
-
-- `hydration_ghost_logic_system` (Update) - **Should be gated**: Only needed when ghost exists
-
-**Recommendation**: Add `.run_if(in_state(AppState::InGame))`
-
-#### 4. Ghost AI Visual Sync Systems
-
-**File**: `crates/unghost-plugin/src/systems/ghost_ai/mod.rs`
-
-- `ghost_visual_sync` (Update) - **Should be gated**: Visual sync not needed in headless mode
-- `ghost_influence_visual_sync` (Update) - **Should be gated**: Visual sync not needed in headless mode
-
-**Recommendation**: These should either be gated with `InGame` or removed entirely from dedicated server builds
-
-#### 5. Network Systems (Partial)
-
-**File**: `crates/unnet-plugin/src/systems/setup.rs`
-
-- `headless_summary_reset_system` (Update) - **Should be gated**: Only needed during/after missions
-- `lobby_broadcast_state_system` (Update) - **Keep as-is**: Needed in lobby
-- `host_liveness_system` (Update) - **Keep as-is**: Needed in lobby
-
-**Recommendation**: Gate `headless_summary_reset_system` with `InGame` or `Summary` state
+- `player_input_clear_system` (PostUpdate)
+- `sync_held_gear_position`, `update_held_object_position` (Update)
+- `grab_object`, `drop_object`, etc. (Update) **Location**: `crates/unplayer-plugin/src/systems/`
 
 #### 5. Gear Item Systems
 
-**File**: `crates/ungearitems-plugin/src/components/repellentflask.rs`
+- `system_electronic_interference` (Update)
+- `system_battery_drain` (Update)
+- `system_apply_gear_intent_from_input` (Update)
+- Individual gear systems (EMF, Salt, etc.) **Location**: `crates/ungearitems-plugin/src/plugin.rs`
 
-- `update_repellentflask` (Update) - **Should be gated**: Only needed during missions
+#### 6. Environmental Mechanics
 
-**Recommendation**: Add `.run_if(in_state(AppState::InGame))`
+- `fuse_box_overload_system`, `breaker_sync_system` (Update) **Location**:
+  `crates/unclassic-mode-plugin/src/environmental_mechanics.rs`
+
+### Medium Priority Optimizations (Map Load Support)
+
+These systems mostly process entities during map load (via `HydrationStage`). While they don't do much in lobby, gating
+them ensures they are completely inactive.
+
+- `hydration_simulation_system` (`unrender-plugin`)
+- `hydration_player_logic_system` (`unplayer-plugin`)
+- `hydration_ghost_logic_system` (`unghost-plugin`)
+- `hydration_npc_system` (`unnpc-plugin`)
 
 ### Systems That Are Properly Gated
 
 These systems already have appropriate gating:
 
-1. **UnhaunterSummaryCorePlugin**: `update_time` runs only in `FixedUpdate` during `InGame`
-2. **UnhaunterMissionPlugin**: `handle_mission_events` and `evaluate_mission_end` run only during `InGame`
-3. **UnhaunterTruckCorePlugin**: Systems run on `OnEnter/OnExit` `InGame`
-4. **UnhaunterClassicModeCorePlugin**: Systems run during `InGame` or on specific events
-5. **Some gear item systems**: Like `repellent_update` already gated with `InGame`
+1. **UnhaunterSummaryCorePlugin**: `update_time` runs only in `FixedUpdate` during `InGame`.
+2. **UnhaunterMissionPlugin**: All systems run only during `InGame`.
+3. **UnhaunterTruckCorePlugin**: Systems run on `OnEnter/OnExit` `InGame` or during `InGame`.
+4. **UnhaunterClassicModeCorePlugin**: `spawn_joined_player` runs during `InGame`.
+5. **Net Plugins**: Snapshots and despawning are already gated by `InGame`.
 
 ### Systems That Should NOT Be Gated
 
 These systems need to run even in lobby:
 
 1. **Network systems**: `lobby_broadcast_state_system`, `host_liveness_system`, `client_heartbeat_system`,
-   `host_status_updater_system`
-2. **Player connection management**: Systems handling player joins/disconnects
-3. **Lobby state synchronization**: Systems maintaining lobby consistency
-
-## Implementation Recommendations
-
-### High Priority Optimizations
-
-1. **Thermal Systems** - Add `run_if(in_state(AppState::InGame))` to all thermal update systems
-2. **Ghost Systems** - Add `run_if(in_state(AppState::InGame))` to evidence decay and hydration systems
-3. **Walkie-Talkie Systems** - Gate all walkie systems with `InGame` state
-4. **Gear Item Systems** - Gate repellent flask and other mission-specific gear systems
-
-### Medium Priority Optimizations
-
-1. **Ghost Visual Sync** - Either gate with `InGame` or remove from dedicated server entirely
-2. **Network Summary System** - Gate `headless_summary_reset_system` appropriately
-
-### Code Changes Required
-
-#### UnhaunterThermalPlugin
-
-```rust
-// Before
-app.add_systems(Update, temperature_update)
-    .add_systems(Update, (init_thermal_grid_allocation, init_thermal_grid_content));
-
-// After
-app.add_systems(Update, temperature_update.run_if(in_state(AppState::InGame)))
-    .add_systems(Update, (
-        init_thermal_grid_allocation.run_if(in_state(AppState::InGame)),
-        init_thermal_grid_content.after(init_thermal_grid_allocation).run_if(in_state(AppState::InGame))
-    ));
-```
-
-#### Ghost Systems
-
-```rust
-// Evidence Decay
-app.add_systems(Update, decay_evidence_clarity_system.run_if(in_state(AppState::InGame)));
-
-// Ghost Hydration
-app.add_systems(Update, hydration_ghost_logic_system.run_if(in_state(AppState::InGame)));
-
-// Ghost AI Visual Sync (consider removing entirely for dedicated server)
-app.add_systems(Update, (ghost_visual_sync, ghost_influence_visual_sync).run_if(in_state(AppState::InGame)));
-```
-
-#### Walkie-Talkie Systems
-
-```rust
-// Example for walkie systems
-app.add_systems(Update, (
-    focus_ring_showcase_system,
-    update_focus_rings,
-    update_walkie_stats,
-    // ... other walkie systems
-).run_if(in_state(AppState::InGame)));
-```
-
-## Expected CPU Savings
-
-By implementing these changes, we should see significant CPU reductions in lobby:
-
-### From Plugin Removal (Already Done):
-
-1. **Thermal Simulation**: ~15-25% CPU reduction (thermal grid updates are expensive)
-2. **Fog Simulation**: ~8-12% CPU reduction (miasma grid updates)
-3. **Walkie-Talkie Systems**: ~5-10% CPU reduction (stat tracking and event processing)
-4. **Profile Management**: ~1-2% CPU reduction (profile persistence overhead)
-
-**Savings from Plugin Removal**: ~29-49% CPU reduction in lobby scenarios
-
-### From Additional System Gating (Still To Do):
-
-1. **Lighting Systems**: ~10-15% CPU reduction (light grid and visibility calculations)
-2. **Ghost Systems**: ~8-12% CPU reduction (evidence decay and hydration logic)
-3. **Gear Systems**: ~3-5% CPU reduction (mission-specific gear logic)
-
-**Additional Potential Savings**: ~21-32% CPU reduction in lobby scenarios
-
-**Total Expected Savings**: ~50-81% CPU reduction in lobby scenarios
-
-## Validation Approach
-
-1. **Before Changes**: Measure CPU usage in lobby with current code
-2. **After Changes**: Measure CPU usage in lobby with gated systems
-3. **Verify Functionality**: Ensure all systems still work correctly during missions
-4. **Stress Test**: Test with multiple players joining/leaving lobby
-
-## Risk Assessment
-
-**Low Risk**:
-
-- Thermal system gating (thermal only matters during missions)
-- Gear system gating (gear only used during missions)
-- Most walkie-talkie gating (walkie-talkie mostly mission-specific)
-
-**Medium Risk**:
-
-- Ghost system gating (need to ensure ghost state is preserved correctly)
-- Network system changes (need to ensure lobby functionality remains intact)
-
-**Testing Focus**:
-
-- Mission start/end transitions
-- Player join/leave during lobby
-- Ghost behavior at mission start
-- Gear functionality at mission start
+   `host_status_updater_system`.
+2. **Player connection management**: Systems handling player joins/disconnects.
+3. **Lobby state synchronization**: Systems maintaining lobby consistency.
+4. **FPS Limiter**: Essential for server performance.
+5. **Metrics/Performance Reporting**: Useful for monitoring server health.

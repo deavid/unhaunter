@@ -148,6 +148,10 @@ fn breaker_sync_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, (fuse_box_overload_system, breaker_sync_system));
+    app.add_systems(
+        Update,
+        (fuse_box_overload_system, breaker_sync_system)
+            .run_if(in_state(untypes_core::states::AppState::InGame)),
+    );
     app.add_systems(Startup, initialize_fuse_box_system);
 }
