@@ -529,7 +529,7 @@ fn build_headless_app(cli_options: CliOptions) {
         UnhaunterRenderPlugin,  // needs is_headless gating (Step 8)
         UnhaunterGhostPlugin,
         UnhaunterInteractionPlugin,
-        MissionPlugin,
+        UnhaunterMissionPlugin,
         UnhaunterLobbyPlugin,
         UnhaunterPlayerPlugin,  // needs is_headless gating (Step 8)
         UnhaunterGearPlugin,

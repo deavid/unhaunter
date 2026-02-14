@@ -1,14 +1,10 @@
-use bevy::prelude::*;
-use unplayer_core::resources::game_config::GameConfig;
-
 use crate::metrics;
+use bevy::prelude::*;
 
 pub struct UnhaunterGearItemsPlugin;
 
 impl Plugin for UnhaunterGearItemsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<GameConfig>();
-
         crate::components::quartz::app_setup(app);
         crate::components::salt::app_setup(app);
         crate::components::sage::app_setup(app);

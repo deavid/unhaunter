@@ -33,7 +33,7 @@ pub(crate) fn update_thermometer(
         &mut PerceivedClarity,
     )>,
     mut gs_audio: SoundEmitter,
-    tg: Res<ThermalGrid>,
+    tg: If<Res<ThermalGrid>>,
     difficulty: Res<CurrentDifficulty>,
     player_profile: Res<Persistent<PlayerProfileData>>,
     cli: Res<untypes_core::cli::CliOptions>,

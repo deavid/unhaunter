@@ -1,9 +1,9 @@
 use crate::{evidence_perception, game_ui, looking_gear, object_charge, roomchanged};
 use bevy::prelude::*;
 
-pub struct ClassicModeCorePlugin;
+pub struct UnhaunterClassicModeCorePlugin;
 
-impl Plugin for ClassicModeCorePlugin {
+impl Plugin for UnhaunterClassicModeCorePlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<unevents_core::events::roomchanged::RoomChangedEvent>();
         app.insert_resource(unsummary_core::summary::ActiveMissionEvaluator(Box::new(

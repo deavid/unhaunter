@@ -728,7 +728,7 @@ pub(crate) fn handshake_handler_system(
         (Entity, &NetworkId),
         With<unplayer_core::components::PlayerDisconnected>,
     >,
-    runtime_installation_id: Res<unprofile_core::profile::RuntimeInstallationId>,
+    runtime_installation_id: Option<Res<unprofile_core::profile::RuntimeInstallationId>>,
     current_app_state: Res<State<AppState>>,
     summary_data: Res<SummaryData>,
     ghost_guess: Res<GhostGuess>,
@@ -803,7 +803,7 @@ pub(crate) fn handshake_handler_system(
                 debug!("Network: Sending Hello...");
                 write_queue.push_back(NetworkMessage::Hello {
                     version: "0.1.0".to_string(),
-                    installation_id: runtime_installation_id.0,
+                    installation_id: runtime_installation_id.map(|x| x.0).unwrap_or_default(),
                 });
                 *handshake = HandshakeState::HelloSent;
             }

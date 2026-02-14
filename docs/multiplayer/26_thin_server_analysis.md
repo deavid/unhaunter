@@ -335,7 +335,7 @@ decays via `1.01^dt` and adds via `dt * 5.2 * inv_sanity`).
 | `UnhaunterFpsPlugin`          | FPS display — visual only                                   |
 | `UnhaunterUiPlugin`           | UI asset loading, themes                                    |
 | `UnhaunterSettingsPlugin`     | User settings persistence (video, audio)                    |
-| `UnmetricsPlugin`             | Diagnostics display (keep if you want server metrics)       |
+| `UnhaunterMetricsPlugin`      | Diagnostics display (keep if you want server metrics)       |
 | `CustomSpritePickingPlugin`   | Mouse picking                                               |
 | `UnhaunterMenuPlugin`         | Main menu UI                                                |
 | `UnhaunterMenuSettingsPlugin` | Settings menu UI                                            |
@@ -345,9 +345,9 @@ decays via `1.01^dt` and adds via `dt * 5.2 * inv_sanity`).
 | `UnhaunterCampaignPlugin`     | Campaign progression (not relevant for dedicated missions)  |
 | `UnhaunterProfilePlugin`      | Local player profile (no local player)                      |
 | `UnhaunterCoreMenuPlugin`     | Menu templates                                              |
-| `ThermalPlugin`               | **Thermal grid simulation — clients compute locally**       |
+| `UnhaunterThermalPlugin`      | **Thermal grid simulation — clients compute locally**       |
 | `UnhaunterLightPlugin`        | **Light propagation — clients compute locally**             |
-| `SoundPlugin`                 | **Sound grid — clients compute locally**                    |
+| `UnhaunterSoundPlugin`        | **Sound grid — clients compute locally**                    |
 | `UnhaunterFogPlugin`          | **Fog/miasma — clients compute locally**                    |
 | `UnhaunterGearItemsPlugin`    | **Per-item gear simulation — clients compute locally**      |
 | `UnhaunterWalkiePlugin`       | Walkie triggers — client-local                              |
@@ -364,7 +364,7 @@ decays via `1.01^dt` and adds via `dt * 5.2 * inv_sanity`).
 | `UnhaunterGhostPlugin`       | Ghost AI, behavior dynamics, interaction selection/execution  |
 | `UnhaunterInteractionPlugin` | Door/switch/breaker toggle arbitration                        |
 | `UnhaunterDifficultyPlugin`  | Difficulty configuration                                      |
-| `MissionPlugin`              | Mission lifecycle evaluation                                  |
+| `UnhaunterMissionPlugin`     | Mission lifecycle evaluation                                  |
 | `UnhaunterLobbyPlugin`       | Lobby state management (no UI)                                |
 
 Note: `UnhaunterMapLoadPlugin` has a rendering dependency on `Assets<CustomMaterial1>` which must be resolved (see Phase

@@ -3,9 +3,9 @@ use crate::systems::*;
 use bevy::prelude::*;
 use unthermal_core::resources::ThermalGrid;
 
-pub struct ThermalPlugin;
+pub struct UnhaunterThermalPlugin;
 
-impl Plugin for ThermalPlugin {
+impl Plugin for UnhaunterThermalPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ThermalGrid>()
             .add_systems(Update, temperature_update)

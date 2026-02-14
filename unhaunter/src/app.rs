@@ -3,7 +3,7 @@ use bevy::window::WindowResolution;
 use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
 use std::time::Duration;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
-use unclassic_mode_plugin::plugin::{ClassicModeCorePlugin, ClassicModePlugin};
+use unclassic_mode_plugin::plugin::{ClassicModePlugin, UnhaunterClassicModeCorePlugin};
 use undifficulty_plugin::plugin::UnhaunterDifficultyPlugin;
 use unengine_plugin::plugin::{UnhaunterEngineCorePlugin, UnhaunterEnginePlugin};
 use unfog_plugin::plugin::{UnhaunterFogCorePlugin, UnhaunterFogPlugin};
@@ -20,8 +20,8 @@ use unmaphub_plugin::plugin::UnhaunterMapHubPlugin;
 use unmapload_plugin::plugin::UnhaunterMapLoadPlugin;
 use unmenu_plugin::plugin::UnhaunterCoreMenuPlugin;
 use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
-use unmetrics_plugin::plugin::UnmetricsPlugin;
-use unmission_plugin::MissionPlugin;
+use unmetrics_plugin::plugin::UnhaunterMetricsPlugin;
+use unmission_plugin::plugin::UnhaunterMissionPlugin;
 use unnet_plugin::plugin::UnhaunterNetPlugin;
 use unnpc_plugin::plugin::{UnhaunterNPCCorePlugin, UnhaunterNPCPlugin};
 use unpicking_plugin::plugin::CustomSpritePickingPlugin;
@@ -29,9 +29,9 @@ use unplayer_plugin::plugin::{UnhaunterPlayerCorePlugin, UnhaunterPlayerPlugin};
 use unprofile_plugin::plugin::UnhaunterProfilePlugin;
 use unrender_plugin::plugin::{UnhaunterRenderCorePlugin, UnhaunterRenderPlugin};
 use unsettings_plugin::plugin::UnhaunterSettingsPlugin;
-use unsound_plugin::plugin::SoundPlugin;
+use unsound_plugin::plugin::UnhaunterSoundPlugin;
 use unsummary_plugin::plugin::{UnhaunterSummaryCorePlugin, UnhaunterSummaryPlugin};
-use unthermal_plugin::plugin::ThermalPlugin;
+use unthermal_plugin::plugin::UnhaunterThermalPlugin;
 use untmxmap_plugin::plugin::UnhaunterTmxMapPlugin;
 use untruck_plugin::plugin::{UnhaunterTruckCorePlugin, UnhaunterTruckPlugin};
 use untypes_core::cli::CliOptions;
@@ -108,13 +108,11 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterDifficultyPlugin,
         UnhaunterEngineCorePlugin,
         UnhaunterSummaryCorePlugin,
-        UnmetricsPlugin,
-        ThermalPlugin,
+        UnhaunterMetricsPlugin,
         UnhaunterRenderCorePlugin,
         UnhaunterGearCorePlugin,
         UnhaunterInteractionCorePlugin,
-        MissionPlugin,
-        UnhaunterGearItemsPlugin,
+        UnhaunterMissionPlugin,
     ));
     app.add_plugins((
         UnhaunterTruckCorePlugin,
@@ -124,15 +122,19 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterNPCCorePlugin,
         UnhaunterNetPlugin,
         UnhaunterTmxMapPlugin,
-        UnhaunterFogCorePlugin,
-        UnhaunterWalkieCorePlugin,
         UnhaunterMapLoadPlugin,
-        ClassicModeCorePlugin,
-        UnhaunterProfilePlugin,
+        UnhaunterClassicModeCorePlugin,
+        UnhaunterGearItemsPlugin,
     ));
 
     // Client-side only plugins (UI, Graphics, Sound, Input)
     if !cli_options.dedicated {
+        app.add_plugins((
+            UnhaunterThermalPlugin,
+            UnhaunterFogCorePlugin,
+            UnhaunterWalkieCorePlugin,
+            UnhaunterProfilePlugin,
+        ));
         app.add_plugins((
             UnhaunterUiPlugin,
             UnhaunterManualPlugin,
@@ -149,7 +151,7 @@ pub fn app_run(cli_options: CliOptions) {
         ));
         app.add_plugins((
             UnhaunterGhostPlugin,
-            SoundPlugin,
+            UnhaunterSoundPlugin,
             UnhaunterLightPlugin,
             UnhaunterFogPlugin,
             UnhaunterRenderPlugin,
