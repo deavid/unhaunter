@@ -5,9 +5,11 @@ use bevy_persistent::Persistent;
 use rand::prelude::*;
 use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::BoardEntityField;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unmetrics_core::metrics::SendMetric;
 use unnet_core::messages::{NetworkDataEvent, NetworkMessage, SendNetworkMessage};
 use unnet_core::network_id::NetworkId;
@@ -15,13 +17,11 @@ use unnet_core::resources::{CurrentMapSeed, LobbyData, MissionEndRequested, Room
 use unplayer_core::components::{Hiding, MainPlayer, PlayerInput, PlayerSprite};
 use unsettings_core::audio::AudioSettings;
 use unspatial_core::position::Position;
-use unmapload_core::events::loadlevel::LoadLevelEvent;
 use untruck_core::components::in_truck::InTruck;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::AppState;
-use undifficulty_core::current_difficulty::CurrentDifficulty;
 
 use crate::metrics;
 
@@ -524,6 +524,12 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                         .as_ref()
                         .and_then(|ld| ld.selected_map.clone())
                         .unwrap_or_default();
+
+                    if map.is_empty() {
+                        warn!("RequestStartMission: No map selected, ignoring.");
+                        return;
+                    }
+
                     let diff = params
                         .lobby_data
                         .as_ref()
@@ -545,9 +551,9 @@ pub(crate) fn host_apply_input_system(mut params: HostApplyInputParams) {
                         if let Ok(d) = Difficulty::from_str(&diff) {
                             *params.current_difficulty = CurrentDifficulty::new(d);
                         }
-                        params.ev_load_level.write(LoadLevelEvent {
-                            map_filepath: map,
-                        });
+                        params
+                            .ev_load_level
+                            .write(LoadLevelEvent { map_filepath: map });
                         params.next_app_state.set(AppState::Loading);
                     }
                 }

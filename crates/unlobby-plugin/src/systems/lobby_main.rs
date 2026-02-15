@@ -292,6 +292,10 @@ pub(crate) fn handle_clicks(
                         }
                     } else if let (Some(map_filepath), true) = (&lobby_data.selected_map, !is_join)
                     {
+                        if map_filepath.is_empty() {
+                            warn!("Attempted to start mission with empty map path");
+                            return;
+                        }
                         let difficulty_id = lobby_data.selected_difficulty.clone();
                         let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
                         current_map_seed.0 = map_seed;

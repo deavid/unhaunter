@@ -144,7 +144,7 @@ pub(crate) fn host_liveness_system(
         for client in clients {
             if let Some(player_id) = client.associated_id {
                 let heartbeat_timeout = (now - client.last_heartbeat) > 5.0;
-                let input_timeout = (now - client.last_input) > 60.0;
+                let input_timeout = (now - client.last_input) > 180.0;
                 let left_mission = client
                     .client_app_state
                     .is_some_and(|s| s != AppState::InGame);
@@ -202,10 +202,15 @@ pub(crate) fn host_process_heartbeats_system(
                         use_right_hand,
                         use_left_hand,
                         target_position,
+                        aim_direction,
                         ..
                     } => {
                         let is_moving = movement[0].abs() > 0.001 || movement[1].abs() > 0.001;
+                        let aim_diff = (aim_direction[0] - client.last_aim_direction[0]).abs()
+                            + (aim_direction[1] - client.last_aim_direction[1]).abs();
+                        let is_aiming = aim_diff > 0.001;
                         let is_active = is_moving
+                            || is_aiming
                             || *run
                             || *interact
                             || *use_right_hand
@@ -214,6 +219,7 @@ pub(crate) fn host_process_heartbeats_system(
                         if is_active {
                             client.last_input = now;
                         }
+                        client.last_aim_direction = *aim_direction;
                     }
                     _ => {
                         // Any other message from client to host counts as activity
@@ -470,6 +476,7 @@ pub(crate) fn network_io_system(
                                     needs_full_sync: false,
                                     last_heartbeat: now,
                                     last_input: now,
+                                    last_aim_direction: [0.0, 0.0],
                                     client_app_state: None,
                                 });
                             }
