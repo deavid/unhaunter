@@ -66,12 +66,39 @@ pub fn app_run(cli_options: CliOptions) {
             bevy::state::app::StatesPlugin,
             bevy::transform::TransformPlugin,
         ));
-        // Force the Update schedule to run systems one-by-one
-        app.edit_schedule(Update, |schedule| {
+        // Force all continuous schedules to run systems one-by-one.
+        // This reduces overhead on dedicated servers where threading is restricted.
+        app.edit_schedule(First, |schedule| {
             schedule.set_executor_kind(ExecutorKind::SingleThreaded);
         })
-        // You can also do this for FixedUpdate if you use it
+        .edit_schedule(PreUpdate, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
+        .edit_schedule(Update, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
+        .edit_schedule(SpawnScene, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
+        .edit_schedule(PostUpdate, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
+        .edit_schedule(Last, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
+        .edit_schedule(FixedFirst, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
+        .edit_schedule(FixedPreUpdate, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
         .edit_schedule(FixedUpdate, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
+        .edit_schedule(FixedPostUpdate, |schedule| {
+            schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+        })
+        .edit_schedule(FixedLast, |schedule| {
             schedule.set_executor_kind(ExecutorKind::SingleThreaded);
         });
     } else {

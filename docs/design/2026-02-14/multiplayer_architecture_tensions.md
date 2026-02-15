@@ -180,25 +180,37 @@ The author did concrete analysis on dedicated server resource usage:
 - **Active (players connected):** ~15% CPU.
 - **Total capacity (2 vCores = 200%):** ~13 rooms.
 
+UPDATE: Turns out that we can gain a bit more performance if we move most schedules to single threaded:
+
+- **Idle:** ~4% CPU.
+- **Active (players connected):** ~10% CPU.
+- **Total capacity (2 vCores = 200%):** ~20 rooms.
+
+Also note that these tests are run at 60 ticks per second. We could effectively lower this to 20 ticks/s and we would
+triple capacity.
+
 ### Optimization Levers Identified
 
 1. **Single-threaded mode:** Dropping the multithreaded Bevy scheduler reduces idle cost from ~10% to ~2.5% (4×
-   improvement).
-2. **Lower tick rate:** Server doesn't need 60Hz. 20Hz (or even lower for lobby) is sufficient. Systems can run in
-   `FixedUpdate` at reduced frequency while positions interpolate smoothly each frame.
+   improvement). But only when done via feature flags - not building multithread support, which is a problem because it
+   needs two different dependency graphs to build each binary.
+2. **Lower tick rate:** Server doesn't need 60Hz. 20Hz is sufficient. Systems can run in `FixedUpdate` at reduced
+   frequency while positions interpolate smoothly each frame.
 3. **Multi-room per process:** Unexplored but potentially significant. If Bevy's `World`/`SubApp` architecture allows
    multiple independent simulations in one process, the scheduler overhead is shared across rooms.
+   - Update: It seems that SubApps have their independent scheduler so we expect the overhead to also scale linearly.
+     The only option would be to make a single world be capable of simulating multiple rooms.
 
 ### Projected Capacity (New 8-vCore VPS, ~€10/month)
 
-- 8 vCores with ~50% faster per-core performance vs. old VPS = ~12× total capacity.
-- With optimizations: ~20 rooms (optimized) × 12 (hardware) = **~240 rooms.**
-- **The author's reaction:** "And suddenly, that sounds like headroom. Like, no way we're getting 240 rooms in parallel
+- 8 vCores with ~50% faster per-core performance vs. old VPS = ~6× total capacity.
+- With optimizations: ~20 rooms (optimized) × 6 (hardware) = **~120 rooms.**
+- **The author's reaction:** "And suddenly, that sounds like headroom. Like, no way we're getting 120 rooms in parallel
   ever. If we get that, probably we can think on offloading to the community to provide their servers."
 
 ### Implication
 
-The capacity concern may be solved by pragmatic optimization + slightly better hardware. 240 rooms is far beyond what a
+The capacity concern may be solved by pragmatic optimization + slightly better hardware. 120 rooms is far beyond what a
 small FOSS game would need. Even half that is generous. This shifts the calculus toward Option (b) — if the numbers work
 out, the relay's scaling advantage becomes irrelevant because the dedicated server scales "enough."
 
@@ -288,6 +300,8 @@ The author leans toward lobbies on the dedicated server because:
 A lobby room doesn't need 60Hz updates. Dropping to 5-10Hz when in lobby mode would make the cost negligible. Nobody
 needs 60Hz fidelity for "player walked to the whiteboard." The server can ramp up to full tick rate when a mission
 starts and drop back down when it ends.
+
+Author's note: I'd rather prefer to avoid dynamic tick rates. We will find other levers to pull if needed.
 
 ### Dedicated Server vs. Lobby Scope
 
@@ -448,7 +462,7 @@ Based on the conversation, a fuzzy picture is forming:
 ### Key Principles Emerging
 
 1. **The dedicated server stays, but its role is "thin arbiter."** It runs ghost AI decision-making and state
-   arbitration, not environmental simulation. It's lean enough to run 200+ rooms on a modest VPS.
+   arbitration, not environmental simulation. It's lean enough to run 100+ rooms on a modest VPS.
 
 2. **Host mode is the arbiter embedded in a client.** Same code path for the arbiter logic, different deployment. This
    minimizes the "extra code paths" concern.
@@ -489,6 +503,10 @@ If a single Bevy headless process could run multiple independent game worlds (us
 similar), the per-room scheduler overhead drops dramatically. This would make the dedicated server model unambiguously
 the right choice. But it's unexplored territory — the author has "NOT analyzed this if it's even viable."
 
+Author's note: SubApp or World approaches are discarded. These seem to create new schedules and thus the overhead would
+scale up as well with the number of worlds. However, converting the whole game into a multi-mission parallel simulator
+isn't discarded.
+
 ### 3. When does the hub get built?
 
 The author says "very very soon." It's the missing piece for the shippable experience. But its scope is unclear — does
@@ -499,11 +517,6 @@ v1 of the hub just do room codes? Or does it also need a server browser, ban lis
 Voice is critical for public rooms with strangers. Without it, multiplayer with strangers is fundamentally broken — this
 is a game about _talking about evidence_. But voice is a massive infrastructure and UX lift. The tension: the author
 wants public rooms soon, but public rooms without voice are hollow.
-
-### 5. What's the actual idle CPU of the optimized server?
-
-The 4× improvement from single-threading is an estimate. The adaptive tick rate benefit is theoretical. These need to be
-measured. The 240-room projection depends on these numbers being real.
 
 ---
 
@@ -545,7 +558,7 @@ it's people.
 | Relay stance            | "Rejected — abuse problems"      | "Back on the table, Phasmophobia does this"              |
 | Hub/discovery urgency   | "Phase 4, eventually"            | "Need this very very soon"                               |
 | Server CPU concern      | "Needs profiling, uncertain"     | "Measured: ~10% idle, but optimizable to maybe 2.5%"     |
-| Scalability estimate    | "Unknown"                        | "~240 rooms on €10/month VPS seems like enough headroom" |
+| Scalability estimate    | "Unknown"                        | "~120 rooms on €10/month VPS seems like enough headroom" |
 | Confidence level        | Decisive (dedicated server wins) | Uncertain (revisiting the decision, decision paralysis)  |
 
 ### What stayed the same
