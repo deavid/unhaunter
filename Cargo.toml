@@ -117,22 +117,21 @@ csv = "1.4"
 dirs = "6.0"
 strum = { version = "0.27", features = ["derive"] }
 noise = { version = "0.9.0", features = ["std"] }
-# bevy = { version = "0.18", features = ["jpeg", "serialize", "debug"] }
-bevy = { version = "0.18", default-features = false, features = [
-    "jpeg",
-    "serialize",
-    "debug",
-    # 2D
-    "2d_bevy_render",
-    "audio",
-    "default_app",
-    "picking",
-    "scene",
-    # UI
-    "ui_api",
-    "ui_bevy_render",
-
-] }
+bevy = { version = "0.18", features = ["jpeg", "serialize", "debug"] }
+# bevy = { version = "0.18", default-features = false, features = [
+#     "jpeg",
+#     "serialize",
+#     "debug",
+#     # 2D
+#     "2d_bevy_render",
+#     "audio",
+#     "default_app",
+#     "picking",
+#     "scene",
+#     # UI
+#     "ui_api",
+#     "ui_bevy_render",
+# ] }
 bevy_asset_loader = { version = "0.25.0", features = ["2d"] }
 bevy_math = "0.18"
 bevy-persistent = { version = "0.10", features = ["all"] }
@@ -143,7 +142,7 @@ ndarray = "0.17"
 sha2 = "0.10"
 rayon = "1.11"
 crossbeam-channel = "0.5"
-uuid = { version = "1.13", features = ["v4", "serde"] }
+uuid = { version = "1.21", features = ["v4", "serde"] }
 
 # winit is not for WASM, and needs to be in sync with bevy version
 winit = "0.30"
