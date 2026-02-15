@@ -25,6 +25,15 @@ pub enum GameState {
     NpcHelp,
 }
 
+#[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub enum SimulationState {
+    #[default]
+    Inactive, // No map loaded, all simulation systems should be idle
+    Initializing, // Map geometry loaded, fields are being allocated
+    Ready,        // All fields allocated, level content ready
+    Running,      // InGame + simulation is safe to run
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, States, Default, Serialize, Deserialize)]
 pub enum MapHubState {
     DifficultySelection,

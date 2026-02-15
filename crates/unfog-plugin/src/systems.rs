@@ -37,6 +37,10 @@ pub(crate) fn init_miasma_grid(
     }
 }
 
+pub(crate) fn reset_miasma_grid(mut miasma: ResMut<MiasmaGrid>) {
+    miasma.reset();
+}
+
 pub(crate) fn initialize_miasma(
     board_data: Res<BoardTopology>,
     mut bcf: ResMut<BoardCollisionField>,

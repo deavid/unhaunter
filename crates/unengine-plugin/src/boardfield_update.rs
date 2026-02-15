@@ -35,10 +35,12 @@ fn boardfield_update(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
+    use untypes_core::states::SimulationState;
     app.add_systems(
         PostUpdate,
         boardfield_update
             .run_if(bevy::prelude::on_message::<BoardTopologyToRebuild>)
+            .run_if(not(in_state(SimulationState::Inactive)))
             .in_set(BoardUpdateSet::Collision),
     );
 }

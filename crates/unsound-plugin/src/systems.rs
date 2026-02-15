@@ -10,6 +10,10 @@ use unmetrics_core::metrics::SendMetric;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 
+pub fn reset_sound_grid(mut sound_grid: ResMut<SoundGrid>) {
+    sound_grid.reset();
+}
+
 pub fn sound_update(
     mut sound_grid: ResMut<SoundGrid>,
     roomdb: Res<RoomDB>,

@@ -26,6 +26,10 @@ pub fn init_light_grid(
     }
 }
 
+pub fn reset_light_grid(mut lg: ResMut<LightGrid>) {
+    lg.reset();
+}
+
 /// System to rebuild the entire lighting field based on prebaked data and active sources.
 /// Triggered by BoardTopologyToRebuild events.
 pub fn rebuild_lighting_field(

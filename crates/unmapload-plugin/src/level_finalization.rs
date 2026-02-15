@@ -18,7 +18,7 @@ use unrender_std::components::visuals::ResolutionFactor;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
-use untypes_core::states::{AppState, GameState};
+use untypes_core::states::{AppState, GameState, SimulationState};
 
 /// Processes level completion after the level is fully loaded.
 ///
@@ -43,10 +43,13 @@ fn after_level_ready(
     roomdb: Res<RoomDB>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
+    mut next_sim_state: ResMut<NextState<SimulationState>>,
 ) {
     if ev.is_empty() {
         return;
     }
+
+    next_sim_state.set(SimulationState::Ready);
 
     // Get level parameters
     let open_van = ev.read().next().unwrap().open_van;

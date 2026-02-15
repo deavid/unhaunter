@@ -6,3 +6,9 @@ use unspatial_core::boardposition::BoardPosition;
 pub struct SoundGrid {
     pub sound_field: HashMap<BoardPosition, Vec<Vec2>>,
 }
+
+impl SoundGrid {
+    pub fn reset(&mut self) {
+        self.sound_field.clear();
+    }
+}

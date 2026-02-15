@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-use untypes_core::states::AppState;
-use untypes_core::states::GameState;
+use untypes_core::states::{AppState, GameState, SimulationState};
 
 use crate::systems::grabdrop;
 use crate::systems::hide;
@@ -40,12 +39,12 @@ pub(crate) fn app_setup_core(app: &mut App) {
             .chain()
             .after(unplayer_core::PlayerInputSet)
             .after(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(SimulationState::Running)),
     );
 
     app.add_systems(
         PostUpdate,
-        input::keyboard::player_input_clear_system.run_if(in_state(AppState::InGame)),
+        input::keyboard::player_input_clear_system.run_if(in_state(SimulationState::Running)),
     );
 
     // Gear toggle system must run on all instances (including dedicated server)

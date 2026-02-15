@@ -17,6 +17,14 @@ pub struct LightGrid {
 }
 
 impl LightGrid {
+    pub fn reset(&mut self) {
+        self.light_field = Array3::from_elem((1, 1, 1), LightFieldData::default());
+        self.prebaked_lighting = Array3::from_elem((1, 1, 1), PrebakedLightingData::default());
+        self.prebaked_metadata = PrebakedMetadata::default();
+        self.prebaked_wave_edges.clear();
+        self.prebaked_propagation.clear();
+    }
+
     pub fn has_power(&self, qt: &Query<&Behavior>) -> bool {
         if self.prebaked_metadata.breakers.is_empty() {
             true

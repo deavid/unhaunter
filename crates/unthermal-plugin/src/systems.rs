@@ -17,6 +17,10 @@ use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
 
+pub fn reset_thermal_grid(mut thermal_grid: ResMut<ThermalGrid>) {
+    thermal_grid.reset();
+}
+
 pub fn temperature_update(
     mut thermal_grid: ResMut<ThermalGrid>,
     bf: Res<BoardTopology>,

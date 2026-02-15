@@ -24,6 +24,11 @@ pub struct BoardTopology {
 }
 
 impl BoardTopology {
+    pub fn reset(&mut self) {
+        self.map_size = (0, 0, 0);
+        self.origin = (0, 0, 0);
+    }
+
     /// Check if a position is passable (for connectivity calculations)
     pub fn is_position_passable(&self, bcf: &BoardCollisionField, pos: BoardPosition) -> bool {
         if pos.x < 0
@@ -44,8 +49,20 @@ impl BoardTopology {
 #[derive(Clone, Debug, Resource, Default)]
 pub struct BoardEntityField(pub Array3<Vec<Entity>>);
 
+impl BoardEntityField {
+    pub fn reset(&mut self) {
+        self.0 = Array3::default((0, 0, 0));
+    }
+}
+
 #[derive(Clone, Debug, Resource, Default)]
 pub struct BoardCollisionField(pub Array3<CollisionFieldData>);
+
+impl BoardCollisionField {
+    pub fn reset(&mut self) {
+        self.0 = Array3::default((0, 0, 0));
+    }
+}
 
 impl FromWorld for BoardTopology {
     fn from_world(_world: &mut World) -> Self {

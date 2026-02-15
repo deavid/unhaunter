@@ -16,7 +16,7 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         (interaction_event_handler, room_state_sync_system)
             .chain()
-            .run_if(in_state(untypes_core::states::AppState::InGame)),
+            .run_if(in_state(untypes_core::states::SimulationState::Running)),
     );
 }
 

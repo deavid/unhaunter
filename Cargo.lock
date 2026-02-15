@@ -6683,6 +6683,7 @@ dependencies = [
  "unmetrics-core",
  "unsound-core",
  "unspatial-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6757,6 +6758,7 @@ dependencies = [
  "unsettings-core",
  "unspatial-core",
  "unthermal-core",
+ "untypes-core",
 ]
 
 [[package]]

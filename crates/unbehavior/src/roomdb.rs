@@ -22,3 +22,10 @@ pub struct RoomDB {
     /// * Temperature or other environmental factors.
     pub room_state: HashMap<String, TileState>,
 }
+
+impl RoomDB {
+    pub fn reset(&mut self) {
+        self.room_tiles.clear();
+        self.room_state.clear();
+    }
+}

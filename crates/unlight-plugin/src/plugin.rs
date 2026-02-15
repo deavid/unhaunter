@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unboard_core::BoardUpdateSet;
-use untypes_core::states::AppState;
+use untypes_core::states::{AppState, SimulationState};
 
 use unlight_core::resources::light_grid::LightGrid;
 
@@ -21,11 +21,16 @@ impl Plugin for UnhaunterLightCorePlugin {
                 (
                     lighting_sim::systems::rebuild_lighting_field
                         .in_set(BoardUpdateSet::Lighting)
-                        .after(BoardUpdateSet::Collision),
+                        .after(BoardUpdateSet::Collision)
+                        .run_if(not(in_state(SimulationState::Inactive))),
                     maplight::systems::gathering::player_visibility_system
                         .after(BoardUpdateSet::Lighting)
-                        .run_if(in_state(AppState::InGame)),
+                        .run_if(in_state(SimulationState::Running)),
                 ),
+            )
+            .add_systems(
+                OnExit(AppState::InGame),
+                lighting_sim::systems::reset_light_grid,
             );
         metrics::register_all(app);
     }
@@ -48,7 +53,7 @@ impl Plugin for UnhaunterLightPlugin {
             )
                 .chain()
                 .after(BoardUpdateSet::Lighting)
-                .run_if(in_state(AppState::InGame)),
+                .run_if(in_state(AppState::InGame).and(in_state(SimulationState::Running))),
         );
         audio::app_setup(app);
         maplight::systems::app_setup(app);

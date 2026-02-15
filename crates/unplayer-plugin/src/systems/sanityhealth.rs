@@ -18,7 +18,6 @@ use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use unthermal_core::resources::ThermalGrid;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::states::AppState;
 use unui_core::components::game_ui::DamageBackground;
 
 pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
@@ -314,6 +313,8 @@ pub(crate) fn server_apply_client_sanity(
 
 pub(crate) fn app_setup(app: &mut App) {
     use untypes_core::cli::{is_authority, is_headless};
+    use untypes_core::states::SimulationState;
+
     app.add_systems(
         Update,
         (
@@ -327,6 +328,6 @@ pub(crate) fn app_setup(app: &mut App) {
             update_profile_death_stats.run_if(not(is_headless)),
             debug_kill_spectator,
         )
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(SimulationState::Running)),
     );
 }

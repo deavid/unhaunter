@@ -17,6 +17,7 @@ unfoundation-core = { path = "../unfoundation-core" }
 unevents-core = { path = "../unevents-core" }
 unboard-core = { path = "../unboard-core" }
 unmetrics-core = { path = "../unmetrics-core" }
+untypes-core = { path = "../untypes-core" }
 unbehavior = { path = "../unbehavior" }
 unmapload-core = { path = "../unmapload-core" }
 

@@ -19,6 +19,7 @@ use unrender_std::components::game::{GameSound, GameSprite};
 use unrender_std::materials::CustomMaterial1;
 use untiled_core::tiled::MapTileSetDb;
 use untiled_core::tiledmap::map::MapLayerType;
+use untypes_core::states::{AppState, SimulationState};
 
 use crate::resources::LevelLoadingStatus;
 use crate::sprite_db;
@@ -68,6 +69,7 @@ fn load_level_handler(
     mut p: LoadLevelSystemParam,
     mut ev_geometry_init: MessageWriter<MapGeometryInitializedEvent>,
     time: Res<Time>,
+    mut next_sim_state: ResMut<NextState<SimulationState>>,
 ) {
     // Get the loaded event or return early if none
     let Some(loaded_event) = ev.read().next() else {
@@ -75,6 +77,7 @@ fn load_level_handler(
     };
 
     info!("Starting level load: {}", loaded_event.map_filepath);
+    next_sim_state.set(SimulationState::Initializing);
     *p.loading_status = LevelLoadingStatus::JustStarted;
 
     // --- 1. Cleanup & Reset ---
@@ -181,7 +184,13 @@ fn load_level_handler(
     debug!("Map spawning complete: {}", loaded_event.map_filepath);
 }
 
+pub(crate) fn reset_level_resources(mut roomdb: ResMut<RoomDB>, mut sdb: ResMut<SpriteDB>) {
+    roomdb.reset();
+    sdb.clear();
+}
+
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(OnExit(AppState::InGame), reset_level_resources);
     app.add_systems(
         PostUpdate,
         load_level_handler.run_if(bevy::prelude::on_message::<LevelLoadedEvent>),

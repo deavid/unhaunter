@@ -44,6 +44,16 @@ pub struct ThermalGrid {
     pub iterator_index: usize,
 }
 
+impl ThermalGrid {
+    pub fn reset(&mut self) {
+        self.temperature_field = Array3::default((0, 0, 0));
+        self.temperature_activity = Array3::default((0, 0, 0));
+        self.connectivity_scores = Array3::default((0, 0, 0));
+        self.valid_tiles.clear();
+        self.iterator_index = 0;
+    }
+}
+
 impl Default for ThermalGrid {
     fn default() -> Self {
         Self {
