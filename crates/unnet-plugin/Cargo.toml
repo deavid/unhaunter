@@ -14,6 +14,7 @@ workspace = true
 unprofile-core = { path = "../unprofile-core" }
 unnet-core = { path = "../unnet-core" }
 untypes-core = { path = "../untypes-core" }
+unhub-client = { path = "../unhub-client" }
 unplayer-core = { path = "../unplayer-core" }
 unspatial-core = { path = "../unspatial-core" }
 unfoundation-core = { path = "../unfoundation-core" }
@@ -40,3 +41,4 @@ bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 serde_json = { workspace = true }
 uuid = { workspace = true }
+crossbeam-channel = { workspace = true }

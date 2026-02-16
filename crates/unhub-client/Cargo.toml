@@ -1,0 +1,13 @@
+[package]
+name = "unhub-client"
+version.workspace = true
+edition.workspace = true
+description = "Hub client library for Unhaunter"
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+uuid = { workspace = true, features = ["v4", "serde"] }
+rand = { workspace = true }

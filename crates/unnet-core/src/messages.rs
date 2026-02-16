@@ -220,6 +220,8 @@ pub enum NetworkMessage {
     Hello {
         version: String,
         installation_id: uuid::Uuid,
+        secret: Option<String>,
+        nickname: Option<String>,
     },
     /// Response from Host to Client.
     Welcome {
@@ -383,3 +385,8 @@ pub struct PlayerDiedEvent {
 
 #[derive(Debug, Clone, Message)]
 pub struct SendNetworkMessage(pub NetworkMessage);
+
+#[derive(Debug, Clone, Message)]
+pub struct ConnectToServer {
+    pub address: String,
+}

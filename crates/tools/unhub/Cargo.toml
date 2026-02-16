@@ -1,0 +1,27 @@
+[package]
+name = "unhub"
+version.workspace = true
+edition.workspace = true
+description = "Central discovery service for Unhaunter"
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1.0", features = ["full"] }
+dashmap = "6.1"
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+ron = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"] }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+unhub-client = { path = "../../unhub-client" }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3"
+tokio-util = { version = "0.7", features = ["codec"] }
+rand = { workspace = true }

@@ -35,6 +35,9 @@ pub(crate) struct LobbyDifficultyInfo;
 #[derive(Component)]
 pub(crate) struct LobbyPlayerList;
 
+#[derive(Component)]
+pub(crate) struct LobbyRoomCode;
+
 #[derive(Clone, Copy, Component, Debug, PartialEq, Eq)]
 pub(crate) enum LobbyMenuAction {
     SelectMap,
@@ -56,6 +59,7 @@ pub(crate) fn setup_ui(
     mut entry_timer: ResMut<StateEntryTimer>,
     local_player: Res<LocalPlayer>,
     room_owner: Option<Res<RoomOwner>>,
+    room_ident: Option<Res<unnet_core::resources::RoomIdentification>>,
 ) {
     *entry_timer = StateEntryTimer(time.elapsed_secs());
     if !q_ui.is_empty() {
@@ -195,6 +199,26 @@ pub(crate) fn setup_ui(
                     },
                     LobbyPlayerList,
                 ));
+
+                // Room Code display
+                if let Some(ri) = room_ident.as_ref()
+                    && let Some(code) = ri.code.as_ref()
+                {
+                    right.spawn((
+                        Text::new(format!("Room Code: {}", code)),
+                        TextFont {
+                            font: ui_assets.font_kode_bold.clone(),
+                            font_size: 24.0 * FONT_SCALE,
+                            ..default()
+                        },
+                        TextColor(colors::MENU_ITEM_COLOR_ON),
+                        LobbyRoomCode,
+                    ))
+                    .insert(Node {
+                        margin: UiRect::top(Val::Px(20.0 * UI_SCALE)),
+                        ..default()
+                    });
+                }
             });
         });
 
@@ -521,11 +545,14 @@ pub(crate) fn update_display(
                     ));
 
                     // Player label
+                    let name = player.nickname.clone().unwrap_or_else(|| {
+                        format!("Player {}", player.id.0)
+                    });
                     row.spawn((
                         Text::new(format!(
-                            "{}Player {}{}",
+                            "{}{}{}",
                             prefix,
-                            player_idx + 1,
+                            name,
                             host_suffix
                         )),
                         TextFont {

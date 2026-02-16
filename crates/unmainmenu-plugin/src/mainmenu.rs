@@ -19,6 +19,7 @@ pub(crate) enum MenuID {
     Campaign,
     CustomMission,
     MultiplayerLobby,
+    Hub,
     Manual,
     Settings,
     #[cfg(not(target_arch = "wasm32"))]
@@ -31,6 +32,7 @@ impl std::fmt::Display for MenuID {
             MenuID::Campaign => "Campaign",
             MenuID::CustomMission => "Custom Mission",
             MenuID::MultiplayerLobby => "Multiplayer Lobby",
+            MenuID::Hub => "Play Online",
             MenuID::Manual => "Manual",
             MenuID::Settings => "Settings",
             #[cfg(not(target_arch = "wasm32"))]
@@ -77,6 +79,7 @@ pub(crate) fn setup_ui(
         vec![
             (MenuID::Campaign, MenuID::Campaign.to_string()),
             (MenuID::CustomMission, MenuID::CustomMission.to_string()),
+            (MenuID::Hub, MenuID::Hub.to_string()),
         ]
     } else {
         vec![(
@@ -164,6 +167,10 @@ pub(crate) fn menu_event(
                 MenuID::MultiplayerLobby => {
                     next_app_state.set(AppState::Lobby);
                     info!("Transitioning to Lobby state");
+                }
+                MenuID::Hub => {
+                    next_app_state.set(AppState::Hub);
+                    info!("Transitioning to Hub state");
                 }
                 MenuID::Manual => {
                     next_app_state.set(AppState::UserManual);

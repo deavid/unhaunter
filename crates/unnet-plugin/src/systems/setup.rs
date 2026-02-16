@@ -6,9 +6,14 @@ use super::client_sync::{client_apply_snapshots_system, delayed_despawn_system};
 use super::connection::{
     autostart_net_game, client_connection_monitor_system, client_heartbeat_system,
     client_lobby_state_handler, client_start_mission_handler, client_state_bootstrap_system,
-    handshake_handler_system, headless_summary_reset_system, host_handle_disconnects_system,
-    host_liveness_system, host_process_heartbeats_system, host_status_updater_system,
-    lobby_broadcast_state_system, network_io_system, session_roster_system, startup_network_system,
+    connect_to_server_system, handshake_handler_system, headless_summary_reset_system,
+    host_handle_disconnects_system, host_liveness_system, host_process_heartbeats_system,
+    host_status_updater_system, idle_timeout_system, lobby_broadcast_state_system,
+    network_io_system, session_roster_system, startup_network_system,
+};
+use super::procman::{
+    procman_player_events_system, procman_state_sync_system, setup_procman_system,
+    update_procman_system,
 };
 use super::host_input::host_apply_input_system;
 use super::host_sync::{host_send_snapshots_system, host_send_summary_system};
@@ -27,6 +32,18 @@ pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<unnet_core::resources::CurrentMapSeed>();
     app.add_systems(OnEnter(AppState::Summary), host_send_summary_system);
     app.add_systems(Update, headless_summary_reset_system);
+    if is_headless {
+        app.add_systems(Update, idle_timeout_system);
+        app.add_systems(Startup, setup_procman_system);
+        app.add_systems(
+            Update,
+            (
+                update_procman_system,
+                procman_state_sync_system,
+                procman_player_events_system,
+            ),
+        );
+    }
 
     app.add_systems(Update, (lobby_broadcast_state_system, host_liveness_system));
     app.add_systems(
@@ -48,6 +65,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         PreUpdate,
         (
+            connect_to_server_system,
             network_io_system,
             host_process_heartbeats_system,
             host_handle_disconnects_system,

@@ -2,6 +2,8 @@
 members = [
     "crates/tools/ghost_list",
     "crates/tools/ghost_radio",
+    "crates/tools/unhub",
+    "crates/tools/unprocman",
     "crates/tools/text_to_speech/walkie_voice_generator",
     "crates/uncampaign-plugin",
     "crates/unclassic-mode-plugin",
@@ -19,6 +21,8 @@ members = [
     "crates/unfog-core",
     "crates/unfps-core",
     "crates/unfps-plugin",
+    "crates/unhub-client",
+    "crates/unhub-plugin",
     "crates/ungear-core",
     "crates/ungear-plugin",
     "crates/ungearitems-core",
@@ -143,6 +147,7 @@ sha2 = "0.10"
 rayon = "1.11"
 crossbeam-channel = "0.5"
 uuid = { version = "1.21", features = ["v4", "serde"] }
+reqwest = { version = "0.12", features = ["json"] }
 
 # winit is not for WASM, and needs to be in sync with bevy version
 winit = "0.30"
@@ -202,6 +207,8 @@ untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unui-plugin = { path = "crates/unui-plugin" }
 undifficulty-plugin = { path = "crates/undifficulty-plugin" }
 uninteraction-plugin = { path = "crates/uninteraction-plugin" }
+unhub-client = { path = "crates/unhub-client" }
+unhub-plugin = { path = "crates/unhub-plugin" }
 
 [[bin]]
 name = "unhaunter_game"

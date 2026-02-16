@@ -32,6 +32,9 @@ struct Args {
 
     #[clap(long, action)]
     mute: bool,
+
+    #[clap(long)]
+    hub_url: Option<String>,
 }
 
 fn main() {
@@ -112,5 +115,7 @@ fn main() {
         verbose: args.verbose,
         mute: args.mute,
         dedicated: false,
+        procman_channel: None,
+        hub_url: args.hub_url,
     });
 }

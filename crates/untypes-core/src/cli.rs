@@ -24,6 +24,8 @@ pub struct CliOptions {
     pub verbose: u8,
     pub mute: bool,
     pub dedicated: bool,
+    pub procman_channel: Option<String>,
+    pub hub_url: Option<String>,
 }
 
 impl CliOptions {

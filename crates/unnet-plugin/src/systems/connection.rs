@@ -19,8 +19,10 @@ use untypes_core::states::{AppState, GameState};
 use crate::metrics;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unnet_core::messages::PlayerJoinedEvent;
+use bevy_persistent::Persistent;
 use unnet_core::resources::LobbyPlayer;
 use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerSpectating};
+use unprofile_core::profile::PlayerProfileData;
 use unsummary_core::summary::SummaryData;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 
@@ -31,6 +33,7 @@ pub(crate) fn session_roster_system(
     local_player: Res<LocalPlayer>,
     mut commands: Commands,
     room_owner: Option<Res<unnet_core::resources::RoomOwner>>,
+    conn: Res<crate::resources::NetworkConn>,
 ) {
     if !matches!(cli.net_mode, NetMode::Host { .. }) {
         return;
@@ -52,10 +55,19 @@ pub(crate) fn session_roster_system(
     }
     for id in players_to_add {
         let next_tint = (lobby_data.players.len() % 9) as u8;
+        let nickname = if let crate::resources::NetworkConn::Host { clients, .. } = &*conn {
+            clients
+                .iter()
+                .find(|c| c.associated_id == Some(id))
+                .and_then(|c| c.nickname.clone())
+        } else {
+            None
+        };
         lobby_data.players.push(LobbyPlayer {
             id,
             tint_color_index: next_tint,
             connected: true,
+            nickname,
         });
         changed = true;
 
@@ -70,12 +82,16 @@ pub(crate) fn session_roster_system(
     if let Some(host_id) = local_player.0
         && !lobby_data.players.iter().any(|p| p.id == host_id)
     {
+        // For host, we don't have it in clients, but we might have it in profile.
+        // Actually, session_roster_system is called on host.
+        // I'll leave nickname None for now, or fetch from profile if I had access.
         lobby_data.players.insert(
             0,
             LobbyPlayer {
                 id: host_id,
                 tint_color_index: 0,
                 connected: true,
+                nickname: None,
             },
         );
         changed = true;
@@ -478,6 +494,7 @@ pub(crate) fn network_io_system(
                                     last_input: now,
                                     last_aim_direction: [0.0, 0.0],
                                     client_app_state: None,
+                                    nickname: None,
                                 });
                             }
                             Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
@@ -740,6 +757,8 @@ pub(crate) fn handshake_handler_system(
     summary_data: Res<SummaryData>,
     ghost_guess: Res<GhostGuess>,
     repellent_tracker: Res<RepellentCraftTracker>,
+    room_ident: Option<Res<unnet_core::resources::RoomIdentification>>,
+    player_profile: Option<Res<Persistent<PlayerProfileData>>>,
 ) {
     let measure = metrics::HANDSHAKE_HANDLER.time_measure();
     let mut welcomes_to_send = Vec::new();
@@ -754,15 +773,40 @@ pub(crate) fn handshake_handler_system(
                 if let NetworkMessage::Hello {
                     version,
                     installation_id,
+                    secret,
+                    nickname,
                 } = &ev.message
                 {
                     debug!(
-                        "Network: Received Hello (version: {}, install_id: {:?})",
-                        version, installation_id
+                        "Network: Received Hello (version: {}, install_id: {:?}, secret: {:?}, nick: {:?})",
+                        version, installation_id, secret, nickname
                     );
+
                     // Find client by associated_id
-                    for client in clients.iter_mut() {
+                    let mut found_idx = None;
+                    for (idx, client) in clients.iter_mut().enumerate() {
                         if client.associated_id == Some(source_id) {
+                            // Validate secret if required
+                            if let Some(required_secret) =
+                                room_ident.as_ref().and_then(|ri| ri.secret.as_ref())
+                                && secret.as_ref() != Some(required_secret)
+                            {
+                                error!(
+                                    "Network: Client {:?} sent invalid secret. Disconnecting.",
+                                    source_id
+                                );
+                                client.handshake = HandshakeState::None;
+                                let _ = client.stream.shutdown(std::net::Shutdown::Both);
+                                continue;
+                            }
+
+                            found_idx = Some(idx);
+                            break;
+                        }
+                    }
+
+                    if let Some(idx) = found_idx {
+                        let client = &mut clients[idx];
                             // Check if we can re-associate with an existing disconnected entity
                             for (entity, disc_id) in query_disconnected.iter() {
                                 if disc_id == &source_id {
@@ -779,6 +823,7 @@ pub(crate) fn handshake_handler_system(
 
                             client.handshake = HandshakeState::Completed;
                             client.needs_full_sync = true;
+                            client.nickname = nickname.clone();
                             ev_player_joined
                                 .write(unnet_core::messages::PlayerJoinedEvent { id: source_id });
 
@@ -794,12 +839,10 @@ pub(crate) fn handshake_handler_system(
                                     player_statuses: vec![], // Will be updated by next broadcast
                                 },
                             ));
-                            break;
                         }
                     }
                 }
             }
-        }
         NetworkConn::Client {
             handshake,
             write_queue,
@@ -808,9 +851,18 @@ pub(crate) fn handshake_handler_system(
             // Client side automatic Hello
             if matches!(cli.net_mode, NetMode::Join { .. }) && *handshake == HandshakeState::None {
                 debug!("Network: Sending Hello...");
+                let secret = room_ident.as_ref().and_then(|ri| ri.secret.clone());
+                let nickname = player_profile.as_ref().and_then(|p| {
+                    p.nickname_letter.map(|l| {
+                        unhub_client::generate_codename(l, p.nickname_attempt)
+                    })
+                });
+
                 write_queue.push_back(NetworkMessage::Hello {
                     version: "0.1.0".to_string(),
                     installation_id: runtime_installation_id.map(|x| x.0).unwrap_or_default(),
+                    secret,
+                    nickname,
                 });
                 *handshake = HandshakeState::HelloSent;
             }
@@ -1089,5 +1141,61 @@ pub(crate) fn headless_summary_reset_system(
         info!("Headless: Mission summary period ended. Returning to Lobby.");
         next_state.set(AppState::Lobby);
         *timer = 0.0;
+    }
+}
+
+pub(crate) fn connect_to_server_system(
+    mut ev_connect: MessageReader<unnet_core::messages::ConnectToServer>,
+    mut conn: ResMut<NetworkConn>,
+) {
+    for ev in ev_connect.read() {
+        info!("Network: Connecting to {} via event...", ev.address);
+        match TcpStream::connect(&ev.address) {
+            Ok(stream) => {
+                if let Err(e) = stream.set_nonblocking(true) {
+                    error!("Failed to set stream non-blocking: {}", e);
+                } else {
+                    if let Err(e) = stream.set_nodelay(true) {
+                        error!("Failed to set TCP_NODELAY: {}", e);
+                    }
+                    info!("Network: Connected to {}", ev.address);
+                    *conn = NetworkConn::Client {
+                        stream,
+                        read_buffer: String::new(),
+                        write_queue: VecDeque::new(),
+                        handshake: HandshakeState::None,
+                    };
+                }
+            }
+            Err(e) => error!("Network: Failed to connect to {}: {}", ev.address, e),
+        }
+    }
+}
+
+pub(crate) fn idle_timeout_system(
+    cli: Res<CliOptions>,
+    time: Res<Time>,
+    mut idle_timer: Local<f32>,
+    lobby_data: Res<LobbyData>,
+    app_state: Res<State<AppState>>,
+    mut exit: MessageWriter<bevy::app::AppExit>,
+) {
+    if !cli.dedicated {
+        return;
+    }
+
+    // A server is idle if it's in Lobby or MainMenu state and has no connected players
+    let is_idle = (*app_state.get() == AppState::Lobby || *app_state.get() == AppState::MainMenu)
+        && !lobby_data.players.iter().any(|p| p.connected);
+
+    if is_idle {
+        *idle_timer += time.delta_secs();
+        // 5 minutes timeout
+        if *idle_timer > 300.0 {
+            info!("Headless: Idle timeout reached (5 mins). Exiting.");
+            exit.write(bevy::app::AppExit::Success);
+        }
+    } else {
+        *idle_timer = 0.0;
     }
 }

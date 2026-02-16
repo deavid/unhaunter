@@ -21,6 +21,7 @@ impl Plugin for UnhaunterNetPlugin {
         app.add_message::<unnet_core::messages::PlayerDiedEvent>();
         app.add_message::<unnet_core::messages::SendNetworkMessage>();
         app.add_message::<unnet_core::messages::TransientEvent>();
+        app.add_message::<unnet_core::messages::ConnectToServer>();
 
         systems::setup::app_setup(app);
     }

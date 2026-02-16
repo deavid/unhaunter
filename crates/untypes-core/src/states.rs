@@ -14,6 +14,7 @@ pub enum AppState {
     UserManual,
     PreplayManual,
     MissionSelect, // Unified mission selection state for both Campaign and Custom missions
+    Hub,
 }
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]

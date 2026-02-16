@@ -13,6 +13,12 @@ struct Args {
     host: u16,
 
     #[clap(long)]
+    procman_channel: Option<String>,
+
+    #[clap(long)]
+    hub_url: Option<String>,
+
+    #[clap(long)]
     bind: Vec<String>,
 
     #[clap(long)]
@@ -101,5 +107,7 @@ fn main() {
         verbose: args.verbose,
         mute: true,
         dedicated: true,
+        procman_channel: args.procman_channel,
+        hub_url: args.hub_url,
     });
 }
