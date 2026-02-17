@@ -2,6 +2,8 @@ use rand::prelude::*;
 
 pub mod protocol;
 
+pub const GAME_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub const SAFE_VOCAL_ALPHABET: &[char] = &[
     'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'P', 'R', 'S', 'T', 'V', 'W', 'X', '2', '4', '7',
     '9',
@@ -14,6 +16,9 @@ pub fn generate_room_code() -> String {
         .collect()
 }
 
+/// Generates a random room secret for basic access control.
+/// This is NOT a cryptographic secret — it only prevents casual guessing
+/// of room connections. No cryptographic security guarantees are needed.
 pub fn generate_room_secret() -> String {
     let mut rng = rand::rng();
     let chars: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -23,15 +28,61 @@ pub fn generate_room_secret() -> String {
 }
 
 pub const ADJECTIVES: &[&str] = &[
-    "Ancient", "Broken", "Cold", "Dark", "Eerie", "Forgotten", "Gloomy", "Haunted", "Invisible",
-    "Jaded", "Keen", "Lonely", "Misty", "Nightly", "Old", "Pale", "Quiet", "Restless", "Silent",
-    "Tragic", "Unknown", "Vague", "Wicked", "Xenon", "Young", "Zealous",
+    "Ancient",
+    "Broken",
+    "Cold",
+    "Dark",
+    "Eerie",
+    "Forgotten",
+    "Gloomy",
+    "Haunted",
+    "Invisible",
+    "Jaded",
+    "Keen",
+    "Lonely",
+    "Misty",
+    "Nightly",
+    "Old",
+    "Pale",
+    "Quiet",
+    "Restless",
+    "Silent",
+    "Tragic",
+    "Unknown",
+    "Vague",
+    "Wicked",
+    "Xenon",
+    "Young",
+    "Zealous",
 ];
 
 pub const NOUNS: &[&str] = &[
-    "Apparition", "Banshee", "Cryptid", "Demon", "Entity", "Fragment", "Ghost", "Haint", "Image",
-    "Jester", "Kestrel", "Lurker", "Manifestation", "Nightmare", "Orb", "Phantom", "Quaint",
-    "Revenant", "Specter", "Trace", "Underworlder", "Vapor", "Wraith", "Xenomorph", "Yeti", "Zombie",
+    "Apparition",
+    "Banshee",
+    "Cryptid",
+    "Demon",
+    "Entity",
+    "Fragment",
+    "Ghost",
+    "Haint",
+    "Image",
+    "Jester",
+    "Kestrel",
+    "Lurker",
+    "Manifestation",
+    "Nightmare",
+    "Orb",
+    "Phantom",
+    "Quaint",
+    "Revenant",
+    "Specter",
+    "Trace",
+    "Underworlder",
+    "Vapor",
+    "Wraith",
+    "Xenomorph",
+    "Yeti",
+    "Zombie",
 ];
 
 pub fn generate_codename(letter: char, attempt: u32) -> String {
@@ -41,11 +92,7 @@ pub fn generate_codename(letter: char, attempt: u32) -> String {
         .filter(|a| a.starts_with(l))
         .cloned()
         .collect();
-    let nouns_filtered: Vec<_> = NOUNS
-        .iter()
-        .filter(|n| n.starts_with(l))
-        .cloned()
-        .collect();
+    let nouns_filtered: Vec<_> = NOUNS.iter().filter(|n| n.starts_with(l)).cloned().collect();
 
     let adjectives = if adjectives_filtered.is_empty() {
         vec!["Anonymous"]

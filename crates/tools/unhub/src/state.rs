@@ -22,7 +22,6 @@ pub struct HubConfig {
 }
 
 pub struct ProcManSession {
-    pub uuid: Uuid,
     pub tx: tokio::sync::mpsc::UnboundedSender<unhub_client::protocol::ProcManMessage>,
     pub game_versions: Vec<String>,
     pub public_addr: String,

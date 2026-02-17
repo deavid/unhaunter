@@ -55,6 +55,8 @@ pub(crate) fn setup_procman_system(mut commands: Commands, cli: Res<CliOptions>)
 pub(crate) fn update_procman_system(
     mut procman: Option<ResMut<ProcManChannel>>,
     mut room_ident: ResMut<RoomIdentification>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    mut conn: ResMut<crate::resources::NetworkConn>,
     mut exit: MessageWriter<bevy::app::AppExit>,
 ) {
     let Some(procman) = procman.as_mut() else {
@@ -67,6 +69,7 @@ pub(crate) fn update_procman_system(
                 info!("ProcMan: Assigned room code {} with secret", room_code);
                 room_ident.code = Some(room_code);
                 room_ident.secret = Some(secret);
+                next_app_state.set(AppState::Lobby);
             }
             ProcManToDedicated::RenameRoom {
                 new_code,
@@ -75,6 +78,13 @@ pub(crate) fn update_procman_system(
                 info!("ProcMan: Renamed room to {} with new secret", new_code);
                 room_ident.code = Some(new_code);
                 room_ident.secret = Some(new_secret);
+            }
+            ProcManToDedicated::WipeRoom { reason } => {
+                info!("ProcMan: Wiping room: {}", reason);
+                room_ident.code = None;
+                room_ident.secret = None;
+                *conn = crate::resources::NetworkConn::Disconnected;
+                next_app_state.set(AppState::Hub);
             }
             ProcManToDedicated::Shutdown { reason } => {
                 info!("ProcMan: Shutdown requested: {}", reason);
@@ -126,43 +136,73 @@ pub(crate) fn procman_player_events_system(
     procman: Option<Res<ProcManChannel>>,
     mut ev_joined: MessageReader<unnet_core::messages::PlayerJoinedEvent>,
     mut ev_left: MessageReader<unnet_core::messages::NetworkDisconnectEvent>,
-    conn: Res<crate::resources::NetworkConn>,
     lobby_data: Res<LobbyData>,
 ) {
     let Some(procman) = procman.as_ref() else {
         return;
     };
 
-    let crate::resources::NetworkConn::Host { clients, .. } = &*conn else {
-        return;
-    };
-
     for ev in ev_joined.read() {
-        if let Some(uuid) = clients
-            .iter()
-            .find(|c| c.associated_id == Some(ev.id))
-            .and_then(|c| c.installation_id)
-        {
-            let _ = procman.tx.send(DedicatedToProcMan::PlayerJoined {
-                player_uuid: uuid,
-            });
-        }
+        let _ = procman.tx.send(DedicatedToProcMan::PlayerJoined {
+            player_uuid: ev.uuid,
+        });
     }
 
-    for _ev in ev_left.read() {
+    for ev in ev_left.read() {
         // Note: the client might already be removed from the `clients` list by the time we get here
         // depending on system ordering. network_io_system removes them.
         // However, DedicatedToProcMan::PlayerLeft needs the remaining_count.
         let remaining_count = lobby_data.players.iter().filter(|p| p.connected).count();
 
-        // We might not have the UUID anymore if it's already gone.
-        // For v1, the Hub mostly cares about player_count in the summary anyway.
-        // But let's try to send it if we can.
-        // Actually, we'd need to keep a map of NetworkId -> UUID to be sure.
-
         let _ = procman.tx.send(DedicatedToProcMan::PlayerLeft {
-            player_uuid: uuid::Uuid::nil(), // Placeholder if we don't have it
+            player_uuid: ev.uuid.unwrap_or_default(),
             remaining_count,
         });
     }
+}
+
+pub(crate) fn dynamic_tick_rate_system(
+    app_state: Res<State<AppState>>,
+    lobby_data: Res<LobbyData>,
+    cli: Res<CliOptions>,
+    mut last_tick: Local<Option<std::time::Instant>>,
+    mut fixed_time: ResMut<Time<Fixed>>,
+) {
+    if !cli.dedicated {
+        return;
+    }
+
+    let current_state = *app_state.get();
+    let player_count = lobby_data.players.iter().filter(|p| p.connected).count();
+
+    let (target_hz, fixed_hz) = match current_state {
+        AppState::Hub | AppState::Loading | AppState::MainMenu => (1.0, 1.0),
+        AppState::Lobby => {
+            if player_count <= 1 {
+                (1.0, 1.0)
+            } else {
+                (5.0, 5.0)
+            }
+        }
+        AppState::InGame => {
+            if player_count <= 1 {
+                (15.0, 15.0)
+            } else {
+                (60.0, 15.0) // Keep physics at 15Hz even if display/network is 60Hz
+            }
+        }
+        _ => (1.0, 1.0),
+    };
+
+    fixed_time.set_timestep(std::time::Duration::from_secs_f32(1.0 / fixed_hz));
+
+    let now = std::time::Instant::now();
+    if let Some(last) = *last_tick {
+        let elapsed = now - last;
+        let target_period = std::time::Duration::from_secs_f32(1.0 / target_hz);
+        if elapsed < target_period {
+            std::thread::sleep(target_period - elapsed);
+        }
+    }
+    *last_tick = Some(std::time::Instant::now());
 }

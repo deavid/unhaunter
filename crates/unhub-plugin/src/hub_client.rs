@@ -43,6 +43,9 @@ pub fn setup_hub_client(mut commands: Commands, cli: Res<CliOptions>) {
 
     let worker_hub_url = hub_url.clone();
     std::thread::spawn(move || {
+        // Intentionally single-threaded: Hub requests are sequential (one at a
+        // time) and low-frequency. Multi-threading would add complexity and CPU
+        // overhead for no practical gain in this use case.
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()

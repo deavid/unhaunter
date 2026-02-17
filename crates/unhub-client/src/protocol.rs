@@ -134,18 +134,44 @@ pub struct HealthResponse {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum ProcManToDedicated {
-    AssignRoom { room_code: String, secret: String },
-    RenameRoom { new_code: String, new_secret: String },
-    Shutdown { reason: String },
+    AssignRoom {
+        room_code: String,
+        secret: String,
+    },
+    RenameRoom {
+        new_code: String,
+        new_secret: String,
+    },
+    /// Wipe current room assignment and return to idle state.
+    WipeRoom {
+        reason: String,
+    },
+    Shutdown {
+        reason: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum DedicatedToProcMan {
-    Ready { port: u16 },
-    PlayerJoined { player_uuid: Uuid },
-    PlayerLeft { player_uuid: Uuid, remaining_count: usize },
-    StateChanged { state: RoomState, metadata: RoomMetadata },
-    RoomRenameRequest { reason: String },
-    Exiting { reason: String },
+    Ready {
+        port: u16,
+    },
+    PlayerJoined {
+        player_uuid: Uuid,
+    },
+    PlayerLeft {
+        player_uuid: Uuid,
+        remaining_count: usize,
+    },
+    StateChanged {
+        state: RoomState,
+        metadata: RoomMetadata,
+    },
+    RoomRenameRequest {
+        reason: String,
+    },
+    Exiting {
+        reason: String,
+    },
 }

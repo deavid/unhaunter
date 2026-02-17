@@ -370,12 +370,14 @@ pub struct NetworkDataEvent {
 #[derive(Debug, Clone, Message)]
 pub struct NetworkDisconnectEvent {
     pub id: NetworkId,
+    pub uuid: Option<uuid::Uuid>,
 }
 
 /// Emitted on the host when a client completes handshake and is ready to play.
 #[derive(Debug, Clone, Message)]
 pub struct PlayerJoinedEvent {
     pub id: NetworkId,
+    pub uuid: uuid::Uuid,
 }
 
 #[derive(Debug, Clone, Message)]

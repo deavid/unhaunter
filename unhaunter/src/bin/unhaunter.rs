@@ -48,11 +48,7 @@ fn main() {
     }
 
     let net_mode = if let Some(port) = args.host {
-        let mut bind_addresses = args.bind.clone();
-        if bind_addresses.is_empty() {
-            bind_addresses.push("::".to_string());
-            bind_addresses.push("0.0.0.0".to_string());
-        }
+        let bind_addresses = args.bind.clone();
         untypes_core::cli::NetMode::Host {
             port,
             bind_addresses,

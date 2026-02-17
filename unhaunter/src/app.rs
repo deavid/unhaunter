@@ -52,7 +52,8 @@ pub fn app_run(cli_options: CliOptions) {
         app.add_plugins((
             MinimalPlugins
                 .set(ScheduleRunnerPlugin::run_loop(Duration::from_micros(
-                    16_666,
+                    1_000_000 / 60,
+                    // 1_000_000 / 10,
                 )))
                 .set(TaskPoolPlugin {
                     task_pool_options: TaskPoolOptions::with_num_threads(1),

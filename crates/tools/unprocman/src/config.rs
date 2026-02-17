@@ -19,7 +19,7 @@ pub async fn load_config(path: impl AsRef<Path>) -> Result<ProcManConfig> {
             hub_addr: "localhost:11000".to_string(),
             public_addr: "127.0.0.1".to_string(),
             installation_id: Uuid::new_v4(),
-            port_range: (11000, 11100),
+            port_range: (12000, 12100),
             idle_pool_size: 1,
             game_binary_path: "./unhaunter_dedicated".to_string(),
         };

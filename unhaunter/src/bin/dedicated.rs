@@ -44,11 +44,7 @@ fn main() {
         }
     }
 
-    let mut bind_addresses = args.bind.clone();
-    if bind_addresses.is_empty() {
-        bind_addresses.push("::".to_string());
-        bind_addresses.push("0.0.0.0".to_string());
-    }
+    let bind_addresses = args.bind.clone();
 
     let net_mode = untypes_core::cli::NetMode::Host {
         port: args.host,

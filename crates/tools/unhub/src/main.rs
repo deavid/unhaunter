@@ -3,13 +3,13 @@ mod config;
 mod procman;
 mod state;
 
+use crate::state::HubState;
 use axum::{
-    routing::{get, post},
     Router,
+    routing::{get, post},
 };
 use std::net::SocketAddr;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use crate::state::HubState;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -37,7 +37,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/health", get(api::health))
         .route("/v1/rooms/create", post(api::create_room))
-        .route("/v1/rooms/join/:code", post(api::join_room))
+        .route("/v1/rooms/join/{code}", post(api::join_room))
         .with_state(state);
 
     let api_addr: SocketAddr = "0.0.0.0:3000".parse()?;

@@ -24,7 +24,7 @@ async fn main() -> anyhow::Result<()> {
             if let Err(e) = manager_clone.maintain_pool().await {
                 tracing::error!("Error maintaining pool: {}", e);
             }
-            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
         }
     });
 

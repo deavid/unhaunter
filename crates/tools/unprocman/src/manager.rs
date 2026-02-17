@@ -1,12 +1,12 @@
 use std::process::Stdio;
-use tokio::process::{Child, Command};
-use tokio::io::{AsyncWriteExt, AsyncBufReadExt};
-use unhub_client::protocol::{RoomState, RoomSummary, RoomMetadata, ProcManMessage};
 use std::sync::Arc;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
+use tokio::process::{Child, Command};
 use tokio::sync::Mutex;
-use tracing::{info, error};
+use tracing::{debug, error, info, warn};
+use unhub_client::protocol::{ProcManMessage, RoomMetadata, RoomState, RoomSummary};
 
-use unhub_client::protocol::{ProcManToDedicated, DedicatedToProcMan};
+use unhub_client::protocol::{DedicatedToProcMan, ProcManToDedicated};
 
 pub struct ServerProcess {
     pub port: u16,
@@ -14,6 +14,8 @@ pub struct ServerProcess {
     pub secret: Option<String>,
     pub state: RoomState,
     pub player_count: u8,
+    pub assigned_at: Option<std::time::Instant>,
+    pub has_been_joined: bool,
     pub stdin_tx: tokio::sync::mpsc::UnboundedSender<ProcManToDedicated>,
 }
 
@@ -34,6 +36,49 @@ impl ServerManager {
 
     pub async fn maintain_pool(self: &Arc<Self>) -> anyhow::Result<()> {
         let mut servers = self.servers.lock().await;
+
+        // Reclaim unused rooms
+        let mut to_wipe = Vec::new();
+        for s in servers.values() {
+            if let (Some(code), 0, Some(assigned_at)) =
+                (&s.room_code, s.player_count, s.assigned_at)
+            {
+                let timeout_secs = if s.has_been_joined {
+                    300 // 5 minutes if it was once joined
+                } else {
+                    10 // 10 seconds if it was never joined
+                };
+
+                if assigned_at.elapsed().as_secs() > timeout_secs {
+                    to_wipe.push((s.port, code.clone()));
+                }
+            }
+        }
+
+        for (port, code) in to_wipe {
+            warn!(
+                "Reclaiming unused room {} on port {} (no players for 30s)",
+                code, port
+            );
+            if let Some(s) = servers.get_mut(&port) {
+                s.room_code = None;
+                s.secret = None;
+                s.assigned_at = None;
+                let _ = s.stdin_tx.send(ProcManToDedicated::WipeRoom {
+                    reason: "Unused for >30s".to_string(),
+                });
+
+                // Notify Hub
+                if let Some(tx) = self.hub_tx.lock().await.as_ref() {
+                    let _ = tx.send(ProcManMessage::RoomClosed {
+                        room_code: code,
+                        port,
+                        reason: "Reclaimed (unused)".to_string(),
+                    });
+                }
+            }
+        }
+
         let idle_count = servers.values().filter(|s| s.room_code.is_none()).count();
 
         if idle_count < self.config.idle_pool_size {
@@ -47,31 +92,55 @@ impl ServerManager {
             }
 
             info!("Spawning new idle server on port {}", port);
-            let mut child = Command::new(&self.config.game_binary_path)
-                .arg("--host")
+            let mut cmd = Command::new(&self.config.game_binary_path);
+            cmd.arg("--host")
                 .arg(port.to_string())
                 .arg("--procman-channel")
                 .arg("stdin")
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
-                .spawn()?;
+                .stderr(Stdio::piped())
+                .env("NO_COLOR", "1")
+                .env("TERM", "dumb");
+
+            if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
+                let path = std::path::Path::new(&manifest_dir);
+                if let Some(root) = path
+                    .parent()
+                    .and_then(|p| p.parent())
+                    .and_then(|p| p.parent())
+                {
+                    cmd.env("CARGO_MANIFEST_DIR", root);
+                }
+            }
+
+            let mut child = cmd.spawn()?;
 
             let stdin = child.stdin.take().unwrap();
             let stdout = child.stdout.take().unwrap();
+            let stderr = child.stderr.take().unwrap();
             let (stdin_tx, stdin_rx) = tokio::sync::mpsc::unbounded_channel();
 
-            servers.insert(port, ServerProcess {
+            servers.insert(
                 port,
-                room_code: None,
-                secret: None,
-                state: RoomState::Lobby,
-                player_count: 0,
-                stdin_tx,
-            });
+                ServerProcess {
+                    port,
+                    room_code: None,
+                    secret: None,
+                    state: RoomState::Lobby,
+                    player_count: 0,
+                    assigned_at: None,
+                    has_been_joined: false,
+                    stdin_tx,
+                },
+            );
 
             let manager = self.clone();
             tokio::spawn(async move {
-                if let Err(e) = manager.monitor_server(port, child, stdin, stdout, stdin_rx).await {
+                if let Err(e) = manager
+                    .monitor_server(port, child, stdin, stdout, stderr, stdin_rx)
+                    .await
+                {
                     error!("Server on port {} error: {}", port, e);
                 }
             });
@@ -79,15 +148,53 @@ impl ServerManager {
         Ok(())
     }
 
+    /// Wrapper that ensures cleanup always runs on all exit paths (normal exit,
+    /// error, `?` propagation, stdout EOF, etc). The actual monitoring loop is
+    /// in `monitor_server_loop`.
     async fn monitor_server(
+        &self,
+        port: u16,
+        child: Child,
+        stdin: tokio::process::ChildStdin,
+        stdout: tokio::process::ChildStdout,
+        stderr: tokio::process::ChildStderr,
+        stdin_rx: tokio::sync::mpsc::UnboundedReceiver<ProcManToDedicated>,
+    ) -> anyhow::Result<()> {
+        let result = self
+            .monitor_server_loop(port, child, stdin, stdout, stderr, stdin_rx)
+            .await;
+
+        // Cleanup on ALL exit paths — wrapper guarantees this runs
+        let mut servers = self.servers.lock().await;
+        if let Some(s) = servers.remove(&port)
+            && let Some(code) = s.room_code
+            && let Some(tx) = self.hub_tx.lock().await.as_ref()
+        {
+            let reason = match &result {
+                Ok(()) => "Server exited normally".to_string(),
+                Err(e) => format!("Server error: {}", e),
+            };
+            let _ = tx.send(ProcManMessage::RoomClosed {
+                room_code: code,
+                port,
+                reason,
+            });
+        }
+
+        result
+    }
+
+    async fn monitor_server_loop(
         &self,
         port: u16,
         mut child: Child,
         mut stdin: tokio::process::ChildStdin,
         stdout: tokio::process::ChildStdout,
+        stderr: tokio::process::ChildStderr,
         mut stdin_rx: tokio::sync::mpsc::UnboundedReceiver<ProcManToDedicated>,
     ) -> anyhow::Result<()> {
-        let mut reader = tokio::io::BufReader::new(stdout).lines();
+        let mut stdout_reader = tokio::io::BufReader::new(stdout).lines();
+        let mut stderr_reader = tokio::io::BufReader::new(stderr).lines();
 
         loop {
             tokio::select! {
@@ -99,30 +206,35 @@ impl ServerManager {
                 result = child.wait() => {
                     let status = result?;
                     info!("Server on port {} exited with status {}", port, status);
-                    let mut servers = self.servers.lock().await;
-                    if let Some(s) = servers.remove(&port) {
-                        if let Some(code) = s.room_code {
-                            let tx_lock = self.hub_tx.lock().await;
-                            if let Some(tx) = tx_lock.as_ref() {
-                                let _ = tx.send(ProcManMessage::RoomClosed {
-                                    room_code: code,
-                                    port,
-                                    reason: format!("Process exited with {}", status),
-                                });
-                            }
-                        }
-                    }
                     break;
                 }
-                line_res = reader.next_line() => {
+                line_res = stdout_reader.next_line() => {
                     match line_res {
                         Ok(Some(line)) => {
-                            self.handle_server_output(port, &line).await?;
+                            let trimmed = line.trim();
+                            if trimmed.starts_with('{') && trimmed.ends_with('}') {
+                                if let Err(e) = self.handle_server_output(port, trimmed).await {
+                                    error!("Protocol error on port {}: {} (line: {})", port, e, trimmed);
+                                }
+                            } else {
+                                self.log_child_line(port, trimmed, false);
+                            }
                         }
                         Ok(None) => break,
                         Err(e) => {
-                            error!("Error reading server output on port {}: {}", port, e);
+                            error!("Error reading server stdout on port {}: {}", port, e);
                             break;
+                        }
+                    }
+                }
+                line_res = stderr_reader.next_line() => {
+                    match line_res {
+                        Ok(Some(line)) => {
+                            self.log_child_line(port, line.trim(), true);
+                        }
+                        Ok(None) => {}, // stderr closed, but stdout might still be alive
+                        Err(e) => {
+                            error!("Error reading server stderr on port {}: {}", port, e);
                         }
                     }
                 }
@@ -131,11 +243,32 @@ impl ServerManager {
         Ok(())
     }
 
+    fn log_child_line(&self, port: u16, line: &str, is_stderr: bool) {
+        if line.is_empty() {
+            return;
+        }
+
+        let prefix = format!("[Port {}]", port);
+
+        // Detect log level from Bevy's format (e.g., "... ERROR ...")
+        if line.contains(" ERROR ") {
+            error!("{} {}", prefix, line);
+        } else if line.contains(" WARN ") {
+            warn!("{} {}", prefix, line);
+        } else if line.contains(" DEBUG ") {
+            debug!("{} {}", prefix, line);
+        } else if line.contains(" TRACE ") {
+            debug!("{} {}", prefix, line); // Map trace to debug for unprocman
+        } else if is_stderr {
+            // Stderr lines without explicit level are likely warnings/errors
+            warn!("{} {}", prefix, line);
+        } else {
+            info!("{} {}", prefix, line);
+        }
+    }
+
     async fn handle_server_output(&self, port: u16, line: &str) -> anyhow::Result<()> {
-        let msg: DedicatedToProcMan = match serde_json::from_str(line) {
-            Ok(v) => v,
-            Err(_) => return Ok(()),
-        };
+        let msg: DedicatedToProcMan = serde_json::from_str(line)?;
 
         match msg {
             DedicatedToProcMan::Ready { .. } => {
@@ -145,6 +278,7 @@ impl ServerManager {
                 let mut servers = self.servers.lock().await;
                 if let Some(s) = servers.get_mut(&port) {
                     s.player_count += 1;
+                    s.has_been_joined = true;
                     if let Some(code) = &s.room_code {
                         let tx_lock = self.hub_tx.lock().await;
                         if let Some(tx) = tx_lock.as_ref() {
@@ -163,7 +297,11 @@ impl ServerManager {
             } => {
                 let mut servers = self.servers.lock().await;
                 if let Some(s) = servers.get_mut(&port) {
+                    let old_count = s.player_count;
                     s.player_count = remaining_count as u8;
+                    if old_count > 0 && s.player_count == 0 {
+                        s.assigned_at = Some(std::time::Instant::now());
+                    }
                     if let Some(code) = &s.room_code {
                         let tx_lock = self.hub_tx.lock().await;
                         if let Some(tx) = tx_lock.as_ref() {
@@ -195,10 +333,7 @@ impl ServerManager {
                 }
             }
             DedicatedToProcMan::RoomRenameRequest { reason } => {
-                info!(
-                    "Server on port {} requested room rename: {}",
-                    port, reason
-                );
+                info!("Server on port {} requested room rename: {}", port, reason);
             }
             DedicatedToProcMan::Exiting { reason } => {
                 info!("Server on port {} is exiting: {}", port, reason);
@@ -208,12 +343,23 @@ impl ServerManager {
         Ok(())
     }
 
-    pub async fn assign_room(&self, room_code: String, secret: String, game_version: String) -> anyhow::Result<RoomSummary> {
+    pub async fn assign_room(
+        &self,
+        room_code: String,
+        secret: String,
+        game_version: String,
+    ) -> anyhow::Result<RoomSummary> {
         let mut servers = self.servers.lock().await;
-        let server = servers.values_mut().find(|s| s.room_code.is_none()).ok_or_else(|| anyhow::anyhow!("No idle servers available"))?;
+        let server = servers
+            .values_mut()
+            .find(|s| s.room_code.is_none())
+            .ok_or_else(|| anyhow::anyhow!("No idle servers available"))?;
 
         server.room_code = Some(room_code.clone());
         server.secret = Some(secret.clone());
+        server.assigned_at = Some(std::time::Instant::now());
+        server.player_count = 0;
+        server.has_been_joined = false;
 
         let msg = ProcManToDedicated::AssignRoom {
             room_code: room_code.clone(),
@@ -228,7 +374,10 @@ impl ServerManager {
             secret,
             state: RoomState::Lobby,
             player_count: 0,
-            metadata: RoomMetadata { map: "".into(), difficulty: "".into() },
+            metadata: RoomMetadata {
+                map: "".into(),
+                difficulty: "".into(),
+            },
             server_id: self.config.installation_id,
         })
     }

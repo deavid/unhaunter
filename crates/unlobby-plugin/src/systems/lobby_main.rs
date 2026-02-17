@@ -199,28 +199,34 @@ pub(crate) fn setup_ui(
                     },
                     LobbyPlayerList,
                 ));
-
-                // Room Code display
-                if let Some(ri) = room_ident.as_ref()
-                    && let Some(code) = ri.code.as_ref()
-                {
-                    right.spawn((
-                        Text::new(format!("Room Code: {}", code)),
-                        TextFont {
-                            font: ui_assets.font_kode_bold.clone(),
-                            font_size: 24.0 * FONT_SCALE,
-                            ..default()
-                        },
-                        TextColor(colors::MENU_ITEM_COLOR_ON),
-                        LobbyRoomCode,
-                    ))
-                    .insert(Node {
-                        margin: UiRect::top(Val::Px(20.0 * UI_SCALE)),
-                        ..default()
-                    });
-                }
             });
         });
+
+        // Room Code display (Top Right)
+        if let Some(ri) = room_ident.as_ref()
+            && let Some(code) = ri.code.as_ref()
+        {
+            p.spawn((
+                Node {
+                    position_type: PositionType::Absolute,
+                    right: Val::Px(40.0 * UI_SCALE),
+                    top: Val::Px(40.0 * UI_SCALE),
+                    ..default()
+                },
+                LobbyRoomCode,
+            ))
+            .with_children(|parent| {
+                parent.spawn((
+                    Text::new(format!("Room Code: {}", code)),
+                    TextFont {
+                        font: ui_assets.font_kode_bold.clone(),
+                        font_size: 32.0 * FONT_SCALE,
+                        ..default()
+                    },
+                    TextColor(colors::MENU_ITEM_COLOR_ON),
+                ));
+            });
+        }
 
         let help_text = if is_room_owner {
             "[ESC]: Back to Menu | [Click]: Select | [Enter]: Confirm".to_string()
@@ -545,16 +551,12 @@ pub(crate) fn update_display(
                     ));
 
                     // Player label
-                    let name = player.nickname.clone().unwrap_or_else(|| {
-                        format!("Player {}", player.id.0)
-                    });
+                    let name = player
+                        .nickname
+                        .clone()
+                        .unwrap_or_else(|| format!("Player {}", player.id.0));
                     row.spawn((
-                        Text::new(format!(
-                            "{}{}{}",
-                            prefix,
-                            name,
-                            host_suffix
-                        )),
+                        Text::new(format!("{}{}{}", prefix, name, host_suffix)),
                         TextFont {
                             font: ui_assets.font_titillium_regular.clone(),
                             font_size: 20.0 * FONT_SCALE,

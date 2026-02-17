@@ -13,3 +13,6 @@ flamegraph.svg
 index.scip
 assets/upscaled
 player*.uuid
+hub_config.ron
+procman_config.ron
+unhaunter_dedicated

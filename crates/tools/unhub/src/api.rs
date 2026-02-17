@@ -1,13 +1,13 @@
+use crate::state::HubState;
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
-    Json,
 };
 use unhub_client::protocol::{
-    CreateRoomRequest, CreateRoomResponse, HealthResponse, HubError, JoinRoomResponse, JoinRoomRequest,
-    ProcManMessage,
+    CreateRoomRequest, CreateRoomResponse, HealthResponse, HubError, JoinRoomRequest,
+    JoinRoomResponse, ProcManMessage,
 };
-use crate::state::HubState;
 use unhub_client::{generate_room_code, generate_room_secret};
 
 pub async fn health(State(state): State<HubState>) -> Json<HealthResponse> {
@@ -32,14 +32,13 @@ pub async fn create_room(
         ));
     }
 
-    // Select a ProcMan with capacity
-    let procman_uuid = state
+    // Select a ProcMan with capacity — extract what we need in a single lookup
+    // to avoid a second DashMap get that could race with disconnection.
+    let (tx, public_addr) = state
         .procmans
         .iter()
-        .find(|pm| {
-            pm.game_versions.contains(&payload.game_version) && pm.idle_capacity > 0
-        })
-        .map(|pm| pm.uuid)
+        .find(|pm| pm.game_versions.contains(&payload.game_version) && pm.idle_capacity > 0)
+        .map(|pm| (pm.tx.clone(), pm.public_addr.clone()))
         .ok_or((
             StatusCode::SERVICE_UNAVAILABLE,
             Json(HubError {
@@ -48,33 +47,43 @@ pub async fn create_room(
             }),
         ))?;
 
-    let room_code = generate_room_code();
+    // Generate a unique room code, retrying on collision (bounded to avoid
+    // infinite loops from bugs in the RNG or an overly full code space).
+    let room_code = (0..10)
+        .map(|_| generate_room_code())
+        .find(|candidate| !state.rooms.contains_key(candidate))
+        .ok_or((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(HubError {
+                error: "code_exhausted".to_string(),
+                message: "Failed to generate a unique room code after 10 attempts.".to_string(),
+            }),
+        ))?;
     let secret = generate_room_secret();
-
-    // Get the sender
-    let tx = state.procmans.get(&procman_uuid).unwrap().tx.clone();
 
     // Ask ProcMan to create the room
     tx.send(ProcManMessage::CreateRoom {
         room_code: room_code.clone(),
         secret: secret.clone(),
         game_version: payload.game_version.clone(),
-    }).map_err(|_| (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(HubError {
-            error: "internal_error".to_string(),
-            message: "Failed to communicate with process manager.".to_string(),
-        }),
-    ))?;
+    })
+    .map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(HubError {
+                error: "internal_error".to_string(),
+                message: "Failed to communicate with process manager.".to_string(),
+            }),
+        )
+    })?;
 
     // WAIT for RoomReady (timeout 5s)
     for _ in 0..50 {
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         if let Some(room) = state.rooms.get(&room_code) {
-            let pm = state.procmans.get(&room.server_id).unwrap();
             return Ok(Json(CreateRoomResponse {
                 code: room_code,
-                addr: format!("{}:{}", pm.public_addr, room.port),
+                addr: format!("{}:{}", public_addr, room.port),
                 secret: room.secret.clone(),
             }));
         }

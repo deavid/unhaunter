@@ -1,10 +1,10 @@
+use crate::manager::ServerManager;
+use futures::{SinkExt, StreamExt};
+use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio_util::codec::{Framed, LinesCodec};
-use futures::{SinkExt, StreamExt};
+use tracing::{error, info, warn};
 use unhub_client::protocol::ProcManMessage;
-use tracing::{info, error, warn};
-use std::sync::Arc;
-use crate::manager::ServerManager;
 
 pub async fn run_hub_comm(manager: Arc<ServerManager>) -> anyhow::Result<()> {
     let hub_addr = manager.config.hub_addr.clone();
@@ -27,7 +27,10 @@ pub async fn run_hub_comm(manager: Arc<ServerManager>) -> anyhow::Result<()> {
     }
 }
 
-async fn handle_hub_connection(stream: TcpStream, manager: Arc<ServerManager>) -> anyhow::Result<()> {
+async fn handle_hub_connection(
+    stream: TcpStream,
+    manager: Arc<ServerManager>,
+) -> anyhow::Result<()> {
     let mut framed = Framed::new(stream, LinesCodec::new());
 
     let mut rooms_summary = Vec::new();
@@ -38,11 +41,14 @@ async fn handle_hub_connection(stream: TcpStream, manager: Arc<ServerManager>) -
                 rooms_summary.push(unhub_client::protocol::RoomSummary {
                     code: code.clone(),
                     port: s.port,
-                    game_version: "0.3.2-dev".to_string(),
+                    game_version: unhub_client::GAME_VERSION.to_string(),
                     secret: secret.clone(),
                     state: s.state,
                     player_count: s.player_count,
-                    metadata: unhub_client::protocol::RoomMetadata { map: "".into(), difficulty: "".into() },
+                    metadata: unhub_client::protocol::RoomMetadata {
+                        map: "".into(),
+                        difficulty: "".into(),
+                    },
                     server_id: manager.config.installation_id,
                 });
             }
@@ -52,10 +58,10 @@ async fn handle_hub_connection(stream: TcpStream, manager: Arc<ServerManager>) -
     let hello = ProcManMessage::ProcManHello {
         uuid: manager.config.installation_id,
         version: env!("CARGO_PKG_VERSION").to_string(),
-        game_versions: vec!["0.3.2-dev".to_string()],
+        game_versions: vec![unhub_client::GAME_VERSION.to_string()],
         port_range: manager.config.port_range,
         public_addr: manager.config.public_addr.clone(),
-        idle_pool: std::collections::HashMap::from([("0.3.2-dev".to_string(), 1)]),
+        idle_pool: std::collections::HashMap::from([(unhub_client::GAME_VERSION.to_string(), 1)]),
         rooms: rooms_summary,
     };
 
@@ -99,7 +105,7 @@ async fn handle_hub_connection(stream: TcpStream, manager: Arc<ServerManager>) -
                         rooms.push(unhub_client::protocol::RoomSummary {
                             code: code.clone(),
                             port: s.port,
-                            game_version: "0.3.2-dev".to_string(),
+                            game_version: unhub_client::GAME_VERSION.to_string(),
                             secret: secret.clone(),
                             state: s.state,
                             player_count: s.player_count,
@@ -130,10 +136,14 @@ async fn handle_hub_connection(stream: TcpStream, manager: Arc<ServerManager>) -
 async fn handle_hub_message(
     manager: &Arc<ServerManager>,
     framed: &mut Framed<TcpStream, LinesCodec>,
-    msg: ProcManMessage
+    msg: ProcManMessage,
 ) -> anyhow::Result<()> {
     match msg {
-        ProcManMessage::CreateRoom { room_code, secret, game_version } => {
+        ProcManMessage::CreateRoom {
+            room_code,
+            secret,
+            game_version,
+        } => {
             info!("Creating room {} for version {}", room_code, game_version);
             match manager.assign_room(room_code, secret, game_version).await {
                 Ok(room) => {
