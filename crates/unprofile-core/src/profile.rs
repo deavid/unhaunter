@@ -143,6 +143,10 @@ pub struct PlayerProfileData {
     pub times_evidence_acknowledged_on_gear: HashMap<Evidence, u32>,
     #[serde(default)]
     pub times_evidence_acknowledged_in_journal: HashMap<Evidence, u32>,
+    #[serde(default)]
+    pub nickname_letter: Option<char>,
+    #[serde(default)]
+    pub nickname_attempt: u32,
 }
 
 #[derive(Resource, Debug, Clone, Copy, PartialEq, Eq)]

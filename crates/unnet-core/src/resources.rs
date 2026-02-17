@@ -49,9 +49,16 @@ pub struct CurrentMapSeed(pub u64);
 #[derive(Resource, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RoomOwner(pub NetworkId);
 
+#[derive(Resource, Default, Debug, Clone)]
+pub struct RoomIdentification {
+    pub code: Option<String>,
+    pub secret: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LobbyPlayer {
     pub id: NetworkId,
     pub tint_color_index: u8,
     pub connected: bool,
+    pub nickname: Option<String>,
 }

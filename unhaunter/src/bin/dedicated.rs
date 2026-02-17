@@ -13,6 +13,12 @@ struct Args {
     host: u16,
 
     #[clap(long)]
+    procman_channel: Option<String>,
+
+    #[clap(long)]
+    hub_url: Option<String>,
+
+    #[clap(long)]
     bind: Vec<String>,
 
     #[clap(long)]
@@ -38,11 +44,7 @@ fn main() {
         }
     }
 
-    let mut bind_addresses = args.bind.clone();
-    if bind_addresses.is_empty() {
-        bind_addresses.push("::".to_string());
-        bind_addresses.push("0.0.0.0".to_string());
-    }
+    let bind_addresses = args.bind.clone();
 
     let net_mode = untypes_core::cli::NetMode::Host {
         port: args.host,
@@ -101,5 +103,7 @@ fn main() {
         verbose: args.verbose,
         mute: true,
         dedicated: true,
+        procman_channel: args.procman_channel,
+        hub_url: args.hub_url,
     });
 }

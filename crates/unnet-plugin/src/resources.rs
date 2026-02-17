@@ -31,6 +31,7 @@ pub(crate) struct ClientConnection {
     pub last_input: f32,
     pub last_aim_direction: [f32; 2],
     pub client_app_state: Option<untypes_core::states::AppState>,
+    pub nickname: Option<String>,
 }
 
 #[derive(Resource, Default)]

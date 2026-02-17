@@ -220,6 +220,8 @@ pub enum NetworkMessage {
     Hello {
         version: String,
         installation_id: uuid::Uuid,
+        secret: Option<String>,
+        nickname: Option<String>,
     },
     /// Response from Host to Client.
     Welcome {
@@ -368,12 +370,14 @@ pub struct NetworkDataEvent {
 #[derive(Debug, Clone, Message)]
 pub struct NetworkDisconnectEvent {
     pub id: NetworkId,
+    pub uuid: Option<uuid::Uuid>,
 }
 
 /// Emitted on the host when a client completes handshake and is ready to play.
 #[derive(Debug, Clone, Message)]
 pub struct PlayerJoinedEvent {
     pub id: NetworkId,
+    pub uuid: uuid::Uuid,
 }
 
 #[derive(Debug, Clone, Message)]
@@ -383,3 +387,8 @@ pub struct PlayerDiedEvent {
 
 #[derive(Debug, Clone, Message)]
 pub struct SendNetworkMessage(pub NetworkMessage);
+
+#[derive(Debug, Clone, Message)]
+pub struct ConnectToServer {
+    pub address: String,
+}

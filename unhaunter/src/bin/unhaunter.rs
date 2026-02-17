@@ -32,6 +32,9 @@ struct Args {
 
     #[clap(long, action)]
     mute: bool,
+
+    #[clap(long)]
+    hub_url: Option<String>,
 }
 
 fn main() {
@@ -45,11 +48,7 @@ fn main() {
     }
 
     let net_mode = if let Some(port) = args.host {
-        let mut bind_addresses = args.bind.clone();
-        if bind_addresses.is_empty() {
-            bind_addresses.push("::".to_string());
-            bind_addresses.push("0.0.0.0".to_string());
-        }
+        let bind_addresses = args.bind.clone();
         untypes_core::cli::NetMode::Host {
             port,
             bind_addresses,
@@ -112,5 +111,7 @@ fn main() {
         verbose: args.verbose,
         mute: args.mute,
         dedicated: false,
+        procman_channel: None,
+        hub_url: args.hub_url,
     });
 }

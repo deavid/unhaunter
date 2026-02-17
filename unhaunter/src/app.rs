@@ -12,6 +12,7 @@ use unfps_plugin::plugin::UnhaunterFpsPlugin;
 use ungear_plugin::plugin::{UnhaunterGearCorePlugin, UnhaunterGearPlugin};
 use ungearitems_plugin::plugin::{UnhaunterGearItemsCorePlugin, UnhaunterGearItemsPlugin};
 use unghost_plugin::plugin::{UnhaunterGhostCorePlugin, UnhaunterGhostPlugin};
+use unhub_plugin::plugin::UnhaunterHubPlugin;
 use uninteraction_plugin::plugin::UnhaunterInteractionCorePlugin;
 use unlight_plugin::plugin::{UnhaunterLightCorePlugin, UnhaunterLightPlugin};
 use unlobby_plugin::plugin::UnhaunterLobbyPlugin;
@@ -51,7 +52,8 @@ pub fn app_run(cli_options: CliOptions) {
         app.add_plugins((
             MinimalPlugins
                 .set(ScheduleRunnerPlugin::run_loop(Duration::from_micros(
-                    16_666,
+                    1_000_000 / 60,
+                    // 1_000_000 / 10,
                 )))
                 .set(TaskPoolPlugin {
                     task_pool_options: TaskPoolOptions::with_num_threads(1),
@@ -150,6 +152,7 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterGearCorePlugin,
         UnhaunterInteractionCorePlugin,
         UnhaunterMissionPlugin,
+        UnhaunterHubPlugin,
     ));
     app.add_plugins((
         UnhaunterTruckCorePlugin,
