@@ -36,6 +36,7 @@ async fn main() -> anyhow::Result<()> {
     // REST API
     let app = Router::new()
         .route("/health", get(api::health))
+        .route("/v1/challenge", post(api::challenge))
         .route("/v1/rooms/create", post(api::create_room))
         .route("/v1/rooms/join/{code}", post(api::join_room))
         .with_state(state);

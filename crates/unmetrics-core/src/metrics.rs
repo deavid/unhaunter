@@ -2,7 +2,7 @@ use bevy::diagnostic::{DiagnosticMeasurement, DiagnosticPath, DiagnosticsStore};
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
 use bevy_platform::time::Instant;
-use std::sync::{mpsc, LazyLock, Mutex};
+use std::sync::{LazyLock, Mutex, mpsc};
 
 const CHANNEL_CAPACITY: usize = 32768;
 
@@ -50,10 +50,7 @@ pub fn receive_data(
     for path in remembered_paths.iter() {
         if let Some(diag) = diag_store.get_mut(path) {
             let value = frame_data.get(path).cloned().unwrap_or(0.0);
-            diag.add_measurement(DiagnosticMeasurement {
-                time: now,
-                value,
-            });
+            diag.add_measurement(DiagnosticMeasurement { time: now, value });
         }
     }
 }

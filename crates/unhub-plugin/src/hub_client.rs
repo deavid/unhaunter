@@ -1,11 +1,14 @@
 use bevy::prelude::*;
-use unhub_client::protocol::{CreateRoomRequest, CreateRoomResponse, JoinRoomRequest, JoinRoomResponse};
-use crossbeam_channel::{Receiver, Sender};
-use untypes_core::cli::CliOptions;
 use bevy_persistent::Persistent;
-use unprofile_core::profile::PlayerProfileData;
-use unhub_client::generate_codename;
+use crossbeam_channel::{Receiver, Sender};
 use rand::Rng;
+use unhub_client::generate_codename;
+use unhub_client::protocol::{
+    ChallengeRequest, ChallengeResponse, CreateRoomRequest, CreateRoomResponse, JoinRoomRequest,
+    JoinRoomResponse,
+};
+use unprofile_core::profile::PlayerProfileData;
+use untypes_core::cli::CliOptions;
 
 #[derive(Resource)]
 pub struct HubClient {
@@ -14,8 +17,14 @@ pub struct HubClient {
 }
 
 pub enum HubRequest {
-    CreateRoom { player_uuid: uuid::Uuid, game_version: String },
-    JoinRoom { code: String, player_uuid: uuid::Uuid },
+    CreateRoom {
+        player_uuid: uuid::Uuid,
+        game_version: String,
+    },
+    JoinRoom {
+        code: String,
+        player_uuid: uuid::Uuid,
+    },
 }
 
 pub enum HubResponse {
@@ -55,28 +64,81 @@ pub fn setup_hub_client(mut commands: Commands, cli: Res<CliOptions>) {
             let client = reqwest::Client::new();
             while let Ok(req) = rx_from_bevy.recv() {
                 match req {
-                    HubRequest::CreateRoom { player_uuid, game_version } => {
-                        let res = client.post(format!("{}/v1/rooms/create", worker_hub_url))
-                            .json(&CreateRoomRequest { player_uuid, game_version })
+                    HubRequest::CreateRoom {
+                        player_uuid,
+                        game_version,
+                    } => {
+                        // 1. Request Challenge
+                        let challenge_res = client
+                            .post(format!("{}/v1/challenge", worker_hub_url))
+                            .json(&ChallengeRequest { player_uuid })
                             .send()
                             .await;
-                        match res {
-                            Ok(resp) => {
-                                if resp.status().is_success() {
-                                    if let Ok(data) = resp.json::<CreateRoomResponse>().await {
-                                        let _ = tx_to_bevy.send(HubResponse::RoomCreated(data));
+
+                        if let Ok(resp) = challenge_res {
+                            if resp.status().is_success() {
+                                if let Ok(challenge) = resp.json::<ChallengeResponse>().await {
+                                    // 2. Solve PoW
+                                    let nonce = challenge.nonce.clone();
+                                    let difficulty = challenge.difficulty;
+                                    let solution = tokio::task::spawn_blocking(move || {
+                                        unhub_client::solve_pow(&nonce, difficulty)
+                                    })
+                                    .await
+                                    .unwrap_or_default();
+
+                                    // 3. Create Room
+                                    let create_res = client
+                                        .post(format!("{}/v1/rooms/create", worker_hub_url))
+                                        .json(&CreateRoomRequest {
+                                            player_uuid,
+                                            game_version,
+                                            nonce: challenge.nonce,
+                                            solution,
+                                        })
+                                        .send()
+                                        .await;
+
+                                    match create_res {
+                                        Ok(resp) => {
+                                            if resp.status().is_success() {
+                                                if let Ok(data) =
+                                                    resp.json::<CreateRoomResponse>().await
+                                                {
+                                                    let _ = tx_to_bevy
+                                                        .send(HubResponse::RoomCreated(data));
+                                                }
+                                            } else {
+                                                let _ = tx_to_bevy.send(HubResponse::Error(
+                                                    format!("Status: {}", resp.status()),
+                                                ));
+                                            }
+                                        }
+                                        Err(e) => {
+                                            let _ =
+                                                tx_to_bevy.send(HubResponse::Error(e.to_string()));
+                                        }
                                     }
                                 } else {
-                                    let _ = tx_to_bevy.send(HubResponse::Error(format!("Status: {}", resp.status())));
+                                    let _ = tx_to_bevy.send(HubResponse::Error(
+                                        "Failed to parse challenge response".to_string(),
+                                    ));
                                 }
+                            } else {
+                                let _ = tx_to_bevy.send(HubResponse::Error(format!(
+                                    "Challenge failed: {}",
+                                    resp.status()
+                                )));
                             }
-                            Err(e) => {
-                                let _ = tx_to_bevy.send(HubResponse::Error(e.to_string()));
-                            }
+                        } else {
+                            let _ = tx_to_bevy.send(HubResponse::Error(
+                                "Failed to request challenge".to_string(),
+                            ));
                         }
                     }
                     HubRequest::JoinRoom { code, player_uuid } => {
-                        let res = client.post(format!("{}/v1/rooms/join/{}", worker_hub_url, code))
+                        let res = client
+                            .post(format!("{}/v1/rooms/join/{}", worker_hub_url, code))
                             .json(&JoinRoomRequest { player_uuid })
                             .send()
                             .await;
@@ -87,7 +149,10 @@ pub fn setup_hub_client(mut commands: Commands, cli: Res<CliOptions>) {
                                         let _ = tx_to_bevy.send(HubResponse::RoomJoined(data));
                                     }
                                 } else {
-                                    let _ = tx_to_bevy.send(HubResponse::Error(format!("Status: {}", resp.status())));
+                                    let _ = tx_to_bevy.send(HubResponse::Error(format!(
+                                        "Status: {}",
+                                        resp.status()
+                                    )));
                                 }
                             }
                             Err(e) => {

@@ -1,7 +1,7 @@
 use crate::state::HubConfig;
+use anyhow::Result;
 use std::collections::HashSet;
 use std::path::Path;
-use anyhow::Result;
 
 pub async fn load_config(path: impl AsRef<Path>) -> Result<HubConfig> {
     if !path.as_ref().exists() {
@@ -10,6 +10,9 @@ pub async fn load_config(path: impl AsRef<Path>) -> Result<HubConfig> {
             official_server_keys: Default::default(),
             banned_uuids: HashSet::new(),
             allowed_procman_uuids: HashSet::new(),
+            max_rooms_per_ip: 2,
+            trust_proxy_headers: false,
+            pow_difficulty: 20,
         };
         save_config(path, &default_config).await?;
         return Ok(default_config);

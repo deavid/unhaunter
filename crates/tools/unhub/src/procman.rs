@@ -29,7 +29,7 @@ async fn handle_procman_connection(
     stream: TcpStream,
     peer_addr: SocketAddr,
 ) -> anyhow::Result<()> {
-    let mut framed = Framed::new(stream, LinesCodec::new());
+    let mut framed = Framed::new(stream, LinesCodec::new_with_max_length(65536));
 
     // 1. Handshake
     let line = framed
@@ -114,7 +114,26 @@ async fn handle_procman_connection(
     // Cleanup
     info!("ProcMan {} disconnected", uuid);
     state.procmans.remove(&uuid);
-    state.rooms.retain(|_, room| room.server_id != uuid);
+
+    let mut rooms_to_remove = Vec::new();
+    for entry in state.rooms.iter() {
+        if entry.value().server_id == uuid {
+            rooms_to_remove.push(entry.key().clone());
+        }
+    }
+
+    for room_code in rooms_to_remove {
+        state.rooms.remove(&room_code);
+        if let Some((_, ip)) = state.room_to_ip.remove(&room_code)
+            && let Some(mut rooms) = state.rooms_by_ip.get_mut(&ip)
+        {
+            rooms.retain(|c| c != &room_code);
+            if rooms.is_empty() {
+                drop(rooms);
+                state.rooms_by_ip.remove(&ip);
+            }
+        }
+    }
 
     Ok(())
 }
@@ -166,6 +185,15 @@ async fn handle_message(
         }
         ProcManMessage::RoomClosed { room_code, .. } => {
             state.rooms.remove(&room_code);
+            if let Some((_, ip)) = state.room_to_ip.remove(&room_code)
+                && let Some(mut rooms) = state.rooms_by_ip.get_mut(&ip)
+            {
+                rooms.retain(|c| c != &room_code);
+                if rooms.is_empty() {
+                    drop(rooms); // Release the lock before removing
+                    state.rooms_by_ip.remove(&ip);
+                }
+            }
         }
         _ => warn!("Unhandled message from ProcMan {}: {:?}", uuid, msg),
     }

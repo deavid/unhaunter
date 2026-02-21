@@ -31,8 +31,8 @@ impl PerlinNoise {
 
         for (x, row) in values.iter_mut().enumerate() {
             for (y, value) in row.iter_mut().enumerate() {
-                *value = perlin.get([x as f64 * resolution as f64, y as f64 * resolution as f64])
-                    as f32;
+                *value =
+                    perlin.get([x as f64 * resolution as f64, y as f64 * resolution as f64]) as f32;
             }
         }
 

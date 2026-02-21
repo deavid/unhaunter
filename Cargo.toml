@@ -148,6 +148,94 @@ rayon = "1.11"
 crossbeam-channel = "0.5"
 uuid = { version = "1.21", features = ["v4", "serde"] }
 reqwest = { version = "0.12", features = ["json"] }
+axum = "0.8.8"
+tokio = { version = "1.0", features = ["full"] }
+dashmap = "6.1.0"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json"] }
+chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3.32"
+tokio-util = { version = "0.7", features = ["codec"] }
+
+# Local crates
+ghost_list = { path = "crates/tools/ghost_list" }
+ghost_radio = { path = "crates/tools/ghost_radio" }
+unhub = { path = "crates/tools/unhub" }
+unprocman = { path = "crates/tools/unprocman" }
+walkie_voice_generator = { path = "crates/tools/text_to_speech/walkie_voice_generator" }
+untypes-core = { path = "crates/untypes-core" }
+unassets-core = { path = "crates/unassets-core" }
+uncampaign-plugin = { path = "crates/uncampaign-plugin" }
+unclassic-mode-plugin = { path = "crates/unclassic-mode-plugin" }
+unengine-core = { path = "crates/unengine-core" }
+unengine-plugin = { path = "crates/unengine-plugin" }
+unbehavior = { path = "crates/unbehavior" }
+unboard-core = { path = "crates/unboard-core" }
+unevents-core = { path = "crates/unevents-core" }
+unfoundation-core = { path = "crates/unfoundation-core" }
+undifficulty-core = { path = "crates/undifficulty-core" }
+undifficulty-plugin = { path = "crates/undifficulty-plugin" }
+unfog-plugin = { path = "crates/unfog-plugin" }
+unfog-core = { path = "crates/unfog-core" }
+unfps-core = { path = "crates/unfps-core" }
+unfps-plugin = { path = "crates/unfps-plugin" }
+unhub-client = { path = "crates/unhub-client" }
+unhub-plugin = { path = "crates/unhub-plugin" }
+ungear-core = { path = "crates/ungear-core" }
+ungear-plugin = { path = "crates/ungear-plugin" }
+ungearitems-core = { path = "crates/ungearitems-core" }
+ungearitems-plugin = { path = "crates/ungearitems-plugin" }
+unghost-plugin = { path = "crates/unghost-plugin" }
+unghost-core = { path = "crates/unghost-core" }
+uninteraction-core = { path = "crates/uninteraction-core" }
+uninteraction-plugin = { path = "crates/uninteraction-plugin" }
+unlight-plugin = { path = "crates/unlight-plugin" }
+unlobby-plugin = { path = "crates/unlobby-plugin" }
+unlight-core = { path = "crates/unlight-core" }
+unmanual-core = { path = "crates/unmanual-core" }
+unmanual-plugin = { path = "crates/unmanual-plugin" }
+unmapload-plugin = { path = "crates/unmapload-plugin" }
+unmapload-core = { path = "crates/unmapload-core" }
+unmaphub-plugin = { path = "crates/unmaphub-plugin" }
+unmainmenu-plugin = { path = "crates/unmainmenu-plugin" }
+unmenu-core = { path = "crates/unmenu-core" }
+unmenu-plugin = { path = "crates/unmenu-plugin" }
+unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }
+unmetrics-core = { path = "crates/unmetrics-core" }
+unmetrics-plugin = { path = "crates/unmetrics-plugin" }
+unmission-plugin = { path = "crates/unmission-plugin" }
+unnavigation-core = { path = "crates/unnavigation-core" }
+unnet-core = { path = "crates/unnet-core" }
+unnet-plugin = { path = "crates/unnet-plugin" }
+unnpc-plugin = { path = "crates/unnpc-plugin" }
+unnoise-core = { path = "crates/unnoise-core" }
+unpicking-plugin = { path = "crates/unpicking-plugin" }
+unpicking-core = { path = "crates/unpicking-core" }
+unplayer-plugin = { path = "crates/unplayer-plugin" }
+unplayer-core = { path = "crates/unplayer-core" }
+unprofile-core = { path = "crates/unprofile-core" }
+unprofile-plugin = { path = "crates/unprofile-plugin" }
+unrender-std = { path = "crates/unrender-std" }
+unrender-plugin = { path = "crates/unrender-plugin" }
+unsettings-core = { path = "crates/unsettings-core" }
+unsettings-plugin = { path = "crates/unsettings-plugin" }
+unspatial-core = { path = "crates/unspatial-core" }
+unsummary-core = { path = "crates/unsummary-core" }
+unsummary-plugin = { path = "crates/unsummary-plugin" }
+unsound-core = { path = "crates/unsound-core" }
+unsound-plugin = { path = "crates/unsound-plugin" }
+untags-core = { path = "crates/untags-core" }
+unthermal-core = { path = "crates/unthermal-core" }
+unthermal-plugin = { path = "crates/unthermal-plugin" }
+untiled-core = { path = "crates/untiled-core" }
+untruck-core = { path = "crates/untruck-core" }
+untruck-plugin = { path = "crates/untruck-plugin" }
+untmxmap-plugin = { path = "crates/untmxmap-plugin" }
+unui-core = { path = "crates/unui-core" }
+unui-plugin = { path = "crates/unui-plugin" }
+unwalkie-plugin = { path = "crates/unwalkie-plugin" }
+unwalkie-core = { path = "crates/unwalkie-core" }
 
 # winit is not for WASM, and needs to be in sync with bevy version
 winit = "0.30"
@@ -170,45 +258,51 @@ clap = { workspace = true }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
 
-untypes-core = { path = "crates/untypes-core" }
-unassets-core = { path = "crates/unassets-core" }
+untypes-core = { workspace = true }
+unassets-core = { workspace = true }
 
-uncampaign-plugin = { path = "crates/uncampaign-plugin" }
-unclassic-mode-plugin = { path = "crates/unclassic-mode-plugin" }
-unengine-plugin = { path = "crates/unengine-plugin" }
-unfog-plugin = { path = "crates/unfog-plugin" }
-unfps-plugin = { path = "crates/unfps-plugin" }
-ungear-plugin = { path = "crates/ungear-plugin" }
-ungearitems-plugin = { path = "crates/ungearitems-plugin" }
-unghost-plugin = { path = "crates/unghost-plugin" }
-unlight-plugin = { path = "crates/unlight-plugin" }
-unlobby-plugin = { path = "crates/unlobby-plugin" }
-unmapload-plugin = { path = "crates/unmapload-plugin" }
-unmaphub-plugin = { path = "crates/unmaphub-plugin" }
-unmainmenu-plugin = { path = "crates/unmainmenu-plugin" }
-unmenu-plugin = { path = "crates/unmenu-plugin" }
-unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }
-unmetrics-plugin = { path = "crates/unmetrics-plugin" }
-unmission-plugin = { path = "crates/unmission-plugin" }
-unnet-plugin = { path = "crates/unnet-plugin" }
-unnpc-plugin = { path = "crates/unnpc-plugin" }
-unplayer-plugin = { path = "crates/unplayer-plugin" }
-unprofile-plugin = { path = "crates/unprofile-plugin" }
-unsettings-plugin = { path = "crates/unsettings-plugin" }
-unsummary-plugin = { path = "crates/unsummary-plugin" }
-unthermal-plugin = { path = "crates/unthermal-plugin" }
-unsound-plugin = { path = "crates/unsound-plugin" }
-unrender-plugin = { path = "crates/unrender-plugin" }
-unmanual-plugin = { path = "crates/unmanual-plugin" }
-unpicking-plugin = { path = "crates/unpicking-plugin" }
-untruck-plugin = { path = "crates/untruck-plugin" }
-unwalkie-plugin = { path = "crates/unwalkie-plugin" }
-untmxmap-plugin = { path = "crates/untmxmap-plugin" }
-unui-plugin = { path = "crates/unui-plugin" }
-undifficulty-plugin = { path = "crates/undifficulty-plugin" }
-uninteraction-plugin = { path = "crates/uninteraction-plugin" }
-unhub-client = { path = "crates/unhub-client" }
-unhub-plugin = { path = "crates/unhub-plugin" }
+uncampaign-plugin = { workspace = true }
+unclassic-mode-plugin = { workspace = true }
+unengine-plugin = { workspace = true }
+unfog-plugin = { workspace = true }
+unfps-plugin = { workspace = true }
+ungear-plugin = { workspace = true }
+ungearitems-plugin = { workspace = true }
+unghost-plugin = { workspace = true }
+unlight-plugin = { workspace = true }
+unlobby-plugin = { workspace = true }
+unmapload-plugin = { workspace = true }
+unmaphub-plugin = { workspace = true }
+unmainmenu-plugin = { workspace = true }
+unmenu-plugin = { workspace = true }
+unmenusettings-plugin = { workspace = true }
+unmetrics-plugin = { workspace = true }
+unmission-plugin = { workspace = true }
+unnet-plugin = { workspace = true }
+unnpc-plugin = { workspace = true }
+unplayer-plugin = { workspace = true }
+unprofile-plugin = { workspace = true }
+unsettings-plugin = { workspace = true }
+unsummary-plugin = { workspace = true }
+unthermal-plugin = { workspace = true }
+unsound-plugin = { workspace = true }
+unrender-plugin = { workspace = true }
+unmanual-plugin = { workspace = true }
+unpicking-plugin = { workspace = true }
+untruck-plugin = { workspace = true }
+unwalkie-plugin = { workspace = true }
+untmxmap-plugin = { workspace = true }
+unui-plugin = { workspace = true }
+undifficulty-plugin = { workspace = true }
+uninteraction-plugin = { workspace = true }
+unhub-client = { workspace = true }
+unhub-plugin = { workspace = true }
+sha2 = { workspace = true }
+axum = { workspace = true }
+dashmap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+futures = { workspace = true }
 
 [[bin]]
 name = "unhaunter_game"

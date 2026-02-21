@@ -7,12 +7,12 @@ use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
-use unmapload_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightFieldData;
 use unlight_core::types::prebaked_lighting_data::{
     LightInfo, PrebakedLightingData, WaveEdge, WaveEdgeData,
 };
+use unmapload_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 

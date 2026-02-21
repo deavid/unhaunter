@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-use unboard_core::resources::board_topology::{BoardCollisionField, BoardEntityField, BoardTopology};
+use unboard_core::resources::board_topology::{
+    BoardCollisionField, BoardEntityField, BoardTopology,
+};
 use unengine_core::{GCameraArena, MCamera, MenuUI};
 use unrender_std::components::game::{GameSound, GameSprite};
 use untypes_core::states::{AppState, GameState, SimulationState};
@@ -86,5 +88,8 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::MainMenu), setup_menu_camera);
     app.add_systems(OnExit(AppState::MainMenu), cleanup_menu);
     app.add_systems(OnExit(AppState::InGame), cleanup_game);
-    app.add_systems(Update, (keyboard_state_transitions, simulation_state_transitions));
+    app.add_systems(
+        Update,
+        (keyboard_state_transitions, simulation_state_transitions),
+    );
 }

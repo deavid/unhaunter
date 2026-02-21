@@ -31,7 +31,7 @@ async fn handle_hub_connection(
     stream: TcpStream,
     manager: Arc<ServerManager>,
 ) -> anyhow::Result<()> {
-    let mut framed = Framed::new(stream, LinesCodec::new());
+    let mut framed = Framed::new(stream, LinesCodec::new_with_max_length(65536));
 
     let mut rooms_summary = Vec::new();
     {

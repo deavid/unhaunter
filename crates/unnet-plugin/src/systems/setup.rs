@@ -11,12 +11,12 @@ use super::connection::{
     host_process_heartbeats_system, host_status_updater_system, idle_timeout_system,
     lobby_broadcast_state_system, network_io_system, session_roster_system, startup_network_system,
 };
+use super::host_input::host_apply_input_system;
+use super::host_sync::{host_send_snapshots_system, host_send_summary_system};
 use super::procman::{
     dynamic_tick_rate_system, procman_player_events_system, procman_state_sync_system,
     setup_procman_system, update_procman_system,
 };
-use super::host_input::host_apply_input_system;
-use super::host_sync::{host_send_snapshots_system, host_send_summary_system};
 use bevy::prelude::*;
 use untypes_core::states::AppState;
 

@@ -11,6 +11,9 @@ pub struct HubState {
     pub procmans: Arc<DashMap<Uuid, ProcManSession>>,
     pub config: Arc<tokio::sync::RwLock<HubConfig>>,
     pub start_time: std::time::Instant,
+    pub rooms_by_ip: Arc<DashMap<std::net::IpAddr, Vec<String>>>,
+    pub room_to_ip: Arc<DashMap<String, std::net::IpAddr>>,
+    pub nonces: Arc<DashMap<String, NonceEntry>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -19,6 +22,15 @@ pub struct HubConfig {
     pub official_server_keys: std::collections::HashMap<Uuid, String>,
     pub banned_uuids: HashSet<Uuid>,
     pub allowed_procman_uuids: HashSet<Uuid>,
+    pub max_rooms_per_ip: usize,
+    pub trust_proxy_headers: bool,
+    pub pow_difficulty: u32,
+}
+
+pub struct NonceEntry {
+    pub player_uuid: Uuid,
+    pub client_ip: std::net::IpAddr,
+    pub issued_at: std::time::Instant,
 }
 
 pub struct ProcManSession {
@@ -36,6 +48,9 @@ impl HubState {
             procmans: Arc::new(DashMap::new()),
             config: Arc::new(tokio::sync::RwLock::new(config)),
             start_time: std::time::Instant::now(),
+            rooms_by_ip: Arc::new(DashMap::new()),
+            room_to_ip: Arc::new(DashMap::new()),
+            nonces: Arc::new(DashMap::new()),
         }
     }
 }

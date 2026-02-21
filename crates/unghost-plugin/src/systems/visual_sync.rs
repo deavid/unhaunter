@@ -8,7 +8,9 @@ use unrender_std::components::visuals::{
 
 use crate::metrics;
 
-pub(crate) fn ghost_visual_sync(mut q: Query<(&GhostSprite, &mut Ethereal, Option<&mut Emissive>)>) {
+pub(crate) fn ghost_visual_sync(
+    mut q: Query<(&GhostSprite, &mut Ethereal, Option<&mut Emissive>)>,
+) {
     let measure = metrics::GHOST_VISUAL_SYNC.time_measure();
     for (gs, mut eth, mut o_emissive) in q.iter_mut() {
         eth.warp = gs.warp;

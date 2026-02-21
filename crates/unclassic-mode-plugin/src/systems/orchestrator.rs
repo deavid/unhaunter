@@ -304,7 +304,8 @@ pub(crate) fn classic_mode_orchestrator(
                 && let (Some(meshes), Some(materials1), Some(ghost_assets)) =
                     (&mut p.meshes, &mut p.materials1, &p.ghost_assets)
             {
-                let mesh_handle = meshes.add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
+                let mesh_handle =
+                    meshes.add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
                 let mut material = CustomMaterial1::from_texture(ghost_assets.breach.clone());
                 material.data.color = Color::NONE.into();
                 material.data.y_anchor = anchor.y;

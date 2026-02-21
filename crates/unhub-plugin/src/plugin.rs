@@ -22,7 +22,10 @@ impl Plugin for UnhaunterHubPlugin {
             // Client side logic
             app.add_systems(
                 Startup,
-                (hub_client::setup_hub_client, hub_client::initialize_nickname),
+                (
+                    hub_client::setup_hub_client,
+                    hub_client::initialize_nickname,
+                ),
             );
             app.add_systems(Update, hub_client::update_hub_status);
 

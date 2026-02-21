@@ -80,7 +80,10 @@ fn initialize_installation_id(
                 match Uuid::parse_str(content) {
                     Ok(uuid) => {
                         if uuid.is_nil() {
-                            eprintln!("ERROR: Override UUID from {} cannot be nil (all zeros).", path_str);
+                            eprintln!(
+                                "ERROR: Override UUID from {} cannot be nil (all zeros).",
+                                path_str
+                            );
                             std::process::exit(1);
                         }
                         info!(
@@ -99,7 +102,10 @@ fn initialize_installation_id(
                 }
             }
             Err(e) => {
-                eprintln!("ERROR: Failed to read installation-id-file {}: {:?}", path_str, e);
+                eprintln!(
+                    "ERROR: Failed to read installation-id-file {}: {:?}",
+                    path_str, e
+                );
                 std::process::exit(1);
             }
         }

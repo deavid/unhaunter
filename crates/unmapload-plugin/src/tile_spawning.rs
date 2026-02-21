@@ -70,7 +70,11 @@ pub(crate) fn process_and_spawn_tile(
 
         // Create transparent material initially (will fade in later)
         if !p.cli.is_headless() {
-            let mut mat = p.materials1.get(&b.material).expect("Material not found in tile_spawning").clone();
+            let mut mat = p
+                .materials1
+                .get(&b.material)
+                .expect("Material not found in tile_spawning")
+                .clone();
             mat.data.color.alpha = 0.0;
             let mat = p.materials1.add(mat);
             b.material = MeshMaterial2d(mat);

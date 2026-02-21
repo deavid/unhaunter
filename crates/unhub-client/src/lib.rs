@@ -110,3 +110,29 @@ pub fn generate_codename(letter: char, attempt: u32) -> String {
 
     format!("{} {}", adjectives[adj_idx], nouns[noun_idx])
 }
+
+use sha2::{Digest, Sha256};
+
+pub fn solve_pow(nonce: &str, difficulty: u32) -> String {
+    let mut i = 0u64;
+    loop {
+        let candidate = format!("{}:{}", nonce, i);
+        let hash = Sha256::digest(candidate.as_bytes());
+
+        // Check leading zero bits
+        let mut zero_bits = 0;
+        for byte in hash {
+            if byte == 0 {
+                zero_bits += 8;
+            } else {
+                zero_bits += byte.leading_zeros();
+                break;
+            }
+        }
+
+        if zero_bits >= difficulty {
+            return i.to_string();
+        }
+        i += 1;
+    }
+}

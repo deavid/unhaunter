@@ -93,9 +93,22 @@ pub struct RoomSummary {
 // --- Player ↔ Hub REST API ---
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ChallengeRequest {
+    pub player_uuid: Uuid,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ChallengeResponse {
+    pub nonce: String,
+    pub difficulty: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateRoomRequest {
     pub player_uuid: Uuid,
     pub game_version: String,
+    pub nonce: String,
+    pub solution: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

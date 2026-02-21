@@ -6,9 +6,9 @@ use unassets_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_state::DifficultySelectionState;
 use undifficulty_core::manual_types::ManualChapterIndex;
-use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unfoundation_core::platform::plt::FONT_SCALE;
 use unmanual_core::assets::ManualAssets;
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use untypes_core::states::AppState;
 use unui_core::assets::UiAssets;
 

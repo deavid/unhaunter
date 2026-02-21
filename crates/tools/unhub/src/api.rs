@@ -4,6 +4,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
+use sha2::Digest;
 use unhub_client::protocol::{
     CreateRoomRequest, CreateRoomResponse, HealthResponse, HubError, JoinRoomRequest,
     JoinRoomResponse, ProcManMessage,
@@ -17,8 +18,90 @@ pub async fn health(State(state): State<HubState>) -> Json<HealthResponse> {
     })
 }
 
+pub async fn challenge(
+    State(state): State<HubState>,
+    axum::extract::ConnectInfo(addr): axum::extract::ConnectInfo<std::net::SocketAddr>,
+    headers: axum::http::HeaderMap,
+    Json(payload): Json<unhub_client::protocol::ChallengeRequest>,
+) -> Result<Json<unhub_client::protocol::ChallengeResponse>, (StatusCode, Json<HubError>)> {
+    let config = state.config.read().await;
+
+    // Check ban list
+    if config.banned_uuids.contains(&payload.player_uuid) {
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(HubError {
+                error: "banned".to_string(),
+                message: "Banned".to_string(),
+            }),
+        ));
+    }
+
+    // Extract IP (same logic as create_room)
+    let client_ip = if config.trust_proxy_headers {
+        headers
+            .get("X-Forwarded-For")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|s| s.split(',').next())
+            .and_then(|s| s.trim().parse::<std::net::IpAddr>().ok())
+            .unwrap_or(addr.ip())
+    } else {
+        addr.ip()
+    };
+
+    // Enforce max 2 outstanding nonces per UUID and IP
+    let mut uuid_count = 0;
+    let mut ip_count = 0;
+    let mut expired_nonces = Vec::new();
+    let now = std::time::Instant::now();
+
+    for entry in state.nonces.iter() {
+        if now.duration_since(entry.issued_at).as_secs() > 120 {
+            expired_nonces.push(entry.key().clone());
+            continue;
+        }
+        if entry.player_uuid == payload.player_uuid {
+            uuid_count += 1;
+        }
+        if entry.client_ip == client_ip {
+            ip_count += 1;
+        }
+    }
+
+    for nonce in expired_nonces {
+        state.nonces.remove(&nonce);
+    }
+
+    if uuid_count >= 2 || ip_count >= 2 {
+        return Err((
+            StatusCode::TOO_MANY_REQUESTS,
+            Json(HubError {
+                error: "rate_limited".to_string(),
+                message: "Too many challenges".to_string(),
+            }),
+        ));
+    }
+
+    let nonce = uuid::Uuid::new_v4().to_string();
+    state.nonces.insert(
+        nonce.clone(),
+        crate::state::NonceEntry {
+            player_uuid: payload.player_uuid,
+            client_ip,
+            issued_at: std::time::Instant::now(),
+        },
+    );
+
+    Ok(Json(unhub_client::protocol::ChallengeResponse {
+        nonce,
+        difficulty: config.pow_difficulty,
+    }))
+}
+
 pub async fn create_room(
     State(state): State<HubState>,
+    axum::extract::ConnectInfo(addr): axum::extract::ConnectInfo<std::net::SocketAddr>,
+    headers: axum::http::HeaderMap,
     Json(payload): Json<CreateRoomRequest>,
 ) -> Result<Json<CreateRoomResponse>, (StatusCode, Json<HubError>)> {
     let config = state.config.read().await;
@@ -28,6 +111,79 @@ pub async fn create_room(
             Json(HubError {
                 error: "banned".to_string(),
                 message: "You are banned from Hub services.".to_string(),
+            }),
+        ));
+    }
+
+    let client_ip = if config.trust_proxy_headers {
+        headers
+            .get("X-Forwarded-For")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|s| s.split(',').next())
+            .and_then(|s| s.trim().parse::<std::net::IpAddr>().ok())
+            .unwrap_or(addr.ip())
+    } else {
+        addr.ip()
+    };
+
+    if let Some(rooms) = state.rooms_by_ip.get(&client_ip)
+        && rooms.len() >= config.max_rooms_per_ip
+    {
+        return Err((
+            StatusCode::TOO_MANY_REQUESTS,
+            Json(HubError {
+                error: "room_cap_exceeded".to_string(),
+                message: "You have reached the maximum number of active rooms.".to_string(),
+            }),
+        ));
+    }
+
+    let entry = state.nonces.remove(&payload.nonce).map(|(_, v)| v).ok_or((
+        StatusCode::BAD_REQUEST,
+        Json(HubError {
+            error: "invalid_pow".to_string(),
+            message: "Invalid or expired nonce".to_string(),
+        }),
+    ))?;
+
+    if entry.player_uuid != payload.player_uuid || entry.client_ip != client_ip {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(HubError {
+                error: "invalid_pow".to_string(),
+                message: "Nonce mismatch".to_string(),
+            }),
+        ));
+    }
+
+    if entry.issued_at.elapsed().as_secs() > 120 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(HubError {
+                error: "invalid_pow".to_string(),
+                message: "Nonce expired".to_string(),
+            }),
+        ));
+    }
+
+    let candidate = format!("{}:{}", payload.nonce, payload.solution);
+    let hash = sha2::Sha256::digest(candidate.as_bytes());
+    let mut zero_bits = 0;
+    for byte in hash {
+        if byte == 0 {
+            zero_bits += 8;
+        } else {
+            zero_bits += byte.leading_zeros();
+            break;
+        }
+    }
+
+    if zero_bits < config.pow_difficulty {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(HubError {
+                error: "invalid_pow".to_string(),
+                message: "Incorrect solution".to_string(),
             }),
         ));
     }
@@ -61,21 +217,39 @@ pub async fn create_room(
         ))?;
     let secret = generate_room_secret();
 
+    state
+        .rooms_by_ip
+        .entry(client_ip)
+        .or_default()
+        .push(room_code.clone());
+    state.room_to_ip.insert(room_code.clone(), client_ip);
+
     // Ask ProcMan to create the room
-    tx.send(ProcManMessage::CreateRoom {
-        room_code: room_code.clone(),
-        secret: secret.clone(),
-        game_version: payload.game_version.clone(),
-    })
-    .map_err(|_| {
-        (
+    if tx
+        .send(ProcManMessage::CreateRoom {
+            room_code: room_code.clone(),
+            secret: secret.clone(),
+            game_version: payload.game_version.clone(),
+        })
+        .is_err()
+    {
+        if let Some((_, ip)) = state.room_to_ip.remove(&room_code)
+            && let Some(mut rooms) = state.rooms_by_ip.get_mut(&ip)
+        {
+            rooms.retain(|c| c != &room_code);
+            if rooms.is_empty() {
+                drop(rooms);
+                state.rooms_by_ip.remove(&ip);
+            }
+        }
+        return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(HubError {
                 error: "internal_error".to_string(),
                 message: "Failed to communicate with process manager.".to_string(),
             }),
-        )
-    })?;
+        ));
+    }
 
     // WAIT for RoomReady (timeout 5s)
     for _ in 0..50 {
@@ -86,6 +260,17 @@ pub async fn create_room(
                 addr: format!("{}:{}", public_addr, room.port),
                 secret: room.secret.clone(),
             }));
+        }
+    }
+
+    // Timeout cleanup
+    if let Some((_, ip)) = state.room_to_ip.remove(&room_code)
+        && let Some(mut rooms) = state.rooms_by_ip.get_mut(&ip)
+    {
+        rooms.retain(|c| c != &room_code);
+        if rooms.is_empty() {
+            drop(rooms);
+            state.rooms_by_ip.remove(&ip);
         }
     }
 
