@@ -300,8 +300,10 @@ pub(crate) fn player_movement_system(
         player.movement.dx += DIR_MAG3 * d.dx * (*avg_running + 0.5);
         player.movement.dy += DIR_MAG3 * d.dy * (*avg_running + 0.5);
 
-        pos.x += pdx;
-        pos.y += pdy;
+        if is_main_player {
+            pos.x += pdx;
+            pos.y += pdy;
+        }
 
         // Update player animation - make animations faster when running
         let animation_speed_factor = if run_multiplier > 1.0 { 1.5 } else { 1.0 };

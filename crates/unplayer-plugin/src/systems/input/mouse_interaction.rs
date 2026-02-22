@@ -51,13 +51,13 @@ pub(crate) fn player_gear_usage_system(
                             ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         } else if is_authority {
                             // Host plays sound locally for remote player click
-                            // but we don't broadcast it back to the client
-                            ga.play_audio_local("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                            // and broadcasts it to other clients
+                            ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         }
                     } else if is_main {
                         ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                     } else if is_authority {
-                        ga.play_audio_nopos_local("sounds/switch-on-1.ogg".into(), 1.0);
+                        ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }
             }
@@ -88,13 +88,13 @@ pub(crate) fn player_gear_usage_system(
                             ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         } else if is_authority {
                             // Host plays sound locally for remote player click
-                            // but we don't broadcast it back to the client
-                            ga.play_audio_local("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                            // and broadcasts it to other clients
+                            ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         }
                     } else if is_main {
                         ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                     } else if is_authority {
-                        ga.play_audio_nopos_local("sounds/switch-on-1.ogg".into(), 1.0);
+                        ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }
             }
