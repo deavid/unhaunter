@@ -463,7 +463,7 @@ The main work is:
 
 ---
 
-## Lobby Design Notes (2025-06 Conversation)
+## Lobby Design Notes
 
 ### Two-Track Multiplayer Access
 

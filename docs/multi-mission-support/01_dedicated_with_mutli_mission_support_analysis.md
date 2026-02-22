@@ -1,5 +1,7 @@
 # Multi-Mission Dedicated Server: Feasibility Analysis
 
+NOTE: Status as of 2026-02-22 - this is deemed as not wanted.
+
 ## 1. Executive Summary
 
 This document analyzes what changes would be required for Unhaunter's dedicated server to simulate **multiple missions

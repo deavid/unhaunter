@@ -107,7 +107,8 @@ The Lobby is a physical Bevy game space.
 
 - Asynchronous presence (bulletin boards, "I was here" traces).
 - Contact lists with history (Agencies).
-- Proximity voice chat (deferred/long-term).
+- **[Text Chat System](35_diegetic_chat_system.md)** (Accessibility & Tension fallback).
+- **[Voice Chat System](36_voice_chat_system.md)** (Immersive, EMI-affected dual-mode comms).
 
 ---
 

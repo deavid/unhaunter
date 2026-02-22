@@ -1,6 +1,10 @@
 # Simulation Boundaries and Code Health
 
-**Date:** 2026-02-15 **Follows:** `01_dedicated_with_multi_mission_support_analysis.md`
+**Date:** 2026-02-15
+
+**Follows:** `01_dedicated_with_multi_mission_support_analysis.md`
+
+NOTE: Status as of 2026-02-22 - this is deemed as not wanted.
 
 ---
 

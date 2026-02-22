@@ -92,6 +92,18 @@ legitimate players.
 2. **`crates/tools/unhub/src/config.rs`** (or wherever config is loaded):
    - Ensure these new fields are parsed correctly with fallbacks.
 
+## 6. Future Considerations: Communication Layers
+
+While this MVP focuses on Hub infrastructure security, upcoming features like **Text Chat** (see
+[35_diegetic_chat_system.md](35_diegetic_chat_system.md)) will leverage these bounded codecs.
+
+- **DDoS via Chat:** The 8192-byte limit on `LinesCodec` naturally mitigates "Giant JSON" attacks in the `ChatMessage`
+  protocol.
+- **Garble Logic as Security:** Since text chat is garbled by ghost interference, the server already centralizes and
+  filters all message traffic, providing a hook for future automated spam/slur detection if needed.
+- **Wait, what's that noise?** Text chat serves as an essential accessibility fallback for players with microphone
+  issues, ensuring they can still coordinate "Mic Checks" or "Help!" during intense mission phases.
+
 ---
 
 **Execution Note:** These steps are designed to be implemented incrementally. You can start with Step 1 (Bounded Codecs)

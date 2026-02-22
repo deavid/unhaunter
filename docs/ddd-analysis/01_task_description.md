@@ -1,5 +1,8 @@
 # Task: Domain-Driven Architectural Analysis
 
+NOTE: This is an analysis that we execute from time to time to understand how to get the codebase into a better state
+and flag potential problems. It has been executed already at least 3 times. For now we do not expect to require this.
+
 ## 1. Objective
 
 The goal of this task is to perform a deep-dive architectural audit of the `unhaunter` workspace. We aim to evaluate the

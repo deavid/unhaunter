@@ -6,6 +6,9 @@ This document analyzes the decision to transition Unhaunter from 2D isometric pi
 major architectural decision that addresses a fundamental problem: **players approach the game with the wrong mindset
 because the visual language tells them it's a different genre.**
 
+NOTE: As of the latter docs/design/2026-02-21/core_mechanics_and_vision.md, we are going to try to stick to 2D for
+a while, to give it an extra push to see if we can fix the problems correctly.
+
 ---
 
 ## Table of Contents
