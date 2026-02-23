@@ -41,6 +41,8 @@ Before touching game logic, we must establish the new transport layer and secure
 - Add `bevy_replicon` and `bevy_replicon_renet` to the workspace.
 - Create a new `unreplicon-plugin` to encapsulate the Replicon setup and transport configuration.
 - Configure `bevy_renet` to listen on UDP ports assigned by `unprocman`.
+- **Bevy 0.18 Note:** Ensure `bevy_replicon` events are consumed using `MessageReader<T>` and `MessageWriter<T>` to
+  align with the project's strict Message vs Event (Observer) separation.
 
 ### 1.2. Implement Ticket-Based Authentication
 
@@ -72,7 +74,8 @@ With the secure transport in place, we migrate the foundational game state.
 
 - The server remains authoritative over the selected map.
 - When the server transitions to `AppState::Loading`, it replicates a `SelectedMap` component.
-- Clients observe this component, load the corresponding `.tmx` file locally, and spawn the static map geometry.
+- **Bevy 0.18 Pattern:** Clients use an Observer (`OnAdd<SelectedMap>`) to trigger the local `.tmx` file load and spawn
+  the static map geometry, rather than polling in a system.
 - **Crucial:** The server does _not_ replicate the thousands of static map tiles. It only replicates the map identifier.
 
 ---
@@ -86,23 +89,28 @@ This is the most complex phase, requiring the "Client Prediction + Server Exclus
 - The server spawns player entities and assigns ownership using `bevy_replicon`'s `ClientId`.
 - Replicate core player components: `Position`, `PlayerName`, `PlayerColor`.
 
-### 3.2. Implement Client Prediction for Movement
+### 3.2. Implement Client Prediction and Interpolation for Movement
 
-- **Client:** When the local player moves, update the local `Position` immediately (zero latency). Send a
-  `PlayerMoveEvent` (Client Event) to the server.
-- **Server:** Receive the event, validate the movement (speed limits, collision), and update the authoritative
-  `Position`.
-- **Replication:** Use `ClientVisibility` (Server Exclusion) to replicate the authoritative `Position` to _all other
-  clients except the owner_. The owner relies on their local prediction.
-- **Correction (Optional):** Implement a mechanism for the server to force-correct the owner's position if they desync
-  significantly (e.g., rubber-banding).
+- **The Interpolation Problem:** Replicating `Position` directly at the network tick rate (e.g., 30Hz) will cause remote
+  players to stutter on 60Hz+ clients.
+- **Component Split:** Replicate a `NetworkPosition` component instead of the core `Position`.
+- **Client (Local Player):** Updates their local `Position` immediately (zero latency). Sends a `PlayerMoveMessage`
+  (Client Message) to the server.
+- **Server:** Receives the message, validates movement, and updates the authoritative `NetworkPosition`.
+- **Replication:** Uses `ClientVisibility` (Server Exclusion) to replicate `NetworkPosition` to _all other clients
+  except the owner_.
+- **Client (Remote Players):** An interpolation system smoothly moves the visual `Position` towards the replicated
+  `NetworkPosition` every frame.
 
 ### 3.3. Migrate Gear & Interactions
 
 - Apply the same prediction pattern to gear toggles (e.g., turning on a flashlight).
-- **Component Splitting:** Separate networked state (`GearOperativeState`) from local simulation state
-  (`ThermometerReading`). The server replicates the operative state; the client computes the reading locally based on
-  the map.
+- **Component Splitting:** Strictly separate networked state from local visual/audio state.
+  - Example: `FlashlightNet { is_on: bool }` is replicated.
+  - **Bevy 0.18 Pattern:** Use an Observer (`OnChanged<FlashlightNet>`) to toggle the local `Flashlight` component
+    (which handles the actual `SpotLight` and meshes). The server _never_ spawns the local `Flashlight`.
+- The server replicates the operative state; the client computes sensory readings (like `ThermometerReading`) locally
+  based on the map.
 
 ---
 
@@ -119,7 +127,8 @@ Migrate the remaining dynamic entities.
 ### 5.2. Interactive Objects (Doors, Switches)
 
 - Replicate the state of interactive map objects (e.g., `DoorOpen`, `LightSwitchOn`).
-- Clients send interaction events to the server; the server validates and updates the replicated state.
+- Clients send interaction messages to the server; the server validates and updates the replicated state.
+- **Bevy 0.18 Pattern:** Use Observers (`OnChanged<DoorOpen>`) to trigger the local door animation and sound effects.
 
 ---
 

@@ -25,8 +25,8 @@ Server-Authoritative to Client-Authoritative.
   state must be idempotent and programmed to be overwritten by the next authoritative server update without crashing or
   desyncing.
 - **Force Overrides:** While the owner has authority, the server can still "force" state changes (e.g., an EMP ghost
-  disabling a flashlight) by sending a targeted RPC event (e.g., `ForceGearStateEvent`) which the client is programmed
-  to respect.
+  disabling a flashlight) by sending a targeted RPC message (e.g., `ForceGearStateMessage`) which the client is
+  programmed to respect.
 
 ---
 
@@ -64,6 +64,8 @@ locally by the client immediately.
 - **The Requirement:** The `SoundEvent` system must be expanded to include an optional
   `exclude_player: Option<ClientId>` field. The server will use this field to skip the original actor when broadcasting
   environmental sounds that were already predicted locally.
+- **Bevy 0.18 Pattern:** Use Observers (`Trigger<SoundEvent>`) for local sound playback, but ensure the network message
+  that triggers it respects the exclusion.
 
 ---
 

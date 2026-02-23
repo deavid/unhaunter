@@ -77,6 +77,7 @@ members = [
     "crates/unui-plugin",
     "crates/unwalkie-plugin",
     "crates/unwalkie-core",
+    "crates/unreplicon-plugin",
 ]
 resolver = "3"
 
@@ -119,7 +120,7 @@ normalize-path = "0.2"
 itertools = "0.14.0"
 csv = "1.4"
 dirs = "6.0"
-strum = { version = "0.27", features = ["derive"] }
+strum = { version = "0.28", features = ["derive"] }
 noise = { version = "0.9.0", features = ["std"] }
 bevy = { version = "0.18", features = ["jpeg", "serialize", "debug"] }
 # bevy = { version = "0.18", default-features = false, features = [
@@ -147,9 +148,15 @@ sha2 = "0.10"
 rayon = "1.11"
 crossbeam-channel = "0.5"
 uuid = { version = "1.21", features = ["v4", "serde"] }
-reqwest = { version = "0.12", features = ["json"] }
+bevy_replicon = "0.38.2"
+bevy_replicon_renet = "0.14.0"
+bevy_renet = { version = "4.0.0", features = ["netcode"] }
+renet = "2.0.0"
+renet_netcode = "2.0.0"
+jsonwebtoken = "10.3.0"
+reqwest = { version = "0.13", features = ["json"] }
 axum = "0.8.8"
-tokio = { version = "1.0", features = ["full"] }
+tokio = { version = "1.49", features = ["full"] }
 dashmap = "6.1.0"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 tracing = "0.1.44"
@@ -236,6 +243,7 @@ unui-core = { path = "crates/unui-core" }
 unui-plugin = { path = "crates/unui-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 unwalkie-core = { path = "crates/unwalkie-core" }
+unreplicon-plugin = { path = "crates/unreplicon-plugin" }
 
 # winit is not for WASM, and needs to be in sync with bevy version
 winit = "0.30"

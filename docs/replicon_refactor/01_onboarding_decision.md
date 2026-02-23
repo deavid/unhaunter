@@ -61,13 +61,13 @@ Exclusion**.
 
 ### Blocker B: Idempotency and "Six Nines" Reliability
 
-**The Concern:** If we use "Client Events" to tell the server what we did, sending an event like "I pressed R" (or
+**The Concern:** If we use "Client Messages" to tell the server what we did, sending a message like "I pressed R" (or
 "Toggle") is time-sensitive and fragile. If there's a desync or a dropped packet, the same action on the client could
 execute a slightly different action on the server. We need robust, reliable state updates.
 
-**The Resolution:** We will not send "X happened" events. We will send **Idempotent State Payloads**.
+**The Resolution:** We will not send "X happened" messages. We will send **Idempotent State Payloads**.
 
-- Instead of sending `ToggleGearEvent`, the client sends `SetGearStateEvent { entity: Entity, is_on: true }`.
+- Instead of sending `ToggleGearMessage`, the client sends `SetGearStateMessage { entity: Entity, is_on: true }`.
 - If the network duplicates the packet, or it arrives late, setting `is_on: true` when it's already `true` does nothing.
   No desync. The server receives this, validates ownership, and applies it to the server's ECS.
 
@@ -111,9 +111,9 @@ ECS or allocate game state.
 **The Concern:** Replicon runs on its own internal tick rate (e.g., 20 or 30 ticks per second). If the game runs at 60Hz
 or 144Hz, will remote players look like a slideshow?
 
-**The Resolution:** Yes, they will, unless we interpolate. Replicon only updates the `Position` component at the tick
-rate. We will need to implement a standard interpolation pattern (e.g., replicating a `NetworkPosition` and smoothly
-moving the visual `Transform` towards it every frame) to ensure smooth movement for remote players.
+**The Resolution:** Yes, they will, unless we interpolate. Replicon only updates the `NetworkPosition` component at the
+tick rate. We will need to implement a standard interpolation pattern (e.g., replicating a `NetworkPosition` and
+smoothly moving the visual `Position` towards it every frame) to ensure smooth movement for remote players.
 
 ---
 
