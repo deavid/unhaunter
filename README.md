@@ -90,7 +90,21 @@ Embark on a full **Campaign** featuring over 15 unique maps. As you successfully
 **Experience (XP)** and **Money**, allowing you to level up and take on more challenging missions. Each mission is
 graded from **A to F** based on your performance and bravery.
 
-### Controls
+## Design Philosophy
+
+Unhaunter is built on several core architectural and psychological pillars that distinguish it from other paranormal
+investigation games. For a deep dive into our vision, see [docs/DESIGN_PHILOSOPHY.md](docs/DESIGN_PHILOSOPHY.md).
+
+- **Liminal Horror over PagerDuty Simulation:** We prioritize atmosphere and "Gear 3" tension over synthetic stress and
+  tool-clutter.
+- **Zero-Ops Networking:** A "RAM-only" Hub architecture designed for frictionless community-run servers and GDPR
+  compliance.
+- **Friction Architecture:** A unique security model that taxes a troll's time through Reputation economies rather than
+  simple bans.
+- **Distributed Authority:** A multiplayer model where players own their movement and gear locally for zero-latency
+  gameplay, while the environment remains server-authoritative.
+
+## Controls
 
 - **[WASD]:** Movement (or Arrow keys, configurable)
 - **[E]:** Interact (doors, switches, lamps, hiding spots)

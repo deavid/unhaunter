@@ -14,6 +14,9 @@
 - \`README.md\`: Project overview and instructions.
 - \`INSTALLING_DEPS.md\`: Dependency installation guide.
 - \`RELEASING.md\`: Release process documentation.
+- \`docs/DESIGN_PHILOSOPHY.md\`: Core design and architectural principles (Multiplayer, UX, Security).
+- \`docs/replicon_refactor/\`: Journey and roadmap for the \`bevy_replicon\` migration.
+- \`FR_ghost_interaction_system.md\`: Functional Requirement & Design Doc for the Ghost Interaction System (GIS).
 - \`unhaunter/src/assetidx_updater.rs\`: Generates \`\*.assetidx\` files for WASM.
 - \`clippy.toml\`: Rust linter config.
 - \`index.html\`: WASM entry point.
@@ -75,6 +78,9 @@ Low-level foundation shared across the project. Zero game logic (no systems or o
 - **\`unsound-core\`**: Sound-related resources and types.
 - **\`untruck-core\`**: Truck-specific components, journal, and loadout data.
 - **\`unwalkie-core\`**: Walkie-talkie traits, events, and resources.
+- **\`unnet-core\`**: Base networking types, protocol definitions, and transport traits.
+- **\`unfps-core\`**: FPS-related diagnostics and core types.
+- **\`unwalkie-types\`**: Low-level message types for walkie-talkie communication.
 
 ### Plugins & Gameplay Systems
 
@@ -109,6 +115,11 @@ High-level game flow and specific gameplay mechanics. Logic is contained in \`Pl
 - **\`unmetrics-plugin\`**: Performance monitoring and reporting.
 - **\`unclassic-mode-plugin\`**: Classic mode gameplay logic and mission evaluation.
 - **\`unmanual-plugin\`**: In-game manual UI, chapters, and navigation logic.
+- **\`unnet-plugin\`**: Low-level networking transport (UDP/TCP/WebRTC) and connection management.
+- **\`unreplicon-plugin\`**: Centralized entity replication and authority management using \`bevy_replicon\`.
+- **\`unhub-plugin\`**: Networking Hub implementation for the "Zero-Ops" directory and matchmaking.
+- **\`unhub-client\`**: Client-side logic for interacting with the Universe/Domain Hubs.
+- **\`unfps-plugin\`**: FPS counter and performance diagnostics UI.
 - **\`unmission-plugin\`**: Mission lifecycle events and summary data preparation.
 - **\`unsettings-plugin\`**: Persistence of application and gameplay settings.
 - **\`untmxmap-plugin\`**: Tiled map loading integration and Bevy compatibility.
