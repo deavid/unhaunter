@@ -257,6 +257,7 @@ pub fn handle_hub_responses(
                 room_ident.secret = Some(data.secret);
                 cli.net_mode = NetMode::Join {
                     address: data.addr.clone(),
+                    ticket: Some(data.ticket.clone()),
                 };
                 ev_connect.write(unnet_core::messages::ConnectToServer { address: data.addr });
                 next_app_state.set(AppState::Lobby);
@@ -267,6 +268,7 @@ pub fn handle_hub_responses(
                 room_ident.secret = Some(data.secret);
                 cli.net_mode = NetMode::Join {
                     address: data.addr.clone(),
+                    ticket: Some(data.ticket.clone()),
                 };
                 ev_connect.write(unnet_core::messages::ConnectToServer { address: data.addr });
                 next_app_state.set(AppState::Lobby);

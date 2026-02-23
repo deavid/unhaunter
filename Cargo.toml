@@ -286,7 +286,6 @@ unmenu-plugin = { workspace = true }
 unmenusettings-plugin = { workspace = true }
 unmetrics-plugin = { workspace = true }
 unmission-plugin = { workspace = true }
-unnet-plugin = { workspace = true }
 unnpc-plugin = { workspace = true }
 unplayer-plugin = { workspace = true }
 unprofile-plugin = { workspace = true }
@@ -305,6 +304,7 @@ undifficulty-plugin = { workspace = true }
 uninteraction-plugin = { workspace = true }
 unhub-client = { workspace = true }
 unhub-plugin = { workspace = true }
+unreplicon-plugin = { workspace = true }
 sha2 = { workspace = true }
 axum = { workspace = true }
 dashmap = { workspace = true }

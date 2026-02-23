@@ -18,3 +18,8 @@ bevy_renet = { workspace = true }
 renet = { workspace = true }
 renet_netcode = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
+jsonwebtoken = { workspace = true }
+crossbeam-channel = { workspace = true }
+unhub-client = { workspace = true }
+untypes-core = { path = "../untypes-core" }

@@ -14,6 +14,10 @@ pub enum ProcManMessage {
         public_addr: String,
         idle_pool: std::collections::HashMap<String, usize>,
         rooms: Vec<RoomSummary>,
+        /// HMAC-SHA256 key (hex-encoded 32 bytes) used to sign per-room JWT
+        /// tickets. The Hub uses this to create tickets for players; the
+        /// dedicated server receives it via `AssignRoom` to validate them.
+        ticket_hmac_secret: String,
     },
     Heartbeat {
         idle_capacity: usize,
@@ -121,6 +125,9 @@ pub struct CreateRoomResponse {
     pub code: String,
     pub addr: String,
     pub secret: String,
+    /// JWT ticket signed by the Hub; must be included as `user_data` in the
+    /// Renet connection request for the dedicated server to accept it.
+    pub ticket: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -128,6 +135,9 @@ pub struct JoinRoomResponse {
     pub code: String,
     pub addr: String,
     pub secret: String,
+    /// JWT ticket signed by the Hub; must be included as `user_data` in the
+    /// Renet connection request for the dedicated server to accept it.
+    pub ticket: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -150,6 +160,9 @@ pub enum ProcManToDedicated {
     AssignRoom {
         room_code: String,
         secret: String,
+        /// HMAC-SHA256 key (hex-encoded) shared with the Hub for JWT ticket
+        /// validation. Store this in `RoomAuth` to authenticate connections.
+        ticket_hmac_secret: String,
     },
     RenameRoom {
         new_code: String,

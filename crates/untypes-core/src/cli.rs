@@ -11,6 +11,11 @@ pub enum NetMode {
     },
     Join {
         address: String,
+        /// JWT ticket issued by the Hub after PoW challenge. When present the
+        /// Renet transport embeds it in the connection `user_data` so the
+        /// dedicated server can validate the connection.  `None` in
+        /// singleplayer / direct-connect scenarios (no auth enforced).
+        ticket: Option<String>,
     },
 }
 

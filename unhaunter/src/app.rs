@@ -24,12 +24,12 @@ use unmenu_plugin::plugin::UnhaunterCoreMenuPlugin;
 use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
 use unmetrics_plugin::plugin::UnhaunterMetricsPlugin;
 use unmission_plugin::plugin::UnhaunterMissionPlugin;
-use unnet_plugin::plugin::UnhaunterNetPlugin;
 use unnpc_plugin::plugin::{UnhaunterNPCCorePlugin, UnhaunterNPCPlugin};
 use unpicking_plugin::plugin::CustomSpritePickingPlugin;
 use unplayer_plugin::plugin::{UnhaunterPlayerCorePlugin, UnhaunterPlayerPlugin};
 use unprofile_plugin::plugin::UnhaunterProfilePlugin;
 use unrender_plugin::plugin::{UnhaunterRenderCorePlugin, UnhaunterRenderPlugin};
+use unreplicon_plugin::plugin::UnrepliconPlugin;
 use unsettings_plugin::plugin::UnhaunterSettingsPlugin;
 use unsound_plugin::plugin::UnhaunterSoundPlugin;
 use unsummary_plugin::plugin::{UnhaunterSummaryCorePlugin, UnhaunterSummaryPlugin};
@@ -160,7 +160,7 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterGhostCorePlugin,
         UnhaunterLightCorePlugin,
         UnhaunterNPCCorePlugin,
-        UnhaunterNetPlugin,
+        UnrepliconPlugin,
         UnhaunterTmxMapPlugin,
         UnhaunterMapLoadPlugin,
         UnhaunterClassicModeCorePlugin,

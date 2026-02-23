@@ -63,6 +63,7 @@ async fn handle_hub_connection(
         public_addr: manager.config.public_addr.clone(),
         idle_pool: std::collections::HashMap::from([(unhub_client::GAME_VERSION.to_string(), 1)]),
         rooms: rooms_summary,
+        ticket_hmac_secret: manager.config.ticket_hmac_secret.clone(),
     };
 
     framed.send(serde_json::to_string(&hello)?).await?;

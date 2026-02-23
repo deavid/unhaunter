@@ -17,6 +17,8 @@ pub struct ServerProcess {
     pub assigned_at: Option<std::time::Instant>,
     pub has_been_joined: bool,
     pub stdin_tx: tokio::sync::mpsc::UnboundedSender<ProcManToDedicated>,
+    /// The HMAC secret passed to the game server so it can validate JWT tickets.
+    pub ticket_hmac_secret: Option<String>,
 }
 
 pub struct ServerManager {
@@ -46,7 +48,7 @@ impl ServerManager {
                 let timeout_secs = if s.has_been_joined {
                     300 // 5 minutes if it was once joined
                 } else {
-                    10 // 10 seconds if it was never joined
+                    5 // Fast Expiry: 5 seconds if never joined (Phase 1.4)
                 };
 
                 if assigned_at.elapsed().as_secs() > timeout_secs {
@@ -132,6 +134,7 @@ impl ServerManager {
                     assigned_at: None,
                     has_been_joined: false,
                     stdin_tx,
+                    ticket_hmac_secret: None,
                 },
             );
 
@@ -361,9 +364,13 @@ impl ServerManager {
         server.player_count = 0;
         server.has_been_joined = false;
 
+        let ticket_hmac_secret = self.config.ticket_hmac_secret.clone();
+        server.ticket_hmac_secret = Some(ticket_hmac_secret.clone());
+
         let msg = ProcManToDedicated::AssignRoom {
             room_code: room_code.clone(),
             secret: secret.clone(),
+            ticket_hmac_secret,
         };
         server.stdin_tx.send(msg)?;
 

@@ -26,3 +26,4 @@ futures = { workspace = true }
 tokio-util = { workspace = true }
 rand = { workspace = true }
 sha2 = { workspace = true }
+jsonwebtoken = { workspace = true }

@@ -54,7 +54,7 @@ fn main() {
             bind_addresses,
         }
     } else if let Some(address) = args.join {
-        untypes_core::cli::NetMode::Join { address }
+        untypes_core::cli::NetMode::Join { address, ticket: None }
     } else {
         untypes_core::cli::NetMode::Offline
     };

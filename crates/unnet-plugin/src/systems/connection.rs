@@ -436,7 +436,7 @@ pub(crate) fn startup_network_system(
                 };
             }
         }
-        NetMode::Join { address } => {
+        NetMode::Join { address, .. } => {
             info!("Network: Connecting to {}...", address);
             match TcpStream::connect(address) {
                 Ok(stream) => {

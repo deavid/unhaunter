@@ -190,11 +190,18 @@ pub async fn create_room(
 
     // Select a ProcMan with capacity — extract what we need in a single lookup
     // to avoid a second DashMap get that could race with disconnection.
-    let (tx, public_addr) = state
+    let (tx, public_addr, pm_uuid, ticket_hmac_secret) = state
         .procmans
         .iter()
         .find(|pm| pm.game_versions.contains(&payload.game_version) && pm.idle_capacity > 0)
-        .map(|pm| (pm.tx.clone(), pm.public_addr.clone()))
+        .map(|pm| {
+            (
+                pm.tx.clone(),
+                pm.public_addr.clone(),
+                *pm.key(),
+                pm.ticket_hmac_secret.clone(),
+            )
+        })
         .ok_or((
             StatusCode::SERVICE_UNAVAILABLE,
             Json(HubError {
@@ -255,10 +262,26 @@ pub async fn create_room(
     for _ in 0..50 {
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         if let Some(room) = state.rooms.get(&room_code) {
+            let ticket = crate::tickets::generate_ticket(
+                &ticket_hmac_secret,
+                &room_code,
+                pm_uuid,
+                payload.player_uuid,
+            )
+            .map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(HubError {
+                        error: "ticket_error".to_string(),
+                        message: format!("Failed to generate connection ticket: {}", e),
+                    }),
+                )
+            })?;
             return Ok(Json(CreateRoomResponse {
                 code: room_code,
                 addr: format!("{}:{}", public_addr, room.port),
                 secret: room.secret.clone(),
+                ticket,
             }));
         }
     }
@@ -316,9 +339,26 @@ pub async fn join_room(
         }),
     ))?;
 
+    let ticket = crate::tickets::generate_ticket(
+        &pm.ticket_hmac_secret,
+        &code,
+        room.server_id,
+        payload.player_uuid,
+    )
+    .map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(HubError {
+                error: "ticket_error".to_string(),
+                message: format!("Failed to generate connection ticket: {}", e),
+            }),
+        )
+    })?;
+
     Ok(Json(JoinRoomResponse {
         code,
         addr: format!("{}:{}", pm.public_addr, room.port),
         secret: room.secret.clone(),
+        ticket,
     }))
 }

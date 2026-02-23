@@ -65,7 +65,7 @@ pub(crate) fn update_procman_system(
 
     while let Ok(msg) = procman.rx.try_recv() {
         match msg {
-            ProcManToDedicated::AssignRoom { room_code, secret } => {
+            ProcManToDedicated::AssignRoom { room_code, secret, ticket_hmac_secret: _ } => {
                 info!("ProcMan: Assigned room code {} with secret", room_code);
                 room_ident.code = Some(room_code);
                 room_ident.secret = Some(secret);

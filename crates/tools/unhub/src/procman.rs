@@ -38,15 +38,16 @@ async fn handle_procman_connection(
         .ok_or_else(|| anyhow::anyhow!("Connection closed"))??;
     let hello = serde_json::from_str::<ProcManMessage>(&line)?;
 
-    let (uuid, public_addr, game_versions, idle_pool, rooms) = match hello {
+    let (uuid, public_addr, game_versions, idle_pool, rooms, ticket_hmac_secret) = match hello {
         ProcManMessage::ProcManHello {
             uuid,
             public_addr,
             game_versions,
             idle_pool,
             rooms,
+            ticket_hmac_secret,
             ..
-        } => (uuid, public_addr, game_versions, idle_pool, rooms),
+        } => (uuid, public_addr, game_versions, idle_pool, rooms, ticket_hmac_secret),
         _ => return Err(anyhow::anyhow!("Expected ProcManHello")),
     };
 
@@ -83,6 +84,7 @@ async fn handle_procman_connection(
             public_addr,
             idle_capacity,
             last_heartbeat: std::time::Instant::now(),
+            ticket_hmac_secret,
         },
     );
 

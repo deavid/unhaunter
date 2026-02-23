@@ -39,6 +39,9 @@ pub struct ProcManSession {
     pub public_addr: String,
     pub idle_capacity: usize,
     pub last_heartbeat: std::time::Instant,
+    /// HMAC-SHA256 key used to sign JWT connection tickets for this procman's
+    /// dedicated servers. Sent during handshake and stored for ticket issuance.
+    pub ticket_hmac_secret: String,
 }
 
 impl HubState {

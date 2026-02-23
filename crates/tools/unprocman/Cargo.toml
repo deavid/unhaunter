@@ -21,3 +21,4 @@ thiserror = { workspace = true }
 futures = { workspace = true }
 tokio-util = { workspace = true }
 clap = { workspace = true }
+rand = { workspace = true }

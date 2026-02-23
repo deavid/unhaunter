@@ -1,4 +1,5 @@
 use anyhow::Result;
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use uuid::Uuid;
@@ -11,6 +12,19 @@ pub struct ProcManConfig {
     pub port_range: (u16, u16),
     pub idle_pool_size: usize,
     pub game_binary_path: String,
+    /// HMAC-SHA256 key (64 hex chars = 32 bytes) used to sign per-room JWT
+    /// tickets. The Hub uses this to issue tickets; the dedicated server
+    /// receives it via stdin and validates incoming connection tickets.
+    /// Auto-generated on first run. Must be consistent for the lifetime of
+    /// this procman instance; rotate only when cycling servers.
+    pub ticket_hmac_secret: String,
+}
+
+/// Generates a cryptographically random 256-bit HMAC secret, hex-encoded.
+pub fn generate_hmac_secret() -> String {
+    let mut rng = rand::rng();
+    let bytes: [u8; 32] = rng.random();
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 pub async fn load_config(path: impl AsRef<Path>) -> Result<ProcManConfig> {
@@ -22,6 +36,7 @@ pub async fn load_config(path: impl AsRef<Path>) -> Result<ProcManConfig> {
             port_range: (12000, 12100),
             idle_pool_size: 1,
             game_binary_path: "./unhaunter_dedicated".to_string(),
+            ticket_hmac_secret: generate_hmac_secret(),
         };
         save_config(path, &default_config).await?;
         return Ok(default_config);
