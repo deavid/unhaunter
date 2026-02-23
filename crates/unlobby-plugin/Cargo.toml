@@ -25,3 +25,5 @@ unprofile-core = { path = "../unprofile-core" }
 unmapload-core = { path = "../unmapload-core" }
 unevents-core = { path = "../unevents-core" }
 bevy-persistent = { workspace = true }
+unreplicon-core = { workspace = true }
+bevy_replicon = { workspace = true }

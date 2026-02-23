@@ -7578,6 +7578,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_replicon",
  "enum-iterator",
  "unassets-core",
  "undifficulty-core",
@@ -7588,6 +7589,7 @@ dependencies = [
  "unmenu-core",
  "unnet-core",
  "unprofile-core",
+ "unreplicon-core",
  "untypes-core",
  "unui-core",
 ]
@@ -7986,6 +7988,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "unreplicon-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
+ "untypes-core",
+]
+
+[[package]]
 name = "unreplicon-plugin"
 version = "0.3.2-dev"
 dependencies = [
@@ -7999,7 +8010,11 @@ dependencies = [
  "renet_netcode",
  "serde",
  "serde_json",
+ "undifficulty-core",
  "unhub-client",
+ "unmapload-core",
+ "unnet-core",
+ "unreplicon-core",
  "untypes-core",
 ]
 

@@ -77,6 +77,7 @@ members = [
     "crates/unui-plugin",
     "crates/unwalkie-plugin",
     "crates/unwalkie-core",
+    "crates/unreplicon-core",
     "crates/unreplicon-plugin",
 ]
 resolver = "3"
@@ -243,6 +244,7 @@ unui-core = { path = "crates/unui-core" }
 unui-plugin = { path = "crates/unui-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 unwalkie-core = { path = "crates/unwalkie-core" }
+unreplicon-core = { path = "crates/unreplicon-core" }
 unreplicon-plugin = { path = "crates/unreplicon-plugin" }
 
 # winit is not for WASM, and needs to be in sync with bevy version

@@ -22,4 +22,8 @@ serde_json = { workspace = true }
 jsonwebtoken = { workspace = true }
 crossbeam-channel = { workspace = true }
 unhub-client = { workspace = true }
-untypes-core = { path = "../untypes-core" }
+untypes-core = { workspace = true }
+unreplicon-core = { path = "../unreplicon-core" }
+unnet-core = { workspace = true }
+unmapload-core = { workspace = true }
+undifficulty-core = { workspace = true }

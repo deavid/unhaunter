@@ -6,7 +6,8 @@ use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::scrollbar::{self, ScrollableListContainer};
 use unmenu_core::templates;
 use unnet_core::resources::LobbyData;
-use untypes_core::cli::{CliOptions, NetMode};
+use unreplicon_core::messages::RequestSelectMap;
+use untypes_core::cli::CliOptions;
 use untypes_core::states::LobbyScreen;
 use unui_core::assets::UiAssets;
 
@@ -154,7 +155,7 @@ pub(crate) fn handle_input(
     mut ev_clicks: MessageReader<MenuItemClicked>,
     mut ev_escape: MessageReader<MenuEscapeEvent>,
     mut next_lobby_state: ResMut<NextState<LobbyScreen>>,
-    mut lobby_data: ResMut<LobbyData>,
+    lobby_data: Res<LobbyData>,
     mapping: Res<MapSelectMapping>,
     maps: Res<Maps>,
     cli: Res<CliOptions>,
@@ -162,7 +163,7 @@ pub(crate) fn handle_input(
     entry_timer: Res<StateEntryTimer>,
     local_player: Res<unnet_core::resources::LocalPlayer>,
     room_owner: Option<Res<unnet_core::resources::RoomOwner>>,
-    mut ev_send: MessageWriter<unnet_core::messages::SendNetworkMessage>,
+    mut ev_send_map: MessageWriter<RequestSelectMap>,
 ) {
     let is_room_owner = match (local_player.0, room_owner) {
         (Some(lp), Some(ro)) => lp == ro.0,
@@ -187,21 +188,17 @@ pub(crate) fn handle_input(
         }
         if let Some(&map_idx) = mapping.ui_to_map_index.get(ev.pos) {
             let map = &maps.maps[map_idx];
-            if matches!(cli.net_mode, NetMode::Join { .. }) {
-                if let Some(pid) = local_player.0 {
-                    ev_send.write(unnet_core::messages::SendNetworkMessage(
-                        unnet_core::messages::NetworkMessage::RequestSelectMap {
-                            player_id: pid,
-                            map_filepath: map.path.clone(),
-                        },
-                    ));
-                }
-            } else {
-                lobby_data.selected_map = Some(map.path.clone());
-            }
+            // Send to server (or echo locally for Host/Offline) via client message.
+            // The server handler updates LobbyInfo; the bridge syncs it to LobbyData.
+            ev_send_map.write(RequestSelectMap {
+                map_filepath: map.path.clone(),
+            });
             next_lobby_state.set(LobbyScreen::Main);
         }
     }
+
+    // Keep lobby_data in scope so the borrow checker is satisfied; it is read-only here.
+    let _ = &*lobby_data;
 }
 
 pub(crate) fn update_preview(

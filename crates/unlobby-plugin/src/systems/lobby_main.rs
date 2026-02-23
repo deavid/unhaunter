@@ -3,20 +3,18 @@ use std::str::FromStr;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unassets_core::resources::maps::Maps;
-use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
+use untypes_core::difficulty::Difficulty;
 use unengine_core::MenuUI;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
-use unnet_core::messages::{NetworkMessage, SendNetworkMessage};
-use unnet_core::resources::{CurrentMapSeed, LobbyData, LocalPlayer, RoomOwner};
+use unnet_core::resources::{LobbyData, LocalPlayer, RoomOwner};
 use unprofile_core::profile::PlayerProfileData;
-use untypes_core::cli::{CliOptions, NetMode};
-use untypes_core::difficulty::Difficulty;
+use unreplicon_core::messages::RequestStartMission;
+use untypes_core::cli::CliOptions;
 use untypes_core::states::{AppState, LobbyScreen};
 use unui_core::assets::UiAssets;
 
@@ -253,15 +251,12 @@ pub(crate) fn handle_clicks(
         &LobbyMenuAction,
     )>,
     lobby_data: Res<LobbyData>,
-    mut cli: ResMut<CliOptions>,
-    mut current_difficulty: ResMut<CurrentDifficulty>,
-    mut ev_send: MessageWriter<SendNetworkMessage>,
-    mut ev_load_level: MessageWriter<LoadLevelEvent>,
+    cli: Res<CliOptions>,
     time: Res<Time>,
     entry_timer: Res<StateEntryTimer>,
-    mut current_map_seed: ResMut<CurrentMapSeed>,
     local_player: Res<LocalPlayer>,
     room_owner: Option<Res<RoomOwner>>,
+    mut ev_start: MessageWriter<RequestStartMission>,
 ) {
     let is_room_owner = match (local_player.0, room_owner) {
         (Some(lp), Some(ro)) => lp == ro.0,
@@ -303,57 +298,28 @@ pub(crate) fn handle_clicks(
                 }
             }
             Some(LobbyMenuAction::StartMission) => {
-                let is_join = matches!(cli.net_mode, NetMode::Join { .. });
                 let host_in_mission = lobby_data.host_app_state == Some(AppState::InGame);
 
-                if is_join && host_in_mission {
-                    if let Some(pid) = local_player.0 {
-                        ev_send.write(SendNetworkMessage(NetworkMessage::RequestLateJoin {
-                            player_id: pid,
-                        }));
-                    }
+                if host_in_mission {
+                    warn!("Late-join not yet implemented");
                 } else if is_room_owner {
-                    if is_join {
-                        // Client is RoomOwner, send request to start
-                        if let Some(pid) = local_player.0 {
-                            ev_send.write(SendNetworkMessage(
-                                NetworkMessage::RequestStartMission { player_id: pid },
-                            ));
+                    match &lobby_data.selected_map {
+                        Some(map_filepath) if !map_filepath.is_empty() => {
+                            let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
+                            info!(
+                                "Room owner requesting mission start: map={}",
+                                map_filepath
+                            );
+                            ev_start.write(RequestStartMission { map_seed });
                         }
-                    } else if let (Some(map_filepath), true) = (&lobby_data.selected_map, !is_join)
-                    {
-                        if map_filepath.is_empty() {
-                            warn!("Attempted to start mission with empty map path");
-                            return;
+                        _ => {
+                            warn!("Cannot start mission: no map selected");
                         }
-                        let difficulty_id = lobby_data.selected_difficulty.clone();
-                        let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
-                        current_map_seed.0 = map_seed;
-
-                        info!(
-                            "Host starting mission: map={}, diff={}, seed={}",
-                            map_filepath, difficulty_id, map_seed
-                        );
-
-                        cli.map_path = Some(map_filepath.clone());
-                        cli.difficulty_id = Some(difficulty_id.clone());
-
-                        if let Ok(diff_enum) = Difficulty::from_str(&difficulty_id) {
-                            *current_difficulty = CurrentDifficulty::new(diff_enum);
-                        }
-
-                        ev_send.write(SendNetworkMessage(NetworkMessage::StartMission {
-                            map_seed,
-                            map_filepath: map_filepath.clone(),
-                            difficulty_id,
-                        }));
-
-                        ev_load_level.write(LoadLevelEvent {
-                            map_filepath: map_filepath.clone(),
-                        });
-                        next_app_state.set(AppState::Loading);
                     }
                 }
+
+                // State transition is handled by the bridge observer on SelectedMission.
+                let _ = &next_app_state; // keep borrow checker happy
             }
             Some(LobbyMenuAction::ExitLobby) => {
                 next_app_state.set(AppState::MainMenu);

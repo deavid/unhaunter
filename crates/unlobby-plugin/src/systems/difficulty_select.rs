@@ -5,7 +5,8 @@ use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::templates;
 use unnet_core::resources::LobbyData;
-use untypes_core::cli::{CliOptions, NetMode};
+use unreplicon_core::messages::RequestSelectDifficulty;
+use untypes_core::cli::CliOptions;
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::LobbyScreen;
 use unui_core::assets::UiAssets;
@@ -117,14 +118,14 @@ pub(crate) fn handle_input(
     mut ev_clicks: MessageReader<MenuItemClicked>,
     mut ev_escape: MessageReader<MenuEscapeEvent>,
     mut next_lobby_state: ResMut<NextState<LobbyScreen>>,
-    mut lobby_data: ResMut<LobbyData>,
+    lobby_data: Res<LobbyData>,
     mapping: Res<DifficultyMapping>,
     cli: Res<CliOptions>,
     time: Res<Time>,
     entry_timer: Res<StateEntryTimer>,
     local_player: Res<unnet_core::resources::LocalPlayer>,
     room_owner: Option<Res<unnet_core::resources::RoomOwner>>,
-    mut ev_send: MessageWriter<unnet_core::messages::SendNetworkMessage>,
+    mut ev_send_diff: MessageWriter<RequestSelectDifficulty>,
 ) {
     let is_room_owner = match (local_player.0, room_owner) {
         (Some(lp), Some(ro)) => lp == ro.0,
@@ -148,21 +149,17 @@ pub(crate) fn handle_input(
             continue;
         }
         if let Some(diff) = mapping.difficulties.get(ev.pos) {
-            if matches!(cli.net_mode, NetMode::Join { .. }) {
-                if let Some(pid) = local_player.0 {
-                    ev_send.write(unnet_core::messages::SendNetworkMessage(
-                        unnet_core::messages::NetworkMessage::RequestSelectDifficulty {
-                            player_id: pid,
-                            difficulty_id: diff.to_string(),
-                        },
-                    ));
-                }
-            } else {
-                lobby_data.selected_difficulty = diff.to_string();
-            }
+            // Send to server (or echo locally for Host/Offline) via client message.
+            // The server handler updates LobbyInfo; the bridge syncs it to LobbyData.
+            ev_send_diff.write(RequestSelectDifficulty {
+                difficulty_id: diff.to_string(),
+            });
             next_lobby_state.set(LobbyScreen::Main);
         }
     }
+
+    // Keep lobby_data in scope; it is read-only here.
+    let _ = &*lobby_data;
 }
 
 pub(crate) fn update_description(
