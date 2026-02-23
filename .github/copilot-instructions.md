@@ -5,6 +5,12 @@ This project is a 2D isometric paranormal investigation game built with Bevy.
 Note that Bevy releases quite often and this game is likely using a Bevy version much newer than the one you might be
 familiar with.
 
+See the following migration summaries for up-to-date Bevy patterns and project-specific choices:
+
+- docs/bevy_0.16_migration_filtered.md
+- docs/bevy_0.17_migration_filtered.md
+- docs/bevy_0.18_migration_filtered.md
+
 Do not guess. If something feels off ask questions to the user.
 
 Unless the user asks specifically and directly, DO NOT CODE, DO NOT FIX. If the user asks to review, DO NOT CODE,
