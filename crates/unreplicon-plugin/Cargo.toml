@@ -27,3 +27,8 @@ unreplicon-core = { path = "../unreplicon-core" }
 unnet-core = { workspace = true }
 unmapload-core = { workspace = true }
 undifficulty-core = { workspace = true }
+unspatial-core = { path = "../unspatial-core" }
+unplayer-core = { path = "../unplayer-core" }
+unboard-core = { path = "../unboard-core" }
+uninteraction-core = { path = "../uninteraction-core" }
+unevents-core = { path = "../unevents-core" }

@@ -35,6 +35,7 @@ unui-core = { path = "../unui-core" }
 unpicking-core = { path = "../unpicking-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 unprofile-core = { path = "../unprofile-core" }
+unreplicon-core = { path = "../unreplicon-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }

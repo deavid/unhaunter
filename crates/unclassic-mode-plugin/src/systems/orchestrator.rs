@@ -21,7 +21,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unmapload_core::events::loadlevel::{LevelReadyEvent, MapEntitiesReadyEvent};
 use unnet_core::network_id::NetworkId;
-use unnet_core::resources::LobbyData;
+use unnet_core::resources::{LobbyData, LocalPlayer};
 use unplayer_core::components::PlayerDisconnected;
 use unplayer_core::components::{
     MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite, Stamina,
@@ -44,6 +44,7 @@ use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::{GhostTag, PlayerTag};
+use unreplicon_core::net_components::{NetworkPosition, PlayerNetInfo};
 
 #[derive(SystemParam)]
 pub(crate) struct ClassicModeSystemParam<'w> {
@@ -776,6 +777,175 @@ fn spawn_ambient_sounds(p: &ClassicModeSystemParam, commands: &mut Commands) {
         .insert(GameSound {
             class: SoundType::Insane,
         });
+}
+
+pub(crate) fn setup_replicated_player_visuals(
+    mut p: ClassicModeSystemParam,
+    mut commands: Commands,
+    local_player: Res<LocalPlayer>,
+    q_new_players: Query<
+        (Entity, &PlayerNetInfo, &NetworkPosition),
+        (Added<PlayerNetInfo>, Without<PlayerSprite>),
+    >,
+) {
+    for (entity, net_info, net_pos) in q_new_players.iter() {
+        let is_local = local_player
+            .0
+            .map(|id| id.0 == net_info.client_id)
+            .unwrap_or(false);
+
+        let net_id = NetworkId(net_info.client_id);
+        let spawn_pos = Position {
+            x: net_pos.x,
+            y: net_pos.y,
+            z: net_pos.z,
+            visual_priority: 0.0,
+        };
+
+        // Both local and remote players get a full gear kit spawned; active gear
+        // state is then kept in sync via the *Net components.
+        let player_gear =
+            spawn_initial_gear(&mut commands, &p.gear_registry, &p.difficulty, net_info.client_id);
+
+        // --- Visual setup ---
+        let mut player_image = p
+            .player_assets
+            .as_ref()
+            .map(|a| a.character.clone())
+            .unwrap_or_default();
+        let mut player_rf = 1.0;
+
+        if !p.cli.is_headless()
+            && let Some(video_settings) = &p.video_settings
+            && let Some(resolved) = p.upscale_idx.resolve(
+                "img/characters-model1-demo.png",
+                video_settings.max_upscale_factor.factor(),
+            )
+        {
+            player_image = p.asset_server.load(resolved.path);
+            player_rf = resolved.factor;
+        }
+
+        let sprite_size = Vec2::new(32.0 * player_rf, 32.0 * player_rf);
+        let anchor = unplayer_core::assets::PLAYER_ANCHOR;
+        let sprite_anchor = Vec2::new(
+            sprite_size.x * (anchor.x + 0.5),
+            sprite_size.y * (0.5 - anchor.y),
+        );
+
+        let mut src_mesh_handle = Handle::default();
+        if let Some(meshes) = &mut p.meshes {
+            src_mesh_handle = meshes.add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
+        }
+
+        let spawn_scoord = perspective::to_screen_coord(spawn_pos);
+
+        let mut ec = commands.entity(entity);
+        ec.insert(spawn_pos);
+        ec.insert(GameSprite);
+
+        if !p.cli.is_headless() {
+            let mut material = CustomMaterial1::from_texture(player_image);
+            material.data.sheet_cols = 16;
+            material.data.sheet_rows = 4;
+            material.data.sprite_width = 32.0 * player_rf;
+            material.data.sprite_height = 32.0 * player_rf;
+            material.data.upscale_factor = player_rf;
+            material.data.y_anchor = anchor.y;
+
+            if let Some(materials1) = &mut p.materials1 {
+                let material_handle = materials1.add(material);
+
+                ec.insert(Mesh2d(src_mesh_handle))
+                    .insert(MeshMaterial2d(material_handle))
+                    .insert(
+                        Transform::from_xyz(spawn_scoord[0], spawn_scoord[1], spawn_scoord[2])
+                            .with_scale(Vec3::new(
+                                1.0 / player_rf,
+                                1.0 / player_rf,
+                                1.0 / player_rf,
+                            )),
+                    )
+                    .insert(ResolutionFactor(player_rf))
+                    .insert(MapTileSprite)
+                    .insert(SpriteLayer(0.00001));
+            }
+        }
+
+        ec.insert(PlayerSprite::new(net_id, spawn_pos))
+            .insert(net_id)
+            .insert(MapColor {
+                color: Color::WHITE,
+            })
+            .insert(PlayerInput::default())
+            .insert(VisibilityData::default())
+            .insert(PlayerTag)
+            .insert(ShadowCaster::default())
+            .insert(MapEntityFieldBPos(spawn_pos.to_board_position()))
+            .insert(Movable)
+            .insert(LightSensitive {
+                exposure_factor: 1.1,
+                bias: 0.01,
+            })
+            .insert(Direction::new_right())
+            .insert(AnimationTimer::from_range(
+                Timer::from_seconds(0.20, TimerMode::Repeating),
+                CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
+            ))
+            .insert(Stamina::default())
+            .insert(unnavigation_core::components::waypoint::WaypointQueue::default());
+
+        if is_local {
+            // Local player: add input, camera targets, and audio listener.
+            if let Some(control_settings) = &p.control_settings {
+                ec.insert(PlayerInputMapping {
+                    controls: ***control_settings,
+                });
+            }
+            ec.insert(MainPlayer).insert(Viewer {
+                id: net_id,
+                ..default()
+            });
+            if let Some(audio_settings) = &p.audio_settings {
+                ec.insert(SpatialListener::new(
+                    -audio_settings.sound_output.to_ear_offset(),
+                ));
+            }
+        } else {
+            // Remote player: no input, use NONE control keys.
+            ec.insert(PlayerInputMapping {
+                controls: unsettings_core::controls::ControlKeys::NONE,
+            });
+        }
+
+        ec.insert(player_gear);
+
+        if !p.cli.is_headless()
+            && let Some(ghost_assets) = &p.ghost_assets
+        {
+            ec.with_children(|parent| {
+                parent
+                    .spawn(Sprite {
+                        image: ghost_assets.focus_ring_vignette.clone(),
+                        color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                        ..default()
+                    })
+                    .insert(
+                        Transform::from_scale(Vec3::splat(1.1 * player_rf))
+                            .with_translation(Vec3::new(0.0, 0.1, 0.01)),
+                    )
+                    .insert(FocusRing::default());
+            });
+        }
+
+        let player_ent_id = entity;
+        p.board_entity_field.0[spawn_pos.to_board_position().ndidx()].push(player_ent_id);
+
+        info!(
+            "setup_replicated_player_visuals: entity {:?} client_id={} is_local={}",
+            entity, net_info.client_id, is_local
+        );
+    }
 }
 
 pub(crate) fn sync_ghost_visuals(

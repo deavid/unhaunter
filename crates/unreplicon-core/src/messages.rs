@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use unevents_core::events::roomchanged::InteractionExecutionType;
 
 /// Sent by the (room-owner) client to request a map change.
 ///
@@ -28,4 +29,43 @@ pub struct RequestSelectDifficulty {
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct RequestStartMission {
     pub map_seed: u64,
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3: Players, Movement, and Interactions
+// ---------------------------------------------------------------------------
+
+/// Sent each frame by a non-host client to report its current position and state.
+///
+/// Sent over `Channel::Unreliable` (best-effort, unordered). The server validates
+/// and writes to `NetworkPosition` + `PlayerStateNet`, after which replicon
+/// propagates the update to all other connected clients.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct PlayerMoveMessage {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub is_running: bool,
+    /// Current animation frame index (for remote character animation sync).
+    pub frame: u16,
+    pub is_hiding: bool,
+    pub stamina: f32,
+    pub health: f32,
+    pub sanity: f32,
+}
+
+/// Sent by a client to request an interactive-object state change.
+///
+/// Uses board-space integer coordinates to identify the target entity in a
+/// map-stable way (all clients load the same map from the same seed).
+/// The server finds the entity at `position`, validates the request, and fires
+/// `ExecuteInteractionEvent` locally.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct InteractionRequestMessage {
+    /// Board-space position (`[x, y, z]`) of the interactive entity.
+    pub position: [i32; 3],
+    /// Whether to change state or only read the current room state.
+    pub ietype: InteractionExecutionType,
+    /// If `Some`, force the interaction to transition to this specific tile UID.
+    pub force_tuid: Option<u32>,
 }

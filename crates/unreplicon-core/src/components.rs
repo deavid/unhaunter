@@ -51,3 +51,11 @@ pub struct SelectedMission {
     /// String key of the difficulty chosen for this mission.
     pub difficulty_id: String,
 }
+
+/// Marker resource: inserted by `unreplicon-plugin` when replicon-based player
+/// spawning is active (i.e. the server entered `AppState::InGame`).
+///
+/// When this resource is present, classic-mode player-spawning systems such as
+/// `spawn_joined_player` should be skipped to avoid creating duplicate entities.
+#[derive(Resource, Debug, Default)]
+pub struct RepliconPlayerSpawningActive;

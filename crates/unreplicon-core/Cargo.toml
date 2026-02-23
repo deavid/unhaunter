@@ -14,3 +14,6 @@ workspace = true
 bevy = { workspace = true }
 serde = { workspace = true }
 untypes-core = { workspace = true }
+unevents-core = { path = "../unevents-core" }
+ungearitems-core = { path = "../ungearitems-core" }
+unghost-core = { path = "../unghost-core" }

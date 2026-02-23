@@ -7,6 +7,7 @@ use unplayer_core::components::Hiding;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
+use unreplicon_core::net_components::PlayerNetInfo;
 
 pub(crate) fn update_player_styling(
     lobby_data: Option<Res<LobbyData>>,
@@ -17,20 +18,35 @@ pub(crate) fn update_player_styling(
             Has<Hiding>,
             Has<MainPlayer>,
             Has<PlayerSpectating>,
+            Option<&PlayerNetInfo>,
         ),
         With<PlayerSprite>,
     >,
 ) {
-    for (id, mut map_color, is_hiding, is_main, is_spectating) in query.iter_mut() {
-        let tint_index = lobby_data
-            .as_ref()
-            .and_then(|ld| {
-                ld.players
-                    .iter()
-                    .find(|p| p.id == *id)
-                    .map(|p| p.tint_color_index as usize)
-            })
-            .unwrap_or(id.0 as usize % 9);
+    for (id, mut map_color, is_hiding, is_main, is_spectating, maybe_net_info) in query.iter_mut() {
+        let tint_index = if let Some(net_info) = maybe_net_info {
+            // Replicon mode: match by client_id stored in PlayerNetInfo.
+            lobby_data
+                .as_ref()
+                .and_then(|ld| {
+                    ld.players
+                        .iter()
+                        .find(|p| p.id.0 == net_info.client_id)
+                        .map(|p| p.tint_color_index as usize)
+                })
+                .unwrap_or(net_info.tint_color_index as usize)
+        } else {
+            // Legacy / offline mode: match by NetworkId.
+            lobby_data
+                .as_ref()
+                .and_then(|ld| {
+                    ld.players
+                        .iter()
+                        .find(|p| p.id == *id)
+                        .map(|p| p.tint_color_index as usize)
+                })
+                .unwrap_or(id.0 as usize % 9)
+        };
 
         let mut color = colors::player_color(tint_index);
 

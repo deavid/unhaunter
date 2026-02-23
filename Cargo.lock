@@ -7089,6 +7089,7 @@ dependencies = [
  "unplayer-core",
  "unprofile-core",
  "unrender-std",
+ "unreplicon-core",
  "unsettings-core",
  "unspatial-core",
  "unsummary-core",
@@ -7889,6 +7890,7 @@ dependencies = [
  "unplayer-core",
  "unprofile-core",
  "unrender-std",
+ "unreplicon-core",
  "unsettings-core",
  "unsound-core",
  "unspatial-core",
@@ -7993,6 +7995,9 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
+ "unevents-core",
+ "ungearitems-core",
+ "unghost-core",
  "untypes-core",
 ]
 
@@ -8010,11 +8015,16 @@ dependencies = [
  "renet_netcode",
  "serde",
  "serde_json",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
  "unhub-client",
+ "uninteraction-core",
  "unmapload-core",
  "unnet-core",
+ "unplayer-core",
  "unreplicon-core",
+ "unspatial-core",
  "untypes-core",
 ]
 
