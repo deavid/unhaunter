@@ -17,3 +17,4 @@ untypes-core = { workspace = true }
 unevents-core = { path = "../unevents-core" }
 ungearitems-core = { path = "../ungearitems-core" }
 unghost-core = { path = "../unghost-core" }
+unsummary-core = { path = "../unsummary-core" }

@@ -1,12 +1,14 @@
 use std::f64::consts::PI;
 
 use bevy::prelude::*;
+use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::components::visuals::ResolutionFactor;
+use unreplicon_core::messages::SpawnParticleNetEvent;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
@@ -32,7 +34,7 @@ pub(crate) fn ghost_fade_out_system(
         Option<&mut GhostBehaviorDynamics>,
     )>,
     mut ga: SoundEmitter,
-    mut ev_snapshot_events: MessageWriter<unnet_core::messages::TransientEvent>,
+    mut ev_particles: MessageWriter<ToClients<SpawnParticleNetEvent>>,
 ) {
     let mut rng = random_seed::rng();
     for (entity, mut fade_out, mut map_color, position, ghost_sprite, o_dynamics) in
@@ -51,9 +53,12 @@ pub(crate) fn ghost_fade_out_system(
         // Emit smoke particles while fading
         if fade_out.timer.remaining_secs() > 0.0 && rng.random_bool(((1.0 - rem_f) / 3.0) as f64) {
             let pos = *position;
-            ev_snapshot_events.write(unnet_core::messages::TransientEvent::SpawnParticle {
-                particle_type: "smoke".to_string(),
-                position: [pos.x, pos.y, pos.z],
+            ev_particles.write(ToClients {
+                mode: SendMode::Broadcast,
+                message: SpawnParticleNetEvent {
+                    particle_type: "smoke".to_string(),
+                    position: [pos.x, pos.y, pos.z],
+                },
             });
         }
 

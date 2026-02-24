@@ -29,8 +29,9 @@ untags-core = { path = "../untags-core" }
 unspatial-core = { path = "../unspatial-core" }
 unghost-core = { path = "../unghost-core" }
 untruck-core = { path = "../untruck-core" }
-unnet-core = { path = "../unnet-core" }
+unreplicon-core = { path = "../unreplicon-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
+bevy_replicon = { workspace = true }
 rand = { workspace = true }

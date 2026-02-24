@@ -25,6 +25,8 @@ impl Plugin for UnhaunterClassicModeCorePlugin {
                     .run_if(not(resource_exists::<RepliconPlayerSpawningActive>)),
                 crate::systems::orchestrator::setup_replicated_player_visuals
                     .run_if(in_state(untypes_core::states::AppState::InGame)),
+                crate::systems::orchestrator::setup_replicated_ghost_visuals
+                    .run_if(in_state(untypes_core::states::AppState::InGame)),
             ),
         );
 

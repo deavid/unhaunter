@@ -32,10 +32,12 @@ unsummary-core = { path = "../unsummary-core" }
 unthermal-core = { path = "../unthermal-core" }
 unprofile-core = { path = "../unprofile-core" }
 unnet-core = { path = "../unnet-core" }
+unreplicon-core = { path = "../unreplicon-core" }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 bevy_platform = { workspace = true }
+bevy_replicon = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }
 enum-iterator = { workspace = true }

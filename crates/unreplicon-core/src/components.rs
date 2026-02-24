@@ -59,3 +59,20 @@ pub struct SelectedMission {
 /// `spawn_joined_player` should be skipped to avoid creating duplicate entities.
 #[derive(Resource, Debug, Default)]
 pub struct RepliconPlayerSpawningActive;
+
+/// Marker resource: inserted by `unreplicon-plugin` when replicon-based ghost
+/// spawning is active (i.e. the server entered `AppState::InGame`).
+///
+/// When this resource is present, `classic_mode_orchestrator` in
+/// `unclassic-mode-plugin` skips the ghost-spawn block so that the ghost entity
+/// is only created on the server and then replicated to Join clients.
+#[derive(Resource, Debug, Default)]
+pub struct RepliconGhostSpawningActive;
+
+/// Marker component placed on the singleton "mission goal" entity.
+///
+/// This entity carries replicated journal components (`EvidenceFoundNet`,
+/// `MissionResultNet`) so clients can receive them from the server without the
+/// need for a per-ghost or per-player lookup.
+#[derive(Component, Debug, Default)]
+pub struct MissionGoalEntity;

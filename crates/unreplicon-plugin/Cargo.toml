@@ -32,3 +32,10 @@ unplayer-core = { path = "../unplayer-core" }
 unboard-core = { path = "../unboard-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 unevents-core = { path = "../unevents-core" }
+unghost-core = { path = "../unghost-core" }
+untags-core = { path = "../untags-core" }
+ungearitems-core = { path = "../ungearitems-core" }
+unrender-std = { path = "../unrender-std" }
+unsummary-core = { path = "../unsummary-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+rand = { workspace = true }

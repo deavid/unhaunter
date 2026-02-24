@@ -37,6 +37,7 @@ use unrender_std::components::visuals::{
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::quadcc::QuadCC;
+use unreplicon_core::net_components::{GhostStateNet, NetworkPosition, PlayerNetInfo};
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::direction::Direction;
@@ -44,7 +45,6 @@ use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::{GhostTag, PlayerTag};
-use unreplicon_core::net_components::{NetworkPosition, PlayerNetInfo};
 
 #[derive(SystemParam)]
 pub(crate) struct ClassicModeSystemParam<'w> {
@@ -269,26 +269,130 @@ pub(crate) fn classic_mode_orchestrator(
         p.board_entity_field.0[player_position.to_board_position().ndidx()].push(player_ent_id);
     }
 
-    // --- Spawn Ghost ---
-    {
-        let ghost_spawn = ghost_spawn_points
-            .choose(&mut rng)
-            .copied()
-            .unwrap_or(Position::new_i64(0, 0, 0));
+    // Join clients do not spawn the ghost locally; they receive the replicated entity
+    // from the server and set up its visuals via setup_replicated_ghost_visuals.
+    if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
+        // --- Spawn Ghost ---
+        {
+            let ghost_spawn = ghost_spawn_points
+                .choose(&mut rng)
+                .copied()
+                .unwrap_or(Position::new_i64(0, 0, 0));
 
-        let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set.as_vec();
-        let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
-        let ghost_types = vec![ghost_sprite.class];
+            let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set.as_vec();
+            let ghost_sprite =
+                GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
+            let ghost_types = vec![ghost_sprite.class];
 
-        commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));
+            commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));
 
-        let breach_id = {
-            let mut breach_img_size = Vec2::new(128.0, 128.0);
-            if let Some(ghost_assets) = &p.ghost_assets
-                && let Some(images) = &p.images
-                && let Some(img) = images.get(ghost_assets.breach.id())
+            let breach_id = {
+                let mut breach_img_size = Vec2::new(128.0, 128.0);
+                if let Some(ghost_assets) = &p.ghost_assets
+                    && let Some(images) = &p.images
+                    && let Some(img) = images.get(ghost_assets.breach.id())
+                {
+                    breach_img_size = Vec2::new(
+                        img.texture_descriptor.size.width as f32,
+                        img.texture_descriptor.size.height as f32,
+                    );
+                }
+
+                let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
+                let sprite_anchor = Vec2::new(
+                    breach_img_size.x * (anchor.x + 0.5),
+                    breach_img_size.y * (0.5 - anchor.y),
+                );
+
+                let mut ec = commands.spawn(ghost_spawn);
+                if !p.cli.is_headless()
+                    && let (Some(meshes), Some(materials1), Some(ghost_assets)) =
+                        (&mut p.meshes, &mut p.materials1, &p.ghost_assets)
+                {
+                    let mesh_handle =
+                        meshes.add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
+                    let mut material = CustomMaterial1::from_texture(ghost_assets.breach.clone());
+                    material.data.color = Color::NONE.into();
+                    material.data.y_anchor = anchor.y;
+                    let material_handle = materials1.add(material);
+
+                    ec.insert(Mesh2d(mesh_handle))
+                        .insert(MeshMaterial2d(material_handle))
+                        .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
+                        .insert(MapTileSprite)
+                        .insert(SpriteLayer(0.01))
+                        .insert(AlphaModulator {
+                            frequency: 0.92,
+                            amplitude: 0.5,
+                        })
+                        .insert(EctoplasmVisuals {
+                            use_breach_curve: true,
+                        });
+                }
+
+                ec.insert(GhostBreach)
+                    .insert(GameSprite)
+                    .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
+                    .insert(LightSensitive {
+                        exposure_factor: 1.1,
+                        bias: 0.02,
+                    })
+                    .insert(UltravioletSensitive {
+                        intensity: 1.0,
+                        color_shift: 1.0,
+                    })
+                    .insert(ThermalEmitter {
+                        room_restricted: true,
+                        ..default()
+                    })
+                    .insert(FluidEmitter::default())
+                    .insert(SoundEmitter::default());
+
+                if !p.cli.is_headless()
+                    && let Some(ghost_assets) = &p.ghost_assets
+                {
+                    ec.with_children(|parent| {
+                        parent
+                            .spawn(Sprite {
+                                image: ghost_assets.focus_ring_vignette.clone(),
+                                color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                                ..default()
+                            })
+                            .insert(
+                                Transform::from_scale(Vec3::splat(0.5))
+                                    .with_translation(Vec3::new(0.0, 0.0, 0.01)),
+                            )
+                            .insert(FocusRing::default());
+                    });
+                }
+                let breach_id = ec.id();
+
+                p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(breach_id);
+                breach_id
+            };
+
+            let mut ghost_image = p
+                .ghost_assets
+                .as_ref()
+                .map(|a| a.ghost.clone())
+                .unwrap_or_default();
+            let mut ghost_rf = 1.0;
+
+            if !p.cli.is_headless()
+                && let Some(video_settings) = &p.video_settings
+                && let Some(resolved) = p
+                    .upscale_idx
+                    .resolve("img/ghost.png", video_settings.max_upscale_factor.factor())
             {
-                breach_img_size = Vec2::new(
+                ghost_image = p.asset_server.load(resolved.path);
+                ghost_rf = resolved.factor;
+            }
+
+            let mut ghost_img_size = Vec2::new(128.0, 128.0);
+            if let Some(images) = &p.images
+                && let Some(img) = images.get(ghost_image.id())
+            {
+                ghost_img_size = Vec2::new(
                     img.texture_descriptor.size.width as f32,
                     img.texture_descriptor.size.height as f32,
                 );
@@ -296,46 +400,61 @@ pub(crate) fn classic_mode_orchestrator(
 
             let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
             let sprite_anchor = Vec2::new(
-                breach_img_size.x * (anchor.x + 0.5),
-                breach_img_size.y * (0.5 - anchor.y),
+                ghost_img_size.x * (anchor.x + 0.5),
+                ghost_img_size.y * (0.5 - anchor.y),
             );
 
+            let ghost_id_net = NetworkId(0); // Ghost is always 0 in MVP
             let mut ec = commands.spawn(ghost_spawn);
             if !p.cli.is_headless()
-                && let (Some(meshes), Some(materials1), Some(ghost_assets)) =
-                    (&mut p.meshes, &mut p.materials1, &p.ghost_assets)
+                && let (Some(meshes), Some(materials1)) = (&mut p.meshes, &mut p.materials1)
             {
                 let mesh_handle =
-                    meshes.add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
-                let mut material = CustomMaterial1::from_texture(ghost_assets.breach.clone());
+                    meshes.add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));
+                let mut material = CustomMaterial1::from_texture(ghost_image);
                 material.data.color = Color::NONE.into();
                 material.data.y_anchor = anchor.y;
                 let material_handle = materials1.add(material);
 
                 ec.insert(Mesh2d(mesh_handle))
                     .insert(MeshMaterial2d(material_handle))
-                    .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
+                    .insert(
+                        Transform::from_xyz(-1000.0, -1000.0, -1000.0)
+                            .with_scale(Vec3::splat(1.0 / ghost_rf)),
+                    )
                     .insert(MapTileSprite)
-                    .insert(SpriteLayer(0.01))
+                    .insert(ResolutionFactor(ghost_rf))
+                    .insert(SpriteLayer(10.0))
+                    .insert(Ethereal::default())
+                    .insert(Emissive::default())
+                    .insert(SpectralClarity::default())
                     .insert(AlphaModulator {
-                        frequency: 0.92,
+                        frequency: 1.0,
                         amplitude: 0.5,
                     })
                     .insert(EctoplasmVisuals {
-                        use_breach_curve: true,
+                        use_breach_curve: false,
                     });
             }
 
-            ec.insert(GhostBreach)
+            ec.insert(ghost_sprite.with_breachid(breach_id))
+                .insert(p.haunt_state.ghost_dynamics)
+                .insert(GhostTag)
+                .insert(ghost_id_net)
                 .insert(GameSprite)
                 .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
+                .insert(Movable)
                 .insert(LightSensitive {
-                    exposure_factor: 1.1,
-                    bias: 0.02,
+                    exposure_factor: 0.5,
+                    bias: 0.01,
                 })
                 .insert(UltravioletSensitive {
                     intensity: 1.0,
-                    color_shift: 1.0,
+                    ..default()
+                })
+                .insert(InfraredSensitive {
+                    intensity: 1.0,
+                    ..default()
                 })
                 .insert(ThermalEmitter {
                     room_restricted: true,
@@ -355,145 +474,32 @@ pub(crate) fn classic_mode_orchestrator(
                             ..default()
                         })
                         .insert(
-                            Transform::from_scale(Vec3::splat(0.5))
+                            Transform::from_scale(Vec3::splat(0.5 * ghost_rf))
                                 .with_translation(Vec3::new(0.0, 0.0, 0.01)),
                         )
                         .insert(FocusRing::default());
                 });
             }
-            let breach_id = ec.id();
+            let ghost_id = ec.id();
 
-            p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(breach_id);
-            breach_id
-        };
+            p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(ghost_id);
 
-        let mut ghost_image = p
-            .ghost_assets
-            .as_ref()
-            .map(|a| a.ghost.clone())
-            .unwrap_or_default();
-        let mut ghost_rf = 1.0;
+            if !p.cli.is_headless() {
+                spawn_ambient_sounds(&p, &mut commands);
+            }
 
-        if !p.cli.is_headless()
-            && let Some(video_settings) = &p.video_settings
-            && let Some(resolved) = p
-                .upscale_idx
-                .resolve("img/ghost.png", video_settings.max_upscale_factor.factor())
-        {
-            ghost_image = p.asset_server.load(resolved.path);
-            ghost_rf = resolved.factor;
-        }
-
-        let mut ghost_img_size = Vec2::new(128.0, 128.0);
-        if let Some(images) = &p.images
-            && let Some(img) = images.get(ghost_image.id())
-        {
-            ghost_img_size = Vec2::new(
-                img.texture_descriptor.size.width as f32,
-                img.texture_descriptor.size.height as f32,
+            crate::influence_system::assign_ghost_influence(
+                &mut commands,
+                &movable_objects,
+                &q_ghost_breach,
+                &q_player_sprite,
+                &q_position,
+                &p.roomdb,
+                &p.board_topology,
+                &p.haunt_state,
             );
         }
-
-        let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
-        let sprite_anchor = Vec2::new(
-            ghost_img_size.x * (anchor.x + 0.5),
-            ghost_img_size.y * (0.5 - anchor.y),
-        );
-
-        let ghost_id_net = NetworkId(0); // Ghost is always 0 in MVP
-        let mut ec = commands.spawn(ghost_spawn);
-        if !p.cli.is_headless()
-            && let (Some(meshes), Some(materials1)) = (&mut p.meshes, &mut p.materials1)
-        {
-            let mesh_handle = meshes.add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));
-            let mut material = CustomMaterial1::from_texture(ghost_image);
-            material.data.color = Color::NONE.into();
-            material.data.y_anchor = anchor.y;
-            let material_handle = materials1.add(material);
-
-            ec.insert(Mesh2d(mesh_handle))
-                .insert(MeshMaterial2d(material_handle))
-                .insert(
-                    Transform::from_xyz(-1000.0, -1000.0, -1000.0)
-                        .with_scale(Vec3::splat(1.0 / ghost_rf)),
-                )
-                .insert(MapTileSprite)
-                .insert(ResolutionFactor(ghost_rf))
-                .insert(SpriteLayer(10.0))
-                .insert(Ethereal::default())
-                .insert(Emissive::default())
-                .insert(SpectralClarity::default())
-                .insert(AlphaModulator {
-                    frequency: 1.0,
-                    amplitude: 0.5,
-                })
-                .insert(EctoplasmVisuals {
-                    use_breach_curve: false,
-                });
-        }
-
-        ec.insert(ghost_sprite.with_breachid(breach_id))
-            .insert(p.haunt_state.ghost_dynamics)
-            .insert(GhostTag)
-            .insert(ghost_id_net)
-            .insert(GameSprite)
-            .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
-            .insert(Movable)
-            .insert(LightSensitive {
-                exposure_factor: 0.5,
-                bias: 0.01,
-            })
-            .insert(UltravioletSensitive {
-                intensity: 1.0,
-                ..default()
-            })
-            .insert(InfraredSensitive {
-                intensity: 1.0,
-                ..default()
-            })
-            .insert(ThermalEmitter {
-                room_restricted: true,
-                ..default()
-            })
-            .insert(FluidEmitter::default())
-            .insert(SoundEmitter::default());
-
-        if !p.cli.is_headless()
-            && let Some(ghost_assets) = &p.ghost_assets
-        {
-            ec.with_children(|parent| {
-                parent
-                    .spawn(Sprite {
-                        image: ghost_assets.focus_ring_vignette.clone(),
-                        color: Color::srgba(1.0, 1.0, 1.0, 0.0),
-                        ..default()
-                    })
-                    .insert(
-                        Transform::from_scale(Vec3::splat(0.5 * ghost_rf))
-                            .with_translation(Vec3::new(0.0, 0.0, 0.01)),
-                    )
-                    .insert(FocusRing::default());
-            });
-        }
-        let ghost_id = ec.id();
-
-        p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(ghost_id);
-
-        if !p.cli.is_headless() {
-            spawn_ambient_sounds(&p, &mut commands);
-        }
-
-        crate::influence_system::assign_ghost_influence(
-            &mut commands,
-            &movable_objects,
-            &q_ghost_breach,
-            &q_player_sprite,
-            &q_position,
-            &p.roomdb,
-            &p.board_topology,
-            &p.haunt_state,
-        );
-    }
+    } // end if !Join
 
     ev_level_ready.write(LevelReadyEvent { open_van });
 }
@@ -804,8 +810,12 @@ pub(crate) fn setup_replicated_player_visuals(
 
         // Both local and remote players get a full gear kit spawned; active gear
         // state is then kept in sync via the *Net components.
-        let player_gear =
-            spawn_initial_gear(&mut commands, &p.gear_registry, &p.difficulty, net_info.client_id);
+        let player_gear = spawn_initial_gear(
+            &mut commands,
+            &p.gear_registry,
+            &p.difficulty,
+            net_info.client_id,
+        );
 
         // --- Visual setup ---
         let mut player_image = p
@@ -955,5 +965,125 @@ pub(crate) fn sync_ghost_visuals(
         clarity.uv = dynamics.uv_ectoplasm_clarity;
         clarity.rl = dynamics.rl_presence_clarity;
         clarity.alpha = dynamics.visual_alpha_multiplier;
+    }
+}
+
+/// Sets up local visual and physics components on a ghost entity that arrived via replication
+/// (i.e. on Join clients). Triggered by `Added<GhostStateNet>` without a `GhostSprite`, which
+/// means the server has just replicated the ghost entity to us.
+pub(crate) fn setup_replicated_ghost_visuals(
+    mut p: ClassicModeSystemParam,
+    mut commands: Commands,
+    q_new_ghosts: Query<(Entity, &NetworkPosition), (Added<GhostStateNet>, Without<GhostSprite>)>,
+) {
+    for (entity, net_pos) in q_new_ghosts.iter() {
+        let ghost_spawn = Position {
+            x: net_pos.x,
+            y: net_pos.y,
+            z: net_pos.z,
+            visual_priority: 0.0,
+        };
+
+        let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set.as_vec();
+        let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
+
+        let mut ghost_image = p
+            .ghost_assets
+            .as_ref()
+            .map(|a| a.ghost.clone())
+            .unwrap_or_default();
+        let mut ghost_rf = 1.0;
+
+        if !p.cli.is_headless()
+            && let Some(video_settings) = &p.video_settings
+            && let Some(resolved) = p
+                .upscale_idx
+                .resolve("img/ghost.png", video_settings.max_upscale_factor.factor())
+        {
+            ghost_image = p.asset_server.load(resolved.path);
+            ghost_rf = resolved.factor;
+        }
+
+        let mut ghost_img_size = Vec2::new(128.0, 128.0);
+        if let Some(images) = &p.images
+            && let Some(img) = images.get(ghost_image.id())
+        {
+            ghost_img_size = Vec2::new(
+                img.texture_descriptor.size.width as f32,
+                img.texture_descriptor.size.height as f32,
+            );
+        }
+
+        let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
+        let sprite_anchor = Vec2::new(
+            ghost_img_size.x * (anchor.x + 0.5),
+            ghost_img_size.y * (0.5 - anchor.y),
+        );
+
+        let mut ec = commands.entity(entity);
+        if !p.cli.is_headless()
+            && let (Some(meshes), Some(materials1)) = (&mut p.meshes, &mut p.materials1)
+        {
+            let mesh_handle = meshes.add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));
+            let mut material = CustomMaterial1::from_texture(ghost_image);
+            material.data.color = Color::NONE.into();
+            material.data.y_anchor = anchor.y;
+            let material_handle = materials1.add(material);
+
+            ec.insert(Mesh2d(mesh_handle))
+                .insert(MeshMaterial2d(material_handle))
+                .insert(
+                    Transform::from_xyz(-1000.0, -1000.0, -1000.0)
+                        .with_scale(Vec3::splat(1.0 / ghost_rf)),
+                )
+                .insert(MapTileSprite)
+                .insert(ResolutionFactor(ghost_rf))
+                .insert(SpriteLayer(10.0))
+                .insert(Ethereal::default())
+                .insert(Emissive::default())
+                .insert(SpectralClarity::default())
+                .insert(AlphaModulator {
+                    frequency: 1.0,
+                    amplitude: 0.5,
+                })
+                .insert(EctoplasmVisuals {
+                    use_breach_curve: false,
+                });
+        }
+
+        // No breach entity on Join clients (breach_id stays None in GhostSprite).
+        ec.insert(ghost_sprite)
+            .insert(GhostBehaviorDynamics::default())
+            .insert(GhostTag)
+            .insert(NetworkId(0))
+            .insert(GameSprite)
+            .insert(ghost_spawn)
+            .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
+            .insert(Movable)
+            .insert(LightSensitive {
+                exposure_factor: 0.5,
+                bias: 0.01,
+            })
+            .insert(UltravioletSensitive {
+                intensity: 1.0,
+                ..default()
+            })
+            .insert(InfraredSensitive {
+                intensity: 1.0,
+                ..default()
+            })
+            .insert(ThermalEmitter {
+                room_restricted: true,
+                ..default()
+            })
+            .insert(FluidEmitter::default())
+            .insert(SoundEmitter::default());
+
+        p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(entity);
+
+        info!(
+            "setup_replicated_ghost_visuals: entity {:?} at {:?}",
+            entity, ghost_spawn
+        );
     }
 }

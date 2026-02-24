@@ -1,6 +1,7 @@
 use crate::metrics;
 
 use bevy::prelude::*;
+use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
@@ -12,6 +13,7 @@ use ungearitems_core::components::sage::{SageBundleData, SageSmokeParticle, Smok
 use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
+use unreplicon_core::messages::SpawnParticleNetEvent;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -30,7 +32,7 @@ pub(crate) fn update_sage(
     mut gs_audio: SoundEmitter,
     mut commands: Commands,
     cli: Res<CliOptions>,
-    mut ev_snapshot_events: MessageWriter<unnet_core::messages::TransientEvent>,
+    mut ev_particles: MessageWriter<ToClients<SpawnParticleNetEvent>>,
 ) {
     let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
 
@@ -59,10 +61,13 @@ pub(crate) fn update_sage(
                 p.x += rng.random_range(-0.2..0.2);
                 p.y += rng.random_range(-0.2..0.2);
 
-                // Spawn smoke particle via network event
-                ev_snapshot_events.write(unnet_core::messages::TransientEvent::SpawnParticle {
-                    particle_type: "smoke".to_string(),
-                    position: [p.x, p.y, p.z],
+                // Broadcast smoke particle to all clients
+                ev_particles.write(ToClients {
+                    mode: SendMode::Broadcast,
+                    message: SpawnParticleNetEvent {
+                        particle_type: "smoke".to_string(),
+                        position: [p.x, p.y, p.z],
+                    },
                 });
 
                 sage.smoke_produced += 1;

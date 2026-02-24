@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use unevents_core::events::roomchanged::InteractionExecutionType;
+use unghost_core::types::evidence::Evidence;
+use unghost_core::types::ghost::types::GhostType;
 
 /// Sent by the (room-owner) client to request a map change.
 ///
@@ -68,4 +70,38 @@ pub struct InteractionRequestMessage {
     pub ietype: InteractionExecutionType,
     /// If `Some`, force the interaction to transition to this specific tile UID.
     pub force_tuid: Option<u32>,
+}
+
+// ---------------------------------------------------------------------------
+// Phase 4: Ghost, Evidence, and Mission messages
+// ---------------------------------------------------------------------------
+
+/// Broadcast by the server to all clients to spawn a visual particle effect.
+///
+/// Registered as a server → client message via `app.add_server_message`.
+/// Clients receive this and spawn the particle entity locally.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct SpawnParticleNetEvent {
+    /// Particle type identifier (currently only "smoke").
+    pub particle_type: String,
+    /// World-space position `[x, y, z]` at which to spawn the particle.
+    pub position: [f32; 3],
+}
+
+/// Sent by a client to toggle evidence in the shared journal.
+///
+/// The server validates this, updates `GhostGuess`, and the change propagates
+/// to all clients via `EvidenceFoundNet` replication.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct RequestJournalEvidenceToggle {
+    pub evidence: Evidence,
+    pub mark_as_found: bool,
+}
+
+/// Sent by a client to update the ghost-type guess in the shared journal.
+///
+/// `ghost_type = None` means "clear the current guess".
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct RequestJournalGhostToggle {
+    pub ghost_type: Option<GhostType>,
 }
