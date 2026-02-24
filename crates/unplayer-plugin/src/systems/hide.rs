@@ -3,8 +3,6 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
 use ungear_core::components::playergear::PlayerGear;
-use unnet_core::messages::{NetworkMessage, SendNetworkMessage};
-use unnet_core::network_id::NetworkId;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unrender_std::components::animation::AnimationTimer;
 use unrender_std::components::visuals::ResolutionFactor;
@@ -29,7 +27,6 @@ fn hide_player(
     mut players: Query<
         (
             Entity,
-            &NetworkId,
             &PlayerInputMapping,
             &mut Position,
             &PlayerGear,
@@ -42,9 +39,8 @@ fn hide_player(
     >,
     mut ga: SoundEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
-    mut ev_net: MessageWriter<SendNetworkMessage>,
 ) {
-    for (player_entity, player_net_id, input_mapping, mut player_pos, player_gear) in
+    for (player_entity, input_mapping, mut player_pos, player_gear) in
         players.iter_mut()
     {
         // Get the player's hold timer or create a new one
@@ -81,11 +77,6 @@ fn hide_player(
                 // Play "Hide" sound effect
                 ga.play_audio("sounds/hide-rustle.ogg".into(), 1.0, &player_pos);
 
-                // Notify server
-                ev_net.write(SendNetworkMessage(NetworkMessage::RequestHide {
-                    player_id: *player_net_id,
-                }));
-
                 let upscale_f = rf.map(|r| r.0).unwrap_or(1.0);
 
                 // Add Visual Overlay
@@ -121,12 +112,11 @@ fn unhide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
-        (Entity, &NetworkId, &PlayerInputMapping, &Hiding),
+        (Entity, &PlayerInputMapping, &Hiding),
         (With<MainPlayer>, With<PlayerSprite>),
     >,
-    mut ev_net: MessageWriter<SendNetworkMessage>,
 ) {
-    for (player_entity, player_net_id, input_mapping, _) in players.iter_mut() {
+    for (player_entity, input_mapping, _) in players.iter_mut() {
         if keyboard_input.just_pressed(input_mapping.controls.activate) {
             // Using 'activate' for unhiding Remove the Hiding component
             commands.entity(player_entity).remove::<Hiding>();
@@ -137,11 +127,6 @@ fn unhide_player(
                     Timer::from_seconds(0.20, TimerMode::Repeating),
                     vec![32],
                 ));
-
-            // Notify server
-            ev_net.write(SendNetworkMessage(NetworkMessage::RequestUnhide {
-                player_id: *player_net_id,
-            }));
         }
     }
 }

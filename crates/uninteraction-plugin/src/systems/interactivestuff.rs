@@ -5,7 +5,6 @@ use unbehavior::roomdb::RoomDB;
 use unevents_core::events::roomchanged::InteractionExecutionType;
 use unevents_core::events::sound::SoundEvent;
 use uninteraction_core::interaction::Authority;
-use unnet_core::messages::{NetworkDataEvent, NetworkMessage};
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::materials::CustomMaterial1;
 use unspatial_core::boardposition::BoardPosition;
@@ -42,17 +41,11 @@ pub struct InteractiveStuff<'w, 's> {
     /// Access to the materials used for rendering map tiles. Used to update tile
     /// visuals when object states change.
     pub materials1: Option<ResMut<'w, Assets<CustomMaterial1>>>,
-    /// ID of the local player.
-    pub local_player: Res<'w, unnet_core::resources::LocalPlayer>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
     pub roomdb: ResMut<'w, RoomDB>,
     /// Controls the transition to different game states, such as the truck UI.
     pub game_next_state: ResMut<'w, NextState<GameState>>,
-    /// Event writer for sending network messages.
-    pub net_events: MessageWriter<'w, NetworkDataEvent>,
-    /// Track changed tiles to send to clients.
-    pub changed_tiles: ResMut<'w, unnet_core::resources::ChangedTiles>,
 }
 
 impl InteractiveStuff<'_, '_> {
@@ -219,21 +212,6 @@ impl InteractiveStuff<'_, '_> {
             return false;
         }
 
-        if force_tuid.is_none() && authority == Authority::Client {
-            if let Some(player_id) = self.local_player.0 {
-                trace!("Client: Requesting interaction at {:?}", item_bpos);
-                self.net_events.write(NetworkDataEvent {
-                    message: NetworkMessage::InteractionRequest {
-                        player_id,
-                        position: [item_bpos.x as i32, item_bpos.y as i32, item_bpos.z as i32],
-                        interaction_type: ietype,
-                    },
-                    source: None,
-                });
-            }
-            return false;
-        }
-
         let Some(bf) = self.bf.as_ref() else {
             return false;
         };
@@ -246,7 +224,7 @@ impl InteractiveStuff<'_, '_> {
             } else if *other_tuid == tuid {
                 continue;
             }
-            let (beh_state, other_tileset, other_tileuid, other_behavior) = {
+            let (beh_state, _other_tileset, _other_tileuid, other_behavior) = {
                 let other = bf.map_tile.get(other_tuid).unwrap();
                 (
                     other.behavior.state(),
@@ -296,18 +274,6 @@ impl InteractiveStuff<'_, '_> {
 
             self.apply_visual_update(entity, other_tuid, behavior);
 
-            if ietype == InteractionExecutionType::ChangeState && authority == Authority::Host {
-                self.changed_tiles
-                    .0
-                    .push(unnet_core::messages::MapTileState {
-                        x: item_bpos.x as i32,
-                        y: item_bpos.y as i32,
-                        z: item_bpos.z as i32,
-                        tileset: other_tileset,
-                        tileuid: other_tileuid,
-                        cvo_key: other_behavior.key_cvo().to_key_string(),
-                    });
-            }
             if ietype == InteractionExecutionType::ChangeState
                 && let Some(interactive) = interactive
                 && authority == Authority::Host

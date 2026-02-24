@@ -18,7 +18,7 @@ unspatial-core = { path = "../unspatial-core" }
 unrender-core = { path = "../unrender-core" }
 unbehavior = { path = "../unbehavior" }
 unboard-core = { path = "../unboard-core" }
-unnet-core = { path = "../unnet-core" }
+unreplicon-core = { path = "../unreplicon-core" }
 ungear-core = { path = "../ungear-core" }
 enum-iterator = { workspace = true }
 bevy_platform = { workspace = true }

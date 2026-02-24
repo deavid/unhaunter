@@ -47,8 +47,6 @@ members = [
     "crates/unmetrics-plugin",
     "crates/unmission-plugin",
     "crates/unnavigation-core",
-    "crates/unnet-core",
-    "crates/unnet-plugin",
     "crates/unnpc-plugin",
     "crates/unnoise-core",
     "crates/unpicking-plugin",
@@ -214,8 +212,6 @@ unmetrics-core = { path = "crates/unmetrics-core" }
 unmetrics-plugin = { path = "crates/unmetrics-plugin" }
 unmission-plugin = { path = "crates/unmission-plugin" }
 unnavigation-core = { path = "crates/unnavigation-core" }
-unnet-core = { path = "crates/unnet-core" }
-unnet-plugin = { path = "crates/unnet-plugin" }
 unnpc-plugin = { path = "crates/unnpc-plugin" }
 unnoise-core = { path = "crates/unnoise-core" }
 unpicking-plugin = { path = "crates/unpicking-plugin" }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unevents_core::events::mission::MissionEvent;
-use unnet_core::resources::MissionEndRequested;
+use unreplicon_core::resources::MissionEndRequested;
 use unplayer_core::components::PlayerDisconnected;
 use unplayer_core::components::PlayerInactive;
 use unplayer_core::components::PlayerSpectating;

@@ -47,16 +47,12 @@ pub(crate) fn player_gear_usage_system(
                 if toggle.is_on != target_on {
                     toggle.is_on = target_on;
                     if let Some(pos) = pos {
-                        if is_main {
-                            ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
-                        } else if is_authority {
+                        if is_main || is_authority {
                             // Host plays sound locally for remote player click
                             // and broadcasts it to other clients
                             ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         }
-                    } else if is_main {
-                        ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
-                    } else if is_authority {
+                    } else if is_main || is_authority {
                         ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }
@@ -84,16 +80,12 @@ pub(crate) fn player_gear_usage_system(
                 if toggle.is_on != target_on {
                     toggle.is_on = target_on;
                     if let Some(pos) = pos {
-                        if is_main {
-                            ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
-                        } else if is_authority {
+                        if is_main || is_authority {
                             // Host plays sound locally for remote player click
                             // and broadcasts it to other clients
                             ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
                         }
-                    } else if is_main {
-                        ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
-                    } else if is_authority {
+                    } else if is_main || is_authority {
                         ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }

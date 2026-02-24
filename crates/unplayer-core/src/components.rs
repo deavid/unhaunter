@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unfoundation_core::types::gear::Hand;
-use unnet_core::messages::GearDetails;
-use unnet_core::network_id::NetworkId;
+use ungearitems_core::gear_details::GearDetails;
+use unreplicon_core::network_id::NetworkId;
 use unsettings_core::controls::ControlKeys;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;

@@ -12,8 +12,8 @@ use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unnet_core::network_id::NetworkId;
-use unnet_core::resources::MissionEndRequested;
+use unreplicon_core::network_id::NetworkId;
+use unreplicon_core::resources::MissionEndRequested;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::audio::AudioSettings;
 use untruck_core::events::truck::TruckUIEvent;
@@ -290,8 +290,6 @@ fn hold_button_system(
 #[derive(SystemParam)]
 struct TruckNetParams<'w, 's> {
     cli: Res<'w, untypes_core::cli::CliOptions>,
-    loc_player: Res<'w, unnet_core::resources::LocalPlayer>,
-    ev_send_net: MessageWriter<'w, unnet_core::messages::SendNetworkMessage>,
     mission_end_requested: Res<'w, MissionEndRequested>,
     q_net_id: Query<'w, 's, &'static NetworkId>,
 }
@@ -309,7 +307,7 @@ fn truckui_event_handle(
     mut q_repellent: Query<&mut RepellentFlask>,
     q_gearkind: Query<&GearKind>,
     mut ev_mission: MessageWriter<MissionEvent>,
-    mut net_params: TruckNetParams,
+    net_params: TruckNetParams,
 ) {
     for ev in ev_truckui.read() {
         match ev {
@@ -317,56 +315,12 @@ fn truckui_event_handle(
                 if !net_params.mission_end_requested.0 {
                     continue;
                 }
-                if matches!(
-                    net_params.cli.net_mode,
-                    untypes_core::cli::NetMode::Join { .. }
-                ) {
-                    net_params
-                        .ev_send_net
-                        .write(unnet_core::messages::SendNetworkMessage(
-                            unnet_core::messages::NetworkMessage::RequestEndMission,
-                        ));
-                } else {
-                    ev_mission.write(MissionEvent::End);
-                }
+                ev_mission.write(MissionEvent::End);
             }
             TruckUIEvent::ExitTruck => {
-                if let (Some(player_id), true) = (
-                    net_params.loc_player.0,
-                    matches!(
-                        net_params.cli.net_mode,
-                        untypes_core::cli::NetMode::Join { .. }
-                    ),
-                ) {
-                    net_params
-                        .ev_send_net
-                        .write(unnet_core::messages::SendNetworkMessage(
-                            unnet_core::messages::NetworkMessage::RequestTruckExit { player_id },
-                        ));
-                }
                 game_next_state.set(GameState::None);
             }
             TruckUIEvent::CraftRepellent => {
-                if matches!(
-                    net_params.cli.net_mode,
-                    untypes_core::cli::NetMode::Join { .. }
-                ) {
-                    if let (Some(player_id), Some(ghost_type)) =
-                        (net_params.loc_player.0, gg.ghost_type)
-                    {
-                        net_params
-                            .ev_send_net
-                            .write(unnet_core::messages::SendNetworkMessage(
-                                unnet_core::messages::NetworkMessage::CraftRepellent {
-                                    player_id,
-                                    ghost_type,
-                                },
-                            ));
-                        // Client optimistic local exit
-                        game_next_state.set(GameState::None);
-                    }
-                    continue;
-                }
                 for (_player, mut gear) in q_gear.iter_mut() {
                     if let Some(ghost_type) = gg.ghost_type {
                         let consumed_new_bottle = craft_repellent(
@@ -463,7 +417,7 @@ fn update_craft_button_text(
 }
 
 fn update_end_mission_button_status(
-    mission_end_req: Res<unnet_core::resources::MissionEndRequested>,
+    mission_end_req: Res<unreplicon_core::resources::MissionEndRequested>,
     mut q_button: Query<&mut TruckUIButton, With<Button>>,
 ) {
     if !mission_end_req.is_changed() {

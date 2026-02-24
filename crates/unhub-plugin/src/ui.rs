@@ -5,7 +5,7 @@ use unengine_core::{MCamera, MenuUI};
 use unmenu_core::components::MenuItemInteractive;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
-use unnet_core::resources::RoomIdentification;
+use unreplicon_core::resources::RoomIdentification;
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::platform::plt;
 use untypes_core::states::AppState;
@@ -247,7 +247,6 @@ pub fn handle_hub_responses(
     mut next_app_state: ResMut<NextState<AppState>>,
     mut cli: ResMut<CliOptions>,
     mut room_ident: ResMut<RoomIdentification>,
-    mut ev_connect: MessageWriter<unnet_core::messages::ConnectToServer>,
 ) {
     if let Some(resp) = hub_status.last_response.take() {
         match resp {
@@ -259,7 +258,6 @@ pub fn handle_hub_responses(
                     address: data.addr.clone(),
                     ticket: Some(data.ticket.clone()),
                 };
-                ev_connect.write(unnet_core::messages::ConnectToServer { address: data.addr });
                 next_app_state.set(AppState::Lobby);
             }
             HubResponse::RoomJoined(data) => {
@@ -270,7 +268,6 @@ pub fn handle_hub_responses(
                     address: data.addr.clone(),
                     ticket: Some(data.ticket.clone()),
                 };
-                ev_connect.write(unnet_core::messages::ConnectToServer { address: data.addr });
                 next_app_state.set(AppState::Lobby);
             }
             HubResponse::Error(e) => {

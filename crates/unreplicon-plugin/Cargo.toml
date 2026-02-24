@@ -24,7 +24,7 @@ crossbeam-channel = { workspace = true }
 unhub-client = { workspace = true }
 untypes-core = { workspace = true }
 unreplicon-core = { path = "../unreplicon-core" }
-unnet-core = { workspace = true }
+
 unmapload-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unspatial-core = { path = "../unspatial-core" }

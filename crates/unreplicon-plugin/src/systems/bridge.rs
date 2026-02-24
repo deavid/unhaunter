@@ -4,9 +4,9 @@ use bevy::prelude::*;
 use bevy_renet::netcode::NetcodeClientTransport;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
-use unnet_core::network_id::NetworkId as GameNetworkId;
-use unnet_core::resources::{CurrentMapSeed, LobbyData, LobbyPlayer, LocalPlayer, RoomOwner};
 use unreplicon_core::components::{LobbyInfo, SelectedMission};
+use unreplicon_core::network_id::NetworkId as GameNetworkId;
+use unreplicon_core::resources::{CurrentMapSeed, LobbyData, LobbyPlayer, LocalPlayer, RoomOwner};
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::AppState;
@@ -105,7 +105,10 @@ fn on_selected_mission_added(
 
     let entity = trigger.entity;
     let Ok(mission) = q_mission.get(entity) else {
-        error!("on_selected_mission_added: entity {:?} has no SelectedMission", entity);
+        error!(
+            "on_selected_mission_added: entity {:?} has no SelectedMission",
+            entity
+        );
         return;
     };
 

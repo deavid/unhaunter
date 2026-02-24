@@ -5,8 +5,7 @@ use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unnet_core::messages::{NetworkMessage, SendNetworkMessage};
-use unnet_core::resources::LocalPlayer;
+use unreplicon_core::messages::RequestJournalEvidenceToggle;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::states::AppState;
@@ -70,8 +69,7 @@ pub(crate) fn keyboard_evidence(
     q_sensor: Query<&EvidenceSensor>,
     looking_gear: Res<LookingGear>,
     cli: Res<CliOptions>,
-    local_id: Res<LocalPlayer>,
-    mut ev_net: MessageWriter<SendNetworkMessage>,
+    mut ev_evidence_toggle: MessageWriter<RequestJournalEvidenceToggle>,
     mut gg: ResMut<GhostGuess>,
 ) {
     for (input_mapping, playergear) in &players {
@@ -98,15 +96,8 @@ pub(crate) fn keyboard_evidence(
                     }
                 }
                 NetMode::Join { .. } => {
-                    if let Some(player_id) = local_id.0 {
-                        ev_net.write(SendNetworkMessage(
-                            NetworkMessage::RequestJournalEvidenceToggle {
-                                player_id,
-                                evidence,
-                                discard: false,
-                            },
-                        ));
-                    }
+                    let mark_as_found = !gg.evidences_found.contains(&evidence);
+                    ev_evidence_toggle.write(RequestJournalEvidenceToggle { evidence, mark_as_found });
                 }
             }
         }

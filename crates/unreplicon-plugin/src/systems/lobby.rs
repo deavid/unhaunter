@@ -4,9 +4,9 @@ use bevy_replicon::prelude::{
     ServerState,
 };
 use bevy_replicon::shared::backend::connected_client::NetworkId as RepliconNetworkId;
-use unnet_core::resources::{CurrentMapSeed, LobbyData, LocalPlayer};
-use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, ServerAppState, SelectedMission};
+use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerAppState};
 use unreplicon_core::messages::{RequestSelectDifficulty, RequestSelectMap, RequestStartMission};
+use unreplicon_core::resources::{CurrentMapSeed, HostGone, LobbyData, LocalPlayer};
 use untypes_core::cli::CliOptions;
 use untypes_core::states::AppState;
 
@@ -26,7 +26,8 @@ pub(super) fn app_setup(app: &mut App) {
     app.init_resource::<LobbyData>();
     app.init_resource::<LocalPlayer>();
     app.init_resource::<CurrentMapSeed>();
-    app.init_resource::<unnet_core::resources::RoomIdentification>();
+    app.init_resource::<HostGone>();
+    app.init_resource::<unreplicon_core::resources::RoomIdentification>();
 
     // Observer: fires whenever a client entity gains ConnectedClient component.
     app.add_observer(on_client_connected);
@@ -120,10 +121,7 @@ fn on_client_connected(
 /// Returns the `NetworkId` u64 for a `ClientId` by querying the component.
 ///
 /// `ClientId::Server` ⇒ 0 (our sentinel for the host / listen-server player).
-fn client_network_id(
-    client_id: ClientId,
-    q_network_id: &Query<Option<&RepliconNetworkId>>,
-) -> u64 {
+fn client_network_id(client_id: ClientId, q_network_id: &Query<Option<&RepliconNetworkId>>) -> u64 {
     match client_id {
         ClientId::Server => 0,
         ClientId::Client(entity) => q_network_id

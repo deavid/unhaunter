@@ -23,7 +23,7 @@ ungear-core = { path = "../ungear-core" }
 ungearitems-core = { path = "../ungearitems-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
-unnet-core = { path = "../unnet-core" }
+unreplicon-core = { path = "../unreplicon-core" }
 unwalkie-core = { path = "../unwalkie-core" }
 unghost-core = { path = "../unghost-core" }
 unbehavior = { path = "../unbehavior" }

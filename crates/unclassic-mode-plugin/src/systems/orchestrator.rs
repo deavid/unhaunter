@@ -20,8 +20,8 @@ use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unmapload_core::events::loadlevel::{LevelReadyEvent, MapEntitiesReadyEvent};
-use unnet_core::network_id::NetworkId;
-use unnet_core::resources::{LobbyData, LocalPlayer};
+use unreplicon_core::network_id::NetworkId;
+use unreplicon_core::resources::{LobbyData, LocalPlayer};
 use unplayer_core::components::PlayerDisconnected;
 use unplayer_core::components::{
     MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite, Stamina,

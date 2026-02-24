@@ -4,6 +4,8 @@ use unevents_core::events::roomchanged::InteractionExecutionType;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
 
+use crate::network_id::NetworkId;
+
 /// Sent by the (room-owner) client to request a map change.
 ///
 /// On the server this arrives as `FromClient<RequestSelectMap>`.
@@ -104,4 +106,13 @@ pub struct RequestJournalEvidenceToggle {
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct RequestJournalGhostToggle {
     pub ghost_type: Option<GhostType>,
+}
+
+/// Local event fired when a player dies (server-authoritative).
+///
+/// Written by the health / sanity system when a player's HP reaches zero.
+/// Read by death-handling systems (e.g. spectator mode activation).
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct PlayerDiedEvent {
+    pub id: NetworkId,
 }

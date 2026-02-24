@@ -6,7 +6,7 @@ use ungear_core::components::playergear::PlayerGear;
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unmetrics_core::metrics::SendMetric;
-use unnet_core::messages::GearDetails;
+use ungearitems_core::gear_details::GearDetails;
 use unplayer_core::components::{MainPlayer, PlayerInput};
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;

@@ -18,12 +18,11 @@ unengine-core = { path = "../unengine-core" }
 unui-core = { path = "../unui-core" }
 untypes-core = { path = "../untypes-core" }
 unmenu-core = { path = "../unmenu-core" }
-unnet-core = { path = "../unnet-core" }
+unreplicon-core = { path = "../unreplicon-core" }
 unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unprofile-core = { path = "../unprofile-core" }
 unmapload-core = { path = "../unmapload-core" }
 unevents-core = { path = "../unevents-core" }
 bevy-persistent = { workspace = true }
-unreplicon-core = { workspace = true }
 bevy_replicon = { workspace = true }

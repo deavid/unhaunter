@@ -13,7 +13,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 unhub-client = { workspace = true }
 untypes-core = { workspace = true }
-unnet-core = { workspace = true }
+unreplicon-core = { path = "../unreplicon-core" }
 unmenu-core = { workspace = true }
 unengine-core = { workspace = true }
 unui-core = { workspace = true }

@@ -5,8 +5,8 @@ use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::scrollbar::{self, ScrollableListContainer};
 use unmenu_core::templates;
-use unnet_core::resources::LobbyData;
 use unreplicon_core::messages::RequestSelectMap;
+use unreplicon_core::resources::LobbyData;
 use untypes_core::cli::CliOptions;
 use untypes_core::states::LobbyScreen;
 use unui_core::assets::UiAssets;
@@ -161,8 +161,8 @@ pub(crate) fn handle_input(
     cli: Res<CliOptions>,
     time: Res<Time>,
     entry_timer: Res<StateEntryTimer>,
-    local_player: Res<unnet_core::resources::LocalPlayer>,
-    room_owner: Option<Res<unnet_core::resources::RoomOwner>>,
+    local_player: Res<unreplicon_core::resources::LocalPlayer>,
+    room_owner: Option<Res<unreplicon_core::resources::RoomOwner>>,
     mut ev_send_map: MessageWriter<RequestSelectMap>,
 ) {
     let is_room_owner = match (local_player.0, room_owner) {

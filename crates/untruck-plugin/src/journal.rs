@@ -8,8 +8,7 @@ use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
-use unnet_core::messages::{NetworkDataEvent, NetworkMessage, SendNetworkMessage};
-use unnet_core::resources::LocalPlayer;
+use unreplicon_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhostToggle};
 use unprofile_core::profile::PlayerProfileData;
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
@@ -85,8 +84,8 @@ struct JournalButtonParams<'w, 's> {
     keyboard_input: Res<'w, ButtonInput<KeyCode>>,
     difficulty: Res<'w, CurrentDifficulty>,
     cli: Res<'w, CliOptions>,
-    ev_net: MessageWriter<'w, SendNetworkMessage>,
-    local_id: Res<'w, LocalPlayer>,
+    ev_evidence_toggle: MessageWriter<'w, RequestJournalEvidenceToggle>,
+    ev_ghost_toggle: MessageWriter<'w, RequestJournalGhostToggle>,
 }
 
 fn button_system(mut p: JournalButtonParams) {
@@ -157,25 +156,24 @@ fn button_system(mut p: JournalButtonParams) {
             }
         }
         NetMode::Join { .. } => {
-            if let Some(player_id) = p.local_id.0 {
-                if let Some((evidence, discard)) = clicked_evidence_type {
-                    p.ev_net.write(SendNetworkMessage(
-                        NetworkMessage::RequestJournalEvidenceToggle {
-                            player_id,
-                            evidence,
-                            discard,
-                        },
-                    ));
-                }
-                if let Some((ghost_type, discard)) = clicked_ghost_type {
-                    p.ev_net.write(SendNetworkMessage(
-                        NetworkMessage::RequestJournalGhostToggle {
-                            player_id,
-                            ghost_type,
-                            discard,
-                        },
-                    ));
-                }
+            if let Some((evidence, discard)) = clicked_evidence_type {
+                let mark_as_found = if discard {
+                    false // shift-click: mark as missing/discarded
+                } else {
+                    !p.gg.evidences_found.contains(&evidence)
+                };
+                p.ev_evidence_toggle.write(RequestJournalEvidenceToggle { evidence, mark_as_found });
+            }
+            // Note: ghost discard (shift-click) is not yet supported via replicon protocol.
+            if let Some((ghost_type, discard)) = clicked_ghost_type
+                && !discard
+            {
+                let new_guess = if p.gg.ghost_type == Some(ghost_type) {
+                    None
+                } else {
+                    Some(ghost_type)
+                };
+                p.ev_ghost_toggle.write(RequestJournalGhostToggle { ghost_type: new_guess });
             }
         }
     }
@@ -330,94 +328,13 @@ fn ghost_guess_system(
     }
 }
 
-/// System that handles network messages for the journal on the host.
-fn host_handle_journal_messages_system(
-    cli: Res<CliOptions>,
-    mut ev_reader: MessageReader<NetworkDataEvent>,
-    mut gg: ResMut<GhostGuess>,
-) {
-    if !matches!(cli.net_mode, NetMode::Host { .. }) {
-        return;
-    }
-
-    for ev in ev_reader.read() {
-        match &ev.message {
-            NetworkMessage::JournalUpdate {
-                player_id,
-                ghost_type,
-                evidences_found,
-                evidences_missing,
-            } => {
-                debug!(
-                    "Journal: Received JournalUpdate from client {:?}",
-                    player_id
-                );
-                gg.ghost_type = *ghost_type;
-                gg.evidences_found = evidences_found.iter().cloned().collect();
-                gg.evidences_missing = evidences_missing.iter().cloned().collect();
-            }
-            NetworkMessage::RequestJournalEvidenceToggle {
-                player_id,
-                evidence,
-                discard,
-            } => {
-                debug!(
-                    "Journal: Received RequestJournalEvidenceToggle from client {:?} for {:?} (discard: {})",
-                    player_id, evidence, discard
-                );
-                if *discard {
-                    if gg.evidences_missing.contains(evidence) {
-                        gg.evidences_missing.remove(evidence);
-                    } else {
-                        gg.evidences_missing.insert(*evidence);
-                        gg.evidences_found.remove(evidence);
-                    }
-                } else if gg.evidences_found.contains(evidence) {
-                    gg.evidences_found.remove(evidence);
-                } else if gg.evidences_missing.contains(evidence) {
-                    gg.evidences_missing.remove(evidence);
-                } else {
-                    gg.evidences_found.insert(*evidence);
-                }
-            }
-            NetworkMessage::RequestJournalGhostToggle {
-                player_id,
-                ghost_type,
-                discard,
-            } => {
-                debug!(
-                    "Journal: Received RequestJournalGhostToggle from client {:?} for {:?} (discard: {})",
-                    player_id, ghost_type, discard
-                );
-                if *discard {
-                    if gg.ghosts_discarded.contains(ghost_type) {
-                        gg.ghosts_discarded.remove(ghost_type);
-                    } else {
-                        gg.ghosts_discarded.insert(*ghost_type);
-                        if gg.ghost_type == Some(*ghost_type) {
-                            gg.ghost_type = None;
-                        }
-                    }
-                } else if gg.ghost_type == Some(*ghost_type) {
-                    gg.ghost_type = None;
-                } else {
-                    gg.ghost_type = Some(*ghost_type);
-                    gg.ghosts_discarded.remove(ghost_type);
-                }
-            }
-            _ => {}
-        }
-    }
-}
+// NOTE: host_handle_journal_messages_system was removed; journal synchronization
+// is now handled by unreplicon-plugin via replicon messages.
 
 pub(crate) fn app_setup_core(app: &mut App) {
     app.add_message::<ForceDiscardEvidenceEvent>().add_systems(
         Update,
-        (
-            force_discard_evidence_system,
-            host_handle_journal_messages_system,
-        )
-            .run_if(in_state(AppState::InGame)),
+        force_discard_evidence_system.run_if(in_state(AppState::InGame)),
     );
 }
 

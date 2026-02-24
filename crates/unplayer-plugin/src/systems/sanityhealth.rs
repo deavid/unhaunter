@@ -205,7 +205,7 @@ fn update_player_stamina(
     }
 }
 
-use unnet_core::messages::PlayerDiedEvent;
+use unreplicon_core::messages::PlayerDiedEvent;
 
 fn detect_and_apply_death(
     mut commands: Commands,
@@ -248,7 +248,7 @@ fn detect_and_apply_death(
 fn update_profile_death_stats(
     mut ev_death: MessageReader<PlayerDiedEvent>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
-    local_player: Res<unnet_core::resources::LocalPlayer>,
+    local_player: Res<unreplicon_core::resources::LocalPlayer>,
     mut summary_data: ResMut<SummaryData>,
     board_topology: Res<BoardTopology>,
     difficulty_res: Res<CurrentDifficulty>,
@@ -315,7 +315,7 @@ pub(crate) fn app_setup(app: &mut App) {
     use untypes_core::cli::{is_authority, is_headless};
     use untypes_core::states::SimulationState;
 
-    app.add_systems(
+    app.add_message::<PlayerDiedEvent>().add_systems(
         Update,
         (
             lose_sanity.run_if(not(is_headless)),

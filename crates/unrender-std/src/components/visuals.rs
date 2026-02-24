@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unnet_core::network_id::NetworkId;
+use unreplicon_core::network_id::NetworkId;
 
 /// Component that controls how an entity reacts to general lighting and exposure.
 #[derive(Component, Debug, Clone, Copy)]

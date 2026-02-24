@@ -11,7 +11,7 @@ use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
-use unnet_core::resources::{LobbyData, LocalPlayer, RoomOwner};
+use unreplicon_core::resources::{LobbyData, LocalPlayer, RoomOwner};
 use unprofile_core::profile::PlayerProfileData;
 use unreplicon_core::messages::RequestStartMission;
 use untypes_core::cli::CliOptions;
@@ -57,7 +57,7 @@ pub(crate) fn setup_ui(
     mut entry_timer: ResMut<StateEntryTimer>,
     local_player: Res<LocalPlayer>,
     room_owner: Option<Res<RoomOwner>>,
-    room_ident: Option<Res<unnet_core::resources::RoomIdentification>>,
+    room_ident: Option<Res<unreplicon_core::resources::RoomIdentification>>,
 ) {
     *entry_timer = StateEntryTimer(time.elapsed_secs());
     if !q_ui.is_empty() {
@@ -417,17 +417,8 @@ pub(crate) fn update_display(
             let map_name = map_data
                 .map(|m| m.display_name.as_str())
                 .unwrap_or("Unknown Map");
-            let minutes = (lobby_data.mission_elapsed_secs / 60.0).floor();
-            let seconds = (lobby_data.mission_elapsed_secs % 60.0).floor();
 
-            text.0 = format!(
-                "MISSION IN PROGRESS\n\nMap: {}\nTime: {:02}:{:02}\nEvidence Found: {}\nRepellent Used: {}",
-                map_name,
-                minutes,
-                seconds,
-                lobby_data.evidences_found_count,
-                lobby_data.repellent_used
-            );
+            text.0 = format!("MISSION IN PROGRESS\n\nMap: {}", map_name,);
         } else if let Some(m) = map_data {
             text.0 = format!(
                 "{}\n{}\n\n{}",
@@ -441,17 +432,8 @@ pub(crate) fn update_display(
     // Update Difficulty Info
     if let Ok(mut text) = q_diff_info.single_mut() {
         if host_in_mission {
-            let mut status_lines = vec!["Player Status:".to_string()];
+            let mut status_lines = vec!["Players:".to_string()];
             for (idx, player) in lobby_data.players.iter().enumerate() {
-                let status = lobby_data
-                    .player_statuses
-                    .iter()
-                    .find(|s| s.id == player.id);
-                let state = match status {
-                    Some(s) if !s.is_alive => "DEAD / SPECTATING",
-                    Some(s) if s.is_in_lobby => "IN LOBBY",
-                    _ => "ACTIVE IN MISSION",
-                };
                 let is_local = local_player.0 == Some(player.id);
                 let name = if is_local {
                     "You".to_string()
@@ -460,7 +442,7 @@ pub(crate) fn update_display(
                 } else {
                     format!("Player {}", player.id.0)
                 };
-                status_lines.push(format!("- {}: {}", name, state));
+                status_lines.push(format!("- {}", name));
             }
             text.0 = status_lines.join("\n");
         } else {

@@ -10,9 +10,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
-use unnet_core::messages::{NetworkMessage, SendNetworkMessage, TruckInventoryChange};
-use unnet_core::network_id::NetworkId;
-use unnet_core::resources::LocalPlayer;
+use unreplicon_core::network_id::NetworkId;
 use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::assets::GearAssets;
@@ -470,32 +468,10 @@ fn button_clicked(
     gear_registry: Res<GearSpawnerRegistry>,
     mut commands: Commands,
     cli: Res<CliOptions>,
-    local_player: Res<LocalPlayer>,
-    mut ev_net: MessageWriter<SendNetworkMessage>,
 ) {
     let Some(ev) = ev_clk.read().next() else {
         return;
     };
-
-    if matches!(cli.net_mode, NetMode::Join { .. }) {
-        let Some(player_id) = local_player.0 else {
-            return;
-        };
-        let change = match &ev.0 {
-            LoadoutButton::Inventory(inv) => match inv.hand {
-                Hand::Left => TruckInventoryChange::RemoveLeftHand,
-                Hand::Right => TruckInventoryChange::RemoveRightHand,
-            },
-            LoadoutButton::InventoryNext(invnext) => {
-                TruckInventoryChange::RemoveInventoryIndex(invnext.idx.unwrap_or(0))
-            }
-            LoadoutButton::Van(kind) => TruckInventoryChange::AddItem(*kind),
-        };
-        ev_net.write(SendNetworkMessage(
-            NetworkMessage::RequestTruckInventoryChange { player_id, change },
-        ));
-        return;
-    }
 
     let Some(mut p_gear) = q_gear
         .iter_mut()

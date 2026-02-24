@@ -1,16 +1,19 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Component that uniquely identifies an entity across the network.
+/// A 64-bit identifier that is unique per entity across the network.
+///
+/// Zero is reserved as a sentinel for the host / listen-server player.
 #[derive(
     Component, Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect, Default,
 )]
 #[reflect(Component)]
 pub struct NetworkId(pub u64);
 
-/// Component that marks an entity to be despawned after a few frames.
-/// This is used to prevent panics when entities are despawned while still being referenced
-/// by other systems or snapshots in the same frame.
+/// Marks an entity as pending despawn after `in_frames` update ticks.
+///
+/// Used to keep despawn events alive long enough for all clients to receive them
+/// before the entity is removed from the ECS world.
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Reflect, Default)]
 #[reflect(Component)]
 pub struct ToBeDespawned {

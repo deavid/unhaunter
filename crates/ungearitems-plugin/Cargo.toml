@@ -31,7 +31,7 @@ unsound-core = { path = "../unsound-core" }
 unsummary-core = { path = "../unsummary-core" }
 unthermal-core = { path = "../unthermal-core" }
 unprofile-core = { path = "../unprofile-core" }
-unnet-core = { path = "../unnet-core" }
+
 unreplicon-core = { path = "../unreplicon-core" }
 
 bevy = { workspace = true }

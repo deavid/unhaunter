@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::colors;
-use unnet_core::network_id::NetworkId;
-use unnet_core::resources::LobbyData;
+use unreplicon_core::network_id::NetworkId;
+use unreplicon_core::resources::LobbyData;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSpectating;

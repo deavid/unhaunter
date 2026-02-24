@@ -40,8 +40,6 @@ const UNHAUNTER_CRATES: &[&str] = &[
     "unmetrics_plugin",
     "unmission_plugin",
     "unnavigation_core",
-    "unnet_core",
-    "unnet_plugin",
     "unnoise_core",
     "unnpc_plugin",
     "unpicking_core",

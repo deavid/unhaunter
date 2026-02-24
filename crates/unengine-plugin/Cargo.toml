@@ -22,7 +22,7 @@ unevents-core = { path = "../unevents-core" }
 unspatial-core = { path = "../unspatial-core" }
 unassets-core = { path = "../unassets-core" }
 unnoise-core = { path = "../unnoise-core" }
-unnet-core = { path = "../unnet-core" }
+unreplicon-core = { path = "../unreplicon-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
