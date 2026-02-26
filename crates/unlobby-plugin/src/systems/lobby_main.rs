@@ -3,16 +3,19 @@ use std::str::FromStr;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unassets_core::resources::maps::Maps;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unengine_core::MenuUI;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
 use unprofile_core::profile::PlayerProfileData;
+use unreplicon_core::components::SelectedMission;
 use unreplicon_core::messages::RequestStartMission;
-use unreplicon_core::resources::{LobbyData, LocalPlayer, RoomOwner};
+use unreplicon_core::resources::{CurrentMapSeed, LobbyData, LocalPlayer, RoomOwner};
 use untypes_core::cli::CliOptions;
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::{AppState, LobbyScreen};
@@ -256,6 +259,10 @@ pub(crate) fn handle_clicks(
     entry_timer: Res<StateEntryTimer>,
     local_player: Res<LocalPlayer>,
     room_owner: Option<Res<RoomOwner>>,
+    q_selected_mission: Query<&SelectedMission>,
+    mut current_map_seed: ResMut<CurrentMapSeed>,
+    mut current_difficulty: ResMut<CurrentDifficulty>,
+    mut ev_load: MessageWriter<LoadLevelEvent>,
     mut ev_start: MessageWriter<RequestStartMission>,
 ) {
     let is_room_owner = match (local_player.0, room_owner) {
@@ -298,26 +305,55 @@ pub(crate) fn handle_clicks(
                 }
             }
             Some(LobbyMenuAction::StartMission) => {
-                // TODO: check ServerGamePhase::InProgress when late-join is implemented
-                let host_in_mission = false;
+                let host_in_mission = !q_selected_mission.is_empty();
 
-                if host_in_mission {
-                    warn!("Late-join not yet implemented");
-                } else if is_room_owner {
-                    match &lobby_data.selected_map {
+                if host_in_mission && !is_room_owner {
+                    // Non-owner: join an already-running mission.
+                    if let Ok(mission) = q_selected_mission.single() {
+                        current_map_seed.0 = mission.map_seed;
+                        if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
+                            *current_difficulty = CurrentDifficulty::new(diff);
+                        } else {
+                            warn!(
+                                "Unknown difficulty '{}'; keeping current",
+                                mission.difficulty_id
+                            );
+                        }
+                        ev_load.write(LoadLevelEvent {
+                            map_filepath: mission.map_path.clone(),
+                        });
+                        info!("Non-owner joining mission: map={}", mission.map_path);
+                        // AppState::InGame is set by after_level_ready when LevelReadyEvent fires.
+                    }
+                } else if !host_in_mission && is_room_owner {
+                    // Owner: start a new mission.
+                    match lobby_data.selected_map.clone() {
                         Some(map_filepath) if !map_filepath.is_empty() => {
                             let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
                             info!("Room owner requesting mission start: map={}", map_filepath);
                             ev_start.write(RequestStartMission { map_seed });
+                            current_map_seed.0 = map_seed;
+                            if let Ok(diff) = Difficulty::from_str(&lobby_data.selected_difficulty)
+                            {
+                                *current_difficulty = CurrentDifficulty::new(diff);
+                            } else {
+                                warn!(
+                                    "Unknown difficulty '{}'; keeping current",
+                                    lobby_data.selected_difficulty
+                                );
+                            }
+                            ev_load.write(LoadLevelEvent {
+                                map_filepath: map_filepath.clone(),
+                            });
+                            // AppState::InGame is set by after_level_ready when LevelReadyEvent fires.
                         }
                         _ => {
                             warn!("Cannot start mission: no map selected");
                         }
                     }
+                } else if host_in_mission && is_room_owner {
+                    warn!("Owner clicked Start Mission while mission already in progress; ignored");
                 }
-
-                // State transition is handled by the bridge observer on SelectedMission.
-                let _ = &next_app_state; // keep borrow checker happy
             }
             Some(LobbyMenuAction::ExitLobby) => {
                 next_app_state.set(AppState::MainMenu);
@@ -343,14 +379,14 @@ pub(crate) fn update_display(
     mut q_menu_items: Query<(&LobbyMenuAction, &mut Visibility, &Children)>,
     mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
     room_owner: Option<Res<RoomOwner>>,
+    q_selected_mission: Query<Entity, With<SelectedMission>>,
 ) {
     let is_room_owner = match (local_player.0, room_owner) {
         (Some(lp), Some(ro)) => lp == ro.0,
         (Some(_), None) => cli.is_authority() && !cli.is_headless(),
         _ => false,
     };
-    // TODO: check ServerGamePhase::InProgress when late-join is implemented
-    let host_in_mission = false;
+    let host_in_mission = !q_selected_mission.is_empty();
 
     // Update Menu Items (Start/Join Mission)
     for (action, mut vis, children) in q_menu_items.iter_mut() {

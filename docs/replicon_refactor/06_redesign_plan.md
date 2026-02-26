@@ -2,7 +2,7 @@
 
 - **Date:** 2026-02-26
 - **Scope:** `unreplicon-plugin`, `unreplicon-core`, `unengine-core`, `unlobby-plugin`
-- **Status:** Approved for implementation
+- **Status:** Implemented — revised during execution (see §4 notes)
 
 ---
 
@@ -158,77 +158,55 @@ This replaces `ServerAppState`. It only contains states the server can actually 
 These replace the three write sites identically. No logic changes to the server — just the type changes from
 `ServerAppState(AppState::X)` to `ServerGamePhase::X`.
 
-### 4.4 Client-side reactions (replacing `follow_server_app_state`)
+### 4.4 Client-side reactions — revised principle
 
-Delete `follow_server_app_state`. Replace with a single observer:
+> **Implemented differently from the original plan.** The plan proposed a `react_to_server_game_phase` system with
+> guarded transitions. During implementation this was recognised as the same disease as `follow_server_app_state`, only
+> with narrower guards. It was removed entirely.
 
-```rust
-fn on_server_phase_changed(
-    trigger: On<Insert, ServerGamePhase>,  // also fires on Change via a system
-    // ...
-)
-```
+**The rule adopted:**
 
-Actually, since we need `Changed<>` semantics and a system is cleaner here, use a system with explicit per-value guards.
-All guards are on the **client's current state** — the transition only fires if the client is in a state where it makes
-sense:
+> Every `AppState` transition on the client must be the direct result of a player action on their own local client. The
+> only exceptions are pure in-game events that would also occur in single-player (e.g. all players dying → Summary). No
+> networking event of any kind may cause a client state transition.
 
-| `ServerGamePhase` received | Client precondition                                     | Client action                                                       |
-| -------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------- |
-| `Lobby`                    | Client is in `InGame` or `Summary`                      | `next_state.set(AppState::Lobby)`                                   |
-| `Lobby`                    | Client is in `Loading` or `MainMenu`                    | **do nothing** — client navigates to Lobby on its own terms via 4.5 |
-| `InProgress`               | (unused here — `SelectedMission` observer handles this) | no action                                                           |
-| `Ended`                    | Client is in `InGame`                                   | `next_state.set(AppState::Summary)`                                 |
-| `Ended`                    | Any other state                                         | do nothing                                                          |
+Consequences:
 
-Keys:
+- `react_to_server_game_phase` — **not implemented**. `ServerGamePhase` is replicated and available as display data, but
+  no client system reads it to change `NextState<AppState>`.
+- `on_selected_mission_added` observer in `bridge.rs` — **deleted**. This observer previously called
+  `next_state.set(AppState::Loading)` when a `SelectedMission` component was replicated from the server, which is a
+  networking event driving a state transition. It was removed.
+- Mission loading is now entirely owned by click handlers in `unlobby-plugin` (see §4.5).
+- `ServerGamePhase` remains replicated. It is used as **display data only** — e.g. to decide whether to show "Start
+  Mission" vs "Join Mission" in the lobby UI.
 
-- `Lobby` arriving while client is in `Loading` or `MainMenu` = server is just advertising its availability. The client
-  will navigate to Lobby when ready (see 4.5).
-- `InProgress` is still handled by `on_selected_mission_added` (spawning `SelectedMission`).
-  `ServerGamePhase::InProgress` is written for correctness but the client does not need to react to it as a state
-  transition.
-- `Ended` arriving while in `InGame` = normal mission end. Go to Summary.
+### 4.5 Navigation — user-driven only
 
-### 4.5 Initial navigation for Join clients
+> **Implemented differently from the original plan.** The plan proposed `auto_join_to_lobby` to automatically redirect
+> Join clients from `MainMenu` to `Lobby` after asset loading. This was also removed — an automatic redirect is a
+> networking event driving navigation, which violates the principle in §4.4.
 
-The asset loader is hardcoded in `unengine-core/src/plugin.rs` as:
+**What actually navigates the client:**
 
-```rust
-LoadingState::new(AppState::Loading).continue_to_state(AppState::MainMenu)
-```
+| Transition           | Trigger                                                                       |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `Loading → MainMenu` | Asset loader (`unengine-core`) — unchanged, correct                           |
+| `MainMenu → Lobby`   | User clicks "Multiplayer Lobby" in the main menu — unchanged                  |
+| `Lobby → Loading`    | User clicks "Start Mission" (owner) or "Join Mission" (non-owner) — see below |
+| `InGame → Summary`   | Game-internal event (all players dead, repellent depleted, etc.) — unchanged  |
+| `Summary → Lobby`    | User clicks a button in the summary screen — unchanged                        |
 
-This is correct — it must not change. The loading pipeline should always go to `MainMenu`.
+**Mission loading in `unlobby-plugin/src/systems/lobby_main.rs`:**
 
-After `MainMenu` is entered, a new system in `unreplicon-plugin/src/systems/bridge.rs` handles the Join-mode
-auto-redirect:
-
-```rust
-fn auto_join_to_lobby(
-    cli: Res<CliOptions>,
-    mut next_state: ResMut<NextState<AppState>>,
-) {
-    if matches!(cli.net_mode, NetMode::Join { .. }) {
-        info!("Join mode: auto-navigating to Lobby after asset loading");
-        next_state.set(AppState::Lobby);
-    }
-}
-```
-
-Registered as:
-
-```rust
-app.add_systems(
-    OnEnter(AppState::MainMenu),
-    auto_join_to_lobby.run_if(not(in_state(ServerState::Running))),
-);
-```
-
-This is:
-
-- Triggered at the right moment (assets are loaded, `MainMenu` has just been entered)
-- Only runs on non-server nodes (Join clients and Host clients, not dedicated server)
-- Only runs in `NetMode::Join` — Host clients enter Lobby via existing button click
+- `host_in_mission` is derived from `!q_selected_mission.is_empty()` — a local ECS query, not a networking callback.
+- **Owner, no mission running:** clicking "Start Mission" sends `RequestStartMission` to the server AND immediately
+  triggers local load (`CurrentMapSeed`, `CurrentDifficulty`, `LoadLevelEvent`, `AppState::Loading`). The owner does not
+  wait for replication to initiate their own load.
+- **Non-owner, mission running:** the "Start Mission" button is replaced by "Join Mission". Clicking it reads
+  `SelectedMission` (already replicated) to obtain the seed, difficulty, and map path, then triggers the same local load
+  pipeline. This is "always late-join" — joining seconds to minutes after the owner started.
+- **Non-owner, no mission running:** button is hidden.
 
 ### 4.6 Disconnect cleanup
 
@@ -288,23 +266,17 @@ that re-runs the bridge logic once without the `Changed<>` filter.
 
 ---
 
-## 5. Impact Map — Files to Touch
+## 5. Impact Map — Files Touched
 
-| File                                      | Change                                                                                                                                                              | Step       |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `unreplicon-core/src/components.rs`       | Add `ServerGamePhase` enum; mark `ServerAppState` with FIXME REFACTOR                                                                                               | 1, 4       |
-| `unreplicon-plugin/src/systems/lobby.rs`  | Replace `ServerAppState` writes with `ServerGamePhase`; add `on_client_disconnected` observer                                                                       | 3, 4       |
-| `unreplicon-plugin/src/systems/ghost.rs`  | Replace `ServerAppState(Summary)` write with `ServerGamePhase::Ended`                                                                                               | 4          |
-| `unreplicon-plugin/src/systems/bridge.rs` | Delete `follow_server_app_state`; add `react_to_server_game_phase` system with guards; add `auto_join_to_lobby`; add `OnEnter(AppState::Lobby)` re-hydration system | 2, 4, 5, 6 |
-| `unengine-core/src/plugin.rs`             | No change needed — `Loading → MainMenu` stays                                                                                                                       | —          |
-
-No changes needed outside this list. Specifically:
-
-- `unlobby-plugin` does not need to change (it reads `LobbyData` and `RoomOwner` which are correctly populated by the
-  bridge)
-- `unmainmenu-plugin` does not need to change
-- `unreplicon-plugin/src/systems/connection.rs` does not need to change
-- `unreplicon-plugin/src/systems/auth.rs` does not need to change
+| File                                       | Change                                                                                                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unreplicon-core/src/components.rs`        | Added `ServerGamePhase` enum; removed `ServerAppState`                                                                                                                    |
+| `unreplicon-core/src/resources.rs`         | Removed `host_app_state` field from `LobbyData`                                                                                                                           |
+| `unreplicon-plugin/src/systems/lobby.rs`   | Replaced `ServerAppState` with `ServerGamePhase`; added `on_client_disconnected` observer                                                                                 |
+| `unreplicon-plugin/src/systems/ghost.rs`   | Replaced `ServerAppState(Summary)` write with `ServerGamePhase::Ended`                                                                                                    |
+| `unreplicon-plugin/src/systems/bridge.rs`  | Deleted `follow_server_app_state`, `on_selected_mission_added`, `react_to_server_game_phase`, `auto_join_to_lobby`; kept `rehydrate_lobby_data_on_enter` (data sync only) |
+| `unlobby-plugin/src/systems/lobby_main.rs` | Added full mission load pipeline to Start/Join Mission click handler; `host_in_mission` derived from ECS query on `SelectedMission`                                       |
+| `unengine-core/src/plugin.rs`              | No change — `Loading → MainMenu` unchanged                                                                                                                                |
 
 ---
 
@@ -365,33 +337,38 @@ Add `app.replicate::<ServerGamePhase>()` in `lobby.rs::app_setup`.
 the client reacts to `ServerGamePhase` yet — it is inert. **Risk:** Low. Additive only. Both old and new components
 coexist.
 
-### Step 5 — Replace client reactions: delete `follow_server_app_state`, add guarded system
+### Step 5 — Remove all server-driven client navigation; implement Join Mission button
 
 In `bridge.rs`:
 
-- Delete `follow_server_app_state` and its registration in `app_setup`
-- Add `react_to_server_game_phase` system with the guards specified in table 4.4
-- Register it in `app_setup` with `run_if(not(in_state(ServerState::Running)))`
-- Add `auto_join_to_lobby` system on `OnEnter(AppState::MainMenu)` as specified in 4.5
+- Delete `follow_server_app_state` and its registration
+- Delete `on_selected_mission_added` observer (no longer drives `NextState`)
+- Do **not** add `react_to_server_game_phase` or `auto_join_to_lobby` — these were designed and then rejected as
+  violations of the independence principle (see §4.4)
+- `app_setup` now registers only: `bridge_lobby_info_system` (data sync) and `rehydrate_lobby_data_on_enter` (data sync
+  on Lobby entry). Neither touches `NextState<AppState>`.
 
-**Goal:** Client no longer blindly copies server state. Freeze bug resolved. Involuntary Lobby jump resolved. Summary
-transition still works (via `Ended` guard). **Risk:** Medium. This is the main behaviour change step. Test the full
-session sequence: start dedicated → join → lobby appears → select map → start mission → play → end → summary → back to
-lobby → second mission.
+In `unlobby-plugin/src/systems/lobby_main.rs`:
 
-### Step 6 — Remove `ServerAppState` and `LobbyData.host_app_state`
+- Add `q_selected_mission: Query<Entity, With<SelectedMission>>` to `update_display` — drives `host_in_mission` flag and
+  "Join Mission" button visibility
+- Add full mission load pipeline to `handle_clicks` for the `StartMission` action:
+  - Owner path: send `RequestStartMission` + set `CurrentMapSeed` + set `CurrentDifficulty` + write `LoadLevelEvent` +
+    `next_state.set(AppState::Loading)`
+  - Non-owner path (mission running): read `SelectedMission` directly, same load pipeline
+  - Non-owner path (no mission): button hidden
 
-After Step 5 is tested and confirmed working:
+**Goal:** No networking event drives client navigation. All state transitions are explicit user actions. Freeze,
+involuntary redirect, and ESC-back bugs resolved. **Risk:** Medium — main behaviour change.
 
-- Remove `ServerAppState` from `unreplicon-core/src/components.rs`
-- Remove all import and usage sites (three write sites, `bridge.rs` import, `ghost.rs` import, `lobby.rs` import)
-- Remove `host_app_state` from `LobbyData` in `unreplicon-core/src/resources.rs` and all sites that read it (only
-  `lobby_main.rs` uses it to check `host_app_state == Some(AppState::InGame)` for the late-join warning — replace with
-  `ServerGamePhase::InProgress` check)
-- Remove `app.replicate::<ServerAppState>()` from `lobby.rs::app_setup`
+### Step 6 — Remove `ServerAppState` and `LobbyData.host_app_state` (completed alongside Step 5)
 
-**Goal:** Dead code gone. Single source of truth for server game phase. **Risk:** Low after Step 5 is confirmed. This is
-pure removal with one read-site substitution.
+- Removed `ServerAppState` from `unreplicon-core/src/components.rs`
+- Removed all import and usage sites
+- Removed `host_app_state` from `LobbyData` in `unreplicon-core/src/resources.rs`
+- `lobby_main.rs` now derives `host_in_mission` from `q_selected_mission.is_empty()` instead
+
+**Goal:** Dead types gone. `ServerGamePhase` is the single server-side phase indicator. **Risk:** Low — pure removal.
 
 ---
 
@@ -399,8 +376,10 @@ pure removal with one read-site substitution.
 
 These are known gaps that this plan does not address and should not be addressed in the same changeset:
 
-- **Late-join (joining a game in progress):** The lobby currently shows "Late-join not yet implemented" and that path is
-  unchanged.
+- **Late-join (joining a game in progress):** Redesigned as the standard join flow. "Start Mission" becomes "Join
+  Mission" for non-owners when a `SelectedMission` entity exists in the ECS. All client joins are effectively late-joins
+  — the client loads independently whenever the player clicks the button, regardless of when the owner started. No
+  synchronisation point is enforced.
 - **Hub-mode authentication changes:** `auth.rs` hub-mode bypass is separate work.
 - **Player tint colour conflicts:** When a player reconnects they may get a duplicate tint index. Out of scope.
 - **`LobbyInfo` persistence on server restart / round-trip:** Out of scope.
@@ -413,8 +392,9 @@ These are known gaps that this plan does not address and should not be addressed
 After all six steps are complete and tested:
 
 1. `cargo clippy` produces zero errors and zero warnings on any of the changed crates.
-2. Starting a dedicated server and joining with a client results in: the client loading assets, arriving at MainMenu
-   briefly, then automatically transitioning to Lobby without any user input.
+2. Starting a dedicated server and joining with a client results in: the client loading assets, arriving at `MainMenu`,
+   and staying there until the user manually navigates to the Lobby. The client is never automatically redirected by the
+   server or by any replication event.
 3. The lobby displays the correct player(s) with correct ownership.
 4. Closing the client (force-kill) removes the player from the lobby on the server within one connection timeout cycle.
 5. Pressing ESC from the Lobby, returning to MainMenu, and clicking "Multiplayer Lobby" again shows the correct current

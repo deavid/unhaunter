@@ -4,6 +4,7 @@ use bevy_replicon::prelude::{
     ServerState,
 };
 use bevy_replicon::shared::backend::connected_client::NetworkId as RepliconNetworkId;
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
 use unreplicon_core::messages::{RequestSelectDifficulty, RequestSelectMap, RequestStartMission};
 use unreplicon_core::resources::{CurrentMapSeed, HostGone, LobbyData, LocalPlayer};
@@ -287,6 +288,7 @@ fn handle_request_start_mission(
     mut q_lobby: Query<&mut LobbyInfo>,
     q_network_id: Query<Option<&RepliconNetworkId>>,
     mut commands: Commands,
+    mut ev_load: MessageWriter<LoadLevelEvent>,
 ) {
     for msg in reader.read() {
         let sender_id = client_network_id(msg.client_id, &q_network_id);
@@ -318,6 +320,11 @@ fn handle_request_start_mission(
                     difficulty_id: lobby.selected_difficulty.clone(),
                 },
             ));
+            // Load the level server-side so the server enters AppState::InGame,
+            // enabling player/gear spawning and replication to clients.
+            ev_load.write(LoadLevelEvent {
+                map_filepath: map_path.clone(),
+            });
         }
     }
 }
