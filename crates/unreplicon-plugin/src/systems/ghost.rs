@@ -14,13 +14,17 @@ use bevy_replicon::prelude::{
 };
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
+use unfoundation_core::types::grade::Grade;
 use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use unreplicon_core::components::{MissionGoalEntity, RepliconGhostSpawningActive};
+use unreplicon_core::components::{
+    MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
+};
 use unreplicon_core::messages::{
     RequestJournalEvidenceToggle, RequestJournalGhostToggle, SpawnParticleNetEvent,
 };
@@ -30,6 +34,7 @@ use unreplicon_core::net_components::{
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
+use unsummary_core::summary::SummaryData;
 use untags_core::tags::GhostTag;
 use untypes_core::states::AppState;
 
@@ -72,6 +77,14 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(in_state(AppState::InGame)),
     );
 
+    // Server: write mission result when summary screen activates.
+    app.add_systems(
+        Update,
+        sync_mission_result_to_net
+            .run_if(in_state(ServerState::Running))
+            .run_if(in_state(AppState::Summary)),
+    );
+
     // Client: apply replicated state to local world.
     app.add_systems(
         Update,
@@ -83,6 +96,13 @@ pub(super) fn app_setup(app: &mut App) {
         )
             .run_if(in_state(AppState::InGame))
             .run_if(not(in_state(ServerState::Running))),
+    );
+
+    // Client: apply mission result — runs in any non-server state so it fires
+    // even as the client is about to re-enter InGame after a mission ends.
+    app.add_systems(
+        Update,
+        apply_mission_result_net.run_if(not(in_state(ServerState::Running))),
     );
 }
 
@@ -305,4 +325,110 @@ fn handle_spawn_particle(
                 .insert(SpriteLayer::default());
         }
     }
+}
+
+/// Server: when the server enters `AppState::Summary`, write the authoritative
+/// `SummaryData` into `MissionResultNet` and set `ServerGamePhase::Ended` so
+/// clients can follow the transition to the summary screen.
+///
+/// Runs every frame while in `AppState::Summary` with a server `ServerState`,
+/// but uses `Res::is_changed()` so the actual write only happens once when
+/// `SummaryData` is first populated by `calculate_rewards_and_grades`.
+fn sync_mission_result_to_net(
+    summary: Res<SummaryData>,
+    mut q_goal: Query<&mut MissionResultNet, With<MissionGoalEntity>>,
+    mut q_server_phase: Query<&mut ServerGamePhase>,
+) {
+    if !summary.is_changed() {
+        return;
+    }
+
+    // Signal to clients that the server has moved to the summary state.
+    for mut sas in q_server_phase.iter_mut() {
+        *sas = ServerGamePhase::Ended;
+    }
+
+    let Ok(mut net) = q_goal.single_mut() else {
+        warn!("sync_mission_result_to_net: no MissionGoalEntity found");
+        return;
+    };
+
+    net.time_taken_secs = summary.time_taken_secs;
+    net.ghost_types = summary.ghost_types.clone();
+    net.repellent_used_amt = summary.repellent_used_amt;
+    net.ghosts_unhaunted = summary.ghosts_unhaunted;
+    net.base_score = summary.base_score;
+    net.difficulty_multiplier = summary.difficulty_multiplier;
+    net.grade_multiplier = summary.grade_multiplier;
+    net.average_sanity = summary.average_sanity;
+    net.player_count = summary.player_count as u32;
+    net.alive_count = summary.alive_count as u32;
+    net.full_score = summary.full_score;
+    net.map_path = summary.map_path.clone();
+    net.mission_successful = summary.mission_successful;
+    net.money_earned = summary.money_earned;
+    net.grade_achieved = format!("{}", summary.grade_achieved);
+    net.required_deposit = summary.required_deposit;
+    net.mission_reward_base = summary.mission_reward_base;
+    net.deposit_originally_held = summary.deposit_originally_held;
+    net.deposit_returned_to_bank = summary.deposit_returned_to_bank;
+    net.costs_deducted_from_deposit = summary.costs_deducted_from_deposit;
+    net.ready = true;
+
+    info!(
+        "sync_mission_result_to_net: written MissionResultNet (score={}, grade={})",
+        net.full_score, net.grade_achieved
+    );
+}
+
+/// Client: apply `MissionResultNet` to the local `SummaryData` resource and
+/// transition to `AppState::Summary` when the server marks the result as ready.
+///
+/// Only runs on non-server nodes.  The `SummaryData` transition is normally driven
+/// by `update_time` (player deaths), but the server's authoritative result takes
+/// precedence for score breakdown, grade, and financial fields.
+fn apply_mission_result_net(
+    q_net: Query<&MissionResultNet, Changed<MissionResultNet>>,
+    mut summary: ResMut<SummaryData>,
+    current_difficulty: Res<CurrentDifficulty>,
+    mut next_state: ResMut<NextState<AppState>>,
+) {
+    let Ok(net) = q_net.single() else {
+        return;
+    };
+    if !net.ready {
+        return;
+    }
+
+    summary.time_taken_secs = net.time_taken_secs;
+    summary.ghost_types = net.ghost_types.clone();
+    summary.repellent_used_amt = net.repellent_used_amt;
+    summary.ghosts_unhaunted = net.ghosts_unhaunted;
+    summary.base_score = net.base_score;
+    summary.difficulty_multiplier = net.difficulty_multiplier;
+    summary.grade_multiplier = net.grade_multiplier;
+    summary.average_sanity = net.average_sanity;
+    summary.player_count = net.player_count as usize;
+    summary.alive_count = net.alive_count as usize;
+    summary.full_score = net.full_score;
+    summary.map_path = net.map_path.clone();
+    summary.mission_successful = net.mission_successful;
+    summary.money_earned = net.money_earned;
+    summary.grade_achieved = Grade::from(net.grade_achieved.as_str());
+    summary.required_deposit = net.required_deposit;
+    summary.mission_reward_base = net.mission_reward_base;
+    summary.deposit_originally_held = net.deposit_originally_held;
+    summary.deposit_returned_to_bank = net.deposit_returned_to_bank;
+    summary.costs_deducted_from_deposit = net.costs_deducted_from_deposit;
+    // Preserve the local difficulty resource so grade display is correct.
+    summary.difficulty = current_difficulty.clone();
+    // animated_final_score starts at 0; the UI score-count animation drives it.
+    summary.animated_final_score = 0;
+
+    info!(
+        "apply_mission_result_net: received summary (score={}, grade={})",
+        net.full_score, net.grade_achieved
+    );
+
+    next_state.set(AppState::Summary);
 }

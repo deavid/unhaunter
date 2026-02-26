@@ -17,7 +17,7 @@ untypes-core = { path = "../untypes-core" }
 unsummary-core = { path = "../unsummary-core" }
 unprofile-core = { path = "../unprofile-core" }
 unplayer-core = { path = "../unplayer-core" }
-unreplicon-core = { path = "../unreplicon-core" }
+unreplicon-core = { workspace = true }
 untruck-core = { path = "../untruck-core" }
 unspatial-core = { path = "../unspatial-core" }
 

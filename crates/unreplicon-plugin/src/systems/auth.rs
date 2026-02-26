@@ -24,16 +24,30 @@ pub(super) fn app_setup(app: &mut App) {
 
 /// Observes each newly connected client's `user_data`, extracts the JWT ticket,
 /// and disconnects any client whose ticket is missing, malformed, or invalid.
+///
+/// When no [`crate::systems::procman::ProcManChannel`] is present the server is running in
+/// hub-less direct-connect mode. In that case all connections are accepted without a ticket
+/// because there is no hub to issue tickets and no JWT secret to validate against.
 fn validate_new_connection_observer(
     trigger: On<RenetServerEvent>,
     mut server: ResMut<RenetServer>,
     transport: Option<Res<NetcodeServerTransport>>,
     room_auth: Res<RoomAuth>,
+    procman: Option<Res<crate::systems::procman::ProcManChannel>>,
 ) {
     let ServerEvent::ClientConnected { client_id } = &trigger.event().0 else {
         return;
     };
     let client_id = *client_id;
+
+    // No procman channel → hub-less direct-connect: no tickets exist, accept unconditionally.
+    if procman.is_none() {
+        info!(
+            "Client {:?} connected (hub-less direct-connect; authentication skipped).",
+            client_id
+        );
+        return;
+    }
 
     // Reject all connections until a room is assigned and we have a secret.
     let (Some(hmac_secret), Some(room_code)) =

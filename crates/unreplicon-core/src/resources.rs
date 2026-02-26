@@ -1,7 +1,6 @@
 use crate::network_id::NetworkId;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use untypes_core::states::AppState;
 
 /// Identifies which player is the local (owning) player on this game instance.
 ///
@@ -28,7 +27,6 @@ pub struct LobbyData {
     pub players: Vec<LobbyPlayer>,
     pub selected_map: Option<String>,
     pub selected_difficulty: String,
-    pub host_app_state: Option<AppState>,
 }
 
 impl Default for LobbyData {
@@ -37,7 +35,6 @@ impl Default for LobbyData {
             players: Vec::new(),
             selected_map: None,
             selected_difficulty: "standard-challenge".to_string(),
-            host_app_state: None,
         }
     }
 }
@@ -71,4 +68,30 @@ pub struct RoomOwner(pub NetworkId);
 pub struct RoomIdentification {
     pub code: Option<String>,
     pub secret: Option<String>,
+}
+
+/// A single floor gear item currently present in the game world.
+///
+/// Stored in [`FloorGearCache`] on the server. Used to replay all existing floor
+/// items to clients that join mid-mission.
+#[derive(Debug, Clone)]
+pub struct FloorGearEntry {
+    pub kind: ungear_core::types::gear::kind::GearKind,
+    /// World-space position `[x, y, z]`.
+    pub pos: [f32; 3],
+    /// Direction the gear is facing `[dx, dy, dz]`.
+    pub direction: [f32; 3],
+}
+
+/// Server-only resource tracking all gear items currently on the floor.
+///
+/// Maintained by `broadcast_floor_gear_drop` (push) and `broadcast_floor_gear_pickup`
+/// (pop nearest). Reset to empty on `OnEnter/OnExit(AppState::InGame)` so stale
+/// items never carry over between missions.
+///
+/// When a new client connects mid-mission, `send_floor_gear_to_new_client` iterates
+/// this cache and sends `FloorGearSpawnBroadcast` directly to the new client.
+#[derive(Resource, Debug, Default)]
+pub struct FloorGearCache {
+    pub entries: Vec<FloorGearEntry>,
 }

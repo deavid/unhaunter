@@ -16,5 +16,7 @@ serde = { workspace = true }
 untypes-core = { workspace = true }
 unevents-core = { path = "../unevents-core" }
 ungearitems-core = { path = "../ungearitems-core" }
+ungear-core = { path = "../ungear-core" }
+unfoundation-core = { path = "../unfoundation-core" }
 unghost-core = { path = "../unghost-core" }
 unsummary-core = { path = "../unsummary-core" }

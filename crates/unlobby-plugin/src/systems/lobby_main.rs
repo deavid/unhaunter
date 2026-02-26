@@ -4,17 +4,17 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unassets_core::resources::maps::Maps;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use untypes_core::difficulty::Difficulty;
 use unengine_core::MenuUI;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
-use unreplicon_core::resources::{LobbyData, LocalPlayer, RoomOwner};
 use unprofile_core::profile::PlayerProfileData;
 use unreplicon_core::messages::RequestStartMission;
+use unreplicon_core::resources::{LobbyData, LocalPlayer, RoomOwner};
 use untypes_core::cli::CliOptions;
+use untypes_core::difficulty::Difficulty;
 use untypes_core::states::{AppState, LobbyScreen};
 use unui_core::assets::UiAssets;
 
@@ -298,7 +298,8 @@ pub(crate) fn handle_clicks(
                 }
             }
             Some(LobbyMenuAction::StartMission) => {
-                let host_in_mission = lobby_data.host_app_state == Some(AppState::InGame);
+                // TODO: check ServerGamePhase::InProgress when late-join is implemented
+                let host_in_mission = false;
 
                 if host_in_mission {
                     warn!("Late-join not yet implemented");
@@ -306,10 +307,7 @@ pub(crate) fn handle_clicks(
                     match &lobby_data.selected_map {
                         Some(map_filepath) if !map_filepath.is_empty() => {
                             let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
-                            info!(
-                                "Room owner requesting mission start: map={}",
-                                map_filepath
-                            );
+                            info!("Room owner requesting mission start: map={}", map_filepath);
                             ev_start.write(RequestStartMission { map_seed });
                         }
                         _ => {
@@ -351,7 +349,8 @@ pub(crate) fn update_display(
         (Some(_), None) => cli.is_authority() && !cli.is_headless(),
         _ => false,
     };
-    let host_in_mission = lobby_data.host_app_state == Some(AppState::InGame);
+    // TODO: check ServerGamePhase::InProgress when late-join is implemented
+    let host_in_mission = false;
 
     // Update Menu Items (Start/Join Mission)
     for (action, mut vis, children) in q_menu_items.iter_mut() {

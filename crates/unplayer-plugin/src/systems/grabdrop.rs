@@ -12,6 +12,7 @@ use ungear_core::types::gear::kind::GearKind;
 use unplayer_core::components::{PlayerInput, PlayerSprite};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
+use unreplicon_core::messages::{HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent};
 use unspatial_core::position::Position;
 
 fn sync_held_gear_position(
@@ -57,6 +58,7 @@ fn grab_object(
     >,
     mut commands: Commands,
     mut ev_sound: MessageWriter<SoundEvent>,
+    mut ev_floor_pickup: MessageWriter<HostFloorGearPickedUpEvent>,
 ) {
     for (mut player_gear, player_pos, player_input) in players.iter_mut() {
         if player_input.grab {
@@ -67,11 +69,11 @@ fn grab_object(
                 let dist = player_pos.distance(pos);
                 if dist < min_dist {
                     min_dist = dist;
-                    closest = Some((entity, gear_kind, behavior));
+                    closest = Some((entity, pos, gear_kind, behavior));
                 }
             }
 
-            if let Some((entity, gear_kind, behavior)) = closest {
+            if let Some((entity, pos, gear_kind, behavior)) = closest {
                 if gear_kind.is_some() {
                     let mut grabbed = false;
                     if player_gear.right_hand.is_none() {
@@ -105,6 +107,9 @@ fn grab_object(
                             position: Some(*player_pos),
                             broadcast: true,
                         });
+                        ev_floor_pickup.write(HostFloorGearPickedUpEvent {
+                            pos: [pos.x, pos.y, pos.z],
+                        });
                     }
                 } else if let Some(behavior) = behavior
                     && behavior.p.object.pickable
@@ -130,6 +135,8 @@ fn drop_object(
     board_collision: Res<BoardCollisionField>,
     pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,
     mut ev_sound: MessageWriter<SoundEvent>,
+    mut ev_floor_drop: MessageWriter<HostFloorGearDroppedEvent>,
+    q_gear_kind: Query<&GearKind>,
 ) {
     for (mut player_gear, player_pos, player_input, player_sprite) in players.iter_mut() {
         if player_input.drop {
@@ -177,6 +184,17 @@ fn drop_object(
                     position: Some(*player_pos),
                     broadcast: true,
                 });
+                if let Ok(kind) = q_gear_kind.get(entity) {
+                    ev_floor_drop.write(HostFloorGearDroppedEvent {
+                        kind: *kind,
+                        pos: [player_pos.x, player_pos.y, player_pos.z],
+                        direction: [
+                            player_sprite.movement.dx,
+                            player_sprite.movement.dy,
+                            player_sprite.movement.dz,
+                        ],
+                    });
+                }
                 if !player_gear.inventory.is_empty() {
                     let next_item = player_gear.inventory.remove(0);
                     player_gear.right_hand = Some(next_item);

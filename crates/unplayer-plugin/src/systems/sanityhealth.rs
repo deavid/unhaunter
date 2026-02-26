@@ -324,7 +324,7 @@ pub(crate) fn app_setup(app: &mut App) {
             server_apply_client_sanity.run_if(is_authority),
             visual_health.run_if(not(is_headless)),
             update_player_stamina,
-            detect_and_apply_death.run_if(is_authority),
+            detect_and_apply_death,
             update_profile_death_stats.run_if(not(is_headless)),
             debug_kill_spectator,
         )

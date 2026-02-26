@@ -29,7 +29,7 @@ untags-core = { path = "../untags-core" }
 unspatial-core = { path = "../unspatial-core" }
 unghost-core = { path = "../unghost-core" }
 untruck-core = { path = "../untruck-core" }
-unreplicon-core = { path = "../unreplicon-core" }
+unreplicon-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

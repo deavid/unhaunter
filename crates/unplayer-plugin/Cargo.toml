@@ -30,7 +30,7 @@ uninteraction-core = { path = "../uninteraction-core" }
 untruck-core = { path = "../untruck-core" }
 ungear-core = { path = "../ungear-core" }
 
-unreplicon-core = { path = "../unreplicon-core" }
+unreplicon-core = { workspace = true }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unspatial-core = { path = "../unspatial-core" }

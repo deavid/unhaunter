@@ -13,9 +13,12 @@ use ungearitems_core::components::sage::{SageBundleData, SageSmokeParticle, Smok
 use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
+use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unreplicon_core::messages::SpawnParticleNetEvent;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::direction::Direction;
+use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untypes_core::cli::CliOptions;
 
@@ -32,6 +35,7 @@ pub(crate) fn update_sage(
     mut gs_audio: SoundEmitter,
     mut commands: Commands,
     cli: Res<CliOptions>,
+    asset_server: Res<AssetServer>,
     mut ev_particles: MessageWriter<ToClients<SpawnParticleNetEvent>>,
 ) {
     let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
@@ -61,7 +65,7 @@ pub(crate) fn update_sage(
                 p.x += rng.random_range(-0.2..0.2);
                 p.y += rng.random_range(-0.2..0.2);
 
-                // Broadcast smoke particle to all clients
+                // Broadcast smoke particle to all connected clients (join clients).
                 ev_particles.write(ToClients {
                     mode: SendMode::Broadcast,
                     message: SpawnParticleNetEvent {
@@ -69,6 +73,39 @@ pub(crate) fn update_sage(
                         position: [p.x, p.y, p.z],
                     },
                 });
+
+                // Also spawn the particle locally on the authority node.
+                //
+                // `handle_spawn_particle` only runs on non-server clients, so the
+                // listen-server host and offline-mode player would otherwise never
+                // see smoke or benefit from the ghost-calming effect applied by
+                // `sage_smoke_system`. Direct spawn fixes both issues.
+                commands
+                    .spawn(Sprite {
+                        image: asset_server.load("img/smoke.png"),
+                        color: Color::NONE,
+                        ..default()
+                    })
+                    .insert(
+                        Transform::from_translation(perspective::to_screen_coord(p))
+                            .with_scale(Vec3::new(0.2, 0.2, 0.2)),
+                    )
+                    .insert(SageSmokeParticle)
+                    .insert(GameSprite)
+                    .insert(p)
+                    .insert(Direction {
+                        dx: rng.random_range(-0.9..0.9),
+                        dy: rng.random_range(-0.9..0.9),
+                        dz: rng.random_range(-0.5..0.5),
+                    })
+                    .insert(MapColor {
+                        color: Color::srgba(1.0, 1.0, 1.0, 0.20),
+                    })
+                    .insert(SmokeParticleTimer(Timer::from_seconds(
+                        5.0,
+                        TimerMode::Once,
+                    )))
+                    .insert(SpriteLayer::default());
 
                 sage.smoke_produced += 1;
             }

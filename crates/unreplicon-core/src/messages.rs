@@ -5,6 +5,8 @@ use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
 
 use crate::network_id::NetworkId;
+use unfoundation_core::types::gear::Hand;
+use ungear_core::types::gear::kind::GearKind;
 
 /// Sent by the (room-owner) client to request a map change.
 ///
@@ -72,6 +74,144 @@ pub struct InteractionRequestMessage {
     pub ietype: InteractionExecutionType,
     /// If `Some`, force the interaction to transition to this specific tile UID.
     pub force_tuid: Option<u32>,
+}
+
+/// Broadcast by the server to all join clients (excluding the originator) to
+/// notify them of a remote player's interaction with an interactive map object.
+///
+/// Registered as a server → client message via `app.add_server_message`.
+/// Clients receive this and fire `ExecuteInteractionEvent` on the matching local
+/// entity, keeping door/switch state in sync across all nodes.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct RemoteInteractionBroadcast {
+    /// Board-space position of the interactive entity (same coordinate system
+    /// as `InteractionRequestMessage::position`).
+    pub position: [i32; 3],
+    pub ietype: InteractionExecutionType,
+    pub force_tuid: Option<u32>,
+}
+
+/// One loadout action a join client can request from the server during the truck phase.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TruckLoadoutAction {
+    /// Equip a gear item from the van inventory into the first free slot.
+    AddGear(GearKind),
+    /// Unequip the item currently held in the given hand.
+    ClearHand(Hand),
+    /// Unequip the backpack item at the given index.
+    ClearInventorySlot(usize),
+}
+
+/// Sent by a join client to request a loadout change during the truck phase.
+///
+/// The server processes each action and applies the same spawn/despawn logic
+/// as the host-local `button_clicked` handler, ensuring the server's copy of
+/// the player's `PlayerGear` reflects the chosen loadout.
+/// Transmitted on `Channel::Ordered` for reliability.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct TruckLoadoutMessage {
+    pub action: TruckLoadoutAction,
+}
+
+/// Local-only Bevy event fired by `player_interaction_system` on the authority
+/// (listen-server host) when the host player interacts with an object.
+///
+/// This event never travels over the network — it is a signal from
+/// `unplayer-plugin` to `unreplicon-plugin` so the network layer can broadcast
+/// the change to all connected join clients via `RemoteInteractionBroadcast`.
+#[derive(Debug, Clone, Message)]
+pub struct HostInteractionOccurred {
+    /// Board-space position of the interactive entity.
+    pub position: [i32; 3],
+    pub ietype: InteractionExecutionType,
+    pub force_tuid: Option<u32>,
+}
+
+/// Local-only Bevy event fired by `watch_tween_insertions` on the authority
+/// whenever a `Tween` component is added to any map entity.
+///
+/// Never travels over the network. `unreplicon-plugin` reads this and
+/// broadcasts `MovableMotionBroadcast` to all connected join clients so they
+/// can replay the same animation locally.
+#[derive(Debug, Clone, Message)]
+pub struct HostMovableMotionEvent {
+    /// Board-space original spawn position of the entity
+    /// (from `NetworkOriginalMapPosition`), used for entity lookup on clients.
+    pub map_bpos: [i32; 3],
+    /// World-space start position `[x, y, z, visual_priority]`.
+    pub start: [f32; 4],
+    /// World-space end position `[x, y, z, visual_priority]`.
+    pub end: [f32; 4],
+    /// Animation duration in seconds.
+    pub duration: f32,
+    /// Ease function: 0 = Linear, 1 = ParabolicArc, 2 = SineEaseOut.
+    pub ease: u8,
+}
+
+/// Broadcast by the server to all join clients when a ghost interaction moves
+/// a map object (throw, nudge, haunted-move). Clients replay the same tween
+/// animation locally to keep visual state in sync.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct MovableMotionBroadcast {
+    /// Board-space original spawn position of the entity.
+    pub map_bpos: [i32; 3],
+    /// World-space start position `[x, y, z, visual_priority]`.
+    pub start: [f32; 4],
+    /// World-space end position `[x, y, z, visual_priority]`.
+    pub end: [f32; 4],
+    /// Animation duration in seconds.
+    pub duration: f32,
+    /// Ease function: 0 = Linear, 1 = ParabolicArc, 2 = SineEaseOut.
+    pub ease: u8,
+}
+
+/// Local-only Bevy event fired by `drop_object` on the authority (listen-server host)
+/// when a player drops a gear item onto the floor.
+///
+/// This event never travels over the network — it is a signal from
+/// `unplayer-plugin` to `unreplicon-plugin` so the network layer can broadcast
+/// the floor-gear spawn to all connected join clients via `FloorGearSpawnBroadcast`.
+#[derive(Debug, Clone, Message)]
+pub struct HostFloorGearDroppedEvent {
+    pub kind: GearKind,
+    /// World-space position `[x, y, z]` where the gear was placed.
+    pub pos: [f32; 3],
+    /// Direction the gear is facing `[dx, dy, dz]` (from `DeployedGear.direction`).
+    pub direction: [f32; 3],
+}
+
+/// Local-only Bevy event fired by `grab_object` on the authority (listen-server host)
+/// when a player picks up a floor gear item.
+///
+/// This event never travels over the network — it is a signal from
+/// `unplayer-plugin` to `unreplicon-plugin` so the network layer can broadcast
+/// the floor-gear despawn to all connected join clients via `FloorGearDespawnBroadcast`.
+#[derive(Debug, Clone, Message)]
+pub struct HostFloorGearPickedUpEvent {
+    /// World-space position `[x, y, z]` from which the gear was picked up.
+    pub pos: [f32; 3],
+}
+
+/// Broadcast by the server to all join clients when a gear item is placed on the floor.
+///
+/// Clients spawn a local gear entity with `FloorItemCollidable`, `DeployedGear`, and
+/// `EquipmentPosition::Deployed` so the item is visible and correctly oriented for lighting.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct FloorGearSpawnBroadcast {
+    pub kind: GearKind,
+    /// World-space position `[x, y, z]` where the gear was placed.
+    pub pos: [f32; 3],
+    /// Direction the gear is facing `[dx, dy, dz]`.
+    pub direction: [f32; 3],
+}
+
+/// Broadcast by the server to all join clients when a floor gear item is picked up.
+///
+/// Clients find the nearest floor gear entity within ~0.6 units of `pos` and despawn it.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct FloorGearDespawnBroadcast {
+    /// World-space position `[x, y, z]` from which the gear was picked up.
+    pub pos: [f32; 3],
 }
 
 // ---------------------------------------------------------------------------

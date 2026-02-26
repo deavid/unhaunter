@@ -10,12 +10,13 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
-use unreplicon_core::network_id::NetworkId;
 use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::assets::GearAssets;
 use unrender_std::materials::UIPanelMaterial;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
+use unreplicon_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
+use unreplicon_core::network_id::NetworkId;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::states::GameState;
@@ -468,6 +469,7 @@ fn button_clicked(
     gear_registry: Res<GearSpawnerRegistry>,
     mut commands: Commands,
     cli: Res<CliOptions>,
+    mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
 ) {
     let Some(ev) = ev_clk.read().next() else {
         return;
@@ -487,6 +489,11 @@ fn button_clicked(
             };
             if let Some(e) = entity {
                 commands.entity(e).despawn();
+                if !cli.is_authority() {
+                    ev_loadout.write(TruckLoadoutMessage {
+                        action: TruckLoadoutAction::ClearHand(inv.hand),
+                    });
+                }
             }
         }
         LoadoutButton::InventoryNext(invnext) => {
@@ -495,10 +502,22 @@ fn button_clicked(
             {
                 let e = p_gear.inventory.remove(idx);
                 commands.entity(e).despawn();
+                if !cli.is_authority() {
+                    ev_loadout.write(TruckLoadoutMessage {
+                        action: TruckLoadoutAction::ClearInventorySlot(idx),
+                    });
+                }
             }
         }
         LoadoutButton::Van(kind) => {
             if *kind == GearKind::None {
+                return;
+            }
+            // Bail early if there is no room, to avoid a spurious spawn+despawn.
+            let has_space = p_gear.left_hand.is_none()
+                || p_gear.right_hand.is_none()
+                || p_gear.inventory.len() < 2;
+            if !has_space {
                 return;
             }
             // Spawn item and put in hand or inventory
@@ -517,11 +536,15 @@ fn button_clicked(
                 p_gear.left_hand = Some(entity);
             } else if p_gear.right_hand.is_none() {
                 p_gear.right_hand = Some(entity);
-            } else if p_gear.inventory.len() < 2 {
-                p_gear.inventory.push(entity);
             } else {
-                // No space, despawn
-                commands.entity(entity).despawn();
+                p_gear.inventory.push(entity);
+            }
+            // For join clients, notify the server so it can mirror this selection
+            // in the server-side PlayerGear (used by sync_gear_to_net at mission start).
+            if !cli.is_authority() {
+                ev_loadout.write(TruckLoadoutMessage {
+                    action: TruckLoadoutAction::AddGear(*kind),
+                });
             }
         }
     }

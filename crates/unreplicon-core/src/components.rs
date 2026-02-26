@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use untypes_core::states::AppState;
 
 /// Server-side lobby state replicated to all clients.
 ///
@@ -32,11 +31,23 @@ pub struct LobbyPlayerInfo {
     pub nickname: Option<String>,
 }
 
-/// Replicated wrapper around the server's current `AppState`.
+/// The authoritative game phase as determined by the server.
 ///
-/// Clients watch this component changing and drive their own `NextState<AppState>`.
-#[derive(Component, Debug, Clone, Serialize, Deserialize)]
-pub struct ServerAppState(pub AppState);
+/// Replicated to all clients. Clients react to transitions in a context-aware,
+/// guarded way (see `bridge.rs`) rather than blindly copying this into their
+/// own `NextState<AppState>`.
+///
+/// This is **not** an `AppState`. It describes what the server's game session
+/// is doing, not how any client's UI is laid out.
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ServerGamePhase {
+    /// Server is up and accepting players. No mission is running.
+    Lobby,
+    /// A mission is in progress.
+    InProgress,
+    /// The mission has ended and results are available.
+    Ended,
+}
 
 /// Spawned (with `Replicated`) by the server when a mission is about to start.
 ///

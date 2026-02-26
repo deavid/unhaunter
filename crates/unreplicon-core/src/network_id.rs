@@ -9,13 +9,3 @@ use serde::{Deserialize, Serialize};
 )]
 #[reflect(Component)]
 pub struct NetworkId(pub u64);
-
-/// Marks an entity as pending despawn after `in_frames` update ticks.
-///
-/// Used to keep despawn events alive long enough for all clients to receive them
-/// before the entity is removed from the ECS world.
-#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Reflect, Default)]
-#[reflect(Component)]
-pub struct ToBeDespawned {
-    pub in_frames: usize,
-}

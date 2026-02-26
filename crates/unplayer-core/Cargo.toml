@@ -15,6 +15,6 @@ unfoundation-core = { path = "../unfoundation-core" }
 unsettings-core = { path = "../unsettings-core" }
 unspatial-core = { path = "../unspatial-core" }
 ungearitems-core = { path = "../ungearitems-core" }
-unreplicon-core = { path = "../unreplicon-core" }
+unreplicon-core = { workspace = true }
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

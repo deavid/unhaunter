@@ -32,7 +32,7 @@ unsummary-core = { path = "../unsummary-core" }
 unthermal-core = { path = "../unthermal-core" }
 unprofile-core = { path = "../unprofile-core" }
 
-unreplicon-core = { path = "../unreplicon-core" }
+unreplicon-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

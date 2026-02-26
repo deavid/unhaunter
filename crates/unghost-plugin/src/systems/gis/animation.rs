@@ -1,5 +1,9 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::ServerState;
 use unmetrics_core::metrics::SendMetric;
+use unreplicon_core::messages::MovableMotionBroadcast;
+use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::components::NetworkOriginalMapPosition;
 use unspatial_core::position::Position;
 
 use crate::metrics;
@@ -11,6 +15,10 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         bevy::prelude::Update,
         (tween_animation_system, door_lock_timer_system),
+    );
+    app.add_systems(
+        bevy::prelude::Update,
+        apply_remote_movable_motion.run_if(not(in_state(ServerState::Running))),
     );
 }
 
@@ -52,7 +60,56 @@ fn tween_animation_system(
     measure.end_ms();
 }
 
-/// System that handles door lock timers and removes the Locked component when expired
+/// Client (join mode only): receive a `MovableMotionBroadcast` from the server
+/// and replay the same tween animation on the matching local entity.
+///
+/// The entity is identified by its `NetworkOriginalMapPosition` (its spawn-time
+/// board position), which is stable across all clients that loaded the same map.
+fn apply_remote_movable_motion(
+    mut reader: MessageReader<MovableMotionBroadcast>,
+    q_map_pos: Query<(Entity, &NetworkOriginalMapPosition)>,
+    mut commands: Commands,
+) {
+    for msg in reader.read() {
+        let target_bpos = BoardPosition {
+            x: msg.map_bpos[0] as i64,
+            y: msg.map_bpos[1] as i64,
+            z: msg.map_bpos[2] as i64,
+        };
+        let found = q_map_pos
+            .iter()
+            .find(|(_, mp)| mp.position == target_bpos)
+            .map(|(e, _)| e);
+        if let Some(entity) = found {
+            let ease_fn = match msg.ease {
+                1 => TweenEase::ParabolicArc,
+                2 => TweenEase::SineEaseOut,
+                _ => TweenEase::Linear,
+            };
+            commands.entity(entity).insert(Tween {
+                start_pos: Position {
+                    x: msg.start[0],
+                    y: msg.start[1],
+                    z: msg.start[2],
+                    visual_priority: msg.start[3],
+                },
+                end_pos: Position {
+                    x: msg.end[0],
+                    y: msg.end[1],
+                    z: msg.end[2],
+                    visual_priority: msg.end[3],
+                },
+                timer: Timer::from_seconds(msg.duration, TimerMode::Once),
+                ease_fn,
+            });
+        } else {
+            warn!(
+                "apply_remote_movable_motion: no entity found at original board position {:?}",
+                target_bpos
+            );
+        }
+    }
+}
 ///
 /// This system ticks down the locked timer on doors and removes the lock when
 /// the timer expires, allowing the door to be used normally again.

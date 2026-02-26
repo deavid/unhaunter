@@ -23,7 +23,7 @@ jsonwebtoken = { workspace = true }
 crossbeam-channel = { workspace = true }
 unhub-client = { workspace = true }
 untypes-core = { workspace = true }
-unreplicon-core = { path = "../unreplicon-core" }
+unreplicon-core = { workspace = true }
 
 unmapload-core = { workspace = true }
 undifficulty-core = { workspace = true }
@@ -35,7 +35,9 @@ unevents-core = { path = "../unevents-core" }
 unghost-core = { path = "../unghost-core" }
 untags-core = { path = "../untags-core" }
 ungearitems-core = { path = "../ungearitems-core" }
+ungear-core = { path = "../ungear-core" }
 unrender-std = { path = "../unrender-std" }
 unsummary-core = { path = "../unsummary-core" }
 unfoundation-core = { path = "../unfoundation-core" }
+unbehavior = { path = "../unbehavior" }
 rand = { workspace = true }

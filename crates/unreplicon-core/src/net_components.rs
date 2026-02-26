@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::FlashlightStatus;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
@@ -33,6 +34,11 @@ pub struct PlayerStateNet {
     pub is_running: bool,
     /// Current animation frame index.
     pub frame: u16,
+    /// Board-space original spawn position `[x, y, z]` of the world object
+    /// (non-gear map entity) currently being carried by this player.
+    /// `None` when the player is not carrying anything.
+    /// Clients use this to move the referenced map entity to follow the player.
+    pub held_object_bpos: Option<[i32; 3]>,
 }
 
 /// Replicated player identity for tint resolution and local-player detection.
@@ -97,6 +103,31 @@ pub struct RepellentFlaskNet {
     pub qty: i32,
     pub active: bool,
     pub liquid_content: Option<GhostType>,
+}
+
+/// Replicated gear-kind roster — server-authoritative.
+///
+/// Tells each client which gear type occupies each slot so local gear entities
+/// can be despawned and re-spawned with the correct components when the loadout
+/// changes. `GearKind::None` means the slot is empty.
+///
+/// Inventory is fixed at two slots to match the in-game limit enforced by
+/// `handle_truck_loadout_message` (`inventory.len() < 2`).
+#[derive(Component, Debug, Clone, Serialize, Deserialize)]
+pub struct PlayerGearKindNet {
+    pub left_hand: GearKind,
+    pub right_hand: GearKind,
+    pub inventory: [GearKind; 2],
+}
+
+impl Default for PlayerGearKindNet {
+    fn default() -> Self {
+        Self {
+            left_hand: GearKind::None,
+            right_hand: GearKind::None,
+            inventory: [GearKind::None; 2],
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------

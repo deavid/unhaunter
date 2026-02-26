@@ -15,10 +15,13 @@ use unplayer_core::components::PlayerInput;
 use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
+use unreplicon_core::messages::HostInteractionOccurred;
+use unreplicon_core::messages::InteractionRequestMessage;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
+use untypes_core::cli::CliOptions;
 use unui_core::resources::MouseVisibility;
 
 const PLAYER_SPEED: f32 = 0.04;
@@ -52,7 +55,10 @@ pub(crate) fn player_interaction_system(
         Without<PlayerSprite>,
     >,
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
+    mut ev_interaction_req: MessageWriter<InteractionRequestMessage>,
+    mut ev_host_interact: MessageWriter<HostInteractionOccurred>,
     mut ev_npc: Option<MessageWriter<NpcHelpEvent>>,
+    cli: Res<CliOptions>,
 ) {
     for (pos, player_input, hiding, in_truck, spectating) in players.iter() {
         if in_truck.is_some() || hiding.is_some() || spectating.is_some() {
@@ -78,7 +84,7 @@ pub(crate) fn player_interaction_system(
                 }
             }
             if let Some(entity) = selected_entity {
-                for (entity, _, _, behavior, _) in
+                for (entity, item_pos, _, behavior, _) in
                     interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
                 {
                     if behavior.is_npc()
@@ -91,6 +97,25 @@ pub(crate) fn player_interaction_system(
                         ietype: InteractionExecutionType::ChangeState,
                         force_tuid: None,
                     });
+                    let bpos = item_pos.to_board_position();
+                    let bpos_arr = [bpos.x as i32, bpos.y as i32, bpos.z as i32];
+                    if cli.is_authority() {
+                        // On the host (authority), signal the network layer to
+                        // broadcast this interaction to all connected join clients.
+                        ev_host_interact.write(HostInteractionOccurred {
+                            position: bpos_arr,
+                            ietype: InteractionExecutionType::ChangeState,
+                            force_tuid: None,
+                        });
+                    } else {
+                        // On join clients, forward the request to the server so
+                        // it is validated and then broadcast to other clients.
+                        ev_interaction_req.write(InteractionRequestMessage {
+                            position: bpos_arr,
+                            ietype: InteractionExecutionType::ChangeState,
+                            force_tuid: None,
+                        });
+                    }
                 }
             }
         }
