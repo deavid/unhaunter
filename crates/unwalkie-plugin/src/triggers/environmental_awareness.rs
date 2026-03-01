@@ -22,7 +22,7 @@ use unwalkie_core::resources::WalkiePlay;
 /// a walkie-talkie warning event is triggered. The timer resets if the player leaves the dark or the game state changes.
 fn trigger_darkness_level_system(
     time: Res<Time>,
-    light_grid: Res<LightGrid>,
+    light_grid: If<Res<LightGrid>>,
     roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
     _game_state: Res<State<GameState>>,
@@ -142,7 +142,7 @@ fn trigger_ghost_showcase(
 /// Triggers a walkie-talkie event if the player uses gear that requires darkness in a lit room.
 fn trigger_room_lights_on_gear_needs_dark(
     time: Res<Time>,
-    light_grid: Res<LightGrid>,
+    light_grid: If<Res<LightGrid>>,
     roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
     _game_state: Res<State<GameState>>,

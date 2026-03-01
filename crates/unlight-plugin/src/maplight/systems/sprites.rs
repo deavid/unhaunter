@@ -90,7 +90,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
     >,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     active_flashlights: Res<ActiveFlashlights>,
-    lg: Res<LightGrid>,
+    lg: If<Res<LightGrid>>,
     grids: GridResources,
     q_vf: Query<&VisibilityData, With<MainPlayer>>,
     difficulty: Res<CurrentDifficulty>,

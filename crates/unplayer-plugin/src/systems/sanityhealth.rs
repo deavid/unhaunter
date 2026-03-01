@@ -36,9 +36,9 @@ fn lose_sanity(
             Without<PlayerSpectating>,
         ),
     >,
-    thermal_grid: Res<ThermalGrid>,
-    sound_grid: Res<SoundGrid>,
-    lg: Res<LightGrid>,
+    thermal_grid: If<Res<ThermalGrid>>,
+    sound_grid: If<Res<SoundGrid>>,
+    lg: If<Res<LightGrid>>,
     roomdb: Res<RoomDB>,
     difficulty: Res<CurrentDifficulty>,
 ) {

@@ -2,15 +2,13 @@ use bevy::prelude::*;
 use untypes_core::states::{AppState, SimulationState};
 
 use crate::metrics;
-use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
 
 pub struct UnhaunterFogCorePlugin;
 
 impl Plugin for UnhaunterFogCorePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<MiasmaConfig>()
-            .init_resource::<MiasmaGrid>();
+        app.init_resource::<MiasmaConfig>();
 
         app.add_systems(Update, crate::systems::init_miasma_grid);
         app.add_systems(

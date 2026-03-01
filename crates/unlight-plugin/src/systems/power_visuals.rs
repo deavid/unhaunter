@@ -60,7 +60,7 @@ fn update_single_visual(
 }
 
 pub(crate) fn update_power_visuals(
-    lg: Res<LightGrid>,
+    lg: If<Res<LightGrid>>,
     sdb: Res<SpriteDB>,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     mut q_set: ParamSet<(

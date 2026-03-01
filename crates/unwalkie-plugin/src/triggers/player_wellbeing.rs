@@ -109,7 +109,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
         (With<MainPlayer>, Without<Hiding>),
     >,
     roomdb: Res<RoomDB>,
-    lg: Res<LightGrid>,
+    lg: If<Res<LightGrid>>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
     mut darkness_sanity_tracker: Local<Option<(f32, Stopwatch)>>, // (sanity_at_darkness_start, timer)

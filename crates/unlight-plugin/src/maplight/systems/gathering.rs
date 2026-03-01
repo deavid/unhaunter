@@ -155,7 +155,7 @@ pub(crate) fn update_exposure_system(
     qp: Query<(&Position, Has<MainPlayer>)>,
     q_vf: Query<&VisibilityData, With<MainPlayer>>,
     active_flashlights: Res<ActiveFlashlights>,
-    mut lg: ResMut<LightGrid>,
+    mut lg: If<ResMut<LightGrid>>,
     time: Res<Time>,
 ) {
     let Ok(vf) = q_vf.single() else {

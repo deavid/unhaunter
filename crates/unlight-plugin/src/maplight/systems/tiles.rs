@@ -81,7 +81,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
         ),
     >,
     active_flashlights: Res<ActiveFlashlights>,
-    mut lg: ResMut<LightGrid>,
+    mut lg: If<ResMut<LightGrid>>,
     grids: GridResources,
     // haunt_state: Res<HauntState>,
     q_vf: Query<&VisibilityData, With<MainPlayer>>,

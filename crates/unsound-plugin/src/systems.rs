@@ -10,12 +10,12 @@ use unmetrics_core::metrics::SendMetric;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 
-pub fn reset_sound_grid(mut sound_grid: ResMut<SoundGrid>) {
-    sound_grid.reset();
+pub fn reset_sound_grid(mut commands: Commands) {
+    commands.remove_resource::<SoundGrid>();
 }
 
 pub fn sound_update(
-    mut sound_grid: ResMut<SoundGrid>,
+    mut sound_grid: If<ResMut<SoundGrid>>,
     roomdb: Res<RoomDB>,
     qe: Query<(&SoundEmitter, &Position)>,
 ) {
@@ -85,11 +85,8 @@ pub fn sound_update(
     measure.end_ms();
 }
 
-pub fn init_sound_grid(
-    mut sound_grid: ResMut<SoundGrid>,
-    mut ev: MessageReader<MapGeometryInitializedEvent>,
-) {
+pub fn init_sound_grid(mut commands: Commands, mut ev: MessageReader<MapGeometryInitializedEvent>) {
     for _ in ev.read() {
-        sound_grid.sound_field.clear();
+        commands.insert_resource(SoundGrid::default());
     }
 }

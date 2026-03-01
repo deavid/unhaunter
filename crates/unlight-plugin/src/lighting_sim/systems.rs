@@ -17,7 +17,7 @@ use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
 pub fn init_light_grid(
-    mut lg: ResMut<LightGrid>,
+    mut lg: If<ResMut<LightGrid>>,
     mut ev: MessageReader<MapGeometryInitializedEvent>,
 ) {
     for ev in ev.read() {
@@ -26,16 +26,16 @@ pub fn init_light_grid(
     }
 }
 
-pub fn reset_light_grid(mut lg: ResMut<LightGrid>) {
+pub fn reset_light_grid(mut lg: If<ResMut<LightGrid>>) {
     lg.reset();
 }
 
 /// System to rebuild the entire lighting field based on prebaked data and active sources.
 /// Triggered by BoardTopologyToRebuild events.
 pub fn rebuild_lighting_field(
-    bf: Res<BoardTopology>,
-    bcf: Res<BoardCollisionField>,
-    mut lg: ResMut<LightGrid>,
+    bf: If<Res<BoardTopology>>,
+    bcf: If<Res<BoardCollisionField>>,
+    mut lg: If<ResMut<LightGrid>>,
     mut ev_bdr: MessageReader<BoardTopologyToRebuild>,
     qt: Query<(&Position, &Behavior)>,
     mut avg_time: Local<(f32, f32)>,
@@ -91,7 +91,7 @@ pub fn rebuild_lighting_field(
     let mut failure_indices = Vec::new();
     let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
     for ((i, j, k), data) in lfs.indexed_iter() {
-        if data.lux > 0.1 && bcf.0[(i, j, k)].see_through {
+        if data.lux > 0.1 && bcf.0.0[(i, j, k)].see_through {
             let mut failed = false;
             for &(dx, dy, dz) in &directions {
                 let ni = i as i64 + dx;
@@ -99,7 +99,7 @@ pub fn rebuild_lighting_field(
                 let nk = k as i64 + dz;
                 if is_in_bounds((ni, nj, nk), bf.map_size) {
                     let n_idx = (ni as usize, nj as usize, nk as usize);
-                    if bcf.0[n_idx].see_through {
+                    if bcf.0.0[n_idx].see_through {
                         let n_lux = lfs[n_idx].lux;
                         if n_lux < data.lux / 10.0 || n_lux > data.lux * 10.0 {
                             failed = true;
@@ -137,13 +137,14 @@ pub fn rebuild_lighting_field(
 pub fn prebake_lighting_on_level_ready(
     bf: Res<BoardTopology>,
     mut bcf: ResMut<BoardCollisionField>,
-    mut lg: ResMut<LightGrid>,
+    mut olg: Option<ResMut<LightGrid>>,
     mut ev: MessageReader<LevelReadyEvent>,
     qt: Query<(Entity, &Position, &Behavior)>,
 ) {
     for _ in ev.read() {
+        let lg = olg.as_mut().expect("Prebake: LightGrid is mandatory on receiving the LevelReady event - otherwise we can't prebake lights");
         unrender_std::utils::collision::rebuild_collision_data(&bf, &mut bcf, &qt);
-        prebake_lighting_field(&bf, &bcf, &mut lg, &qt);
+        prebake_lighting_field(&bf, &bcf, lg, &qt);
     }
 }
 

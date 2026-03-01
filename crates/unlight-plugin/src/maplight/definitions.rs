@@ -100,6 +100,6 @@ pub(crate) struct GridResources<'w> {
     pub bf: Res<'w, BoardTopology>,
     pub bef: Res<'w, BoardEntityField>,
     pub bcf: Res<'w, BoardCollisionField>,
-    pub miasma: Res<'w, MiasmaGrid>,
+    pub miasma: If<Res<'w, MiasmaGrid>>,
     pub miasma_config: Res<'w, MiasmaConfig>,
 }

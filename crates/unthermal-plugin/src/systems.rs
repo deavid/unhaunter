@@ -17,12 +17,12 @@ use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
 
-pub fn reset_thermal_grid(mut thermal_grid: ResMut<ThermalGrid>) {
-    thermal_grid.reset();
+pub fn reset_thermal_grid(mut commands: Commands) {
+    commands.remove_resource::<ThermalGrid>();
 }
 
 pub fn temperature_update(
-    mut thermal_grid: ResMut<ThermalGrid>,
+    mut thermal_grid: If<ResMut<ThermalGrid>>,
     bf: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
     roomdb: Res<RoomDB>,
@@ -227,26 +227,28 @@ pub fn temperature_update(
 }
 
 pub fn init_thermal_grid_allocation(
-    mut thermal_grid: ResMut<ThermalGrid>,
+    mut commands: Commands,
     bf: Res<BoardTopology>,
     mut ev: MessageReader<MapGeometryInitializedEvent>,
 ) {
     for ev in ev.read() {
         use ndarray::Array3;
-        thermal_grid.temperature_field = Array3::from_elem(ev.map_size, bf.ambient_temp);
-        thermal_grid.temperature_activity = Array3::from_elem(ev.map_size, 0.0);
-        thermal_grid.connectivity_scores = Array3::from_elem(
-            ev.map_size,
-            thermal_grid.temp_diffusion_config.default_score,
-        );
-        thermal_grid.ambient_temp = bf.ambient_temp;
-        thermal_grid.valid_tiles = Vec::new();
-        thermal_grid.iterator_index = 0;
+        let config = unthermal_core::resources::TemperatureDiffusionConfig::default();
+        let tg = ThermalGrid {
+            temperature_field: Array3::from_elem(ev.map_size, bf.ambient_temp),
+            temperature_activity: Array3::from_elem(ev.map_size, 0.0),
+            connectivity_scores: Array3::from_elem(ev.map_size, config.default_score),
+            ambient_temp: bf.ambient_temp,
+            valid_tiles: Vec::new(),
+            iterator_index: 0,
+            temp_diffusion_config: config,
+        };
+        commands.insert_resource(tg);
     }
 }
 
 pub fn init_thermal_grid_content(
-    mut thermal_grid: ResMut<ThermalGrid>,
+    mut thermal_grid: If<ResMut<ThermalGrid>>,
     bf: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
     _roomdb: Res<RoomDB>,

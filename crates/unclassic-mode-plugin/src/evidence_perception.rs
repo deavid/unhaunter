@@ -29,7 +29,7 @@ fn update_current_evidence_readings_from_player_perception_system(
     q_ghost: Query<(&GhostSprite, &Position)>,
     q_orb: Query<&Position, With<GhostOrbParticle>>,
     q_light: Query<(&LightEmitter, &Toggleable, &Position)>,
-    light_grid: Res<LightGrid>,
+    light_grid: If<Res<LightGrid>>,
     time: Res<Time>,
 ) {
     let Some((player_gear, player_pos, vis_data)) = player_query.iter().next() else {
