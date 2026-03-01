@@ -12,7 +12,9 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+bevy_replicon = { workspace = true }
 serde = { workspace = true }
+uuid = { workspace = true }
 untypes-core = { workspace = true }
 unevents-core = { path = "../unevents-core" }
 ungearitems-core = { path = "../ungearitems-core" }

@@ -24,7 +24,7 @@ impl Plugin for UnhaunterMapLoadPlugin {
 
         if !is_headless {
             app.add_loading_state(
-                LoadingState::new(AppState::Loading)
+                LoadingState::new(AppState::EngineBoot)
                     .load_collection::<MapAssets>()
                     .load_collection::<MissionAssets>(),
             );

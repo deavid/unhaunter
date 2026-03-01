@@ -9,7 +9,7 @@ pub struct UnhaunterManualPlugin;
 impl Plugin for UnhaunterManualPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::Loading).load_collection::<ManualAssets>(),
+            LoadingState::new(AppState::EngineBoot).load_collection::<ManualAssets>(),
         );
         user_manual_ui::app_setup(app);
         preplay_manual_ui::app_setup(app);

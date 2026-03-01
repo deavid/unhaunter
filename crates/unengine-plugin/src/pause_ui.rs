@@ -19,7 +19,7 @@ fn keyboard(
     mut next_state: ResMut<NextState<AppState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     host_gone: Res<HostGone>,
-    cli: Res<untypes_core::cli::CliOptions>,
+    lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>,
 ) {
     if *game_state.get() != GameState::Pause {
         return;
@@ -29,10 +29,11 @@ fn keyboard(
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
         game_next_state.set(GameState::None);
-        if matches!(cli.net_mode, untypes_core::cli::NetMode::Offline) {
-            next_state.set(AppState::MissionSelect);
-        } else {
+        // SP-6.2: navigate by role — lobby-presence means networked, offline goes to mission select.
+        if lobby_presence.is_some() {
             next_state.set(AppState::Lobby);
+        } else {
+            next_state.set(AppState::MissionSelect);
         }
     }
 }

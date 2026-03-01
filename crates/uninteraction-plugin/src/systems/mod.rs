@@ -9,14 +9,12 @@ use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::RoomStateSyncEvent;
 use uninteraction_core::interaction::{Authority, ExecuteInteractionEvent};
 use unspatial_core::position::Position;
-use untypes_core::cli::{CliOptions, is_authority};
-
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (interaction_event_handler, room_state_sync_system)
             .chain()
-            .run_if(in_state(untypes_core::states::SimulationState::Running)),
+            .run_if(in_state(untypes_core::states::SimulationState::Ready)),
     );
 }
 
@@ -49,7 +47,7 @@ fn room_state_sync_system(
 fn interaction_event_handler(
     mut ev_reader: MessageReader<ExecuteInteractionEvent>,
     mut interactive_stuff: InteractiveStuff,
-    cli: Res<CliOptions>,
+    authority_role: Option<Res<untypes_core::roles::AuthorityRole>>,
     q_interactive: Query<(
         Option<&Interactive>,
         &Behavior,
@@ -59,7 +57,7 @@ fn interaction_event_handler(
     mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
 ) {
-    let authority = if is_authority(cli) {
+    let authority = if authority_role.is_some() {
         Authority::Host
     } else {
         Authority::Client

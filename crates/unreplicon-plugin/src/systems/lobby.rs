@@ -3,13 +3,14 @@ use bevy_replicon::prelude::{
     AppRuleExt, Channel, ClientId, ClientMessageAppExt, ConnectedClient, FromClient, Replicated,
     ServerState,
 };
-use bevy_replicon::shared::backend::connected_client::NetworkId as RepliconNetworkId;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
+use unprofile_core::profile::PlayerProfileData;
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
 use unreplicon_core::messages::{RequestSelectDifficulty, RequestSelectMap, RequestStartMission};
-use unreplicon_core::resources::{CurrentMapSeed, HostGone, LobbyData, LocalPlayer};
-use untypes_core::cli::CliOptions;
-use untypes_core::states::AppState;
+use unreplicon_core::resources::{ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer};
+use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
+use untypes_core::states::{AppState, BootState};
+use uuid::Uuid;
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
@@ -23,8 +24,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<SelectedMission>();
 
     // Initialize resources that are referenced by lobby UI systems.
-    // These are normally populated by unnet-plugin which is being removed.
-    app.init_resource::<LobbyData>();
+    app.init_resource::<ClientUuidMap>();
     app.init_resource::<LocalPlayer>();
     app.init_resource::<CurrentMapSeed>();
     app.init_resource::<HostGone>();
@@ -35,12 +35,10 @@ pub(super) fn app_setup(app: &mut App) {
     // Observer: fires whenever a client entity loses ConnectedClient on disconnect.
     app.add_observer(on_client_disconnected);
 
-    // Server-side: auto-start lobby in hub-less dedicated mode.
-    // Uses OnEnter(ServerState::Running) because ServerState starts as Stopped and
-    // is transitioned to Running by the bevy_replicon_renet backend in the first
-    // PreUpdate. PostStartup fires before that, so run_if(in_state(ServerState::Running))
-    // on PostStartup would always be false.
-    app.add_systems(OnEnter(ServerState::Running), auto_start_headless_lobby);
+    app.add_systems(
+        OnEnter(ServerState::Running),
+        auto_start_headless_lobby.run_if(in_state(BootState::Ready)),
+    );
 
     // Server-side lobby lifecycle
     app.add_systems(
@@ -64,63 +62,65 @@ pub(super) fn app_setup(app: &mut App) {
         )
             .run_if(in_state(ServerState::Running)),
     );
+
+    // Observe SimulationState::Ready to transition MissionLoading → InGame
+    app.add_systems(
+        Update,
+        observe_simulation_ready_to_enter_game.run_if(in_state(AppState::MissionLoading)),
+    );
+}
+
+/// Helper to get UUID for a Replicon ClientId
+fn client_uuid(client_id: ClientId, uuid_map: &Res<ClientUuidMap>) -> Option<Uuid> {
+    uuid_map.0.get(&client_id).copied()
 }
 
 /// Server: In hub-less dedicated mode, transition to Lobby immediately.
-///
-/// When running under a process manager (hub mode), the transition is managed
-/// by procman via `AssignRoom`. In standalone mode, we must start the lobby
-/// ourselves or clients will have nothing to connect to.
 fn auto_start_headless_lobby(
-    cli: Res<CliOptions>,
     procman: Option<Res<crate::systems::procman::ProcManChannel>>,
     mut next_state: ResMut<NextState<AppState>>,
+    authority: Option<Res<AuthorityRole>>,
+    local_player: Option<Res<LocalPlayerRole>>,
 ) {
-    if cli.is_headless() && procman.is_none() {
+    // Dedicated server (authority, NO local player) or hub-less direct-connect authority.
+    if authority.is_some() && local_player.is_none() && procman.is_none() {
         info!("Hub-less dedicated mode: auto-transitioning to AppState::Lobby");
         next_state.set(AppState::Lobby);
     }
 }
 
 /// Spawn (or reset) the authoritative lobby-state entity when the server enters Lobby.
-///
-/// On the very first entry (e.g., server startup) a fresh entity is spawned.
-/// On subsequent re-entries (e.g., after a mission ends and the server returns to
-/// Lobby) the existing entity is updated in-place so that bevy_replicon propagates
-/// the `Changed<ServerGamePhase>` to connected clients, triggering
-/// `react_to_server_game_phase` on each client and returning them to the Lobby screen.
-///
-/// Re-using the entity also avoids the duplicate-entity problem that would arise
-/// from spawning unconditionally: that system uses `q.single()` and would panic if
-/// two `ServerGamePhase` entities coexisted.
 fn setup_lobby_entity(
     mut q_existing: Query<(&mut LobbyInfo, &mut ServerGamePhase)>,
     mut commands: Commands,
-    cli: Res<CliOptions>,
+    local_player: Option<Res<LocalPlayerRole>>,
+    profile: Option<Res<PlayerProfileData>>,
 ) {
     if let Ok((mut lobby, mut game_phase)) = q_existing.single_mut() {
         // Re-entering Lobby after a mission: reset selection, signal state change.
         *game_phase = ServerGamePhase::Lobby;
         lobby.selected_map = None;
-        info!(
-            "Lobby entity reset for new session (headless={})",
-            cli.is_headless()
-        );
+        info!("Lobby entity reset for new session");
         return;
     }
 
     // First-time spawn.
-    let players = if cli.is_headless() {
-        Vec::new()
-    } else {
-        // Host (listen server): add local player with id = 0
-        vec![LobbyPlayerInfo {
-            client_id: 0,
+    let mut players = Vec::new();
+    let mut leader_uuid = None;
+
+    if local_player.is_some()
+        && let Some(p) = profile
+    {
+        let uuid = p.installation_id;
+        players.push(LobbyPlayerInfo {
+            player_uuid: uuid,
+            current_socket: None, // Local host player
             tint_color_index: 0,
             connected: true,
             nickname: None,
-        }]
-    };
+        });
+        leader_uuid = Some(uuid);
+    }
 
     commands.spawn((
         Replicated,
@@ -128,23 +128,15 @@ fn setup_lobby_entity(
             players,
             selected_map: None,
             selected_difficulty: "standard-challenge".to_string(),
-            owner_client_id: 0, // 0 = server / host
+            leader_uuid,
         },
         ServerGamePhase::Lobby,
     ));
-    info!(
-        "Lobby entity spawned (headless={}, owner=0)",
-        cli.is_headless()
-    );
+    info!("Lobby entity spawned (leader={:?})", leader_uuid);
 }
 
 /// Server: write `ServerGamePhase::InProgress` on the lobby entity when the server
 /// enters `AppState::InGame`.
-///
-/// Clients react to this via `react_to_server_game_phase` — but the InProgress
-/// transition itself is driven by the `on_selected_mission_added` observer, so the
-/// client does not navigate on this signal alone. Writing it here keeps the phase
-/// accurate for any system that queries current game phase.
 fn set_server_state_ingame(mut q: Query<&mut ServerGamePhase>) {
     for mut phase in q.iter_mut() {
         *phase = ServerGamePhase::InProgress;
@@ -152,107 +144,115 @@ fn set_server_state_ingame(mut q: Query<&mut ServerGamePhase>) {
     info!("ServerGamePhase set to InProgress");
 }
 
-/// Observer: triggered whenever `ConnectedClient` is added to an entity.
-///
-/// Appends the new player to all existing `LobbyInfo` entities.
-/// No-ops if there is no active lobby (avoids firing during non-lobby states).
-fn on_client_connected(
-    trigger: On<Insert, ConnectedClient>,
-    q_network_id: Query<Option<&RepliconNetworkId>>,
-    mut q_lobby: Query<&mut LobbyInfo>,
+/// Observe `SimulationState::Ready` and transition `AppState::MissionLoading → AppState::InGame`.
+fn observe_simulation_ready_to_enter_game(
+    sim_state: Res<State<untypes_core::states::SimulationState>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
 ) {
-    let entity = trigger.entity;
-    let client_id_u64 = q_network_id
-        .get(entity)
-        .ok()
-        .flatten()
-        .map(|n| n.get())
-        .unwrap_or(0);
+    if *sim_state == untypes_core::states::SimulationState::Ready {
+        next_app_state.set(AppState::InGame);
+    }
+}
+
+/// Observer: triggered whenever `ConnectedClient` is added to an entity.
+fn on_client_connected(
+    trigger: On<Add, ConnectedClient>,
+    mut q_lobby: Query<&mut LobbyInfo>,
+    uuid_map: Res<ClientUuidMap>,
+) {
+    let client_id = ClientId::Client(trigger.entity);
+    let Some(uuid) = client_uuid(client_id, &uuid_map) else {
+        warn!(
+            "on_client_connected: no UUID mapped for client {:?}; ignoring",
+            client_id
+        );
+        return;
+    };
 
     if q_lobby.is_empty() {
         debug!(
-            "on_client_connected: client {} connected but no lobby entity exists; ignoring",
-            client_id_u64
+            "on_client_connected: client {:?} connected but no lobby entity exists; ignoring",
+            client_id
         );
         return; // Not in a lobby phase — ignore
     }
 
     for mut lobby in q_lobby.iter_mut() {
-        // If this is the first player joining a headless server, make them the owner.
-        if lobby.players.is_empty() && lobby.owner_client_id == 0 {
-            lobby.owner_client_id = client_id_u64;
-            info!("First client {} assigned as room owner", client_id_u64);
-        }
+        // Check if player is already in the list (reconnect)
+        if let Some(player) = lobby.players.iter_mut().find(|p| p.player_uuid == uuid) {
+            player.current_socket = Some(client_id);
+            player.connected = true;
+            info!("Player {} reconnected (socket={:?})", uuid, client_id);
+        } else {
+            // New player
+            let color_index = lobby.players.len() as u8;
+            lobby.players.push(LobbyPlayerInfo {
+                player_uuid: uuid,
+                current_socket: Some(client_id),
+                tint_color_index: color_index,
+                connected: true,
+                nickname: None,
+            });
+            info!(
+                "Player {} joined lobby (socket={:?}, tint={})",
+                uuid, client_id, color_index
+            );
 
-        let color_index = lobby.players.len() as u8;
-        lobby.players.push(LobbyPlayerInfo {
-            client_id: client_id_u64,
-            tint_color_index: color_index,
-            connected: true,
-            nickname: None,
-        });
-        info!(
-            "Client {} joined lobby (tint={})",
-            client_id_u64, color_index
-        );
+            // If lobby has no leader, assign the first player.
+            if lobby.leader_uuid.is_none() {
+                lobby.leader_uuid = Some(uuid);
+                info!("Player {} assigned as lobby leader", uuid);
+            }
+        }
     }
 }
 
 fn on_client_disconnected(
     trigger: On<Remove, ConnectedClient>,
-    q_network_id: Query<Option<&RepliconNetworkId>>,
     mut q_lobby: Query<&mut LobbyInfo>,
+    uuid_map: Res<ClientUuidMap>,
 ) {
-    let entity = trigger.entity;
-    let client_id_u64 = q_network_id
-        .get(entity)
-        .ok()
-        .flatten()
-        .map(|n| n.get())
-        .unwrap_or(0);
+    let client_id = ClientId::Client(trigger.entity);
+    let Some(uuid) = client_uuid(client_id, &uuid_map) else {
+        return;
+    };
 
     for mut lobby in q_lobby.iter_mut() {
-        lobby.players.retain(|p| p.client_id != client_id_u64);
-        info!("Client {} removed from lobby player list", client_id_u64);
+        if let Some(player) = lobby.players.iter_mut().find(|p| p.player_uuid == uuid) {
+            player.connected = false;
+            player.current_socket = None;
+            info!("Player {} disconnected", uuid);
+        }
 
-        // If the owner left, assign ownership to the next player in the list.
-        if lobby.owner_client_id == client_id_u64 {
-            lobby.owner_client_id = lobby.players.first().map(|p| p.client_id).unwrap_or(0);
+        // If the leader left, assign leadership to the next connected player.
+        if lobby.leader_uuid == Some(uuid) {
+            lobby.leader_uuid = lobby
+                .players
+                .iter()
+                .find(|p| p.connected && p.current_socket.is_some())
+                .map(|p| p.player_uuid);
             info!(
-                "Owner disconnected; new owner_client_id={}",
-                lobby.owner_client_id
+                "Leader disconnected; new leader_uuid={:?}",
+                lobby.leader_uuid
             );
         }
-    }
-}
-
-/// Returns the `NetworkId` u64 for a `ClientId` by querying the component.
-///
-/// `ClientId::Server` ⇒ 0 (our sentinel for the host / listen-server player).
-fn client_network_id(client_id: ClientId, q_network_id: &Query<Option<&RepliconNetworkId>>) -> u64 {
-    match client_id {
-        ClientId::Server => 0,
-        ClientId::Client(entity) => q_network_id
-            .get(entity)
-            .ok()
-            .flatten()
-            .map(|n| n.get())
-            .unwrap_or(0),
     }
 }
 
 fn handle_request_select_map(
     mut reader: MessageReader<FromClient<RequestSelectMap>>,
     mut q_lobby: Query<&mut LobbyInfo>,
-    q_network_id: Query<Option<&RepliconNetworkId>>,
+    uuid_map: Res<ClientUuidMap>,
 ) {
     for msg in reader.read() {
-        let sender_id = client_network_id(msg.client_id, &q_network_id);
+        let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
+            continue;
+        };
         for mut lobby in q_lobby.iter_mut() {
-            if sender_id != lobby.owner_client_id {
+            if Some(sender_uuid) != lobby.leader_uuid {
                 warn!(
-                    "RequestSelectMap from non-owner client {} (owner={}); ignored",
-                    sender_id, lobby.owner_client_id
+                    "RequestSelectMap from non-leader {:?}; ignored",
+                    sender_uuid
                 );
                 continue;
             }
@@ -265,15 +265,17 @@ fn handle_request_select_map(
 fn handle_request_select_difficulty(
     mut reader: MessageReader<FromClient<RequestSelectDifficulty>>,
     mut q_lobby: Query<&mut LobbyInfo>,
-    q_network_id: Query<Option<&RepliconNetworkId>>,
+    uuid_map: Res<ClientUuidMap>,
 ) {
     for msg in reader.read() {
-        let sender_id = client_network_id(msg.client_id, &q_network_id);
+        let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
+            continue;
+        };
         for mut lobby in q_lobby.iter_mut() {
-            if sender_id != lobby.owner_client_id {
+            if Some(sender_uuid) != lobby.leader_uuid {
                 warn!(
-                    "RequestSelectDifficulty from non-owner client {}; ignored",
-                    sender_id
+                    "RequestSelectDifficulty from non-leader {:?}; ignored",
+                    sender_uuid
                 );
                 continue;
             }
@@ -285,45 +287,29 @@ fn handle_request_select_difficulty(
 
 fn handle_request_start_mission(
     mut reader: MessageReader<FromClient<RequestStartMission>>,
-    mut q_lobby: Query<&mut LobbyInfo>,
-    q_network_id: Query<Option<&RepliconNetworkId>>,
-    mut commands: Commands,
+    q_lobby: Query<&LobbyInfo>,
+    uuid_map: Res<ClientUuidMap>,
     mut ev_load: MessageWriter<LoadLevelEvent>,
 ) {
     for msg in reader.read() {
-        let sender_id = client_network_id(msg.client_id, &q_network_id);
-        for lobby in q_lobby.iter_mut() {
-            if sender_id != lobby.owner_client_id {
+        let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
+            continue;
+        };
+        for lobby in q_lobby.iter() {
+            if Some(sender_uuid) != lobby.leader_uuid {
                 warn!(
-                    "RequestStartMission from non-owner client {}; ignored",
-                    sender_id
+                    "RequestStartMission from non-leader {:?}; ignored",
+                    sender_uuid
                 );
                 continue;
             }
-            let Some(ref map_path) = lobby.selected_map.clone() else {
-                warn!("StartMission requested but no map is selected");
+            let Some(map_filepath) = &lobby.selected_map else {
+                warn!("RequestStartMission but no map selected; ignored");
                 continue;
             };
-            if map_path.is_empty() {
-                warn!("StartMission requested with empty map path");
-                continue;
-            }
-            info!(
-                "Mission starting: map={}, difficulty={}, seed={}",
-                map_path, lobby.selected_difficulty, msg.map_seed
-            );
-            commands.spawn((
-                Replicated,
-                SelectedMission {
-                    map_path: map_path.clone(),
-                    map_seed: msg.map_seed,
-                    difficulty_id: lobby.selected_difficulty.clone(),
-                },
-            ));
-            // Load the level server-side so the server enters AppState::InGame,
-            // enabling player/gear spawning and replication to clients.
+            info!("Starting mission: {}", map_filepath);
             ev_load.write(LoadLevelEvent {
-                map_filepath: map_path.clone(),
+                map_filepath: map_filepath.clone(),
             });
         }
     }

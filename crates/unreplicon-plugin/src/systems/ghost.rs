@@ -31,12 +31,15 @@ use unreplicon_core::messages::{
 use unreplicon_core::net_components::{
     EvidenceFoundNet, GhostStateNet, MissionResultNet, NetworkPosition,
 };
+use unreplicon_core::resources::MissionConcludingCinematic;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::GhostTag;
+use untypes_core::roles::AuthorityRole;
 use untypes_core::states::AppState;
+use untypes_core::states::SimulationState;
 
 /// Speed at which ghost position is interpolated toward its network value on clients.
 const LERP_SPEED: f32 = 15.0;
@@ -56,12 +59,12 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Server: setup and teardown ghost replication entities.
     app.add_systems(
-        OnEnter(AppState::InGame),
-        setup_ghost_entities.run_if(in_state(ServerState::Running)),
+        OnEnter(SimulationState::Spawning),
+        setup_ghost_entities.run_if(resource_exists::<AuthorityRole>),
     );
     app.add_systems(
         OnExit(AppState::InGame),
-        cleanup_ghost_entities.run_if(in_state(ServerState::Running)),
+        cleanup_ghost_entities.run_if(resource_exists::<AuthorityRole>),
     );
 
     // Server: state sync and journal request handlers.
@@ -77,12 +80,18 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(in_state(AppState::InGame)),
     );
 
-    // Server: write mission result when summary screen activates.
+    // Server: write mission result when tearing down.
     app.add_systems(
         Update,
         sync_mission_result_to_net
             .run_if(in_state(ServerState::Running))
-            .run_if(in_state(AppState::Summary)),
+            .run_if(in_state(SimulationState::TearingDown)),
+    );
+    app.add_systems(
+        Update,
+        server_teardown_grace_period
+            .run_if(in_state(ServerState::Running))
+            .run_if(in_state(SimulationState::TearingDown)),
     );
 
     // Client: apply replicated state to local world.
@@ -98,11 +107,20 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(not(in_state(ServerState::Running))),
     );
 
-    // Client: apply mission result — runs in any non-server state so it fires
-    // even as the client is about to re-enter InGame after a mission ends.
+    // Client: apply mission result — runs in InGame to copy net summary data into SummaryData
     app.add_systems(
         Update,
-        apply_mission_result_net.run_if(not(in_state(ServerState::Running))),
+        apply_mission_result_net
+            .run_if(not(in_state(ServerState::Running)))
+            .run_if(in_state(AppState::InGame)),
+    );
+
+    // Client: observe ServerGamePhase::Concluding to start cinematic
+    app.add_systems(
+        Update,
+        (on_mission_concluding, tick_mission_concluding)
+            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>)
+            .run_if(in_state(AppState::InGame)),
     );
 }
 
@@ -118,6 +136,8 @@ fn setup_ghost_entities(
     q_ghost: Query<(Entity, &Position), With<GhostTag>>,
     mut commands: Commands,
 ) {
+    // Invariant: all ghost entities must exist with Replicated by the time
+    // SimulationState::Ready is entered. This system must run before that transition.
     commands.insert_resource(RepliconGhostSpawningActive);
 
     for (entity, pos) in q_ghost.iter() {
@@ -327,11 +347,11 @@ fn handle_spawn_particle(
     }
 }
 
-/// Server: when the server enters `AppState::Summary`, write the authoritative
+/// Server: when the server enters `SimulationState::TearingDown`, write the authoritative
 /// `SummaryData` into `MissionResultNet` and set `ServerGamePhase::Ended` so
 /// clients can follow the transition to the summary screen.
 ///
-/// Runs every frame while in `AppState::Summary` with a server `ServerState`,
+/// Runs every frame while in `SimulationState::TearingDown` with a server `ServerState`,
 /// but uses `Res::is_changed()` so the actual write only happens once when
 /// `SummaryData` is first populated by `calculate_rewards_and_grades`.
 fn sync_mission_result_to_net(
@@ -381,17 +401,50 @@ fn sync_mission_result_to_net(
     );
 }
 
+/// Server: keep a short grace period in `SimulationState::TearingDown` before
+/// returning to Lobby and resetting simulation to `Unloaded`.
+fn server_teardown_grace_period(
+    mut timer: Local<Option<Timer>>,
+    time: Res<Time>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_sim_state: ResMut<NextState<SimulationState>>,
+    mut q_server_phase: Query<&mut ServerGamePhase>,
+) {
+    if timer.is_none() {
+        *timer = Some(Timer::from_seconds(5.0, TimerMode::Once));
+    }
+
+    let Some(grace_timer) = timer.as_mut() else {
+        return;
+    };
+    grace_timer.tick(time.delta());
+    if !grace_timer.is_finished() {
+        return;
+    }
+
+    for mut phase in q_server_phase.iter_mut() {
+        *phase = ServerGamePhase::Lobby;
+    }
+    next_sim_state.set(SimulationState::Unloaded);
+    next_app_state.set(AppState::Lobby);
+    *timer = None;
+}
+
 /// Client: apply `MissionResultNet` to the local `SummaryData` resource and
 /// transition to `AppState::Summary` when the server marks the result as ready.
+/// Client-side: apply server mission result to `SummaryData`.
 ///
-/// Only runs on non-server nodes.  The `SummaryData` transition is normally driven
+/// Copies authoritative net summary fields (score, grade, money, etc.) from `MissionResultNet`
+/// to the local `SummaryData` resource. Does NOT transition AppState; client waits for cinematic
+/// and manual navigation in `unsummary-plugin`.
+///
+/// Only runs on non-server nodes and in InGame state.  The `SummaryData` transition is normally driven
 /// by `update_time` (player deaths), but the server's authoritative result takes
 /// precedence for score breakdown, grade, and financial fields.
 fn apply_mission_result_net(
     q_net: Query<&MissionResultNet, Changed<MissionResultNet>>,
     mut summary: ResMut<SummaryData>,
     current_difficulty: Res<CurrentDifficulty>,
-    mut next_state: ResMut<NextState<AppState>>,
 ) {
     let Ok(net) = q_net.single() else {
         return;
@@ -429,6 +482,50 @@ fn apply_mission_result_net(
         "apply_mission_result_net: received summary (score={}, grade={})",
         net.full_score, net.grade_achieved
     );
+}
 
-    next_state.set(AppState::Summary);
+/// Client: observe `ServerGamePhase::Concluding` and start the local cinematic timer.
+fn on_mission_concluding(
+    q_phase: Query<&ServerGamePhase, Changed<ServerGamePhase>>,
+    mut commands: Commands,
+) {
+    for phase in q_phase.iter() {
+        if *phase == ServerGamePhase::Concluding {
+            info!("ServerGamePhase::Concluding observed — starting cinematic");
+            commands.insert_resource(MissionConcludingCinematic {
+                timer: Timer::from_seconds(2.5, TimerMode::Once),
+                inputs_blocked: true,
+            });
+        }
+    }
+}
+
+/// Client: tick the concluding cinematic and enter Summary when timer completes and result exists.
+fn tick_mission_concluding(
+    mut commands: Commands,
+    cinematic: Option<ResMut<MissionConcludingCinematic>>,
+    summary_data: Option<Res<SummaryData>>,
+    authority: Option<Res<AuthorityRole>>,
+    q_net: Query<&MissionResultNet, With<MissionGoalEntity>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    time: Res<Time>,
+) {
+    let Some(mut cinematic) = cinematic else {
+        return;
+    };
+
+    cinematic.timer.tick(time.delta());
+    if !cinematic.timer.just_finished() {
+        return;
+    }
+
+    let ready = if authority.is_some() {
+        summary_data.is_some()
+    } else {
+        q_net.single().map(|net| net.ready).unwrap_or(false)
+    };
+    if ready {
+        next_app_state.set(AppState::Summary);
+        commands.remove_resource::<MissionConcludingCinematic>();
+    }
 }

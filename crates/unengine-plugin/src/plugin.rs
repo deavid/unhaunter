@@ -2,7 +2,7 @@ use crate::systems;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use unassets_core::resources::maps::Maps;
-use untypes_core::states::{AppState, GameState, SimulationState};
+use untypes_core::states::{AppState, BootState, GameState, SimulationState};
 
 pub struct UnhaunterEngineCorePlugin;
 
@@ -16,11 +16,12 @@ impl Plugin for UnhaunterEngineCorePlugin {
 
         app.add_message::<unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild>();
         app.init_state::<AppState>()
+            .init_state::<BootState>()
             .init_state::<GameState>()
             .init_state::<SimulationState>()
             .init_resource::<Maps>()
             .add_loading_state(
-                LoadingState::new(AppState::Loading).continue_to_state(AppState::MainMenu),
+                LoadingState::new(AppState::EngineBoot).continue_to_state(AppState::MainMenu),
             );
 
         if is_headless {

@@ -6,8 +6,8 @@ use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::scrollbar::{self, ScrollableListContainer};
 use unmenu_core::templates;
 use unreplicon_core::messages::RequestSelectMap;
-use unreplicon_core::resources::LobbyData;
-use untypes_core::cli::CliOptions;
+use unreplicon_core::components::LobbyInfo;
+use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::LobbyScreen;
 use unui_core::assets::UiAssets;
 
@@ -155,19 +155,20 @@ pub(crate) fn handle_input(
     mut ev_clicks: MessageReader<MenuItemClicked>,
     mut ev_escape: MessageReader<MenuEscapeEvent>,
     mut next_lobby_state: ResMut<NextState<LobbyScreen>>,
-    lobby_data: Res<LobbyData>,
+    q_lobby: Query<&LobbyInfo>,
     mapping: Res<MapSelectMapping>,
     maps: Res<Maps>,
-    cli: Res<CliOptions>,
+    authority_role: Option<Res<AuthorityRole>>,
+    local_player_role: Option<Res<LocalPlayerRole>>,
     time: Res<Time>,
     entry_timer: Res<StateEntryTimer>,
     local_player: Res<unreplicon_core::resources::LocalPlayer>,
-    room_owner: Option<Res<unreplicon_core::resources::RoomOwner>>,
     mut ev_send_map: MessageWriter<RequestSelectMap>,
 ) {
-    let is_room_owner = match (local_player.0, room_owner) {
-        (Some(lp), Some(ro)) => lp == ro.0,
-        (Some(_), None) => cli.is_authority() && !cli.is_headless(),
+    let lobby_info = q_lobby.single().ok();
+    let is_room_owner = match (local_player.0, lobby_info) {
+        (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
+        (Some(_), None) => authority_role.is_some() && local_player_role.is_some(),
         _ => false,
     };
 
@@ -189,16 +190,13 @@ pub(crate) fn handle_input(
         if let Some(&map_idx) = mapping.ui_to_map_index.get(ev.pos) {
             let map = &maps.maps[map_idx];
             // Send to server (or echo locally for Host/Offline) via client message.
-            // The server handler updates LobbyInfo; the bridge syncs it to LobbyData.
+            // The server handler updates LobbyInfo directly.
             ev_send_map.write(RequestSelectMap {
                 map_filepath: map.path.clone(),
             });
             next_lobby_state.set(LobbyScreen::Main);
         }
     }
-
-    // Keep lobby_data in scope so the borrow checker is satisfied; it is read-only here.
-    let _ = &*lobby_data;
 }
 
 pub(crate) fn update_preview(

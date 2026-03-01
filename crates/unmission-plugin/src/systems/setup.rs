@@ -13,7 +13,8 @@ pub(crate) fn app_setup(app: &mut App) {
             Update,
             (
                 handle_mission_events::handle_mission_events,
-                evaluate_mission_end::evaluate_mission_end,
+                evaluate_mission_end::evaluate_mission_end
+                    .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
             )
                 .run_if(in_state(AppState::InGame)),
         );

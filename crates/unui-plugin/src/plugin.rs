@@ -8,7 +8,9 @@ pub struct UnhaunterUiPlugin;
 
 impl Plugin for UnhaunterUiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_loading_state(LoadingState::new(AppState::Loading).load_collection::<UiAssets>());
+        app.add_loading_state(
+            LoadingState::new(AppState::EngineBoot).load_collection::<UiAssets>(),
+        );
         app.add_message::<OnScreenHintEvent>();
     }
 }

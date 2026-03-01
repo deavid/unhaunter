@@ -192,24 +192,24 @@ pub(crate) fn ghost_scale_glitch_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::is_authority;
     use untypes_core::states::SimulationState;
 
     app.add_systems(
         Update,
         (
-            ghost_movement.run_if(is_authority),
-            ghost_enrage.run_if(is_authority),
-            ghost_fade_out_system.run_if(is_authority),
+            ghost_movement.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+            ghost_enrage.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+            ghost_fade_out_system.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
             update_ghost_warning_field,
-            ghost_scale_glitch_system.run_if(is_authority),
+            ghost_scale_glitch_system
+                .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
         )
-            .run_if(in_state(SimulationState::Running)),
+            .run_if(in_state(SimulationState::Ready)),
     );
 
     app.add_systems(
         Update,
-        (ghost_visual_sync, ghost_influence_visual_sync).run_if(in_state(SimulationState::Running)),
+        (ghost_visual_sync, ghost_influence_visual_sync).run_if(in_state(SimulationState::Ready)),
     );
 
     // Initialize dynamic behavior update system

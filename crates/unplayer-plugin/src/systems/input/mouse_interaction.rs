@@ -10,7 +10,6 @@ use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSpectating, Playe
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::cli::{CliOptions, is_authority};
 
 pub(crate) fn player_gear_usage_system(
     mut commands: Commands,
@@ -20,9 +19,9 @@ pub(crate) fn player_gear_usage_system(
     >,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
     mut ga: SoundEmitter,
-    cli: Res<CliOptions>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
-    let is_authority = is_authority(cli);
+    let is_authority = authority.is_some();
 
     for (player_gear, player_input, main_player) in q_players.iter_mut() {
         let is_main = main_player.is_some();

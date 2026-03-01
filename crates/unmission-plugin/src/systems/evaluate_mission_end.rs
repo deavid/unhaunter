@@ -7,7 +7,6 @@ use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::cli::{CliOptions, NetMode};
 
 pub(crate) fn evaluate_mission_end(
     query_players: Query<
@@ -22,14 +21,9 @@ pub(crate) fn evaluate_mission_end(
     >,
     mut ev_mission: MessageWriter<MissionEvent>,
     mut mission_end_requested: ResMut<MissionEndRequested>,
-    cli: Res<CliOptions>,
     time: Res<Time>,
     mut empty_timer: Local<Option<f32>>,
 ) {
-    if !matches!(cli.net_mode, NetMode::Host { .. } | NetMode::Offline) {
-        return;
-    }
-
     let mut active_players = 0;
     let mut players_in_truck = 0;
 

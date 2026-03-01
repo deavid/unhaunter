@@ -7,7 +7,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<TruckGear>();
     app.add_systems(
         Update,
-        initialize_truck_gear.run_if(untypes_core::cli::is_authority),
+        initialize_truck_gear.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
     );
 }
 

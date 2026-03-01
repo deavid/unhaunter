@@ -8,15 +8,14 @@ use undifficulty_core::difficulty_settings::DifficultySettings;
 use unengine_core::MenuUI;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
 use unprofile_core::profile::PlayerProfileData;
-use unreplicon_core::components::SelectedMission;
+use unreplicon_core::components::{LobbyInfo, SelectedMission};
 use unreplicon_core::messages::RequestStartMission;
-use unreplicon_core::resources::{CurrentMapSeed, LobbyData, LocalPlayer, RoomOwner};
-use untypes_core::cli::CliOptions;
+use unreplicon_core::resources::{CurrentMapSeed, LocalPlayer};
+use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::{AppState, LobbyScreen};
 use unui_core::assets::UiAssets;
@@ -53,22 +52,24 @@ pub(crate) struct StateEntryTimer(pub f32);
 pub(crate) fn setup_ui(
     mut commands: Commands,
     ui_assets: If<Res<UiAssets>>,
-    cli: Res<CliOptions>,
+    authority_role: Option<Res<AuthorityRole>>,
+    local_player_role: Option<Res<LocalPlayerRole>>,
     player_profile: Res<Persistent<PlayerProfileData>>,
     q_ui: Query<Entity, With<LobbyMainUI>>,
     time: Res<Time>,
     mut entry_timer: ResMut<StateEntryTimer>,
     local_player: Res<LocalPlayer>,
-    room_owner: Option<Res<RoomOwner>>,
+    q_lobby: Query<&LobbyInfo>,
     room_ident: Option<Res<unreplicon_core::resources::RoomIdentification>>,
 ) {
     *entry_timer = StateEntryTimer(time.elapsed_secs());
     if !q_ui.is_empty() {
         return;
     }
-    let is_room_owner = match (local_player.0, room_owner) {
-        (Some(lp), Some(ro)) => lp == ro.0,
-        (Some(_), None) => cli.is_authority() && !cli.is_headless(),
+    let lobby_info = q_lobby.single().ok();
+    let is_room_owner = match (local_player.0, lobby_info) {
+        (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
+        (Some(_), None) => authority_role.is_some() && local_player_role.is_some(),
         _ => false,
     };
 
@@ -253,21 +254,21 @@ pub(crate) fn handle_clicks(
         &unmenu_core::components::MenuItemInteractive,
         &LobbyMenuAction,
     )>,
-    lobby_data: Res<LobbyData>,
-    cli: Res<CliOptions>,
+    q_lobby: Query<&LobbyInfo>,
+    authority_role: Option<Res<AuthorityRole>>,
+    local_player_role: Option<Res<LocalPlayerRole>>,
     time: Res<Time>,
     entry_timer: Res<StateEntryTimer>,
     local_player: Res<LocalPlayer>,
-    room_owner: Option<Res<RoomOwner>>,
     q_selected_mission: Query<&SelectedMission>,
     mut current_map_seed: ResMut<CurrentMapSeed>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
-    mut ev_load: MessageWriter<LoadLevelEvent>,
     mut ev_start: MessageWriter<RequestStartMission>,
 ) {
-    let is_room_owner = match (local_player.0, room_owner) {
-        (Some(lp), Some(ro)) => lp == ro.0,
-        (Some(_), None) => cli.is_authority() && !cli.is_headless(),
+    let lobby_info = q_lobby.single().ok();
+    let is_room_owner = match (local_player.0, lobby_info) {
+        (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
+        (Some(_), None) => authority_role.is_some() && local_player_role.is_some(),
         _ => false,
     };
 
@@ -319,33 +320,31 @@ pub(crate) fn handle_clicks(
                                 mission.difficulty_id
                             );
                         }
-                        ev_load.write(LoadLevelEvent {
-                            map_filepath: mission.map_path.clone(),
-                        });
                         info!("Non-owner joining mission: map={}", mission.map_path);
-                        // AppState::InGame is set by after_level_ready when LevelReadyEvent fires.
+                        // AppState::MissionLoading is set by SelectedMission observer in unreplicon-plugin.
                     }
                 } else if !host_in_mission && is_room_owner {
                     // Owner: start a new mission.
-                    match lobby_data.selected_map.clone() {
+                    let selected_map = lobby_info.and_then(|li| li.selected_map.clone());
+                    let selected_difficulty = lobby_info
+                        .map(|li| li.selected_difficulty.clone())
+                        .unwrap_or_default();
+                    match selected_map {
                         Some(map_filepath) if !map_filepath.is_empty() => {
                             let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
                             info!("Room owner requesting mission start: map={}", map_filepath);
                             ev_start.write(RequestStartMission { map_seed });
                             current_map_seed.0 = map_seed;
-                            if let Ok(diff) = Difficulty::from_str(&lobby_data.selected_difficulty)
-                            {
+                            if let Ok(diff) = Difficulty::from_str(&selected_difficulty) {
                                 *current_difficulty = CurrentDifficulty::new(diff);
                             } else {
                                 warn!(
                                     "Unknown difficulty '{}'; keeping current",
-                                    lobby_data.selected_difficulty
+                                    selected_difficulty
                                 );
                             }
-                            ev_load.write(LoadLevelEvent {
-                                map_filepath: map_filepath.clone(),
-                            });
-                            // AppState::InGame is set by after_level_ready when LevelReadyEvent fires.
+                            next_app_state.set(AppState::MissionLoading);
+                            // SimulationState::Ready observer will transition to InGame once simulation is ready.
                         }
                         _ => {
                             warn!("Cannot start mission: no map selected");
@@ -364,12 +363,13 @@ pub(crate) fn handle_clicks(
 }
 
 pub(crate) fn update_display(
-    lobby_data: Res<LobbyData>,
+    q_lobby: Query<Ref<LobbyInfo>>,
     maps: Res<Maps>,
     ui_assets: If<Res<UiAssets>>,
     asset_server: Res<AssetServer>,
     local_player: Res<LocalPlayer>,
-    cli: Res<CliOptions>,
+    authority_role: Option<Res<AuthorityRole>>,
+    local_player_role: Option<Res<LocalPlayerRole>>,
     mut q_preview: Query<&mut ImageNode, With<LobbyMapPreview>>,
     mut q_map_info: Query<&mut Text, (With<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
     mut q_diff_info: Query<&mut Text, (With<LobbyDifficultyInfo>, Without<LobbyMapInfo>)>,
@@ -378,12 +378,12 @@ pub(crate) fn update_display(
     mut commands: Commands,
     mut q_menu_items: Query<(&LobbyMenuAction, &mut Visibility, &Children)>,
     mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
-    room_owner: Option<Res<RoomOwner>>,
     q_selected_mission: Query<Entity, With<SelectedMission>>,
 ) {
-    let is_room_owner = match (local_player.0, room_owner) {
-        (Some(lp), Some(ro)) => lp == ro.0,
-        (Some(_), None) => cli.is_authority() && !cli.is_headless(),
+    let lobby_info = q_lobby.single().ok();
+    let is_room_owner = match (local_player.0, lobby_info.as_deref()) {
+        (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
+        (Some(_), None) => authority_role.is_some() && local_player_role.is_some(),
         _ => false,
     };
     let host_in_mission = !q_selected_mission.is_empty();
@@ -427,17 +427,26 @@ pub(crate) fn update_display(
         }
     }
 
-    if !lobby_data.is_changed() && !maps.is_changed() && !local_player.is_changed() {
+    if lobby_info
+        .as_ref()
+        .map(|li| !li.is_changed())
+        .unwrap_or(true)
+        && !maps.is_changed()
+        && !local_player.is_changed()
+    {
         return;
     }
 
     // Update Map Preview & Info
-    let map_data = lobby_data.selected_map.as_ref().and_then(|path| {
-        maps.maps
-            .iter()
-            .find(|m| &m.path == path)
-            .map(|m| &m.mission_data)
-    });
+    let map_data = lobby_info
+        .as_deref()
+        .and_then(|li| li.selected_map.as_ref())
+        .and_then(|path| {
+            maps.maps
+                .iter()
+                .find(|m| &m.path == path)
+                .map(|m| &m.mission_data)
+        });
 
     if let Ok(mut img) = q_preview.single_mut() {
         let path = map_data
@@ -468,20 +477,27 @@ pub(crate) fn update_display(
     if let Ok(mut text) = q_diff_info.single_mut() {
         if host_in_mission {
             let mut status_lines = vec!["Players:".to_string()];
-            for (idx, player) in lobby_data.players.iter().enumerate() {
-                let is_local = local_player.0 == Some(player.id);
+            let players = lobby_info
+                .as_deref()
+                .map(|li| li.players.as_slice())
+                .unwrap_or_default();
+            for (idx, player) in players.iter().enumerate() {
+                let is_local = local_player.0 == Some(player.player_uuid);
                 let name = if is_local {
                     "You".to_string()
                 } else if idx == 0 {
                     "Host".to_string()
                 } else {
-                    format!("Player {}", player.id.0)
+                    format!("Player {}", &player.player_uuid.to_string()[..8])
                 };
                 status_lines.push(format!("- {}", name));
             }
             text.0 = status_lines.join("\n");
         } else {
-            let diff_str = &lobby_data.selected_difficulty;
+            let diff_str = lobby_info
+                .as_deref()
+                .map(|li| li.selected_difficulty.as_str())
+                .unwrap_or("");
             if let Ok(diff) = Difficulty::from_str(diff_str) {
                 text.0 = format!(
                     "Difficulty: {}\n{}",
@@ -504,8 +520,12 @@ pub(crate) fn update_display(
             }
         }
         commands.entity(list_entity).with_children(|p| {
-            for (player_idx, player) in lobby_data.players.iter().enumerate() {
-                let is_local = local_player.0 == Some(player.id);
+            let players = lobby_info
+                .as_deref()
+                .map(|li| li.players.clone())
+                .unwrap_or_default();
+            for (player_idx, player) in players.iter().enumerate() {
+                let is_local = local_player.0 == Some(player.player_uuid);
                 let prefix = if is_local { "\u{25BA} " } else { "" }; // ►
                 let host_suffix = if player_idx == 0 { " (Host)" } else { "" };
 
@@ -534,10 +554,9 @@ pub(crate) fn update_display(
                     ));
 
                     // Player label
-                    let name = player
-                        .nickname
-                        .clone()
-                        .unwrap_or_else(|| format!("Player {}", player.id.0));
+                    let name = player.nickname.clone().unwrap_or_else(|| {
+                        format!("Player {}", &player.player_uuid.to_string()[..8])
+                    });
                     row.spawn((
                         Text::new(format!("{}{}{}", prefix, name, host_suffix)),
                         TextFont {

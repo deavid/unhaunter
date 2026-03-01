@@ -10,7 +10,7 @@ use unghost_core::types::ghost::types::GhostType;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
 use unsummary_core::summary::{ActiveMissionEvaluator, SummaryData};
-use untypes_core::cli::{CliOptions, NetMode};
+use untypes_core::roles::LobbyPresenceRole;
 use untypes_core::states::AppState;
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
@@ -21,6 +21,9 @@ pub(crate) fn setup(mut commands: Commands) {
     commands.spawn(Camera2d).insert(SCamera);
     debug!("Summary camera setup");
 }
+
+#[derive(Resource)]
+pub(crate) struct SummaryAfkTimer(pub Timer);
 
 pub(crate) fn cleanup(
     mut commands: Commands,
@@ -76,7 +79,7 @@ pub(crate) fn keyboard(
     mut app_next_state: ResMut<NextState<AppState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    cli: Res<CliOptions>,
+    lobby_presence: Option<Res<LobbyPresenceRole>>,
 ) {
     if *app_state.get() != AppState::Summary {
         return;
@@ -85,10 +88,41 @@ pub(crate) fn keyboard(
         | keyboard_input.just_pressed(KeyCode::NumpadEnter)
         | keyboard_input.just_pressed(KeyCode::Enter)
     {
-        if matches!(cli.net_mode, NetMode::Offline) {
-            app_next_state.set(AppState::MissionSelect);
-        } else {
+        if lobby_presence.is_some() {
             app_next_state.set(AppState::Lobby);
+        } else {
+            app_next_state.set(AppState::MissionSelect);
+        }
+        game_next_state.set(GameState::None);
+    }
+}
+
+pub(crate) fn insert_afk_timer(mut commands: Commands) {
+    commands.insert_resource(SummaryAfkTimer(Timer::from_seconds(30.0, TimerMode::Once)));
+}
+
+pub(crate) fn remove_afk_timer(mut commands: Commands) {
+    commands.remove_resource::<SummaryAfkTimer>();
+}
+
+pub(crate) fn afk_timeout(
+    mut timer: ResMut<SummaryAfkTimer>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    lobby_presence: Option<Res<LobbyPresenceRole>>,
+    mut app_next_state: ResMut<NextState<AppState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
+    time: Res<Time>,
+) {
+    if keyboard_input.get_just_pressed().next().is_some() {
+        timer.0.reset();
+        return;
+    }
+    timer.0.tick(time.delta());
+    if timer.0.is_finished() {
+        if lobby_presence.is_some() {
+            app_next_state.set(AppState::Lobby);
+        } else {
+            app_next_state.set(AppState::MissionSelect);
         }
         game_next_state.set(GameState::None);
     }
@@ -585,12 +619,7 @@ pub(crate) fn calculate_rewards_and_grades(
     mut sd: ResMut<SummaryData>,
     maps: Res<Maps>,
     evaluator: Option<Res<ActiveMissionEvaluator>>,
-    app_state: Res<State<AppState>>,
 ) {
-    if *app_state != AppState::Summary {
-        return;
-    }
-
     let Some(evaluator) = evaluator else {
         return;
     };

@@ -1,10 +1,13 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::ClientId;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 /// Server-side lobby state replicated to all clients.
 ///
 /// Spawned on a single "lobby state entity" when the server enters `AppState::Lobby`.
-/// Clients read this via the bridge system to populate `LobbyData`.
+/// Clients query this component directly in UI systems (`Query<&LobbyInfo>`) to read
+/// the current lobby roster, selected map, difficulty, and leader identity.
 #[derive(Component, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct LobbyInfo {
     /// All players currently tracked in the lobby, in join order.
@@ -13,16 +16,19 @@ pub struct LobbyInfo {
     pub selected_map: Option<String>,
     /// String key of the selected difficulty (see `Difficulty::to_string`).
     pub selected_difficulty: String,
-    /// `NetworkId` u64 of the player who owns (controls) the lobby.
-    /// `0` means the server itself (Host/listen-server mode).
-    pub owner_client_id: u64,
+    /// UUID of the player currently holding lobby leader permissions.
+    /// None = no leader (server boot, dedicated server before first player joins).
+    pub leader_uuid: Option<Uuid>,
 }
 
 /// Per-player data stored inside `LobbyInfo`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LobbyPlayerInfo {
-    /// renet client id (u64) for this player. `0` = server/host.
-    pub client_id: u64,
+    /// Stable persistent identity (from the player's profile installation_id).
+    pub player_uuid: Uuid,
+    /// The current active transport socket, or None if disconnected.
+    #[serde(skip)]
+    pub current_socket: Option<ClientId>,
     /// Index into the player-tint colour palette.
     pub tint_color_index: u8,
     /// `true` while the player's transport is still connected.
@@ -45,14 +51,16 @@ pub enum ServerGamePhase {
     Lobby,
     /// A mission is in progress.
     InProgress,
-    /// The mission has ended and results are available.
+    /// Mission over; server is computing/publishing results. All ticking has stopped.
+    Concluding,
+    /// Results published and available on SummaryData.
     Ended,
 }
 
 /// Spawned (with `Replicated`) by the server when a mission is about to start.
 ///
 /// Clients observe `On<Add, SelectedMission>` to fire `LoadLevelEvent` and transition
-/// their own state to `AppState::Loading`.
+/// their own state to `AppState::MissionLoading`.
 #[derive(Component, Debug, Clone, Serialize, Deserialize)]
 pub struct SelectedMission {
     /// Path to the TMX map file.

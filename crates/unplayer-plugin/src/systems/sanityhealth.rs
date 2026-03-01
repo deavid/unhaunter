@@ -240,7 +240,9 @@ fn detect_and_apply_death(
                 // Empty the inventory
                 **gear = PlayerGear::default();
             }
-            ev_death.write(PlayerDiedEvent { id: player.id });
+            ev_death.write(PlayerDiedEvent {
+                id: player.network_id,
+            });
         }
     }
 }
@@ -249,12 +251,18 @@ fn update_profile_death_stats(
     mut ev_death: MessageReader<PlayerDiedEvent>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     local_player: Res<unreplicon_core::resources::LocalPlayer>,
+    q_players: Query<&PlayerSprite>,
     mut summary_data: ResMut<SummaryData>,
     board_topology: Res<BoardTopology>,
     difficulty_res: Res<CurrentDifficulty>,
 ) {
     for ev in ev_death.read() {
-        if local_player.0 == Some(ev.id) {
+        let player_uuid = q_players
+            .iter()
+            .find(|p| p.network_id == ev.id)
+            .map(|p| p.id);
+
+        if local_player.0 == player_uuid && player_uuid.is_some() {
             // It's us!
             let initial_deposit_held = player_profile.progression.insurance_deposit;
 
@@ -312,22 +320,22 @@ pub(crate) fn server_apply_client_sanity(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::{is_authority, is_headless};
+    use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
     use untypes_core::states::SimulationState;
 
     app.add_message::<PlayerDiedEvent>().add_systems(
         Update,
         (
-            lose_sanity.run_if(not(is_headless)),
+            lose_sanity.run_if(resource_exists::<LocalPlayerRole>),
             recover_sanity,
-            health_regen.run_if(is_authority),
-            server_apply_client_sanity.run_if(is_authority),
-            visual_health.run_if(not(is_headless)),
+            health_regen.run_if(resource_exists::<AuthorityRole>),
+            server_apply_client_sanity.run_if(resource_exists::<AuthorityRole>),
+            visual_health.run_if(resource_exists::<LocalPlayerRole>),
             update_player_stamina,
             detect_and_apply_death,
-            update_profile_death_stats.run_if(not(is_headless)),
+            update_profile_death_stats.run_if(resource_exists::<LocalPlayerRole>),
             debug_kill_spectator,
         )
-            .run_if(in_state(SimulationState::Running)),
+            .run_if(in_state(SimulationState::Ready)),
     );
 }

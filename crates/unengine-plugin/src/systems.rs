@@ -1,10 +1,13 @@
 use bevy::prelude::*;
+use unassets_core::resources::maps::Maps;
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
 use unengine_core::{GCameraArena, MCamera, MenuUI};
 use unrender_std::components::game::{GameSound, GameSprite};
-use untypes_core::states::{AppState, GameState, SimulationState};
+use untypes_core::cli::CliOptions;
+use untypes_core::roles::{AuthorityRole, LobbyPresenceRole, LocalPlayerRole};
+use untypes_core::states::{AppState, BootState, GameState, SimulationState};
 
 pub fn setup_menu_camera(mut commands: Commands) {
     commands.spawn(Camera2d).insert(MCamera);
@@ -36,7 +39,7 @@ pub fn cleanup_game(
     bf.reset();
     bcf.reset();
     bef.reset();
-    next_sim_state.set(SimulationState::Inactive);
+    next_sim_state.set(SimulationState::Unloaded);
 
     // Despawn old camera if exists
     for cam in qc.iter() {
@@ -59,8 +62,8 @@ pub fn simulation_state_transitions(
     sim_state: Res<State<SimulationState>>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
 ) {
-    if *app_state.get() == AppState::InGame && *sim_state.get() == SimulationState::Ready {
-        next_sim_state.set(SimulationState::Running);
+    if *app_state.get() == AppState::InGame && *sim_state.get() == SimulationState::Spawning {
+        next_sim_state.set(SimulationState::Ready);
     }
 }
 
@@ -84,12 +87,59 @@ pub fn keyboard_state_transitions(
     }
 }
 
+fn set_boot_ready_when_maps_loaded(
+    maps: Option<Res<Maps>>,
+    boot_state: Res<State<BootState>>,
+    mut next_boot: ResMut<NextState<BootState>>,
+) {
+    if *boot_state == BootState::Ready {
+        return;
+    } // one-way gate
+    if let Some(m) = maps.as_ref().filter(|m| !m.maps.is_empty()) {
+        info!("BootState -> Ready ({} maps loaded)", m.maps.len());
+        next_boot.set(BootState::Ready);
+    }
+}
+
+fn insert_roles_at_startup(cli: Res<CliOptions>, mut commands: Commands) {
+    if cli.dedicated {
+        // Dedicated server
+        commands.insert_resource(AuthorityRole);
+        commands.insert_resource(LobbyPresenceRole);
+        debug!("Roles inserted: AuthorityRole, LobbyPresenceRole");
+    } else {
+        match cli.net_mode {
+            untypes_core::cli::NetMode::Offline => {
+                commands.insert_resource(AuthorityRole);
+                commands.insert_resource(LocalPlayerRole);
+                debug!("Roles inserted: AuthorityRole, LocalPlayerRole");
+            }
+            untypes_core::cli::NetMode::Host { .. } => {
+                commands.insert_resource(AuthorityRole);
+                commands.insert_resource(LocalPlayerRole);
+                commands.insert_resource(LobbyPresenceRole);
+                debug!("Roles inserted: AuthorityRole, LocalPlayerRole, LobbyPresenceRole");
+            }
+            untypes_core::cli::NetMode::Join { .. } => {
+                commands.insert_resource(LocalPlayerRole);
+                commands.insert_resource(LobbyPresenceRole);
+                debug!("Roles inserted: LocalPlayerRole, LobbyPresenceRole");
+            }
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Startup, insert_roles_at_startup);
     app.add_systems(OnEnter(AppState::MainMenu), setup_menu_camera);
     app.add_systems(OnExit(AppState::MainMenu), cleanup_menu);
     app.add_systems(OnExit(AppState::InGame), cleanup_game);
     app.add_systems(
         Update,
-        (keyboard_state_transitions, simulation_state_transitions),
+        (
+            keyboard_state_transitions,
+            simulation_state_transitions,
+            set_boot_ready_when_maps_loaded,
+        ),
     );
 }

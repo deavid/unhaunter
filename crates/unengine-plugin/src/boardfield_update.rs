@@ -40,7 +40,7 @@ pub(crate) fn app_setup(app: &mut App) {
         PostUpdate,
         boardfield_update
             .run_if(bevy::prelude::on_message::<BoardTopologyToRebuild>)
-            .run_if(not(in_state(SimulationState::Inactive)))
+            .run_if(not(in_state(SimulationState::Unloaded)))
             .in_set(BoardUpdateSet::Collision),
     );
 }

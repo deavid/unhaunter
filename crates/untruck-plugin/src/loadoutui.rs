@@ -18,7 +18,7 @@ use unrender_std::resources::sprite_registry::SpriteRegistry;
 use unreplicon_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
 use unreplicon_core::network_id::NetworkId;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
-use untypes_core::cli::{CliOptions, NetMode};
+use untypes_core::roles::LobbyPresenceRole;
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
 
@@ -468,7 +468,8 @@ fn button_clicked(
     _craft_tracker: ResMut<RepellentCraftTracker>,
     gear_registry: Res<GearSpawnerRegistry>,
     mut commands: Commands,
-    cli: Res<CliOptions>,
+    lobby_presence: Option<Res<LobbyPresenceRole>>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
 ) {
     let Some(ev) = ev_clk.read().next() else {
@@ -489,7 +490,7 @@ fn button_clicked(
             };
             if let Some(e) = entity {
                 commands.entity(e).despawn();
-                if !cli.is_authority() {
+                if authority.is_none() {
                     ev_loadout.write(TruckLoadoutMessage {
                         action: TruckLoadoutAction::ClearHand(inv.hand),
                     });
@@ -502,7 +503,7 @@ fn button_clicked(
             {
                 let e = p_gear.inventory.remove(idx);
                 commands.entity(e).despawn();
-                if !cli.is_authority() {
+                if authority.is_none() {
                     ev_loadout.write(TruckLoadoutMessage {
                         action: TruckLoadoutAction::ClearInventorySlot(idx),
                     });
@@ -523,7 +524,7 @@ fn button_clicked(
             // Spawn item and put in hand or inventory
             let entity = gear_registry.spawn(&mut commands, *kind);
 
-            if !matches!(cli.net_mode, NetMode::Offline) {
+            if lobby_presence.is_some() {
                 // Ensure the entity has a NetworkId so it can be synced to clients.
                 // We use heavy_rng_seed to avoid needing a direct dependency on `rand`,
                 // and clamp to >1000 to avoid reserved IDs.
@@ -541,7 +542,7 @@ fn button_clicked(
             }
             // For join clients, notify the server so it can mirror this selection
             // in the server-side PlayerGear (used by sync_gear_to_net at mission start).
-            if !cli.is_authority() {
+            if authority.is_none() {
                 ev_loadout.write(TruckLoadoutMessage {
                     action: TruckLoadoutAction::AddGear(*kind),
                 });

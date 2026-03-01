@@ -23,7 +23,7 @@ impl Plugin for UnhaunterFogCorePlugin {
         );
         app.add_systems(
             Update,
-            crate::systems::update_miasma.run_if(in_state(SimulationState::Running)),
+            crate::systems::update_miasma.run_if(in_state(SimulationState::Ready)),
         );
         app.add_systems(OnExit(AppState::InGame), crate::systems::reset_miasma_grid);
 

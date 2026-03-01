@@ -36,10 +36,10 @@ pub(crate) fn update_thermometer(
     tg: If<Res<ThermalGrid>>,
     difficulty: Res<CurrentDifficulty>,
     player_profile: Res<Persistent<PlayerProfileData>>,
-    cli: Res<untypes_core::cli::CliOptions>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
-    let is_authority = untypes_core::cli::is_authority(cli);
+    let is_authority = authority.is_some();
     for (
         mut thermometer,
         mut status,

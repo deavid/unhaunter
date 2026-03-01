@@ -1,13 +1,20 @@
-use crate::network_id::NetworkId;
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
+pub use bevy_replicon::prelude::ClientId;
+use std::collections::HashMap;
+pub use uuid::Uuid;
+
+/// Server-side mapping from an active bevy_replicon ClientId to the
+/// player's stable installation UUID (extracted from the JWT ticket at
+/// connection time).
+#[derive(Resource, Debug, Default)]
+pub struct ClientUuidMap(pub HashMap<ClientId, Uuid>);
 
 /// Identifies which player is the local (owning) player on this game instance.
 ///
 /// `None` means the local player has not yet been assigned (e.g. in offline play
 /// before a session starts, or in a dedicated server where there is no local player).
 #[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct LocalPlayer(pub Option<NetworkId>);
+pub struct LocalPlayer(pub Option<Uuid>);
 
 /// Accumulator flag: set to `true` once all players are back in the truck.
 ///
@@ -21,45 +28,11 @@ pub struct MissionEndRequested(pub bool);
 #[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct HostGone(pub bool);
 
-/// Per-session information about all players in the current lobby.
-#[derive(Resource, Debug, Clone)]
-pub struct LobbyData {
-    pub players: Vec<LobbyPlayer>,
-    pub selected_map: Option<String>,
-    pub selected_difficulty: String,
-}
-
-impl Default for LobbyData {
-    fn default() -> Self {
-        Self {
-            players: Vec::new(),
-            selected_map: None,
-            selected_difficulty: "standard-challenge".to_string(),
-        }
-    }
-}
-
-/// A single player's entry in the lobby roster.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LobbyPlayer {
-    pub id: NetworkId,
-    pub tint_color_index: u8,
-    pub connected: bool,
-    pub nickname: Option<String>,
-}
-
 /// The random seed used to generate the current mission's level.
 ///
 /// All clients (and the server) share the same seed so the map is identical everywhere.
 #[derive(Resource, Default, Debug, Clone)]
 pub struct CurrentMapSeed(pub u64);
-
-/// Identifies the client who originally created / owns the current room.
-///
-/// Owning the room grants privileges such as selecting the map, changing the difficulty,
-/// and starting the mission.
-#[derive(Resource, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RoomOwner(pub NetworkId);
 
 /// Credentials returned by the hub server that identify this client's room.
 ///
@@ -68,6 +41,17 @@ pub struct RoomOwner(pub NetworkId);
 pub struct RoomIdentification {
     pub code: Option<String>,
     pub secret: Option<String>,
+}
+
+/// Inserted by the client when ServerGamePhase::Concluding is observed.
+/// Tracks the local fade-to-black timer before transitioning to Summary.
+#[derive(Resource)]
+pub struct MissionConcludingCinematic {
+    /// Countdown timer. When finished, the client transitions to AppState::Summary
+    /// provided SummaryData also exists.
+    pub timer: Timer,
+    /// Whether player inputs have been disabled for the duration of this cinematic.
+    pub inputs_blocked: bool,
 }
 
 /// A single floor gear item currently present in the game world.

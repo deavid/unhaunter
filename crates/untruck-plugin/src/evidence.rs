@@ -7,7 +7,7 @@ use ungear_core::resources::looking_gear::LookingGear;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unreplicon_core::messages::RequestJournalEvidenceToggle;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
-use untypes_core::cli::{CliOptions, NetMode};
+use untypes_core::roles::AuthorityRole;
 use untypes_core::states::AppState;
 use unui_core::components::game_ui::EvidenceUI;
 
@@ -68,7 +68,7 @@ pub(crate) fn keyboard_evidence(
     players: Query<(&PlayerInputMapping, &PlayerGear), With<MainPlayer>>,
     q_sensor: Query<&EvidenceSensor>,
     looking_gear: Res<LookingGear>,
-    cli: Res<CliOptions>,
+    authority: Option<Res<AuthorityRole>>,
     mut ev_evidence_toggle: MessageWriter<RequestJournalEvidenceToggle>,
     mut gg: ResMut<GhostGuess>,
 ) {
@@ -85,20 +85,17 @@ pub(crate) fn keyboard_evidence(
         };
 
         if keyboard_input.just_pressed(input_mapping.controls.change_evidence) {
-            match cli.net_mode {
-                NetMode::Offline | NetMode::Host { .. } => {
-                    if gg.evidences_found.contains(&evidence) {
-                        gg.evidences_found.remove(&evidence);
-                    } else {
-                        // If it was missing/discarded, we reset it to found.
-                        gg.evidences_missing.remove(&evidence);
-                        gg.evidences_found.insert(evidence);
-                    }
+            if authority.is_some() {
+                if gg.evidences_found.contains(&evidence) {
+                    gg.evidences_found.remove(&evidence);
+                } else {
+                    // If it was missing/discarded, we reset it to found.
+                    gg.evidences_missing.remove(&evidence);
+                    gg.evidences_found.insert(evidence);
                 }
-                NetMode::Join { .. } => {
-                    let mark_as_found = !gg.evidences_found.contains(&evidence);
-                    ev_evidence_toggle.write(RequestJournalEvidenceToggle { evidence, mark_as_found });
-                }
+            } else {
+                let mark_as_found = !gg.evidences_found.contains(&evidence);
+                ev_evidence_toggle.write(RequestJournalEvidenceToggle { evidence, mark_as_found });
             }
         }
     }

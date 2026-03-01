@@ -30,7 +30,7 @@ pub struct UnhaunterGhostPlugin;
 impl Plugin for UnhaunterGhostPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::Loading).load_collection::<GhostAssets>(),
+            LoadingState::new(AppState::EngineBoot).load_collection::<GhostAssets>(),
         );
         ghost_orb::app_setup(app);
     }

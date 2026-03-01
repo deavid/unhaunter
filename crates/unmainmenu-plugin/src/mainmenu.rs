@@ -10,7 +10,6 @@ use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use unmenu_core::templates;
 use unprofile_core::profile::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
-use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::states::{AppState, MapHubState};
 use unui_core::assets::UiAssets;
 
@@ -73,9 +72,9 @@ pub(crate) fn setup_ui(
     mut commands: Commands,
     ui_assets: Res<UiAssets>,
     player_profile: Res<Persistent<PlayerProfileData>>,
-    cli: Res<CliOptions>,
+    lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>,
 ) {
-    let mut menu_items = if matches!(cli.net_mode, NetMode::Offline) {
+    let mut menu_items = if lobby_presence.is_none() {
         vec![
             (MenuID::Campaign, MenuID::Campaign.to_string()),
             (MenuID::CustomMission, MenuID::CustomMission.to_string()),

@@ -2,8 +2,11 @@ use bevy::prelude::*;
 use bevy_renet::netcode::NetcodeServerTransport;
 use bevy_renet::renet::ServerEvent;
 use bevy_renet::{RenetServer, RenetServerEvent};
+use bevy_replicon::prelude::ClientId;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use serde::{Deserialize, Serialize};
+use unreplicon_core::resources::ClientUuidMap;
+use uuid::Uuid;
 
 use crate::systems::procman::RoomAuth;
 
@@ -22,23 +25,45 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_observer(validate_new_connection_observer);
 }
 
+/// Helper to convert renet ClientId to replicon ClientId.
+///
+/// In bevy_replicon 0.38, for the Renet backend, the ClientId variant is
+/// `Client(Entity)`. We must find the Entity associated with the renet ID.
+fn renet_to_replicon(
+    renet_id: renet::ClientId,
+    q_network_id: &Query<(
+        Entity,
+        &bevy_replicon::shared::backend::connected_client::NetworkId,
+    )>,
+) -> Option<ClientId> {
+    for (entity, net_id) in q_network_id.iter() {
+        if net_id.get() == renet_id {
+            return Some(ClientId::Client(entity));
+        }
+    }
+    None
+}
+
 /// Observes each newly connected client's `user_data`, extracts the JWT ticket,
 /// and disconnects any client whose ticket is missing, malformed, or invalid.
-///
-/// When no [`crate::systems::procman::ProcManChannel`] is present the server is running in
-/// hub-less direct-connect mode. In that case all connections are accepted without a ticket
-/// because there is no hub to issue tickets and no JWT secret to validate against.
 fn validate_new_connection_observer(
     trigger: On<RenetServerEvent>,
     mut server: ResMut<RenetServer>,
     transport: Option<Res<NetcodeServerTransport>>,
     room_auth: Res<RoomAuth>,
     procman: Option<Res<crate::systems::procman::ProcManChannel>>,
+    mut uuid_map: ResMut<ClientUuidMap>,
+    q_network_id: Query<(
+        Entity,
+        &bevy_replicon::shared::backend::connected_client::NetworkId,
+    )>,
 ) {
     let ServerEvent::ClientConnected { client_id } = &trigger.event().0 else {
         return;
     };
     let client_id = *client_id;
+    let replicon_client_id =
+        renet_to_replicon(client_id, &q_network_id).unwrap_or(ClientId::Server);
 
     // No procman channel → hub-less direct-connect: no tickets exist, accept unconditionally.
     if procman.is_none() {
@@ -46,6 +71,9 @@ fn validate_new_connection_observer(
             "Client {:?} connected (hub-less direct-connect; authentication skipped).",
             client_id
         );
+        // Fallback: deterministic UUID for development/hub-less
+        let uuid = Uuid::from_u128(client_id as u128);
+        uuid_map.0.insert(replicon_client_id, uuid);
         return;
     }
 
@@ -82,42 +110,34 @@ fn validate_new_connection_observer(
         return;
     };
 
-    if !validate_ticket(&ticket, hmac_secret, room_code) {
-        warn!(
-            "Rejecting client {:?}: connection ticket failed validation.",
-            client_id
-        );
-        server.disconnect(client_id);
-    } else {
-        info!("Client {:?} authenticated successfully.", client_id);
-    }
-}
-
-/// Returns `true` iff the JWT is correctly signed, unexpired, and valid for
-/// the given room.
-fn validate_ticket(ticket: &str, hmac_secret: &str, expected_room_code: &str) -> bool {
     let mut validation = Validation::new(Algorithm::HS256);
     validation.validate_exp = true;
 
     match decode::<TicketClaims>(
-        ticket,
+        &ticket,
         &DecodingKey::from_secret(hmac_secret.as_bytes()),
         &validation,
     ) {
         Ok(token_data) => {
-            if token_data.claims.room_code != expected_room_code {
+            if token_data.claims.room_code != *room_code {
                 warn!(
-                    "Ticket room_code mismatch: expected '{}', got '{}'.",
-                    expected_room_code, token_data.claims.room_code
+                    "Rejecting client {:?} (room_code mismatch): expected '{}', got '{}'.",
+                    client_id, room_code, token_data.claims.room_code
                 );
-                false
+                server.disconnect(client_id);
             } else {
-                true
+                info!("Client {:?} authenticated successfully.", client_id);
+                if let Ok(uuid) = Uuid::parse_str(&token_data.claims.player_uuid) {
+                    uuid_map.0.insert(replicon_client_id, uuid);
+                }
             }
         }
         Err(e) => {
-            warn!("JWT decode failed: {}", e);
-            false
+            warn!(
+                "Rejecting client {:?} (JWT decode failed): {}",
+                client_id, e
+            );
+            server.disconnect(client_id);
         }
     }
 }

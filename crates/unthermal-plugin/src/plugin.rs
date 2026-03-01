@@ -11,7 +11,7 @@ impl Plugin for UnhaunterThermalPlugin {
         app.init_resource::<ThermalGrid>()
             .add_systems(
                 Update,
-                temperature_update.run_if(in_state(SimulationState::Running)),
+                temperature_update.run_if(in_state(SimulationState::Ready)),
             )
             .add_systems(
                 Update,

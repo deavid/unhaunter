@@ -17,7 +17,6 @@ use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::cli::is_authority;
 use unui_core::resources::MouseVisibility;
 
 use super::pathfinding::detect_stair_area;
@@ -229,13 +228,13 @@ pub(crate) fn waypoint_following_system(
     )>,
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
-    cli: Res<untypes_core::cli::CliOptions>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
     q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
     if !q_in_truck.is_empty() {
         return;
     }
-    let is_authority = is_authority(cli);
+    let is_authority = authority.is_some();
     for (player_entity, player_pos, waypoint_queue, mut player_input) in q_player.iter_mut() {
         if let Some(current_waypoint_entity) = waypoint_queue.next() {
             if let Ok((waypoint_pos, waypoint)) = q_waypoints.get(current_waypoint_entity) {

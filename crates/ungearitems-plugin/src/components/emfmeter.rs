@@ -45,10 +45,10 @@ pub(crate) fn update_emfmeter(
     difficulty: Res<CurrentDifficulty>,
     haunt_state: Res<HauntState>,
     player_profile: If<Res<Persistent<PlayerProfileData>>>,
-    cli: Res<untypes_core::cli::CliOptions>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
     let measure = metrics::EMF_UPDATE.time_measure();
-    let is_authority = untypes_core::cli::is_authority(cli);
+    let is_authority = authority.is_some();
     for (
         mut emf,
         mut status,

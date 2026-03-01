@@ -18,7 +18,7 @@ use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::audio::AudioSettings;
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
-use untypes_core::cli::NetMode;
+use untypes_core::roles::LobbyPresenceRole;
 use untypes_core::states::{AppState, GameState};
 
 // Component to mark the progress bar for hold buttons
@@ -289,7 +289,7 @@ fn hold_button_system(
 
 #[derive(SystemParam)]
 struct TruckNetParams<'w, 's> {
-    cli: Res<'w, untypes_core::cli::CliOptions>,
+    lobby_presence: Option<Res<'w, LobbyPresenceRole>>,
     mission_end_requested: Res<'w, MissionEndRequested>,
     q_net_id: Query<'w, 's, &'static NetworkId>,
 }
@@ -337,7 +337,7 @@ fn truckui_event_handle(
                             craft_tracker.craft();
                         }
 
-                        if !matches!(net_params.cli.net_mode, NetMode::Offline) {
+                        if net_params.lobby_presence.is_some() {
                             // Ensure the entity has a NetworkId so it can be synced to clients.
                             let mut ensure_id = |o_entity: Option<Entity>| {
                                 if let Some(entity) = o_entity

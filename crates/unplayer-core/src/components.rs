@@ -5,6 +5,7 @@ use unreplicon_core::network_id::NetworkId;
 use unsettings_core::controls::ControlKeys;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
+use unreplicon_core::resources::Uuid;
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct MainPlayer;
@@ -172,8 +173,10 @@ impl InventoryStats {
 /// health, and mean sound exposure.
 #[derive(Component, Debug)]
 pub struct PlayerSprite {
-    /// The unique identifier for the player (e.g., Player 1, Player 2).
-    pub id: NetworkId,
+    /// The unique identifier for the player (persistent UUID).
+    pub id: Uuid,
+    /// The unique identifier for the player's Replicon client (u64).
+    pub network_id: NetworkId,
     /// The player's accumulated "craziness" level. Higher craziness reduces sanity.
     pub crazyness: f32,
     /// The player's current sanity level (0.0 - 100.0).
@@ -196,10 +199,11 @@ pub struct PlayerInputMapping {
 }
 
 impl PlayerSprite {
-    /// Creates a new `PlayerSprite` with the specified ID.
-    pub fn new(id: NetworkId, spawn_position: Position) -> Self {
+    /// Creates a new `PlayerSprite` with the specified identity.
+    pub fn new(id: Uuid, network_id: NetworkId, spawn_position: Position) -> Self {
         Self {
             id,
+            network_id,
             crazyness: 0.0,
             sanity: 100.0,
             mean_sound: 0.0,

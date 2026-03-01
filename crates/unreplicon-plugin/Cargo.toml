@@ -24,6 +24,8 @@ crossbeam-channel = { workspace = true }
 unhub-client = { workspace = true }
 untypes-core = { workspace = true }
 unreplicon-core = { workspace = true }
+unprofile-core = { path = "../unprofile-core" }
+uuid = { workspace = true }
 
 unmapload-core = { workspace = true }
 undifficulty-core = { workspace = true }

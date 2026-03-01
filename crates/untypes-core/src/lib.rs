@@ -6,5 +6,6 @@ pub mod cli;
 pub mod difficulty;
 pub mod hydration;
 pub mod platform;
+pub mod roles;
 pub mod states;
 pub mod utils;

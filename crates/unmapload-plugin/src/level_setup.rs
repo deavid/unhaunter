@@ -77,7 +77,7 @@ fn load_level_handler(
     };
 
     info!("Starting level load: {}", loaded_event.map_filepath);
-    next_sim_state.set(SimulationState::Initializing);
+    next_sim_state.set(SimulationState::Loading);
     *p.loading_status = LevelLoadingStatus::JustStarted;
 
     // --- 1. Cleanup & Reset ---

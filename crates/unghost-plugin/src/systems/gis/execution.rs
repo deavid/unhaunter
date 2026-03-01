@@ -165,10 +165,10 @@ use crate::components::interaction::{Locked, Tween, TweenEase};
 
 /// Registers execution systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::cli::is_authority;
     app.add_systems(
         bevy::prelude::Update,
-        (ghost_interaction_execution_system, watch_tween_insertions).run_if(is_authority),
+        (ghost_interaction_execution_system, watch_tween_insertions)
+            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
     );
 }
 
@@ -195,7 +195,7 @@ fn ghost_interaction_execution_system(
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_topology: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
-    cli: Res<untypes_core::cli::CliOptions>,
+    local_player_role: Option<Res<untypes_core::roles::LocalPlayerRole>>,
 ) {
     let measure = metrics::GIS_EXECUTION.time_measure();
     for event in ev_ghost_interaction.read() {
@@ -312,7 +312,7 @@ fn ghost_interaction_execution_system(
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
-                    &cli,
+                    local_player_role.as_deref(),
                 );
             }
         }
@@ -706,7 +706,7 @@ fn execute_trip_breaker_interaction(
         Option<&RoomState>,
     )>,
     target: Entity,
-    cli: &untypes_core::cli::CliOptions,
+    local_player_role: Option<&untypes_core::roles::LocalPlayerRole>,
 ) {
     // Get the behavior component to execute the interaction
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
@@ -732,7 +732,7 @@ fn execute_trip_breaker_interaction(
         });
 
         // Spawn electrical sparks visual effect
-        if !cli.is_headless() {
+        if local_player_role.is_some() {
             visual_effects::spawn_electrical_sparks(commands, asset_server, *position);
         }
     } else {

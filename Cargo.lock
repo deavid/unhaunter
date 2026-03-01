@@ -7941,6 +7941,7 @@ name = "unreplicon-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_replicon",
  "serde",
  "unevents-core",
  "unfoundation-core",
@@ -7949,6 +7950,7 @@ dependencies = [
  "unghost-core",
  "unsummary-core",
  "untypes-core",
+ "uuid",
 ]
 
 [[package]]
@@ -7978,12 +7980,14 @@ dependencies = [
  "uninteraction-core",
  "unmapload-core",
  "unplayer-core",
+ "unprofile-core",
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",
  "unsummary-core",
  "untags-core",
  "untypes-core",
+ "uuid",
 ]
 
 [[package]]

@@ -19,7 +19,7 @@ pub struct UnhaunterPlayerPlugin;
 impl Plugin for UnhaunterPlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::Loading).load_collection::<PlayerAssets>(),
+            LoadingState::new(AppState::EngineBoot).load_collection::<PlayerAssets>(),
         );
         systems::setup::app_setup_client(app);
     }

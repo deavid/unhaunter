@@ -22,10 +22,10 @@ impl Plugin for UnhaunterLightCorePlugin {
                     lighting_sim::systems::rebuild_lighting_field
                         .in_set(BoardUpdateSet::Lighting)
                         .after(BoardUpdateSet::Collision)
-                        .run_if(not(in_state(SimulationState::Inactive))),
+                        .run_if(not(in_state(SimulationState::Unloaded))),
                     maplight::systems::gathering::player_visibility_system
                         .after(BoardUpdateSet::Lighting)
-                        .run_if(in_state(SimulationState::Running)),
+                        .run_if(in_state(SimulationState::Ready)),
                 ),
             )
             .add_systems(
@@ -53,7 +53,7 @@ impl Plugin for UnhaunterLightPlugin {
             )
                 .chain()
                 .after(BoardUpdateSet::Lighting)
-                .run_if(in_state(AppState::InGame).and(in_state(SimulationState::Running))),
+                .run_if(in_state(AppState::InGame).and(in_state(SimulationState::Ready))),
         );
         audio::app_setup(app);
         maplight::systems::app_setup(app);

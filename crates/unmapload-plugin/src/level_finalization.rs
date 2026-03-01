@@ -49,7 +49,7 @@ fn after_level_ready(
         return;
     }
 
-    next_sim_state.set(SimulationState::Ready);
+    next_sim_state.set(SimulationState::Spawning);
 
     // Get level parameters
     let open_van = ev.read().next().unwrap().open_van;

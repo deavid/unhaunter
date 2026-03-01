@@ -12,7 +12,7 @@ use unreplicon_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhos
 use unprofile_core::profile::PlayerProfileData;
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
-use untypes_core::cli::{CliOptions, NetMode};
+use untypes_core::roles::AuthorityRole;
 use untypes_core::states::AppState;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -83,7 +83,7 @@ struct JournalButtonParams<'w, 's> {
     potential_id_timer: ResMut<'w, PotentialIDTimer>,
     keyboard_input: Res<'w, ButtonInput<KeyCode>>,
     difficulty: Res<'w, CurrentDifficulty>,
-    cli: Res<'w, CliOptions>,
+    authority: Option<Res<'w, AuthorityRole>>,
     ev_evidence_toggle: MessageWriter<'w, RequestJournalEvidenceToggle>,
     ev_ghost_toggle: MessageWriter<'w, RequestJournalGhostToggle>,
 }
@@ -121,60 +121,57 @@ fn button_system(mut p: JournalButtonParams) {
     }
 
     // --- 2. UPDATE STATE (HOST) OR SEND MESSAGES (CLIENT) ---
-    match p.cli.net_mode {
-        NetMode::Offline | NetMode::Host { .. } => {
-            if let Some((ev, discard)) = clicked_evidence_type {
-                if discard {
-                    if p.gg.evidences_missing.contains(&ev) {
-                        p.gg.evidences_missing.remove(&ev);
-                    } else {
-                        p.gg.evidences_missing.insert(ev);
-                        p.gg.evidences_found.remove(&ev);
-                    }
-                } else if p.gg.evidences_found.contains(&ev) {
-                    p.gg.evidences_found.remove(&ev);
-                } else {
-                    p.gg.evidences_found.insert(ev);
+    if p.authority.is_some() {
+        if let Some((ev, discard)) = clicked_evidence_type {
+            if discard {
+                if p.gg.evidences_missing.contains(&ev) {
                     p.gg.evidences_missing.remove(&ev);
-                }
-            }
-            if let Some((gh, discard)) = clicked_ghost_type {
-                if discard {
-                    if p.gg.ghosts_discarded.contains(&gh) {
-                        p.gg.ghosts_discarded.remove(&gh);
-                    } else {
-                        p.gg.ghosts_discarded.insert(gh);
-                        if p.gg.ghost_type == Some(gh) {
-                            p.gg.ghost_type = None;
-                        }
-                    }
-                } else if p.gg.ghost_type == Some(gh) {
-                    p.gg.ghost_type = None;
                 } else {
-                    p.gg.ghost_type = Some(gh);
+                    p.gg.evidences_missing.insert(ev);
+                    p.gg.evidences_found.remove(&ev);
                 }
+            } else if p.gg.evidences_found.contains(&ev) {
+                p.gg.evidences_found.remove(&ev);
+            } else {
+                p.gg.evidences_found.insert(ev);
+                p.gg.evidences_missing.remove(&ev);
             }
         }
-        NetMode::Join { .. } => {
-            if let Some((evidence, discard)) = clicked_evidence_type {
-                let mark_as_found = if discard {
-                    false // shift-click: mark as missing/discarded
+        if let Some((gh, discard)) = clicked_ghost_type {
+            if discard {
+                if p.gg.ghosts_discarded.contains(&gh) {
+                    p.gg.ghosts_discarded.remove(&gh);
                 } else {
-                    !p.gg.evidences_found.contains(&evidence)
-                };
-                p.ev_evidence_toggle.write(RequestJournalEvidenceToggle { evidence, mark_as_found });
+                    p.gg.ghosts_discarded.insert(gh);
+                    if p.gg.ghost_type == Some(gh) {
+                        p.gg.ghost_type = None;
+                    }
+                }
+            } else if p.gg.ghost_type == Some(gh) {
+                p.gg.ghost_type = None;
+            } else {
+                p.gg.ghost_type = Some(gh);
             }
-            // Note: ghost discard (shift-click) is not yet supported via replicon protocol.
-            if let Some((ghost_type, discard)) = clicked_ghost_type
-                && !discard
-            {
-                let new_guess = if p.gg.ghost_type == Some(ghost_type) {
-                    None
-                } else {
-                    Some(ghost_type)
-                };
-                p.ev_ghost_toggle.write(RequestJournalGhostToggle { ghost_type: new_guess });
-            }
+        }
+    } else {
+        if let Some((evidence, discard)) = clicked_evidence_type {
+            let mark_as_found = if discard {
+                false // shift-click: mark as missing/discarded
+            } else {
+                !p.gg.evidences_found.contains(&evidence)
+            };
+            p.ev_evidence_toggle.write(RequestJournalEvidenceToggle { evidence, mark_as_found });
+        }
+        // Note: ghost discard (shift-click) is not yet supported via replicon protocol.
+        if let Some((ghost_type, discard)) = clicked_ghost_type
+            && !discard
+        {
+            let new_guess = if p.gg.ghost_type == Some(ghost_type) {
+                None
+            } else {
+                Some(ghost_type)
+            };
+            p.ev_ghost_toggle.write(RequestJournalGhostToggle { ghost_type: new_guess });
         }
     }
 
@@ -196,7 +193,7 @@ fn button_system(mut p: JournalButtonParams) {
         .collect();
 
     // Host-exclusive: auto-select/deselect logic
-    if !matches!(p.cli.net_mode, NetMode::Join { .. }) {
+    if p.authority.is_some() {
         // a) Auto-deselect if the currently selected ghost becomes invalid
         if let Some(selected_ghost) = p.gg.ghost_type
             && !possible_ghosts.contains(&selected_ghost)

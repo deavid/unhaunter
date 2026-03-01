@@ -36,7 +36,7 @@ pub struct UnhaunterTruckPlugin;
 impl Plugin for UnhaunterTruckPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::Loading).load_collection::<TruckAssets>(),
+            LoadingState::new(AppState::EngineBoot).load_collection::<TruckAssets>(),
         );
 
         super::hydration::app_setup(app);

@@ -1,0 +1,16 @@
+use bevy::prelude::*;
+
+/// Inserted if this process runs authoritative server logic
+/// (Dedicated Server or the server-half of PeerHost).
+#[derive(Resource, Debug, Default)]
+pub struct AuthorityRole;
+
+/// Inserted if this process has a human watching a screen
+/// (pure Client or the client-half of PeerHost).
+#[derive(Resource, Debug, Default)]
+pub struct LocalPlayerRole;
+
+/// Inserted if this session is part of a multiplayer lobby flow
+/// (Client, Dedicated Server, or PeerHost — not Offline single-player).
+#[derive(Resource, Debug, Default)]
+pub struct LobbyPresenceRole;

@@ -26,6 +26,18 @@ fn load_level_handler(
         return;
     };
     let map_filepath = load_event.map_filepath.clone();
+
+    // F-04 patch: guard against missing map entries on headless server.
+    // Full visual/logic separation is deferred to D-01 (F-18).
+    if !maps.maps.iter().any(|m| m.path == map_filepath) {
+        warn!(
+            "load_level_handler: map '{}' not found in Maps resource; \
+             skipping load (headless server with missing asset?)",
+            map_filepath
+        );
+        return;
+    }
+
     info!("Load Level: {map_filepath}");
     let tiled_map = UnhaunterMapLoader::load(&map_filepath, &maps, &tmx_assets, &tsx_assets);
 

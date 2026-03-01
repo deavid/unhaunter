@@ -21,7 +21,6 @@ use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::cli::CliOptions;
 use unui_core::resources::MouseVisibility;
 
 const PLAYER_SPEED: f32 = 0.04;
@@ -58,7 +57,7 @@ pub(crate) fn player_interaction_system(
     mut ev_interaction_req: MessageWriter<InteractionRequestMessage>,
     mut ev_host_interact: MessageWriter<HostInteractionOccurred>,
     mut ev_npc: Option<MessageWriter<NpcHelpEvent>>,
-    cli: Res<CliOptions>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
     for (pos, player_input, hiding, in_truck, spectating) in players.iter() {
         if in_truck.is_some() || hiding.is_some() || spectating.is_some() {
@@ -99,7 +98,7 @@ pub(crate) fn player_interaction_system(
                     });
                     let bpos = item_pos.to_board_position();
                     let bpos_arr = [bpos.x as i32, bpos.y as i32, bpos.z as i32];
-                    if cli.is_authority() {
+                    if authority.is_some() {
                         // On the host (authority), signal the network layer to
                         // broadcast this interaction to all connected join clients.
                         ev_host_interact.write(HostInteractionOccurred {
@@ -136,7 +135,7 @@ pub(crate) fn player_interaction_system(
 /// and click-to-move input to use the same movement implementation.
 pub(crate) fn player_movement_system(
     time: Res<Time>,
-    cli: Res<untypes_core::cli::CliOptions>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
     mut players: Query<(
         &mut Position,
         &mut Direction,
@@ -167,7 +166,7 @@ pub(crate) fn player_movement_system(
     mut last_error_log: Local<f32>,
     mouse_visibility: Option<Res<MouseVisibility>>,
 ) {
-    let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+    let is_authority = authority.is_some();
     let dt = time.delta_secs() * 60.0;
     let now = time.elapsed_secs();
     let mut can_log = false;

@@ -22,7 +22,7 @@ pub(crate) fn app_setup_core(app: &mut App) {
     app.configure_sets(
         Update,
         unplayer_core::authoritative::PlayerAuthoritativeLogicSet
-            .run_if(untypes_core::cli::is_authority)
+            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>)
             .after(unplayer_core::PlayerInputSet),
     );
 
@@ -39,12 +39,12 @@ pub(crate) fn app_setup_core(app: &mut App) {
             .chain()
             .after(unplayer_core::PlayerInputSet)
             .after(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
-            .run_if(in_state(SimulationState::Running)),
+            .run_if(in_state(SimulationState::Ready)),
     );
 
     app.add_systems(
         PostUpdate,
-        input::keyboard::player_input_clear_system.run_if(in_state(SimulationState::Running)),
+        input::keyboard::player_input_clear_system.run_if(in_state(SimulationState::Ready)),
     );
 
     // Gear toggle system must run on all instances (including dedicated server)

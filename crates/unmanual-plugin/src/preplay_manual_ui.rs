@@ -85,7 +85,8 @@ pub(crate) fn preplay_manual_system(
                             .path
                             .clone();
                         ev_load_level.write(LoadLevelEvent { map_filepath });
-                        next_state.set(AppState::Loading);
+                        // SP-5: exit to InGame is handled by SimulationState observer in unreplicon-plugin.
+                        next_state.set(AppState::MissionLoading);
                     }
                 } else {
                     // No tutorial chapter, start game immediately.
@@ -94,7 +95,8 @@ pub(crate) fn preplay_manual_system(
                         .clone();
 
                     ev_load_level.write(LoadLevelEvent { map_filepath });
-                    next_state.set(AppState::Loading);
+                    // SP-5: exit to InGame is handled by SimulationState observer in unreplicon-plugin.
+                    next_state.set(AppState::MissionLoading);
                 }
             }
         }

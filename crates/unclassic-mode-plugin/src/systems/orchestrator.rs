@@ -20,8 +20,6 @@ use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unmapload_core::events::loadlevel::{LevelReadyEvent, MapEntitiesReadyEvent};
-use unreplicon_core::network_id::NetworkId;
-use unreplicon_core::resources::{LobbyData, LocalPlayer};
 use unplayer_core::components::PlayerDisconnected;
 use unplayer_core::components::{
     MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite, Stamina,
@@ -37,7 +35,10 @@ use unrender_std::components::visuals::{
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::quadcc::QuadCC;
+use unreplicon_core::components::LobbyInfo;
 use unreplicon_core::net_components::{GhostStateNet, NetworkPosition, PlayerNetInfo};
+use unreplicon_core::network_id::NetworkId;
+use unreplicon_core::resources::{ClientId, ClientUuidMap, LocalPlayer, Uuid};
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::direction::Direction;
@@ -48,7 +49,8 @@ use untags_core::tags::{GhostTag, PlayerTag};
 
 #[derive(SystemParam)]
 pub(crate) struct ClassicModeSystemParam<'w> {
-    pub cli: Res<'w, untypes_core::cli::CliOptions>,
+    pub local_player_role: Option<Res<'w, untypes_core::roles::LocalPlayerRole>>,
+    pub authority_role: Option<Res<'w, untypes_core::roles::AuthorityRole>>,
     pub asset_server: Res<'w, AssetServer>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub player_assets: Option<Res<'w, unplayer_core::assets::PlayerAssets>>,
@@ -105,7 +107,7 @@ pub(crate) fn classic_mode_orchestrator(
         .unwrap_or_default();
     let mut player_rf = 1.0;
 
-    if !p.cli.is_headless()
+    if p.local_player_role.is_some()
         && let Some(video_settings) = &p.video_settings
         && let Some(resolved) = p.upscale_idx.resolve(
             "img/characters-model1-demo.png",
@@ -137,16 +139,10 @@ pub(crate) fn classic_mode_orchestrator(
         src_mesh_handle = meshes.add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
     }
 
-    let player_ids_to_spawn: Vec<usize> = match p.cli.net_mode {
-        untypes_core::cli::NetMode::Offline => vec![1],
-        untypes_core::cli::NetMode::Host { .. } => {
-            if p.cli.is_headless() {
-                vec![]
-            } else {
-                vec![1]
-            }
-        }
-        untypes_core::cli::NetMode::Join { .. } => vec![],
+    let player_ids_to_spawn: Vec<Uuid> = if p.local_player_role.is_some() {
+        vec![Uuid::from_u128(1)]
+    } else {
+        vec![]
     };
 
     for (idx, id) in player_ids_to_spawn.into_iter().enumerate() {
@@ -157,9 +153,13 @@ pub(crate) fn classic_mode_orchestrator(
         let is_main_player = true;
 
         let mut player_gear = PlayerGear::default();
-        if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
-            player_gear =
-                spawn_initial_gear(&mut commands, &p.gear_registry, &p.difficulty, id as u64);
+        if p.authority_role.is_some() {
+            player_gear = spawn_initial_gear(
+                &mut commands,
+                &p.gear_registry,
+                &p.difficulty,
+                id.to_u128_le() as u64,
+            );
         }
 
         // Pick a spawn point for this player. Use index-based selection to avoid spawning on top of each other.
@@ -172,7 +172,7 @@ pub(crate) fn classic_mode_orchestrator(
 
         let mut ec = commands.spawn(spawn_pos);
 
-        if !p.cli.is_headless() {
+        if p.local_player_role.is_some() {
             let mut material = CustomMaterial1::from_texture(player_image.clone());
             material.data.sheet_cols = 16;
             material.data.sheet_rows = 4;
@@ -200,9 +200,9 @@ pub(crate) fn classic_mode_orchestrator(
             }
         }
 
-        let id_net = NetworkId(id as u64);
+        let id_net = NetworkId(id.to_u128_le() as u64);
 
-        ec.insert(PlayerSprite::new(id_net, spawn_pos))
+        ec.insert(PlayerSprite::new(id, id_net, spawn_pos))
             .insert(id_net)
             .insert(GameSprite)
             .insert(MapColor {
@@ -247,7 +247,7 @@ pub(crate) fn classic_mode_orchestrator(
         }
         ec.insert(player_gear);
 
-        if !p.cli.is_headless()
+        if p.local_player_role.is_some()
             && let Some(ghost_assets) = &p.ghost_assets
         {
             ec.with_children(|parent| {
@@ -271,7 +271,7 @@ pub(crate) fn classic_mode_orchestrator(
 
     // Join clients do not spawn the ghost locally; they receive the replicated entity
     // from the server and set up its visuals via setup_replicated_ghost_visuals.
-    if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
+    if p.authority_role.is_some() {
         // --- Spawn Ghost ---
         {
             let ghost_spawn = ghost_spawn_points
@@ -305,7 +305,7 @@ pub(crate) fn classic_mode_orchestrator(
                 );
 
                 let mut ec = commands.spawn(ghost_spawn);
-                if !p.cli.is_headless()
+                if p.local_player_role.is_some()
                     && let (Some(meshes), Some(materials1), Some(ghost_assets)) =
                         (&mut p.meshes, &mut p.materials1, &p.ghost_assets)
                 {
@@ -348,7 +348,7 @@ pub(crate) fn classic_mode_orchestrator(
                     .insert(FluidEmitter::default())
                     .insert(SoundEmitter::default());
 
-                if !p.cli.is_headless()
+                if p.local_player_role.is_some()
                     && let Some(ghost_assets) = &p.ghost_assets
                 {
                     ec.with_children(|parent| {
@@ -378,7 +378,7 @@ pub(crate) fn classic_mode_orchestrator(
                 .unwrap_or_default();
             let mut ghost_rf = 1.0;
 
-            if !p.cli.is_headless()
+            if p.local_player_role.is_some()
                 && let Some(video_settings) = &p.video_settings
                 && let Some(resolved) = p
                     .upscale_idx
@@ -406,7 +406,7 @@ pub(crate) fn classic_mode_orchestrator(
 
             let ghost_id_net = NetworkId(0); // Ghost is always 0 in MVP
             let mut ec = commands.spawn(ghost_spawn);
-            if !p.cli.is_headless()
+            if p.local_player_role.is_some()
                 && let (Some(meshes), Some(materials1)) = (&mut p.meshes, &mut p.materials1)
             {
                 let mesh_handle =
@@ -463,7 +463,7 @@ pub(crate) fn classic_mode_orchestrator(
                 .insert(FluidEmitter::default())
                 .insert(SoundEmitter::default());
 
-            if !p.cli.is_headless()
+            if p.local_player_role.is_some()
                 && let Some(ghost_assets) = &p.ghost_assets
             {
                 ec.with_children(|parent| {
@@ -484,7 +484,7 @@ pub(crate) fn classic_mode_orchestrator(
 
             p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(ghost_id);
 
-            if !p.cli.is_headless() {
+            if p.local_player_role.is_some() {
                 spawn_ambient_sounds(&p, &mut commands);
             }
 
@@ -546,25 +546,29 @@ fn spawn_initial_gear(
 pub(crate) fn spawn_joined_player(
     mut p: ClassicModeSystemParam,
     mut commands: Commands,
-    lobby_data: Res<LobbyData>,
-    existing_players: Query<&NetworkId, With<PlayerTag>>,
+    q_lobby: Query<&LobbyInfo>,
+    existing_players: Query<&PlayerSprite>,
     q_player_spawns: Query<&Position, With<PlayerSpawnPoint>>,
-    q_disconnected: Query<(Entity, &NetworkId), With<PlayerDisconnected>>,
+    q_disconnected: Query<(Entity, &PlayerSprite), With<PlayerDisconnected>>,
 ) {
-    if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Host { .. }) {
+    if p.authority_role.is_none() {
         return;
     }
 
-    for player in &lobby_data.players {
+    let Ok(lobby_info) = q_lobby.single() else {
+        return;
+    };
+
+    for player in &lobby_info.players {
         if !player.connected {
             continue;
         }
-        let new_id = player.id;
+        let new_id = player.player_uuid;
 
         // Skip if entity already exists (reconnect case)
-        if existing_players.iter().any(|id| *id == new_id) {
-            for (entity, disc_id) in q_disconnected.iter() {
-                if disc_id == &new_id {
+        if existing_players.iter().any(|ps| ps.id == new_id) {
+            for (entity, ps) in q_disconnected.iter() {
+                if ps.id == new_id {
                     info!("Removing Disconnected state for player {:?}", new_id);
                     commands
                         .entity(entity)
@@ -585,9 +589,8 @@ pub(crate) fn spawn_joined_player(
             continue;
         }
 
-        // Use NetworkId to pick a deterministic spawn point. Host is NetworkId(1) → index 0,
-        // first client is NetworkId(2) → index 1, etc. This is stable regardless of join/leave order.
-        let spawn_idx = (new_id.0 as usize - 1) % player_spawn_points.len();
+        // Use a hash of the UUID to pick a deterministic spawn point.
+        let spawn_idx = (new_id.to_u128_le() as usize) % player_spawn_points.len();
         let spawn_pos = player_spawn_points[spawn_idx];
 
         info!(
@@ -596,8 +599,13 @@ pub(crate) fn spawn_joined_player(
         );
 
         // --- Gear ---
-        let player_gear =
-            spawn_initial_gear(&mut commands, &p.gear_registry, &p.difficulty, new_id.0);
+        let network_id_val = new_id.to_u128_le() as u64;
+        let player_gear = spawn_initial_gear(
+            &mut commands,
+            &p.gear_registry,
+            &p.difficulty,
+            network_id_val,
+        );
 
         // --- Visual setup ---
         let mut player_image = p
@@ -607,7 +615,7 @@ pub(crate) fn spawn_joined_player(
             .unwrap_or_default();
         let mut player_rf = 1.0;
 
-        if !p.cli.is_headless()
+        if p.local_player_role.is_some()
             && let Some(video_settings) = &p.video_settings
             && let Some(resolved) = p.upscale_idx.resolve(
                 "img/characters-model1-demo.png",
@@ -635,7 +643,7 @@ pub(crate) fn spawn_joined_player(
         let mut ec = commands.spawn(spawn_pos);
         ec.insert(GameSprite);
 
-        if !p.cli.is_headless() {
+        if p.local_player_role.is_some() {
             let mut material = CustomMaterial1::from_texture(player_image);
             material.data.sheet_cols = 16;
             material.data.sheet_rows = 4;
@@ -665,8 +673,9 @@ pub(crate) fn spawn_joined_player(
 
         // Remote player: no MainPlayer, no Viewer, no SpatialListener.
         // Use explicit ControlKeys::NONE — ControlKeys::default() is WASD, not NONE!
-        ec.insert(PlayerSprite::new(new_id, spawn_pos))
-            .insert(new_id)
+        let network_id = NetworkId(new_id.to_u128_le() as u64);
+        ec.insert(PlayerSprite::new(new_id, network_id, spawn_pos))
+            .insert(network_id)
             .insert(MapColor {
                 color: Color::WHITE,
             })
@@ -694,7 +703,7 @@ pub(crate) fn spawn_joined_player(
 
         ec.insert(player_gear);
 
-        if !p.cli.is_headless()
+        if p.local_player_role.is_some()
             && let Some(ghost_assets) = &p.ghost_assets
         {
             ec.with_children(|parent| {
@@ -789,16 +798,27 @@ pub(crate) fn setup_replicated_player_visuals(
     mut p: ClassicModeSystemParam,
     mut commands: Commands,
     local_player: Res<LocalPlayer>,
+    uuid_map: Res<ClientUuidMap>,
     q_new_players: Query<
         (Entity, &PlayerNetInfo, &NetworkPosition),
         (Added<PlayerNetInfo>, Without<PlayerSprite>),
     >,
 ) {
     for (entity, net_info, net_pos) in q_new_players.iter() {
-        let is_local = local_player
-            .0
-            .map(|id| id.0 == net_info.client_id)
-            .unwrap_or(false);
+        let client_id = if net_info.client_id == 0 {
+            ClientId::Server
+        } else {
+            ClientId::Client(Entity::from_bits(net_info.client_id - 1))
+        };
+        let Some(player_uuid) = uuid_map.0.get(&client_id) else {
+            error!(
+                "setup_replicated_player_visuals: No UUID found for client_id {}",
+                net_info.client_id
+            );
+            continue;
+        };
+
+        let is_local = local_player.0.map(|id| id == *player_uuid).unwrap_or(false);
 
         let net_id = NetworkId(net_info.client_id);
         let spawn_pos = Position {
@@ -825,7 +845,7 @@ pub(crate) fn setup_replicated_player_visuals(
             .unwrap_or_default();
         let mut player_rf = 1.0;
 
-        if !p.cli.is_headless()
+        if p.local_player_role.is_some()
             && let Some(video_settings) = &p.video_settings
             && let Some(resolved) = p.upscale_idx.resolve(
                 "img/characters-model1-demo.png",
@@ -854,7 +874,7 @@ pub(crate) fn setup_replicated_player_visuals(
         ec.insert(spawn_pos);
         ec.insert(GameSprite);
 
-        if !p.cli.is_headless() {
+        if p.local_player_role.is_some() {
             let mut material = CustomMaterial1::from_texture(player_image);
             material.data.sheet_cols = 16;
             material.data.sheet_rows = 4;
@@ -882,7 +902,7 @@ pub(crate) fn setup_replicated_player_visuals(
             }
         }
 
-        ec.insert(PlayerSprite::new(net_id, spawn_pos))
+        ec.insert(PlayerSprite::new(*player_uuid, net_id, spawn_pos))
             .insert(net_id)
             .insert(MapColor {
                 color: Color::WHITE,
@@ -930,7 +950,7 @@ pub(crate) fn setup_replicated_player_visuals(
 
         ec.insert(player_gear);
 
-        if !p.cli.is_headless()
+        if p.local_player_role.is_some()
             && let Some(ghost_assets) = &p.ghost_assets
         {
             ec.with_children(|parent| {
@@ -994,7 +1014,7 @@ pub(crate) fn setup_replicated_ghost_visuals(
             .unwrap_or_default();
         let mut ghost_rf = 1.0;
 
-        if !p.cli.is_headless()
+        if p.local_player_role.is_some()
             && let Some(video_settings) = &p.video_settings
             && let Some(resolved) = p
                 .upscale_idx
@@ -1021,7 +1041,7 @@ pub(crate) fn setup_replicated_ghost_visuals(
         );
 
         let mut ec = commands.entity(entity);
-        if !p.cli.is_headless()
+        if p.local_player_role.is_some()
             && let (Some(meshes), Some(materials1)) = (&mut p.meshes, &mut p.materials1)
         {
             let mesh_handle = meshes.add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));

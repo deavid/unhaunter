@@ -16,7 +16,6 @@ use unsound_core::emitter::SoundEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
-use untypes_core::cli::{CliOptions, NetMode};
 use untypes_core::states::AppState;
 
 use crate::metrics;
@@ -44,9 +43,9 @@ pub(crate) fn update_repellentflask(
     _gs_audio: SoundEmitter,
     mut summary: ResMut<SummaryData>,
     mut commands: Commands,
-    cli: Res<CliOptions>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
-    let is_authority = !matches!(cli.net_mode, NetMode::Join { .. });
+    let is_authority = authority.is_some();
     for (entity, mut repellent, mut status, mut sprite, pos, ep, triggered) in
         q_repellent.iter_mut()
     {

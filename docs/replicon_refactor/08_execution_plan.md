@@ -12,7 +12,7 @@ This document translates `07_target_architecture.md` into a concrete, ordered ex
 that document is accounted for below. The goal is to specify _what to build_, _in what order_, _why that order_, and
 _what can be parallelized_.
 
-The plan is organized into **seven sub-phases (SP-1 through SP-7)**. Each is a coherent unit of work that leaves the
+The plan is organized into **ten sub-phases (SP-1 through SP-10)**. Each is a coherent unit of work that leaves the
 build in a clean, deployable state.
 
 ---
@@ -40,6 +40,12 @@ SP-1: Infrastructure Primitives
 SP-6: Role-Based Navigation & Movement  (uses roles from SP-1; otherwise independent)
 
 SP-7: Documentation  (written after states are fully implemented)
+
+SP-8: Role Cleanup — Remaining Crates  (uses roles from SP-1; depends on SP-1 only)
+
+SP-9: Role Cleanup — Final Crates      (uses roles from SP-1; depends on SP-1 only; parallel with SP-8)
+
+SP-10: Role Cleanup — is_authority Sweep  (uses roles from SP-1; depends on SP-1 only; parallel with SP-8/SP-9)
 ```
 
 **SP-3 and SP-4 are independent of each other and can be done in parallel by two developers.** **SP-5 and SP-6 are
@@ -912,9 +918,828 @@ states and UX states explicit and permanent.
 
 ---
 
+## SP-8 — Role Cleanup: Remaining Crates
+
+**Addresses:** Completion criteria #6 and #7 for crates not covered by SP-6. **Depends on:** SP-1 (role resources must
+exist). **Independent of SP-3 through SP-7 except that SP-1 must be committed first.** **Affected crates:**
+`unplayer-plugin`, `unghost-plugin`, `unlobby-plugin`, `untruck-plugin`.
+
+SP-6 cleaned `unreplicon-plugin` of `NetMode`/`is_headless()` usage. The following crates still branch on
+`cli.is_headless()` or `cli.net_mode` inside game-logic systems.
+
+### Permitted Sites (do NOT change these)
+
+Before touching anything, confirm the following sites are explicitly permitted and must be left alone:
+
+| File                                   | Line(s)  | Reason permitted                                                                                                                                                        |
+| -------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unmapload-plugin/src/plugin.rs`       | 19, 25   | Plugin `build()` time — same pattern as the SP-1 boot insertion in `unengine-plugin`.                                                                                   |
+| `unmapload-plugin/src/assets_debug.rs` | 43, 49   | Debug-only asset monitoring registered in `build()`.                                                                                                                    |
+| `untmxmap-plugin/src/load_level.rs`    | 51       | Passes `is_headless` flag into `bevy_load_map` to control visual loading. Covered by D-01 (visual/logic separation in `untmxmap-plugin`), which is explicitly deferred. |
+| `unhub-plugin/src/ui.rs`               | 257, 267 | _Writes_ `cli.net_mode = NetMode::Join { .. }` — this is boot-time configuration mutation when the user picks a server from the hub browser, not topology branching.    |
+
+### 8.1 — `unplayer-plugin`: Sanity/Health System Registration
+
+**File:** `crates/unplayer-plugin/src/systems/sanityhealth.rs`, `app_setup` function
+
+The system registrations currently import and use function-item references `is_headless` and `is_authority` from
+`untypes_core::cli`:
+
+```rust
+use untypes_core::cli::{is_authority, is_headless};
+// ...
+lose_sanity.run_if(not(is_headless)),
+visual_health.run_if(not(is_headless)),
+update_profile_death_stats.run_if(not(is_headless)),
+health_regen.run_if(is_authority),
+server_apply_client_sanity.run_if(is_authority),
+```
+
+Replace with role resource checks:
+
+```rust
+lose_sanity.run_if(resource_exists::<LocalPlayerRole>()),
+visual_health.run_if(resource_exists::<LocalPlayerRole>()),
+update_profile_death_stats.run_if(resource_exists::<LocalPlayerRole>()),
+health_regen.run_if(resource_exists::<AuthorityRole>()),
+server_apply_client_sanity.run_if(resource_exists::<AuthorityRole>()),
+```
+
+Remove the `use untypes_core::cli::{is_authority, is_headless};` import once unused.
+
+### 8.2 — `unghost-plugin`: Visual Effect Systems
+
+**Files:**
+
+- `crates/unghost-plugin/src/systems/gis/visual_effects.rs` (lines 38, 206)
+- `crates/unghost-plugin/src/systems/gis/execution.rs` (line 735)
+
+**`visual_effects.rs`** — Two systems (`spawn_interaction_particles_system`, `door_lock_indicator_system`) each contain
+an `if cli.is_headless() { return; }` early-exit guard. These systems should not run on the dedicated server at all.
+Replace the in-body guard with a registration-time gate:
+
+1. Remove the `cli: Res<untypes_core::cli::CliOptions>` parameter from each system.
+2. Remove the `if cli.is_headless() { return; }` body.
+3. In the `app_setup` function that registers these systems, add `.run_if(resource_exists::<LocalPlayerRole>())` to each
+   registration.
+
+**`execution.rs`** — Line 735 contains a conditional visual-effects spawn inside a larger mixed-logic system:
+
+```rust
+if !cli.is_headless() {
+    visual_effects::spawn_electrical_sparks(commands, asset_server, *position);
+}
+```
+
+This cannot be hoisted to registration level because the surrounding system does real authority-side work. Replace the
+condition in place:
+
+```rust
+if local_player_role.is_some() {
+    visual_effects::spawn_electrical_sparks(commands, asset_server, *position);
+}
+```
+
+Add `local_player_role: Option<Res<untypes_core::roles::LocalPlayerRole>>` to the system's parameter list and remove the
+`cli: Res<CliOptions>` parameter if it is no longer used elsewhere in the same function.
+
+### 8.3 — `unlobby-plugin`: Lobby UI Authority Check
+
+**Files:**
+
+- `crates/unlobby-plugin/src/systems/lobby_main.rs` (lines 71, 269, 383)
+- `crates/unlobby-plugin/src/systems/difficulty_select.rs` (line 132)
+- `crates/unlobby-plugin/src/systems/map_select.rs` (line 170)
+
+All five sites share the same pattern inside `match` arms that determine which UI buttons are enabled for the local
+player:
+
+```rust
+(Some(_), None) => cli.is_authority() && !cli.is_headless(),
+```
+
+The semantic is: "I am the server-half of a PeerHost session (authority + local screen)." That is exactly
+`AuthorityRole` AND `LocalPlayerRole` both present. Replace with:
+
+```rust
+(Some(_), None) => authority.is_some() && local_player.is_some(),
+```
+
+Where `authority: Option<Res<AuthorityRole>>` and `local_player: Option<Res<LocalPlayerRole>>` are added to each
+system's parameter list. Remove the `cli: Res<CliOptions>` parameter (and any `NetMode` import) from each system once
+`cli` is no longer referenced.
+
+### 8.4 — `untruck-plugin`: Journal, Evidence, and Loadout Topology Branches
+
+**Files:**
+
+- `crates/untruck-plugin/src/journal.rs` (lines 125, 158, 199)
+- `crates/untruck-plugin/src/evidence.rs` (lines 89, 98)
+- `crates/untruck-plugin/src/loadoutui.rs` (line 526)
+- `crates/untruck-plugin/src/systems/truck_ui_systems.rs` (line 340)
+
+**Journal and Evidence (`journal.rs`, `evidence.rs`)** — Both files contain a
+`match cli.net_mode { Offline | Host { .. } => modify state directly, Join { .. } => send message }` branch. The
+semantic is: "if I am the authority node, apply the change locally; otherwise send a message to the server." Replace
+with an `AuthorityRole` check:
+
+```rust
+// Before:
+match cli.net_mode {
+    NetMode::Offline | NetMode::Host { .. } => { /* mutate directly */ },
+    NetMode::Join { .. } => { ev.write(...); },
+}
+
+// After:
+if authority.is_some() {
+    /* mutate directly */
+} else {
+    ev.write(...);
+}
+```
+
+The auto-select/deselect logic in `journal.rs` (line 199: `if !matches!(p.cli.net_mode, NetMode::Join { .. })`) uses the
+same semantic — a join client does not auto-select because the server will push the authoritative state. Replace with
+`if authority.is_some()`.
+
+Add `authority: Option<Res<AuthorityRole>>` to the system parameter list (or the `SystemParam` struct if the system uses
+one). Remove `CliOptions` / `NetMode` imports once unused.
+
+**`loadoutui.rs` and `truck_ui_systems.rs`** — Both files contain:
+
+```rust
+if !matches!(cli.net_mode, NetMode::Offline) {
+    // Ensure spawned gear entity has a NetworkId so it can be synced to clients.
+    commands.entity(entity).insert(NetworkId(...));
+}
+```
+
+The semantic is: "in any networked session, gear must have a stable `NetworkId`." That is exactly `LobbyPresenceRole`.
+Replace with:
+
+```rust
+if lobby_presence.is_some() {
+    commands.entity(entity).insert(NetworkId(...));
+}
+```
+
+Add `lobby_presence: Option<Res<LobbyPresenceRole>>` to each system's parameter list. Remove the `CliOptions` /
+`NetMode` import from each file once unused.
+
+### 8.5 — Checkpoint
+
+- `cargo clippy` passes.
+- Singleplayer: full mission loop unchanged.
+- `git grep 'is_headless'` in `crates/` returns only the permitted sites listed above (plus the definition in
+  `untypes_core::cli`).
+- `git grep 'NetMode'` in `crates/` returns zero gameplay-system matches outside the permitted list (only boot-transport
+  setup in `unreplicon-plugin/connection.rs` + `procman.rs`, boot config writes in `unhub-plugin/ui.rs`, and the enum
+  definition itself in `untypes_core/cli.rs`).
+
+---
+
+## SP-9 — Role Cleanup: Final Crates
+
+**Addresses:** Completion criteria #6 and #7 for crates not covered by SP-6 or SP-8. **Depends on:** SP-1 (role
+resources must exist). **Affected crates:** `unclassic-mode-plugin`, `unplayer-plugin`, `unmission-plugin`,
+`unghost-plugin`, `ungearitems-plugin`, `unmainmenu-plugin`.
+
+After SP-8, the global `git grep 'is_headless'` and `git grep 'NetMode'` sweeps found these remaining violation sites.
+All are in game-logic systems; none are in the boot-time permitted list.
+
+### 9.1 — `unclassic-mode-plugin`: Orchestrator Visual Guards
+
+**File:** `crates/unclassic-mode-plugin/src/systems/orchestrator.rs`
+
+This file is the mission entity spawner. It is a large `SystemParam`-based system. All 18 `is_headless()` call sites
+guard rendering/visual code — mesh handle creation, material insertion, sprite child-spawning, and ambient sound
+spawning. No site guards authority-side logic.
+
+There are also two `net_mode` match arms near the start of the function body:
+
+1. **`player_ids_to_spawn` match (lines ~140–151):** The whole match collapses to a single semantic — "spawn one local
+   player iff `LocalPlayerRole` is present":
+
+   ```rust
+   // Before:
+   let player_ids_to_spawn: Vec<Uuid> = match p.cli.net_mode {
+       NetMode::Offline => vec![Uuid::from_u128(1)],
+       NetMode::Host { .. } => {
+           if p.cli.is_headless() { vec![] } else { vec![Uuid::from_u128(1)] }
+       }
+       NetMode::Join { .. } => vec![],
+   };
+
+   // After:
+   let player_ids_to_spawn: Vec<Uuid> = if p.local_player_role.is_some() {
+       vec![Uuid::from_u128(1)]
+   } else {
+       vec![]
+   };
+   ```
+
+2. **Gear-spawn guard (line ~162):** `!matches!(p.cli.net_mode, NetMode::Join { .. })` — semantic is "I am the authority
+   node, so I own this player's gear." Replace with `p.authority_role.is_some()`:
+
+   ```rust
+   // Before:
+   if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
+       player_gear = spawn_initial_gear(...);
+   }
+
+   // After:
+   if p.authority_role.is_some() {
+       player_gear = spawn_initial_gear(...);
+   }
+   ```
+
+3. **All 18 `is_headless()` guards:** Every occurrence in this file is `!p.cli.is_headless()` (guard around visual
+   insertion) or `p.cli.is_headless()` (used as a branch inside the `player_ids_to_spawn` match, which is collapsed
+   above). After replacing the `player_ids_to_spawn` match, the only remaining pattern is:
+
+   ```rust
+   // Before:
+   if !p.cli.is_headless() { /* visual insertion */ }
+   // or:
+   if !p.cli.is_headless() && let Some(asset) = ... { /* visual insertion */ }
+
+   // After:
+   if p.local_player_role.is_some() { /* visual insertion */ }
+   // or:
+   if p.local_player_role.is_some() && let Some(asset) = ... { /* visual insertion */ }
+   ```
+
+**How to wire the roles into the `SystemParam`:**
+
+The orchestrator system uses a `SystemParam` struct (call it `OrchestratorParams` or similar). Add two new optional
+fields:
+
+```rust
+local_player_role: Option<Res<'w, untypes_core::roles::LocalPlayerRole>>,
+authority_role:    Option<Res<'w, untypes_core::roles::AuthorityRole>>,
+```
+
+These replace all accesses to `p.cli.is_headless()` and `p.cli.net_mode` inside the spawner body. Remove the
+`CliOptions` import from this file once `p.cli` is no longer referenced anywhere in it.
+
+### 9.2 — `unplayer-plugin`: Movement and Keyboard Authority Check
+
+**Files:**
+
+- `crates/unplayer-plugin/src/systems/movement.rs` (line ~170)
+- `crates/unplayer-plugin/src/systems/keyboard.rs` (line ~17)
+
+Both files derive a local boolean from `NetMode`:
+
+```rust
+let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+```
+
+The semantic is identical: "I own non-local players' positions" (authority node moves all players; join client only
+moves its own). Replace by adding `authority: Option<Res<AuthorityRole>>` to each system's parameter list and changing
+the binding:
+
+```rust
+let is_authority = authority.is_some();
+```
+
+Remove the `cli: Res<CliOptions>` parameter from each system once no other code in the same function body references
+`cli`. Remove the `CliOptions` / `NetMode` imports once unused.
+
+### 9.3 — `unmission-plugin`: Mission-End Evaluation Authority Gate
+
+**File:** `crates/unmission-plugin/src/systems/evaluate_mission_end.rs` (line ~29)
+
+The system body begins with:
+
+```rust
+if !matches!(cli.net_mode, NetMode::Host { .. } | NetMode::Offline) {
+    return;
+}
+```
+
+The semantic is: "only the authority node evaluates mission-end conditions." This is a system-body early-return that
+should instead be a registration-time guard. Two options; prefer Option A for clarity:
+
+**Option A — registration-time gate (preferred):**
+
+1. Remove the `if !matches!(...)` early-return entirely.
+2. In the `app_setup` that registers this system, add `.run_if(resource_exists::<AuthorityRole>())`.
+3. Remove `cli: Res<CliOptions>` and the `NetMode` import from the file.
+
+**Option B — inline replacement (only if the system is registered in a way that makes a gate awkward):**
+
+```rust
+// Before:
+if !matches!(cli.net_mode, NetMode::Host { .. } | NetMode::Offline) { return; }
+
+// After:
+if authority.is_none() { return; }
+```
+
+Where `authority: Option<Res<AuthorityRole>>` is added to the system's parameter list.
+
+Check which option applies by reading the `app_setup` registration site first.
+
+### 9.4 — `unghost-plugin`: Dynamic Behavior Update Authority Gate
+
+**File:** `crates/unghost-plugin/src/systems/dynamic_behavior_update.rs`, `app_setup` function (line ~164)
+
+The current registration uses a locally-defined closure:
+
+```rust
+use untypes_core::cli::{CliOptions, NetMode};
+let is_authority =
+    |cli: Res<CliOptions>| -> bool { !matches!(cli.net_mode, NetMode::Join { .. }) };
+
+app.add_systems(
+    Update,
+    (
+        update_ghost_behavior_dynamics_system.run_if(is_authority),
+        sync_ghost_emitters,
+    ).chain(),
+);
+```
+
+Replace the closure with the standard `resource_exists::<AuthorityRole>()` condition:
+
+```rust
+app.add_systems(
+    Update,
+    (
+        update_ghost_behavior_dynamics_system
+            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+        sync_ghost_emitters,
+    ).chain(),
+);
+```
+
+Remove the `use untypes_core::cli::{CliOptions, NetMode};` import from `app_setup` once unused. Remove the
+`is_authority` closure binding entirely.
+
+### 9.5 — `ungearitems-plugin`: Sage and Repellent Flask Authority Check
+
+**Files:**
+
+- `crates/ungearitems-plugin/src/components/sage.rs` (line ~41)
+- `crates/ungearitems-plugin/src/components/repellentflask.rs` (line ~49)
+
+Both files derive an inline boolean:
+
+```rust
+let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+```
+
+The semantic is: "only the authority node triggers item activation and game-state mutation." Replace identically to 9.2:
+add `authority: Option<Res<AuthorityRole>>` to each system's parameter list and change the binding:
+
+```rust
+let is_authority = authority.is_some();
+```
+
+Remove `cli: Res<CliOptions>` and `CliOptions` / `NetMode` imports from each file once unused.
+
+### 9.6 — `unmainmenu-plugin`: Menu Item Visibility by Role
+
+**File:** `crates/unmainmenu-plugin/src/mainmenu.rs`, `setup_ui` function (line ~78)
+
+The current code selects which menu items to show based on `NetMode`:
+
+```rust
+let mut menu_items = if matches!(cli.net_mode, NetMode::Offline) {
+    vec![
+        (MenuID::Campaign, ...),
+        (MenuID::CustomMission, ...),
+        (MenuID::Hub, ...),
+    ]
+} else {
+    vec![(MenuID::MultiplayerLobby, ...)]
+};
+```
+
+The semantic is: "if the user launched without a lobby (offline/singleplayer), show the single-player menu; if they
+launched into a multiplayer session, show the lobby entry point." That is exactly `LobbyPresenceRole` absent vs.
+present. Replace:
+
+```rust
+// Replace:
+cli: Res<CliOptions>,
+// With:
+lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>,
+
+// Replace the condition:
+if lobby_presence.is_none() {
+    vec![
+        (MenuID::Campaign, ...),
+        (MenuID::CustomMission, ...),
+        (MenuID::Hub, ...),
+    ]
+} else {
+    vec![(MenuID::MultiplayerLobby, ...)]
+}
+```
+
+Remove the `use untypes_core::cli::{CliOptions, NetMode};` import from `mainmenu.rs` once unused.
+
+### 9.7 — Checkpoint
+
+- `cargo clippy` passes.
+- Singleplayer: full mission loop, entity spawning, item activation, and main menu all work unchanged.
+- `git grep 'is_headless'` in `crates/` returns **only** the following permitted sites and the definition site:
+  - `unmapload-plugin/src/plugin.rs` lines 19, 25
+  - `unmapload-plugin/src/assets_debug.rs` lines 43, 49
+  - `untmxmap-plugin/src/load_level.rs` line 51 (D-01 deferred)
+  - `untypes_core/src/cli.rs` (the function definition itself)
+- `git grep 'NetMode'` in `crates/` returns **only**:
+  - `untypes_core/src/cli.rs` (the enum definition)
+  - `unreplicon-plugin/src/systems/connection.rs` and `procman.rs` (boot-transport setup)
+  - `unhub-plugin/src/ui.rs` lines 257, 267 (boot-time config write)
+
+---
+
+## SP-10 — Role Cleanup: `is_authority` Global Sweep
+
+**Addresses:** Completion criteria #6, #7, and #9 — eliminating all remaining `is_authority(cli)` / `cli.is_authority()`
+/ `run_if(is_authority)` sites from game-logic systems. **Depends on:** SP-1 (role resources must exist). **Independent
+of SP-3 through SP-9 except that SP-1 must be committed first.** **Affected crates:** `unghost-plugin`,
+`ungearitems-plugin`, `unplayer-plugin`, `untruck-plugin`, `uninteraction-plugin`, `unsummary-plugin`.
+
+### Background: Why SP-10 Exists
+
+The checkpoint greps in SP-8.X and SP-9.7 searched for `is_headless` and `NetMode` but not for `is_authority`. The
+`is_authority` function in `untypes_core::cli` wraps the same topology-branching logic (`NetMode::Join` check) without
+embedding either keyword, so it survived all previous audits. This sub-phase removes every surviving game-logic call
+site.
+
+### SP-10 Permitted Sites (do NOT change these)
+
+| File                                  | Lines | Reason permitted                                            |
+| ------------------------------------- | ----- | ----------------------------------------------------------- |
+| `untypes_core/src/cli.rs`             | 40–46 | The `is_authority` **definition** itself.                   |
+| `unreplicon-plugin/src/procman.rs`    | —     | Boot-transport setup; not game-logic topology branching.    |
+| `unreplicon-plugin/src/connection.rs` | —     | Boot-transport setup; not game-logic topology branching.    |
+| `unhub-plugin/src/ui.rs`              | —     | Config write at hub browser selection; not topology branch. |
+
+---
+
+### 10.1 — `unghost-plugin`: Ghost AI and GIS Registration-Time Gates
+
+**Files:**
+
+- `crates/unghost-plugin/src/systems/ghost_ai/mod.rs`, `app_setup` function (lines ~195–205)
+- `crates/unghost-plugin/src/systems/gis/execution.rs`, `app_setup` function (lines ~168–171)
+- `crates/unghost-plugin/src/systems/gis/selection.rs`, `app_setup` function (lines ~24–27)
+
+All three files import `untypes_core::cli::is_authority` inside a local `app_setup` scope and pass the function item as
+a `.run_if(is_authority)` argument. Replace each with `resource_exists::<AuthorityRole>()`.
+
+**`ghost_ai/mod.rs`** — four systems registered with `.run_if(is_authority)`:
+
+```rust
+// Before:
+use untypes_core::cli::is_authority;
+// ...
+ghost_movement.run_if(is_authority),
+ghost_enrage.run_if(is_authority),
+ghost_fade_out_system.run_if(is_authority),
+ghost_scale_glitch_system.run_if(is_authority),
+
+// After (each system, same pattern):
+ghost_movement.run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+ghost_enrage.run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+ghost_fade_out_system.run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+ghost_scale_glitch_system.run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+```
+
+Remove the `use untypes_core::cli::is_authority;` import from the `app_setup` scope once unused.
+
+**`gis/execution.rs`** — one tuple registered with `.run_if(is_authority)`:
+
+```rust
+// Before:
+use untypes_core::cli::is_authority;
+app.add_systems(
+    bevy::prelude::Update,
+    (ghost_interaction_execution_system, watch_tween_insertions).run_if(is_authority),
+);
+
+// After:
+app.add_systems(
+    bevy::prelude::Update,
+    (ghost_interaction_execution_system, watch_tween_insertions)
+        .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+);
+```
+
+Remove the `use untypes_core::cli::is_authority;` import from the `app_setup` scope once unused.
+
+**`gis/selection.rs`** — one system registered with `.run_if(is_authority)`:
+
+```rust
+// Before:
+use untypes_core::cli::is_authority;
+app.add_systems(
+    bevy::prelude::Update,
+    ghost_interaction_selection_system.run_if(is_authority),
+);
+
+// After:
+app.add_systems(
+    bevy::prelude::Update,
+    ghost_interaction_selection_system
+        .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+);
+```
+
+Remove the `use untypes_core::cli::is_authority;` import from the `app_setup` scope once unused.
+
+---
+
+### 10.2 — `ungearitems-plugin`: EMF Meter and Thermometer Inline Checks
+
+**Files:**
+
+- `crates/ungearitems-plugin/src/components/emfmeter.rs` (lines ~51, ~69)
+- `crates/ungearitems-plugin/src/components/thermometer.rs` (lines ~42, ~59)
+
+Both files call `untypes_core::cli::is_authority(cli)` inside a system body to derive a local `is_authority: bool`, then
+use it to gate battery drain state writes. Apply the same replacement used for `sage.rs` / `repellentflask.rs` in
+SP-9.5.
+
+Add `authority: Option<Res<untypes_core::roles::AuthorityRole>>` to each system's parameter list and change the binding:
+
+```rust
+// Before (both files):
+cli: Res<untypes_core::cli::CliOptions>,
+// ...
+let is_authority = untypes_core::cli::is_authority(cli);
+
+// After:
+authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+// ...
+let is_authority = authority.is_some();
+```
+
+Remove the `cli: Res<untypes_core::cli::CliOptions>` parameter from each system once unused.
+
+---
+
+### 10.3 — `unplayer-plugin`: Setup Registration Gate
+
+**File:** `crates/unplayer-plugin/src/systems/setup.rs`, `app_setup_core` function (line ~25)
+
+The `PlayerAuthoritativeLogicSet` configure-set call uses a function-item reference:
+
+```rust
+app.configure_sets(
+    Update,
+    unplayer_core::authoritative::PlayerAuthoritativeLogicSet
+        .run_if(untypes_core::cli::is_authority)
+        .after(unplayer_core::PlayerInputSet),
+);
+```
+
+Replace:
+
+```rust
+app.configure_sets(
+    Update,
+    unplayer_core::authoritative::PlayerAuthoritativeLogicSet
+        .run_if(resource_exists::<untypes_core::roles::AuthorityRole>())
+        .after(unplayer_core::PlayerInputSet),
+);
+```
+
+No import change needed unless `untypes_core::cli` becomes unused after this edit — check all other import uses in the
+file.
+
+---
+
+### 10.4 — `unplayer-plugin`: Interaction System Inline Branch
+
+**File:** `crates/unplayer-plugin/src/systems/movement.rs`, `player_interaction_system` function (line ~102)
+
+The function uses `cli: Res<CliOptions>` to branch between two network message writers:
+
+```rust
+if cli.is_authority() {
+    ev_host_interact.write(HostInteractionOccurred { ... });
+} else {
+    ev_interaction_req.write(InteractionRequestMessage { ... });
+}
+```
+
+This is a two-path dispatch (host vs. client), not a simple gate. Replace with `authority: Option<Res<AuthorityRole>>`:
+
+```rust
+// Before:
+cli: Res<CliOptions>,
+
+// After:
+authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+
+// Condition:
+if authority.is_some() {
+    ev_host_interact.write(HostInteractionOccurred { ... });
+} else {
+    ev_interaction_req.write(InteractionRequestMessage { ... });
+}
+```
+
+Remove `use untypes_core::cli::CliOptions;` from the file once unused (verify against `player_movement_system` — that
+function was already cleaned in SP-9.2 and no longer needs `CliOptions`).
+
+---
+
+### 10.5 — `unplayer-plugin`: Waypoint System Inline Check
+
+**File:** `crates/unplayer-plugin/src/systems/waypoint.rs`, `waypoint_following_system` function (line ~238)
+
+The function uses `cli: Res<untypes_core::cli::CliOptions>` and `is_authority(cli)` to decide whether to speculatively
+fire `ExecuteInteractionEvent` on the client:
+
+```rust
+cli: Res<untypes_core::cli::CliOptions>,
+// ...
+let is_authority = is_authority(cli);
+// ...
+if !is_authority {
+    ev_interaction.write(ExecuteInteractionEvent { ... });
+}
+```
+
+Replace with:
+
+```rust
+authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+// ...
+let is_authority = authority.is_some();
+```
+
+Remove the `use untypes_core::cli::is_authority;` and the `Res<untypes_core::cli::CliOptions>` parameter once unused.
+
+---
+
+### 10.6 — `unplayer-plugin`: Mouse Interaction Inline Check
+
+**File:** `crates/unplayer-plugin/src/systems/input/mouse_interaction.rs`, `player_gear_usage_system` function (lines
+~25, ~50–55, ~67, ~83–88)
+
+The function calls `is_authority(cli)` once to derive a local `is_authority: bool`, used in multiple
+`if is_main || is_authority` guards that control whether the sound emitter fires:
+
+```rust
+cli: Res<CliOptions>,
+// ...
+let is_authority = is_authority(cli);
+```
+
+Replace:
+
+```rust
+authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+// ...
+let is_authority = authority.is_some();
+```
+
+Remove `use untypes_core::cli::{CliOptions, is_authority};` from the file imports once unused.
+
+---
+
+### 10.7 — `untruck-plugin`: Loadout UI and Truck Gear Registration
+
+**Files:**
+
+- `crates/untruck-plugin/src/loadoutui.rs`, `button_clicked` function (lines ~494, ~507, ~546)
+- `crates/untruck-plugin/src/truckgear.rs`, `app_setup` function (line ~10)
+
+**`loadoutui.rs`** — `button_clicked` already has `lobby_presence: Option<Res<LobbyPresenceRole>>` in its signature. The
+three `cli.is_authority()` calls gate whether to emit a `TruckLoadoutMessage` to the server. Add
+`authority: Option<Res<untypes_core::roles::AuthorityRole>>` and replace:
+
+```rust
+// Before (three call sites):
+if !cli.is_authority() {
+    ev_loadout.write(TruckLoadoutMessage { ... });
+}
+
+// After:
+if authority.is_none() {
+    ev_loadout.write(TruckLoadoutMessage { ... });
+}
+```
+
+Remove `cli: Res<CliOptions>` from `button_clicked`'s parameter list once unused. Verify that `CliOptions` is not used
+elsewhere in `loadoutui.rs`; if not, remove the `use untypes_core::cli::CliOptions;` import.
+
+**`truckgear.rs`** — `initialize_truck_gear` is registered with a function-item gate:
+
+```rust
+app.add_systems(
+    Update,
+    initialize_truck_gear.run_if(untypes_core::cli::is_authority),
+);
+```
+
+Replace:
+
+```rust
+app.add_systems(
+    Update,
+    initialize_truck_gear
+        .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+);
+```
+
+---
+
+### 10.8 — `uninteraction-plugin`: Interaction Event Handler Inline Check
+
+**File:** `crates/uninteraction-plugin/src/systems/mod.rs`, `interaction_event_handler` function (line ~62)
+
+The function converts `is_authority(cli)` into the `Authority` enum:
+
+```rust
+use untypes_core::cli::{CliOptions, is_authority};
+// ...
+cli: Res<CliOptions>,
+// ...
+let authority = if is_authority(cli) {
+    Authority::Host
+} else {
+    Authority::Client
+};
+```
+
+Replace:
+
+```rust
+authority_role: Option<Res<untypes_core::roles::AuthorityRole>>,
+
+// Rename to avoid shadowing:
+let authority = if authority_role.is_some() {
+    Authority::Host
+} else {
+    Authority::Client
+};
+```
+
+Remove `use untypes_core::cli::{CliOptions, is_authority};` from the file imports and `cli: Res<CliOptions>` from the
+parameter list once unused.
+
+---
+
+### 10.9 — `unsummary-plugin`: Reward Calculation Gates
+
+**File:** `crates/unsummary-plugin/src/plugin.rs`, both `Plugin::build` implementations (lines ~19 and ~33)
+
+`UnhaunterSummaryCorePlugin` runs `calculate_rewards_and_grades` only on the authority:
+
+```rust
+calculate_rewards_and_grades.run_if(untypes_core::cli::is_authority),
+```
+
+`UnhaunterSummaryPlugin` runs it on **non**-authority (clients reach `AppState::Summary`; the dedicated server does not
+show the summary screen):
+
+```rust
+calculate_rewards_and_grades.run_if(not(untypes_core::cli::is_authority)),
+```
+
+Replace both:
+
+```rust
+// First plugin:
+calculate_rewards_and_grades
+    .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+
+// Second plugin:
+calculate_rewards_and_grades
+    .run_if(not(resource_exists::<untypes_core::roles::AuthorityRole>())),
+```
+
+Verify that `untypes_core::cli` is not imported elsewhere in `plugin.rs` and remove the import once unused.
+
+---
+
+### 10.10 — Checkpoint
+
+- `cargo clippy` passes with zero new warnings.
+- Singleplayer: full mission loop works — item toggling, interactions, waypoint following, summary screen, and main menu
+  all function correctly.
+- `git grep 'is_headless'` in `crates/` returns **only** the permitted sites listed in SP-9.7.
+- `git grep 'NetMode'` in `crates/` returns **only** the permitted sites listed in SP-9.7.
+- `git grep 'is_authority'` in `crates/` returns **only**:
+  - `untypes_core/src/cli.rs` (the function definition lines 40–46)
+  - Any permitted boot-transport sites explicitly listed in 10.0 above (`unreplicon-plugin`, `unhub-plugin`)
+- `git grep 'CliOptions'` in `crates/` returns **only** the definition site and the permitted boot and config sites
+  (`unreplicon-plugin`, `unhub-plugin`, `unmapload-plugin`, `untmxmap-plugin`).
+
+---
+
 ## Deferred Work Tracker
 
-Items not in scope for this plan. Revisit after SP-1–SP-7 are merged:
+Items not in scope for this plan. Revisit after SP-1–SP-10 are merged:
 
 | Tag  | Source | Title                                        | Blocking?                          |
 | ---- | ------ | -------------------------------------------- | ---------------------------------- |
@@ -966,3 +1791,5 @@ The entire plan is **done** when:
 7. No `NetMode` branching inside gameplay system logic (only in SP-1's role insertion at boot).
 8. `LobbyData`, `bridge_lobby_info_system`, `sync_player_state_to_net`, and `RoomOwner` are fully deleted with no dead
    references.
+9. No `cli.is_authority()`, `is_authority(cli)`, or `run_if(is_authority)` call sites remain in game-logic systems (only
+   the definition in `untypes_core/src/cli.rs` and the boot-time insertion in SP-1 are permitted).

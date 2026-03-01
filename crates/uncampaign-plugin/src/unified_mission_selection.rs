@@ -188,7 +188,8 @@ fn handle_selection_input(
                 ev_load_level.write(LoadLevelEvent {
                     map_filepath: mission_data.map_filepath.clone(),
                 });
-                next_app_state.set(AppState::Loading);
+                // SP-5: exit to InGame is handled by SimulationState observer in unreplicon-plugin.
+                next_app_state.set(AppState::MissionLoading);
                 return;
             }
             _ => {}

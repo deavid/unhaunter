@@ -22,8 +22,9 @@ use ungearitems_core::components::sage::SageBundleData;
 use ungearitems_core::components::spiritbox::SpiritBox;
 use ungearitems_core::components::thermometer::Thermometer;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
+use untypes_core::roles::LocalPlayerRole;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSpectating, PlayerSprite, Stamina};
-use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
+use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive, SelectedMission};
 use unreplicon_core::messages::{
     FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, HostFloorGearDroppedEvent,
     HostFloorGearPickedUpEvent, HostInteractionOccurred, HostMovableMotionEvent,
@@ -70,6 +71,8 @@ pub(super) fn app_setup(app: &mut App) {
     );
     // Send existing floor gear to clients that connect mid-mission
     app.add_observer(send_floor_gear_to_new_client);
+    // Client: observe SelectedMission to enter MissionLoading
+    app.add_observer(on_selected_mission_added);
 
     // Register replicated components
     app.replicate::<NetworkPosition>();
@@ -83,13 +86,18 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<RepellentFlaskNet>();
     app.replicate::<PlayerGearKindNet>();
 
-    // Server-side: spawn/tag player entities when InGame starts
+    // Host/offline: spawn and tag player entities when InGame starts.
+    // SP-6.3: gated by LocalPlayerRole so dedicated servers (no local player) never run this.
     app.add_systems(
         OnEnter(AppState::InGame),
-        setup_mission_players.run_if(in_state(ServerState::Running)),
+        setup_mission_players.run_if(resource_exists::<LocalPlayerRole>),
     );
 
-    // Server-side: message handlers + host state sync
+    // Server-side: message handlers + net state sync.
+    // SP-6.4: sync_player_state_to_net removed; the host now goes through
+    // send_local_player_position (same path as join clients) scheduled below in Update.
+    // handle_player_move and send_local_player_position both run in Update so the
+    // host's move message is received in the same frame it was sent, before rendering.
     app.add_systems(
         Update,
         (
@@ -99,7 +107,6 @@ pub(super) fn app_setup(app: &mut App) {
             broadcast_movable_motion,
             broadcast_floor_gear_drop,
             broadcast_floor_gear_pickup,
-            sync_player_state_to_net,
             sync_held_object_to_net,
             sync_gear_to_net,
         )
@@ -114,12 +121,16 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(in_state(GameState::Truck)),
     );
 
-    // Client-side: send local position to server (Join clients only)
+    // All local players (offline, host, join): send own position to the authority every frame.
+    // SP-6.4: gated by LocalPlayerRole instead of not(ServerState::Running) so this runs for
+    // the listen-server host and offline players as well as pure join clients.
+    // Schedule: Update — same schedule as handle_player_move, ensuring the move message is
+    // consumed in the same frame it is produced, before rendering (R-01).
     app.add_systems(
         Update,
         send_local_player_position
             .run_if(in_state(AppState::InGame))
-            .run_if(not(in_state(ServerState::Running))),
+            .run_if(resource_exists::<LocalPlayerRole>),
     );
 
     // Client-side: apply replicated player state to local components
@@ -180,6 +191,7 @@ fn setup_mission_players(
     q_host_player: Query<(Entity, &Position, &PlayerSprite), Without<NetworkPosition>>,
     q_lobby: Query<&LobbyInfo>,
     q_spawn_points: Query<&Position, (With<PlayerSpawnPoint>, Without<PlayerSprite>)>,
+    q_network_id: Query<Option<&RepliconNetworkId>>,
     mut commands: Commands,
 ) {
     // Signal that replicon-based player spawning is now active.
@@ -199,7 +211,7 @@ fn setup_mission_players(
         let tint_color_index = q_lobby
             .iter()
             .flat_map(|l| l.players.iter())
-            .find(|p| p.client_id == 0)
+            .find(|p| p.current_socket.is_none())
             .map(|p| p.tint_color_index)
             .unwrap_or(0);
 
@@ -237,7 +249,7 @@ fn setup_mission_players(
     };
 
     for (idx, player) in lobby.players.iter().enumerate() {
-        if player.client_id == 0 {
+        if player.current_socket.is_none() {
             // Host handled above.
             continue;
         }
@@ -247,6 +259,11 @@ fn setup_mission_players(
             .get(idx % spawn_points.len().max(1))
             .copied()
             .unwrap_or(default_pos);
+
+        let client_id_u64 = player
+            .current_socket
+            .map(|s| client_network_id(s, &q_network_id))
+            .unwrap_or(0);
 
         let remote_entity = commands
             .spawn((
@@ -258,7 +275,7 @@ fn setup_mission_players(
                 },
                 PlayerStateNet::default(),
                 PlayerNetInfo {
-                    client_id: player.client_id,
+                    client_id: client_id_u64,
                     tint_color_index: player.tint_color_index,
                 },
                 FlashlightNet::default(),
@@ -272,8 +289,8 @@ fn setup_mission_players(
             .id();
 
         info!(
-            "setup_mission_players: spawned replicated entity {:?} for client {}",
-            remote_entity, player.client_id
+            "setup_mission_players: spawned replicated entity {:?} for client {:?}",
+            remote_entity, player.current_socket
         );
     }
 }
@@ -284,46 +301,6 @@ fn setup_mission_players(
 /// re-evaluate whether replicon-based spawning is needed.
 fn cleanup_mission_players(mut commands: Commands) {
     commands.remove_resource::<RepliconPlayerSpawningActive>();
-}
-
-/// Server: sync the host player's local `Position` and `PlayerSprite` into the
-/// replicated `NetworkPosition` and `PlayerStateNet` every frame.
-///
-/// This is the server-side equivalent of `send_local_player_position` for the
-/// listen-server host: since the host IS the server, position updates are made
-/// directly on the entity rather than going through a network message.
-fn sync_player_state_to_net(
-    mut q_host: Query<
-        (
-            &Position,
-            &PlayerSprite,
-            &Stamina,
-            Has<Hiding>,
-            Has<PlayerSpectating>,
-            &mut NetworkPosition,
-            &mut PlayerStateNet,
-        ),
-        With<MainPlayer>,
-    >,
-) {
-    for (pos, sprite, stamina, is_hiding, is_spectating, mut net_pos, mut state_net) in
-        q_host.iter_mut()
-    {
-        net_pos.x = pos.x;
-        net_pos.y = pos.y;
-        net_pos.z = pos.z;
-
-        state_net.is_hiding = is_hiding;
-        state_net.is_spectating = is_spectating;
-        state_net.is_running = stamina.running;
-        state_net.stamina = if stamina.max > 0.0 {
-            stamina.current / stamina.max
-        } else {
-            1.0
-        };
-        state_net.health = sprite.health;
-        state_net.sanity = sprite.sanity;
-    }
 }
 
 /// Server: handle `PlayerMoveMessage` from connected clients.
@@ -545,6 +522,17 @@ fn send_floor_gear_to_new_client(
                 direction: entry.direction,
             },
         });
+    }
+}
+
+/// Client: observe SelectedMission to enter MissionLoading
+fn on_selected_mission_added(
+    _trigger: On<Add, SelectedMission>,
+    local_player: Option<Res<LocalPlayerRole>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+) {
+    if local_player.is_some() {
+        next_app_state.set(AppState::MissionLoading);
     }
 }
 

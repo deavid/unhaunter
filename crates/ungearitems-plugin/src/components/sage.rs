@@ -20,7 +20,6 @@ use unsound_core::emitter::SoundEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
-use untypes_core::cli::CliOptions;
 
 pub(crate) fn update_sage(
     mut q_sage: Query<(
@@ -34,11 +33,11 @@ pub(crate) fn update_sage(
     )>,
     mut gs_audio: SoundEmitter,
     mut commands: Commands,
-    cli: Res<CliOptions>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
     asset_server: Res<AssetServer>,
     mut ev_particles: MessageWriter<ToClients<SpawnParticleNetEvent>>,
 ) {
-    let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+    let is_authority = authority.is_some();
 
     for (entity, mut sage, mut status, mut sprite, pos, _ep, triggered) in q_sage.iter_mut() {
         if is_authority && triggered.is_some() && !sage.is_active && !sage.consumed {

@@ -6,7 +6,7 @@ use unspatial_core::orientation::Orientation;
 use unspatial_core::position::Position;
 
 pub(crate) fn stairs_player(
-    cli: Res<untypes_core::cli::CliOptions>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
     mut players: Query<(
         &mut Position,
         &PlayerSprite,
@@ -14,7 +14,7 @@ pub(crate) fn stairs_player(
     )>,
     stairs: Query<(&Position, &Stairs, &Behavior), Without<PlayerSprite>>,
 ) {
-    let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+    let is_authority = authority.is_some();
     for (mut player_pos, _player_sprite, main_player) in players.iter_mut() {
         if !is_authority && main_player.is_none() {
             continue;

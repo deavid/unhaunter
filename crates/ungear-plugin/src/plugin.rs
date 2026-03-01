@@ -25,7 +25,9 @@ pub struct UnhaunterGearPlugin;
 
 impl Plugin for UnhaunterGearPlugin {
     fn build(&self, app: &mut App) {
-        app.add_loading_state(LoadingState::new(AppState::Loading).load_collection::<GearAssets>());
+        app.add_loading_state(
+            LoadingState::new(AppState::EngineBoot).load_collection::<GearAssets>(),
+        );
         systems::app_setup(app);
     }
 }
