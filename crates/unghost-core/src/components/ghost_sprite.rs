@@ -1,15 +1,18 @@
 use crate::types::evidence::Evidence;
 use crate::types::ghost::types::GhostType;
 use bevy::prelude::*;
-use rand::prelude::*;
-use std::fmt::Debug;
+use bevy::ecs::entity::{EntityMapper, MapEntities};
+use bevy::ecs::reflect::ReflectMapEntities;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use unfoundation_core::random_seed;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
-
+use rand::RngExt;
 /// Per-ghost randomized noise offsets for unique behavior patterns
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Reflect, Default, Serialize, Deserialize)]
+#[reflect(Default)]
 pub struct NoiseOffsets {
     // Evidence-specific offsets
     pub freezing_temp_x: f32,
@@ -79,7 +82,8 @@ impl NoiseOffsets {
     }
 }
 
-#[derive(Component, Debug, Clone, Copy, PartialEq)]
+#[derive(Component, Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, Default)]
+#[reflect(Component, Default)]
 pub struct GhostBehaviorDynamics {
     pub freezing_temp_clarity: f32,
     pub floating_orbs_clarity: f32,
@@ -144,7 +148,8 @@ impl GhostBehaviorDynamics {
 ///
 /// This component stores the ghost's type, spawn point, target location,
 /// interaction stats, current mood, hunting state, and other relevant attributes.
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component, MapEntities)]
 pub struct GhostSprite {
     /// The specific type of ghost, which determines its characteristics and abilities.
     pub class: GhostType,
@@ -187,8 +192,10 @@ pub struct GhostSprite {
     /// The ghost got hit by sage, and it will be calm for a while.
     pub calm_time_secs: f32,
     /// Timer to track the duration of the "Salty" side effect.
+    #[serde(skip, default = "default_timer")]
     pub salty_effect_timer: Timer,
     /// Timer to control the frequency of spawning Salty Traces.
+    #[serde(skip, default = "default_timer")]
     pub salty_trace_spawn_timer: Timer,
     /// Makes the ghost wait more for the next attack but it will be a harder attack.
     pub rage_limit_multiplier: f32,
@@ -256,5 +263,17 @@ impl GhostSprite {
 
     pub fn get_health(&self) -> f32 {
         1.0 - (self.repellent_hits as f32 / 1000.0)
+    }
+}
+
+fn default_timer() -> Timer {
+    Timer::from_seconds(1.0, TimerMode::Once)
+}
+
+impl MapEntities for GhostSprite {
+    fn map_entities<M: EntityMapper>(&mut self, mapper: &mut M) {
+        if let Some(ref mut id) = self.breach_id {
+            *id = mapper.get_mapped(*id);
+        }
     }
 }

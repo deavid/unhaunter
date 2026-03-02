@@ -800,27 +800,27 @@ pub(crate) fn setup_replicated_player_visuals(
     local_player: Res<LocalPlayer>,
     uuid_map: Res<ClientUuidMap>,
     q_new_players: Query<
-        (Entity, &PlayerNetInfo, &NetworkPosition),
-        (Added<PlayerNetInfo>, Without<PlayerSprite>),
+        (Entity, &Owner, &Position),
+        (Added<Owner>, Without<PlayerTag>),
     >,
 ) {
     for (entity, net_info, net_pos) in q_new_players.iter() {
-        let client_id = if net_info.client_id == 0 {
+        let client_id = if net_info.0 == 0 {
             ClientId::Server
         } else {
-            ClientId::Client(Entity::from_bits(net_info.client_id - 1))
+            ClientId::Client(Entity::from_bits(net_info.0 - 1))
         };
         let Some(player_uuid) = uuid_map.0.get(&client_id) else {
             error!(
                 "setup_replicated_player_visuals: No UUID found for client_id {}",
-                net_info.client_id
+                net_info.0
             );
             continue;
         };
 
         let is_local = local_player.0.map(|id| id == *player_uuid).unwrap_or(false);
 
-        let net_id = NetworkId(net_info.client_id);
+        let net_id = NetworkId(net_info.0);
         let spawn_pos = Position {
             x: net_pos.x,
             y: net_pos.y,
@@ -834,7 +834,7 @@ pub(crate) fn setup_replicated_player_visuals(
             &mut commands,
             &p.gear_registry,
             &p.difficulty,
-            net_info.client_id,
+            net_info.0,
         );
 
         // --- Visual setup ---
@@ -973,7 +973,7 @@ pub(crate) fn setup_replicated_player_visuals(
 
         info!(
             "setup_replicated_player_visuals: entity {:?} client_id={} is_local={}",
-            entity, net_info.client_id, is_local
+            entity, net_info.0, is_local
         );
     }
 }
@@ -994,7 +994,7 @@ pub(crate) fn sync_ghost_visuals(
 pub(crate) fn setup_replicated_ghost_visuals(
     mut p: ClassicModeSystemParam,
     mut commands: Commands,
-    q_new_ghosts: Query<(Entity, &NetworkPosition), (Added<GhostStateNet>, Without<GhostSprite>)>,
+    q_new_ghosts: Query<(Entity, &Position), (Added<GhostSprite>, Without<GhostTag>)>,
 ) {
     for (entity, net_pos) in q_new_ghosts.iter() {
         let ghost_spawn = Position {
