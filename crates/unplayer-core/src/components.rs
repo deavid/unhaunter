@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 use unfoundation_core::types::gear::Hand;
 use ungearitems_core::gear_details::GearDetails;
 use unreplicon_core::network_id::NetworkId;
+use unreplicon_core::resources::Uuid;
 use unsettings_core::controls::ControlKeys;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
-use unreplicon_core::resources::Uuid;
 
 #[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
 #[reflect(Component, Default)]
@@ -251,14 +251,9 @@ impl PlayerSprite {
 /// Marks a player entity that is currently hiding.
 #[derive(Component, Serialize, Deserialize, Reflect)]
 #[reflect(Component, Default)]
+#[derive(Default)]
 pub struct Hiding {
     pub hiding_spot: Option<Entity>,
-}
-
-impl Default for Hiding {
-    fn default() -> Self {
-        Self { hiding_spot: None }
-    }
 }
 
 impl bevy::ecs::entity::MapEntities for Hiding {

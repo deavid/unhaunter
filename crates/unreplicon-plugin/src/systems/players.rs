@@ -1,37 +1,36 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{
-    AppRuleExt, Channel, ClientId, ClientMessageAppExt, FromClient, Replicated,
-    SendMode, ServerMessageAppExt, ToClients,
+    AppRuleExt, Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode,
+    ServerMessageAppExt, ToClients,
 };
 use bevy_replicon::server::visibility::client_visibility::ClientVisibility;
+use bevy_replicon::shared::server_entity_map::ServerEntityMap;
 use unbehavior::components::FloorItemCollidable;
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use unfoundation_core::types::gear::Hand;
+use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite, Stamina};
-use unreplicon_core::ownership::{Owner, OwnerId, LocallyOwned};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive, SelectedMission};
 use unreplicon_core::messages::{
-    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, HostFloorGearDroppedEvent,
-    HostFloorGearPickedUpEvent, HostInteractionOccurred, HostMovableMotionEvent,
-    InteractionRequestMessage, MovableMotionBroadcast, PlayerMoveMessage,
-    RemoteInteractionBroadcast, TruckLoadoutAction, TruckLoadoutMessage,
-    ExportStateMessage, OwnershipGranted, RequestPickupGear, OwnershipReleased, ExportGearStateMessage
+    ExportGearStateMessage, ExportStateMessage, FloorGearDespawnBroadcast, FloorGearSpawnBroadcast,
+    HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent, HostInteractionOccurred,
+    HostMovableMotionEvent, InteractionRequestMessage, MovableMotionBroadcast, OwnershipGranted,
+    OwnershipReleased, RemoteInteractionBroadcast, RequestPickupGear, TruckLoadoutAction,
+    TruckLoadoutMessage,
 };
-use bevy_replicon::shared::server_entity_map::ServerEntityMap;
+use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
 use unspatial_core::position::Position;
 use untypes_core::roles::is_pure_client;
+use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::{AppState, GameState};
-use ungear_core::components::playergear::HeldObject;
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
     app.add_client_message::<ExportStateMessage>(Channel::Unreliable);
-    app.add_client_message::<PlayerMoveMessage>(Channel::Unreliable);
     app.add_client_message::<InteractionRequestMessage>(Channel::Ordered);
     app.add_client_message::<TruckLoadoutMessage>(Channel::Ordered);
     app.add_mapped_client_message::<RequestPickupGear>(Channel::Ordered);
@@ -74,7 +73,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            handle_player_move,
             handle_interaction_request,
             broadcast_host_interactions,
             broadcast_movable_motion,
@@ -105,10 +103,7 @@ pub(super) fn app_setup(app: &mut App) {
     // Client-side: apply replicated player state to local components
     app.add_systems(
         Update,
-        (
-            apply_remote_interaction,
-            handle_ownership_granted,
-        )
+        (apply_remote_interaction, handle_ownership_granted)
             .run_if(in_state(AppState::InGame))
             .run_if(is_pure_client),
     );
@@ -116,7 +111,6 @@ pub(super) fn app_setup(app: &mut App) {
     // Cleanup the spawning-active marker when leaving InGame
     app.add_systems(OnExit(AppState::InGame), cleanup_mission_players);
 }
-
 
 /// Helper: convert Replicon ClientId to OwnerId.
 fn to_owner_id(client_id: ClientId) -> OwnerId {
@@ -156,11 +150,9 @@ fn setup_mission_players(
 
     // Add network components to the existing host player entity.
     for (entity, _pos, _player_sprite) in q_host_player.iter() {
-        commands.entity(entity).insert((
-            Replicated,
-            Owner(OwnerId::Server),
-            LocallyOwned,
-        ));
+        commands
+            .entity(entity)
+            .insert((Replicated, Owner(OwnerId::Server), LocallyOwned));
 
         info!(
             "setup_mission_players: host player entity {:?} marked Replicated, LocallyOwned and Hidden",
@@ -198,10 +190,10 @@ fn setup_mission_players(
             ))
             .id();
 
-        if let OwnerId::Client(client_entity) = socket_owner_id {
-            if let Ok(mut visibility) = q_clients.get_mut(client_entity) {
-                visibility.set(remote_entity, filter_bit.0, false);
-            }
+        if let OwnerId::Client(client_entity) = socket_owner_id
+            && let Ok(mut visibility) = q_clients.get_mut(client_entity)
+        {
+            visibility.set(remote_entity, filter_bit.0, false);
         }
 
         info!(
@@ -224,40 +216,22 @@ fn cleanup_mission_players(mut commands: Commands) {
     commands.remove_resource::<RepliconPlayerSpawningActive>();
 }
 
-/// Server: handle `PlayerMoveMessage` from connected clients. (Legacy, still useful for now)
-fn handle_player_move(
-    mut reader: MessageReader<FromClient<PlayerMoveMessage>>,
-    mut q_players: Query<(&Owner, &mut Position, &mut Stamina, &mut PlayerSprite)>,
-) {
-    for msg in reader.read() {
-        for (owner, mut pos, mut stamina, mut sprite) in q_players.iter_mut() {
-            if from_owner_id(owner.0) != msg.client_id {
-                continue;
-            }
-
-            pos.x = msg.message.x;
-            pos.y = msg.message.y;
-            pos.z = msg.message.z;
-
-            stamina.running = msg.message.is_running;
-            stamina.current = msg.message.stamina * stamina.max;
-            sprite.health = msg.message.health;
-            sprite.sanity = msg.message.sanity;
-
-            break;
-        }
-    }
-}
-
 fn send_export_gear_state(
-    q_local_gear: Query<(Entity, Option<&ungearitems_core::components::flashlight::Flashlight>), With<LocallyOwned>>,
+    q_local_gear: Query<
+        (
+            Entity,
+            Option<&ungearitems_core::components::flashlight::Flashlight>,
+        ),
+        With<LocallyOwned>,
+    >,
     mut writer: MessageWriter<ExportGearStateMessage>,
 ) {
     for (entity, flashlight) in q_local_gear.iter() {
         if let Some(flashlight) = flashlight {
             writer.write(ExportGearStateMessage {
                 entity,
-                is_on: flashlight.status != ungearitems_core::components::flashlight::FlashlightStatus::Off,
+                is_on: flashlight.status
+                    != ungearitems_core::components::flashlight::FlashlightStatus::Off,
                 battery: 100.0, // TODO
                 temperature: flashlight.inner_temp,
             });
@@ -265,9 +239,16 @@ fn send_export_gear_state(
     }
 }
 
+/// Server: handle `ExportGearStateMessage` from connected clients.
 fn handle_export_gear_state(
     mut reader: MessageReader<FromClient<ExportGearStateMessage>>,
-    mut q_gear: Query<(&Owner, Option<&mut ungearitems_core::components::flashlight::Flashlight>)>,
+    mut q_gear: Query<
+        (
+            &Owner,
+            Option<&mut ungearitems_core::components::flashlight::Flashlight>,
+        ),
+        Without<LocallyOwned>,
+    >,
 ) {
     for msg in reader.read() {
         if let Ok((owner, flashlight)) = q_gear.get_mut(msg.message.entity) {
@@ -289,7 +270,16 @@ fn handle_export_gear_state(
 /// Server: handle `ExportStateMessage` from connected clients.
 fn handle_export_state(
     mut reader: MessageReader<FromClient<ExportStateMessage>>,
-    mut q_players: Query<(&Owner, &mut Position, &mut Stamina, &mut PlayerSprite, Option<&mut PlayerSpectating>)>,
+    mut q_players: Query<
+        (
+            &Owner,
+            &mut Position,
+            &mut Stamina,
+            &mut PlayerSprite,
+            Option<&mut PlayerSpectating>,
+        ),
+        Without<LocallyOwned>,
+    >,
     mut commands: Commands,
 ) {
     for msg in reader.read() {
@@ -308,10 +298,11 @@ fn handle_export_state(
             sprite.health = msg.message.health;
             sprite.sanity = msg.message.sanity;
 
-            if msg.message.is_spectating && spectating.is_none() {
-                if let OwnerId::Client(e) = owner.0 {
-                    commands.entity(e).insert(PlayerSpectating);
-                }
+            if msg.message.is_spectating
+                && spectating.is_none()
+                && let OwnerId::Client(e) = owner.0
+            {
+                commands.entity(e).insert(PlayerSpectating);
             }
 
             break;
@@ -404,26 +395,26 @@ fn handle_request_pickup_gear(
         let client_id = msg.client_id;
         let gear_entity = msg.message.entity;
 
-        if let Ok((entity, owner)) = q_gear.get(gear_entity) {
-            if owner.is_none() {
-                let owner_id = to_owner_id(client_id);
-                // Grant ownership
-                commands.entity(entity).insert(Owner(owner_id));
+        if let Ok((entity, owner)) = q_gear.get(gear_entity)
+            && owner.is_none()
+        {
+            let owner_id = to_owner_id(client_id);
+            // Grant ownership
+            commands.entity(entity).insert(Owner(owner_id));
 
-                // Pillar 5 Orphan step
-                // commands.entity(entity).remove::<Replicated>(); // REVERTED: Server must keep Replicated
+            // Pillar 5 Orphan step
+            // commands.entity(entity).remove::<Replicated>(); // REVERTED: Server must keep Replicated
 
-                if let OwnerId::Client(client_entity) = owner_id {
-                    if let Ok(mut visibility) = q_clients.get_mut(client_entity) {
-                        visibility.set(entity, filter_bit.0, false);
-                    }
-                }
-
-                commands.write_message(ToClients {
-                    mode: SendMode::Direct(client_id),
-                    message: OwnershipGranted { entity },
-                });
+            if let OwnerId::Client(client_entity) = owner_id
+                && let Ok(mut visibility) = q_clients.get_mut(client_entity)
+            {
+                visibility.set(entity, filter_bit.0, false);
             }
+
+            commands.write_message(ToClients {
+                mode: SendMode::Direct(client_id),
+                message: OwnershipGranted { entity },
+            });
         }
     }
 }
@@ -439,23 +430,22 @@ fn handle_ownership_released(
         let client_id = msg.client_id;
         let gear_entity = msg.message.entity;
 
-        if let Ok((entity, owner)) = q_gear.get(gear_entity) {
-            if from_owner_id(owner.0) == client_id {
-                commands.entity(entity).remove::<Owner>();
+        if let Ok((entity, owner)) = q_gear.get(gear_entity)
+            && from_owner_id(owner.0) == client_id
+        {
+            commands.entity(entity).remove::<Owner>();
 
-                // Pillar 5 Re-Adopt step (Server side)
-                commands.entity(entity).insert(Replicated);
+            // Pillar 5 Re-Adopt step (Server side)
+            commands.entity(entity).insert(Replicated);
 
-                if let ClientId::Client(client_entity) = client_id {
-                    if let Ok(mut visibility) = q_clients.get_mut(client_entity) {
-                        visibility.set(entity, filter_bit.0, true);
-                    }
-                }
+            if let ClientId::Client(client_entity) = client_id
+                && let Ok(mut visibility) = q_clients.get_mut(client_entity)
+            {
+                visibility.set(entity, filter_bit.0, true);
             }
         }
     }
 }
-
 
 fn on_selected_mission_added(
     _trigger: On<Add, SelectedMission>,
@@ -466,7 +456,6 @@ fn on_selected_mission_added(
         next_app_state.set(AppState::MissionLoading);
     }
 }
-
 
 fn handle_truck_loadout_message(
     mut reader: MessageReader<FromClient<TruckLoadoutMessage>>,

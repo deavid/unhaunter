@@ -1,11 +1,11 @@
 use bevy::prelude::*;
+use bevy_renet::RenetServer;
 use bevy_renet::netcode::NetcodeServerTransport;
-use bevy_renet::renet::ServerEvent;
-use bevy_renet::{RenetServer, RenetServerEvent};
-use bevy_replicon::prelude::ClientId;
-use unreplicon_core::ownership::OwnerId;
+use bevy_replicon::prelude::ConnectedClient;
+use bevy_replicon::shared::backend::connected_client::NetworkId;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use serde::{Deserialize, Serialize};
+use unreplicon_core::ownership::OwnerId;
 use unreplicon_core::resources::ClientUuidMap;
 use uuid::Uuid;
 
@@ -21,54 +21,41 @@ struct TicketClaims {
 }
 
 pub(super) fn app_setup(app: &mut App) {
-    // bevy_renet 4.0 fires connection events via `commands.trigger(RenetServerEvent(...))`.
-    // Use a Bevy observer to react to each connection individually.
+    // Observe Add<ConnectedClient> — fires after bevy_replicon_renet has already spawned the
+    // client entity with both ConnectedClient and NetworkId, so we can safely retrieve the
+    // renet ClientId and map it to a UUID.
     app.add_observer(validate_new_connection_observer);
 }
 
-/// Helper to convert renet ClientId to replicon ClientId.
-///
-/// In bevy_replicon 0.38, for the Renet backend, the ClientId variant is
-/// `Client(Entity)`. We must find the Entity associated with the renet ID.
-fn renet_to_replicon(
-    renet_id: renet::ClientId,
-    q_network_id: &Query<(
-        Entity,
-        &bevy_replicon::shared::backend::connected_client::NetworkId,
-    )>,
-) -> Option<ClientId> {
-    for (entity, net_id) in q_network_id.iter() {
-        if net_id.get() == renet_id {
-            return Some(ClientId::Client(entity));
-        }
-    }
-    None
-}
-
-/// Observes each newly connected client's `user_data`, extracts the JWT ticket,
-/// and disconnects any client whose ticket is missing, malformed, or invalid.
+/// Observes each newly connected client entity (after ConnectedClient + NetworkId are
+/// already present) to validate the JWT ticket and populate the UUID map.
 fn validate_new_connection_observer(
-    trigger: On<RenetServerEvent>,
+    trigger: On<Add, ConnectedClient>,
     mut server: ResMut<RenetServer>,
     transport: Option<Res<NetcodeServerTransport>>,
     room_auth: Res<RoomAuth>,
     procman: Option<Res<crate::systems::procman::ProcManChannel>>,
     mut uuid_map: ResMut<ClientUuidMap>,
-    q_network_id: Query<(
-        Entity,
-        &bevy_replicon::shared::backend::connected_client::NetworkId,
-    )>,
+    q_network_id: Query<&NetworkId>,
 ) {
-    let ServerEvent::ClientConnected { client_id } = &trigger.event().0 else {
-        return;
+    info!(
+        "validate_new_connection_observer: fired for entity {:?} (procman={}, room_assigned={})",
+        trigger.entity,
+        procman.is_some(),
+        room_auth.room_code.is_some(),
+    );
+    let entity = trigger.entity;
+    let client_id = match q_network_id.get(entity) {
+        Ok(net_id) => net_id.get(),
+        Err(_) => {
+            warn!(
+                "validate_new_connection_observer: no NetworkId on client entity {:?}",
+                entity
+            );
+            return;
+        }
     };
-    let client_id = *client_id;
-    let replicon_client_id =
-        renet_to_replicon(client_id, &q_network_id).unwrap_or(ClientId::Server);
-    let owner_id = match replicon_client_id {
-        ClientId::Server => OwnerId::Server,
-        ClientId::Client(e) => OwnerId::Client(e),
-    };
+    let owner_id = OwnerId::Client(entity);
 
     // No procman channel → hub-less direct-connect: no tickets exist, accept unconditionally.
     if procman.is_none() {

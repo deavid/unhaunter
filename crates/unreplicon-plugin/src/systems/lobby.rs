@@ -31,14 +31,25 @@ pub(super) fn app_setup(app: &mut App) {
     app.init_resource::<HostGone>();
     app.init_resource::<unreplicon_core::resources::RoomIdentification>();
 
-    // Observer: fires whenever a client entity gains ConnectedClient component.
-    app.add_observer(on_client_connected);
     // Observer: fires whenever a client entity loses ConnectedClient on disconnect.
     app.add_observer(on_client_disconnected);
 
     app.add_systems(
+        Update,
+        process_newly_connected_clients.run_if(resource_exists::<AuthorityRole>),
+    );
+
+    // Two hooks so the transition to Lobby is caught regardless of which state
+    // settles last.  On a dedicated server, ServerState::Running fires at startup
+    // (before maps load) and BootState::Ready fires once maps are ready — both
+    // can be the "later" one depending on timing.
+    app.add_systems(
         OnEnter(ServerState::Running),
         auto_start_headless_lobby.run_if(in_state(BootState::Ready)),
+    );
+    app.add_systems(
+        OnEnter(BootState::Ready),
+        auto_start_headless_lobby.run_if(in_state(ServerState::Running)),
     );
 
     // Server-side lobby lifecycle
@@ -95,6 +106,13 @@ fn auto_start_headless_lobby(
     authority: Option<Res<AuthorityRole>>,
     local_player: Option<Res<LocalPlayerRole>>,
 ) {
+    // Log the actual values so we can see which conditions are or aren't met.
+    info!(
+        "auto_start_headless_lobby: authority={} local_player={} procman={}",
+        authority.is_some(),
+        local_player.is_some(),
+        procman.is_some(),
+    );
     // Dedicated server (authority, NO local player) or hub-less direct-connect authority.
     if authority.is_some() && local_player.is_none() && procman.is_none() {
         info!("Hub-less dedicated mode: auto-transitioning to AppState::Lobby");
@@ -167,55 +185,68 @@ fn observe_simulation_ready_to_enter_game(
     }
 }
 
-/// Observer: triggered whenever `ConnectedClient` is added to an entity.
-fn on_client_connected(
-    trigger: On<Add, ConnectedClient>,
+/// System: triggered every frame on the server to handle clients that have connected
+/// but haven't been added to the lobby yet (e.g. waiting for authentication).
+fn process_newly_connected_clients(
+    q_clients: Query<Entity, With<ConnectedClient>>,
     mut q_lobby: Query<&mut LobbyInfo>,
     uuid_map: Res<ClientUuidMap>,
 ) {
-    let client_id = ClientId::Client(trigger.entity);
-    let Some(uuid) = client_uuid(client_id, &uuid_map) else {
-        warn!(
-            "on_client_connected: no UUID mapped for client {:?}; ignoring",
-            client_id
-        );
-        return;
-    };
-
+    let client_count = q_clients.iter().count();
     if q_lobby.is_empty() {
-        debug!(
-            "on_client_connected: client {:?} connected but no lobby entity exists; ignoring",
-            client_id
-        );
-        return; // Not in a lobby phase — ignore
+        // Log only when clients are present so we notice if the lobby entity never spawns.
+        if client_count > 0 {
+            warn!(
+                "process_newly_connected_clients: {} client(s) waiting but lobby entity not yet spawned!",
+                client_count
+            );
+        }
+        return;
     }
 
-    for mut lobby in q_lobby.iter_mut() {
-        let owner_id = to_owner_id(client_id);
-        // Check if player is already in the list (reconnect)
-        if let Some(player) = lobby.players.iter_mut().find(|p| p.player_uuid == uuid) {
-            player.current_socket = Some(owner_id);
-            player.connected = true;
-            info!("Player {} reconnected (socket={:?})", uuid, client_id);
-        } else {
-            // New player
-            let color_index = lobby.players.len() as u8;
-            lobby.players.push(LobbyPlayerInfo {
-                player_uuid: uuid,
-                current_socket: Some(owner_id),
-                tint_color_index: color_index,
-                connected: true,
-                nickname: None,
-            });
-            info!(
-                "Player {} joined lobby (socket={:?}, tint={})",
-                uuid, client_id, color_index
+    for entity in q_clients.iter() {
+        let client_id = ClientId::Client(entity);
+        let Some(uuid) = client_uuid(client_id, &uuid_map) else {
+            debug!(
+                "Still waiting for authentication/mapping: (socket={:?})",
+                client_id
             );
 
-            // If lobby has no leader, assign the first player.
-            if lobby.leader_uuid.is_none() {
-                lobby.leader_uuid = Some(uuid);
-                info!("Player {} assigned as lobby leader", uuid);
+            continue;
+        };
+
+        for mut lobby in q_lobby.iter_mut() {
+            let owner_id = to_owner_id(client_id);
+            // Check if player is already in the list
+            if let Some(player) = lobby.players.iter_mut().find(|p| p.player_uuid == uuid) {
+                if player.current_socket != Some(owner_id) || !player.connected {
+                    player.current_socket = Some(owner_id);
+                    player.connected = true;
+                    // Trigger replication by re-setting the field (even if same value,
+                    // though if we reached here something changed).
+                    lobby.set_changed();
+                    info!("Player {} reconnected (socket={:?})", uuid, client_id);
+                }
+            } else {
+                // New player
+                let color_index = lobby.players.len() as u8;
+                lobby.players.push(LobbyPlayerInfo {
+                    player_uuid: uuid,
+                    current_socket: Some(owner_id),
+                    tint_color_index: color_index,
+                    connected: true,
+                    nickname: None,
+                });
+                info!(
+                    "Player {} joined lobby (socket={:?}, tint={})",
+                    uuid, client_id, color_index
+                );
+
+                // If lobby has no leader, assign the first player.
+                if lobby.leader_uuid.is_none() {
+                    lobby.leader_uuid = Some(uuid);
+                    info!("Player {} assigned as lobby leader", uuid);
+                }
             }
         }
     }

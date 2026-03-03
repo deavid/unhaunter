@@ -8,6 +8,8 @@ pub struct UnhaunterEngineCorePlugin;
 
 impl Plugin for UnhaunterEngineCorePlugin {
     fn build(&self, app: &mut App) {
+        app.add_systems(Startup, systems::insert_roles_at_startup);
+        app.add_systems(Update, systems::set_boot_ready_when_maps_loaded);
         let is_headless = app
             .world()
             .get_resource::<untypes_core::cli::CliOptions>()

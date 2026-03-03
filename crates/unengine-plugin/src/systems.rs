@@ -87,7 +87,7 @@ pub fn keyboard_state_transitions(
     }
 }
 
-fn set_boot_ready_when_maps_loaded(
+pub(crate) fn set_boot_ready_when_maps_loaded(
     maps: Option<Res<Maps>>,
     boot_state: Res<State<BootState>>,
     mut next_boot: ResMut<NextState<BootState>>,
@@ -101,7 +101,7 @@ fn set_boot_ready_when_maps_loaded(
     }
 }
 
-fn insert_roles_at_startup(cli: Res<CliOptions>, mut commands: Commands) {
+pub(crate) fn insert_roles_at_startup(cli: Res<CliOptions>, mut commands: Commands) {
     if cli.dedicated {
         // Dedicated server
         commands.insert_resource(AuthorityRole);
@@ -130,16 +130,11 @@ fn insert_roles_at_startup(cli: Res<CliOptions>, mut commands: Commands) {
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Startup, insert_roles_at_startup);
     app.add_systems(OnEnter(AppState::MainMenu), setup_menu_camera);
     app.add_systems(OnExit(AppState::MainMenu), cleanup_menu);
     app.add_systems(OnExit(AppState::InGame), cleanup_game);
     app.add_systems(
         Update,
-        (
-            keyboard_state_transitions,
-            simulation_state_transitions,
-            set_boot_ready_when_maps_loaded,
-        ),
+        (keyboard_state_transitions, simulation_state_transitions),
     );
 }

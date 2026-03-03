@@ -18,11 +18,11 @@ fn log_asset_events<T: Asset>(
     for event in events.read() {
         match event {
             AssetEvent::Added { id } => {
-                let path = asset_server
+                let _path = asset_server
                     .get_path(*id)
                     .map(|p| p.to_string())
                     .unwrap_or_else(|| "<generated>".to_string());
-                trace!("asset loaded: type={type_name} path={path} id={id:?}");
+                // trace!("asset loaded: type={type_name} path={path} id={id:?}");
             }
             AssetEvent::Removed { id } => {
                 let path = asset_server

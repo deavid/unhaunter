@@ -610,13 +610,19 @@ pub(crate) fn spawn_joined_player(
         // Pillar 5: Initial gear must be replicated.
         if p.authority_role.is_some() {
             if let Some(e) = player_gear.left_hand {
-                commands.entity(e).insert(bevy_replicon::prelude::Replicated);
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
             }
             if let Some(e) = player_gear.right_hand {
-                commands.entity(e).insert(bevy_replicon::prelude::Replicated);
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
             }
             for &e in &player_gear.inventory {
-                commands.entity(e).insert(bevy_replicon::prelude::Replicated);
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
             }
         }
 
@@ -812,10 +818,7 @@ pub(crate) fn setup_replicated_player_visuals(
     mut commands: Commands,
     local_player: Res<LocalPlayer>,
     uuid_map: Res<ClientUuidMap>,
-    q_new_players: Query<
-        (Entity, &Owner, &Position),
-        (Added<Owner>, Without<PlayerSprite>),
-    >,
+    q_new_players: Query<(Entity, &Owner, &Position), (Added<Owner>, Without<PlayerSprite>)>,
 ) {
     for (entity, owner, pos) in q_new_players.iter() {
         let owner_id = owner.0;
@@ -836,23 +839,25 @@ pub(crate) fn setup_replicated_player_visuals(
         let spawn_pos = *pos;
 
         // Both local and remote players get a full gear kit spawned.
-        let player_gear = spawn_initial_gear(
-            &mut commands,
-            &p.gear_registry,
-            &p.difficulty,
-            net_id.0,
-        );
+        let player_gear =
+            spawn_initial_gear(&mut commands, &p.gear_registry, &p.difficulty, net_id.0);
 
         // Pillar 5: Initial gear must be replicated.
         if p.authority_role.is_some() {
             if let Some(e) = player_gear.left_hand {
-                commands.entity(e).insert(bevy_replicon::prelude::Replicated);
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
             }
             if let Some(e) = player_gear.right_hand {
-                commands.entity(e).insert(bevy_replicon::prelude::Replicated);
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
             }
             for &e in &player_gear.inventory {
-                commands.entity(e).insert(bevy_replicon::prelude::Replicated);
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
             }
         }
 
