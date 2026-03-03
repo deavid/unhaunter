@@ -15,8 +15,8 @@ use unprofile_core::profile::PlayerProfileData;
 use unreplicon_core::components::{LobbyInfo, SelectedMission};
 use unreplicon_core::messages::RequestStartMission;
 use unreplicon_core::resources::{CurrentMapSeed, LocalPlayer};
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::difficulty::Difficulty;
+use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::{AppState, LobbyScreen};
 use unui_core::assets::UiAssets;
 
@@ -486,7 +486,7 @@ pub(crate) fn update_display(
                 let name = if is_local {
                     "You".to_string()
                 } else if idx == 0 {
-                    "Host".to_string()
+                    "Leader".to_string()
                 } else {
                     format!("Player {}", &player.player_uuid.to_string()[..8])
                 };
@@ -527,7 +527,7 @@ pub(crate) fn update_display(
             for (player_idx, player) in players.iter().enumerate() {
                 let is_local = local_player.0 == Some(player.player_uuid);
                 let prefix = if is_local { "\u{25BA} " } else { "" }; // ►
-                let host_suffix = if player_idx == 0 { " (Host)" } else { "" };
+                let leader_suffix = if player_idx == 0 { " (Leader)" } else { "" };
 
                 p.spawn(Node {
                     flex_direction: FlexDirection::Row,
@@ -558,7 +558,7 @@ pub(crate) fn update_display(
                         format!("Player {}", &player.player_uuid.to_string()[..8])
                     });
                     row.spawn((
-                        Text::new(format!("{}{}{}", prefix, name, host_suffix)),
+                        Text::new(format!("{}{}{}", prefix, name, leader_suffix)),
                         TextFont {
                             font: ui_assets.font_titillium_regular.clone(),
                             font_size: 20.0 * FONT_SCALE,

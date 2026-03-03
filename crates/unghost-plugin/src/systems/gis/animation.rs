@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::ServerState;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::messages::MovableMotionBroadcast;
 use unspatial_core::boardposition::BoardPosition;
@@ -18,7 +17,7 @@ pub(crate) fn app_setup(app: &mut App) {
     );
     app.add_systems(
         bevy::prelude::Update,
-        apply_remote_movable_motion.run_if(not(in_state(ServerState::Running))),
+        apply_remote_movable_motion.run_if(untypes_core::roles::is_pure_client),
     );
 }
 

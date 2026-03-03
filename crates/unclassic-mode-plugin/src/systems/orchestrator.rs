@@ -36,9 +36,9 @@ use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::quadcc::QuadCC;
 use unreplicon_core::components::LobbyInfo;
-use unreplicon_core::net_components::{GhostStateNet, NetworkPosition, PlayerNetInfo};
 use unreplicon_core::network_id::NetworkId;
-use unreplicon_core::resources::{ClientId, ClientUuidMap, LocalPlayer, Uuid};
+use unreplicon_core::ownership::Owner;
+use unreplicon_core::resources::{ClientUuidMap, LocalPlayer, Uuid};
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::direction::Direction;
@@ -607,6 +607,25 @@ pub(crate) fn spawn_joined_player(
             network_id_val,
         );
 
+        // Pillar 5: Initial gear must be replicated.
+        if p.authority_role.is_some() {
+            if let Some(e) = player_gear.left_hand {
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
+            }
+            if let Some(e) = player_gear.right_hand {
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
+            }
+            for &e in &player_gear.inventory {
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
+            }
+        }
+
         // --- Visual setup ---
         let mut player_image = p
             .player_assets
@@ -799,43 +818,48 @@ pub(crate) fn setup_replicated_player_visuals(
     mut commands: Commands,
     local_player: Res<LocalPlayer>,
     uuid_map: Res<ClientUuidMap>,
-    q_new_players: Query<
-        (Entity, &PlayerNetInfo, &NetworkPosition),
-        (Added<PlayerNetInfo>, Without<PlayerSprite>),
-    >,
+    q_new_players: Query<(Entity, &Owner, &Position), (Added<Owner>, Without<PlayerSprite>)>,
 ) {
-    for (entity, net_info, net_pos) in q_new_players.iter() {
-        let client_id = if net_info.client_id == 0 {
-            ClientId::Server
-        } else {
-            ClientId::Client(Entity::from_bits(net_info.client_id - 1))
-        };
-        let Some(player_uuid) = uuid_map.0.get(&client_id) else {
+    for (entity, owner, pos) in q_new_players.iter() {
+        let owner_id = owner.0;
+        let Some(player_uuid) = uuid_map.0.get(&owner_id) else {
             error!(
-                "setup_replicated_player_visuals: No UUID found for client_id {}",
-                net_info.client_id
+                "setup_replicated_player_visuals: No UUID found for owner_id {:?}",
+                owner_id
             );
             continue;
         };
 
         let is_local = local_player.0.map(|id| id == *player_uuid).unwrap_or(false);
 
-        let net_id = NetworkId(net_info.client_id);
-        let spawn_pos = Position {
-            x: net_pos.x,
-            y: net_pos.y,
-            z: net_pos.z,
-            visual_priority: 0.0,
+        let net_id = match owner_id {
+            unreplicon_core::ownership::OwnerId::Server => NetworkId(0),
+            unreplicon_core::ownership::OwnerId::Client(e) => NetworkId(e.to_bits()),
         };
+        let spawn_pos = *pos;
 
-        // Both local and remote players get a full gear kit spawned; active gear
-        // state is then kept in sync via the *Net components.
-        let player_gear = spawn_initial_gear(
-            &mut commands,
-            &p.gear_registry,
-            &p.difficulty,
-            net_info.client_id,
-        );
+        // Both local and remote players get a full gear kit spawned.
+        let player_gear =
+            spawn_initial_gear(&mut commands, &p.gear_registry, &p.difficulty, net_id.0);
+
+        // Pillar 5: Initial gear must be replicated.
+        if p.authority_role.is_some() {
+            if let Some(e) = player_gear.left_hand {
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
+            }
+            if let Some(e) = player_gear.right_hand {
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
+            }
+            for &e in &player_gear.inventory {
+                commands
+                    .entity(e)
+                    .insert(bevy_replicon::prelude::Replicated);
+            }
+        }
 
         // --- Visual setup ---
         let mut player_image = p
@@ -972,8 +996,8 @@ pub(crate) fn setup_replicated_player_visuals(
         p.board_entity_field.0[spawn_pos.to_board_position().ndidx()].push(player_ent_id);
 
         info!(
-            "setup_replicated_player_visuals: entity {:?} client_id={} is_local={}",
-            entity, net_info.client_id, is_local
+            "setup_replicated_player_visuals: entity {:?} owner_id={:?} is_local={}",
+            entity, owner_id, is_local
         );
     }
 }
@@ -989,20 +1013,20 @@ pub(crate) fn sync_ghost_visuals(
 }
 
 /// Sets up local visual and physics components on a ghost entity that arrived via replication
-/// (i.e. on Join clients). Triggered by `Added<GhostStateNet>` without a `GhostSprite`, which
+/// (i.e. on Join clients). Triggered by `Added<GhostSprite>` without visuals, which
 /// means the server has just replicated the ghost entity to us.
 pub(crate) fn setup_replicated_ghost_visuals(
     mut p: ClassicModeSystemParam,
     mut commands: Commands,
-    q_new_ghosts: Query<(Entity, &NetworkPosition), (Added<GhostStateNet>, Without<GhostSprite>)>,
+    q_new_ghosts: Query<(Entity, &Position, &GhostSprite), Added<GhostSprite>>,
 ) {
-    for (entity, net_pos) in q_new_ghosts.iter() {
-        let ghost_spawn = Position {
-            x: net_pos.x,
-            y: net_pos.y,
-            z: net_pos.z,
-            visual_priority: 0.0,
-        };
+    for (entity, pos, _ghost) in q_new_ghosts.iter() {
+        // If we already have a GameSprite, we've likely already set up visuals.
+        if p.board_topology.map_size.0 == 0 {
+            // Map not yet loaded.
+        }
+
+        let ghost_spawn = *pos;
 
         let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set.as_vec();
         let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);

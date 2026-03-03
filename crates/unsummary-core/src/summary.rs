@@ -1,9 +1,11 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
 use unghost_core::types::ghost::types::GhostType;
 
-#[derive(Debug, Clone, Resource, Default)]
+#[derive(Debug, Clone, Resource, Component, Default, Serialize, Deserialize, Reflect, PartialEq)]
+#[reflect(Component, Resource, Default, PartialEq)]
 pub struct SummaryData {
     pub time_taken_secs: f32,
     pub ghost_types: Vec<GhostType>,

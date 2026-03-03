@@ -55,7 +55,7 @@ impl GearKind {
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Reflect)]
 pub struct PlayerGearKind {
     pub left_hand: GearKind,
     pub right_hand: GearKind,

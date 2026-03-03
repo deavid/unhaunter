@@ -18,3 +18,4 @@ ungearitems-core = { path = "../ungearitems-core" }
 unreplicon-core = { workspace = true }
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
+serde = { workspace = true }

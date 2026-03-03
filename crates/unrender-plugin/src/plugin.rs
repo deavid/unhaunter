@@ -10,6 +10,7 @@ use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
 use unmetrics_core::metrics::SendMetric;
+use unspatial_core::lerp_position::LerpPosition;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 
@@ -33,14 +34,24 @@ pub const APPLY_PERSPECTIVE: DiagnosticPath =
 /// * `q` - A query for entities with `Position` and `Transform` components that have changed.
 pub fn apply_perspective(
     mut q: Query<
-        (&Position, &mut Transform, Option<&SpriteLayer>),
-        Or<(Changed<Position>, Changed<SpriteLayer>)>,
+        (
+            &Position,
+            Option<&LerpPosition>,
+            &mut Transform,
+            Option<&SpriteLayer>,
+        ),
+        Or<(
+            Changed<Position>,
+            Changed<LerpPosition>,
+            Changed<SpriteLayer>,
+        )>,
     >,
 ) {
     let measure = APPLY_PERSPECTIVE.time_measure();
 
-    for (pos, mut transform, layer) in q.iter_mut() {
-        let mut translation = perspective::to_screen_coord(*pos);
+    for (pos, lerp, mut transform, layer) in q.iter_mut() {
+        let effective_pos = if let Some(l) = lerp { &l.current } else { pos };
+        let mut translation = perspective::to_screen_coord(*effective_pos);
         if let Some(layer) = layer {
             translation.z += layer.0;
         }
@@ -59,6 +70,7 @@ impl Plugin for UnhaunterRenderCorePlugin {
         let headless = cli.map(|c| c.dedicated).unwrap_or(false);
 
         crate::systems::board_sync::app_setup(app);
+        crate::systems::lerp::app_setup(app);
         crate::systems::hydration::app_setup(app);
         metrics::register_all(app);
 

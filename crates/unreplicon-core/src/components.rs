@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::ClientId;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -28,7 +27,7 @@ pub struct LobbyPlayerInfo {
     pub player_uuid: Uuid,
     /// The current active transport socket, or None if disconnected.
     #[serde(skip)]
-    pub current_socket: Option<ClientId>,
+    pub current_socket: Option<crate::ownership::OwnerId>,
     /// Index into the player-tint colour palette.
     pub tint_color_index: u8,
     /// `true` while the player's transport is still connected.
@@ -90,8 +89,8 @@ pub struct RepliconGhostSpawningActive;
 
 /// Marker component placed on the singleton "mission goal" entity.
 ///
-/// This entity carries replicated journal components (`EvidenceFoundNet`,
-/// `MissionResultNet`) so clients can receive them from the server without the
+/// This entity carries replicated journal components (`GhostGuess`,
+/// `SummaryData`) so clients can receive them from the server without the
 /// need for a per-ghost or per-player lookup.
 #[derive(Component, Debug, Default)]
 pub struct MissionGoalEntity;

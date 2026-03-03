@@ -22,11 +22,14 @@ const UNHAUNTER_CRATES: &[&str] = &[
     "ungearitems_plugin",
     "unghost_core",
     "unghost_plugin",
+    "unhub_client",
+    "unhub_plugin",
     "uninteraction_core",
     "uninteraction_plugin",
     "uninvestigation_shared",
     "unlight_core",
     "unlight_plugin",
+    "unlobby_plugin",
     "unmainmenu_plugin",
     "unmanual_core",
     "unmanual_plugin",
@@ -51,6 +54,8 @@ const UNHAUNTER_CRATES: &[&str] = &[
     "unrender_core",
     "unrender_plugin",
     "unrender_std",
+    "unreplicon_core",
+    "unreplicon_plugin",
     "unroot_plugin",
     "unsettings_core",
     "unsettings_plugin",
@@ -74,6 +79,16 @@ const UNHAUNTER_CRATES: &[&str] = &[
     "unwalkie_types",
 ];
 
+/// Third-party networking crates that are worth watching when debugging multiplayer.
+/// Capped at `debug` because their `trace` output is extremely high-volume.
+const NETWORKING_CRATES: &[&str] = &[
+    "bevy_replicon",
+    "bevy_replicon_renet",
+    "bevy_renet",
+    "renet",
+    "renet_netcode",
+];
+
 pub fn build_log_filter(verbose: u8) -> String {
     let level = match verbose {
         0 => "warn",
@@ -81,9 +96,18 @@ pub fn build_log_filter(verbose: u8) -> String {
         2 => "debug",
         _ => "trace",
     };
+    // Networking crates are capped at debug — their trace output is extremely noisy.
+    let net_level = match verbose {
+        0 => "warn",
+        1 => "info",
+        _ => "debug",
+    };
     let mut filter = "warn,wgpu_hal=error".to_string();
     for c in UNHAUNTER_CRATES {
         filter.push_str(&format!(",{}={}", c, level));
+    }
+    for c in NETWORKING_CRATES {
+        filter.push_str(&format!(",{}={}", c, net_level));
     }
     filter
 }

@@ -3,12 +3,13 @@
 //! Holds the currently active difficulty settings.
 
 use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
-use bevy::prelude::Resource;
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use untypes_core::difficulty::Difficulty;
 
 /// Resource that holds the current difficulty settings
-#[derive(Debug, Clone, Serialize, Deserialize, Resource, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Resource, PartialEq, Default, Reflect)]
+#[reflect(Resource, Default, PartialEq)]
 pub struct CurrentDifficulty(pub DifficultyStruct);
 
 impl CurrentDifficulty {

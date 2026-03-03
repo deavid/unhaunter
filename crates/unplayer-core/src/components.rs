@@ -1,26 +1,40 @@
+use bevy::ecs::entity::{EntityMapper, MapEntities};
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 use unfoundation_core::types::gear::Hand;
 use ungearitems_core::gear_details::GearDetails;
 use unreplicon_core::network_id::NetworkId;
+use unreplicon_core::resources::Uuid;
 use unsettings_core::controls::ControlKeys;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
-use unreplicon_core::resources::Uuid;
 
-#[derive(Component, Debug, Clone, Default)]
+#[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
+#[reflect(Component, Default)]
 pub struct MainPlayer;
 
+impl MapEntities for MainPlayer {
+    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
+}
+
 /// Component added to players who have disconnected but whose entity is being retained.
-#[derive(Component, Debug, Clone, Default)]
+#[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
+#[reflect(Component, Default)]
 pub struct PlayerDisconnected;
 
 /// Marks a player entity that is connected but unresponsive (no heartbeat for >5s).
-#[derive(Component, Debug, Clone, Default)]
+#[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
+#[reflect(Component, Default)]
 pub struct PlayerInactive;
 
 /// Component added to players who are spectating (dead or finished).
-#[derive(Component, Debug, Clone, Default)]
+#[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
+#[reflect(Component, Default)]
 pub struct PlayerSpectating;
+
+impl MapEntities for PlayerSpectating {
+    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
+}
 
 /// Component that acts as a virtual joystick for player movement.
 /// All input systems write to this component, and the movement system reads from it.
@@ -171,7 +185,8 @@ impl InventoryStats {
 ///
 /// This component stores the player's attributes, sanity level,
 /// health, and mean sound exposure.
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
 pub struct PlayerSprite {
     /// The unique identifier for the player (persistent UUID).
     pub id: Uuid,
@@ -190,6 +205,25 @@ pub struct PlayerSprite {
     pub spawn_position: Position,
     /// The player's movement direction based on WASD controls.
     pub movement: Direction,
+}
+
+impl MapEntities for PlayerSprite {
+    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
+}
+
+impl Default for PlayerSprite {
+    fn default() -> Self {
+        Self {
+            id: Uuid::nil(),
+            network_id: NetworkId(0),
+            crazyness: 0.0,
+            sanity: 100.0,
+            mean_sound: 0.0,
+            health: 100.0,
+            spawn_position: Position::default(),
+            movement: Direction::zero(),
+        }
+    }
 }
 
 /// The keyboard control scheme for the player (WASD, IJKL, etc.).
@@ -215,13 +249,24 @@ impl PlayerSprite {
 }
 
 /// Marks a player entity that is currently hiding.
-#[derive(Component)]
+#[derive(Component, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
+#[derive(Default)]
 pub struct Hiding {
     pub hiding_spot: Option<Entity>,
 }
 
+impl bevy::ecs::entity::MapEntities for Hiding {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        if let Some(ref mut h) = self.hiding_spot {
+            *h = mapper.get_mapped(*h);
+        }
+    }
+}
+
 /// Component for managing player stamina and running ability
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
 pub struct Stamina {
     /// Current stamina level
     pub current: f32,
@@ -237,6 +282,10 @@ pub struct Stamina {
     pub recovery_rate: f32,
     /// Minimum stamina required to start running
     pub min_to_run: f32,
+}
+
+impl MapEntities for Stamina {
+    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
 }
 
 impl Default for Stamina {

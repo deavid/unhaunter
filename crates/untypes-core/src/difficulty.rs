@@ -2,6 +2,7 @@
 //!
 //! This module contains just the enum and basic utility methods.
 
+use bevy::prelude::Reflect;
 use enum_iterator::{Sequence, all};
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};
@@ -20,6 +21,7 @@ use strum::{Display, EnumString};
     Default,
     Display,
     EnumString,
+    Reflect,
 )]
 #[strum(serialize_all = "kebab-case")]
 pub enum Difficulty {

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Represents the visual state of a tab in the truck UI.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 pub enum TabState {
     /// The tab is currently selected and active.
     Selected,
@@ -18,7 +18,7 @@ pub enum TabState {
 }
 
 /// Represents the different content sections within the truck UI.
-#[derive(Debug, Clone, Component, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Component, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 pub enum TabContents {
     /// The loadout tab for managing player gear.
     Loadout,

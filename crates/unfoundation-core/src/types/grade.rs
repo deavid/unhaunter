@@ -1,9 +1,10 @@
+use bevy::prelude::Reflect;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt;
 
 /// Represents mission performance grades, ordered from highest (A) to lowest (N/A)
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub enum Grade {
     /// Excellent performance
     A,

@@ -4,7 +4,7 @@
 //! The implementation is in the undifficulty-core crate to avoid circular dependencies.
 
 use crate::manual_types::ManualChapterIndex;
-use bevy::prelude::Resource;
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use unfoundation_core::types::truck::TabContents;
 use ungear_core::types::gear::kind::{GearKind, PlayerGearKind};
@@ -61,7 +61,8 @@ pub trait DifficultySettings {
 }
 
 /// A struct that holds all difficulty settings
-#[derive(Debug, Clone, Serialize, Deserialize, Resource, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Resource, PartialEq, Reflect)]
+#[reflect(Resource, Default, PartialEq)]
 pub struct DifficultyStruct {
     pub ghost_speed: f32,
     pub ghost_rage_likelihood: f32,

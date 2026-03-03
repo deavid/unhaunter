@@ -41,11 +41,115 @@ pub struct RequestStartMission {
 // Phase 3: Players, Movement, and Interactions
 // ---------------------------------------------------------------------------
 
+/// Message sent by a client to report its owned entity state.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect, Default)]
+#[reflect(Default)]
+pub struct ExportStateMessage {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub is_running: bool,
+    pub frame: u16,
+    pub is_hiding: bool,
+    pub stamina: f32,
+    pub health: f32,
+    pub sanity: f32,
+    pub is_spectating: bool,
+}
+
+/// Message sent by the server to grant ownership of an entity to a client.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
+#[reflect(Default)]
+pub struct OwnershipGranted {
+    pub entity: Entity,
+}
+
+impl Default for OwnershipGranted {
+    fn default() -> Self {
+        Self {
+            entity: Entity::PLACEHOLDER,
+        }
+    }
+}
+
+impl bevy::ecs::entity::MapEntities for OwnershipGranted {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        self.entity = mapper.get_mapped(self.entity);
+    }
+}
+
+/// Message sent by a client to request picking up a gear entity.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
+#[reflect(Default)]
+pub struct RequestPickupGear {
+    pub entity: Entity,
+}
+
+impl Default for RequestPickupGear {
+    fn default() -> Self {
+        Self {
+            entity: Entity::PLACEHOLDER,
+        }
+    }
+}
+
+impl bevy::ecs::entity::MapEntities for RequestPickupGear {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        self.entity = mapper.get_mapped(self.entity);
+    }
+}
+
+/// Message sent by the client to the server to report its owned gear state.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
+#[reflect(Default)]
+pub struct ExportGearStateMessage {
+    pub entity: Entity,
+    pub is_on: bool,
+    pub battery: f32,
+    pub temperature: f32,
+}
+
+impl Default for ExportGearStateMessage {
+    fn default() -> Self {
+        Self {
+            entity: Entity::PLACEHOLDER,
+            is_on: false,
+            battery: 100.0,
+            temperature: 20.0,
+        }
+    }
+}
+
+impl bevy::ecs::entity::MapEntities for ExportGearStateMessage {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        self.entity = mapper.get_mapped(self.entity);
+    }
+}
+
+/// Message sent by the client to the server to release ownership.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
+#[reflect(Default)]
+pub struct OwnershipReleased {
+    pub entity: Entity,
+}
+
+impl Default for OwnershipReleased {
+    fn default() -> Self {
+        Self {
+            entity: Entity::PLACEHOLDER,
+        }
+    }
+}
+
+impl bevy::ecs::entity::MapEntities for OwnershipReleased {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        self.entity = mapper.get_mapped(self.entity);
+    }
+}
+
 /// Sent each frame by a non-host client to report its current position and state.
 ///
-/// Sent over `Channel::Unreliable` (best-effort, unordered). The server validates
-/// and writes to `NetworkPosition` + `PlayerStateNet`, after which replicon
-/// propagates the update to all other connected clients.
+/// Sent over `Channel::Unreliable` (best-effort, unordered).
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct PlayerMoveMessage {
     pub x: f32,
@@ -233,7 +337,7 @@ pub struct SpawnParticleNetEvent {
 /// Sent by a client to toggle evidence in the shared journal.
 ///
 /// The server validates this, updates `GhostGuess`, and the change propagates
-/// to all clients via `EvidenceFoundNet` replication.
+/// to all clients via replication.
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct RequestJournalEvidenceToggle {
     pub evidence: Evidence,

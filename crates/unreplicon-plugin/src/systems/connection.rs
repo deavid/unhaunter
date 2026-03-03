@@ -21,6 +21,8 @@ const MAX_CLIENTS: usize = 4;
 
 pub(super) fn app_setup(app: &mut App) {
     app.add_systems(Startup, startup_transport_system);
+    app.add_systems(Update, monitor_renet_client_status);
+    app.add_systems(Update, monitor_renet_server_clients);
 }
 
 fn startup_transport_system(
@@ -28,6 +30,10 @@ fn startup_transport_system(
     channels: Res<RepliconChannels>,
     mut commands: Commands,
 ) {
+    info!(
+        "startup_transport_system: initializing transport (net_mode={:?})",
+        cli.net_mode
+    );
     let Ok(current_time) = SystemTime::now().duration_since(UNIX_EPOCH) else {
         error!("System clock is before UNIX epoch; cannot initialize network transport.");
         return;
@@ -125,5 +131,64 @@ fn startup_transport_system(
             commands.insert_resource(transport);
             info!("Replicon transport: connecting to {address} as client_id {client_id}");
         }
+    }
+}
+
+/// Monitors `RenetClient` state each frame and logs transitions
+/// (connecting → connected → disconnected).
+fn monitor_renet_client_status(
+    client: Option<Res<RenetClient>>,
+    mut last_state: Local<u8>,
+    // 0 = resource absent, 1 = connecting, 2 = connected, 3 = disconnected
+) {
+    let state: u8 = match client.as_ref() {
+        None => 0,
+        Some(c) => {
+            if c.is_connected() {
+                2
+            } else if c.is_disconnected() {
+                3
+            } else {
+                1
+            }
+        }
+    };
+    if state != *last_state {
+        match state {
+            0 => debug!("RenetClient: resource absent (was state {})", *last_state),
+            1 => info!("RenetClient: connecting to server..."),
+            2 => info!("RenetClient: CONNECTED to server"),
+            3 => {
+                let reason = client.as_ref().and_then(|c| c.disconnect_reason());
+                warn!(
+                    "RenetClient: DISCONNECTED from server (reason: {:?})",
+                    reason
+                );
+            }
+            _ => {}
+        }
+        *last_state = state;
+    }
+}
+
+/// Monitors `RenetServer` renet-level client count each frame and logs changes.
+fn monitor_renet_server_clients(server: Option<Res<RenetServer>>, mut last_count: Local<usize>) {
+    let Some(server) = server else {
+        return;
+    };
+    let count = server.clients_id().len();
+    if count != *last_count {
+        if count > *last_count {
+            info!(
+                "RenetServer: transport-level client count {} → {} (client joined at transport layer)",
+                *last_count, count
+            );
+        } else {
+            info!(
+                "RenetServer: transport-level client count {} → {} (client left at transport layer)",
+                *last_count, count
+            );
+        }
+        *last_count = count;
     }
 }
