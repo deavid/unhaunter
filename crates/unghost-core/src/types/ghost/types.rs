@@ -1,3 +1,4 @@
+use bevy::prelude::{Reflect, ReflectDefault};
 use bevy_platform::collections::HashSet;
 use enum_iterator::{Sequence, all};
 
@@ -6,8 +7,10 @@ use crate::types::ghost::personality::GhostPersonality;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize, Reflect, Default)]
+#[reflect(Default)]
 pub enum GhostType {
+    #[default]
     BeanSidhe,
     Dullahan,
     Leprechaun,

@@ -1,7 +1,8 @@
 use crate::types::ghost::types::GhostType;
+use bevy::prelude::Reflect;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Reflect)]
 pub enum GhostSet {
     TmpEMF,
     TmpEMFUVOrbs,

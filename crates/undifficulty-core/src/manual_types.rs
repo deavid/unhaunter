@@ -1,6 +1,7 @@
+use bevy::prelude::Reflect;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Reflect)]
 pub enum ManualChapterIndex {
     Chapter1,
     Chapter2,

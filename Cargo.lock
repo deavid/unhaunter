@@ -7069,6 +7069,7 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_platform",
+ "bevy_replicon",
  "ordered-float",
  "rand 0.10.0",
  "unassets-core",
@@ -7808,6 +7809,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
+ "serde",
  "unfoundation-core",
  "ungearitems-core",
  "unreplicon-core",
@@ -7941,7 +7943,6 @@ name = "unreplicon-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_replicon",
  "serde",
  "unevents-core",
  "unfoundation-core",
@@ -8059,6 +8060,7 @@ name = "unsummary-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "serde",
  "undifficulty-core",
  "unfoundation-core",
  "unghost-core",
@@ -8087,6 +8089,7 @@ name = "untags-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "serde",
 ]
 
 [[package]]

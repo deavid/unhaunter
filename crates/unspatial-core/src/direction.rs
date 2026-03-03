@@ -1,9 +1,10 @@
 use bevy::prelude::*;
 use bevy_math::Vec3;
+use serde::{Deserialize, Serialize};
 
 use crate::position::Position;
 
-#[derive(Component, Debug, Clone, Copy, PartialEq)]
+#[derive(Component, Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, Default)]
 pub struct Direction {
     pub dx: f32,
     pub dy: f32,

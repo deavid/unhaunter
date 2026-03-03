@@ -3,6 +3,7 @@ use bevy_renet::netcode::NetcodeServerTransport;
 use bevy_renet::renet::ServerEvent;
 use bevy_renet::{RenetServer, RenetServerEvent};
 use bevy_replicon::prelude::ClientId;
+use unreplicon_core::ownership::OwnerId;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use serde::{Deserialize, Serialize};
 use unreplicon_core::resources::ClientUuidMap;
@@ -64,6 +65,10 @@ fn validate_new_connection_observer(
     let client_id = *client_id;
     let replicon_client_id =
         renet_to_replicon(client_id, &q_network_id).unwrap_or(ClientId::Server);
+    let owner_id = match replicon_client_id {
+        ClientId::Server => OwnerId::Server,
+        ClientId::Client(e) => OwnerId::Client(e),
+    };
 
     // No procman channel → hub-less direct-connect: no tickets exist, accept unconditionally.
     if procman.is_none() {
@@ -73,7 +78,7 @@ fn validate_new_connection_observer(
         );
         // Fallback: deterministic UUID for development/hub-less
         let uuid = Uuid::from_u128(client_id as u128);
-        uuid_map.0.insert(replicon_client_id, uuid);
+        uuid_map.0.insert(owner_id, uuid);
         return;
     }
 
@@ -128,7 +133,7 @@ fn validate_new_connection_observer(
             } else {
                 info!("Client {:?} authenticated successfully.", client_id);
                 if let Ok(uuid) = Uuid::parse_str(&token_data.claims.player_uuid) {
-                    uuid_map.0.insert(replicon_client_id, uuid);
+                    uuid_map.0.insert(owner_id, uuid);
                 }
             }
         }

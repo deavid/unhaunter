@@ -15,6 +15,7 @@ use strum::{AsRefStr, Display, EnumString};
     AsRefStr,
     Serialize,
     Deserialize,
+    Reflect,
 )]
 pub enum FlashlightStatus {
     #[default]
@@ -28,7 +29,8 @@ pub enum FlashlightStatus {
     High,
 }
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
+#[reflect(Component, Default)]
 pub struct Flashlight {
     pub status: FlashlightStatus,
     pub inner_temp: f32,

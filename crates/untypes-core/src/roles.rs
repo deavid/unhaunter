@@ -14,3 +14,10 @@ pub struct LocalPlayerRole;
 /// (Client, Dedicated Server, or PeerHost — not Offline single-player).
 #[derive(Resource, Debug, Default)]
 pub struct LobbyPresenceRole;
+
+pub fn is_pure_client(
+    local: Option<Res<LocalPlayerRole>>,
+    authority: Option<Res<AuthorityRole>>,
+) -> bool {
+    local.is_some() && authority.is_none()
+}

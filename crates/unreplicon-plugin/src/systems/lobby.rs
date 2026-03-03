@@ -7,6 +7,7 @@ use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unprofile_core::profile::PlayerProfileData;
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
 use unreplicon_core::messages::{RequestSelectDifficulty, RequestSelectMap, RequestStartMission};
+use unreplicon_core::ownership::OwnerId;
 use unreplicon_core::resources::{ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer};
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::{AppState, BootState};
@@ -43,13 +44,13 @@ pub(super) fn app_setup(app: &mut App) {
     // Server-side lobby lifecycle
     app.add_systems(
         OnEnter(AppState::Lobby),
-        setup_lobby_entity.run_if(in_state(ServerState::Running)),
+        setup_lobby_entity.run_if(resource_exists::<AuthorityRole>),
     );
 
     // Server-side: broadcast InGame state to clients when the mission starts.
     app.add_systems(
         OnEnter(AppState::InGame),
-        set_server_state_ingame.run_if(in_state(ServerState::Running)),
+        set_server_state_ingame.run_if(resource_exists::<AuthorityRole>),
     );
 
     // Server-side message handlers
@@ -60,7 +61,7 @@ pub(super) fn app_setup(app: &mut App) {
             handle_request_select_difficulty,
             handle_request_start_mission,
         )
-            .run_if(in_state(ServerState::Running)),
+            .run_if(resource_exists::<AuthorityRole>),
     );
 
     // Observe SimulationState::Ready to transition MissionLoading → InGame
@@ -72,7 +73,19 @@ pub(super) fn app_setup(app: &mut App) {
 
 /// Helper to get UUID for a Replicon ClientId
 fn client_uuid(client_id: ClientId, uuid_map: &Res<ClientUuidMap>) -> Option<Uuid> {
-    uuid_map.0.get(&client_id).copied()
+    let owner_id = match client_id {
+        ClientId::Server => OwnerId::Server,
+        ClientId::Client(e) => OwnerId::Client(e),
+    };
+    uuid_map.0.get(&owner_id).copied()
+}
+
+/// Helper: convert Replicon ClientId to OwnerId.
+fn to_owner_id(client_id: ClientId) -> OwnerId {
+    match client_id {
+        ClientId::Server => OwnerId::Server,
+        ClientId::Client(e) => OwnerId::Client(e),
+    }
 }
 
 /// Server: In hub-less dedicated mode, transition to Lobby immediately.
@@ -178,9 +191,10 @@ fn on_client_connected(
     }
 
     for mut lobby in q_lobby.iter_mut() {
+        let owner_id = to_owner_id(client_id);
         // Check if player is already in the list (reconnect)
         if let Some(player) = lobby.players.iter_mut().find(|p| p.player_uuid == uuid) {
-            player.current_socket = Some(client_id);
+            player.current_socket = Some(owner_id);
             player.connected = true;
             info!("Player {} reconnected (socket={:?})", uuid, client_id);
         } else {
@@ -188,7 +202,7 @@ fn on_client_connected(
             let color_index = lobby.players.len() as u8;
             lobby.players.push(LobbyPlayerInfo {
                 player_uuid: uuid,
-                current_socket: Some(client_id),
+                current_socket: Some(owner_id),
                 tint_color_index: color_index,
                 connected: true,
                 nickname: None,
@@ -256,8 +270,8 @@ fn handle_request_select_map(
                 );
                 continue;
             }
-            info!("Map selected: {}", msg.map_filepath);
-            lobby.selected_map = Some(msg.map_filepath.clone());
+            info!("Map selected: {}", msg.message.map_filepath);
+            lobby.selected_map = Some(msg.message.map_filepath.clone());
         }
     }
 }
@@ -279,8 +293,8 @@ fn handle_request_select_difficulty(
                 );
                 continue;
             }
-            info!("Difficulty selected: {}", msg.difficulty_id);
-            lobby.selected_difficulty = msg.difficulty_id.clone();
+            info!("Difficulty selected: {}", msg.message.difficulty_id);
+            lobby.selected_difficulty = msg.message.difficulty_id.clone();
         }
     }
 }

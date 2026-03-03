@@ -1,13 +1,12 @@
 use bevy::prelude::*;
-pub use bevy_replicon::prelude::ClientId;
 use std::collections::HashMap;
 pub use uuid::Uuid;
 
-/// Server-side mapping from an active bevy_replicon ClientId to the
+/// Server-side mapping from an active OwnerId to the
 /// player's stable installation UUID (extracted from the JWT ticket at
 /// connection time).
 #[derive(Resource, Debug, Default)]
-pub struct ClientUuidMap(pub HashMap<ClientId, Uuid>);
+pub struct ClientUuidMap(pub HashMap<crate::ownership::OwnerId, Uuid>);
 
 /// Identifies which player is the local (owning) player on this game instance.
 ///

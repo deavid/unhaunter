@@ -12,7 +12,9 @@ use ungear_core::types::gear::kind::GearKind;
 use unplayer_core::components::{PlayerInput, PlayerSprite};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use unreplicon_core::messages::{HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent};
+use unreplicon_core::messages::{
+    HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent, OwnershipReleased, RequestPickupGear,
+};
 use unspatial_core::position::Position;
 
 fn sync_held_gear_position(
@@ -59,6 +61,8 @@ fn grab_object(
     mut commands: Commands,
     mut ev_sound: MessageWriter<SoundEvent>,
     mut ev_floor_pickup: MessageWriter<HostFloorGearPickedUpEvent>,
+    mut writer_pickup: MessageWriter<RequestPickupGear>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
     for (mut player_gear, player_pos, player_input) in players.iter_mut() {
         if player_input.grab {
@@ -75,54 +79,62 @@ fn grab_object(
 
             if let Some((entity, pos, gear_kind, behavior)) = closest {
                 if gear_kind.is_some() {
-                    let mut grabbed = false;
-                    if player_gear.right_hand.is_none() {
-                        player_gear.right_hand = Some(entity);
-                        commands
-                            .entity(entity)
-                            .insert(EquipmentPosition::Hand(Hand::Right));
-                        grabbed = true;
-                    } else if player_gear.inventory.len() < 2 {
-                        let old_item = player_gear.right_hand.replace(entity).unwrap();
-                        player_gear.inventory.insert(0, old_item);
-                        commands.entity(old_item).insert(EquipmentPosition::Stowed);
-                        commands
-                            .entity(entity)
-                            .insert(EquipmentPosition::Hand(Hand::Right));
-                        grabbed = true;
-                    }
+                    if authority.is_some() {
+                        let mut grabbed = false;
+                        if player_gear.right_hand.is_none() {
+                            player_gear.right_hand = Some(entity);
+                            commands
+                                .entity(entity)
+                                .insert(EquipmentPosition::Hand(Hand::Right));
+                            grabbed = true;
+                        } else if player_gear.inventory.len() < 2 {
+                            let old_item = player_gear.right_hand.replace(entity).unwrap();
+                            player_gear.inventory.insert(0, old_item);
+                            commands.entity(old_item).insert(EquipmentPosition::Stowed);
+                            commands
+                                .entity(entity)
+                                .insert(EquipmentPosition::Hand(Hand::Right));
+                            grabbed = true;
+                        }
 
-                    if grabbed {
+                        if grabbed {
+                            commands.entity(entity).remove::<FloorItemCollidable>();
+                            commands.entity(entity).remove::<DeployedGear>();
+                            commands.entity(entity).remove::<Sprite>();
+                            commands.entity(entity).remove::<Transform>();
+                            commands.entity(entity).remove::<Visibility>();
+                            commands.entity(entity).remove::<GameSprite>();
+                            commands.entity(entity).remove::<SpriteLayer>();
+                            commands.entity(entity).remove::<MapColor>();
+                            ev_sound.write(SoundEvent {
+                                sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
+                                volume: 1.0,
+                                position: Some(*player_pos),
+                                broadcast: true,
+                            });
+                            ev_floor_pickup.write(HostFloorGearPickedUpEvent {
+                                pos: [pos.x, pos.y, pos.z],
+                            });
+                        }
+                    } else {
+                        writer_pickup.write(RequestPickupGear { entity });
+                    }
+                } else if let Some(behavior) = behavior
+                    && behavior.p.object.pickable
+                    && player_gear.held_item.is_none()
+                {
+                    if authority.is_some() {
+                        player_gear.held_item = Some(HeldObject { entity });
                         commands.entity(entity).remove::<FloorItemCollidable>();
-                        commands.entity(entity).remove::<DeployedGear>();
-                        commands.entity(entity).remove::<Sprite>();
-                        commands.entity(entity).remove::<Transform>();
-                        commands.entity(entity).remove::<Visibility>();
-                        commands.entity(entity).remove::<GameSprite>();
-                        commands.entity(entity).remove::<SpriteLayer>();
-                        commands.entity(entity).remove::<MapColor>();
                         ev_sound.write(SoundEvent {
                             sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
                             volume: 1.0,
                             position: Some(*player_pos),
                             broadcast: true,
                         });
-                        ev_floor_pickup.write(HostFloorGearPickedUpEvent {
-                            pos: [pos.x, pos.y, pos.z],
-                        });
+                    } else {
+                        // TODO: Distributed authority for world objects
                     }
-                } else if let Some(behavior) = behavior
-                    && behavior.p.object.pickable
-                    && player_gear.held_item.is_none()
-                {
-                    player_gear.held_item = Some(HeldObject { entity });
-                    commands.entity(entity).remove::<FloorItemCollidable>();
-                    ev_sound.write(SoundEvent {
-                        sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
-                        volume: 1.0,
-                        position: Some(*player_pos),
-                        broadcast: true,
-                    });
                 }
             }
         }
@@ -137,6 +149,8 @@ fn drop_object(
     mut ev_sound: MessageWriter<SoundEvent>,
     mut ev_floor_drop: MessageWriter<HostFloorGearDroppedEvent>,
     q_gear_kind: Query<&GearKind>,
+    mut writer_released: MessageWriter<OwnershipReleased>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
     for (mut player_gear, player_pos, player_input, player_sprite) in players.iter_mut() {
         if player_input.drop {
@@ -160,41 +174,50 @@ fn drop_object(
 
             if let Some(held) = player_gear.held_item.take() {
                 let entity = held.entity;
-                commands.entity(entity).insert(*player_pos);
-                commands.entity(entity).insert(FloorItemCollidable);
-                ev_sound.write(SoundEvent {
-                    sound_file: "sounds/item-drop-clunk.ogg".to_string(),
-                    volume: 1.0,
-                    position: Some(*player_pos),
-                    broadcast: true,
-                });
+                if authority.is_some() {
+                    commands.entity(entity).insert(*player_pos);
+                    commands.entity(entity).insert(FloorItemCollidable);
+                    ev_sound.write(SoundEvent {
+                        sound_file: "sounds/item-drop-clunk.ogg".to_string(),
+                        volume: 1.0,
+                        position: Some(*player_pos),
+                        broadcast: true,
+                    });
+                } else {
+                    // TODO
+                }
                 continue;
             }
 
             if let Some(entity) = player_gear.right_hand.take() {
-                commands.entity(entity).insert(*player_pos);
-                commands.entity(entity).insert(FloorItemCollidable);
-                commands.entity(entity).insert(EquipmentPosition::Deployed);
-                commands.entity(entity).insert(DeployedGear {
-                    direction: player_sprite.movement,
-                });
-                ev_sound.write(SoundEvent {
-                    sound_file: "sounds/item-drop-clunk.ogg".to_string(),
-                    volume: 1.0,
-                    position: Some(*player_pos),
-                    broadcast: true,
-                });
-                if let Ok(kind) = q_gear_kind.get(entity) {
-                    ev_floor_drop.write(HostFloorGearDroppedEvent {
-                        kind: *kind,
-                        pos: [player_pos.x, player_pos.y, player_pos.z],
-                        direction: [
-                            player_sprite.movement.dx,
-                            player_sprite.movement.dy,
-                            player_sprite.movement.dz,
-                        ],
+                if authority.is_some() {
+                    commands.entity(entity).insert(*player_pos);
+                    commands.entity(entity).insert(FloorItemCollidable);
+                    commands.entity(entity).insert(EquipmentPosition::Deployed);
+                    commands.entity(entity).insert(DeployedGear {
+                        direction: player_sprite.movement,
                     });
+                    ev_sound.write(SoundEvent {
+                        sound_file: "sounds/item-drop-clunk.ogg".to_string(),
+                        volume: 1.0,
+                        position: Some(*player_pos),
+                        broadcast: true,
+                    });
+                    if let Ok(kind) = q_gear_kind.get(entity) {
+                        ev_floor_drop.write(HostFloorGearDroppedEvent {
+                            kind: *kind,
+                            pos: [player_pos.x, player_pos.y, player_pos.z],
+                            direction: [
+                                player_sprite.movement.dx,
+                                player_sprite.movement.dy,
+                                player_sprite.movement.dz,
+                            ],
+                        });
+                    }
+                } else {
+                    writer_released.write(OwnershipReleased { entity });
                 }
+
                 if !player_gear.inventory.is_empty() {
                     let next_item = player_gear.inventory.remove(0);
                     player_gear.right_hand = Some(next_item);

@@ -1,30 +1,30 @@
+use bevy::ecs::entity::{EntityMapper, MapEntities};
 use bevy::prelude::*;
 use bevy_math::Vec3;
+use serde::{Deserialize, Serialize};
 
 use crate::boardposition::BoardPosition;
 use crate::direction::Direction;
 
-// use unfoundation_core::random_seed; // TODO: move or handle
-
 /// Represents the logical position of an object on the game board.
-///
-/// This component stores the object's 3D coordinates (`x`, `y`, `z`) in a logical
-/// coordinate system, as well as a `visual_priority` value for fine-tuning the object's
-/// vertical position in the isometric view.
-///
-/// The `to_screen_coord` method converts the logical position to screen
-/// coordinates, applying the isometric perspective transformation. This
-/// transformation is necessary to display the 3D game world in a 2D isometric view.
-///
-/// Other systems, such as the `apply_perspective` system, use the `Position`
-/// component to update the `Transform` component of the object's sprite, ensuring
-/// that the sprite is rendered at the correct position in the isometric view.
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, Reflect, PartialEq)]
+#[reflect(Component, Default, PartialEq)]
 pub struct Position {
     pub x: f32,
     pub y: f32,
     pub z: f32,
     pub visual_priority: f32,
+}
+
+impl Default for Position {
+    fn default() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            visual_priority: 0.0,
+        }
+    }
 }
 
 impl Position {
@@ -33,7 +33,7 @@ impl Position {
             x: x as f32,
             y: y as f32,
             z: z as f32,
-            visual_priority: 0 as f32,
+            visual_priority: 0.0,
         }
     }
 
@@ -53,24 +53,14 @@ impl Position {
             && self.visual_priority.is_finite()
     }
 
-    pub fn lerp(&self, other: &Self, t: f32) -> Self {
-        Self {
-            x: self.x + (other.x - self.x) * t,
-            y: self.y + (other.y - self.y) * t,
-            z: self.z + (other.z - self.z) * t,
+    pub fn lerp(&self, target: &Position, alpha: f32) -> Position {
+        Position {
+            x: self.x + (target.x - self.x) * alpha,
+            y: self.y + (target.y - self.y) * alpha,
+            z: self.z + (target.z - self.z) * alpha,
             visual_priority: self.visual_priority,
         }
     }
-
-    // pub fn with_random(&self, range: f32) -> Self {
-    //     let mut rng = random_seed::rng();
-    //     Self {
-    //         x: self.x + rng.random_range(-range..range),
-    //         y: self.y + rng.random_range(-range..range),
-    //         z: self.z,
-    //         visual_priority: self.visual_priority,
-    //     }
-    // }
 
     pub fn into_visual_priority(mut self, visual_priority: f32) -> Self {
         self.visual_priority = visual_priority;
@@ -94,7 +84,7 @@ impl Position {
     }
 
     pub fn same_xy(&self, other: &Self) -> bool {
-        self.same_x(other) || self.same_y(other)
+        self.same_x(other) && self.same_y(other)
     }
 
     pub fn distance(&self, other: &Self) -> f32 {
@@ -146,7 +136,6 @@ impl Position {
     pub fn rotate_by_dir(&self, dir: &Direction) -> Self {
         let dir = dir.normalized();
 
-        // CAUTION: This is not possible with a single vector. Most likely wrong.
         let x_axis = Direction {
             dx: dir.dx,
             dy: dir.dy,
@@ -171,7 +160,6 @@ impl Position {
     }
 
     pub fn unrotate_by_dir(&self, dir: &Direction) -> Self {
-        // ... probably wrong...
         let dir = Direction {
             dx: dir.dx,
             dy: -dir.dy,
@@ -187,6 +175,10 @@ impl Position {
             dz: self.z - rhs.z,
         }
     }
+}
+
+impl MapEntities for Position {
+    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
 }
 
 impl std::ops::Add<Direction> for &Position {
@@ -212,12 +204,6 @@ impl std::ops::Add<Direction> for Position {
             z: self.z + rhs.dz,
             visual_priority: self.visual_priority,
         }
-    }
-}
-
-impl PartialEq for Position {
-    fn eq(&self, other: &Self) -> bool {
-        self.same_x(other) && self.same_y(other) && self.same_z(other)
     }
 }
 
