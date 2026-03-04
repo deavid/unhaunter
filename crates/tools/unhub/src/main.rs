@@ -2,7 +2,6 @@ mod api;
 mod config;
 mod procman;
 mod state;
-mod tickets;
 
 use crate::state::HubState;
 use axum::{

@@ -423,15 +423,15 @@ All code that previously compares `client_id: u64` or `owner_client_id == 0` mus
 - Permission guards (`set_server_state_ingame`, map selection, difficulty selection): compare `sender_uuid` against
   `lobby.leader_uuid`.
 
-The challenge: where does the sender's UUID come from at the message handler? The JWT ticket carried in the `user_data`
-field already has the answer. In `crates/unreplicon-plugin/src/systems/auth.rs`, the `TicketClaims` struct already
-contains `player_uuid: String`. The validated UUID must be captured and stored server-side.
+The challenge: where does the sender's UUID come from at the message handler? The connection ticket carried in the
+`user_data` field already has the answer. In `crates/unreplicon-plugin/src/systems/auth.rs`, the `TicketClaims` struct
+already contains `player_uuid: String`. The validated UUID must be captured and stored server-side.
 
 **Step A — Create a `ClientUuidMap` resource** in `crates/unreplicon-core/src/resources.rs`:
 
 ```rust
 /// Server-side mapping from an active bevy_replicon ClientId to the
-/// player's stable installation UUID (extracted from the JWT ticket at
+/// player's stable installation UUID (extracted from the connection ticket at
 /// connection time).
 #[derive(Resource, Debug, Default)]
 pub struct ClientUuidMap(pub HashMap<ClientId, Uuid>);
@@ -439,8 +439,8 @@ pub struct ClientUuidMap(pub HashMap<ClientId, Uuid>);
 
 Initialise it in `lobby.rs::app_setup` with `app.init_resource::<ClientUuidMap>()`.
 
-**Step B — Populate the map in `auth.rs`** after a successful JWT validation. Change `validate_new_connection_observer`
-to extract the `player_uuid` claim and insert it into `ClientUuidMap`:
+**Step B — Populate the map in `auth.rs`** after a successful ticket validation. Change
+`validate_new_connection_observer` to extract the `player_uuid` claim and insert it into `ClientUuidMap`:
 
 ```rust
 // After the ticket validates successfully:
@@ -451,8 +451,8 @@ if let Ok(uuid) = Uuid::parse_str(&claims.player_uuid) {
 
 The function will need `mut uuid_map: ResMut<ClientUuidMap>` added to its parameters.
 
-**For hub-less direct-connect** (no JWT, `procman.is_none()` path): there is no ticket to extract a UUID from. For this
-mode, generate a deterministic UUID from the `ClientId` integer as a temporary fallback:
+**For hub-less direct-connect** (no Hub ticket, `procman.is_none()` path): there is no ticket to extract a UUID from.
+For this mode, generate a deterministic UUID from the `ClientId` integer as a temporary fallback:
 `Uuid::from_u128(client_id.get() as u128)`. This is sufficient for the hub-less development path and avoids a
 special-case in the permission guards.
 

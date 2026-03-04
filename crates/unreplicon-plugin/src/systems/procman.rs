@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use crossbeam_channel::{Receiver, Sender};
 use std::io::{BufRead, Write};
 use unhub_client::protocol::{DedicatedToProcMan, ProcManToDedicated};
-use untypes_core::cli::{CliOptions, NetMode};
+use untypes_core::cli::{CliOptions, CliNetMode};
 
 /// Bidirectional channel to the process manager over stdin/stdout.
 ///
@@ -65,7 +65,7 @@ fn setup_procman_system(mut commands: Commands, cli: Res<CliOptions>) {
     });
 
     // Send the initial Ready signal so procman knows the server is up.
-    if let NetMode::Host { port, .. } = cli.net_mode {
+    if let CliNetMode::PeerHost { port, .. } = cli.net_mode {
         let _ = tx_to_procman.send(DedicatedToProcMan::Ready { port });
     }
 

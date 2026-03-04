@@ -2,19 +2,20 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum NetMode {
+pub enum CliNetMode {
     #[default]
     Offline,
-    Host {
+    PeerHost {
         port: u16,
         bind_addresses: Vec<String>,
     },
     Join {
         address: String,
-        /// JWT ticket issued by the Hub after PoW challenge. When present the
-        /// Renet transport embeds it in the connection `user_data` so the
-        /// dedicated server can validate the connection.  `None` in
-        /// singleplayer / direct-connect scenarios (no auth enforced).
+        /// Base64 encoded connection ticket (postcard + HMAC-SHA256) issued by
+        /// the Hub after PoW challenge. When present the Renet transport embeds
+        /// it in the connection `user_data` so the dedicated server can validate
+        /// the connection. `None` in singleplayer / direct-connect scenarios
+        /// (no auth enforced).
         ticket: Option<String>,
     },
 }
@@ -22,7 +23,7 @@ pub enum NetMode {
 #[derive(Resource, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct CliOptions {
     pub include_draft_maps: bool,
-    pub net_mode: NetMode,
+    pub net_mode: CliNetMode,
     pub map_path: Option<String>,
     pub difficulty_id: Option<String>,
     pub installation_id_file: Option<String>,
@@ -38,7 +39,7 @@ impl CliOptions {
         self.dedicated
     }
     pub fn is_authority(&self) -> bool {
-        !matches!(self.net_mode, NetMode::Join { .. })
+        !matches!(self.net_mode, CliNetMode::Join { .. })
     }
 }
 
@@ -51,5 +52,5 @@ pub fn is_headless(cli: Res<CliOptions>) -> bool {
 }
 
 pub fn is_client(cli: Res<CliOptions>) -> bool {
-    matches!(cli.net_mode, NetMode::Join { .. })
+    matches!(cli.net_mode, CliNetMode::Join { .. })
 }

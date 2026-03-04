@@ -2,12 +2,12 @@
 
 > _"The presentation is actively fighting the design."_
 
-This document analyzes the decision to transition Unhaunter from 2D isometric pixel art to first-person 3D. This is a
-major architectural decision that addresses a fundamental problem: **players approach the game with the wrong mindset
-because the visual language tells them it's a different genre.**
+This document analyzes the tentative decision to transition Unhaunter from 2D isometric pixel art to first-person 3D.
+This is a major architectural decision that addresses a fundamental problem: **players approach the game with the wrong
+mindset because the visual language tells them it's a different genre.**
 
-NOTE: As of the latter docs/design/2026-02-21/core_mechanics_and_vision.md, we are going to try to stick to 2D for
-a while, to give it an extra push to see if we can fix the problems correctly.
+NOTE: As of the latter docs/design/2026-02-21/core_mechanics_and_vision.md, we are going to try to stick to 2D for a
+while, to give it an extra push to see if we can fix the problems correctly.
 
 ---
 

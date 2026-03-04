@@ -63,18 +63,18 @@ All known high-severity multiplayer blockers are now resolved. The only remainin
 
 - `Offline`: no transport is created; singleplayer is fully preserved. ✅
 - `Host`: creates a `NetcodeServerTransport` with `ServerAuthentication::Unsecure`. ✅ (see notice below)
-- `Join`: creates a `NetcodeClientTransport`, packs the JWT ticket into the 256-byte `user_data` field. ✅
+- `Join`: creates a `NetcodeClientTransport`, packs the connection ticket into the 256-byte `user_data` field. ✅
 
 #### 1.4 Ticket-based authentication
 
 `auth.rs` uses an observer on `RenetServerEvent::ClientConnected`. Before any game state is allocated, it:
 
 1. Rejects connections when `RoomAuth` has no room assigned (server is idle). ✅
-2. Extracts the null-terminated JWT string from the `user_data` field. ✅
-3. Validates the JWT signature (HMAC-SHA256), expiry, and `room_code` claim. ✅
+2. Decodes the postcard-serialized ticket from the `user_data` field. ✅
+3. Validates the HMAC-SHA256 signature, expiry, and `room_code` claim. ✅
 4. Disconnects non-conformant clients immediately. ✅
 
-The JWT validation in `validate_ticket()` correctly uses `jsonwebtoken` with `validate_exp = true`.
+The ticket validation in `validate_ticket()` uses postcard deserialization with HMAC-SHA256 and a manual expiry check.
 
 #### 1.5 ProcMan adapter
 
@@ -89,10 +89,10 @@ handles all four `ProcManToDedicated` variants:
 The initial `Ready { port }` signal is sent on startup so `unprocman` knows the server is up.
 
 **⚠️ Open TODO:** `ServerAuthentication::Unsecure` and `ClientAuthentication::Unsecure` are used. The plan called for
-switching to `Secure` with a per-session key distributed by the Hub JWT in Phase 1.4. This is explicitly marked
-`// TODO Phase 1.4` in `connection.rs`. The semantic application-level security from `auth.rs` is in place, but
-transport-layer encryption is absent. The `client_id` is also derived from `SystemTime::now()` rather than from
-`installation_id`; a second `TODO Phase 1.4` comment notes this.
+switching to `Secure` with a per-session key in Phase 1.4. This is explicitly marked `// TODO Phase 1.4` in
+`connection.rs`. The semantic application-level security from `auth.rs` is in place, but transport-layer encryption is
+absent. The `client_id` is also derived from `SystemTime::now()` rather than from `installation_id`; a second
+`TODO Phase 1.4` comment notes this.
 
 ---
 
@@ -536,9 +536,9 @@ on the server propagates to clients automatically.
 ### Notice 2 — Transport is `Unsecure` end-to-end
 
 Both server and client use `*Authentication::Unsecure`. The plan's intent was to eventually use
-`ServerAuthentication::Secure` with a per-session key derived from the Hub JWT. Application-level auth via `auth.rs`
-provides the meaningful protection, but the UDP stream is unencrypted in transit. This is an acceptable temporary state
-but should be documented as a known gap in the security model and tracked as an open item.
+`ServerAuthentication::Secure` with a per-session key. Application-level auth via `auth.rs` provides the meaningful
+protection, but the UDP stream is unencrypted in transit. This is an acceptable temporary state but should be documented
+as a known gap in the security model and tracked as an open item.
 
 ### Notice 3 — `NetworkId(u64)` was not replaced by Replicon's `ClientId`
 
@@ -577,8 +577,8 @@ follow-up phase or issue.
 | Quarantine (`unnet-*` removal)                    | 0     | ✅ Complete                              | —        |
 | Plugin / crate structure                          | 1     | ✅ Correct                               | —        |
 | UDP transport init (`Offline`/`Host`/`Join`)      | 1     | ✅ Complete                              | —        |
-| JWT ticket auth (server-side)                     | 1     | ✅ Complete                              | —        |
-| JWT ticket packing (client-side)                  | 1     | ✅ Complete                              | —        |
+| Ticket auth (server-side, postcard+HMAC)          | 1     | ✅ Complete                              | —        |
+| Ticket packing (client-side, postcard+HMAC)       | 1     | ✅ Complete                              | —        |
 | ProcMan stdin/stdout adapter                      | 1     | ✅ Complete                              | —        |
 | Transport uses `Unsecure` auth                    | 1     | ⚠️ Open TODO                             | Info     |
 | Lobby entity + Replicon replication               | 2     | ✅ Complete                              | —        |

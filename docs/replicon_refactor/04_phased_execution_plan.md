@@ -89,9 +89,10 @@ gameplay. **Singleplayer after this phase:** Fully functional.
 
 #### 1.4. Ticket-Based Authentication
 
-- **Hub (`crates/tools/unhub`):** After a successful PoW challenge, the Hub issues a signed JWT containing: `room_id`,
-  `installation_id`, expiry timestamp. Signed with an HMAC key shared with the dedicated server.
-- **Dedicated Server:** On connection attempt, validate the JWT before allowing the Renet connection to proceed.
+- **Hub (`crates/tools/unhub`):** After a successful PoW challenge, the Hub issues a signed connection ticket
+  containing: `room_id`, `installation_id`, expiry timestamp. Serialized with postcard and signed with HMAC-SHA256
+  shared with the dedicated server.
+- **Dedicated Server:** On connection attempt, validate the ticket before allowing the Renet connection to proceed.
   Connections without a valid ticket are dropped before any ECS state is allocated.
 - **`unprocman`:** Remove the TCP proxy logic. It becomes a pure process manager. Implement the Fast Expiry rule: if no
   valid ticketed connection arrives within 5 seconds of server spawn, kill the process and reclaim the port.

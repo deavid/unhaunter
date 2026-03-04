@@ -15,7 +15,6 @@ unassets-core = { path = "../unassets-core" }
 untypes-core = { path = "../untypes-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unmapload-core = { path = "../unmapload-core" }
-unevents-core = { path = "../unevents-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unmanual-core = { path = "../unmanual-core" }
 unui-core = { path = "../unui-core" }

@@ -46,8 +46,8 @@ Before touching game logic, we must establish the new transport layer and secure
 
 ### 1.2. Implement Ticket-Based Authentication
 
-- **Hub Side:** Modify the Hub REST API to issue a signed JWT (or similar cryptographic ticket) upon successful PoW and
-  room allocation.
+- **Hub Side:** Modify the Hub REST API to issue a signed cryptographic ticket (postcard + HMAC-SHA256) upon successful
+  PoW and room allocation.
 - **Client Side:** Update the client to request this ticket and pass it to the `bevy_renet` connection configuration.
 - **Server Side:** Implement a Renet authenticator that validates the ticket signature. Connections without a valid
   ticket are rejected at the transport layer, protecting the ECS from unauthorized load.

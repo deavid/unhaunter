@@ -8,7 +8,7 @@ OUTPUT_DIR="$HOME/Downloads"
 mkdir -p "$OUTPUT_DIR"
 
 # Loop through each directory in crates/
-for crate_path in crates/*/; do
+for crate_path in crates/un*/  crates/tools/*/ unhaunter/ docs/; do
     # Remove trailing slash and get the folder name
     crate_name=$(basename "$crate_path")
     output_file="$OUTPUT_DIR/unhaunter_crate_${crate_name}.txt"

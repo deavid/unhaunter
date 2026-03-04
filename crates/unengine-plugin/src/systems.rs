@@ -109,18 +109,18 @@ pub(crate) fn insert_roles_at_startup(cli: Res<CliOptions>, mut commands: Comman
         debug!("Roles inserted: AuthorityRole, LobbyPresenceRole");
     } else {
         match cli.net_mode {
-            untypes_core::cli::NetMode::Offline => {
+            untypes_core::cli::CliNetMode::Offline => {
                 commands.insert_resource(AuthorityRole);
                 commands.insert_resource(LocalPlayerRole);
                 debug!("Roles inserted: AuthorityRole, LocalPlayerRole");
             }
-            untypes_core::cli::NetMode::Host { .. } => {
+            untypes_core::cli::CliNetMode::PeerHost { .. } => {
                 commands.insert_resource(AuthorityRole);
                 commands.insert_resource(LocalPlayerRole);
                 commands.insert_resource(LobbyPresenceRole);
                 debug!("Roles inserted: AuthorityRole, LocalPlayerRole, LobbyPresenceRole");
             }
-            untypes_core::cli::NetMode::Join { .. } => {
+            untypes_core::cli::CliNetMode::Join { .. } => {
                 commands.insert_resource(LocalPlayerRole);
                 commands.insert_resource(LobbyPresenceRole);
                 debug!("Roles inserted: LocalPlayerRole, LobbyPresenceRole");

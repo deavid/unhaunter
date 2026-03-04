@@ -56,20 +56,7 @@ fn initialize_installation_id(
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     cli: Res<CliOptions>,
 ) {
-    if player_profile.installation_id.is_nil() {
-        // TODO: WASM support for generating UUIDs might need a different approach
-        // for better entropy, but as multiplayer is not yet supported on WASM,
-        // this is acceptable for now.
-        player_profile.installation_id = Uuid::new_v4();
-        if let Err(e) = player_profile.persist() {
-            error!(
-                "Failed to persist PlayerProfileData with new installation_id: {:?}",
-                e
-            );
-        }
-    }
-
-    let mut installation_id = player_profile.installation_id;
+    let mut installation_id = None;
 
     #[cfg(not(target_arch = "wasm32"))]
     if let Some(path_str) = &cli.installation_id_file {
@@ -90,7 +77,7 @@ fn initialize_installation_id(
                             "Using installation ID override from file {}: {}",
                             path_str, uuid
                         );
-                        installation_id = uuid;
+                        installation_id = Some(uuid);
                     }
                     Err(e) => {
                         eprintln!(
@@ -111,12 +98,31 @@ fn initialize_installation_id(
         }
     }
 
+    if installation_id.is_none() {
+        if player_profile.installation_id.is_nil() {
+            // TODO: WASM support for generating UUIDs might need a different approach
+            // for better entropy, but as multiplayer is not yet supported on WASM,
+            // this is acceptable for now.
+            let new_id = Uuid::new_v4();
+            player_profile.installation_id = new_id;
+            if let Err(e) = player_profile.persist() {
+                error!(
+                    "Failed to persist PlayerProfileData with new installation_id: {:?}",
+                    e
+                );
+            }
+            installation_id = Some(new_id);
+        } else {
+            installation_id = Some(player_profile.installation_id);
+        }
+    }
+
     #[cfg(target_arch = "wasm32")]
     if cli.installation_id_file.is_some() {
         warn!("installation-id-file is not supported on WASM");
     }
 
-    commands.insert_resource(RuntimeInstallationId(installation_id));
+    commands.insert_resource(RuntimeInstallationId(installation_id.unwrap()));
 }
 
 fn recover_stuck_insurance_deposit(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {

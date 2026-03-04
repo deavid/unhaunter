@@ -4,7 +4,7 @@ use bevy_replicon::prelude::{
     ServerState,
 };
 use unmapload_core::events::loadlevel::LoadLevelEvent;
-use unprofile_core::profile::PlayerProfileData;
+use unprofile_core::profile::RuntimeInstallationId;
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
 use unreplicon_core::messages::{RequestSelectDifficulty, RequestSelectMap, RequestStartMission};
 use unreplicon_core::ownership::OwnerId;
@@ -125,7 +125,8 @@ fn setup_lobby_entity(
     mut q_existing: Query<(&mut LobbyInfo, &mut ServerGamePhase)>,
     mut commands: Commands,
     local_player: Option<Res<LocalPlayerRole>>,
-    profile: Option<Res<PlayerProfileData>>,
+    runtime_id: Option<Res<RuntimeInstallationId>>,
+    mut uuid_map: ResMut<ClientUuidMap>,
 ) {
     if let Ok((mut lobby, mut game_phase)) = q_existing.single_mut() {
         // Re-entering Lobby after a mission: reset selection, signal state change.
@@ -140,9 +141,9 @@ fn setup_lobby_entity(
     let mut leader_uuid = None;
 
     if local_player.is_some()
-        && let Some(p) = profile
+        && let Some(id) = runtime_id
     {
-        let uuid = p.installation_id;
+        let uuid = id.0;
         players.push(LobbyPlayerInfo {
             player_uuid: uuid,
             current_socket: None, // Local host player
@@ -151,6 +152,7 @@ fn setup_lobby_entity(
             nickname: None,
         });
         leader_uuid = Some(uuid);
+        uuid_map.0.insert(OwnerId::Server, uuid);
     }
 
     commands.spawn((
@@ -313,7 +315,13 @@ fn handle_request_select_difficulty(
     uuid_map: Res<ClientUuidMap>,
 ) {
     for msg in reader.read() {
+        trace!(
+            "Server received difficulty request from ClientId: {:?}",
+            msg.client_id
+        );
+
         let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
+            warn!("Could not find UUID for ClientId: {:?}", msg.client_id);
             continue;
         };
         for mut lobby in q_lobby.iter_mut() {
@@ -335,6 +343,7 @@ fn handle_request_start_mission(
     q_lobby: Query<&LobbyInfo>,
     uuid_map: Res<ClientUuidMap>,
     mut ev_load: MessageWriter<LoadLevelEvent>,
+    mut commands: Commands,
 ) {
     for msg in reader.read() {
         let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
@@ -356,6 +365,15 @@ fn handle_request_start_mission(
             ev_load.write(LoadLevelEvent {
                 map_filepath: map_filepath.clone(),
             });
+            // Replicate mission info to connected clients so they can join.
+            commands.spawn((
+                Replicated,
+                SelectedMission {
+                    map_path: map_filepath.clone(),
+                    map_seed: msg.message.map_seed,
+                    difficulty_id: lobby.selected_difficulty.clone(),
+                },
+            ));
         }
     }
 }

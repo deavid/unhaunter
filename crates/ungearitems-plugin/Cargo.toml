@@ -36,10 +36,8 @@ unreplicon-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
-bevy_platform = { workspace = true }
 bevy_replicon = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }
 enum-iterator = { workspace = true }
-fastapprox = { workspace = true }
 ungearitems-core = { path = "../ungearitems-core" }

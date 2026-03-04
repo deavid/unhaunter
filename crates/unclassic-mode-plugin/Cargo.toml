@@ -33,7 +33,6 @@ untypes-core = { path = "../untypes-core" }
 unui-core = { path = "../unui-core" }
 unpicking-core = { path = "../unpicking-core" }
 uninteraction-core = { path = "../uninteraction-core" }
-unprofile-core = { path = "../unprofile-core" }
 unreplicon-core = { workspace = true }
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }

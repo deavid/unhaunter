@@ -8,6 +8,7 @@ use undifficulty_core::difficulty_settings::DifficultySettings;
 use unengine_core::MenuUI;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
@@ -264,6 +265,7 @@ pub(crate) fn handle_clicks(
     mut current_map_seed: ResMut<CurrentMapSeed>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
     mut ev_start: MessageWriter<RequestStartMission>,
+    mut ev_load: MessageWriter<LoadLevelEvent>,
 ) {
     let lobby_info = q_lobby.single().ok();
     let is_room_owner = match (local_player.0, lobby_info) {
@@ -321,7 +323,10 @@ pub(crate) fn handle_clicks(
                             );
                         }
                         info!("Non-owner joining mission: map={}", mission.map_path);
-                        // AppState::MissionLoading is set by SelectedMission observer in unreplicon-plugin.
+                        ev_load.write(LoadLevelEvent {
+                            map_filepath: mission.map_path.clone(),
+                        });
+                        next_app_state.set(AppState::MissionLoading);
                     }
                 } else if !host_in_mission && is_room_owner {
                     // Owner: start a new mission.
@@ -380,6 +385,13 @@ pub(crate) fn update_display(
     mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
     q_selected_mission: Query<Entity, With<SelectedMission>>,
 ) {
+    // Guard: if LocalPlayer identity is not yet resolved, skip rendering this frame to
+    // avoid displaying the player list without the correct "You" highlight.
+    if local_player.0.is_none() {
+        warn!("update_display: LocalPlayer identity not yet resolved; skipping frame.");
+        return;
+    }
+
     let lobby_info = q_lobby.single().ok();
     let is_room_owner = match (local_player.0, lobby_info.as_deref()) {
         (Some(lp), Some(li)) => li.leader_uuid == Some(lp),

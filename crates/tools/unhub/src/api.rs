@@ -4,11 +4,13 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
+use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 use sha2::Digest;
 use unhub_client::protocol::{
     CreateRoomRequest, CreateRoomResponse, HealthResponse, HubError, JoinRoomRequest,
     JoinRoomResponse, ProcManMessage,
 };
+use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unhub_client::{generate_room_code, generate_room_secret};
 
 pub async fn health(State(state): State<HubState>) -> Json<HealthResponse> {
@@ -262,21 +264,30 @@ pub async fn create_room(
     for _ in 0..50 {
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         if let Some(room) = state.rooms.get(&room_code) {
-            let ticket = crate::tickets::generate_ticket(
-                &ticket_hmac_secret,
-                &room_code,
-                pm_uuid,
-                payload.player_uuid,
-            )
-            .map_err(|e| {
+            let exp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                + 300; // 5 mins
+
+            let ticket_data = ConnectionTicket {
+                room_code: room_code.clone(),
+                installation_id: pm_uuid,
+                player_uuid: payload.player_uuid,
+                exp,
+            };
+
+            let raw_ticket = encode_ticket(&ticket_data, &ticket_hmac_secret).map_err(|e| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(HubError {
                         error: "ticket_error".to_string(),
-                        message: format!("Failed to generate connection ticket: {}", e),
+                        message: format!("Failed to encode connection ticket: {}", e),
                     }),
                 )
             })?;
+
+            let ticket = B64.encode(raw_ticket);
             return Ok(Json(CreateRoomResponse {
                 code: room_code,
                 addr: format!("{}:{}", public_addr, room.port),
@@ -339,21 +350,30 @@ pub async fn join_room(
         }),
     ))?;
 
-    let ticket = crate::tickets::generate_ticket(
-        &pm.ticket_hmac_secret,
-        &code,
-        room.server_id,
-        payload.player_uuid,
-    )
-    .map_err(|e| {
+    let exp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+        + 300; // 5 mins
+
+    let ticket_data = ConnectionTicket {
+        room_code: code.clone(),
+        installation_id: *pm.key(),
+        player_uuid: payload.player_uuid,
+        exp,
+    };
+
+    let raw_ticket = encode_ticket(&ticket_data, &pm.ticket_hmac_secret).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(HubError {
                 error: "ticket_error".to_string(),
-                message: format!("Failed to generate connection ticket: {}", e),
+                message: format!("Failed to encode connection ticket: {}", e),
             }),
         )
     })?;
+
+    let ticket = B64.encode(raw_ticket);
 
     Ok(Json(JoinRoomResponse {
         code,

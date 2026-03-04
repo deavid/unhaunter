@@ -20,9 +20,7 @@ untypes-core = { path = "../untypes-core" }
 unmenu-core = { path = "../unmenu-core" }
 unreplicon-core = { workspace = true }
 unassets-core = { path = "../unassets-core" }
+unmapload-core = { path = "../unmapload-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unprofile-core = { path = "../unprofile-core" }
-unmapload-core = { path = "../unmapload-core" }
-unevents-core = { path = "../unevents-core" }
 bevy-persistent = { workspace = true }
-bevy_replicon = { workspace = true }

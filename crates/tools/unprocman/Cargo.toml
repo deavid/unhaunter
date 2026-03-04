@@ -17,8 +17,6 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 unhub-client = { workspace = true }
 anyhow = { workspace = true }
-thiserror = { workspace = true }
 futures = { workspace = true }
 tokio-util = { workspace = true }
-clap = { workspace = true }
 rand = { workspace = true }

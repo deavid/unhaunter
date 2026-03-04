@@ -16,4 +16,3 @@ bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
 unfoundation-core = { path = "../unfoundation-core" }
 unghost-core = { path = "../unghost-core" }
-unevents-core = { path = "../unevents-core" }

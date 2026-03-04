@@ -1,20 +1,31 @@
 use bevy::prelude::*;
-use unprofile_core::profile::PlayerProfileData;
+use unprofile_core::profile::RuntimeInstallationId;
 use unreplicon_core::resources::LocalPlayer;
-use untypes_core::states::AppState;
-
 pub(super) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::EngineBoot), set_local_player_system);
+    // We must use PostStartup because the unprofile-plugin inserts RuntimeInstallationId in Startup.
+    // However, if we are already in AppState::EngineBoot (which is the default),
+    // OnEnter(AppState::EngineBoot) might have already fired before we reach PostStartup if
+    // we were to put it there.
+    //
+    // The most robust way to ensure we catch the transition OR the initial state
+    // is to run a one-shot initialization system that checks for the resource.
+    app.add_systems(
+        Update,
+        set_local_player_system.run_if(
+            resource_exists::<RuntimeInstallationId>
+                .and(resource_exists_and_equals(LocalPlayer(None))),
+        ),
+    );
     app.add_systems(Update, observe_server_game_phase_transitions);
 }
 
-/// Initialise `LocalPlayer` based on the persistent profile.
-fn set_local_player_system(profile: Option<Res<PlayerProfileData>>, mut commands: Commands) {
-    if let Some(p) = profile {
-        let uuid = p.installation_id;
-        commands.insert_resource(LocalPlayer(Some(uuid)));
-        info!("LocalPlayer identity set to UUID: {}", uuid);
-    }
+/// Initialise `LocalPlayer` from the `RuntimeInstallationId` inserted by the profile plugin.
+fn set_local_player_system(
+    runtime_id: Res<RuntimeInstallationId>,
+    mut local_player: ResMut<LocalPlayer>,
+) {
+    *local_player = LocalPlayer(Some(runtime_id.0));
+    info!("LocalPlayer identity set to UUID: {}", runtime_id.0);
 }
 
 use unreplicon_core::components::ServerGamePhase;

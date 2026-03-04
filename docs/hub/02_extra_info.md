@@ -91,8 +91,10 @@ To prevent players from bypassing the Hub (e.g., port scanning to find open room
 - **Validation:** Player gets secret from Hub API -> sends to `undedicated` in handshake.
 - **Security Level:** Low/Medium. It prevents casual scanning. It does _not_ prevent a player from sharing the secret
   with a friend (which is fine/intended).
-- **Alternative Considered:** Cryptographic tokens (JWTs) signed by the Hub.
-  - **Verdict:** Overkill for v1. A simple string match is faster and easier to debug.
+- **Alternative Considered:** Full JWT tokens signed by the Hub.
+  - **Verdict:** Full JWTs are overkill for this use case. The current implementation uses a lightweight
+    postcard-serialized binary ticket with HMAC-SHA256, which achieves the same security goals while fitting in Renet's
+    256-byte `user_data` field.
 
 ## 4. Discarded Ideas (for v1)
 

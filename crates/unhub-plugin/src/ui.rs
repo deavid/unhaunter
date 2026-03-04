@@ -6,7 +6,7 @@ use unmenu_core::components::MenuItemInteractive;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
 use unreplicon_core::resources::RoomIdentification;
-use untypes_core::cli::{CliOptions, NetMode};
+use untypes_core::cli::{CliOptions, CliNetMode};
 use untypes_core::platform::plt;
 use untypes_core::states::AppState;
 use unui_core::assets::UiAssets;
@@ -254,7 +254,7 @@ pub fn handle_hub_responses(
                 info!("Hub: Room created: {} at {}", data.code, data.addr);
                 room_ident.code = Some(data.code);
                 room_ident.secret = Some(data.secret);
-                cli.net_mode = NetMode::Join {
+                cli.net_mode = CliNetMode::Join {
                     address: data.addr.clone(),
                     ticket: Some(data.ticket.clone()),
                 };
@@ -264,7 +264,7 @@ pub fn handle_hub_responses(
                 info!("Hub: Room joined: {} at {}", data.code, data.addr);
                 room_ident.code = Some(data.code);
                 room_ident.secret = Some(data.secret);
-                cli.net_mode = NetMode::Join {
+                cli.net_mode = CliNetMode::Join {
                     address: data.addr.clone(),
                     ticket: Some(data.ticket.clone()),
                 };

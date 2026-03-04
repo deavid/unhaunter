@@ -12,3 +12,6 @@ serde = { workspace = true, features = ["derive"] }
 uuid = { workspace = true, features = ["v4", "serde"] }
 rand = { workspace = true }
 sha2 = { workspace = true }
+postcard = { workspace = true }
+hmac = { workspace = true }
+anyhow = { workspace = true }

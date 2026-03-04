@@ -14,7 +14,6 @@ workspace = true
 unsound-core = { path = "../unsound-core" }
 unspatial-core = { path = "../unspatial-core" }
 unfoundation-core = { path = "../unfoundation-core" }
-unevents-core = { path = "../unevents-core" }
 unboard-core = { path = "../unboard-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 untypes-core = { path = "../untypes-core" }

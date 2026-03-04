@@ -10,7 +10,7 @@ struct Args {
     draft_maps: bool,
 
     #[clap(long)]
-    host: Option<u16>,
+    peer_host: Option<u16>,
 
     #[clap(long)]
     bind: Vec<String>,
@@ -47,16 +47,19 @@ fn main() {
         }
     }
 
-    let net_mode = if let Some(port) = args.host {
+    let net_mode = if let Some(port) = args.peer_host {
         let bind_addresses = args.bind.clone();
-        untypes_core::cli::NetMode::Host {
+        untypes_core::cli::CliNetMode::PeerHost {
             port,
             bind_addresses,
         }
     } else if let Some(address) = args.join {
-        untypes_core::cli::NetMode::Join { address, ticket: None }
+        untypes_core::cli::CliNetMode::Join {
+            address,
+            ticket: None,
+        }
     } else {
-        untypes_core::cli::NetMode::Offline
+        untypes_core::cli::CliNetMode::Offline
     };
 
     // --- Validation ---

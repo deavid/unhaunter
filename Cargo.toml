@@ -116,11 +116,11 @@ glob = "0.3"
 tiled = { version = "0.15", default-features = false }
 wasm-bindgen = "0.2"
 normalize-path = "0.2"
-itertools = "0.14.0"
+itertools = "0.14"
 csv = "1.4"
 dirs = "6.0"
 strum = { version = "0.28", features = ["derive"] }
-noise = { version = "0.9.0", features = ["std"] }
+noise = { version = "0.9", features = ["std"] }
 bevy = { version = "0.18", features = ["jpeg", "serialize", "debug"] }
 # bevy = { version = "0.18", default-features = false, features = [
 #     "jpeg",
@@ -136,7 +136,7 @@ bevy = { version = "0.18", features = ["jpeg", "serialize", "debug"] }
 #     "ui_api",
 #     "ui_bevy_render",
 # ] }
-bevy_asset_loader = { version = "0.25.0", features = ["2d"] }
+bevy_asset_loader = { version = "0.25", features = ["2d"] }
 bevy_math = "0.18"
 bevy-persistent = { version = "0.10", features = ["all"] }
 bevy_platform = "0.18"
@@ -147,22 +147,24 @@ sha2 = "0.10"
 rayon = "1.11"
 crossbeam-channel = "0.5"
 uuid = { version = "1.21", features = ["v4", "serde"] }
-bevy_replicon = "0.38.2"
-bevy_replicon_renet = "0.14.0"
-bevy_renet = { version = "4.0.0", features = ["netcode"] }
-renet = "2.0.0"
-renet_netcode = "2.0.0"
-jsonwebtoken = "10.3.0"
+bevy_replicon = "0.39"
+bevy_replicon_renet = "0.15"
+bevy_renet = { version = "4.0", features = ["netcode"] }
+renet = "2.0"
+renet_netcode = "2.0"
+postcard = { version = "1.1", features = ["alloc"] }
+hmac = "0.12"
 reqwest = { version = "0.13", features = ["json"] }
-axum = "0.8.8"
-tokio = { version = "1.49", features = ["full"] }
-dashmap = "6.1.0"
+axum = "0.8"
+tokio = { version = "1.50", features = ["full"] }
+dashmap = "6.1"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
-tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 chrono = { version = "0.4", features = ["serde"] }
-futures = "0.3.32"
+futures = "0.3"
 tokio-util = { version = "0.7", features = ["codec"] }
+base64 = "0.22"
 
 # Local crates
 ghost_list = { path = "crates/tools/ghost_list" }
@@ -300,15 +302,8 @@ untmxmap-plugin = { workspace = true }
 unui-plugin = { workspace = true }
 undifficulty-plugin = { workspace = true }
 uninteraction-plugin = { workspace = true }
-unhub-client = { workspace = true }
 unhub-plugin = { workspace = true }
 unreplicon-plugin = { workspace = true }
-sha2 = { workspace = true }
-axum = { workspace = true }
-dashmap = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-futures = { workspace = true }
 
 [[bin]]
 name = "unhaunter_game"

@@ -99,7 +99,8 @@ pub fn build_log_filter(verbose: u8) -> String {
     // Networking crates are capped at debug — their trace output is extremely noisy.
     let net_level = match verbose {
         0 => "warn",
-        1 => "info",
+        1 => "warn",
+        2 => "info",
         _ => "debug",
     };
     let mut filter = "warn,wgpu_hal=error".to_string();

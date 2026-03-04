@@ -9,8 +9,6 @@ authors.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
 unhub-client = { workspace = true }
 untypes-core = { workspace = true }
 unreplicon-core = { workspace = true }
@@ -20,8 +18,6 @@ unui-core = { workspace = true }
 unprofile-core = { workspace = true }
 reqwest = { workspace = true }
 tokio = { workspace = true }
-tracing = { workspace = true }
-anyhow = { workspace = true }
 crossbeam-channel = { workspace = true }
 uuid = { workspace = true }
 bevy-persistent = { workspace = true }

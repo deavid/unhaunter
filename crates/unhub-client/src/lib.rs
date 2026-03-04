@@ -1,6 +1,7 @@
 use rand::prelude::*;
 
 pub mod protocol;
+pub mod tickets;
 
 pub const GAME_VERSION: &str = env!("CARGO_PKG_VERSION");
 

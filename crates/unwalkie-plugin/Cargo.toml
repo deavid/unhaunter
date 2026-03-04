@@ -18,7 +18,6 @@ uninteraction-core = { path = "../uninteraction-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unlight-core = { path = "../unlight-core" }
-unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 unui-core = { path = "../unui-core" }
 ungear-core = { path = "../ungear-core" }

@@ -46,7 +46,7 @@ fn main() {
 
     let bind_addresses = args.bind.clone();
 
-    let net_mode = untypes_core::cli::NetMode::Host {
+    let net_mode = untypes_core::cli::CliNetMode::PeerHost {
         port: args.host,
         bind_addresses,
     };

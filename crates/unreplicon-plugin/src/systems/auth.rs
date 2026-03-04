@@ -1,24 +1,11 @@
+use crate::systems::procman::RoomAuth;
 use bevy::prelude::*;
 use bevy_renet::RenetServer;
 use bevy_renet::netcode::NetcodeServerTransport;
 use bevy_replicon::prelude::ConnectedClient;
 use bevy_replicon::shared::backend::connected_client::NetworkId;
-use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
-use serde::{Deserialize, Serialize};
 use unreplicon_core::ownership::OwnerId;
 use unreplicon_core::resources::ClientUuidMap;
-use uuid::Uuid;
-
-use crate::systems::procman::RoomAuth;
-
-/// JWT claims structure — must match what the Hub generates in `tickets.rs`.
-#[derive(Debug, Serialize, Deserialize)]
-struct TicketClaims {
-    room_code: String,
-    installation_id: String,
-    player_uuid: String,
-    exp: u64,
-}
 
 pub(super) fn app_setup(app: &mut App) {
     // Observe Add<ConnectedClient> — fires after bevy_replicon_renet has already spawned the
@@ -57,79 +44,81 @@ fn validate_new_connection_observer(
     };
     let owner_id = OwnerId::Client(entity);
 
-    // No procman channel → hub-less direct-connect: no tickets exist, accept unconditionally.
-    if procman.is_none() {
-        info!(
-            "Client {:?} connected (hub-less direct-connect; authentication skipped).",
-            client_id
-        );
-        // Fallback: deterministic UUID for development/hub-less
-        let uuid = Uuid::from_u128(client_id as u128);
-        uuid_map.0.insert(owner_id, uuid);
-        return;
-    }
+    // --- New Logic Starts Here ---
 
-    // Reject all connections until a room is assigned and we have a secret.
-    let (Some(hmac_secret), Some(room_code)) =
-        (&room_auth.ticket_hmac_secret, &room_auth.room_code)
-    else {
-        // No room assigned yet — this server is idle or resetting.
-        warn!(
-            "Rejecting client {:?}: no room assigned (server idle).",
-            client_id
-        );
-        server.disconnect(client_id);
-        return;
-    };
-
-    // Extract user_data from the netcode transport.
-    let ticket_opt = transport
+    // Extract the raw 256 bytes from Renet's transport
+    let user_data_bytes = transport
         .as_ref()
         .and_then(|t| t.user_data(client_id))
-        .and_then(|data| {
-            // The JWT was written as raw bytes, null-padded to 256 bytes.
-            let end = data.iter().position(|&b| b == 0).unwrap_or(data.len());
-            std::str::from_utf8(&data[..end]).ok().map(str::to_owned)
-        })
-        .filter(|s| !s.is_empty());
+        .filter(|data| data.len() == bevy_renet::netcode::NETCODE_USER_DATA_BYTES);
 
-    let Some(ticket) = ticket_opt else {
-        warn!(
-            "Rejecting client {:?}: no connection ticket in user_data.",
+    let Some(user_data) = user_data_bytes else {
+        error!(
+            "Rejecting client {:?}: Missing or invalid length user_data.",
             client_id
         );
         server.disconnect(client_id);
         return;
     };
 
-    let mut validation = Validation::new(Algorithm::HS256);
-    validation.validate_exp = true;
+    // Determine the expected secret and room based on topology
+    let (expected_secret, expected_room) = if procman.is_some() {
+        // Hub Mode (Dedicated Server)
+        let secret = room_auth.ticket_hmac_secret.as_deref().unwrap_or_default();
+        let room = room_auth.room_code.as_deref().unwrap_or_default();
 
-    match decode::<TicketClaims>(
-        &ticket,
-        &DecodingKey::from_secret(hmac_secret.as_bytes()),
-        &validation,
-    ) {
-        Ok(token_data) => {
-            if token_data.claims.room_code != *room_code {
-                warn!(
-                    "Rejecting client {:?} (room_code mismatch): expected '{}', got '{}'.",
-                    client_id, room_code, token_data.claims.room_code
-                );
-                server.disconnect(client_id);
-            } else {
-                info!("Client {:?} authenticated successfully.", client_id);
-                if let Ok(uuid) = Uuid::parse_str(&token_data.claims.player_uuid) {
-                    uuid_map.0.insert(owner_id, uuid);
-                }
-            }
+        if secret.is_empty() || room.is_empty() {
+            error!(
+                "Rejecting client {:?}: Server is idle/unassigned.",
+                client_id
+            );
+            server.disconnect(client_id);
+            return;
         }
+        (secret, room)
+    } else {
+        // Direct Connect Mode (PeerHost)
+        ("", ":DIRECT")
+    };
+
+    // Attempt to decode and verify the HMAC signature
+    let ticket = match unhub_client::tickets::decode_ticket(&user_data, expected_secret) {
+        Ok(t) => t,
         Err(e) => {
-            warn!(
-                "Rejecting client {:?} (JWT decode failed): {}",
+            error!(
+                "Rejecting client {:?}: Ticket validation failed: {}",
                 client_id, e
             );
             server.disconnect(client_id);
+            return;
         }
+    };
+
+    // Validate Room Code
+    if ticket.room_code != expected_room {
+        error!(
+            "Rejecting client {:?} (room mismatch): expected '{}', got '{}'",
+            client_id, expected_room, ticket.room_code
+        );
+        server.disconnect(client_id);
+        return;
     }
+
+    // Validate Expiration
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    if ticket.exp < now {
+        error!("Rejecting client {:?}: Ticket expired", client_id);
+        server.disconnect(client_id);
+        return;
+    }
+
+    // Validation passed! Map the UUID to the connection.
+    uuid_map.0.insert(owner_id, ticket.player_uuid);
+    info!(
+        "Client {:?} authenticated successfully for Player: {}",
+        client_id, ticket.player_uuid
+    );
 }

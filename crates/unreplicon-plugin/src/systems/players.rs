@@ -13,7 +13,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite, Stamina};
-use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive, SelectedMission};
+use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportStateMessage, FloorGearDespawnBroadcast, FloorGearSpawnBroadcast,
     HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent, HostInteractionOccurred,
@@ -49,9 +49,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_message::<HostFloorGearDroppedEvent>();
     app.add_message::<HostFloorGearPickedUpEvent>();
 
-    // Client: observe SelectedMission to enter MissionLoading
-    app.add_observer(on_selected_mission_added);
-
     // Register replicated components
     app.replicate::<Owner>();
     app.replicate::<Position>();
@@ -66,7 +63,7 @@ pub(super) fn app_setup(app: &mut App) {
     // SP-6.3: gated by LocalPlayerRole so dedicated servers (no local player) never run this.
     app.add_systems(
         OnEnter(AppState::InGame),
-        setup_mission_players.run_if(resource_exists::<LocalPlayerRole>),
+        setup_mission_players.run_if(resource_exists::<AuthorityRole>),
     );
 
     // Server-side: message handlers + net state sync.
@@ -106,6 +103,12 @@ pub(super) fn app_setup(app: &mut App) {
         (apply_remote_interaction, handle_ownership_granted)
             .run_if(in_state(AppState::InGame))
             .run_if(is_pure_client),
+    );
+
+    // Debug system for player entities
+    app.add_systems(
+        Update,
+        debug_player_entities.run_if(in_state(AppState::InGame)),
     );
 
     // Cleanup the spawning-active marker when leaving InGame
@@ -447,16 +450,6 @@ fn handle_ownership_released(
     }
 }
 
-fn on_selected_mission_added(
-    _trigger: On<Add, SelectedMission>,
-    local_player: Option<Res<LocalPlayerRole>>,
-    mut next_app_state: ResMut<NextState<AppState>>,
-) {
-    if local_player.is_some() {
-        next_app_state.set(AppState::MissionLoading);
-    }
-}
-
 fn handle_truck_loadout_message(
     mut reader: MessageReader<FromClient<TruckLoadoutMessage>>,
     mut q_players: Query<(&Owner, &mut PlayerGear)>,
@@ -592,5 +585,15 @@ fn handle_ownership_granted(
             // Mapping removal is currently skipped due to private API constraints.
             // Replicated removal should mitigate some issues, but this is technically broken.
         }
+    }
+}
+
+/// Debug system for player entities.
+fn debug_player_entities(q: Query<(Entity, &Owner, Has<LocallyOwned>, Has<Replicated>)>) {
+    for (entity, owner, is_local, is_replicated) in q.iter() {
+        debug!(
+            "DEBUG PLAYER: Entity: {:?}, Owner: {:?}, LocallyOwned: {}, Replicated: {}",
+            entity, owner.0, is_local, is_replicated
+        );
     }
 }
