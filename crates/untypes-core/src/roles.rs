@@ -21,3 +21,11 @@ pub fn is_pure_client(
 ) -> bool {
     local.is_some() && authority.is_none()
 }
+
+/// Sent by the UI when the local player wants to disconnect from the current
+/// multiplayer session and return to single-player offline authority.
+///
+/// Consumed exclusively by `unreplicon-plugin/src/systems/connection.rs`.
+/// The UI must not directly manipulate transport resources; it only writes this message.
+#[derive(bevy::prelude::Message, Debug, Clone)]
+pub struct DisconnectRequest;
