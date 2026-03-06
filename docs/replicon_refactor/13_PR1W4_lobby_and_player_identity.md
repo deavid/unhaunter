@@ -4,6 +4,8 @@
 > names, and enum variants have been verified by direct inspection. Line-number references are indicative and may drift;
 > the symbol names are authoritative.
 
+UPDATE: This specification has been executed and the codebase already has these changes.
+
 ---
 
 ## 1. Objective
@@ -705,4 +707,3 @@ cargo check
 ```
 
 Do not run game tests. Do not run the game.
-
