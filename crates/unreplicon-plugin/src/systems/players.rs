@@ -9,11 +9,13 @@ use unbehavior::components::FloorItemCollidable;
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use unfoundation_core::types::gear::Hand;
 use ungear_core::components::playergear::HeldObject;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite, Stamina};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
+use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportStateMessage, FloorGearDespawnBroadcast, FloorGearSpawnBroadcast,
     HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent, HostInteractionOccurred,
@@ -60,7 +62,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<PlayerSpectating>();
 
     // Host/offline: spawn and tag player entities when InGame starts.
-    // SP-6.3: gated by LocalPlayerRole so dedicated servers (no local player) never run this.
+    // Gated by AuthorityRole so it runs on Host and Dedicated Server.
     app.add_systems(
         OnEnter(AppState::InGame),
         setup_mission_players.run_if(resource_exists::<AuthorityRole>),
@@ -133,14 +135,17 @@ fn from_owner_id(owner_id: OwnerId) -> ClientId {
 
 /// Server: called once on `OnEnter(AppState::InGame)`.
 fn setup_mission_players(
-    q_host_player: Query<(Entity, &Position, &PlayerSprite)>,
     q_lobby: Query<&LobbyInfo>,
     q_spawn_points: Query<&Position, (With<PlayerSpawnPoint>, Without<PlayerSprite>)>,
     mut commands: Commands,
     filter_bit: Res<crate::plugin::GlobalFilterBit>,
     mut q_clients: Query<&mut ClientVisibility>,
+    gear_registry: Res<GearSpawnerRegistry>,
+    difficulty: Res<CurrentDifficulty>,
 ) {
     // Signal that replicon-based player spawning is now active.
+    // This marker causes spawn_joined_player (being deleted in Step 3) to be a no-op
+    // on any node that still has the old system registered during the transition period.
     commands.insert_resource(RepliconPlayerSpawningActive);
 
     let spawn_points: Vec<Position> = q_spawn_points.iter().copied().collect();
@@ -151,66 +156,113 @@ fn setup_mission_players(
         visual_priority: 0.0,
     };
 
-    // Add network components to the existing host player entity.
-    for (entity, _pos, _player_sprite) in q_host_player.iter() {
-        commands
-            .entity(entity)
-            .insert((Replicated, Owner(OwnerId::Server), LocallyOwned));
-
-        info!(
-            "setup_mission_players: host player entity {:?} marked Replicated, LocallyOwned and Hidden",
-            entity
-        );
-    }
-
-    // Spawn bare network entities for remote clients.
     let Ok(lobby) = q_lobby.single() else {
-        warn!("setup_mission_players: no LobbyInfo entity found — skipping remote player spawn");
+        warn!("setup_mission_players: no LobbyInfo entity found — skipping player spawn");
         return;
     };
 
     for (idx, player) in lobby.players.iter().enumerate() {
-        let Some(socket_owner_id) = player.current_socket else {
-            // Host handled above.
-            continue;
-        };
-        let client_id = from_owner_id(socket_owner_id);
-
         // Pick a deterministic spawn point based on lobby order.
         let spawn_pos = spawn_points
             .get(idx % spawn_points.len().max(1))
             .copied()
             .unwrap_or(default_pos);
-        let remote_entity = commands
+
+        let net_id = NetworkId::from(player.player_uuid);
+
+        // --- Gear Initialization ---
+        let mut player_gear = PlayerGear::default();
+        let mut gear_id_counter = net_id.0 * 1000;
+
+        if difficulty.0.player_gear.left_hand.is_some() {
+            let gear_entity = gear_registry.spawn(&mut commands, difficulty.0.player_gear.left_hand);
+            player_gear.left_hand = Some(gear_entity);
+            commands
+                .entity(gear_entity)
+                .insert((NetworkId(gear_id_counter), Replicated));
+            gear_id_counter += 1;
+        }
+        if difficulty.0.player_gear.right_hand.is_some() {
+            let gear_entity = gear_registry.spawn(&mut commands, difficulty.0.player_gear.right_hand);
+            player_gear.right_hand = Some(gear_entity);
+            commands
+                .entity(gear_entity)
+                .insert((NetworkId(gear_id_counter), Replicated));
+            gear_id_counter += 1;
+        }
+        for kind in &difficulty.0.player_gear.inventory {
+            if kind.is_some() {
+                let gear_entity = gear_registry.spawn(&mut commands, *kind);
+                player_gear.inventory.push(gear_entity);
+                commands
+                    .entity(gear_entity)
+                    .insert((NetworkId(gear_id_counter), Replicated));
+                gear_id_counter += 1;
+            }
+        }
+
+        // Spawn the player skeleton. Every node (host, join client, dedicated server)
+        // that replicates will receive this entity. Visual components are NOT added
+        // here — hydrate_players_system handles that.
+        let entity = commands
             .spawn((
-                Replicated,
                 spawn_pos,
                 unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
-                PlayerSprite::default(),
+                PlayerSprite::new(player.player_uuid, net_id, spawn_pos),
+                net_id,
                 Stamina::default(),
-                PlayerGear::default(),
-                Owner(socket_owner_id),
+                player_gear,
+                unspatial_core::direction::Direction::new_right(),
+                unbehavior::components::Movable,
+                unnavigation_core::components::waypoint::WaypointQueue::default(),
+                unspatial_core::boardposition::MapEntityFieldBPos(spawn_pos.to_board_position()),
+                untags_core::tags::PlayerTag,
+                unrender_std::resources::visibility_data::VisibilityData::default(),
+                unplayer_core::components::PlayerInput::default(),
+                Replicated,
             ))
             .id();
 
-        if let OwnerId::Client(client_entity) = socket_owner_id
-            && let Ok(mut visibility) = q_clients.get_mut(client_entity)
-        {
-            visibility.set(remote_entity, filter_bit.0, false);
+        let is_host = player.current_socket.is_none();
+
+        if is_host {
+            // Host player: authority owns it locally. Insert LocallyOwned directly —
+            // the OwnershipGranted message path is not used because the host is not
+            // a pure client.
+            commands
+                .entity(entity)
+                .insert((Owner(OwnerId::Server), LocallyOwned));
+            info!(
+                "setup_mission_players: spawned host skeleton {:?} for player {}",
+                entity, player.player_uuid
+            );
+        } else {
+            let socket_owner_id = player.current_socket.unwrap();
+            commands.entity(entity).insert(Owner(socket_owner_id));
+
+            // Configure Replicon's spatial-interest filter for this remote client so
+            // that the server sends this entity's state to the owning client.
+            if let OwnerId::Client(client_entity) = socket_owner_id
+                && let Ok(mut visibility) = q_clients.get_mut(client_entity)
+            {
+                visibility.set(entity, filter_bit.0, false);
+            }
+
+            // Notify the client of which entity it owns. On the client side,
+            // handle_ownership_granted receives this message and inserts LocallyOwned
+            // onto the entity — without this, the client never knows which entity
+            // belongs to it, and send_export_state (which queries With<LocallyOwned>)
+            // will never fire for that client.
+            let client_id = from_owner_id(socket_owner_id);
+            commands.write_message(ToClients {
+                mode: SendMode::Direct(client_id),
+                message: OwnershipGranted { entity },
+            });
+            info!(
+                "setup_mission_players: spawned remote skeleton {:?} for player {} (owner={:?})",
+                entity, player.player_uuid, socket_owner_id
+            );
         }
-
-        info!(
-            "setup_mission_players: spawned replicated entity {:?} for client {:?}",
-            remote_entity, client_id
-        );
-
-        // Notify client of ownership
-        commands.write_message(ToClients {
-            mode: SendMode::Direct(client_id),
-            message: OwnershipGranted {
-                entity: remote_entity,
-            },
-        });
     }
 }
 
