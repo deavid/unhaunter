@@ -21,6 +21,7 @@ pub(crate) enum MenuID {
     Hub,
     Manual,
     Settings,
+    Disconnect,
     #[cfg(not(target_arch = "wasm32"))]
     Quit,
 }
@@ -34,6 +35,7 @@ impl std::fmt::Display for MenuID {
             MenuID::Hub => "Play Online",
             MenuID::Manual => "Manual",
             MenuID::Settings => "Settings",
+            MenuID::Disconnect => "Disconnect from Server",
             #[cfg(not(target_arch = "wasm32"))]
             MenuID::Quit => "Quit",
         };
@@ -73,18 +75,32 @@ pub(crate) fn setup_ui(
     ui_assets: Res<UiAssets>,
     player_profile: Res<Persistent<PlayerProfileData>>,
     lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
-    let mut menu_items = if lobby_presence.is_none() {
+    let is_pure_client = lobby_presence.is_some() && authority.is_none();
+
+    let mut menu_items = if is_pure_client {
+        // Hub Client / Join-only: can only go to the lobby, or disconnect.
+        vec![
+            (
+                MenuID::MultiplayerLobby,
+                MenuID::MultiplayerLobby.to_string(),
+            ),
+            (MenuID::Disconnect, MenuID::Disconnect.to_string()),
+        ]
+    } else if lobby_presence.is_some() {
+        // PeerHost or Dedicated with local player: show lobby entry.
+        vec![(
+            MenuID::MultiplayerLobby,
+            MenuID::MultiplayerLobby.to_string(),
+        )]
+    } else {
+        // Offline single-player: full menu.
         vec![
             (MenuID::Campaign, MenuID::Campaign.to_string()),
             (MenuID::CustomMission, MenuID::CustomMission.to_string()),
             (MenuID::Hub, MenuID::Hub.to_string()),
         ]
-    } else {
-        vec![(
-            MenuID::MultiplayerLobby,
-            MenuID::MultiplayerLobby.to_string(),
-        )]
     };
 
     menu_items.extend(vec![
@@ -138,6 +154,7 @@ pub(crate) fn menu_event(
     mut next_map_hub_state: ResMut<NextState<MapHubState>>,
     mut current_mission_select_mode: ResMut<CurrentMissionSelectMode>,
     menu_items: Query<(&MenuID, &MenuItemInteractive)>,
+    mut ev_disconnect: MessageWriter<untypes_core::roles::DisconnectRequest>,
 ) {
     for ev in click_events.read() {
         if ev.state != AppState::MainMenu {
@@ -178,6 +195,13 @@ pub(crate) fn menu_event(
                 MenuID::Settings => {
                     next_app_state.set(AppState::SettingsMenu);
                     info!("Transitioning to SettingsMenu state");
+                }
+                MenuID::Disconnect => {
+                    ev_disconnect.write(untypes_core::roles::DisconnectRequest);
+                    // The actual teardown happens in unreplicon-plugin/connection.rs.
+                    // Transition back to MainMenu so setup_ui re-runs and shows the offline menu.
+                    next_app_state.set(AppState::MainMenu);
+                    info!("DisconnectRequest sent; transitioning to MainMenu");
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 MenuID::Quit => {

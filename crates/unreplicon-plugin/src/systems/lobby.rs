@@ -24,6 +24,9 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<ServerGamePhase>();
     app.replicate::<SelectedMission>();
 
+    // Register local UI messages
+    app.add_message::<untypes_core::roles::DisconnectRequest>();
+
     // Initialize resources that are referenced by lobby UI systems.
     app.init_resource::<ClientUuidMap>();
     app.init_resource::<LocalPlayer>();
@@ -54,8 +57,12 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Server-side lobby lifecycle
     app.add_systems(
+        Update,
+        spawn_lobby_entity_if_missing.run_if(resource_exists::<AuthorityRole>),
+    );
+    app.add_systems(
         OnEnter(AppState::Lobby),
-        setup_lobby_entity.run_if(resource_exists::<AuthorityRole>),
+        reset_lobby_entity_on_reenter.run_if(resource_exists::<AuthorityRole>),
     );
 
     // Server-side: broadcast InGame state to clients when the mission starts.
@@ -120,19 +127,15 @@ fn auto_start_headless_lobby(
     }
 }
 
-/// Spawn (or reset) the authoritative lobby-state entity when the server enters Lobby.
-fn setup_lobby_entity(
-    mut q_existing: Query<(&mut LobbyInfo, &mut ServerGamePhase)>,
+/// Spawn the authoritative lobby-state entity if it's missing.
+fn spawn_lobby_entity_if_missing(
+    q_lobby: Query<(), With<LobbyInfo>>,
     mut commands: Commands,
     local_player: Option<Res<LocalPlayerRole>>,
     runtime_id: Option<Res<RuntimeInstallationId>>,
     mut uuid_map: ResMut<ClientUuidMap>,
 ) {
-    if let Ok((mut lobby, mut game_phase)) = q_existing.single_mut() {
-        // Re-entering Lobby after a mission: reset selection, signal state change.
-        *game_phase = ServerGamePhase::Lobby;
-        lobby.selected_map = None;
-        info!("Lobby entity reset for new session");
+    if !q_lobby.is_empty() {
         return;
     }
 
@@ -140,9 +143,7 @@ fn setup_lobby_entity(
     let mut players = Vec::new();
     let mut leader_uuid = None;
 
-    if local_player.is_some()
-        && let Some(id) = runtime_id
-    {
+    if local_player.is_some() && let Some(id) = runtime_id {
         let uuid = id.0;
         players.push(LobbyPlayerInfo {
             player_uuid: uuid,
@@ -166,6 +167,18 @@ fn setup_lobby_entity(
         ServerGamePhase::Lobby,
     ));
     info!("Lobby entity spawned (leader={:?})", leader_uuid);
+}
+
+/// Reset the authoritative lobby-state entity when the server re-enters Lobby.
+fn reset_lobby_entity_on_reenter(mut q_existing: Query<(&mut LobbyInfo, &mut ServerGamePhase)>) {
+    if let Ok((mut lobby, mut game_phase)) = q_existing.single_mut() {
+        // Re-entering Lobby after a mission: reset selection, signal state change.
+        *game_phase = ServerGamePhase::Lobby;
+        lobby.selected_map = None;
+        info!("Lobby entity reset for new session");
+    } else {
+        warn!("reset_lobby_entity_on_reenter: Lobby entity not found!");
+    }
 }
 
 /// Server: write `ServerGamePhase::InProgress` on the lobby entity when the server
@@ -231,7 +244,16 @@ fn process_newly_connected_clients(
                 }
             } else {
                 // New player
-                let color_index = lobby.players.len() as u8;
+                // Find the lowest colour slot (0..=8) not currently used by any player.
+                let mut used = [false; 9];
+                for p in lobby.players.iter() {
+                    let idx = p.tint_color_index as usize;
+                    if idx < 9 {
+                        used[idx] = true;
+                    }
+                }
+                let color_index = used.iter().position(|&u| !u).unwrap_or(9) as u8;
+
                 lobby.players.push(LobbyPlayerInfo {
                     player_uuid: uuid,
                     current_socket: Some(owner_id),
@@ -256,19 +278,40 @@ fn process_newly_connected_clients(
 
 fn on_client_disconnected(
     trigger: On<Remove, ConnectedClient>,
-    mut q_lobby: Query<&mut LobbyInfo>,
+    mut q_lobby: Query<(&mut LobbyInfo, &ServerGamePhase)>,
     uuid_map: Res<ClientUuidMap>,
+    mut commands: Commands,
+    q_sprites: Query<(Entity, &unplayer_core::components::PlayerSprite)>,
 ) {
     let client_id = ClientId::Client(trigger.entity);
     let Some(uuid) = client_uuid(client_id, &uuid_map) else {
         return;
     };
 
-    for mut lobby in q_lobby.iter_mut() {
-        if let Some(player) = lobby.players.iter_mut().find(|p| p.player_uuid == uuid) {
-            player.connected = false;
-            player.current_socket = None;
-            info!("Player {} disconnected", uuid);
+    for (mut lobby, phase) in q_lobby.iter_mut() {
+        if *phase == ServerGamePhase::Lobby {
+            // Hard remove
+            lobby.players.retain(|p| p.player_uuid != uuid);
+            info!(
+                "Player {} hard-removed from lobby (ServerGamePhase::Lobby)",
+                uuid
+            );
+        } else {
+            // Soft remove
+            if let Some(player) = lobby.players.iter_mut().find(|p| p.player_uuid == uuid) {
+                player.connected = false;
+                player.current_socket = None;
+                info!("Player {} soft-disconnected (phase={:?})", uuid, phase);
+            }
+            if let Some((entity, _)) = q_sprites.iter().find(|(_, s)| s.id == uuid) {
+                commands
+                    .entity(entity)
+                    .insert(unplayer_core::components::PlayerDisconnected);
+                info!(
+                    "Inserted PlayerDisconnected on avatar entity for player {}",
+                    uuid
+                );
+            }
         }
 
         // If the leader left, assign leadership to the next connected player.

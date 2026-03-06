@@ -30,6 +30,9 @@ pub const DIALOG_TEXT_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.7);
 pub const DIALOG_BOLD_TEXT_COLOR: Color = Color::srgba(0.0, 0.8, 1.0, 0.9);
 
 pub fn player_color(index: usize) -> Color {
+    if index >= 9 {
+        return Color::WHITE;
+    }
     let i = index as f32;
     // Math: Hue(i) = (23 + (i * 3 + (i / 3)) * 40) % 360
     // Simplified for 9 players with stride 3:

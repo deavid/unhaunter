@@ -33,6 +33,39 @@ pub(super) fn app_setup(app: &mut App) {
     );
     app.add_systems(Update, monitor_renet_client_status);
     app.add_systems(Update, monitor_renet_server_clients);
+    app.add_systems(
+        Update,
+        handle_disconnect_request.run_if(resource_exists::<untypes_core::roles::LobbyPresenceRole>),
+    );
+}
+
+fn handle_disconnect_request(
+    mut ev: MessageReader<untypes_core::roles::DisconnectRequest>,
+    mut commands: Commands,
+    q_replicated: Query<Entity, With<bevy_replicon::prelude::Replicated>>,
+) {
+    if ev.is_empty() {
+        return;
+    }
+    ev.clear();
+
+    info!("DisconnectRequest received — tearing down client transport and resetting to offline authority");
+
+    // 1. Remove the transport-layer resources. bevy_renet stops ticking
+    //    and closes the UDP socket automatically when these are dropped.
+    commands.remove_resource::<RenetClient>();
+    commands.remove_resource::<NetcodeClientTransport>();
+
+    // 2. Despawn all entities that were replicated from the remote server.
+    for entity in q_replicated.iter() {
+        commands.entity(entity).despawn();
+    }
+
+    // 3. Retract the network role resources and restore local authority.
+    commands.remove_resource::<untypes_core::roles::LobbyPresenceRole>();
+    commands.insert_resource(untypes_core::roles::AuthorityRole::default());
+
+    // 4. (Callers are responsible for transitioning AppState back to MainMenu or similar.)
 }
 
 fn startup_transport_system(
