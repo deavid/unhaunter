@@ -25,12 +25,7 @@ fn hide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
-        (
-            Entity,
-            &PlayerInputMapping,
-            &mut Position,
-            &PlayerGear,
-        ),
+        (Entity, &PlayerInputMapping, &mut Position, &PlayerGear),
         (With<MainPlayer>, Without<Hiding>, Without<Behavior>),
     >,
     hiding_spots: Query<
@@ -40,9 +35,7 @@ fn hide_player(
     mut ga: SoundEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
-    for (player_entity, input_mapping, mut player_pos, player_gear) in
-        players.iter_mut()
-    {
+    for (player_entity, input_mapping, mut player_pos, player_gear) in players.iter_mut() {
         // Get the player's hold timer or create a new one
         let timer = hold_timers
             .entry(player_entity)
@@ -151,6 +144,6 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (hide_player, unhide_player, cleanup_hiding_overlays)
-            .run_if(in_state(untypes_core::states::GameState::None)),
+            .run_if(in_state(untypes_core::states::GameState::Running)),
     );
 }

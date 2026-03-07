@@ -42,8 +42,7 @@ impl Plugin for UnhaunterSummaryPlugin {
         .add_systems(OnExit(AppState::Summary), (cleanup, remove_afk_timer))
         .add_systems(
             Update,
-            (keyboard, afk_timeout, update_ui, update_score)
-                .run_if(in_state(AppState::Summary)),
+            (keyboard, afk_timeout, update_ui, update_score).run_if(in_state(AppState::Summary)),
         );
     }
 }

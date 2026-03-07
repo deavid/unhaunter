@@ -3,12 +3,15 @@ use bevy_replicon::prelude::{
     AppRuleExt, Channel, ClientId, ClientMessageAppExt, ConnectedClient, FromClient, Replicated,
     ServerState,
 };
+use std::str::FromStr;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unprofile_core::profile::RuntimeInstallationId;
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
 use unreplicon_core::messages::{RequestSelectDifficulty, RequestSelectMap, RequestStartMission};
 use unreplicon_core::ownership::OwnerId;
 use unreplicon_core::resources::{ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer};
+use untypes_core::difficulty::Difficulty;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::{AppState, BootState};
 use uuid::Uuid;
@@ -47,12 +50,12 @@ pub(super) fn app_setup(app: &mut App) {
     // (before maps load) and BootState::Ready fires once maps are ready — both
     // can be the "later" one depending on timing.
     app.add_systems(
-        OnEnter(ServerState::Running),
-        auto_start_headless_lobby.run_if(in_state(BootState::Ready)),
-    );
-    app.add_systems(
-        OnEnter(BootState::Ready),
-        auto_start_headless_lobby.run_if(in_state(ServerState::Running)),
+        Update,
+        auto_start_headless_lobby.run_if(
+            (in_state(ServerState::Running).or(resource_exists::<AuthorityRole>))
+                .and(in_state(BootState::Ready))
+                .and(in_state(AppState::MainMenu)),
+        ),
     );
 
     // Server-side lobby lifecycle
@@ -87,6 +90,55 @@ pub(super) fn app_setup(app: &mut App) {
         Update,
         observe_simulation_ready_to_enter_game.run_if(in_state(AppState::MissionLoading)),
     );
+
+    // Client-side: when SelectedMission is replicated from the server, start loading the map.
+    app.add_observer(on_selected_mission_added);
+}
+
+/// Client-side observer: fires when a `SelectedMission` entity is added (via replication).
+/// Triggers local map loading so the client catches up with the server.
+fn on_selected_mission_added(
+    trigger: On<Add, SelectedMission>,
+    q_mission: Query<&SelectedMission>,
+    local_player: Option<Res<LocalPlayerRole>>,
+    authority: Option<Res<AuthorityRole>>,
+    app_state: Res<State<AppState>>,
+    mut current_map_seed: ResMut<CurrentMapSeed>,
+    mut current_difficulty: ResMut<CurrentDifficulty>,
+    mut ev_load: MessageWriter<LoadLevelEvent>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+) {
+    // Only act on pure clients (not authority -- server handles this itself).
+    if authority.is_some() || local_player.is_none() {
+        return;
+    }
+    // Only act if we already clicked "Start Mission" and are in MissionLoading.
+    // A --join client landing in the Lobby sees SelectedMission replicated but
+    // must not auto-join; they still need to click the button themselves.
+    if *app_state != AppState::MissionLoading {
+        return;
+    }
+    let Ok(mission) = q_mission.get(trigger.entity) else {
+        warn!("on_selected_mission_added: SelectedMission component not found on entity");
+        return;
+    };
+    current_map_seed.0 = mission.map_seed;
+    if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
+        *current_difficulty = CurrentDifficulty::new(diff);
+    } else {
+        warn!(
+            "on_selected_mission_added: unknown difficulty '{}'; keeping current",
+            mission.difficulty_id
+        );
+    }
+    info!(
+        "SelectedMission replicated from server; loading map={}",
+        mission.map_path
+    );
+    ev_load.write(LoadLevelEvent {
+        map_filepath: mission.map_path.clone(),
+    });
+    next_app_state.set(AppState::MissionLoading);
 }
 
 /// Helper to get UUID for a Replicon ClientId
@@ -112,17 +164,20 @@ fn auto_start_headless_lobby(
     mut next_state: ResMut<NextState<AppState>>,
     authority: Option<Res<AuthorityRole>>,
     local_player: Option<Res<LocalPlayerRole>>,
+    cli: Res<untypes_core::cli::CliOptions>,
 ) {
-    // Log the actual values so we can see which conditions are or aren't met.
-    info!(
-        "auto_start_headless_lobby: authority={} local_player={} procman={}",
-        authority.is_some(),
-        local_player.is_some(),
-        procman.is_some(),
-    );
+    let is_dedicated = cli.dedicated;
+    let is_authority = authority.is_some();
+    let is_local_player = local_player.is_some();
+    let has_procman = procman.is_some();
+
     // Dedicated server (authority, NO local player) or hub-less direct-connect authority.
-    if authority.is_some() && local_player.is_none() && procman.is_none() {
-        info!("Hub-less dedicated mode: auto-transitioning to AppState::Lobby");
+    if is_dedicated || (is_authority && !is_local_player && !has_procman) {
+        info!(
+            "Dedicated mode detected (dedicated={is_dedicated}, auth={is_authority}, local={is_local_player}, procman={has_procman}). Auto-transitioning to AppState::Lobby"
+        );
+        // We set both states for better compatibility, although dedicated servers
+        // usually only care about AppState.
         next_state.set(AppState::Lobby);
     }
 }
@@ -143,7 +198,9 @@ fn spawn_lobby_entity_if_missing(
     let mut players = Vec::new();
     let mut leader_uuid = None;
 
-    if local_player.is_some() && let Some(id) = runtime_id {
+    if local_player.is_some()
+        && let Some(id) = runtime_id
+    {
         let uuid = id.0;
         players.push(LobbyPlayerInfo {
             player_uuid: uuid,
@@ -194,9 +251,16 @@ fn set_server_state_ingame(mut q: Query<&mut ServerGamePhase>) {
 fn observe_simulation_ready_to_enter_game(
     sim_state: Res<State<untypes_core::states::SimulationState>>,
     mut next_app_state: ResMut<NextState<AppState>>,
+    mut frame: Local<u32>,
 ) {
     if *sim_state == untypes_core::states::SimulationState::Ready {
+        info!("Simulation ready; transitioning MissionLoading -> InGame");
         next_app_state.set(AppState::InGame);
+    } else {
+        *frame += 1;
+        if frame.is_multiple_of(120) {
+            debug!("Waiting for simulation to be ready - current state: {sim_state:?}");
+        }
     }
 }
 
@@ -387,6 +451,7 @@ fn handle_request_start_mission(
     uuid_map: Res<ClientUuidMap>,
     mut ev_load: MessageWriter<LoadLevelEvent>,
     mut commands: Commands,
+    mut next_app_state: ResMut<NextState<AppState>>,
 ) {
     for msg in reader.read() {
         let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
@@ -408,6 +473,7 @@ fn handle_request_start_mission(
             ev_load.write(LoadLevelEvent {
                 map_filepath: map_filepath.clone(),
             });
+            next_app_state.set(AppState::MissionLoading);
             // Replicate mission info to connected clients so they can join.
             commands.spawn((
                 Replicated,

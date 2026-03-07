@@ -110,5 +110,6 @@ pub fn build_log_filter(verbose: u8) -> String {
     for c in NETWORKING_CRATES {
         filter.push_str(&format!(",{}={}", c, net_level));
     }
+    filter.push_str(",bevy_replicon::shared::message::client_message=warn");
     filter
 }

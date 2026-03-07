@@ -454,10 +454,10 @@ fn toggle_held_object_ui(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::InGame), setup_ui)
         .add_systems(OnExit(AppState::InGame), cleanup)
-        .add_systems(OnEnter(GameState::None), resume)
-        .add_systems(OnExit(GameState::None), pause)
+        .add_systems(OnEnter(GameState::Running), resume)
+        .add_systems(OnExit(GameState::Running), pause)
         .add_systems(
             Update,
-            toggle_held_object_ui.run_if(in_state(GameState::None)),
+            toggle_held_object_ui.run_if(in_state(GameState::Running)),
         );
 }

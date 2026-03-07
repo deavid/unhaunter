@@ -12,13 +12,13 @@ impl Plugin for UnrepliconPlugin {
     }
 
     fn finish(&self, app: &mut App) {
-        let bit = app
-            .world_mut()
-            .resource_scope(|world, mut filter_registry: Mut<FilterRegistry>| {
-                world.resource_scope(|world, mut registry: Mut<ReplicationRegistry>| {
-                    filter_registry.register_scope::<Entity>(world, &mut registry)
-                })
-            });
+        let bit =
+            app.world_mut()
+                .resource_scope(|world, mut filter_registry: Mut<FilterRegistry>| {
+                    world.resource_scope(|world, mut registry: Mut<ReplicationRegistry>| {
+                        filter_registry.register_scope::<Entity>(world, &mut registry)
+                    })
+                });
         app.insert_resource(GlobalFilterBit(bit));
     }
 }

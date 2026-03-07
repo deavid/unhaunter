@@ -201,8 +201,7 @@ pub(crate) fn app_setup(app: &mut App) {
             ghost_enrage.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
             ghost_fade_out_system.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
             update_ghost_warning_field,
-            ghost_scale_glitch_system
-                .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+            ghost_scale_glitch_system.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
         )
             .run_if(in_state(SimulationState::Ready)),
     );

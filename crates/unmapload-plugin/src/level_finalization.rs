@@ -56,7 +56,7 @@ fn after_level_ready(
 
     // Switch to in-game state
     next_app_state.set(AppState::InGame);
-    next_game_state.set(GameState::None);
+    next_game_state.set(GameState::Running);
 
     // Send synchronization events
     ev_room_sync.write(RoomStateSyncEvent);

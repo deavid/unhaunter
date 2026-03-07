@@ -5,8 +5,8 @@ use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unreplicon_core::messages::RequestJournalEvidenceToggle;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
+use unreplicon_core::messages::RequestJournalEvidenceToggle;
 use untypes_core::roles::AuthorityRole;
 use untypes_core::states::AppState;
 use unui_core::components::game_ui::EvidenceUI;
@@ -95,7 +95,10 @@ pub(crate) fn keyboard_evidence(
                 }
             } else {
                 let mark_as_found = !gg.evidences_found.contains(&evidence);
-                ev_evidence_toggle.write(RequestJournalEvidenceToggle { evidence, mark_as_found });
+                ev_evidence_toggle.write(RequestJournalEvidenceToggle {
+                    evidence,
+                    mark_as_found,
+                });
             }
         }
     }

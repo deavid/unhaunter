@@ -52,10 +52,10 @@ pub(crate) struct StateEntryTimer(pub f32);
 
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    ui_assets: If<Res<UiAssets>>,
+    ui_assets: Option<Res<UiAssets>>,
     authority_role: Option<Res<AuthorityRole>>,
     local_player_role: Option<Res<LocalPlayerRole>>,
-    player_profile: Res<Persistent<PlayerProfileData>>,
+    player_profile: Option<Res<Persistent<PlayerProfileData>>>,
     q_ui: Query<Entity, With<LobbyMainUI>>,
     time: Res<Time>,
     mut entry_timer: ResMut<StateEntryTimer>,
@@ -63,6 +63,9 @@ pub(crate) fn setup_ui(
     q_lobby: Query<&LobbyInfo>,
     room_ident: Option<Res<unreplicon_core::resources::RoomIdentification>>,
 ) {
+    let Some(ui_assets) = ui_assets else {
+        return;
+    };
     *entry_timer = StateEntryTimer(time.elapsed_secs());
     if !q_ui.is_empty() {
         return;
@@ -90,7 +93,9 @@ pub(crate) fn setup_ui(
     commands.entity(root).with_children(|p| {
         templates::create_background(p, &ui_assets);
         templates::create_logo(p, &ui_assets);
-        templates::create_player_status_bar(p, &ui_assets, &player_profile);
+        if let Some(profile) = player_profile {
+            templates::create_player_status_bar(p, &ui_assets, &profile);
+        }
 
         // Sidebar strip for primary navigation
         let mut strip = templates::create_menu_strip::<LobbyMenuAction>(p, &ui_assets, &[], 0);
@@ -370,7 +375,7 @@ pub(crate) fn handle_clicks(
 pub(crate) fn update_display(
     q_lobby: Query<Ref<LobbyInfo>>,
     maps: Res<Maps>,
-    ui_assets: If<Res<UiAssets>>,
+    ui_assets: Option<Res<UiAssets>>,
     asset_server: Res<AssetServer>,
     local_player: Res<LocalPlayer>,
     authority_role: Option<Res<AuthorityRole>>,
@@ -385,6 +390,9 @@ pub(crate) fn update_display(
     mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
     q_selected_mission: Query<Entity, With<SelectedMission>>,
 ) {
+    let Some(ui_assets) = ui_assets else {
+        return;
+    };
     // Guard: if LocalPlayer identity is not yet resolved, skip rendering this frame to
     // avoid displaying the player list without the correct "You" highlight.
     if local_player.0.is_none() {

@@ -25,10 +25,10 @@ fn keyboard(
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) && !host_gone.0 {
-        game_next_state.set(GameState::None);
+        game_next_state.set(GameState::Running);
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
-        game_next_state.set(GameState::None);
+        game_next_state.set(GameState::Running);
         // SP-6.2: navigate by role — lobby-presence means networked, offline goes to mission select.
         if lobby_presence.is_some() {
             next_state.set(AppState::Lobby);

@@ -6,7 +6,7 @@ use unmenu_core::components::MenuItemInteractive;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
 use unreplicon_core::resources::RoomIdentification;
-use untypes_core::cli::{CliOptions, CliNetMode};
+use untypes_core::cli::{CliNetMode, CliOptions};
 use untypes_core::platform::plt;
 use untypes_core::states::AppState;
 use unui_core::assets::UiAssets;

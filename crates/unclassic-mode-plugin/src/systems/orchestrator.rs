@@ -18,7 +18,7 @@ use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unmapload_core::events::loadlevel::{LevelReadyEvent, MapEntitiesReadyEvent};
-use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::{GameSound, GameSprite, MapTileSprite};
@@ -28,6 +28,7 @@ use unrender_std::components::visuals::{
     ResolutionFactor, ShadowCaster, SpectralClarity, UltravioletSensitive, Viewer,
 };
 use unrender_std::materials::CustomMaterial1;
+use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::quadcc::QuadCC;
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::resources::LocalPlayer;
@@ -37,6 +38,14 @@ use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::GhostTag;
+
+/// Marker inserted once a player entity has been fully hydrated with visuals and input.
+#[derive(Component)]
+pub(crate) struct PlayerHydrated;
+
+/// Marker inserted once a ghost entity has been fully hydrated with visuals.
+#[derive(Component)]
+pub(crate) struct GhostHydrated;
 
 #[derive(SystemParam)]
 pub(crate) struct ClassicModeSystemParam<'w> {
@@ -194,9 +203,8 @@ pub(crate) fn classic_mode_orchestrator(
                             .insert(FocusRing::default());
                     });
                 }
-                let breach_id = ec.id();
 
-                breach_id
+                ec.id()
             };
 
             let ghost_id_net = NetworkId(0); // Ghost is always 0 in MVP
@@ -248,7 +256,6 @@ pub(crate) fn classic_mode_orchestrator(
 
     ev_level_ready.write(LevelReadyEvent { open_van });
 }
-
 
 fn spawn_ambient_sounds(p: &ClassicModeSystemParam, commands: &mut Commands) {
     commands
@@ -318,7 +325,6 @@ fn spawn_ambient_sounds(p: &ClassicModeSystemParam, commands: &mut Commands) {
         });
 }
 
-
 pub(crate) fn sync_ghost_visuals(
     mut q_ghost: Query<(&mut SpectralClarity, &GhostBehaviorDynamics), With<GhostTag>>,
 ) {
@@ -340,7 +346,7 @@ pub(crate) fn hydrate_players_system(
     mut p: ClassicModeSystemParam,
     mut commands: Commands,
     local_player: Res<LocalPlayer>,
-    q_added: Query<(Entity, &PlayerSprite, &Position), Added<PlayerSprite>>,
+    q_added: Query<(Entity, &PlayerSprite, &Position), Without<PlayerHydrated>>,
 ) {
     // Headless guard: dedicated servers have no local player and must not run this.
     if p.local_player_role.is_none() {
@@ -353,6 +359,10 @@ pub(crate) fn hydrate_players_system(
             .0
             .map(|uuid| uuid == player_sprite.id)
             .unwrap_or(false);
+        debug!(
+            "hydrate_players_system: processing entity {:?} uuid={} is_local={} local_player={:?}",
+            entity, player_sprite.id, is_local, local_player.0
+        );
 
         // --- Resolve asset handles and resolution factor ---
         let mut player_image = p
@@ -386,12 +396,23 @@ pub(crate) fn hydrate_players_system(
 
         // --- Attach shared components (all local-player nodes) ---
         ec.insert(GameSprite)
-            .insert(MapColor { color: Color::WHITE })
+            .insert(MapColor {
+                color: Color::WHITE,
+            })
             .insert(ShadowCaster::default())
             .insert(LightSensitive {
                 exposure_factor: 1.1,
                 bias: 0.01,
             })
+            .insert(unspatial_core::direction::Direction::new_right())
+            .insert(unbehavior::components::Movable)
+            .insert(unnavigation_core::components::waypoint::WaypointQueue::default())
+            .insert(unspatial_core::boardposition::MapEntityFieldBPos(
+                pos.to_board_position(),
+            ))
+            .insert(untags_core::tags::PlayerTag)
+            .insert(unspatial_core::lerp_position::LerpPosition::new(*pos))
+            .insert(PlayerInput::default())
             .insert(AnimationTimer::from_range(
                 Timer::from_seconds(0.20, TimerMode::Repeating),
                 CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
@@ -415,16 +436,12 @@ pub(crate) fn hydrate_players_system(
                 ec.insert(Mesh2d(src_mesh_handle))
                     .insert(MeshMaterial2d(material_handle))
                     .insert(
-                        Transform::from_xyz(
-                            spawn_scoord[0],
-                            spawn_scoord[1],
-                            spawn_scoord[2],
-                        )
-                        .with_scale(Vec3::new(
-                            1.0 / player_rf,
-                            1.0 / player_rf,
-                            1.0 / player_rf,
-                        )),
+                        Transform::from_xyz(spawn_scoord[0], spawn_scoord[1], spawn_scoord[2])
+                            .with_scale(Vec3::new(
+                                1.0 / player_rf,
+                                1.0 / player_rf,
+                                1.0 / player_rf,
+                            )),
                     )
                     .insert(ResolutionFactor(player_rf))
                     .insert(MapTileSprite)
@@ -442,10 +459,12 @@ pub(crate) fn hydrate_players_system(
                     controls: ***control_settings,
                 });
             }
-            ec.insert(MainPlayer).insert(Viewer {
-                id: player_sprite.network_id,
-                ..default()
-            });
+            ec.insert(MainPlayer)
+                .insert(Viewer {
+                    id: player_sprite.network_id,
+                    ..default()
+                })
+                .insert(VisibilityData::default());
             if let Some(audio_settings) = &p.audio_settings {
                 ec.insert(SpatialListener::new(
                     -audio_settings.sound_output.to_ear_offset(),
@@ -482,6 +501,7 @@ pub(crate) fn hydrate_players_system(
         //   (a) cause a double-push on the Host (which is both Authority and LocalPlayer), and
         //   (b) leave the grid empty on the Dedicated Server, which skips this system entirely.
 
+        commands.entity(entity).insert(PlayerHydrated);
         info!(
             "hydrate_players_system: hydrated entity {:?} player_uuid={} is_local={}",
             entity, player_sprite.id, is_local
@@ -496,7 +516,7 @@ pub(crate) fn hydrate_players_system(
 pub(crate) fn hydrate_ghosts_system(
     mut p: ClassicModeSystemParam,
     mut commands: Commands,
-    q_added: Query<(Entity, &Position, &GhostSprite), Added<GhostSprite>>,
+    q_added: Query<(Entity, &Position, &GhostSprite), Without<GhostHydrated>>,
 ) {
     // Headless guard: dedicated servers have no local player and no visuals needed.
     if p.local_player_role.is_none() {
@@ -544,8 +564,7 @@ pub(crate) fn hydrate_ghosts_system(
 
         // --- Attach visual mesh ---
         if let (Some(meshes), Some(materials1)) = (&mut p.meshes, &mut p.materials1) {
-            let mesh_handle =
-                meshes.add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));
+            let mesh_handle = meshes.add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));
             let mut material = CustomMaterial1::from_texture(ghost_image);
             material.data.color = Color::NONE.into();
             material.data.y_anchor = anchor.y;
@@ -596,6 +615,7 @@ pub(crate) fn hydrate_ghosts_system(
         //   (a) cause a double-push on the Host (which is both Authority and LocalPlayer), and
         //   (b) leave the grid empty on the Dedicated Server, which skips this system entirely.
 
+        commands.entity(entity).insert(GhostHydrated);
         info!(
             "hydrate_ghosts_system: hydrated ghost entity {:?} at {:?}",
             entity, ghost_spawn

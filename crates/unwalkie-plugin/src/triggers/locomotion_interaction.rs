@@ -343,7 +343,7 @@ fn trigger_player_stays_hidden_too_long(
         *post_hunt_hidden_timer = None;
         return;
     }
-    if *game_state.get() != GameState::None {
+    if *game_state.get() != GameState::Running {
         *post_hunt_hidden_timer = None;
         return;
     }

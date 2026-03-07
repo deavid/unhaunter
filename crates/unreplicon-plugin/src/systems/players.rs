@@ -7,15 +7,16 @@ use bevy_replicon::server::visibility::client_visibility::ClientVisibility;
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
 use unbehavior::components::FloorItemCollidable;
 use unboard_core::components::spawning::PlayerSpawnPoint;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::gear::Hand;
 use ungear_core::components::playergear::HeldObject;
-use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
-use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite, Stamina};
+use unplayer_core::components::{Hiding, MainPlayer, PlayerSpectating, PlayerSprite, Stamina};
+use unrender_std::components::visuals::Viewer;
+use unrender_std::resources::visibility_data::VisibilityData;
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
-use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportStateMessage, FloorGearDespawnBroadcast, FloorGearSpawnBroadcast,
     HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent, HostInteractionOccurred,
@@ -23,7 +24,9 @@ use unreplicon_core::messages::{
     OwnershipReleased, RemoteInteractionBroadcast, RequestPickupGear, TruckLoadoutAction,
     TruckLoadoutMessage,
 };
+use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
+use unreplicon_core::resources::LocalPlayer;
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
 use unspatial_core::position::Position;
 use untypes_core::roles::is_pure_client;
@@ -43,7 +46,12 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_server_message::<MovableMotionBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearSpawnBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearDespawnBroadcast>(Channel::Ordered);
-    app.add_mapped_server_message::<OwnershipGranted>(Channel::Ordered);
+    // NOTE: OwnershipGranted is registered as a plain (non-mapped) server message.
+    // Using add_mapped_server_message would cause bevy_replicon to drop the message
+    // silently if the referenced entity is not yet in ServerEntityMap at deserialization
+    // time (which happens when the entity is initially hidden from the client).
+    // handle_ownership_granted performs the entity map lookup manually.
+    app.add_server_message::<OwnershipGranted>(Channel::Ordered);
 
     // Register local messages
     app.add_message::<HostInteractionOccurred>();
@@ -83,6 +91,15 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(resource_exists::<AuthorityRole>),
     );
 
+    // Server-side: spawn player entities for clients that joined after mission start.
+    app.add_systems(
+        Update,
+        spawn_late_joining_players
+            .run_if(resource_exists::<AuthorityRole>)
+            .run_if(in_state(AppState::InGame))
+            .run_if(resource_exists::<RepliconPlayerSpawningActive>),
+    );
+
     // Server-side: truck loadout message handler (Truck phase only)
     app.add_systems(
         Update,
@@ -102,7 +119,11 @@ pub(super) fn app_setup(app: &mut App) {
     // Client-side: apply replicated player state to local components
     app.add_systems(
         Update,
-        (apply_remote_interaction, handle_ownership_granted)
+        (
+            apply_remote_interaction,
+            handle_ownership_granted,
+            fallback_player_ownership_from_uuid,
+        )
             .run_if(in_state(AppState::InGame))
             .run_if(is_pure_client),
     );
@@ -138,8 +159,6 @@ fn setup_mission_players(
     q_lobby: Query<&LobbyInfo>,
     q_spawn_points: Query<&Position, (With<PlayerSpawnPoint>, Without<PlayerSprite>)>,
     mut commands: Commands,
-    filter_bit: Res<crate::plugin::GlobalFilterBit>,
-    mut q_clients: Query<&mut ClientVisibility>,
     gear_registry: Res<GearSpawnerRegistry>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -172,10 +191,11 @@ fn setup_mission_players(
 
         // --- Gear Initialization ---
         let mut player_gear = PlayerGear::default();
-        let mut gear_id_counter = net_id.0 * 1000;
+        let mut gear_id_counter = (net_id.0 % 1_000_000) * 1000;
 
         if difficulty.0.player_gear.left_hand.is_some() {
-            let gear_entity = gear_registry.spawn(&mut commands, difficulty.0.player_gear.left_hand);
+            let gear_entity =
+                gear_registry.spawn(&mut commands, difficulty.0.player_gear.left_hand);
             player_gear.left_hand = Some(gear_entity);
             commands
                 .entity(gear_entity)
@@ -183,7 +203,8 @@ fn setup_mission_players(
             gear_id_counter += 1;
         }
         if difficulty.0.player_gear.right_hand.is_some() {
-            let gear_entity = gear_registry.spawn(&mut commands, difficulty.0.player_gear.right_hand);
+            let gear_entity =
+                gear_registry.spawn(&mut commands, difficulty.0.player_gear.right_hand);
             player_gear.right_hand = Some(gear_entity);
             commands
                 .entity(gear_entity)
@@ -200,7 +221,6 @@ fn setup_mission_players(
                 gear_id_counter += 1;
             }
         }
-
         // Spawn the player skeleton. Every node (host, join client, dedicated server)
         // that replicates will receive this entity. Visual components are NOT added
         // here — hydrate_players_system handles that.
@@ -240,13 +260,13 @@ fn setup_mission_players(
             let socket_owner_id = player.current_socket.unwrap();
             commands.entity(entity).insert(Owner(socket_owner_id));
 
-            // Configure Replicon's spatial-interest filter for this remote client so
-            // that the server sends this entity's state to the owning client.
-            if let OwnerId::Client(client_entity) = socket_owner_id
-                && let Ok(mut visibility) = q_clients.get_mut(client_entity)
-            {
-                visibility.set(entity, filter_bit.0, false);
-            }
+            // NOTE: We intentionally do NOT call visibility.set(..., false) here.
+            // Hiding the entity from the owning client would prevent it from ever
+            // arriving via replication, which makes OwnershipGranted impossible to
+            // process on the client side (the entity would not be in ServerEntityMap).
+            // Instead, the entity replicates to the owning client normally. The client
+            // takes ownership via handle_ownership_granted or fallback_player_ownership_from_uuid
+            // and removes Replicated so the server stops sending future position updates.
 
             // Notify the client of which entity it owns. On the client side,
             // handle_ownership_granted receives this message and inserts LocallyOwned
@@ -269,6 +289,114 @@ fn setup_mission_players(
 /// Server: on exit from `AppState::InGame`, remove the spawning-active marker.
 fn cleanup_mission_players(mut commands: Commands) {
     commands.remove_resource::<RepliconPlayerSpawningActive>();
+}
+
+/// Server: runs every frame during InGame to spawn player entities for clients that
+/// connected (and were added to lobby.players) after setup_mission_players already ran.
+fn spawn_late_joining_players(
+    q_lobby: Query<&LobbyInfo>,
+    q_existing_sprites: Query<&PlayerSprite>,
+    q_spawn_points: Query<&Position, With<unboard_core::components::spawning::PlayerSpawnPoint>>,
+    mut commands: Commands,
+    gear_registry: Res<GearSpawnerRegistry>,
+    difficulty: Res<CurrentDifficulty>,
+) {
+    let Ok(lobby) = q_lobby.single() else {
+        return;
+    };
+
+    let spawn_points: Vec<Position> = q_spawn_points.iter().copied().collect();
+    let default_pos = Position {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        visual_priority: 0.0,
+    };
+
+    for (idx, player) in lobby.players.iter().enumerate() {
+        // Only handle remote clients that are currently connected.
+        if player.current_socket.is_none() || !player.connected {
+            continue;
+        }
+
+        // Skip if a PlayerSprite already exists for this player UUID.
+        if q_existing_sprites
+            .iter()
+            .any(|s| s.id == player.player_uuid)
+        {
+            continue;
+        }
+
+        let spawn_pos = spawn_points
+            .get(idx % spawn_points.len().max(1))
+            .copied()
+            .unwrap_or(default_pos);
+
+        let net_id = NetworkId::from(player.player_uuid);
+
+        let mut player_gear = PlayerGear::default();
+        let mut gear_id_counter = (net_id.0 % 1_000_000) * 1000;
+
+        if difficulty.0.player_gear.left_hand.is_some() {
+            let gear_entity =
+                gear_registry.spawn(&mut commands, difficulty.0.player_gear.left_hand);
+            player_gear.left_hand = Some(gear_entity);
+            commands
+                .entity(gear_entity)
+                .insert((NetworkId(gear_id_counter), Replicated));
+            gear_id_counter += 1;
+        }
+        if difficulty.0.player_gear.right_hand.is_some() {
+            let gear_entity =
+                gear_registry.spawn(&mut commands, difficulty.0.player_gear.right_hand);
+            player_gear.right_hand = Some(gear_entity);
+            commands
+                .entity(gear_entity)
+                .insert((NetworkId(gear_id_counter), Replicated));
+            gear_id_counter += 1;
+        }
+        for kind in &difficulty.0.player_gear.inventory {
+            if kind.is_some() {
+                let gear_entity = gear_registry.spawn(&mut commands, *kind);
+                player_gear.inventory.push(gear_entity);
+                commands
+                    .entity(gear_entity)
+                    .insert((NetworkId(gear_id_counter), Replicated));
+                gear_id_counter += 1;
+            }
+        }
+
+        let socket_owner_id = player.current_socket.unwrap();
+        let entity = commands
+            .spawn((
+                spawn_pos,
+                unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
+                PlayerSprite::new(player.player_uuid, net_id, spawn_pos),
+                net_id,
+                Stamina::default(),
+                player_gear,
+                unspatial_core::direction::Direction::new_right(),
+                unbehavior::components::Movable,
+                unnavigation_core::components::waypoint::WaypointQueue::default(),
+                unspatial_core::boardposition::MapEntityFieldBPos(spawn_pos.to_board_position()),
+                untags_core::tags::PlayerTag,
+                unrender_std::resources::visibility_data::VisibilityData::default(),
+                unplayer_core::components::PlayerInput::default(),
+                Owner(socket_owner_id),
+                Replicated,
+            ))
+            .id();
+
+        let client_id = from_owner_id(socket_owner_id);
+        commands.write_message(ToClients {
+            mode: SendMode::Direct(client_id),
+            message: OwnershipGranted { entity },
+        });
+        info!(
+            "spawn_late_joining_players: spawned skeleton {:?} for late-joining player {} (owner={:?})",
+            entity, player.player_uuid, socket_owner_id
+        );
+    }
 }
 
 fn send_export_gear_state(
@@ -615,6 +743,69 @@ fn send_export_state(
     }
 }
 
+/// Client: Fallback system that grants `LocallyOwned` on the player entity identified by UUID.
+/// This handles any residual timing edge-case where `OwnershipGranted` arrives before the entity
+/// appears in `ServerEntityMap`. Runs once per frame in InGame on pure clients until the entity
+/// acquires `LocallyOwned`, at which point it falls out of the query and becomes a no-op.
+fn fallback_player_ownership_from_uuid(
+    q: Query<(Entity, &PlayerSprite), Without<LocallyOwned>>,
+    local_player: Res<LocalPlayer>,
+    mut commands: Commands,
+    time: Res<Time>,
+    mut log_timer: Local<f32>,
+) {
+    let Some(local_uuid) = local_player.0 else {
+        // LocalPlayer not set yet — this is expected before identity is established.
+        return;
+    };
+
+    // Periodic diagnostic log so we can tell what entities exist on this client.
+    *log_timer -= time.delta_secs();
+    if *log_timer <= 0.0 {
+        *log_timer = 3.0;
+        let candidates: Vec<_> = q.iter().map(|(e, s)| (e, s.id)).collect();
+        if candidates.is_empty() {
+            debug!(
+                "fallback_player_ownership_from_uuid: looking for UUID={}, no PlayerSprite entities without LocallyOwned exist yet",
+                local_uuid
+            );
+        } else {
+            debug!(
+                "fallback_player_ownership_from_uuid: looking for UUID={}, candidates={:?}",
+                local_uuid, candidates
+            );
+        }
+    }
+
+    for (entity, sprite) in q.iter() {
+        if sprite.id == local_uuid {
+            info!(
+                "fallback_player_ownership_from_uuid: granting LocallyOwned to {:?} via UUID match (UUID={})",
+                entity, local_uuid
+            );
+            commands.entity(entity).insert(LocallyOwned);
+            commands.entity(entity).remove::<Replicated>();
+            // NOTE: We intentionally do NOT remove ConfirmHistory here.
+            //
+            // ConfirmHistory is bevy_replicon's per-entity history buffer used to decode
+            // "mutate" (delta) messages: the server sends diffs relative to a confirmed
+            // baseline, and ConfirmHistory holds that baseline on the client.
+            //
+            // When we remove Replicated and take local ownership, the server doesn't know
+            // yet — it keeps sending mutate messages for ~1 RTT until our OwnershipReleased
+            // message arrives. Those in-flight mutate packets still need ConfirmHistory to
+            // decode. If we remove it here, every one of them errors with
+            // "missing history component inserted on the first update message".
+            //
+            // ConfirmHistory should ideally be removed only after the server acknowledges
+            // the transfer and stops sending updates — but bevy_replicon 0.39 has no
+            // callback for that. Leaving it in place is the safe approach: it's a small
+            // allocation and becomes unreachable once Replicated is gone.
+            // .remove::<bevy_replicon::client::confirm_history::ConfirmHistory>();
+        }
+    }
+}
+
 /// Client: Handle ownership granted.
 fn handle_ownership_granted(
     mut reader: MessageReader<OwnershipGranted>,
@@ -628,8 +819,9 @@ fn handle_ownership_granted(
             commands
                 .entity(client_entity)
                 .insert(LocallyOwned)
-                .remove::<Replicated>()
-                .remove::<bevy_replicon::client::confirm_history::ConfirmHistory>();
+                .remove::<Replicated>();
+            // FIXME: No idea why we need to remove that Confirm history, it causes tons of errors: unable to apply mutate message for tick `RepliconTick(250)`: `2416v0` missing history component inserted on the first update message.
+            // .remove::<bevy_replicon::client::confirm_history::ConfirmHistory>()
 
             // FIXME: Pillar 5 Orphan step (Client side):
             // Remove from ServerEntityMap so replicon stops updating it.
@@ -641,11 +833,48 @@ fn handle_ownership_granted(
 }
 
 /// Debug system for player entities.
-fn debug_player_entities(q: Query<(Entity, &Owner, Has<LocallyOwned>, Has<Replicated>)>) {
-    for (entity, owner, is_local, is_replicated) in q.iter() {
+fn debug_player_entities(
+    q: Query<(
+        Entity,
+        &Owner,
+        Has<LocallyOwned>,
+        Has<Replicated>,
+        Has<MainPlayer>,
+        Has<Viewer>,
+    )>,
+    q_vis: Query<(
+        Has<VisibilityData>,
+        Has<Visibility>,
+        Has<InheritedVisibility>,
+        Has<ViewVisibility>,
+    )>,
+    q_state: Query<(
+        Has<Position>,
+        Has<unspatial_core::direction::Direction>,
+        Has<PlayerSprite>,
+        Has<unrender_std::components::animation::AnimationTimer>,
+        Has<ungear_core::components::playergear::PlayerGear>,
+        Has<unplayer_core::components::PlayerInput>,
+        Has<Stamina>,
+    )>,
+    time: Res<Time>,
+    mut timer: Local<f32>,
+) {
+    *timer -= time.delta_secs();
+    if *timer > 0.0 {
+        return;
+    }
+    *timer = 2.0;
+
+    for (entity, owner, is_local, is_replicated, is_mainplayer, is_viewer) in q.iter() {
+        let (has_visibility_data, has_visibility, has_inherited_visibility, has_view_visibility) =
+            q_vis.get(entity).unwrap_or_default();
+        let (has_pos, has_dir, has_sprite, has_anim, has_gear, has_input, has_stamina) =
+            q_state.get(entity).unwrap_or_default();
+
         debug!(
-            "DEBUG PLAYER: Entity: {:?}, Owner: {:?}, LocallyOwned: {}, Replicated: {}",
-            entity, owner.0, is_local, is_replicated
+            "PLAYER: Entity: {:?}, Owner: {:?}, LocallyOwned: {}, Replicated: {}, Main Player: {}, Viewer: {}, data: {has_visibility_data}, pos: {has_pos}, dir: {has_dir}, spr: {has_sprite}, anim: {has_anim}, gear: {has_gear}, inp: {has_input}, stam: {has_stamina}, vis: {has_visibility}, inh_vis: {has_inherited_visibility}, view_vis: {has_view_visibility}",
+            entity, owner.0, is_local, is_replicated, is_mainplayer, is_viewer
         );
     }
 }

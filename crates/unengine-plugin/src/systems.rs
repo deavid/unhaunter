@@ -77,7 +77,7 @@ pub fn keyboard_state_transitions(
         return;
     }
 
-    let can_pause = *game_state.get() == GameState::None;
+    let can_pause = *game_state.get() == GameState::Running;
     if *game_state.get() == GameState::Pause {
         return;
     }

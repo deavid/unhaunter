@@ -12,9 +12,9 @@ use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::resources::MissionEndRequested;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::audio::AudioSettings;
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
@@ -65,7 +65,7 @@ fn keyboard(
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        game_next_state.set(GameState::None);
+        game_next_state.set(GameState::Running);
     }
 }
 
@@ -318,7 +318,7 @@ fn truckui_event_handle(
                 ev_mission.write(MissionEvent::End);
             }
             TruckUIEvent::ExitTruck => {
-                game_next_state.set(GameState::None);
+                game_next_state.set(GameState::Running);
             }
             TruckUIEvent::CraftRepellent => {
                 for (_player, mut gear) in q_gear.iter_mut() {
@@ -373,7 +373,7 @@ fn truckui_event_handle(
                             });
 
                         // Automatically exit the truck after crafting repellent
-                        game_next_state.set(GameState::None);
+                        game_next_state.set(GameState::Running);
                     }
                 }
             }

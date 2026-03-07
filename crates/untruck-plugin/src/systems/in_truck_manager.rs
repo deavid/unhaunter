@@ -8,7 +8,13 @@ pub(crate) fn on_enter_truck(
     mut commands: Commands,
     query: Query<Entity, (With<MainPlayer>, Without<InTruck>)>,
 ) {
+    let count = query.iter().count();
+    debug!(
+        "on_enter_truck: found {} MainPlayer entities without InTruck",
+        count
+    );
     for entity in query.iter() {
+        info!("on_enter_truck: inserting InTruck on {:?}", entity);
         commands
             .entity(entity)
             .insert(InTruck)
@@ -22,7 +28,10 @@ pub(crate) fn on_exit_truck(
     query: Query<Entity, (With<MainPlayer>, With<InTruck>)>,
 ) {
     for entity in query.iter() {
-        commands.entity(entity).remove::<InTruck>().remove::<Hiding>();
+        commands
+            .entity(entity)
+            .remove::<InTruck>()
+            .remove::<Hiding>();
     }
 }
 

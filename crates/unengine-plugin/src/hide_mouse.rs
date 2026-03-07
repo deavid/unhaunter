@@ -23,7 +23,7 @@ fn system_hide_mouse(
         timer.0.reset();
     }
 
-    let visible = if *app_state == AppState::InGame && *game_state == GameState::None {
+    let visible = if *app_state == AppState::InGame && *game_state == GameState::Running {
         !timer.0.is_finished()
     } else {
         true
