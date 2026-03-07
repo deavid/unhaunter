@@ -40,8 +40,8 @@ pub(crate) fn ghost_enrage(
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
-    mut q_player: Query<
-        (&mut PlayerSprite, &Position, Option<&Hiding>),
+    q_player: Query<
+        (&PlayerSprite, &Position, Option<&Hiding>),
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
@@ -84,14 +84,7 @@ pub(crate) fn ghost_enrage(
 
         // 5. Handle hunting phase
         if ghost.hunt_target {
-            let hunt_result = handle_hunting_phase(
-                &mut ghost,
-                ghost_position,
-                &mut q_player,
-                &gs_audio.time,
-                &difficulty,
-                dt,
-            );
+            let hunt_result = handle_hunting_phase(&mut ghost, dt);
 
             if hunt_result.should_roar {
                 let roar_decision = RoarDecision {
@@ -213,7 +206,7 @@ fn handle_salty_trace_spawning_simple(
 fn calculate_min_player_distance(
     ghost_position: &Position,
     q_player: &Query<
-        (&mut PlayerSprite, &Position, Option<&Hiding>),
+        (&PlayerSprite, &Position, Option<&Hiding>),
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
@@ -249,37 +242,11 @@ pub(crate) struct HuntingResult {
 }
 
 /// Handle the hunting phase of ghost behavior
-pub(crate) fn handle_hunting_phase(
-    ghost: &mut GhostSprite,
-    ghost_position: &Position,
-    q_player: &mut Query<
-        (&mut PlayerSprite, &Position, Option<&Hiding>),
-        (
-            Without<PlayerSpectating>,
-            Without<PlayerDisconnected>,
-            Without<PlayerInactive>,
-            Without<InTruck>,
-        ),
-    >,
-    time: &Res<Time>,
-    difficulty: &Res<CurrentDifficulty>,
-    dt: f32,
-) -> HuntingResult {
+pub(crate) fn handle_hunting_phase(ghost: &mut GhostSprite, dt: f32) -> HuntingResult {
     // Reset warning states during hunting
     ghost.hunt_warning_active = false;
     ghost.hunt_warning_intensity = 1.0;
     ghost.hunt_warning_timer = 0.0;
-
-    let ghost_strength = (time.elapsed_secs() - ghost.hunt_time_secs).clamp(0.0, 2.0);
-
-    // Apply player damage during hunt
-    // Damage all players based on distance to ghost
-    for (mut player, player_pos, _) in q_player.iter_mut() {
-        let dist2 = calculate_weighted_distance_squared(ghost_position, player_pos) + 2.0;
-        let dmg = dist2.recip() * difficulty.0.health_drain_rate;
-        let damage_to_apply = dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
-        player.health -= damage_to_apply;
-    }
 
     // Determine roar during hunting
     let roar_type = if ghost.hunting > 4.0 {
@@ -370,7 +337,7 @@ pub(crate) fn calculate_rage_update(
     ghost: &mut GhostSprite,
     ghost_position: &Position,
     q_player: &Query<
-        (&mut PlayerSprite, &Position, Option<&Hiding>),
+        (&PlayerSprite, &Position, Option<&Hiding>),
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,

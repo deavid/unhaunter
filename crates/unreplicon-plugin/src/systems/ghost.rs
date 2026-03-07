@@ -8,7 +8,8 @@ use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
 };
 use unreplicon_core::messages::{
-    RequestJournalEvidenceToggle, RequestJournalGhostToggle, SpawnParticleNetEvent,
+    GhostSoundFieldBroadcast, RequestJournalEvidenceToggle, RequestJournalGhostToggle,
+    SpawnParticleNetEvent,
 };
 use unreplicon_core::resources::MissionConcludingCinematic;
 use unspatial_core::lerp_position::LerpPosition;
@@ -27,6 +28,7 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Register server → client messages.
     app.add_server_message::<SpawnParticleNetEvent>(Channel::Ordered);
+    app.add_server_message::<GhostSoundFieldBroadcast>(Channel::Ordered);
 
     // Register client → server messages.
     app.add_client_message::<RequestJournalEvidenceToggle>(Channel::Ordered);
