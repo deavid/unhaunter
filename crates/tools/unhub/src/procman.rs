@@ -47,7 +47,14 @@ async fn handle_procman_connection(
             rooms,
             ticket_hmac_secret,
             ..
-        } => (uuid, public_addr, game_versions, idle_pool, rooms, ticket_hmac_secret),
+        } => (
+            uuid,
+            public_addr,
+            game_versions,
+            idle_pool,
+            rooms,
+            ticket_hmac_secret,
+        ),
         _ => return Err(anyhow::anyhow!("Expected ProcManHello")),
     };
 

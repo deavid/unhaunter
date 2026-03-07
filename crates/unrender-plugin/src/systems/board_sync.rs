@@ -51,9 +51,33 @@ fn sync_map_entity_field(
     measure.end_ms();
 }
 
+/// Populates `BoardEntityField` for entities that are newly given a `MapEntityFieldBPos`.
+///
+/// `sync_map_entity_field` only reacts to `Changed<Position>`, so a freshly spawned entity
+/// that never moves would never enter the grid. This system handles initial insertion by
+/// reacting to `Added<MapEntityFieldBPos>`, covering all peers (host, join client, dedicated
+/// server) uniformly without any state guard.
+fn populate_grid_on_spawn(
+    q_added: Query<(Entity, &MapEntityFieldBPos), Added<MapEntityFieldBPos>>,
+    mut board_entity_field: ResMut<BoardEntityField>,
+    board_topology: Res<BoardTopology>,
+) {
+    for (entity, bpos) in q_added.iter() {
+        if let Some(idx) = bpos.0.ndidx_checked(board_topology.map_size) {
+            let cell = &mut board_entity_field.0[idx];
+            if !cell.contains(&entity) {
+                cell.push(entity);
+            }
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        sync_map_entity_field.run_if(in_state(untypes_core::states::AppState::InGame)),
+        (
+            populate_grid_on_spawn,
+            sync_map_entity_field.run_if(in_state(untypes_core::states::AppState::InGame)),
+        ),
     );
 }

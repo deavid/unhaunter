@@ -67,7 +67,7 @@ pub(crate) fn update_time(
         let start = death_timer.get_or_insert(now);
         if now - *start > 1.0 {
             app_next_state.set(AppState::Summary);
-            game_next_state.set(GameState::None);
+            game_next_state.set(GameState::Running);
         }
     } else {
         *death_timer = None;
@@ -93,7 +93,7 @@ pub(crate) fn keyboard(
         } else {
             app_next_state.set(AppState::MissionSelect);
         }
-        game_next_state.set(GameState::None);
+        game_next_state.set(GameState::Running);
     }
 }
 
@@ -124,7 +124,7 @@ pub(crate) fn afk_timeout(
         } else {
             app_next_state.set(AppState::MissionSelect);
         }
-        game_next_state.set(GameState::None);
+        game_next_state.set(GameState::Running);
     }
 }
 pub(crate) fn setup_ui(

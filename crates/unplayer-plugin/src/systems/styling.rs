@@ -1,23 +1,21 @@
 use bevy::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::colors;
-use unreplicon_core::components::LobbyInfo;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
+use unreplicon_core::components::LobbyInfo;
 
 pub(crate) fn update_player_styling(
     q_lobby: Query<&LobbyInfo>,
-    mut query: Query<
-        (
-            &PlayerSprite,
-            &mut MapColor,
-            Has<Hiding>,
-            Has<MainPlayer>,
-            Has<PlayerSpectating>,
-        ),
-    >,
+    mut query: Query<(
+        &PlayerSprite,
+        &mut MapColor,
+        Has<Hiding>,
+        Has<MainPlayer>,
+        Has<PlayerSpectating>,
+    )>,
 ) {
     let lobby_info = q_lobby.single().ok();
     for (ps, mut map_color, is_hiding, is_main, is_spectating) in query.iter_mut() {

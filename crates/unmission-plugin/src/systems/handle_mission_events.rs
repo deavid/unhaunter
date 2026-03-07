@@ -52,7 +52,7 @@ pub(crate) fn handle_mission_events(
                     }
                 }
 
-                game_next_state.set(GameState::None);
+                game_next_state.set(GameState::Running);
                 next_sim_state.set(SimulationState::TearingDown);
 
                 for mut phase in q_server_phase.iter_mut() {

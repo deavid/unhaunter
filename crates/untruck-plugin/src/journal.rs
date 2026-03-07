@@ -8,8 +8,8 @@ use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
-use unreplicon_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhostToggle};
 use unprofile_core::profile::PlayerProfileData;
+use unreplicon_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhostToggle};
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use untypes_core::roles::AuthorityRole;
@@ -160,7 +160,10 @@ fn button_system(mut p: JournalButtonParams) {
             } else {
                 !p.gg.evidences_found.contains(&evidence)
             };
-            p.ev_evidence_toggle.write(RequestJournalEvidenceToggle { evidence, mark_as_found });
+            p.ev_evidence_toggle.write(RequestJournalEvidenceToggle {
+                evidence,
+                mark_as_found,
+            });
         }
         // Note: ghost discard (shift-click) is not yet supported via replicon protocol.
         if let Some((ghost_type, discard)) = clicked_ghost_type
@@ -171,7 +174,9 @@ fn button_system(mut p: JournalButtonParams) {
             } else {
                 Some(ghost_type)
             };
-            p.ev_ghost_toggle.write(RequestJournalGhostToggle { ghost_type: new_guess });
+            p.ev_ghost_toggle.write(RequestJournalGhostToggle {
+                ghost_type: new_guess,
+            });
         }
     }
 

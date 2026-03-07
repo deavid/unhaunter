@@ -103,7 +103,7 @@ pub(crate) fn app_setup_client(app: &mut App) {
         // Sync viewer data for rendering
         viewer_sync::viewer_visual_sync.run_if(
             in_state(AppState::InGame).and(
-                in_state(GameState::None)
+                in_state(GameState::Running)
                     .or(in_state(GameState::Truck))
                     .or(in_state(GameState::NpcHelp))
                     .or(in_state(GameState::Pause)),

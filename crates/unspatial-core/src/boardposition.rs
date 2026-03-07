@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use super::{direction::Direction, position::Position};
 
-#[derive(Component, Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Reflect)]
+#[derive(
+    Component, Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Reflect,
+)]
 #[reflect(Component, Default)]
 pub struct BoardPosition {
     pub x: i64,

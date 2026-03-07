@@ -15,7 +15,7 @@ use unspatial_core::lerp_position::LerpPosition;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::GhostTag;
-use untypes_core::roles::{is_pure_client, AuthorityRole};
+use untypes_core::roles::{AuthorityRole, is_pure_client};
 use untypes_core::states::AppState;
 use untypes_core::states::SimulationState;
 
@@ -67,10 +67,7 @@ pub(super) fn app_setup(app: &mut App) {
     // Server: journal request handlers.
     app.add_systems(
         Update,
-        (
-            handle_journal_evidence_toggle,
-            handle_journal_ghost_toggle,
-        )
+        (handle_journal_evidence_toggle, handle_journal_ghost_toggle)
             .run_if(resource_exists::<AuthorityRole>)
             .run_if(in_state(AppState::InGame)),
     );
@@ -78,10 +75,7 @@ pub(super) fn app_setup(app: &mut App) {
     // Server: mission lifecycle
     app.add_systems(
         Update,
-        (
-            sync_mission_result_phase,
-            server_teardown_grace_period,
-        )
+        (sync_mission_result_phase, server_teardown_grace_period)
             .run_if(resource_exists::<AuthorityRole>)
             .run_if(in_state(SimulationState::TearingDown)),
     );
@@ -102,10 +96,9 @@ fn setup_ghost_entities(
     commands.insert_resource(RepliconGhostSpawningActive);
 
     for (entity, pos) in q_ghost.iter() {
-        commands.entity(entity).insert((
-            Replicated,
-            LerpPosition::new(*pos),
-        ));
+        commands
+            .entity(entity)
+            .insert((Replicated, LerpPosition::new(*pos)));
         info!(
             "setup_ghost_entities: ghost entity {:?} marked Replicated with LerpPosition",
             entity

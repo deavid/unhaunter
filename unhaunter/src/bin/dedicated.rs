@@ -51,6 +51,11 @@ fn main() {
         bind_addresses,
     };
 
+    println!(
+        "Starting Unhaunter Dedicated Server on port {}...",
+        args.host
+    );
+
     // --- Validation ---
     let mut final_map_path = args.map.clone();
 

@@ -140,12 +140,32 @@ fn update_gear_ui(
     gear_registry: Res<GearSpawnerRegistry>,
     sprite_registry: Res<SpriteRegistry>,
     looking_gear: Res<LookingGear>,
+    mut dbg_timer: Local<u32>,
 ) {
     let measure = metrics::UPDATE_GEAR_UI.time_measure();
     let Some(player_gear) = q_gear.iter().next() else {
+        *dbg_timer += 1;
+        if *dbg_timer % 120 == 1 {
+            warn!(
+                "update_gear_ui: no MainPlayer with PlayerGear found (tick {})",
+                *dbg_timer
+            );
+        }
         measure.end_ms();
         return;
     };
+    *dbg_timer += 1;
+    if *dbg_timer % 120 == 1 {
+        let left_kind = player_gear.left_hand.map(|e| (e, q_gearkind.get(e).ok()));
+        let right_kind = player_gear.right_hand.map(|e| (e, q_gearkind.get(e).ok()));
+        debug!(
+            "update_gear_ui: left_hand={:?} right_hand={:?} inventory_len={} (tick {})",
+            left_kind,
+            right_kind,
+            player_gear.inventory.len(),
+            *dbg_timer
+        );
+    }
 
     for (inv, mut image) in qi.iter_mut() {
         let entity = match inv.hand {

@@ -161,6 +161,7 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterLightCorePlugin,
         UnhaunterNPCCorePlugin,
         UnrepliconPlugin,
+        UnhaunterLobbyPlugin,
         UnhaunterTmxMapPlugin,
         UnhaunterMapLoadPlugin,
         UnhaunterClassicModeCorePlugin,
@@ -198,7 +199,6 @@ pub fn app_run(cli_options: CliOptions) {
             UnhaunterFogPlugin,
             UnhaunterRenderPlugin,
             UnhaunterGearPlugin,
-            UnhaunterLobbyPlugin,
             UnhaunterMapHubPlugin,
             UnhaunterCampaignPlugin,
         ));

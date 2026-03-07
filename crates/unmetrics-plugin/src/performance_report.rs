@@ -45,13 +45,13 @@ pub fn report_performance(
             app_state.get(),
             game_state.get()
         );
-        if *app_state != AppState::InGame && *game_state != GameState::None {
+        if *app_state != AppState::InGame && *game_state != GameState::Running {
             error!(
                 "Inconsistent state: AppState: {:?} - GameState: {:?} - setting GameState to None.",
                 app_state.get(),
                 game_state.get()
             );
-            game_next_state.set(GameState::None);
+            game_next_state.set(GameState::Running);
         }
     }
 }

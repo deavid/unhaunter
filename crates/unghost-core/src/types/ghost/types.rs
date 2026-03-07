@@ -7,7 +7,9 @@ use crate::types::ghost::personality::GhostPersonality;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize, Reflect, Default)]
+#[derive(
+    Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize, Reflect, Default,
+)]
 #[reflect(Default)]
 pub enum GhostType {
     #[default]

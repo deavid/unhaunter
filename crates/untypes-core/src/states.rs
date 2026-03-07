@@ -31,7 +31,7 @@ pub enum BootState {
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum GameState {
     #[default]
-    None,
+    Running,
     Truck,
     Pause,
     NpcHelp,

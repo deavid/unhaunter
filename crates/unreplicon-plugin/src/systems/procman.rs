@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use crossbeam_channel::{Receiver, Sender};
 use std::io::{BufRead, Write};
 use unhub_client::protocol::{DedicatedToProcMan, ProcManToDedicated};
-use untypes_core::cli::{CliOptions, CliNetMode};
+use untypes_core::cli::{CliNetMode, CliOptions};
 
 /// Bidirectional channel to the process manager over stdin/stdout.
 ///

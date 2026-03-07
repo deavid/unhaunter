@@ -89,7 +89,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     *prev_game_state = current_gs;
 
     // Player leaves the truck (transitions from Truck to None)
-    if current_gs == GameState::None && previous_gs == GameState::Truck {
+    if current_gs == GameState::Running && previous_gs == GameState::Truck {
         *exited_truck_time = Some(time.elapsed_secs_f64());
 
         // Check if the current player has empty right hand

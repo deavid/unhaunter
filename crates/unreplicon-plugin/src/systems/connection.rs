@@ -14,6 +14,7 @@ use bevy_replicon_renet::RenetChannelsExt;
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unprofile_core::profile::RuntimeInstallationId;
 use untypes_core::cli::{CliNetMode, CliOptions};
+use untypes_core::roles::AuthorityRole;
 
 /// Unique identifier for this game's protocol version.
 /// Clients and servers with different values cannot connect to each other.
@@ -26,7 +27,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         startup_transport_system.run_if(
-            resource_exists::<RuntimeInstallationId>
+            (resource_exists::<RuntimeInstallationId>.or(resource_exists::<AuthorityRole>))
                 .and(not(resource_exists::<NetcodeClientTransport>))
                 .and(not(resource_exists::<NetcodeServerTransport>)),
         ),
@@ -49,7 +50,9 @@ fn handle_disconnect_request(
     }
     ev.clear();
 
-    info!("DisconnectRequest received — tearing down client transport and resetting to offline authority");
+    info!(
+        "DisconnectRequest received — tearing down client transport and resetting to offline authority"
+    );
 
     // 1. Remove the transport-layer resources. bevy_renet stops ticking
     //    and closes the UDP socket automatically when these are dropped.
@@ -63,7 +66,7 @@ fn handle_disconnect_request(
 
     // 3. Retract the network role resources and restore local authority.
     commands.remove_resource::<untypes_core::roles::LobbyPresenceRole>();
-    commands.insert_resource(untypes_core::roles::AuthorityRole::default());
+    commands.insert_resource(untypes_core::roles::AuthorityRole);
 
     // 4. (Callers are responsible for transitioning AppState back to MainMenu or similar.)
 }
@@ -71,7 +74,7 @@ fn handle_disconnect_request(
 fn startup_transport_system(
     cli: Res<CliOptions>,
     channels: Res<RepliconChannels>,
-    installation_id: Res<RuntimeInstallationId>,
+    installation_id: Option<Res<RuntimeInstallationId>>,
     mut commands: Commands,
 ) {
     info!(
@@ -93,15 +96,35 @@ fn startup_transport_system(
         CliNetMode::Offline => {
             // Singleplayer — no transport needed.
         }
-        CliNetMode::PeerHost { port, .. } => {
+        CliNetMode::PeerHost {
+            port,
+            bind_addresses,
+        } => {
             let port = *port;
             // TODO Phase 1.4: switch to Secure with a per-session private key distributed
             // via the Hub. Unsecure is intentional here during Phase 1.3.
+
+            let mut public_addresses = vec![SocketAddr::from(([0, 0, 0, 0], port))];
+
+            for addr_str in bind_addresses {
+                match addr_str.parse::<SocketAddr>() {
+                    Ok(addr) => public_addresses.push(addr),
+                    Err(_) => {
+                        // Might be just an IP
+                        if let Ok(ip) = addr_str.parse::<std::net::IpAddr>() {
+                            public_addresses.push(SocketAddr::new(ip, port));
+                        } else {
+                            warn!("Invalid bind address: {}", addr_str);
+                        }
+                    }
+                }
+            }
+
             let server_config = ServerConfig {
                 current_time,
                 max_clients: MAX_CLIENTS,
                 protocol_id: PROTOCOL_ID,
-                public_addresses: vec![SocketAddr::from(([0, 0, 0, 0], port))],
+                public_addresses,
                 authentication: ServerAuthentication::Unsecure,
             };
             let socket = match UdpSocket::bind(SocketAddr::from(([0, 0, 0, 0], port))) {
@@ -120,7 +143,11 @@ fn startup_transport_system(
             };
             commands.insert_resource(RenetServer::new(connection_config));
             commands.insert_resource(transport);
-            info!("Replicon transport: listening on UDP port {port}");
+            if cli.dedicated {
+                info!("Replicon transport (Dedicated): listening on UDP port {port}");
+            } else {
+                info!("Replicon transport: listening on UDP port {port}");
+            }
         }
         CliNetMode::Join { address, ticket } => {
             let server_addr: SocketAddr = match address.parse() {
@@ -132,6 +159,8 @@ fn startup_transport_system(
             };
 
             // Use the installation_id as the stable client_id.
+            let installation_id = installation_id
+                .expect("RuntimeInstallationId must exist for non-dedicated clients");
             let client_id = installation_id.0.as_u128() as u64;
 
             let user_data = if let Some(t_str) = ticket {

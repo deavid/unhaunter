@@ -1,6 +1,5 @@
 use crate::{evidence_perception, game_ui, looking_gear, object_charge, roomchanged};
 use bevy::prelude::*;
-use unreplicon_core::components::RepliconPlayerSpawningActive;
 
 pub struct UnhaunterClassicModeCorePlugin;
 
@@ -18,14 +17,9 @@ impl Plugin for UnhaunterClassicModeCorePlugin {
                         unmapload_core::events::loadlevel::MapEntitiesReadyEvent,
                     >,
                 ),
-                // Skip this system when replicon-based player spawning is active
-                // (`unreplicon-plugin` handles player entities in that case).
-                crate::systems::orchestrator::spawn_joined_player
-                    .run_if(in_state(untypes_core::states::AppState::InGame))
-                    .run_if(not(resource_exists::<RepliconPlayerSpawningActive>)),
-                crate::systems::orchestrator::setup_replicated_player_visuals
+                crate::systems::orchestrator::hydrate_players_system
                     .run_if(in_state(untypes_core::states::AppState::InGame)),
-                crate::systems::orchestrator::setup_replicated_ghost_visuals
+                crate::systems::orchestrator::hydrate_ghosts_system
                     .run_if(in_state(untypes_core::states::AppState::InGame)),
             ),
         );

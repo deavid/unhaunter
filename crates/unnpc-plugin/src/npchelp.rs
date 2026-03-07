@@ -30,7 +30,7 @@ pub(crate) fn keyboard(
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) || keyboard_input.just_pressed(KeyCode::KeyE) {
-        game_next_state.set(GameState::None);
+        game_next_state.set(GameState::Running);
     }
 }
 

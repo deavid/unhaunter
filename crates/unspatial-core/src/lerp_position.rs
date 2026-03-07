@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::position::Position;
+use bevy::prelude::*;
 
 /// Visual interpolation buffer. Present on remote entities (ghost, remote players).
 /// Absent on the local player — direct Position→Transform at zero latency.
