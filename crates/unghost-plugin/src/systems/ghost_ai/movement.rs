@@ -1,7 +1,7 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use rand::prelude::*;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
@@ -54,7 +54,7 @@ pub(crate) fn ghost_movement(
             Without<InTruck>,
         ),
     >,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut summary: ResMut<SummaryData>,
     bf: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
@@ -263,7 +263,7 @@ pub(crate) fn ghost_movement(
             target_point.y = target_point.y.clamp(0.0, (bf.map_size.1 - 1) as f32);
             target_point.z = target_point.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
             let bpos = target_point.to_board_position();
-            let dstroom = roomdb.room_tiles.get(&bpos);
+            let dstroom = room_topology.room_tiles.get(&bpos);
             if dstroom.is_some() && board_collision.0[bpos.ndidx()].ghost_free {
                 if hunt {
                     if !ghost.hunt_target {

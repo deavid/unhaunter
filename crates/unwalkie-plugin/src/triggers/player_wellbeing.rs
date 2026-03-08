@@ -1,7 +1,7 @@
 use bevy::app::App;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
@@ -27,7 +27,7 @@ const MIN_INTERACTION_DURATION_SECONDS: f32 = 7.0; // Reduced from 10 to 7 secon
 fn very_low_sanity_no_truck_return(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position)>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
     mut stopwatch: Local<Stopwatch>,
@@ -45,7 +45,7 @@ fn very_low_sanity_no_truck_return(
         return;
     }
     let player_bpos = pos.to_board_position();
-    if roomdb.room_tiles.get(&player_bpos).is_none() {
+    if room_topology.room_tiles.get(&player_bpos).is_none() {
         // Player is not inside the location, reset timer
         stopwatch.reset();
         return;
@@ -65,7 +65,7 @@ fn very_low_sanity_no_truck_return(
 fn low_health_general_warning(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position)>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
     mut stopwatch: Local<Stopwatch>,
@@ -83,7 +83,7 @@ fn low_health_general_warning(
         return;
     }
     let player_bpos = pos.to_board_position();
-    if roomdb.room_tiles.get(&player_bpos).is_none() {
+    if room_topology.room_tiles.get(&player_bpos).is_none() {
         // Player is not inside the location, reset timer
         stopwatch.reset();
         return;
@@ -108,7 +108,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
         (&PlayerSprite, &Position, &LightLevel),
         (With<MainPlayer>, Without<Hiding>),
     >,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     lg: If<Res<LightGrid>>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
@@ -124,7 +124,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
 
     for (player_sprite, player_pos, light_level) in player_query.iter() {
         let player_bpos = player_pos.to_board_position();
-        if roomdb.room_tiles.get(&player_bpos).is_none() {
+        if room_topology.room_tiles.get(&player_bpos).is_none() {
             continue;
         }
         let is_in_darkness = light_level.lux < LOW_LUX_THRESHOLD && !lg.is_lit(player_bpos);
@@ -183,7 +183,7 @@ fn trigger_sanity_dropped_due_to_ghost_system(
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerSprite, &Position, Option<&Hiding>), With<MainPlayer>>,
     ghost_query: Query<(Entity, &GhostSprite, &Position)>, // Query Entity to track specific ghost
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
     mut interaction_sanity_tracker: Local<Option<(f32, Stopwatch, Entity)>>, // (sanity_at_interaction_start, timer, ghost_entity)
@@ -199,7 +199,7 @@ fn trigger_sanity_dropped_due_to_ghost_system(
     // Iterate all players and ghosts (Simulation pattern)
     for (player_sprite, player_pos, maybe_hiding) in player_query.iter() {
         // 2.b. Reset Conditions - Player not inside location or is hiding
-        if roomdb
+        if room_topology
             .room_tiles
             .get(&player_pos.to_board_position())
             .is_none()
@@ -211,7 +211,7 @@ fn trigger_sanity_dropped_due_to_ghost_system(
         }
 
         let player_bpos = player_pos.to_board_position();
-        let player_room_name_opt = roomdb.room_tiles.get(&player_bpos);
+        let player_room_name_opt = room_topology.room_tiles.get(&player_bpos);
 
         let mut current_interaction_ghost_entity: Option<Entity> = None;
 
@@ -225,7 +225,7 @@ fn trigger_sanity_dropped_due_to_ghost_system(
                 }
                 // 3.c.iii. Player in same room
                 let ghost_bpos = ghost_pos.to_board_position();
-                if roomdb.room_tiles.get(&ghost_bpos) == Some(p_room_name)
+                if room_topology.room_tiles.get(&ghost_bpos) == Some(p_room_name)
                 // Simplified map_or
                 {
                     // 3.c.ii. Player is close to this ghost

@@ -7686,6 +7686,7 @@ dependencies = [
  "bevy",
  "bevy_asset_loader",
  "bevy_platform",
+ "bevy_replicon",
  "ndarray",
  "unassets-core",
  "unbehavior",

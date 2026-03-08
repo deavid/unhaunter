@@ -1,5 +1,5 @@
 use bevy::{prelude::*, time::Stopwatch};
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -22,7 +22,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
         (With<PlayerSprite>, With<MainPlayer>),
     >,
     q_ghost: Query<&GhostSprite>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut warning_timer: Local<Option<Stopwatch>>,
     mut player_pos_at_warning: Local<Option<Position>>,
     q_gear: Query<&GearKind>,
@@ -39,7 +39,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
     for (player_current_pos, maybe_hiding, player_gear) in q_player.iter() {
         // Check if player is inside a room (must be inside location for hunt warnings)
         let player_bpos = player_current_pos.to_board_position();
-        if roomdb.room_tiles.get(&player_bpos).is_none() {
+        if room_topology.room_tiles.get(&player_bpos).is_none() {
             // Player is outside the location, reset timer and don't trigger
             if warning_timer.is_some() {
                 *warning_timer = None;

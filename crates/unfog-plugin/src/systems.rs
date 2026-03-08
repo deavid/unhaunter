@@ -6,7 +6,7 @@ use bevy_platform::collections::HashMap;
 use ndarray::{Array3, s};
 use rand::prelude::*;
 use unbehavior::behavior::Behavior;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::components::chunk::{CellIterator, ChunkIterator};
 use unboard_core::components::physics::FluidEmitter;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
@@ -48,7 +48,7 @@ pub(crate) fn initialize_miasma(
     board_data: Res<BoardTopology>,
     mut bcf: ResMut<BoardCollisionField>,
     mut miasma: If<ResMut<MiasmaGrid>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     config: Res<MiasmaConfig>,
     mut level_ready: MessageReader<LevelReadyEvent>,
     qt: Query<(Entity, &Position, &Behavior)>,
@@ -67,7 +67,7 @@ pub(crate) fn initialize_miasma(
 
     for (p, cfield) in collision_field.indexed_iter() {
         let board_position = BoardPosition::from_ndidx(p);
-        let opt_room_id = roomdb.room_tiles.get(&board_position);
+        let opt_room_id = room_topology.room_tiles.get(&board_position);
 
         // 1. Get or Insert Room Modifier:
         let mut modifier = if let Some(room_id) = opt_room_id {
@@ -341,7 +341,7 @@ pub(crate) fn update_miasma(
     mut miasma: If<ResMut<MiasmaGrid>>,
     miasma_config: Res<MiasmaConfig>,
     time: Res<Time>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     q_player: Query<&Position, With<MainPlayer>>,
     fluid_emitter_query: Query<&FluidEmitter>,
     mut room_present: Local<Array3<bool>>,
@@ -367,7 +367,7 @@ pub(crate) fn update_miasma(
     if room_present.dim() != board_data.map_size {
         // FIXME: This will introduce a bug, if the player loads a new map with exact same size, it will not update.
         *room_present = Array3::from_elem(board_data.map_size, false);
-        for bpos in roomdb.room_tiles.keys() {
+        for bpos in room_topology.room_tiles.keys() {
             let p = bpos.ndidx();
             room_present[p] = true;
         }
@@ -594,7 +594,7 @@ pub(crate) fn update_miasma(
             let calculated_velocity = calculated_velocity * (adjusted_vel / calc_vel_len); // .min(calculated_velocity);
             let previous_velocity = miasma.velocity_field[p];
 
-            // FIXME: This should be proportional change of `dt`
+            // FIXME: This should be proportional change of dt
             let mut new_velocity = (previous_velocity * miasma_config.inertia_factor
                 + calculated_velocity)
                 / (1.0 + miasma_config.inertia_factor + miasma_config.friction);

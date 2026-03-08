@@ -4,7 +4,9 @@
 //! It converts tile data from Tiled into game entities with appropriate components and behaviors.
 
 use bevy::prelude::*;
+use bevy_replicon::prelude::Replicated;
 use unbehavior::behavior::Util;
+use unbehavior::components::TmxEntityId;
 use unboard_core::components::spawning::VanEntryPoint;
 use unmapload_core::components::PendingTiledLayerProperties;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
@@ -37,6 +39,7 @@ use crate::level_setup::LoadLevelSystemParam;
 pub(crate) fn process_and_spawn_tile(
     tile: &MapTile,
     layer: &MapLayer,
+    layer_idx: usize,
     map_min_x: i32,
     map_min_y: i32,
     map_size: (usize, usize, usize),
@@ -164,8 +167,32 @@ pub(crate) fn process_and_spawn_tile(
     if tile.flip_x {
         transform.scale.x = -rf;
     }
+    entity.insert(beh.clone());
+
+    // Determine if this entity is "dynamic" — needs network identity for replication.
+    let is_dynamic = beh.p.is_door
+        || beh.p.is_switch
+        || beh.p.is_room_switch
+        || beh.p.is_breaker
+        || beh.p.is_floor_light
+        || beh.p.is_table_light
+        || beh.p.object.movable;
+
+    if is_dynamic {
+        let tmx_id = TmxEntityId {
+            layer_idx,
+            x: tile.pos.x,
+            y: tile.pos.y,
+        };
+        entity.insert(tmx_id);
+
+        // Only the Authority (server / offline host) adds Replicated.
+        if p.authority.is_some() {
+            entity.insert(Replicated);
+        }
+    }
+
     entity
-        .insert(beh)
         .insert(GameSprite)
         .insert(MapTileSprite)
         .insert(pos)

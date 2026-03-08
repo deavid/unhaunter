@@ -7,7 +7,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
@@ -28,7 +28,7 @@ use crate::tile_spawning;
 /// System parameter for loading levels, providing access to various resources.
 ///
 /// This struct contains references to all resources needed throughout the level loading process:
-/// - Core data resources (BoardTopology, RoomDB, SpriteDB, etc.)
+/// - Core data resources (BoardTopology, RoomTopology, RoomStateMap, SpriteDB, etc.)
 /// - Asset handling resources (AssetServer, Meshes, Materials, etc.)
 /// - Game configuration resources (Difficulty, Controls, Audio settings)
 ///
@@ -42,10 +42,12 @@ pub(crate) struct LoadLevelSystemParam<'w> {
     pub meshes: ResMut<'w, Assets<Mesh>>,
     pub tilesetdb: Res<'w, MapTileSetDb>,
     pub sdb: ResMut<'w, SpriteDB>,
-    pub roomdb: ResMut<'w, RoomDB>,
+    pub roomtopo: ResMut<'w, RoomTopology>,
+    pub roomstate: ResMut<'w, RoomStateMap>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub loading_status: ResMut<'w, LevelLoadingStatus>,
     pub cli: Res<'w, untypes_core::cli::CliOptions>,
+    pub authority: Option<Res<'w, untypes_core::roles::AuthorityRole>>,
 }
 
 /// Loads a new level based on the `LevelLoadedEvent`.
@@ -87,8 +89,8 @@ fn load_level_handler(
     }
 
     // Reset core data structures
-    p.roomdb.room_state.clear();
-    p.roomdb.room_tiles.clear();
+    p.roomstate.room_state.clear();
+    p.roomtopo.room_tiles.clear();
     p.sdb.clear();
 
     // --- 2. Map Geometry Calculation ---
@@ -158,7 +160,7 @@ fn load_level_handler(
 
     // --- 5. Entity Spawning ---
     let mut depth_counter = 0.0;
-    for (maptiles, layer) in tile_layers_iter() {
+    for (layer_idx, (maptiles, layer)) in tile_layers_iter().enumerate() {
         // Get floor z-index from the layer's floor_mapping
         let floor_z = layer
             .floor_number
@@ -170,6 +172,7 @@ fn load_level_handler(
             tile_spawning::process_and_spawn_tile(
                 tile,
                 layer,
+                layer_idx,
                 origin.0,
                 origin.1,
                 map_size,
@@ -184,8 +187,13 @@ fn load_level_handler(
     debug!("Map spawning complete: {}", loaded_event.map_filepath);
 }
 
-pub(crate) fn reset_level_resources(mut roomdb: ResMut<RoomDB>, mut sdb: ResMut<SpriteDB>) {
-    roomdb.reset();
+pub(crate) fn reset_level_resources(
+    mut roomtopo: ResMut<RoomTopology>,
+    mut roomstate: ResMut<RoomStateMap>,
+    mut sdb: ResMut<SpriteDB>,
+) {
+    roomtopo.reset();
+    roomstate.reset();
     sdb.clear();
 }
 
