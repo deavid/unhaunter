@@ -34,8 +34,9 @@ pub(crate) struct RageUpdateResult {
 /// during a hunt.
 ///
 /// This system updates the ghost's rage based on player proximity, sanity, and
-/// sound levels. It triggers hunts when rage exceeds a threshold and handles
-/// player damage during hunts.
+/// sound levels. It triggers hunts when rage exceeds a threshold.
+/// Player health damage during hunts is handled client-side by
+/// `client_ghost_aura_damage` in `unplayer-plugin`.
 pub(crate) fn ghost_enrage(
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
