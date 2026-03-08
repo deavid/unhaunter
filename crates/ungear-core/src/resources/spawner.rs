@@ -2,13 +2,20 @@ use crate::types::gear::kind::GearKind;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
+use serde::{Deserialize, Serialize};
 use unfoundation_core::types::gear::VisualKey;
 use unspatial_core::position::Position;
 
 /// A marker component for all gear entities.
-#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[derive(Component, Debug, Clone, Copy, Reflect, Default, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct GearMarker;
+
+/// Marker inserted once a gear entity has been fully hydrated with type-specific components.
+/// On authority nodes this is never needed (components are inserted at spawn time).
+/// On join clients this is inserted by `hydrate_gear_system` after the gear builder runs.
+#[derive(Component, Debug, Default)]
+pub struct GearHydrated;
 
 /// Metadata for a piece of gear.
 #[derive(Clone, Debug)]
@@ -51,5 +58,16 @@ impl GearSpawnerRegistry {
             warn!("No gear builder registered for {:?}", kind);
         }
         entity_cmd.id()
+    }
+
+    /// Applies type-specific components to an already-existing gear entity.
+    /// Used by `hydrate_gear_system` on join clients after replication delivers the entity.
+    pub fn hydrate(&self, commands: &mut Commands, entity: Entity, kind: GearKind) {
+        let mut entity_cmd = commands.entity(entity);
+        if let Some(builder) = self.builders.get(&kind) {
+            (builder)(&mut entity_cmd);
+        } else {
+            warn!("No gear builder registered for {:?} during hydration", kind);
+        }
     }
 }

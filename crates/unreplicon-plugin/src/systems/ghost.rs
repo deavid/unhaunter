@@ -2,8 +2,10 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::{
     AppRuleExt, Channel, ClientMessageAppExt, FromClient, Replicated, ServerMessageAppExt,
 };
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::ghost_breach::GhostBreach;
+use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::ghost_guess::GhostGuess;
+use unrender_std::components::visuals::SpectralClarity;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
 };
@@ -22,7 +24,11 @@ use untypes_core::states::SimulationState;
 
 pub(super) fn app_setup(app: &mut App) {
     // Register Phase 2 replicated components.
+    app.replicate::<GhostTag>();
+    app.replicate::<GhostBreach>();
     app.replicate::<GhostSprite>();
+    app.replicate::<GhostBehaviorDynamics>();
+    app.replicate::<SpectralClarity>();
     app.replicate::<GhostGuess>();
     app.replicate::<SummaryData>();
 
@@ -93,6 +99,7 @@ pub(super) fn app_setup(app: &mut App) {
 
 fn setup_ghost_entities(
     q_ghost: Query<(Entity, &Position), With<GhostTag>>,
+    q_breach: Query<Entity, With<GhostBreach>>,
     mut commands: Commands,
 ) {
     commands.insert_resource(RepliconGhostSpawningActive);
@@ -103,6 +110,14 @@ fn setup_ghost_entities(
             .insert((Replicated, LerpPosition::new(*pos)));
         info!(
             "setup_ghost_entities: ghost entity {:?} marked Replicated with LerpPosition",
+            entity
+        );
+    }
+
+    for entity in q_breach.iter() {
+        commands.entity(entity).insert(Replicated);
+        info!(
+            "setup_ghost_entities: breach entity {:?} marked Replicated",
             entity
         );
     }

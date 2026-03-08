@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 use unreplicon_core::network_id::NetworkId;
 
 /// Component that controls how an entity reacts to general lighting and exposure.
@@ -37,7 +38,8 @@ impl ResolutionFactor {
 }
 
 /// Component that gives the renderer information about how to render the ghost implementation.
-#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[derive(Component, Debug, Clone, Copy, Reflect, Default, Serialize, Deserialize)]
+#[reflect(Component, Default)]
 pub struct SpectralClarity {
     pub uv: f32,
     pub rl: f32,

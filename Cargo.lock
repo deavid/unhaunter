@@ -7948,6 +7948,7 @@ dependencies = [
  "bevy_platform",
  "enum-iterator",
  "ndarray",
+ "serde",
  "unbehavior",
  "unboard-core",
  "unfoundation-core",

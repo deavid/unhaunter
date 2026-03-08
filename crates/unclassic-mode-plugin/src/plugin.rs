@@ -21,6 +21,8 @@ impl Plugin for UnhaunterClassicModeCorePlugin {
                     .run_if(in_state(untypes_core::states::AppState::InGame)),
                 crate::systems::orchestrator::hydrate_ghosts_system
                     .run_if(in_state(untypes_core::states::AppState::InGame)),
+                crate::systems::orchestrator::hydrate_breach_system
+                    .run_if(in_state(untypes_core::states::AppState::InGame)),
             ),
         );
 

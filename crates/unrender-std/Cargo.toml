@@ -13,6 +13,7 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
+serde = { workspace = true }
 unfoundation-core = { path = "../unfoundation-core" }
 unspatial-core = { path = "../unspatial-core" }
 unrender-core = { path = "../unrender-core" }

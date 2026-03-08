@@ -11,7 +11,8 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::gear::Hand;
 use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::resources::spawner::GearSpawnerRegistry;
+use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
+use ungear_core::types::gear::kind::GearKind;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSpectating, PlayerSprite, Stamina};
 use unrender_std::components::visuals::Viewer;
@@ -69,6 +70,8 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<HeldObject>();
     app.replicate::<Hiding>();
     app.replicate::<PlayerSpectating>();
+    app.replicate::<GearMarker>();
+    app.replicate::<GearKind>();
 
     // Host/offline: spawn and tag player entities when InGame starts.
     // Gated by AuthorityRole so it runs on Host and Dedicated Server.
@@ -137,9 +140,39 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Cleanup the spawning-active marker when leaving InGame
     app.add_systems(OnExit(AppState::InGame), cleanup_mission_players);
+
+    // Client: hydrate gear entities that arrive via replication.
+    app.add_systems(
+        Update,
+        hydrate_gear_system
+            .run_if(is_pure_client)
+            .run_if(in_state(AppState::InGame)),
+    );
 }
 
-/// Helper: convert Replicon ClientId to OwnerId.
+/// Client: fires when a GearKind component appears on an entity without GearHydrated.
+/// Applies all type-specific components via the gear builder registry.
+/// Gated to pure clients — authority nodes already have all components from gear_registry.spawn().
+///
+/// FIXME WARNING: The gear builder inserts components at their DEFAULT values
+/// (e.g. Flashlight { status: Off }, Battery { level: 1.0 }, etc.).
+/// The server-side gear may already be in a different state (battery drained, flashlight on, etc.).
+/// Late-joining clients will see remote players' gear in its initial state, not the current state.
+/// Gear state synchronisation is a separate follow-up task.
+fn hydrate_gear_system(
+    mut commands: Commands,
+    gear_registry: Res<GearSpawnerRegistry>,
+    q_added: Query<(Entity, &GearKind), (With<GearMarker>, Without<GearHydrated>)>,
+) {
+    for (entity, kind) in q_added.iter() {
+        gear_registry.hydrate(&mut commands, entity, *kind);
+        commands.entity(entity).insert(GearHydrated);
+        info!(
+            "hydrate_gear_system: hydrated gear entity {:?} kind={:?}",
+            entity, kind
+        );
+    }
+}
 fn to_owner_id(client_id: ClientId) -> OwnerId {
     match client_id {
         ClientId::Server => OwnerId::Server,

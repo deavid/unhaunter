@@ -47,6 +47,10 @@ pub(crate) struct PlayerHydrated;
 #[derive(Component)]
 pub(crate) struct GhostHydrated;
 
+/// Marker inserted once a breach entity has been fully hydrated with visuals.
+#[derive(Component)]
+pub(crate) struct BreachHydrated;
+
 #[derive(SystemParam)]
 pub(crate) struct ClassicModeSystemParam<'w> {
     pub local_player_role: Option<Res<'w, untypes_core::roles::LocalPlayerRole>>,
@@ -68,7 +72,7 @@ pub(crate) struct ClassicModeSystemParam<'w> {
 }
 
 pub(crate) fn classic_mode_orchestrator(
-    mut p: ClassicModeSystemParam,
+    p: ClassicModeSystemParam,
     mut commands: Commands,
     mut ev_level_ready: MessageWriter<LevelReadyEvent>,
     mut ev_entities_ready: MessageReader<MapEntitiesReadyEvent>,
@@ -125,48 +129,7 @@ pub(crate) fn classic_mode_orchestrator(
             commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));
 
             let breach_id = {
-                let mut breach_img_size = Vec2::new(128.0, 128.0);
-                if let Some(ghost_assets) = &p.ghost_assets
-                    && let Some(images) = &p.images
-                    && let Some(img) = images.get(ghost_assets.breach.id())
-                {
-                    breach_img_size = Vec2::new(
-                        img.texture_descriptor.size.width as f32,
-                        img.texture_descriptor.size.height as f32,
-                    );
-                }
-
-                let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
-                let sprite_anchor = Vec2::new(
-                    breach_img_size.x * (anchor.x + 0.5),
-                    breach_img_size.y * (0.5 - anchor.y),
-                );
-
                 let mut ec = commands.spawn(ghost_spawn);
-                if p.local_player_role.is_some()
-                    && let (Some(meshes), Some(materials1), Some(ghost_assets)) =
-                        (&mut p.meshes, &mut p.materials1, &p.ghost_assets)
-                {
-                    let mesh_handle =
-                        meshes.add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
-                    let mut material = CustomMaterial1::from_texture(ghost_assets.breach.clone());
-                    material.data.color = Color::NONE.into();
-                    material.data.y_anchor = anchor.y;
-                    let material_handle = materials1.add(material);
-
-                    ec.insert(Mesh2d(mesh_handle))
-                        .insert(MeshMaterial2d(material_handle))
-                        .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
-                        .insert(MapTileSprite)
-                        .insert(SpriteLayer(0.01))
-                        .insert(AlphaModulator {
-                            frequency: 0.92,
-                            amplitude: 0.5,
-                        })
-                        .insert(EctoplasmVisuals {
-                            use_breach_curve: true,
-                        });
-                }
 
                 ec.insert(GhostBreach)
                     .insert(GameSprite)
@@ -185,24 +148,6 @@ pub(crate) fn classic_mode_orchestrator(
                     })
                     .insert(FluidEmitter::default())
                     .insert(SoundEmitter::default());
-
-                if p.local_player_role.is_some()
-                    && let Some(ghost_assets) = &p.ghost_assets
-                {
-                    ec.with_children(|parent| {
-                        parent
-                            .spawn(Sprite {
-                                image: ghost_assets.focus_ring_vignette.clone(),
-                                color: Color::srgba(1.0, 1.0, 1.0, 0.0),
-                                ..default()
-                            })
-                            .insert(
-                                Transform::from_scale(Vec3::splat(0.5))
-                                    .with_translation(Vec3::new(0.0, 0.0, 0.01)),
-                            )
-                            .insert(FocusRing::default());
-                    });
-                }
 
                 ec.id()
             };
@@ -478,6 +423,11 @@ pub(crate) fn hydrate_players_system(
         }
 
         // --- Attach FocusRing child entity ---
+        // FIXME WARNING: This child entity is spawned client-local during hydration and is NOT
+        // replicated. When bevy_replicon despawns the parent (player) entity on the client it may
+        // NOT call despawn_recursive, leaving this FocusRing child as an orphaned entity. This is
+        // an untested code path — must be verified in multiplayer.
+        // See: docs/replicon_refactor/17_server_entity_replication_inventory.md
         if let Some(ghost_assets) = &p.ghost_assets {
             ec.with_children(|parent| {
                 parent
@@ -592,6 +542,11 @@ pub(crate) fn hydrate_ghosts_system(
         }
 
         // --- Attach FocusRing child entity ---
+        // FIXME WARNING: This child entity is spawned client-local during hydration and is NOT
+        // replicated. When bevy_replicon despawns the parent (ghost) entity on the client it may
+        // NOT call despawn_recursive, leaving this FocusRing child as an orphaned entity. This is
+        // an untested code path — must be verified in multiplayer.
+        // See: docs/replicon_refactor/17_server_entity_replication_inventory.md
         if let Some(ghost_assets) = &p.ghost_assets {
             ec.with_children(|parent| {
                 parent
@@ -619,6 +574,97 @@ pub(crate) fn hydrate_ghosts_system(
         info!(
             "hydrate_ghosts_system: hydrated ghost entity {:?} at {:?}",
             entity, ghost_spawn
+        );
+    }
+}
+
+/// Reactive system: fires whenever a GhostBreach component appears on an entity
+/// (locally spawned on authority/host, or replicated to a join client).
+/// Attaches all visual components for the breach effect.
+/// Runs only on nodes with a local player (LocalPlayerRole present).
+pub(crate) fn hydrate_breach_system(
+    mut p: ClassicModeSystemParam,
+    mut commands: Commands,
+    q_added: Query<(Entity, &Position), (With<GhostBreach>, Without<BreachHydrated>)>,
+) {
+    // Headless guard: dedicated servers have no local player and no visuals needed.
+    if p.local_player_role.is_none() {
+        return;
+    }
+
+    for (entity, pos) in q_added.iter() {
+        let breach_pos = *pos;
+
+        // --- Resolve image size ---
+        let mut breach_img_size = Vec2::new(128.0, 128.0);
+        if let Some(ghost_assets) = &p.ghost_assets
+            && let Some(images) = &p.images
+            && let Some(img) = images.get(ghost_assets.breach.id())
+        {
+            breach_img_size = Vec2::new(
+                img.texture_descriptor.size.width as f32,
+                img.texture_descriptor.size.height as f32,
+            );
+        }
+
+        let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
+        let sprite_anchor = Vec2::new(
+            breach_img_size.x * (anchor.x + 0.5),
+            breach_img_size.y * (0.5 - anchor.y),
+        );
+
+        let mut ec = commands.entity(entity);
+
+        // --- Attach visual mesh ---
+        if let (Some(meshes), Some(materials1), Some(ghost_assets)) =
+            (&mut p.meshes, &mut p.materials1, &p.ghost_assets)
+        {
+            let mesh_handle = meshes.add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
+            let mut material = CustomMaterial1::from_texture(ghost_assets.breach.clone());
+            material.data.color = Color::NONE.into();
+            material.data.y_anchor = anchor.y;
+            let material_handle = materials1.add(material);
+
+            ec.insert(Mesh2d(mesh_handle))
+                .insert(MeshMaterial2d(material_handle))
+                .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
+                .insert(MapTileSprite)
+                .insert(SpriteLayer(0.01))
+                .insert(AlphaModulator {
+                    frequency: 0.92,
+                    amplitude: 0.5,
+                })
+                .insert(EctoplasmVisuals {
+                    use_breach_curve: true,
+                });
+        }
+
+        // --- Attach FocusRing child entity ---
+        // FIXME WARNING: This child entity is spawned client-local during hydration and is NOT
+        // replicated. When bevy_replicon despawns the parent (breach) entity on the client it may
+        // NOT call despawn_recursive, leaving this FocusRing child as an orphaned entity. This is
+        // an untested code path — must be verified in multiplayer.
+        // See: docs/replicon_refactor/17_server_entity_replication_inventory.md
+        if let Some(ghost_assets) = &p.ghost_assets {
+            ec.with_children(|parent| {
+                parent
+                    .spawn(Sprite {
+                        image: ghost_assets.focus_ring_vignette.clone(),
+                        color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                        ..default()
+                    })
+                    .insert(
+                        Transform::from_scale(Vec3::splat(0.5))
+                            .with_translation(Vec3::new(0.0, 0.0, 0.01)),
+                    )
+                    .insert(FocusRing::default());
+            });
+        }
+
+        commands.entity(entity).insert(BreachHydrated);
+        info!(
+            "hydrate_breach_system: hydrated breach entity {:?} at {:?}",
+            entity, breach_pos
         );
     }
 }
