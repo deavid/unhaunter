@@ -524,6 +524,12 @@ pub(crate) fn hydrate_ghosts_system(
                 intensity: 1.0,
                 ..default()
             })
+            .insert(ThermalEmitter {
+                room_restricted: true,
+                ..default()
+            })
+            .insert(FluidEmitter::default())
+            .insert(SoundEmitter::default())
             .insert(unspatial_core::lerp_position::LerpPosition::new(*pos));
 
         // --- Attach visual mesh ---
@@ -640,7 +646,13 @@ pub(crate) fn hydrate_breach_system(
             .insert(UltravioletSensitive {
                 intensity: 1.0,
                 color_shift: 1.0,
-            });
+            })
+            .insert(ThermalEmitter {
+                room_restricted: true,
+                ..default()
+            })
+            .insert(FluidEmitter::default())
+            .insert(SoundEmitter::default());
 
         // --- Attach visual mesh ---
         if let (Some(meshes), Some(materials1), Some(ghost_assets)) =

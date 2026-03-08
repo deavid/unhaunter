@@ -63,8 +63,17 @@ pub(crate) fn ghost_movement(
     config: Res<ObjectInteractionConfig>,
     object_query: Query<(&Position, &GhostInfluence)>,
     difficulty: Res<CurrentDifficulty>,
+    mut log_timer: Local<f32>,
 ) {
     let measure = GHOST_MOVEMENT.time_measure();
+
+    *log_timer -= time.delta_secs();
+    if *log_timer <= 0.0 {
+        *log_timer = 10.0;
+        for (_, pos, entity) in q.iter() {
+            info!("[ghost_movement] ghost {:?} position: {:?}", entity, pos);
+        }
+    }
 
     let mut rng = random_seed::rng();
     let dt = time.delta_secs() * 60.0;

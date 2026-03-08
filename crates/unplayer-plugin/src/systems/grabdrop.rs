@@ -277,8 +277,15 @@ pub(crate) fn app_setup(app: &mut App) {
     );
     app.add_systems(
         Update,
-        (grab_object, drop_object, cycle_inventory, swap_hands)
+        (grab_object, drop_object)
             .in_set(PlayerAuthoritativeLogicSet)
             .run_if(in_state(AppState::InGame)),
+    );
+    // cycle_inventory and swap_hands are purely local slot rearrangements.
+    // They must run on the join client too (not just authority), so they are
+    // registered outside PlayerAuthoritativeLogicSet.
+    app.add_systems(
+        Update,
+        (cycle_inventory, swap_hands).run_if(in_state(AppState::InGame)),
     );
 }

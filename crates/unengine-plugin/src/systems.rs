@@ -133,8 +133,5 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::MainMenu), setup_menu_camera);
     app.add_systems(OnExit(AppState::MainMenu), cleanup_menu);
     app.add_systems(OnExit(AppState::InGame), cleanup_game);
-    app.add_systems(
-        Update,
-        (keyboard_state_transitions, simulation_state_transitions),
-    );
+    app.add_systems(Update, keyboard_state_transitions);
 }

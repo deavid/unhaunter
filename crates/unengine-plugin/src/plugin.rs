@@ -33,6 +33,9 @@ impl Plugin for UnhaunterEngineCorePlugin {
         }
 
         crate::boardfield_update::app_setup(app);
+
+        // Runs on all nodes (dedicated + client). Advances SimulationState: Spawning -> Ready.
+        app.add_systems(Update, systems::simulation_state_transitions);
     }
 }
 

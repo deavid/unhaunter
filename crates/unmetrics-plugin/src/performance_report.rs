@@ -2,7 +2,8 @@ use std::time::Duration;
 
 use bevy::diagnostic::DiagnosticsStore;
 use bevy::prelude::*;
-use untypes_core::states::{AppState, GameState};
+use untypes_core::roles::{AuthorityRole, LocalPlayerRole, LobbyPresenceRole};
+use untypes_core::states::{AppState, GameState, SimulationState};
 
 pub fn report_performance(
     time: Res<Time>,
@@ -11,6 +12,10 @@ pub fn report_performance(
     mut game_next_state: ResMut<NextState<GameState>>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
+    simulation_state: Res<State<SimulationState>>,
+    authority: Option<Res<AuthorityRole>>,
+    local_player: Option<Res<LocalPlayerRole>>,
+    lobby_presence: Option<Res<LobbyPresenceRole>>,
 ) {
     if timer.0.tick(time.delta()).just_finished() {
         let mut system_times: Vec<(&str, f64, String)> = Vec::new();
@@ -41,9 +46,13 @@ pub fn report_performance(
         const MAX_TIME: f64 = 1000.0 / 60.0;
         debug!("systems: {:.2}%", total_systems_time / MAX_TIME * 100.0);
         debug!(
-            "App State: {:?} - Game State: {:?}",
+            "App State: {:?} - Game State: {:?} - Simulation: {:?} - AuthorityRole={} LocalPlayerRole={} LobbyPresenceRole={}",
             app_state.get(),
-            game_state.get()
+            game_state.get(),
+            simulation_state.get(),
+            authority.is_some(),
+            local_player.is_some(),
+            lobby_presence.is_some(),
         );
         if *app_state != AppState::InGame && *game_state != GameState::Running {
             error!(
