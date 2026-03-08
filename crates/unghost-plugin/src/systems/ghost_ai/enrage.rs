@@ -4,7 +4,7 @@ use crate::components::fade_out::FadeOut;
 use crate::metrics::GHOST_ENRAGE;
 use bevy::prelude::*;
 use rand::RngExt;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
@@ -55,7 +55,7 @@ pub(crate) fn ghost_enrage(
     board_collision: Res<BoardCollisionField>,
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut ev_ambient_mute: Option<MessageWriter<AmbientSoundMuteEvent>>,
 ) {
     let measure = GHOST_ENRAGE.time_measure();
@@ -117,7 +117,7 @@ pub(crate) fn ghost_enrage(
             dynamics,
             &mut avg_angry,
             &difficulty,
-            &roomdb,
+            &room_topology,
             dt,
         );
 
@@ -349,7 +349,7 @@ pub(crate) fn calculate_rage_update(
     dynamics: &GhostBehaviorDynamics,
     avg_angry: &mut MeanValue,
     difficulty: &Res<CurrentDifficulty>,
-    roomdb: &Res<RoomDB>,
+    room_topology: &Res<RoomTopology>,
     dt: f32,
 ) -> RageUpdateResult {
     // Calculate player-induced rage
@@ -375,7 +375,7 @@ pub(crate) fn calculate_rage_update(
             angry2 * inv_sanity + player_sprite.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
 
         let player_board_position = player_pos.to_board_position();
-        if roomdb.room_tiles.contains_key(&player_board_position) {
+        if room_topology.room_tiles.contains_key(&player_board_position) {
             player_in_room = true;
             total_inv_sanity += inv_sanity;
         }

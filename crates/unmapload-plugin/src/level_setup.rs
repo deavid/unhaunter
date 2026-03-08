@@ -7,7 +7,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
@@ -28,7 +28,7 @@ use crate::tile_spawning;
 /// System parameter for loading levels, providing access to various resources.
 ///
 /// This struct contains references to all resources needed throughout the level loading process:
-/// - Core data resources (BoardTopology, RoomDB, SpriteDB, etc.)
+/// - Core data resources (BoardTopology, RoomTopology, RoomStateMap, SpriteDB, etc.)
 /// - Asset handling resources (AssetServer, Meshes, Materials, etc.)
 /// - Game configuration resources (Difficulty, Controls, Audio settings)
 ///
@@ -42,7 +42,8 @@ pub(crate) struct LoadLevelSystemParam<'w> {
     pub meshes: ResMut<'w, Assets<Mesh>>,
     pub tilesetdb: Res<'w, MapTileSetDb>,
     pub sdb: ResMut<'w, SpriteDB>,
-    pub roomdb: ResMut<'w, RoomDB>,
+    pub room_topology: ResMut<'w, RoomTopology>,
+    pub room_state: ResMut<'w, RoomStateMap>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub loading_status: ResMut<'w, LevelLoadingStatus>,
     pub cli: Res<'w, untypes_core::cli::CliOptions>,
@@ -87,8 +88,8 @@ fn load_level_handler(
     }
 
     // Reset core data structures
-    p.roomdb.room_state.clear();
-    p.roomdb.room_tiles.clear();
+    p.room_state.room_state.clear();
+    p.room_topology.room_tiles.clear();
     p.sdb.clear();
 
     // --- 2. Map Geometry Calculation ---
@@ -158,7 +159,7 @@ fn load_level_handler(
 
     // --- 5. Entity Spawning ---
     let mut depth_counter = 0.0;
-    for (maptiles, layer) in tile_layers_iter() {
+    for (layer_idx, (maptiles, layer)) in tile_layers_iter().enumerate() {
         // Get floor z-index from the layer's floor_mapping
         let floor_z = layer
             .floor_number
@@ -166,7 +167,7 @@ fn load_level_handler(
             .copied()
             .unwrap_or(0);
 
-        for tile in &maptiles.v {
+        for (tile_idx, tile) in maptiles.v.iter().enumerate() {
             tile_spawning::process_and_spawn_tile(
                 tile,
                 layer,
@@ -177,6 +178,8 @@ fn load_level_handler(
                 &mut p,
                 &mut commands,
                 &mut depth_counter,
+                layer_idx as u32,
+                tile_idx as u32,
             );
         }
     }
@@ -184,8 +187,13 @@ fn load_level_handler(
     debug!("Map spawning complete: {}", loaded_event.map_filepath);
 }
 
-pub(crate) fn reset_level_resources(mut roomdb: ResMut<RoomDB>, mut sdb: ResMut<SpriteDB>) {
-    roomdb.reset();
+pub(crate) fn reset_level_resources(
+    mut room_topology: ResMut<RoomTopology>,
+    mut room_state: ResMut<RoomStateMap>,
+    mut sdb: ResMut<SpriteDB>,
+) {
+    room_topology.reset();
+    room_state.reset();
     sdb.clear();
 }
 

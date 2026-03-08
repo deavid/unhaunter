@@ -2,7 +2,7 @@ use crate::resources::ambient_mute::AmbientMuteController;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unfoundation_core::types::sound::SoundType;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSpectating;
@@ -19,7 +19,7 @@ use untypes_core::states::AppState;
 /// # Arguments
 ///
 /// * `vf` - A reference to the `VisibilityData` resource.
-/// * `roomdb` - A reference to the `RoomDB` resource.
+/// * `room_topology` - A reference to the `RoomTopology` resource.
 /// * `player_bpos` - The player's board position.
 ///
 /// # Returns
@@ -27,7 +27,7 @@ use untypes_core::states::AppState;
 /// A tuple containing the calculated `house_volume` and `street_volume`.
 fn calculate_ambient_sound_volumes(
     vf: &VisibilityData,
-    roomdb: &RoomDB,
+    room_topology: &RoomTopology,
     player_bpos: &BoardPosition,
 ) -> (f32, f32) {
     // Check if visibility field is properly initialized
@@ -66,7 +66,7 @@ fn calculate_ambient_sound_volumes(
             let abs_y = rel_idx.1 + min_y;
             let abs_z = z; // Z is constant, use the original z value
             let k = BoardPosition::from_ndidx((abs_x, abs_y, abs_z));
-            v * match roomdb.room_tiles.get(&k).is_some() {
+            v * match room_topology.room_tiles.get(&k).is_some() {
                 true => 0.2,
                 false => 1.0,
             }
@@ -100,7 +100,7 @@ fn update_ambient_sound_volumes(
         (&Position, &Viewer, &VisibilityData, Has<PlayerSpectating>),
         With<MainPlayer>,
     >,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     audio_settings: Res<Persistent<AudioSettings>>,
     ambient_mute_controller: Res<AmbientMuteController>,
     global_volume: Res<bevy::audio::GlobalVolume>,
@@ -113,7 +113,7 @@ fn update_ambient_sound_volumes(
 
     // Calculate the base ambient volumes
     let (house_volume, street_volume) =
-        calculate_ambient_sound_volumes(visibility_data, &roomdb, &player_bpos);
+        calculate_ambient_sound_volumes(visibility_data, &room_topology, &player_bpos);
 
     // Calculate HeartBeat volume based on health (analog/fuzzy logic)
     // HeartBeat should get louder as health gets lower

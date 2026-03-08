@@ -3,7 +3,7 @@ use crate::maplight::visibility::compute_visibility;
 use crate::metrics::PLAYER_VISIBILITY;
 use bevy::prelude::*;
 use ndarray::Array3;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use unfoundation_core::types::gear::{EquipmentPosition, Hand};
 use unfoundation_core::types::light::LightType;
@@ -22,7 +22,7 @@ use unspatial_core::position::Position;
 pub(crate) fn player_visibility_system(
     mut q_vf: Query<(&Position, &mut VisibilityData), With<Viewer>>,
     bcf: Res<BoardCollisionField>,
-    mut roomdb: ResMut<RoomDB>,
+    mut room_topology: ResMut<RoomTopology>,
 ) {
     let measure = PLAYER_VISIBILITY.clone().time_measure();
 
@@ -37,7 +37,7 @@ pub(crate) fn player_visibility_system(
             &mut vf.visibility_field,
             &bcf.0,
             pos,
-            Some(&mut roomdb),
+            Some(&mut room_topology),
             false,
         );
     }

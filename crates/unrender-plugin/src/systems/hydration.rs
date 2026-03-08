@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unbehavior::behavior::{Behavior, Util};
 use unbehavior::components;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::{RoomStateMap, RoomTopology};
 use unbehavior::state::TileState;
 use unmetrics_core::metrics::SendMetric;
 use untypes_core::hydration::HydrationStage;
@@ -10,7 +10,8 @@ use crate::metrics;
 
 fn hydration_simulation_system(
     mut q: Query<(Entity, &Behavior, &unspatial_core::position::Position), With<HydrationStage<2>>>,
-    mut roomdb: ResMut<RoomDB>,
+    mut room_topology: ResMut<RoomTopology>,
+    mut room_state: ResMut<RoomStateMap>,
     mut commands: Commands,
 ) {
     let measure = metrics::HYDRATION_SIMULATION.time_measure();
@@ -26,10 +27,10 @@ fn hydration_simulation_system(
         }
 
         if let Util::RoomDef(name) = &behavior.p.util {
-            roomdb
+            room_topology
                 .room_tiles
                 .insert(pos.to_board_position(), name.to_owned());
-            roomdb.room_state.insert(name.clone(), TileState::Off);
+            room_state.room_state.insert(name.clone(), TileState::Off);
         }
     }
     measure.end_ms();

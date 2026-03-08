@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unreplicon_core::ownership::LocallyOwned;
 use untags_core::tags::GhostTag;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
@@ -42,7 +42,7 @@ fn lose_sanity(
     thermal_grid: If<Res<ThermalGrid>>,
     sound_grid: If<Res<SoundGrid>>,
     lg: If<Res<LightGrid>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let dt = time.delta_secs();
@@ -69,7 +69,7 @@ fn lose_sanity(
                 * 10.0;
         }
         const MASS: f32 = 10.0;
-        if roomdb.room_tiles.contains_key(&bpos) {
+        if room_topology.room_tiles.contains_key(&bpos) {
             ps.mean_sound =
                 ((sound * dt + ps.mean_sound * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
         } else {

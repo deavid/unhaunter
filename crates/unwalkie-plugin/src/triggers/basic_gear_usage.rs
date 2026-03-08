@@ -1,7 +1,7 @@
 // In unwalkie/src/triggers/basic_gear_usage.rs
 
 use bevy::prelude::*;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::manual_types::ManualChapterIndex;
 use ungear_core::components::core::Battery;
@@ -29,7 +29,7 @@ fn trigger_gear_selected_not_activated_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerInputMapping, &PlayerGear, &Position), With<MainPlayer>>,
@@ -52,7 +52,7 @@ fn trigger_gear_selected_not_activated_system(
     let mut reset_timer_this_frame = false;
 
     for (input_mapping, player_gear, player_pos) in player_query.iter() {
-        if roomdb
+        if room_topology
             .room_tiles
             .get(&player_pos.to_board_position())
             .is_none()
@@ -171,7 +171,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
     ghost_query: Query<(&GhostSprite, &Position)>, // GhostSprite for breach_pos, Position for live pos
     haunt_state: Res<HauntState>, // For actual ghost evidences & fallback breach_pos
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     difficulty: Res<CurrentDifficulty>,
     q_gear: Query<(&GearKind, &Toggleable)>,
     mut tracker: Local<Option<IneffectiveToolInHotspotTracker>>,
@@ -213,8 +213,8 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
         for (ghost_spawn_bpos, current_ghost_live_pos_opt) in &ghost_targets {
             // 3. Hotspot Check
             let player_bpos = player_pos.to_board_position();
-            let player_room = roomdb.room_tiles.get(&player_bpos);
-            let breach_room = roomdb.room_tiles.get(ghost_spawn_bpos);
+            let player_room = room_topology.room_tiles.get(&player_bpos);
+            let breach_room = room_topology.room_tiles.get(ghost_spawn_bpos);
 
             let mut in_hotspot = false;
             if player_room.is_some() {
@@ -223,7 +223,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
                     in_hotspot = true;
                 }
                 if let Some(ghost_live_pos) = current_ghost_live_pos_opt
-                    && player_room == roomdb.room_tiles.get(&ghost_live_pos.to_board_position())
+                    && player_room == room_topology.room_tiles.get(&ghost_live_pos.to_board_position())
                 {
                     // In live ghost's current room
                     in_hotspot = true;
@@ -371,7 +371,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerInputMapping, &PlayerGear, &Position), With<MainPlayer>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     difficulty: Res<CurrentDifficulty>,
     ghost_query: Query<&GhostSprite>, // Add ghost query to check hunting state
@@ -398,7 +398,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     let mut matched_player_info: Option<(&PlayerInputMapping, &PlayerGear)> = None;
 
     for (input_mapping, player_gear, player_pos) in player_query.iter() {
-        if roomdb
+        if room_topology
             .room_tiles
             .get(&player_pos.to_board_position())
             .is_some()

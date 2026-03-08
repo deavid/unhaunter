@@ -12,6 +12,7 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
+bevy_replicon = { workspace = true }
 unspatial-core = { path = "../unspatial-core" }
 unbehavior = { path = "../unbehavior" }
 undifficulty-core = { path = "../undifficulty-core" }

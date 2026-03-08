@@ -4,7 +4,9 @@
 //! It converts tile data from Tiled into game entities with appropriate components and behaviors.
 
 use bevy::prelude::*;
+use bevy_replicon::prelude::Replicated;
 use unbehavior::behavior::Util;
+use unbehavior::components::TmxEntityId;
 use unboard_core::components::spawning::VanEntryPoint;
 use unmapload_core::components::PendingTiledLayerProperties;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
@@ -44,6 +46,8 @@ pub(crate) fn process_and_spawn_tile(
     p: &mut LoadLevelSystemParam,
     commands: &mut Commands,
     c: &mut f32,
+    layer_idx: u32,
+    tile_idx: u32,
 ) {
     // Get the map tile components from the SpriteDB
     let mt = p
@@ -166,6 +170,16 @@ pub(crate) fn process_and_spawn_tile(
     }
     entity
         .insert(beh)
+        .insert(TmxEntityId {
+            layer_idx,
+            tile_idx,
+        });
+
+    if p.cli.is_authority() {
+        entity.insert(Replicated);
+    }
+
+    entity
         .insert(GameSprite)
         .insert(MapTileSprite)
         .insert(pos)

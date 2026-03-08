@@ -1,6 +1,6 @@
 use ndarray::Array3;
 use std::collections::VecDeque;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::types::fielddata::CollisionFieldData;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
@@ -9,7 +9,7 @@ pub(crate) fn compute_visibility(
     vis_field: &mut Array3<f32>,
     collision_field: &Array3<CollisionFieldData>,
     pos_start: &Position,
-    roomdb: Option<&mut RoomDB>,
+    room_topology: Option<&mut RoomTopology>,
     pre_fill: bool,
 ) {
     if pre_fill {
@@ -51,8 +51,8 @@ pub(crate) fn compute_visibility(
             if dst_f < 0.00001 {
                 continue;
             }
-            let k = if let Some(roomdb) = roomdb.as_ref() {
-                match roomdb.room_tiles.get(&npos).is_some() {
+            let k = if let Some(room_topology) = room_topology.as_ref() {
+                match room_topology.room_tiles.get(&npos).is_some() {
                     // Decrease view range inside the location
                     true => 7.0,
                     false => 8.0,

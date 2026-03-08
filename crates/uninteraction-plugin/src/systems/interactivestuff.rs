@@ -1,7 +1,7 @@
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomState;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::{RoomStateMap, RoomTopology};
 use unevents_core::events::roomchanged::InteractionExecutionType;
 use unevents_core::events::sound::SoundEvent;
 use uninteraction_core::interaction::Authority;
@@ -43,7 +43,8 @@ pub struct InteractiveStuff<'w, 's> {
     pub materials1: Option<ResMut<'w, Assets<CustomMaterial1>>>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
-    pub roomdb: ResMut<'w, RoomDB>,
+    pub room_topology: Res<'w, RoomTopology>,
+    pub room_state: ResMut<'w, RoomStateMap>,
     /// Controls the transition to different game states, such as the truck UI.
     pub game_next_state: ResMut<'w, NextState<GameState>>,
 }
@@ -83,7 +84,7 @@ impl InteractiveStuff<'_, '_> {
         }
     }
 
-    /// Synchronizes the entity's state with the current RoomDB state.
+    /// Synchronizes the entity's state with the current RoomStateMap state.
     ///
     /// Checks the `RoomState` of the room the entity belongs to. If the entity's
     /// current behavior state (`beh.state()`) does not match the room's stored
@@ -104,13 +105,13 @@ impl InteractiveStuff<'_, '_> {
             z: item_bpos.z + room_state.room_delta.z,
         };
         let room_name = self
-            .roomdb
+            .room_topology
             .room_tiles
             .get(&item_roombpos)
             .cloned()
             .unwrap_or_default();
 
-        let Some(main_room_state) = self.roomdb.room_state.get(&room_name) else {
+        let Some(main_room_state) = self.room_state.room_state.get(&room_name) else {
             return false;
         };
 
@@ -242,7 +243,7 @@ impl InteractiveStuff<'_, '_> {
                     z: item_bpos.z + room_state.room_delta.z,
                 };
                 let room_name = self
-                    .roomdb
+                    .room_topology
                     .room_tiles
                     .get(&item_roombpos)
                     .cloned()
@@ -252,13 +253,13 @@ impl InteractiveStuff<'_, '_> {
                     InteractionExecutionType::ChangeState => {
                         if authority == Authority::Host
                             && let Some(main_room_state) =
-                                self.roomdb.room_state.get_mut(&room_name)
+                                self.room_state.room_state.get_mut(&room_name)
                         {
                             *main_room_state = beh_state.clone();
                         }
                     }
                     InteractionExecutionType::ReadRoomState => {
-                        if let Some(main_room_state) = self.roomdb.room_state.get(&room_name)
+                        if let Some(main_room_state) = self.room_state.room_state.get(&room_name)
                             && *main_room_state != beh_state
                         {
                             continue;

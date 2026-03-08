@@ -5,7 +5,7 @@ use bevy_persistent::Persistent;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::Door;
 use unbehavior::components::HidingSpot;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unbehavior::state::TileState;
 use ungear_core::components::playergear::PlayerGear;
 use unmetrics_core::metrics::SendMetric;
@@ -31,7 +31,7 @@ fn check_player_stuck_at_start(
     time: Res<Time>,
     _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut stuck_timer: Local<Stopwatch>,
@@ -57,7 +57,7 @@ fn check_player_stuck_at_start(
             min_time_secs = 90.0;
         }
         // If the player is already inside the location, reset the stuck time
-        if roomdb
+        if room_topology
             .room_tiles
             .get(&player_position.to_board_position())
             .is_some()
@@ -91,7 +91,7 @@ fn check_erratic_movement_early(
     time: Res<Time>,
     _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut not_entered_timer: Local<Stopwatch>,
@@ -114,7 +114,7 @@ fn check_erratic_movement_early(
         *m_avg = m_avg.lerp(player_position, 0.5 * time.delta_secs());
 
         // Check if player is inside any room
-        if roomdb
+        if room_topology
             .room_tiles
             .get(&player_position.to_board_position())
             .is_some()
@@ -154,7 +154,7 @@ fn check_door_interaction_hesitation(
     time: Res<Time>,
     _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     door_query: Query<(&Position, &Behavior), With<Door>>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -167,7 +167,7 @@ fn check_door_interaction_hesitation(
 
     for (player_position, _) in player_query.iter() {
         // Check if the player is outside the location
-        let is_outside = roomdb
+        let is_outside = room_topology
             .room_tiles
             .get(&player_position.to_board_position())
             .is_none();

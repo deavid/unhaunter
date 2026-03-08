@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
@@ -24,7 +24,7 @@ fn trigger_ghost_expelled_player_lingers_system(
     mut walkie_play: ResMut<WalkiePlay>,
     ghost_query: Query<Entity, With<GhostSprite>>,
     player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>, // Assuming only one player for now
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut ghost_gone_and_player_in_location_timestamp: Local<Option<f64>>,
 ) {
     // 1. System Run Condition Checks
@@ -41,7 +41,7 @@ fn trigger_ghost_expelled_player_lingers_system(
 
     // 3. Check Player Location - iterate all players (First Responder)
     for player_pos in player_query.iter() {
-        let player_is_inside_location = roomdb
+        let player_is_inside_location = room_topology
             .room_tiles
             .get(&player_pos.to_board_position())
             .is_some();
@@ -80,7 +80,7 @@ fn trigger_has_repellent_enters_location_system(
     _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     q_gear: Query<&GearKind>,
     q_repellent: Query<&RepellentFlask>,
 ) {
@@ -107,7 +107,7 @@ fn trigger_has_repellent_enters_location_system(
             || player_gear.inventory.iter().any(|&e| check_repellent(e));
 
         // 4. Determine Current Location Status
-        let player_is_currently_inside = roomdb
+        let player_is_currently_inside = room_topology
             .room_tiles
             .get(&player_pos.to_board_position())
             .is_some();
@@ -456,7 +456,7 @@ fn trigger_ghost_expelled_player_missed_simplified_system(
     mut walkie_play: ResMut<WalkiePlay>,
     mut removed_ghost_query: RemovedComponents<GhostSprite>, // Reacts to GhostSprite removal
     player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut processed_ghosts: ResMut<ProcessedMissedExpulsionGhosts>,
 ) {
     // 1. System Run Condition Check (Primarily AppState::InGame)
@@ -470,7 +470,7 @@ fn trigger_ghost_expelled_player_missed_simplified_system(
 
     // Iterate all players (First Responder)
     for player_pos in player_query.iter() {
-        let player_is_outside_location = roomdb
+        let player_is_outside_location = room_topology
             .room_tiles
             .get(&player_pos.to_board_position())
             .is_none();

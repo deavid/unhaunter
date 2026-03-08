@@ -1,5 +1,5 @@
 use bevy::{prelude::*, time::Stopwatch};
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
@@ -16,7 +16,7 @@ use unwalkie_core::resources::WalkiePlay;
 fn player_forgot_equipment(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&Position, &PlayerGear), With<MainPlayer>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut stopwatch: Local<Stopwatch>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
@@ -37,7 +37,7 @@ fn player_forgot_equipment(
     for (player_pos, player_gear) in qp.iter() {
         let player_bpos = player_pos.to_board_position();
 
-        if roomdb.room_tiles.get(&player_bpos).is_some() {
+        if room_topology.room_tiles.get(&player_bpos).is_some() {
             if player_gear.right_hand.is_some() {
                 // At least one player has an item, no need to remind anyone.
                 walkie_play.mark(WalkieEvent::GearInVan, time.elapsed_secs_f64());
@@ -70,7 +70,7 @@ fn player_forgot_equipment(
 fn ghost_near_hunt(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&Position, &PlayerGear), With<MainPlayer>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     difficulty: Res<CurrentDifficulty>,
     q_ghost: Query<&GhostSprite>,
     q_gear: Query<&GearKind>,
@@ -101,7 +101,7 @@ fn ghost_near_hunt(
 
         let player_bpos = player_pos.to_board_position();
 
-        if roomdb.room_tiles.get(&player_bpos).is_none() {
+        if room_topology.room_tiles.get(&player_bpos).is_none() {
             // Player is not inside the location, no need to tell them.
             continue;
         }

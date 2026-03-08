@@ -5,7 +5,7 @@
 use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
 
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
@@ -78,7 +78,8 @@ impl Plugin for UnhaunterRenderCorePlugin {
             .init_resource::<BoardEntityField>()
             .init_resource::<BoardCollisionField>()
             .init_resource::<SpriteDB>()
-            .init_resource::<RoomDB>();
+            .init_resource::<RoomTopology>()
+            .init_resource::<RoomStateMap>();
 
         if headless {
             // In headless mode, register stub Assets<T> for the resources LoadLevelSystemParam requires

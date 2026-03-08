@@ -1,6 +1,6 @@
 //! This module defines systems related to managing the charge levels of objects
 //! that influence ghost behavior.
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -49,7 +49,7 @@ fn check_ghost_proximity(
     // Access commands to add/remove components
     mut commands: Commands,
     // Access the room database
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     // Access the time resource
     time: Res<Time>,
     // Access the difficulty settings
@@ -94,7 +94,7 @@ fn check_ghost_proximity(
                 }
 
                 // Remove the object from the list of removed objects if it's back within range
-                if roomdb
+                if room_topology
                     .room_tiles
                     .get(&object_position.to_board_position())
                     .is_some()

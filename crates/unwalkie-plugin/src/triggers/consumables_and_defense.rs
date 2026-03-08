@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::manual_types::ManualChapterIndex;
 use ungear_core::components::playergear::PlayerGear;
@@ -19,7 +19,7 @@ fn quartz_cracked_feedback(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
     q_quartz: Query<&QuartzStoneData>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
     time: Res<Time>,
@@ -33,7 +33,7 @@ fn quartz_cracked_feedback(
         return;
     };
     let player_bpos = pos.to_board_position();
-    if roomdb.room_tiles.get(&player_bpos).is_none() {
+    if room_topology.room_tiles.get(&player_bpos).is_none() {
         *last_cracks = None;
         return;
     }
@@ -62,7 +62,7 @@ fn quartz_shattered_feedback(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
     q_quartz: Query<&QuartzStoneData>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
     time: Res<Time>,
@@ -76,7 +76,7 @@ fn quartz_shattered_feedback(
         return;
     };
     let player_bpos = pos.to_board_position();
-    if roomdb.room_tiles.get(&player_bpos).is_none() {
+    if room_topology.room_tiles.get(&player_bpos).is_none() {
         *shattered = false;
         return;
     }
@@ -110,7 +110,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     truck_gear: Option<Res<TruckGear>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     q_gear: Query<&GearKind>,
 ) {
     // 1. System Run Condition Checks
@@ -164,7 +164,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
             // 7. Check Truck Inventory for Quartz
             // Only trigger truck hint if player is currently outside (near truck)
             let player_bpos = player_pos.to_board_position();
-            let is_outside = roomdb.room_tiles.get(&player_bpos).is_none();
+            let is_outside = room_topology.room_tiles.get(&player_bpos).is_none();
             if !is_outside {
                 continue; // Don't nag about truck gear while inside
             }
@@ -198,7 +198,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     truck_gear: Option<Res<TruckGear>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     q_gear: Query<&GearKind>,
     q_sage: Query<&SageBundleData>,
 ) {
@@ -277,7 +277,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
             // 7. Player has no usable sage in inventory.
             // Check if player is outside (near truck) to suggest picking it up.
             let player_bpos = player_pos.to_board_position();
-            let is_outside = roomdb.room_tiles.get(&player_bpos).is_none();
+            let is_outside = room_topology.room_tiles.get(&player_bpos).is_none();
             if !is_outside {
                 continue; // Don't nag if they've already committed to being inside without it.
             }

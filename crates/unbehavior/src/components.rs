@@ -33,6 +33,13 @@ pub struct Movable;
 #[derive(Component, Debug, Clone, Copy, Default)]
 pub struct HidingSpot;
 
+/// A deterministic ID for map entities to synchronize them between server and client.
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct TmxEntityId {
+    pub layer_idx: u32,
+    pub tile_idx: u32,
+}
+
 /// Marker component that identifies entities that ghosts can interact with.
 ///
 /// This component is automatically added to entities during map loading if they have:
@@ -50,8 +57,8 @@ pub struct InteractableByGhost;
 ///
 /// This acts as a spatial pointer. When an interaction occurs (e.g., flipping a switch),
 /// the `room_delta` is added to the entity's board position to calculate a target coordinate.
-/// This target coordinate is then looked up in the `RoomDB` to identify the room name,
-/// allowing the interaction to affect the state of that entire room (e.g., lights).
+/// This target coordinate is then looked up in the `RoomTopology` to identify the room name,
+/// allowing the interaction to affect the state of that entire room (e.g., lights) via `RoomStateMap`.
 ///
 /// - `room_delta`: Offset vector from the entity pos to a tile inside the target room.
 #[derive(Component, Debug, Clone, PartialEq, Eq, Default)]

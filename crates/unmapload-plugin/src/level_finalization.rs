@@ -9,7 +9,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::roomchanged::{RoomChangedEvent, RoomStateSyncEvent};
 use unmapload_core::events::loadlevel::LevelReadyEvent;
@@ -33,14 +33,14 @@ use untypes_core::states::{AppState, GameState, SimulationState};
 /// * `bf` - Board data resource to modify
 /// * `ev` - Event reader for level ready events
 /// * `ev_room` - Event writer for room changed events
-/// * `roomdb` - Room database resource for room information
+/// * `room_topology` - Room topology resource for room information
 /// * `next_game_state` - State machine to transition to in-game state
 fn after_level_ready(
     bcf: Res<BoardCollisionField>,
     mut ev: MessageReader<LevelReadyEvent>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
@@ -69,7 +69,7 @@ fn after_level_ready(
     let tile_area = BoardPosition::area_per_tile_m2();
 
     // Calculate usable area for each floor and room (excluding solid walls)
-    for bpos in roomdb.room_tiles.keys() {
+    for bpos in room_topology.room_tiles.keys() {
         if let Some(cf) = bcf.0.get(bpos.ndidx()) {
             // Exclude static walls (opaque and not dynamic)
             if cf.see_through || cf.is_dynamic {
@@ -78,7 +78,7 @@ fn after_level_ready(
                 *floor_area += tile_area;
 
                 // Add to room area calculation, organized by floor
-                if let Some(room_name) = roomdb.room_tiles.get(bpos) {
+                if let Some(room_name) = room_topology.room_tiles.get(bpos) {
                     let floor_rooms = rooms_per_floor.entry(bpos.z).or_default();
                     let room_area = floor_rooms.entry(room_name.clone()).or_insert(0.0);
                     *room_area += tile_area;
@@ -88,7 +88,7 @@ fn after_level_ready(
             }
         } else {
             warn!(
-                "Tile at {:?} found in RoomDB but not in behavior_field.",
+                "Tile at {:?} found in RoomTopology but not in behavior_field.",
                 bpos
             );
         }

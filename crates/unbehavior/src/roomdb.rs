@@ -4,28 +4,30 @@ use bevy_platform::collections::HashMap;
 use crate::state::TileState;
 use unspatial_core::boardposition::BoardPosition;
 
-/// The `RoomDB` resource manages room-related data, including room boundaries and
-/// states.
+/// The `RoomTopology` resource manages room boundaries, mapping each
+/// board position to the name of the room it belongs to.
 #[derive(Clone, Default, Resource)]
-pub struct RoomDB {
-    /// Maps each board position to the name of the room it belongs to. This defines
-    /// the boundaries of each room in the game world.
+pub struct RoomTopology {
+    /// Maps each board position to the name of the room it belongs to.
     pub room_tiles: HashMap<BoardPosition, String>,
-    /// Tracks the current state of each room, using the room name as the key. The
-    /// exact nature of the room state is not explicitly defined but could include
-    /// things like:
-    ///
-    /// * Lighting conditions (lit/unlit).
-    ///
-    /// * Presence of specific objects or entities.
-    ///
-    /// * Temperature or other environmental factors.
+}
+
+impl RoomTopology {
+    pub fn reset(&mut self) {
+        self.room_tiles.clear();
+    }
+}
+
+/// The `RoomStateMap` resource tracks the current dynamic state of each room.
+/// This resource is replicated to ensure all clients have synchronized room states.
+#[derive(Clone, Default, Resource, Debug, serde::Serialize, serde::Deserialize)]
+pub struct RoomStateMap {
+    /// Tracks the current state of each room, using the room name as the key.
     pub room_state: HashMap<String, TileState>,
 }
 
-impl RoomDB {
+impl RoomStateMap {
     pub fn reset(&mut self) {
-        self.room_tiles.clear();
         self.room_state.clear();
     }
 }

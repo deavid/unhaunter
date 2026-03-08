@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::prelude::*;
 use std::mem::swap;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::components::physics::SoundEmitter;
 use unfoundation_core::random_seed;
 use unmapload_core::events::loadlevel::MapGeometryInitializedEvent;
@@ -19,7 +19,7 @@ pub fn reset_sound_grid(mut commands: Commands) {
 
 pub fn sound_update(
     mut sound_grid: If<ResMut<SoundGrid>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     qe: Query<(&SoundEmitter, &Position)>,
     is_authority: Option<Res<AuthorityRole>>,
     mut ev_broadcast: MessageWriter<ToClients<GhostSoundFieldBroadcast>>,
@@ -96,7 +96,7 @@ pub fn sound_update(
                 visual_priority: 0.0,
             };
             let bn_p = n_p.to_board_position();
-            if roomdb.room_tiles.get(&bn_p).is_some() && v.length() > 0.00002 {
+            if room_topology.room_tiles.get(&bn_p).is_some() && v.length() > 0.00002 {
                 sound_grid.sound_field.entry(bn_p).or_default().push(v);
             }
         }

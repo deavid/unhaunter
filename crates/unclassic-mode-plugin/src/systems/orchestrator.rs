@@ -5,7 +5,7 @@ use ordered_float::OrderedFloat;
 use rand::prelude::IndexedRandom;
 use unassets_core::resources::upscale::UpscaleIndex;
 use unbehavior::components::Movable;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
 use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
@@ -64,7 +64,7 @@ pub(crate) struct ClassicModeSystemParam<'w> {
     pub audio_settings: Option<Res<'w, Persistent<unsettings_core::audio::AudioSettings>>>,
     pub control_settings: Option<Res<'w, Persistent<unsettings_core::controls::ControlKeys>>>,
     pub board_topology: Res<'w, BoardTopology>,
-    pub roomdb: Res<'w, RoomDB>,
+    pub room_topology: Res<'w, RoomTopology>,
 }
 
 pub(crate) fn classic_mode_orchestrator(
@@ -247,7 +247,7 @@ pub(crate) fn classic_mode_orchestrator(
                 &q_ghost_breach,
                 &q_player_sprite,
                 &q_position,
-                &p.roomdb,
+                &p.room_topology,
                 &p.board_topology,
                 &p.haunt_state,
             );

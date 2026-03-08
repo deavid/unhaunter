@@ -7,7 +7,7 @@ use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::thermometer::Thermometer;
@@ -23,7 +23,7 @@ use unwalkie_core::resources::WalkiePlay;
 fn trigger_darkness_level_system(
     time: Res<Time>,
     light_grid: If<Res<LightGrid>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
     _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
@@ -37,7 +37,7 @@ fn trigger_darkness_level_system(
     let mut any_in_dark = false;
     for (player_pos, _) in qp.iter() {
         let player_bpos = player_pos.to_board_position();
-        let player_room = roomdb.room_tiles.get(&player_bpos);
+        let player_room = room_topology.room_tiles.get(&player_bpos);
 
         if player_room.is_some() && light_grid.exposure.lux < 0.4 {
             any_in_dark = true;
@@ -58,7 +58,7 @@ fn trigger_darkness_level_system(
 /// Triggers a walkie-talkie event if the player is in the same room as a breach.
 fn trigger_breach_showcase(
     time: Res<Time>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
     _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
@@ -81,10 +81,10 @@ fn trigger_breach_showcase(
 
     for (player_pos, _) in qp.iter() {
         let player_bpos = player_pos.to_board_position();
-        let player_room = roomdb.room_tiles.get(&player_bpos);
+        let player_room = room_topology.room_tiles.get(&player_bpos);
         for breach_pos in q_breach.iter() {
             let breach_bpos = breach_pos.to_board_position();
-            let breach_room = roomdb.room_tiles.get(&breach_bpos);
+            let breach_room = room_topology.room_tiles.get(&breach_bpos);
 
             if player_room.is_some()
                 && breach_room.is_some()
@@ -101,7 +101,7 @@ fn trigger_breach_showcase(
 /// Triggers a walkie-talkie event if the player is in the same room as the ghost.
 fn trigger_ghost_showcase(
     time: Res<Time>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
     _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
@@ -124,10 +124,10 @@ fn trigger_ghost_showcase(
 
     for (player_pos, _) in qp.iter() {
         let player_bpos = player_pos.to_board_position();
-        let player_room = roomdb.room_tiles.get(&player_bpos);
+        let player_room = room_topology.room_tiles.get(&player_bpos);
         for ghost_pos in q_ghost.iter() {
             let ghost_bpos = ghost_pos.to_board_position();
-            let ghost_room = roomdb.room_tiles.get(&ghost_bpos);
+            let ghost_room = room_topology.room_tiles.get(&ghost_bpos);
             if player_room.is_some()
                 && ghost_room.is_some()
                 && player_room == ghost_room
@@ -143,7 +143,7 @@ fn trigger_ghost_showcase(
 fn trigger_room_lights_on_gear_needs_dark(
     time: Res<Time>,
     light_grid: If<Res<LightGrid>>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
     _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
@@ -155,7 +155,7 @@ fn trigger_room_lights_on_gear_needs_dark(
     }
     for (player_pos, _player, player_gear) in qp.iter() {
         let player_bpos = player_pos.to_board_position();
-        let player_room = roomdb.room_tiles.get(&player_bpos);
+        let player_room = room_topology.room_tiles.get(&player_bpos);
 
         if player_room.is_none() {
             continue;

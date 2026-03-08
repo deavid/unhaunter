@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::BoardTopology;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_influence::GhostInfluence;
@@ -15,7 +15,7 @@ pub(crate) fn assign_ghost_influence(
     ghost_spawn_query: &Query<&Position, With<GhostBreach>>,
     player_spawn_query: &Query<&Position, With<PlayerSprite>>,
     position_query: &Query<&Position>,
-    roomdb: &RoomDB,
+    room_topology: &RoomTopology,
     board_topology: &BoardTopology,
     haunt_state: &HauntState,
 ) {
@@ -29,7 +29,7 @@ pub(crate) fn assign_ghost_influence(
     for &entity in movable_objects {
         if let Ok(pos) = position_query.get(entity) {
             let board_pos = pos.to_board_position();
-            if roomdb.room_tiles.contains_key(&board_pos) {
+            if room_topology.room_tiles.contains_key(&board_pos) {
                 let floor_z = board_pos.z;
                 objects_by_floor_with_positions
                     .entry(floor_z)

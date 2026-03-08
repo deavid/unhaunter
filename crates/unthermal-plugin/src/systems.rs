@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use rand::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::HeatEmitter;
-use unbehavior::roomdb::RoomDB;
+use unbehavior::roomdb::RoomTopology;
 use unboard_core::components::physics::ThermalEmitter;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
@@ -25,7 +25,7 @@ pub fn temperature_update(
     mut thermal_grid: If<ResMut<ThermalGrid>>,
     bf: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
-    roomdb: Res<RoomDB>,
+    room_topology: Res<RoomTopology>,
     qt: Query<(&Position, &Behavior), With<HeatEmitter>>,
     qe: Query<(&ThermalEmitter, &Position)>,
     difficulty: Res<CurrentDifficulty>,
@@ -50,11 +50,11 @@ pub fn temperature_update(
         if bpos.z < 0 || bpos.z >= bf.map_size.2 as i64 {
             continue;
         }
-        let center_room = roomdb.room_tiles.get(&bpos);
+        let center_room = room_topology.room_tiles.get(&bpos);
         const ENABLE_COLD_TEMPS: bool = true;
         if ENABLE_COLD_TEMPS {
             for npos in bpos.iter_xy_neighbors(3, bf.map_size) {
-                if emitter.room_restricted && center_room != roomdb.room_tiles.get(&npos) {
+                if emitter.room_restricted && center_room != room_topology.room_tiles.get(&npos) {
                     continue;
                 }
                 if !bcf.0[npos.ndidx()].player_free {
@@ -102,7 +102,7 @@ pub fn temperature_update(
             _ => OTHER_CONDUCTIVITY,
         };
         let bpos = BoardPosition::from_ndidx(p);
-        let is_outside = roomdb.room_tiles.get(&bpos).is_none();
+        let is_outside = room_topology.room_tiles.get(&bpos).is_none();
         if is_outside && cp.see_through {
             self_k = OUTSIDE_CONDUCTIVITY;
         }
@@ -153,7 +153,7 @@ pub fn temperature_update(
                 _ => OTHER_CONDUCTIVITY,
             };
 
-            let nis_outside = roomdb.room_tiles.get(&neigh).is_none();
+            let nis_outside = room_topology.room_tiles.get(&neigh).is_none();
             if nis_outside && neigh_free.0 && !is_stair_connection {
                 neigh_k = OUTSIDE_CONDUCTIVITY;
             }
@@ -251,7 +251,7 @@ pub fn init_thermal_grid_content(
     mut thermal_grid: If<ResMut<ThermalGrid>>,
     bf: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
-    _roomdb: Res<RoomDB>,
+    _room_topology: Res<RoomTopology>,
     mut ev: MessageReader<LevelReadyEvent>,
 ) {
     if ev.is_empty() {
