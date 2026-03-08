@@ -512,6 +512,20 @@ pub(crate) fn hydrate_ghosts_system(
 
         let mut ec = commands.entity(entity);
 
+        // --- Attach non-replicated gameplay components ---
+        // These match what classic_mode_orchestrator inserts on the authority at spawn time.
+        ec.insert(GameSprite)
+            .insert(MapEntityFieldBPos(pos.to_board_position()))
+            .insert(LightSensitive {
+                exposure_factor: 0.5,
+                bias: 0.01,
+            })
+            .insert(UltravioletSensitive {
+                intensity: 1.0,
+                ..default()
+            })
+            .insert(unspatial_core::lerp_position::LerpPosition::new(*pos));
+
         // --- Attach visual mesh ---
         if let (Some(meshes), Some(materials1)) = (&mut p.meshes, &mut p.materials1) {
             let mesh_handle = meshes.add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));
@@ -563,12 +577,12 @@ pub(crate) fn hydrate_ghosts_system(
             });
         }
 
-        // NOTE: Do NOT push the entity into board_entity_field here.
-        // The skeleton already has MapEntityFieldBPos inserted by classic_mode_orchestrator.
-        // A separate spatial-sync system reacts to Added<MapEntityFieldBPos> and populates
-        // the grid for all peers uniformly. Duplicating that push here would:
-        //   (a) cause a double-push on the Host (which is both Authority and LocalPlayer), and
-        //   (b) leave the grid empty on the Dedicated Server, which skips this system entirely.
+        // NOTE: MapEntityFieldBPos is inserted above (in the gameplay components block).
+        // On the Host it already exists from classic_mode_orchestrator, so re-inserting it
+        // is a no-op for Added<> (does not double-fire populate_grid_on_spawn).
+        // On Join Clients it is NOT replicated, so hydration must add it here to register
+        // the entity in BoardEntityField — without which the tiles lighting system never
+        // processes the entity and it remains invisible (Color::NONE).
 
         commands.entity(entity).insert(GhostHydrated);
         info!(
@@ -614,6 +628,19 @@ pub(crate) fn hydrate_breach_system(
         );
 
         let mut ec = commands.entity(entity);
+
+        // --- Attach non-replicated gameplay components ---
+        // These match what classic_mode_orchestrator inserts on the authority at spawn time.
+        ec.insert(GameSprite)
+            .insert(MapEntityFieldBPos(breach_pos.to_board_position()))
+            .insert(LightSensitive {
+                exposure_factor: 1.1,
+                bias: 0.02,
+            })
+            .insert(UltravioletSensitive {
+                intensity: 1.0,
+                color_shift: 1.0,
+            });
 
         // --- Attach visual mesh ---
         if let (Some(meshes), Some(materials1), Some(ghost_assets)) =

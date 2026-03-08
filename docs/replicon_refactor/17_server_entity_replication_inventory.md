@@ -4,6 +4,9 @@
 replicated to join clients at runtime. Map-load hydration (tile entities, movables loaded from TMX files) is explicitly
 out of scope.
 
+**Last updated**: reflects changes from the `replicon: add replication + hydration for ghost/breach/gear entities`
+commit.
+
 ---
 
 ## 1. Background: How bevy_replicon Entity Replication Works
@@ -27,27 +30,34 @@ be, since they reference heavy assets). Hydration systems typically use a "marke
 
 All `app.replicate::<T>()` calls in the codebase (non-map-load):
 
-| Component          | Registered in                              |
-| ------------------ | ------------------------------------------ |
-| `LobbyInfo`        | `unreplicon-plugin/src/systems/lobby.rs`   |
-| `ServerGamePhase`  | `unreplicon-plugin/src/systems/lobby.rs`   |
-| `SelectedMission`  | `unreplicon-plugin/src/systems/lobby.rs`   |
-| `TmxEntityId`      | `unreplicon-plugin/src/systems/players.rs` |
-| `Owner`            | `unreplicon-plugin/src/systems/players.rs` |
-| `Position`         | `unreplicon-plugin/src/systems/players.rs` |
-| `PlayerSprite`     | `unreplicon-plugin/src/systems/players.rs` |
-| `Stamina`          | `unreplicon-plugin/src/systems/players.rs` |
-| `PlayerGear`       | `unreplicon-plugin/src/systems/players.rs` |
-| `HeldObject`       | `unreplicon-plugin/src/systems/players.rs` |
-| `Hiding`           | `unreplicon-plugin/src/systems/players.rs` |
-| `PlayerSpectating` | `unreplicon-plugin/src/systems/players.rs` |
-| `GhostSprite`      | `unreplicon-plugin/src/systems/ghost.rs`   |
-| `GhostGuess`       | `unreplicon-plugin/src/systems/ghost.rs`   |
-| `SummaryData`      | `unreplicon-plugin/src/systems/ghost.rs`   |
+| Component               | Registered in                              |
+| ----------------------- | ------------------------------------------ |
+| `LobbyInfo`             | `unreplicon-plugin/src/systems/lobby.rs`   |
+| `ServerGamePhase`       | `unreplicon-plugin/src/systems/lobby.rs`   |
+| `SelectedMission`       | `unreplicon-plugin/src/systems/lobby.rs`   |
+| `TmxEntityId`           | `unreplicon-plugin/src/systems/players.rs` |
+| `Owner`                 | `unreplicon-plugin/src/systems/players.rs` |
+| `Position`              | `unreplicon-plugin/src/systems/players.rs` |
+| `PlayerSprite`          | `unreplicon-plugin/src/systems/players.rs` |
+| `Stamina`               | `unreplicon-plugin/src/systems/players.rs` |
+| `PlayerGear`            | `unreplicon-plugin/src/systems/players.rs` |
+| `HeldObject`            | `unreplicon-plugin/src/systems/players.rs` |
+| `Hiding`                | `unreplicon-plugin/src/systems/players.rs` |
+| `PlayerSpectating`      | `unreplicon-plugin/src/systems/players.rs` |
+| `GearMarker`            | `unreplicon-plugin/src/systems/players.rs` |
+| `GearKind`              | `unreplicon-plugin/src/systems/players.rs` |
+| `GhostTag`              | `unreplicon-plugin/src/systems/ghost.rs`   |
+| `GhostBreach`           | `unreplicon-plugin/src/systems/ghost.rs`   |
+| `GhostSprite`           | `unreplicon-plugin/src/systems/ghost.rs`   |
+| `GhostBehaviorDynamics` | `unreplicon-plugin/src/systems/ghost.rs`   |
+| `SpectralClarity`       | `unreplicon-plugin/src/systems/ghost.rs`   |
+| `GhostGuess`            | `unreplicon-plugin/src/systems/ghost.rs`   |
+| `SummaryData`           | `unreplicon-plugin/src/systems/ghost.rs`   |
 
-> **Note**: `GearMarker`, `GearKind`, and all gear-specific components (e.g. `Flashlight`, `Thermometer`, etc.) are
-> **not** in this list. Gear entities are replicated as structural stubs only — their type identity and state reach the
-> client only via `PlayerGear` entity references and any future hydration.
+> **Note**: Gear-specific type components (e.g. `Flashlight`, `Battery`, `Thermometer`, etc.) are **not** in this list.
+> They are reconstructed on the client by `hydrate_gear_system` via the `GearSpawnerRegistry` builder, using the
+> replicated `GearKind` to select the right builder. State within those components (battery level, on/off) is not yet
+> replicated — see Known Issues.
 
 ---
 
@@ -65,9 +75,9 @@ frame on authority; spawns once when the entity is absent.
 (Replicated, LobbyInfo { … }, ServerGamePhase::Lobby)
 ```
 
-**Replicated components received by client**: `LobbyInfo`, `ServerGamePhase`
+**Replicated → client**: `LobbyInfo`, `ServerGamePhase`
 
-**Client hydration**: None required. The UI reads these components directly. **Client hydration system**: N/A
+**Client hydration**: None required. The UI reads these components directly.
 
 ---
 
@@ -83,160 +93,182 @@ spawns this entity as a signal for all join clients to start loading the map.
 (Replicated, SelectedMission { map_path, map_seed, difficulty_id })
 ```
 
-**Replicated components received by client**: `SelectedMission`
+**Replicated → client**: `SelectedMission`
 
 **Client reaction**: Observer `on_selected_mission_added` fires on `On<Add, SelectedMission>` and calls
-`LoadLevelEvent`. **Client hydration system**: N/A (observer, not a hydration system)
+`LoadLevelEvent`.
 
 ---
 
 ### 3.3 Player Entity
 
-**Marker component**: `PlayerTag` (tag), `PlayerSprite` (data, also the hydration trigger) **Spawn location**:
+**Marker component**: `PlayerTag` (tag), `PlayerSprite` (data, hydration trigger) **Spawn location**:
 `unreplicon-plugin/src/systems/players.rs`
 
 **Spawn functions** (two code paths, both on authority):
 
-1. `setup_mission_players()` — fires on `OnEnter(AppState::InGame)`; spawns all players currently in `LobbyInfo`.
-2. `spawn_late_joining_players()` — runs every frame during `AppState::InGame`; spawns players that joined after
-   `setup_mission_players` already ran.
+1. `setup_mission_players()` — fires on `OnEnter(AppState::InGame)`.
+2. `spawn_late_joining_players()` — runs every frame during `AppState::InGame` for late joiners.
 
-**Authority spawn bundle** (skeleton; identical between the two paths):
+#### Authority spawn bundle
 
-```rust
-(
-    Position (spawn_pos),
-    LerpPosition::new(spawn_pos),
-    PlayerSprite::new(uuid, net_id, spawn_pos),
-    NetworkId,
-    Stamina::default(),
-    PlayerGear { left_hand, right_hand, inventory, … },
-    Direction::new_right(),
-    Movable,
-    WaypointQueue::default(),
-    MapEntityFieldBPos(spawn_pos.to_board_position()),
-    PlayerTag,
-    VisibilityData::default(),
-    PlayerInput::default(),
-    Owner(owner_id),        // OwnerId::Server for host, OwnerId::Client(e) for remotes
-    Replicated,
-)
-```
+| Component                      | Replicated? | Notes                                     |
+| ------------------------------ | ----------- | ----------------------------------------- |
+| `Position`                     | yes         |                                           |
+| `LerpPosition::new(spawn_pos)` | no          | Visual interpolation; client-local        |
+| `PlayerSprite`                 | yes         | Hydration trigger                         |
+| `NetworkId`                    | no          | Only used for gear ID generation          |
+| `Stamina`                      | yes         |                                           |
+| `PlayerGear`                   | yes         | Entity refs mapped via MapEntities        |
+| `Direction::new_right()`       | no          | Re-added by hydration                     |
+| `Movable`                      | no          | Re-added by hydration                     |
+| `WaypointQueue`                | no          | Re-added by hydration                     |
+| `MapEntityFieldBPos`           | no          | Re-added by hydration                     |
+| `PlayerTag`                    | no          | Re-added by hydration                     |
+| `VisibilityData`               | no          | Added by hydration for local player only  |
+| `PlayerInput`                  | no          | Re-added by hydration                     |
+| `Owner`                        | yes         | Inserted after spawn; Client(e) or Server |
+| `HeldObject`                   | yes         |                                           |
+| `Hiding`                       | yes         |                                           |
+| `PlayerSpectating`             | yes         |                                           |
+| `Replicated`                   | n/a         | bevy_replicon marker                      |
 
-Host player additionally gets `LocallyOwned` inserted immediately. Remote-player clients are notified via
-`OwnershipGranted` message so they can insert `LocallyOwned` on their own replica.
+**Components added by hydration** (`hydrate_players_system`):
 
-**Replicated components received by client**: `Position`, `PlayerSprite`, `Stamina`, `PlayerGear` (with mapped entity
-refs), `Owner`, `Hiding`, `HeldObject`, `PlayerSpectating`
-
-**Client hydration** (visual + input): `hydrate_players_system()` in `unclassic-mode-plugin/src/systems/orchestrator.rs`
-**Hydration trigger**: Query `(Entity, &PlayerSprite, &Position), Without<PlayerHydrated>` **Hydration marker
-inserted**: `PlayerHydrated` **Guard**: Returns early when `LocalPlayerRole` resource is absent (dedicated servers are
-headless and skip all visual hydration).
-
-**Components added by hydration**:
-
-- `GameSprite`, `MapColor`, `ShadowCaster`, `LightSensitive`
-- `Direction`, `Movable`, `WaypointQueue`, `MapEntityFieldBPos`
-- `LerpPosition`, `PlayerInput`, `AnimationTimer`
-- `Mesh2d`, `MeshMaterial2d`, `Transform`, `ResolutionFactor`, `MapTileSprite`, `SpriteLayer`
-- Local player only: `PlayerInputMapping`, `MainPlayer`, `Viewer`, `SpatialListener`
-- Remote player only: `PlayerInputMapping` (with null key bindings)
+- Visual/render: `GameSprite`, `MapColor`, `ShadowCaster`, `LightSensitive`, `Mesh2d`, `MeshMaterial2d`, `Transform`,
+  `ResolutionFactor`, `MapTileSprite`, `SpriteLayer`
+- Gameplay: `Direction`, `Movable`, `WaypointQueue`, `MapEntityFieldBPos`, `PlayerTag`, `LerpPosition`, `PlayerInput`,
+  `AnimationTimer`
+- Local player only: `PlayerInputMapping` (real key bindings), `MainPlayer`, `Viewer`, `SpatialListener`,
+  `VisibilityData`
+- Remote player: `PlayerInputMapping` (null key bindings)
 - Child entity: `FocusRing` sprite
+
+**Hydration fidelity**: ✅ All non-replicated components are re-added by hydration. The join-client player entity is
+functionally equivalent to the authority-spawned one, with two intentional exceptions:
+
+- `NetworkId` is not present on join-client copies (all current usages go through `PlayerSprite.network_id` instead).
+- `VisibilityData` is only added for the local player (remote player copies do not need it).
 
 ---
 
 ### 3.4 Gear Entities (Player Equipment)
 
-**Marker component**: `GearMarker` (always present), `GearKind` (enum, identifies type) **Spawn location**:
-`unreplicon-plugin/src/systems/players.rs` **Spawn functions**: Same two as for Player (`setup_mission_players` and
-`spawn_late_joining_players`). Gear is spawned before the player skeleton using `gear_registry.spawn()`, then
-`Replicated` and `NetworkId` are inserted.
+**Marker component**: `GearMarker`, `GearKind` **Spawn location**: `unreplicon-plugin/src/systems/players.rs` **Spawn
+functions**: Same two as for Player. Gear is spawned via `gear_registry.spawn()`, then `Replicated` and `NetworkId` are
+inserted.
 
-**Authority spawn** (via `GearSpawnerRegistry::spawn()`):
+#### Authority spawn bundle (via `GearSpawnerRegistry::spawn()`)
 
-```rust
-commands.spawn((GearMarker, GearKind::Xxx, Position::new_i64(0, 0, 0)))
-```
+| Component                          | Replicated? | Notes                                       |
+| ---------------------------------- | ----------- | ------------------------------------------- |
+| `GearMarker`                       | yes         | Hydration trigger (with GearKind)           |
+| `GearKind`                         | yes         | Hydration trigger; selects builder          |
+| `Position::new_i64(0, 0, 0)`       | yes         | Gear starts at (0,0,0) until equipped       |
+| `ItemName`, `ItemDescription`      | no          | Re-added by builder via hydration           |
+| `GearSprite`, `StatusText`         | no          | Re-added by builder via hydration           |
+| `LightEmitter` (if applicable)     | no          | Re-added by builder via hydration           |
+| `Toggleable`, `Electronic`         | no          | Re-added by builder via hydration           |
+| `Battery`                          | no          | Re-added at defaults; see Known Issues      |
+| `Handheld`, `EquipmentPosition`    | no          | Re-added by builder via hydration           |
+| `Flashlight` / `Thermometer` / etc | no          | Re-added by builder via hydration           |
+| `InteractableByGhost`, `Collision` | no          | Re-added by builder via hydration           |
+| `NetworkId`                        | no          | Only used for gear ID counting on authority |
+| `Replicated`                       | n/a         | bevy_replicon marker                        |
 
-Then the registered builder function for that `GearKind` inserts kind-specific components (e.g. `Flashlight`,
-`Thermometer`, uv-torch components, etc.). After spawn:
+**Components added by hydration** (`hydrate_gear_system` in `unreplicon-plugin/src/systems/players.rs`):
 
-```rust
-commands.entity(gear_entity).insert((NetworkId(gear_id_counter), Replicated));
-```
+- Calls `GearSpawnerRegistry::hydrate()` which runs the same builder closure used at spawn time.
+- Inserts `GearHydrated` marker when done.
 
-The entity reference is then stored in `PlayerGear.left_hand`, `.right_hand`, or `.inventory`.
+**Hydration fidelity**: ⚠️ Structural fidelity is good — the join-client entity has all the right component types after
+hydration. However all mutable state (battery level, on/off status, etc.) is initialized to default values, not the
+current server state. A late-joining client will see all remote gear at its initial state. See Known Issues.
 
-**Replicated components received by client**: `Position`, `Owner` (if present), and any other components that happen to
-be in the global `app.replicate` list.
-
-> **Critical gap**: `GearKind` and `GearMarker` are **not** registered for replication. The client receives a bare
-> entity with only the globally-registered components. The gear type identity is never transmitted. There is currently
-> **no gear hydration system** — the client has no way to know what kind of gear each replicated entity represents, and
-> cannot attach the correct visual or state components to it.
-
-**Gear entity references**: `PlayerGear` holds `Option<Entity>` fields that are mapped client-side via
-`PlayerGear::map_entities()`. This correctly translates server entity IDs to client entity IDs, so the structural
-connection is maintained — but the entities themselves are effectively empty on the client.
+`PlayerGear` holds `Option<Entity>` refs mapped via `PlayerGear::map_entities()`, so the structural link player→gear is
+correct on join clients.
 
 ---
 
 ### 3.5 Ghost Entity
 
-**Marker component**: `GhostTag` (tag), `GhostSprite` (data, also the hydration trigger) **Spawn location** (two-phase):
+**Marker component**: `GhostTag`, `GhostSprite` (hydration trigger) **Spawn location (two-phase)**:
 
 **Phase 1 — Entity creation**: `classic_mode_orchestrator()` in `unclassic-mode-plugin/src/systems/orchestrator.rs`.
 Trigger: authority receives `MapEntitiesReadyEvent`.
 
-Authority spawn bundle at orchestrator time:
-
-```rust
-(
-    Position (ghost_spawn),
-    GhostSprite (with breach_id set to breach entity),
-    GhostBehaviorDynamics,
-    GhostTag,
-    NetworkId(0),
-    GameSprite,
-    MapEntityFieldBPos(ghost_spawn.to_board_position()),
-    Movable,
-    LightSensitive, UltravioletSensitive, InfraredSensitive,
-    ThermalEmitter, FluidEmitter, SoundEmitter,
-)
-```
-
-At this point the ghost entity does NOT yet have `Replicated`.
-
 **Phase 2 — Replication activation**: `setup_ghost_entities()` in `unreplicon-plugin/src/systems/ghost.rs`. Trigger:
 `OnEnter(SimulationState::Spawning)`, authority only.
 
-```rust
-commands.entity(ghost_entity).insert((Replicated, LerpPosition::new(pos)));
-```
+#### Authority spawn bundle
 
-**Replicated components received by client**: `GhostSprite` (with `breach_id` entity ref, mapped via
-`GhostSprite::map_entities()`), `Position`
+| Component                                            | Replicated? | Notes                                                      |
+| ---------------------------------------------------- | ----------- | ---------------------------------------------------------- |
+| `Position`                                           | yes         |                                                            |
+| `GhostSprite` (with `breach_id` set)                 | yes         | Hydration trigger; `breach_id` mapped via MapEntities      |
+| `GhostBehaviorDynamics` (from `haunt_state`)         | yes         | Per-ghost randomized evidence/behavior values              |
+| `GhostTag`                                           | yes         | Needed for `sync_ghost_visuals` query on client            |
+| `NetworkId(0)`                                       | no          | Not used by any client-side system                         |
+| `GameSprite`                                         | no          | NOT added by hydration — see Known Issues §3               |
+| `MapEntityFieldBPos`                                 | no          | Authority-only; spatial board field not needed client-side |
+| `Movable`                                            | no          | Authority-only; ghost AI runs server-side                  |
+| `LightSensitive { exposure_factor: 0.5, bias: 0.01}` | no          | NOT added by hydration — see Known Issues §5               |
+| `UltravioletSensitive`                               | no          | NOT added by hydration — see Known Issues §5               |
+| `InfraredSensitive`                                  | no          | Authority-only sensor; not needed client-side              |
+| `ThermalEmitter`                                     | no          | Authority-only physics emitter                             |
+| `FluidEmitter`                                       | no          | Authority-only physics emitter                             |
+| `SoundEmitter`                                       | no          | Authority-only physics emitter                             |
+| `LerpPosition` (added by `setup_ghost_entities`)     | no          | NOT added by hydration — see Known Issues §4               |
+| `Replicated`                                         | n/a         | bevy_replicon marker                                       |
 
-**Client hydration** (visual only): `hydrate_ghosts_system()` in `unclassic-mode-plugin/src/systems/orchestrator.rs`
-**Hydration trigger**: Query `(Entity, &Position, &GhostSprite), Without<GhostHydrated>` **Hydration marker inserted**:
-`GhostHydrated` **Guard**: Returns early when `LocalPlayerRole` resource is absent (dedicated servers skip).
+`SpectralClarity` is written by `sync_ghost_visuals` (runs on all nodes with `AppState::InGame`) which derives it from
+`GhostBehaviorDynamics`. Both are replicated, so the client also runs the sync redundantly — the result is identical.
 
-**Components added by hydration**:
+**Components added by hydration** (`hydrate_ghosts_system`):
 
-- `Mesh2d`, `MeshMaterial2d`, `Transform`, `MapTileSprite`, `ResolutionFactor`, `SpriteLayer`
-- `Ethereal`, `Emissive`, `SpectralClarity`, `AlphaModulator`, `EctoplasmVisuals`
+- Visual/render: `Mesh2d`, `MeshMaterial2d`, `Transform`, `MapTileSprite`, `ResolutionFactor`, `SpriteLayer`
+- Visual effects: `Ethereal`, `Emissive`, `SpectralClarity`, `AlphaModulator`, `EctoplasmVisuals`
 - Child entity: `FocusRing` sprite
 
-> **Notable gap**: The ghost entity does NOT receive `GhostTag`, `Movable`, `GhostBehaviorDynamics`, `ThermalEmitter`,
-> `FluidEmitter`, `SoundEmitter`, etc. on the client via replication — these are registered nowhere and are therefore
-> absent on join clients. Ghost behavior (hunting, influence, sound, etc.) runs authority-side only, which is
-> intentional. However any client-side system that queries for `GhostTag` will find the replicated entity missing that
-> component.
+**Hydration fidelity**: ⚠️ Three gaps exist on join clients — see Known Issues §3, §4, §5.
 
 ---
 
-### 3.6 MissionGoalEntity (Journal / Summary Singleton)
+### 3.6 GhostBreach Entity
+
+**Marker component**: `GhostBreach` **Spawn location**: `classic_mode_orchestrator()` in
+`unclassic-mode-plugin/src/systems/orchestrator.rs`. **Replication activation**: `setup_ghost_entities()` inserts
+`Replicated` (no `LerpPosition` — breach does not move).
+
+#### Authority spawn bundle
+
+| Component              | Replicated? | Notes                                        |
+| ---------------------- | ----------- | -------------------------------------------- |
+| `Position`             | yes         | Breach is stationary; never changes          |
+| `GhostBreach`          | yes         | Hydration trigger                            |
+| `GameSprite`           | no          | NOT added by hydration — see Known Issues §3 |
+| `MapEntityFieldBPos`   | no          | Authority-only; not needed client-side       |
+| `LightSensitive`       | no          | `{1.1, 0.02}`; NOT in hydration — see §6     |
+| `UltravioletSensitive` | no          | `{1.0, 1.0}`; NOT in hydration — see §6      |
+| `ThermalEmitter`       | no          | Authority-only physics emitter               |
+| `FluidEmitter`         | no          | Authority-only physics emitter               |
+| `SoundEmitter`         | no          | Authority-only physics emitter               |
+| `Replicated`           | n/a         | bevy_replicon marker                         |
+
+**Components added by hydration** (`hydrate_breach_system`):
+
+- Visual/render: `Mesh2d`, `MeshMaterial2d`, `Transform`, `MapTileSprite`, `SpriteLayer`
+- Visual effects: `AlphaModulator`, `EctoplasmVisuals`
+- Child entity: `FocusRing` sprite
+
+**Hydration fidelity**: ⚠️ Three gaps exist on join clients — see Known Issues §3, §4, §6.
+
+Note: `GhostSprite.breach_id` on the ghost entity references the breach entity. Since breach is now replicated, this
+entity reference is correctly mapped by bevy_replicon via `GhostSprite::map_entities()`.
+
+---
+
+### 3.7 MissionGoalEntity (Journal / Summary Singleton)
 
 **Marker component**: `MissionGoalEntity` **Spawn location**: `unreplicon-plugin/src/systems/ghost.rs` **Spawn
 function**: `setup_goal_entity()` **Trigger**: `OnEnter(AppState::InGame)`, authority only.
@@ -247,65 +279,87 @@ function**: `setup_goal_entity()` **Trigger**: `OnEnter(AppState::InGame)`, auth
 (Replicated, MissionGoalEntity, GhostGuess::default(), SummaryData::default())
 ```
 
-**Replicated components received by client**: `GhostGuess`, `SummaryData`
+**Replicated → client**: `GhostGuess`, `SummaryData`
 
-The server writes the current `GhostGuess` and `SummaryData` resources into this entity every frame (via
-`sync_ghost_guess_to_mission_goal` / `sync_summary_data_to_mission_goal`). Clients read from this entity back into local
-resources (via `sync_mission_goal_to_ghost_guess` / `sync_mission_goal_to_summary_data`).
-
-**Client hydration**: None required. **Client cleanup**: Entity is despawned on `OnExit(AppState::InGame)`.
+The server writes the current `GhostGuess` and `SummaryData` resources into this entity every frame. Clients read back
+into local resources. **Client hydration**: None required. **Client cleanup**: Entity is despawned on
+`OnExit(AppState::InGame)`.
 
 ---
 
 ## 4. Entities That Are NOT Replicated
 
-The following entities are spawned by the authority but **intentionally lack `Replicated`**:
-
-| Entity type   | Marker                      | Spawn location                                      | Reason                                                                                             |
-| ------------- | --------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `GhostBreach` | `GhostBreach`               | `unclassic-mode-plugin/src/systems/orchestrator.rs` | Visual-only on the authority side; position is transmitted indirectly via `GhostSprite.breach_pos` |
-| Truck gear    | `GearMarker` (+ `GearKind`) | `untruck-plugin/src/truckgear.rs`                   | Truck inventory is server-local state; clients manage their own truck UI                           |
-| Particles     | various                     | various                                             | Ephemeral visual-only effects, never replicated                                                    |
-| Ambient audio | `GameSound`                 | `unclassic-mode-plugin/src/systems/orchestrator.rs` | Client-local audio                                                                                 |
-
-> **Problem with `GhostBreach`**: `GhostSprite.breach_id` holds an entity reference to the breach entity and implements
-> `MapEntities`. However, the breach entity is never in the client's `ServerEntityMap`. When bevy_replicon unmaps
-> `GhostSprite.breach_id` on the client, `mapper.get_mapped()` will not find a valid mapping, resulting in either a
-> placeholder entity or a stale server-side ID being stored on the client. Any client-side code that dereferences
-> `GhostSprite.breach_id` will get a dangling entity reference.
+| Entity type   | Marker       | Spawn location                                      | Reason                                                     |
+| ------------- | ------------ | --------------------------------------------------- | ---------------------------------------------------------- |
+| Truck gear    | `GearMarker` | `untruck-plugin/src/truckgear.rs`                   | Truck inventory is server-local state                      |
+| Particles     | various      | various                                             | Ephemeral visual-only effects                              |
+| Ambient audio | `GameSound`  | `unclassic-mode-plugin/src/systems/orchestrator.rs` | Client-local audio, spawned only when local player present |
 
 ---
 
 ## 5. Summary: Hydration Status per Entity Type
 
-| Entity type             | Has hydration system?              | Hydration trigger                                    | Missing on client                                      |
-| ----------------------- | ---------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
-| Lobby entity            | No                                 | N/A                                                  | Nothing (UI reads directly)                            |
-| SelectedMission         | No                                 | Observer reacts directly                             | Nothing                                                |
-| Player                  | **Yes** — `hydrate_players_system` | `Without<PlayerHydrated>` on `PlayerSprite` presence | Visual mesh, animation, controls, camera               |
-| Gear (player equipment) | **No**                             | N/A                                                  | `GearKind`, `GearMarker`, all type-specific components |
-| Ghost                   | **Yes** — `hydrate_ghosts_system`  | `Without<GhostHydrated>` on `GhostSprite` presence   | Visual mesh; behavior components intentionally absent  |
-| MissionGoalEntity       | No                                 | N/A                                                  | Nothing (resource bridge reads directly)               |
+| Entity type       | Hydration system                           | Trigger                                            | Fidelity                        |
+| ----------------- | ------------------------------------------ | -------------------------------------------------- | ------------------------------- |
+| Lobby entity      | None (N/A)                                 | N/A                                                | ✅ Full (UI reads directly)     |
+| SelectedMission   | None (observer)                            | N/A                                                | ✅ Full                         |
+| Player            | `hydrate_players_system` (orchestrator.rs) | `PlayerSprite` present + `Without<PlayerHydrated>` | ✅ Full (see §3.3)              |
+| Gear              | `hydrate_gear_system` (players.rs)         | `GearKind + GearMarker` + `Without<GearHydrated>`  | ⚠️ Structure OK; state defaults |
+| Ghost             | `hydrate_ghosts_system` (orchestrator.rs)  | `GhostSprite` present + `Without<GhostHydrated>`   | ⚠️ 3 gaps (§6)                  |
+| GhostBreach       | `hydrate_breach_system` (orchestrator.rs)  | `GhostBreach` + `Without<BreachHydrated>`          | ⚠️ 3 gaps (§6)                  |
+| MissionGoalEntity | None (N/A)                                 | N/A                                                | ✅ Full (resource bridge)       |
 
 ---
 
 ## 6. Known Issues / Gaps Identified
 
-1. **Gear hydration is entirely missing.** Gear entities arrive on the client as empty stubs — only `Position` (and any
-   other globally-registered components) are present. `GearKind` is not replicated, so the client cannot know what kind
-   of item each entity represents. A gear hydration system needs to be written, and `GearKind` needs to be added to
-   `app.replicate`.
+### §1 — Gear state replication gap (deferred)
 
-2. **`GhostBreach` entity is not replicated, but `GhostSprite.breach_id` references it.** On join clients, `breach_id`
-   will be an unmapped / invalid entity reference after deserialization. Any system using `GhostSprite.breach_id` on the
-   client (e.g. for breach visibility, focus ring on breach, walkie events) will malfunction in multiplayer. Options:
-   replicate the breach entity, or strip `breach_id` from replicated `GhostSprite` and rebuild the reference on the
-   client via a query.
+The gear builder runs at default values when `hydrate_gear_system` fires on a join client. All mutable state
+(`Battery { level: 1.0 }`, `Toggleable { is_on: false }`, etc.) is reset to initial defaults. The server-side gear may
+already be in a different state. Late-joining clients will see all remote players' gear at its initial state. Fixing
+this requires replicating gear state components separately.
 
-3. **Ghost entity skeleton is incomplete on client.** `GhostTag`, `Movable`, `GhostBehaviorDynamics`, physics emitters,
-   etc. are absent. Authority-side ghost movement and behavior systems depend on these. This is intentional for a
-   server-authoritative design, but client-side systems that query `With<GhostTag>` (e.g. sound, walkie triggers,
-   environment queries) need to be audited to confirm they work correctly with only `GhostSprite` present.
+### §2 — FocusRing child entity orphan risk (deferred)
 
-4. **`GhostTag` not registered for replication.** The client ghost entity only carries `GhostSprite` + `Position` (+
-   replicon internals). Every system using `With<GhostTag>` is effectively a server-only/host-only query.
+`FocusRing` is spawned as a client-local child entity during hydration of player, ghost, and breach. It is NOT
+replicated. If bevy_replicon despawns the parent entity without using `despawn_recursive`, the `FocusRing` child becomes
+an orphaned entity. This code path has not been tested end-to-end in multiplayer.
+
+### §3 — `GameSprite` missing from ghost and breach on join clients
+
+Both `GhostTag` (ghost entity) and `GhostBreach` (breach entity) are spawned on authority with `GameSprite`. The cleanup
+systems `cleanup_game` (unengine-plugin) and `load_level_handler` (unmapload-plugin) query `With<GameSprite>` to despawn
+all game entities on mission exit or map reload. Without `GameSprite`, the ghost and breach entities on join clients are
+**invisible to these cleanup queries**.
+
+In practice, entity despawn is handled by bevy_replicon when the authority despawns the entity (authority's
+`cleanup_game` triggers replicon's entity removal notification). But if replicon cleanup fails or misses an edge case,
+ghost/breach entities on join clients will leak and persist across map loads.
+
+**Recommendation**: Add `GameSprite` to `hydrate_ghosts_system` and `hydrate_breach_system`.
+
+### §4 — `LerpPosition` missing from ghost on join clients
+
+On the authority, `setup_ghost_entities` inserts `LerpPosition::new(pos)` onto the ghost when enabling replication.
+`LerpPosition` is not registered for replication, and `hydrate_ghosts_system` does not add it. Without it, the
+`apply_perspective` render system falls back to raw `Position` (no `Option<&LerpPosition>` result), causing the ghost to
+**snap/teleport** to new positions on join clients instead of smoothly interpolating.
+
+**Recommendation**: Add `LerpPosition::new(*pos)` to `hydrate_ghosts_system`.
+
+### §5 — `LightSensitive` / `UltravioletSensitive` missing from ghost on join clients
+
+The ghost is spawned with `LightSensitive { exposure_factor: 0.5, bias: 0.01 }` and `UltravioletSensitive`. These are
+used by the lighting render system (`apply_lighting` in unlight-plugin) as `Option<&LightSensitive>` /
+`Option<&UltravioletSensitive>`. Without them on join clients the ghost will not react to flashlights or UV torches.
+
+**Recommendation**: Add `LightSensitive` and `UltravioletSensitive` to `hydrate_ghosts_system`.
+
+### §6 — `LightSensitive` / `UltravioletSensitive` missing from breach on join clients
+
+The breach is spawned with `LightSensitive { exposure_factor: 1.1, bias: 0.02 }` and
+`UltravioletSensitive { intensity: 1.0, color_shift: 1.0 }`. Same issue as §5 but for the breach effect. Without them
+the breach portal will appear unlit / unaffected by UV on join clients.
+
+**Recommendation**: Add `LightSensitive` and `UltravioletSensitive` to `hydrate_breach_system`.
