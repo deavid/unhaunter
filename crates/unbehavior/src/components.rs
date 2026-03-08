@@ -1,4 +1,4 @@
-use bevy::ecs::component::Component;
+use bevy::prelude::*;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::orientation::Orientation;
 
@@ -33,11 +33,23 @@ pub struct Movable;
 #[derive(Component, Debug, Clone, Copy, Default)]
 pub struct HidingSpot;
 
-/// A deterministic ID for map entities to synchronize them between server and client.
-#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+/// Stable Tiled-space identifier for dynamic map entities.
+///
+/// Uniquely identifies an entity by the Tiled layer it came from and the tile's
+/// raw Tiled coordinates. This is the anchor used by the client-side "Stitcher"
+/// to find the local placeholder entity that corresponds to a server-replicated
+/// dynamic entity.
+///
+/// `layer_idx` is the 0-based index of the Tiled layer in the enumerated
+/// `tile_layers_iter()` in `unmapload-plugin/src/level_setup.rs`.
+/// `x` and `y` are the raw `tile.pos.x` and `tile.pos.y` from the Tiled map,
+/// **before** the coordinate transformation applied in `process_and_spawn_tile`.
+#[derive(Component, Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct TmxEntityId {
-    pub layer_idx: u32,
-    pub tile_idx: u32,
+    pub layer_idx: usize,
+    pub x: i32,
+    pub y: i32,
 }
 
 /// Marker component that identifies entities that ghosts can interact with.

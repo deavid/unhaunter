@@ -42,11 +42,12 @@ pub(crate) struct LoadLevelSystemParam<'w> {
     pub meshes: ResMut<'w, Assets<Mesh>>,
     pub tilesetdb: Res<'w, MapTileSetDb>,
     pub sdb: ResMut<'w, SpriteDB>,
-    pub room_topology: ResMut<'w, RoomTopology>,
-    pub room_state: ResMut<'w, RoomStateMap>,
+    pub roomtopo: ResMut<'w, RoomTopology>,
+    pub roomstate: ResMut<'w, RoomStateMap>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub loading_status: ResMut<'w, LevelLoadingStatus>,
     pub cli: Res<'w, untypes_core::cli::CliOptions>,
+    pub authority: Option<Res<'w, untypes_core::roles::AuthorityRole>>,
 }
 
 /// Loads a new level based on the `LevelLoadedEvent`.
@@ -88,8 +89,8 @@ fn load_level_handler(
     }
 
     // Reset core data structures
-    p.room_state.room_state.clear();
-    p.room_topology.room_tiles.clear();
+    p.roomstate.room_state.clear();
+    p.roomtopo.room_tiles.clear();
     p.sdb.clear();
 
     // --- 2. Map Geometry Calculation ---
@@ -167,10 +168,11 @@ fn load_level_handler(
             .copied()
             .unwrap_or(0);
 
-        for (tile_idx, tile) in maptiles.v.iter().enumerate() {
+        for tile in &maptiles.v {
             tile_spawning::process_and_spawn_tile(
                 tile,
                 layer,
+                layer_idx,
                 origin.0,
                 origin.1,
                 map_size,
@@ -178,8 +180,6 @@ fn load_level_handler(
                 &mut p,
                 &mut commands,
                 &mut depth_counter,
-                layer_idx as u32,
-                tile_idx as u32,
             );
         }
     }
@@ -188,12 +188,12 @@ fn load_level_handler(
 }
 
 pub(crate) fn reset_level_resources(
-    mut room_topology: ResMut<RoomTopology>,
-    mut room_state: ResMut<RoomStateMap>,
+    mut roomtopo: ResMut<RoomTopology>,
+    mut roomstate: ResMut<RoomStateMap>,
     mut sdb: ResMut<SpriteDB>,
 ) {
-    room_topology.reset();
-    room_state.reset();
+    roomtopo.reset();
+    roomstate.reset();
     sdb.clear();
 }
 

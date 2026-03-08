@@ -10,8 +10,8 @@ use crate::metrics;
 
 fn hydration_simulation_system(
     mut q: Query<(Entity, &Behavior, &unspatial_core::position::Position), With<HydrationStage<2>>>,
-    mut room_topology: ResMut<RoomTopology>,
-    mut room_state: ResMut<RoomStateMap>,
+    mut roomtopo: ResMut<RoomTopology>,
+    mut roomstate: ResMut<RoomStateMap>,
     mut commands: Commands,
 ) {
     let measure = metrics::HYDRATION_SIMULATION.time_measure();
@@ -27,10 +27,10 @@ fn hydration_simulation_system(
         }
 
         if let Util::RoomDef(name) = &behavior.p.util {
-            room_topology
+            roomtopo
                 .room_tiles
                 .insert(pos.to_board_position(), name.to_owned());
-            room_state.room_state.insert(name.clone(), TileState::Off);
+            roomstate.room_state.insert(name.clone(), TileState::Off);
         }
     }
     measure.end_ms();

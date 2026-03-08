@@ -39,6 +39,7 @@ use crate::level_setup::LoadLevelSystemParam;
 pub(crate) fn process_and_spawn_tile(
     tile: &MapTile,
     layer: &MapLayer,
+    layer_idx: usize,
     map_min_x: i32,
     map_min_y: i32,
     map_size: (usize, usize, usize),
@@ -46,8 +47,6 @@ pub(crate) fn process_and_spawn_tile(
     p: &mut LoadLevelSystemParam,
     commands: &mut Commands,
     c: &mut f32,
-    layer_idx: u32,
-    tile_idx: u32,
 ) {
     // Get the map tile components from the SpriteDB
     let mt = p
@@ -168,15 +167,29 @@ pub(crate) fn process_and_spawn_tile(
     if tile.flip_x {
         transform.scale.x = -rf;
     }
-    entity
-        .insert(beh)
-        .insert(TmxEntityId {
-            layer_idx,
-            tile_idx,
-        });
+    entity.insert(beh.clone());
 
-    if p.cli.is_authority() {
-        entity.insert(Replicated);
+    // Determine if this entity is "dynamic" — needs network identity for replication.
+    let is_dynamic = beh.p.is_door
+        || beh.p.is_switch
+        || beh.p.is_room_switch
+        || beh.p.is_breaker
+        || beh.p.is_floor_light
+        || beh.p.is_table_light
+        || beh.p.object.movable;
+
+    if is_dynamic {
+        let tmx_id = TmxEntityId {
+            layer_idx,
+            x: tile.pos.x,
+            y: tile.pos.y,
+        };
+        entity.insert(tmx_id);
+
+        // Only the Authority (server / offline host) adds Replicated.
+        if p.authority.is_some() {
+            entity.insert(Replicated);
+        }
     }
 
     entity

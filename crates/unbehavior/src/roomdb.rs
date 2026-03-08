@@ -4,11 +4,12 @@ use bevy_platform::collections::HashMap;
 use crate::state::TileState;
 use unspatial_core::boardposition::BoardPosition;
 
-/// The `RoomTopology` resource manages room boundaries, mapping each
-/// board position to the name of the room it belongs to.
+/// Maps each board position to the room name it belongs to.
+///
+/// All nodes (server and client) maintain this. It is populated during
+/// `HydrationStage<2>` in `unrender-plugin` and reset on `OnExit(AppState::InGame)`.
 #[derive(Clone, Default, Resource)]
 pub struct RoomTopology {
-    /// Maps each board position to the name of the room it belongs to.
     pub room_tiles: HashMap<BoardPosition, String>,
 }
 
@@ -18,11 +19,15 @@ impl RoomTopology {
     }
 }
 
-/// The `RoomStateMap` resource tracks the current dynamic state of each room.
-/// This resource is replicated to ensure all clients have synchronized room states.
-#[derive(Clone, Default, Resource, Debug, serde::Serialize, serde::Deserialize)]
+/// Tracks the current TileState of each named room (e.g. On/Off for lights).
+///
+/// Written exclusively on the Authority node (server or offline host).
+/// All nodes hold this resource (initialised to TileState::Off per room during
+/// `HydrationStage<2>`), but only the Authority mutates it after initialisation.
+/// Pure clients read the initial default values; state changes reach clients via
+/// `RemoteInteractionBroadcast` (existing mechanism, unchanged in this PR).
+#[derive(Clone, Default, Resource)]
 pub struct RoomStateMap {
-    /// Tracks the current state of each room, using the room name as the key.
     pub room_state: HashMap<String, TileState>,
 }
 

@@ -3,6 +3,7 @@ mod bridge;
 mod connection;
 pub(crate) mod ghost;
 pub(crate) mod lobby;
+pub(crate) mod map_sync;
 pub(crate) mod players;
 pub(crate) mod procman;
 
@@ -19,4 +20,5 @@ pub(crate) fn app_setup(app: &mut App) {
     bridge::app_setup(app);
     players::app_setup(app);
     ghost::app_setup(app);
+    map_sync::app_setup(app);
 }

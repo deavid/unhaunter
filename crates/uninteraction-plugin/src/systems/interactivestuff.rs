@@ -43,8 +43,8 @@ pub struct InteractiveStuff<'w, 's> {
     pub materials1: Option<ResMut<'w, Assets<CustomMaterial1>>>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
-    pub room_topology: Res<'w, RoomTopology>,
-    pub room_state: ResMut<'w, RoomStateMap>,
+    pub roomtopo: ResMut<'w, RoomTopology>,
+    pub roomstate: ResMut<'w, RoomStateMap>,
     /// Controls the transition to different game states, such as the truck UI.
     pub game_next_state: ResMut<'w, NextState<GameState>>,
 }
@@ -105,13 +105,13 @@ impl InteractiveStuff<'_, '_> {
             z: item_bpos.z + room_state.room_delta.z,
         };
         let room_name = self
-            .room_topology
+            .roomtopo
             .room_tiles
             .get(&item_roombpos)
             .cloned()
             .unwrap_or_default();
 
-        let Some(main_room_state) = self.room_state.room_state.get(&room_name) else {
+        let Some(main_room_state) = self.roomstate.room_state.get(&room_name) else {
             return false;
         };
 
@@ -243,7 +243,7 @@ impl InteractiveStuff<'_, '_> {
                     z: item_bpos.z + room_state.room_delta.z,
                 };
                 let room_name = self
-                    .room_topology
+                    .roomtopo
                     .room_tiles
                     .get(&item_roombpos)
                     .cloned()
@@ -253,13 +253,13 @@ impl InteractiveStuff<'_, '_> {
                     InteractionExecutionType::ChangeState => {
                         if authority == Authority::Host
                             && let Some(main_room_state) =
-                                self.room_state.room_state.get_mut(&room_name)
+                                self.roomstate.room_state.get_mut(&room_name)
                         {
                             *main_room_state = beh_state.clone();
                         }
                     }
                     InteractionExecutionType::ReadRoomState => {
-                        if let Some(main_room_state) = self.room_state.room_state.get(&room_name)
+                        if let Some(main_room_state) = self.roomstate.room_state.get(&room_name)
                             && *main_room_state != beh_state
                         {
                             continue;

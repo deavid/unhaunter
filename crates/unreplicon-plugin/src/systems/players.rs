@@ -5,7 +5,7 @@ use bevy_replicon::prelude::{
 };
 use bevy_replicon::server::visibility::client_visibility::ClientVisibility;
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
-use unbehavior::components::FloorItemCollidable;
+use unbehavior::components::{FloorItemCollidable, TmxEntityId};
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::gear::Hand;
@@ -60,6 +60,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_message::<HostFloorGearPickedUpEvent>();
 
     // Register replicated components
+    app.replicate::<TmxEntityId>();
     app.replicate::<Owner>();
     app.replicate::<Position>();
     app.replicate::<PlayerSprite>();
