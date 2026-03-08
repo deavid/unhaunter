@@ -78,7 +78,7 @@ Low-level foundation shared across the project. Zero game logic (no systems or o
 - **\`unsound-core\`**: Sound-related resources and types.
 - **\`untruck-core\`**: Truck-specific components, journal, and loadout data.
 - **\`unwalkie-core\`**: Walkie-talkie traits, events, and resources.
-- **\`unnet-core\`**: Base networking types, protocol definitions, and transport traits.
+- **\`unreplicon-core\`**: Core types and components for replication logic.
 - **\`unfps-core\`**: FPS-related diagnostics and core types.
 - **\`unwalkie-types\`**: Low-level message types for walkie-talkie communication.
 
@@ -90,6 +90,7 @@ High-level game flow and specific gameplay mechanics. Logic is contained in \`Pl
 - **\`unengine-plugin\`**: Core engine loops, generic state management (AppState/GameState), noise utilities and
   cleanup.
 - **\`unclassic-mode-plugin\`**: Main "Classic" investigation game loop and mechanics.
+- **\`ungame-plugin\`**: High-level game state management and mission orchestration.
 - **\`uncampaign-plugin\`**: Campaign progression, mission unlocking, persistent state.
 - **\`unprofile-plugin\`**: User profile management, save/load logic.
 - **\`unsummary-plugin\`**: End-of-mission summary screen systems.
@@ -109,13 +110,13 @@ High-level game flow and specific gameplay mechanics. Logic is contained in \`Pl
 - **\`unwalkie-plugin\`**: Walkie-talkie communication logic and types.
 - **\`untruck-plugin\`**: Truck-based mission setup, loadout, and journal systems.
 - **\`unrender-plugin\`**: Higher-level rendering orchestration.
+- **\`unrender-core\`**: Shared rendering orchestration types and traits.
 - **\`unpicking-plugin\`**: Custom picking backend for map sprites.
 - **\`unsound-plugin\`**: Audio playback and sound triggering logic.
 - **\`unthermal-plugin\`**: Thermal vision and heat signature simulation.
 - **\`unmetrics-plugin\`**: Performance monitoring and reporting.
 - **\`unclassic-mode-plugin\`**: Classic mode gameplay logic and mission evaluation.
 - **\`unmanual-plugin\`**: In-game manual UI, chapters, and navigation logic.
-- **\`unnet-plugin\`**: Low-level networking transport (UDP/TCP/WebRTC) and connection management.
 - **\`unreplicon-plugin\`**: Centralized entity replication and authority management using \`bevy_replicon\`.
 - **\`unhub-plugin\`**: Networking Hub implementation for the "Zero-Ops" directory and matchmaking.
 - **\`unhub-client\`**: Client-side logic for interacting with the Universe/Domain Hubs.
@@ -131,3 +132,5 @@ High-level game flow and specific gameplay mechanics. Logic is contained in \`Pl
   - \`ghost_radio\`: CLI tool for testing ghost communication/phrasebooks.
   - \`ghost_list\`: Tool for managing/listing ghost definitions.
   - \`text_to_speech\`: Tool for generating TTS audio assets.
+  - \`unhub\`: Universe/Domain Hub server implementation.
+  - \`unprocman\`: Process manager for managing game server instances.
