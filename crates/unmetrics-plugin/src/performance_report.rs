@@ -2,7 +2,8 @@ use std::time::Duration;
 
 use bevy::diagnostic::DiagnosticsStore;
 use bevy::prelude::*;
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole, LobbyPresenceRole};
+use unreplicon_core::components::{LobbyInfo, ServerGamePhase};
+use untypes_core::roles::{AuthorityRole, LobbyPresenceRole, LocalPlayerRole};
 use untypes_core::states::{AppState, GameState, SimulationState};
 
 pub fn report_performance(
@@ -16,6 +17,7 @@ pub fn report_performance(
     authority: Option<Res<AuthorityRole>>,
     local_player: Option<Res<LocalPlayerRole>>,
     lobby_presence: Option<Res<LobbyPresenceRole>>,
+    q_lobby: Query<(&LobbyInfo, Option<&ServerGamePhase>)>,
 ) {
     if timer.0.tick(time.delta()).just_finished() {
         let mut system_times: Vec<(&str, f64, String)> = Vec::new();
@@ -54,6 +56,15 @@ pub fn report_performance(
             local_player.is_some(),
             lobby_presence.is_some(),
         );
+        for (lobby, phase) in q_lobby.iter() {
+            debug!(
+                "Lobby: players={} leader={:?} map={:?} phase={:?}",
+                lobby.players.len(),
+                lobby.leader_uuid,
+                lobby.selected_map,
+                phase
+            );
+        }
         if *app_state != AppState::InGame && *game_state != GameState::Running {
             error!(
                 "Inconsistent state: AppState: {:?} - GameState: {:?} - setting GameState to None.",

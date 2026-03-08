@@ -13,11 +13,9 @@ fn hydration_ghost_logic_system(
 ) {
     let measure = metrics::HYDRATION_GHOST_LOGIC.time_measure();
     for (entity, behavior) in q.iter_mut() {
-        let mut cmd = commands.entity(entity);
-
         // Hostile (Ghost) Spawn Points
         if let Util::GhostSpawn = &behavior.p.util {
-            cmd.insert(HostileSpawnPoint);
+            commands.entity(entity).insert(HostileSpawnPoint);
         }
 
         // Add InteractableByGhost marker component for entities that ghosts can interact with
@@ -36,7 +34,7 @@ fn hydration_ghost_logic_system(
             };
 
         if should_add_ghost_interaction {
-            cmd.insert(InteractableByGhost);
+            commands.entity(entity).insert(InteractableByGhost);
         }
     }
     measure.end_ms();

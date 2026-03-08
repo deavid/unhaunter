@@ -112,10 +112,16 @@ fn on_selected_mission_added(
     if authority.is_some() || local_player.is_none() {
         return;
     }
-    // Only act if we already clicked "Start Mission" and are in MissionLoading.
+    // Only act if we already clicked "Join Mission" and are in MissionLoading.
     // A --join client landing in the Lobby sees SelectedMission replicated but
     // must not auto-join; they still need to click the button themselves.
     if *app_state != AppState::MissionLoading {
+        for mission in q_mission.iter() {
+            debug!(
+                "SelectedMission replicated while in {:?}; map={}. Waiting for user action.",
+                *app_state, mission.map_path
+            );
+        }
         return;
     }
     let Ok(mission) = q_mission.get(trigger.entity) else {
@@ -227,22 +233,33 @@ fn spawn_lobby_entity_if_missing(
 }
 
 /// Reset the authoritative lobby-state entity when the server re-enters Lobby.
-fn reset_lobby_entity_on_reenter(mut q_existing: Query<(&mut LobbyInfo, &mut ServerGamePhase)>) {
+fn reset_lobby_entity_on_reenter(
+    mut q_existing: Query<(&mut LobbyInfo, &mut ServerGamePhase)>,
+    q_selected_mission: Query<Entity, With<SelectedMission>>,
+    mut commands: Commands,
+) {
     if let Ok((mut lobby, mut game_phase)) = q_existing.single_mut() {
         // Re-entering Lobby after a mission: reset selection, signal state change.
         *game_phase = ServerGamePhase::Lobby;
         lobby.selected_map = None;
-        info!("Lobby entity reset for new session");
+        lobby.set_changed();
+        info!("Lobby entity reset for new session (phase set to Lobby)");
     } else {
         warn!("reset_lobby_entity_on_reenter: Lobby entity not found!");
+    }
+
+    for entity in q_selected_mission.iter() {
+        commands.entity(entity).despawn();
+        info!("SelectedMission entity despawned");
     }
 }
 
 /// Server: write `ServerGamePhase::InProgress` on the lobby entity when the server
 /// enters `AppState::InGame`.
-fn set_server_state_ingame(mut q: Query<&mut ServerGamePhase>) {
-    for mut phase in q.iter_mut() {
+fn set_server_state_ingame(mut q: Query<(&mut ServerGamePhase, &mut LobbyInfo)>) {
+    for (mut phase, mut lobby) in q.iter_mut() {
         *phase = ServerGamePhase::InProgress;
+        lobby.set_changed();
     }
     info!("ServerGamePhase set to InProgress");
 }

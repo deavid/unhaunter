@@ -3,7 +3,7 @@ use bevy_persistent::Persistent;
 use unboard_core::resources::board_topology::BoardTopology;
 use unevents_core::events::mission::MissionEvent;
 use unprofile_core::profile::PlayerProfileData;
-use unreplicon_core::components::ServerGamePhase;
+use unreplicon_core::components::{LobbyInfo, ServerGamePhase};
 use unsummary_core::summary::SummaryData;
 use untypes_core::states::{GameState, SimulationState};
 
@@ -14,7 +14,7 @@ pub(crate) fn handle_mission_events(
     mut o_player_profile: Option<ResMut<Persistent<PlayerProfileData>>>,
     mut summary_data: Option<ResMut<SummaryData>>,
     board_topology: Res<BoardTopology>,
-    mut q_server_phase: Query<&mut ServerGamePhase>,
+    mut q_server_phase: Query<(&mut ServerGamePhase, &mut LobbyInfo)>,
 ) {
     for ev in ev_mission.read() {
         match ev {
@@ -55,8 +55,9 @@ pub(crate) fn handle_mission_events(
                 game_next_state.set(GameState::Running);
                 next_sim_state.set(SimulationState::TearingDown);
 
-                for mut phase in q_server_phase.iter_mut() {
+                for (mut phase, mut lobby) in q_server_phase.iter_mut() {
                     *phase = ServerGamePhase::Concluding;
+                    lobby.set_changed();
                 }
             }
         }

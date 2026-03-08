@@ -41,15 +41,17 @@ fn camera_follow_system(
     let in_game = *game_state.get() == GameState::Running;
     let Ok((player, p_transform)) = pc.single() else {
         *warn_count += 1;
-        if *warn_count > 10 {
+        if *warn_count > 60 {
             warn!("Camera error - Player not found (or too many)");
+            *warn_count = 0;
         }
         return;
     };
     let Ok((mut transform, mut cam_dir)) = camera.single_mut() else {
         *warn_count += 1;
-        if *warn_count > 10 {
+        if *warn_count > 60 {
             warn!("Camera error - Camera not found (or too many)");
+            *warn_count = 0;
         }
         return;
     };

@@ -7751,6 +7751,7 @@ dependencies = [
  "bevy",
  "ordered-float",
  "unmetrics-core",
+ "unreplicon-core",
  "untypes-core",
 ]
 
