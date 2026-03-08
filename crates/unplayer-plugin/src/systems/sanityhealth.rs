@@ -1,6 +1,9 @@
 use crate::components::player::Stamina;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use unghost_core::components::ghost_sprite::GhostSprite;
+use unreplicon_core::ownership::LocallyOwned;
+use untags_core::tags::GhostTag;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
@@ -319,6 +322,87 @@ pub(crate) fn server_apply_client_sanity(
     }
 }
 
+/// Client-side: apply ghost aura damage to the locally-owned player.
+///
+/// Replaces the server-side health damage removed from `handle_hunting_phase`.
+/// Runs only on instances with a local player (`LocalPlayerRole`).
+/// Queries only the locally-owned entity (`With<LocallyOwned>`) so that on a
+/// PeerHost the host's own player is damaged, but not the server copies of
+/// remote player entities.
+///
+/// `GhostSprite` is replicated from the server, so the client has a current
+/// copy of `hunt_target`, `hunting`, and `calm_time_secs`.
+///
+/// The `Local<f32> hunt_start` timer avoids using `ghost.hunt_time_secs`
+/// (a server-absolute timestamp) with the client's local `Time::elapsed_secs()`.
+/// See architecture notes for the reason this subtraction is incorrect.
+fn client_ghost_aura_damage(
+    mut q_local_player: Query<
+        (&Position, &mut PlayerSprite),
+        (
+            With<LocallyOwned>,
+            Without<PlayerSpectating>,
+            Without<InTruck>,
+        ),
+    >,
+    q_ghost: Query<(&Position, &GhostSprite), With<GhostTag>>,
+    time: Res<Time>,
+    difficulty: Res<CurrentDifficulty>,
+    mut hunt_start: Local<f32>,
+) {
+    let dt = time.delta_secs();
+
+    let Ok((player_pos, mut player)) = q_local_player.single_mut() else {
+        return;
+    };
+
+    // Check if ANY ghost is hunting before entering the per-ghost loop.
+    // This must be computed outside the loop to avoid the following bug:
+    // if ghost A is hunting and ghost B is not, ghost B's iteration would
+    // reset *hunt_start = 0.0 on every frame, preventing ghost_strength
+    // from ever ramping up and making ghost A deal zero damage.
+    let any_hunting = q_ghost.iter().any(|(_, g)| g.hunt_target);
+
+    if !any_hunting {
+        // No ghost is currently hunting: reset the ramp-up timer.
+        *hunt_start = 0.0;
+    }
+
+    for (ghost_pos, ghost) in q_ghost.iter() {
+        if !ghost.hunt_target {
+            continue;
+        }
+
+        // Record the client-local time at which we first observed any hunt_target==true.
+        // We deliberately avoid time.elapsed_secs() - ghost.hunt_time_secs here
+        // because hunt_time_secs is a server-side absolute timestamp that cannot
+        // be compared meaningfully to the client's elapsed time.
+        if *hunt_start == 0.0 {
+            *hunt_start = time.elapsed_secs();
+        }
+        let ghost_strength = (time.elapsed_secs() - *hunt_start).clamp(0.0, 2.0);
+
+        // Inline of calculate_weighted_distance_squared from unghost-plugin/enrage.rs.
+        // That function is pub(crate) within unghost-plugin and not accessible here.
+        // Logic is identical: Z distance is multiplied by 10 when on different floors
+        // to make the ghost less effective at damaging players across floors.
+        let dx = player_pos.x - ghost_pos.x;
+        let dy = player_pos.y - ghost_pos.y;
+        let ghost_floor = ghost_pos.z.round();
+        let player_floor = player_pos.z.round();
+        let dz = if ghost_floor != player_floor {
+            (player_pos.z - ghost_pos.z) * 10.0
+        } else {
+            player_pos.z - ghost_pos.z
+        };
+        let dist2 = dx * dx + dy * dy + dz * dz + 2.0;
+
+        let dmg = dist2.recip() * difficulty.0.health_drain_rate;
+        let damage_to_apply = dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
+        player.health -= damage_to_apply;
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
     use untypes_core::states::SimulationState;
@@ -332,6 +416,7 @@ pub(crate) fn app_setup(app: &mut App) {
             server_apply_client_sanity.run_if(resource_exists::<AuthorityRole>),
             visual_health.run_if(resource_exists::<LocalPlayerRole>),
             update_player_stamina,
+            client_ghost_aura_damage.run_if(resource_exists::<LocalPlayerRole>),
             detect_and_apply_death,
             update_profile_death_stats.run_if(resource_exists::<LocalPlayerRole>),
             debug_kill_spectator,

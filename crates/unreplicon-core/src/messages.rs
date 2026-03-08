@@ -360,3 +360,18 @@ pub struct RequestJournalGhostToggle {
 pub struct PlayerDiedEvent {
     pub id: NetworkId,
 }
+
+/// Sent by the Authority when the ghost-talk RNG fires in `sound_update`
+/// (the `gn == 0` block). All pure clients receive this and inject a
+/// sound-field pulse into their local `SoundGrid` at the same time as the
+/// Authority, synchronizing the *trigger timing* of ghost-induced sanity
+/// pressure. Each client reconstructs the pulse independently with local RNG,
+/// so the exact vector magnitudes are not identical across instances.
+///
+/// One message is sent per `SoundEmitter` entity that exists at the time of
+/// the trigger (normally: ghost breach + ghost entity = two messages per event).
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct GhostSoundFieldBroadcast {
+    /// World-space position of the emitter entity (breach or ghost).
+    pub position: [f32; 3],
+}

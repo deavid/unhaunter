@@ -29,6 +29,8 @@ unrender-std = { path = "../unrender-std" }
 uninteraction-core = { path = "../uninteraction-core" }
 untruck-core = { path = "../untruck-core" }
 ungear-core = { path = "../ungear-core" }
+unghost-core = { path = "../unghost-core" }
+untags-core = { path = "../untags-core" }
 
 unreplicon-core = { workspace = true }
 unsettings-core = { path = "../unsettings-core" }
