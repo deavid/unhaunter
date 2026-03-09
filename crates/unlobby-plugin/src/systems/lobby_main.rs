@@ -334,34 +334,39 @@ pub(crate) fn handle_clicks(
                         next_app_state.set(AppState::MissionLoading);
                     }
                 } else if !host_in_mission && is_room_owner {
-                    // Owner: start a new mission.
+                    // Owner: request the server to start a new mission.
+                    // The Leader stays in Lobby and must click "Join Mission" once the server confirms.
                     let selected_map = lobby_info.and_then(|li| li.selected_map.clone());
-                    let selected_difficulty = lobby_info
-                        .map(|li| li.selected_difficulty.clone())
-                        .unwrap_or_default();
                     match selected_map {
                         Some(map_filepath) if !map_filepath.is_empty() => {
                             let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
                             info!("Room owner requesting mission start: map={}", map_filepath);
                             ev_start.write(RequestStartMission { map_seed });
-                            current_map_seed.0 = map_seed;
-                            if let Ok(diff) = Difficulty::from_str(&selected_difficulty) {
-                                *current_difficulty = CurrentDifficulty::new(diff);
-                            } else {
-                                warn!(
-                                    "Unknown difficulty '{}'; keeping current",
-                                    selected_difficulty
-                                );
-                            }
-                            next_app_state.set(AppState::MissionLoading);
-                            // SimulationState::Ready observer will transition to InGame once simulation is ready.
+                            // Leader remains in AppState::Lobby; SelectedMission replication will
+                            // make the "Join Mission" button appear once the server confirms.
                         }
                         _ => {
                             warn!("Cannot start mission: no map selected");
                         }
                     }
                 } else if host_in_mission && is_room_owner {
-                    warn!("Owner clicked Start Mission while mission already in progress; ignored");
+                    // Owner joins the confirmed mission, same flow as non-owner.
+                    if let Ok(mission) = q_selected_mission.single() {
+                        current_map_seed.0 = mission.map_seed;
+                        if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
+                            *current_difficulty = CurrentDifficulty::new(diff);
+                        } else {
+                            warn!(
+                                "Unknown difficulty '{}'; keeping current",
+                                mission.difficulty_id
+                            );
+                        }
+                        info!("Owner joining mission: map={}", mission.map_path);
+                        ev_load.write(LoadLevelEvent {
+                            map_filepath: mission.map_path.clone(),
+                        });
+                        next_app_state.set(AppState::MissionLoading);
+                    }
                 }
             }
             Some(LobbyMenuAction::ExitLobby) => {
@@ -411,9 +416,8 @@ pub(crate) fn update_display(
     // Update Menu Items (Start/Join Mission)
     for (action, mut vis, children) in q_menu_items.iter_mut() {
         if *action == LobbyMenuAction::StartMission {
-            if is_room_owner {
-                *vis = Visibility::Inherited;
-            } else if host_in_mission {
+            if host_in_mission {
+                // Server has confirmed the mission; everyone (including the owner) sees "Join Mission".
                 *vis = Visibility::Inherited;
                 for child in children {
                     if let Some(mut text) = q_text
@@ -422,6 +426,18 @@ pub(crate) fn update_display(
                         .filter(|t| t.as_str() != "Join Mission")
                     {
                         **text = "Join Mission".to_string();
+                    }
+                }
+            } else if is_room_owner {
+                // No mission yet; owner sees "Start Mission".
+                *vis = Visibility::Inherited;
+                for child in children {
+                    if let Some(mut text) = q_text
+                        .get_mut(*child)
+                        .ok()
+                        .filter(|t| t.as_str() != "Start Mission")
+                    {
+                        **text = "Start Mission".to_string();
                     }
                 }
             } else {

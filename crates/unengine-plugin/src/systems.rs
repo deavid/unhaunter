@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::Remote;
 use unassets_core::resources::maps::Maps;
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
@@ -28,9 +29,9 @@ pub fn cleanup_menu(
 
 pub fn cleanup_game(
     mut commands: Commands,
-    qc: Query<Entity, With<GCameraArena>>,
-    qgs: Query<Entity, With<GameSprite>>,
-    qs: Query<Entity, With<GameSound>>,
+    qc: Query<Entity, (With<GCameraArena>, Without<Remote>)>,
+    qgs: Query<Entity, (With<GameSprite>, Without<Remote>)>,
+    qs: Query<Entity, (With<GameSound>, Without<Remote>)>,
     mut bf: ResMut<BoardTopology>,
     mut bcf: ResMut<BoardCollisionField>,
     mut bef: ResMut<BoardEntityField>,

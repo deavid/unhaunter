@@ -7171,6 +7171,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
+ "bevy_replicon",
  "unassets-core",
  "unbehavior",
  "unboard-core",
