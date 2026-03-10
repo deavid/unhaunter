@@ -24,6 +24,9 @@ pub(crate) fn player_visibility_system(
     bcf: Res<BoardCollisionField>,
     mut room_topology: ResMut<RoomTopology>,
 ) {
+    if bcf.0.dim().0 == 0 || bcf.0.dim().1 == 0 || bcf.0.dim().2 == 0 {
+        return;
+    }
     let measure = PLAYER_VISIBILITY.clone().time_measure();
 
     for (pos, mut vf) in q_vf.iter_mut() {

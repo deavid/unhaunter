@@ -18,6 +18,9 @@ pub(crate) fn compute_visibility(
     let mut queue = VecDeque::with_capacity(256);
     let start = pos_start.to_board_position();
     let map_size = collision_field.dim();
+    if map_size.0 == 0 || map_size.1 == 0 || map_size.2 == 0 {
+        return;
+    }
     const Z_FACTOR: f32 = 2.0;
     queue.push_front((start.clone(), start.clone()));
     vis_field[start.ndidx()] = 1.0;

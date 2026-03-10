@@ -315,8 +315,8 @@ pub(crate) fn handle_clicks(
             Some(LobbyMenuAction::StartMission) => {
                 let host_in_mission = !q_selected_mission.is_empty();
 
-                if host_in_mission && !is_room_owner {
-                    // Non-owner: join an already-running mission.
+                if host_in_mission {
+                    // Everyone (including owner) joins the confirmed mission.
                     if let Ok(mission) = q_selected_mission.single() {
                         current_map_seed.0 = mission.map_seed;
                         if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
@@ -327,13 +327,13 @@ pub(crate) fn handle_clicks(
                                 mission.difficulty_id
                             );
                         }
-                        info!("Non-owner joining mission: map={}", mission.map_path);
+                        info!("Joining mission: map={}", mission.map_path);
                         ev_load.write(LoadLevelEvent {
                             map_filepath: mission.map_path.clone(),
                         });
                         next_app_state.set(AppState::MissionLoading);
                     }
-                } else if !host_in_mission && is_room_owner {
+                } else if is_room_owner {
                     // Owner: request the server to start a new mission.
                     // The Leader stays in Lobby and must click "Join Mission" once the server confirms.
                     let selected_map = lobby_info.and_then(|li| li.selected_map.clone());
@@ -342,30 +342,10 @@ pub(crate) fn handle_clicks(
                             let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
                             info!("Room owner requesting mission start: map={}", map_filepath);
                             ev_start.write(RequestStartMission { map_seed });
-                            // Leader remains in AppState::Lobby; SelectedMission replication will
-                            // make the "Join Mission" button appear once the server confirms.
                         }
                         _ => {
                             warn!("Cannot start mission: no map selected");
                         }
-                    }
-                } else if host_in_mission && is_room_owner {
-                    // Owner joins the confirmed mission, same flow as non-owner.
-                    if let Ok(mission) = q_selected_mission.single() {
-                        current_map_seed.0 = mission.map_seed;
-                        if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
-                            *current_difficulty = CurrentDifficulty::new(diff);
-                        } else {
-                            warn!(
-                                "Unknown difficulty '{}'; keeping current",
-                                mission.difficulty_id
-                            );
-                        }
-                        info!("Owner joining mission: map={}", mission.map_path);
-                        ev_load.write(LoadLevelEvent {
-                            map_filepath: mission.map_path.clone(),
-                        });
-                        next_app_state.set(AppState::MissionLoading);
                     }
                 }
             }
