@@ -1,9 +1,13 @@
 use bevy::prelude::*;
+use bevy_replicon::bytes::Bytes;
 use bevy_replicon::prelude::{
-    AppRuleExt, Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode,
-    ServerMessageAppExt, ToClients,
+    AppMarkerExt, AppRuleExt, Channel, ClientId, ClientMessageAppExt, FromClient, Replicated,
+    SendMode, ServerMessageAppExt, ToClients,
 };
 use bevy_replicon::server::visibility::client_visibility::ClientVisibility;
+use bevy_replicon::shared::replication::deferred_entity::DeferredEntity;
+use bevy_replicon::shared::replication::registry::ctx::{RemoveCtx, WriteCtx};
+use bevy_replicon::shared::replication::registry::rule_fns::RuleFns;
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
 use unbehavior::components::{FloorItemCollidable, TmxEntityId};
 use unboard_core::components::spawning::PlayerSpawnPoint;
@@ -72,6 +76,20 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<PlayerSpectating>();
     app.replicate::<GearMarker>();
     app.replicate::<GearKind>();
+
+    // Register LocallyOwned as a receive marker to shield client-driven components.
+    app.register_marker::<LocallyOwned>();
+    app.set_marker_fns::<LocallyOwned, TmxEntityId>(noop_write::<TmxEntityId>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, Owner>(noop_write::<Owner>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, Position>(noop_write::<Position>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, PlayerSprite>(noop_write::<PlayerSprite>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, Stamina>(noop_write::<Stamina>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, PlayerGear>(noop_write::<PlayerGear>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, HeldObject>(noop_write::<HeldObject>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, Hiding>(noop_write::<Hiding>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, PlayerSpectating>(noop_write::<PlayerSpectating>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, GearMarker>(noop_write::<GearMarker>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, GearKind>(noop_write::<GearKind>, noop_remove);
 
     // Host/offline: spawn and tag player entities when InGame starts.
     // Gated by AuthorityRole so it runs on Host and Dedicated Server.
@@ -850,20 +868,27 @@ fn handle_ownership_granted(
         let server_entity = msg.entity;
         if let Some(&client_entity) = entity_map.to_client().get(&server_entity) {
             info!("handle_ownership_granted: entity {:?}", client_entity);
-            commands
-                .entity(client_entity)
-                .insert(LocallyOwned)
-                .remove::<Replicated>();
-            // FIXME: No idea why we need to remove that Confirm history, it causes tons of errors: unable to apply mutate message for tick `RepliconTick(250)`: `2416v0` missing history component inserted on the first update message.
-            // .remove::<bevy_replicon::client::confirm_history::ConfirmHistory>()
-
-            // FIXME: Pillar 5 Orphan step (Client side):
-            // Remove from ServerEntityMap so replicon stops updating it.
-            // User says remove_by_server exists but it is not in the public API of 0.38.2.
-            // Mapping removal is currently skipped due to private API constraints.
-            // Replicated removal should mitigate some issues, but this is technically broken.
+            commands.entity(client_entity).insert(LocallyOwned);
         }
     }
+}
+
+/// Discards the server's value without writing it to the component.
+fn noop_write<C: Component>(
+    ctx: &mut WriteCtx,
+    rule_fns: &RuleFns<C>,
+    _entity: &mut DeferredEntity,
+    message: &mut Bytes,
+) -> Result<(), bevy::prelude::BevyError> {
+    // We use the public deserialize and discard the result.
+    // This advances the message cursor correctly.
+    let _ = rule_fns.deserialize(ctx, message)?;
+    Ok(())
+}
+
+/// Suppresses the server's component removal completely.
+fn noop_remove(_ctx: &mut RemoveCtx, _entity: &mut DeferredEntity) {
+    // Intentionally empty.
 }
 
 /// Debug system for player entities.
