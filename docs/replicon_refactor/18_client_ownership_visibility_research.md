@@ -2,7 +2,7 @@
 
 - **Date:** March 2026
 - **Branch:** `dev-deavid`
-- **Status:** Research & design only. No implementation yet. Many open questions flagged.
+- **Status:** Architecture decided. Strategy E (Receive Markers) is the implementation plan. Ready to code.
 - **Purpose:** Reference document for implementing proper player-entity client ownership using `bevy_replicon` 0.39
   visibility filters. Captures everything known, everything unknown, and what needs to be tested before code is written.
 
@@ -60,8 +60,8 @@ The desired architecture is clear and has been agreed on:
 **Ownership transfer** (gear pickup/drop) requires a state transition: the client requests the action, the server
 authorizes it and re-assigns ownership.
 
-The key invariant: **a client should never receive replicated updates for its own player entity's movement components
-after ownership is established.** The client is the sole writer of its own `Position`.
+The key invariant: **a client should never receive replicated updates for its own entities after ownership is
+established.** The client is the sole authority over all components it writes on owned entities.
 
 ---
 
@@ -296,37 +296,25 @@ fn noop_remove(_ctx: &mut RemoveCtx, _entity: &mut DeferredEntity) {
 
 ### 4.9 Design Intent and Library Posture
 
-> ⚠️ This section describes how `bevy_replicon` was designed to be used, and how our approach differs.
-
-The `lib.rs` crate-level documentation (confirmed from source) states:
+The `lib.rs` crate-level documentation states:
 
 > "Replication happens only from server to clients. It's necessary to prevent cheating."
 
-There is no mention of "client authority", "client-owned", "client-authoritative component", or any equivalent concept
-anywhere in the `bevy_replicon` 0.39 source. The library is **explicitly server-authoritative by design**.
+`bevy_replicon` is server-authoritative by design and has no first-class "client authority component". However, this
+does not make our use case unsupported or fragile.
 
-The receive markers API (`AppMarkerExt`) was designed for **client-side prediction (CSP)** and interpolation — scenarios
-where the client _tentatively_ applies its own version of reality and the server _reconciles_ it. It was not designed
-for the scenario where the client is a permanent authority over a component and the server must never overwrite it.
+**Client-Side Prediction (CSP) makes our use case fully supported.** The `Receive Markers` API (`AppMarkerExt`) was
+designed for CSP and interpolation. CSP fundamentally requires the ability to discard server updates — the client runs
+ahead of the server, and when the delayed server state arrives, it either reconciles or discards. Permanently discarding
+server updates for `LocallyOwned` entities is the "always trust client" end of that spectrum. The library cannot break
+this without breaking its own CSP infrastructure.
 
-The visibility filter API (`add_visibility_filter`) was designed for **spatial or per-group visibility** — e.g., fog of
-war, per-team information hiding. The docstring explicitly warns that losing visibility causes despawn (entity scope) or
-component removal (component scope). These are the documented, intended behaviors.
+There is no stability risk. Using `noop_write` + `noop_remove` on `LocallyOwned` entities is a first-class supported
+idiom within the receive markers API. No GitHub issue is needed. See §12.
 
-**We are repurposing both systems** to implement a "client authority" model:
-
-- Visibility filters → used to prevent the server from sending components the client owns
-- Receive markers → used to prevent the client from applying server-sent components it owns
-
-Neither usage aligns with the library's documented intent. This creates two risks:
-
-1. **Future version breakage** — if `bevy_replicon` changes how visibility or receive markers work (especially in edge
-   cases like reconnection, late client join, or entity re-spawn), our usage could break silently.
-2. **Unexpected interaction** — the library may not test the combination of visibility filters + receive markers on the
-   same entity/component. Edge cases may exist.
-
-**Recommendation:** File a GitHub issue requesting an official `ClientAuthority<C>` or `NoReplicateIncoming<C>`
-primitive. See §12.
+**Visibility filters are a separate tool for a separate purpose.** Their confirmed behavior — despawn on entity-scope
+visibility loss, component removal on component-scope loss (see §4.7, Q1, Q2) — makes them a trap for client ownership
+control. They are the correct tool for lobby-to-game entity gating. See §5.4.
 
 ---
 
@@ -340,14 +328,14 @@ All viable options at a glance. Mechanism, sides affected, gear pickup safety, a
 | ------ | ---------------------------------------------- | --------------- | --------------------------- | ----------------------------------------- | ----- |
 | A      | Entity blacklist post-spawn                    | Yes             | No                          | ✗ (despawn)                               | ★☆☆☆☆ |
 | B      | Component filter post-spawn + re-add observer  | Yes             | Yes (observer)              | ✗ (1-frame flicker)                       | ★★☆☆☆ |
-| C1     | Entity scope at spawn (full entity blacklist)  | Yes             | Needs client spawn rethink  | ✓ if gear also handled at spawn           | ★★★☆☆ |
-| C2     | Component scope at spawn (only mutes Position) | Yes             | None                        | ✗ for mid-session gear pickup             | ★★★★☆ |
+| C1     | Entity scope at spawn (full entity blacklist)  | Yes             | Needs client spawn rethink  | ✗ (client never receives initial state)   | ✗     |
+| C2     | Component scope at spawn (only mutes Position) | Yes             | None                        | ✗ (client has no initial state either)    | ✗     |
 | E      | Receive markers only (client-side no-op)       | None            | Yes (register marker + fns) | ✓ if LocallyOwned inserted before removal | ★★★★★ |
-| F      | C2 + E combined ("belt and suspenders")        | Yes             | Yes                         | ✓                                         | ★★★★★ |
+| F      | C2 + E combined ("belt and suspenders")        | Yes             | Yes                         | ✗ (BROKEN — Despawn bypasses markers)     | 0★    |
 | D      | Hybrid: replicate once then block              | Yes             | Yes (complex)               | ✗                                         | ★☆☆☆☆ |
 | G      | Save/restore buffer around replication         | None            | Yes (fragile workaround)    | ✓                                         | ★☆☆☆☆ |
 
-**Recommended option: E for the minimum viable fix, or F for long-term robustness.** See detailed sections below.
+**Strategy E is the only viable option.** All others are either traps or redundant. See detailed sections below.
 
 ---
 
@@ -389,23 +377,23 @@ visibility filter is applied to an already-replicated entity. `iter_lost()` insp
 `ClientTicks` entry. The client despawns the entity and purges the `ServerEntityMap` entry. **Strategy A is broken for
 post-spawn use.**
 
-**Mitigations (all unreliable):**
+**Why mitigations don't work:**
 
-- **Race condition approach:** Remove `Replicated` on the client before the despawn arrives. The despawn packet may
-  arrive first. Do not rely on this.
-- **Parent anchor approach:** Parent the entity to a local anchor. Parent-child despawn behavior is version-dependent
-  and not guaranteed.
-- **Observer interception:** Observe `RemovedComponents::<Replicated>` to detect despawn and re-spawn. Fights the engine
-  and may corrupt `ServerEntityMap`.
+- **Removing `Replicated` on the client:** Ineffective. Removing `Replicated` client-side has no effect on what the
+  server sends — this is the original broken workaround documented in §1. The server's despawn decision is driven by the
+  server-side visibility filter result, not by any component on the client entity.
+- **Parent anchor:** Parent-child despawn behavior is version-dependent and not guaranteed to protect children.
+- **Observer interception:** Observe `RemovedComponents::<Replicated>` to re-spawn. Fights the engine and may leave
+  `ServerEntityMap` in an inconsistent state.
 
 **Best use of this pattern:** At spawn time (Strategy C1) before the entity is ever replicated.
 
 ---
 
-### Strategy B — Component-Level Filter Post-Spawn + Re-add Observer ★★☆☆☆
+### Strategy B — Component-Level Filter Post-Spawn + Re-add Observer ★☆☆☆☆
 
-**Score rationale:** Avoids despawn but causes 1-frame component removal. Re-add observer is fragile. Does not handle
-gear pickup cleanly without combining with receive markers.
+**Score rationale:** Does not fix despawn (just switches from entity loss to component loss). Requires per-component
+observers, a re-add dance, and still loses the component for 1 frame. More ad-hoc work than A for a worse result.
 
 Instead of hiding the entire entity, hide only `Position` (and optionally `Stamina`) using `SingleComponent<C>` scope.
 
@@ -455,80 +443,28 @@ directly when gear changes ownership.
 
 ---
 
-### Strategy C1 — Entity Scope at Spawn (Full Blacklist) ★★★☆☆
+### Strategy C1 — Entity Scope at Spawn ✗
 
-**Score rationale:** Clean on paper but requires rethinking client-side spawn path. Gear must also be excluded at spawn
-time. Only viable if all owned entities are known at spawn.
-
-Apply the entity-level filter at spawn time, before the entity ever replicates to the owning client:
-
-```rust
-commands.spawn((
-    Replicated,
-    Position::default(),
-    PlayerSprite::new(/* ... */),
-    ReplicationBlacklist(owner_replicon_id), // type Scope = Entity
-));
-```
-
-The entity NEVER appears in the owning client's `ServerEntityMap`. `OwnershipGranted` must also carry enough initial
-state for the client to initialize its local copy (position, etc.), because the entity will NOT arrive via replication.
-
-**Pros:**
-
-- Zero despawn, zero component removal dance.
-- Ownership release is clean: remove the filter → entity appears as a fresh spawn.
-
-**Cons:**
-
-- Requires rethinking the "OwnershipGranted" path: the client must initialize the player entity from the message
-  payload, not from replication.
-- The current code relies on Replicon spawning the entity first, then `OwnershipGranted` identifying it. That changes
-  fundamentally under C1.
-- Gear entities picked up mid-session need their own entity-level filters inserted at the moment of pickup — the server
-  must know to exclude them when sending to the owning client.
+**Why it doesn't work:** The client must receive the full initial entity state (position, appearance, all components) to
+know where the entity is and what it looks like before taking ownership. "Never send it" defeats the purpose: the player
+entity spawns on the owning client with no data.
 
 ---
 
-### Strategy C2 — Component Scope at Spawn (Mute Only Position) ★★★★☆
+### Strategy C2 — Component Scope at Spawn ✗
 
-**Score rationale:** Clean for the primary movement bug. Does not handle gear pickup mid-session without additional
-work. Combine with E for full solution.
-
-Apply the component-scope filter at spawn time:
-
-```rust
-commands.spawn((
-    Replicated,
-    Position::default(),
-    PlayerSprite::new(/* ... */),
-    MutePositionForOwner(owner_replicon_id), // type Scope = SingleComponent<Position>
-));
-```
-
-The entity replicates normally to the owning client (they get all components), but `Position` is NEVER included in any
-packet to them. The entity arrives on the client WITHOUT `Position`. The client's own movement systems initialize and
-own `Position` locally.
-
-**Pros:**
-
-- No removal dance (component was never replicated to the owning client, so no removal message ever fires).
-- Entity IS in `ServerEntityMap` — `OwnershipGranted` still works exactly as today.
-- On ownership release: remove the filter → server sends `Position` as an INSERT (new component) → clean.
-
-**Cons:**
-
-- Does not handle gear entities picked up mid-session (the gear entity already has `Position` replicated to the client;
-  applying the filter post-pickup causes a removal message). See §5.7.
-- Requires knowing the owner's `RepliconId` at spawn time. See Q7 in §6.
+**Why it doesn't work:** Fixing only `Position` misunderstands the problem. Every replicated component on a
+locally-owned entity needs shielding, not just one. More fundamentally: if `Position` is filtered at spawn, the owning
+client's player entity arrives without knowing where it spawned. The client needs the complete initial state before it
+can take ownership.
 
 ---
 
 ### Strategy E — Receive Markers with No-Op Functions (Client-Side Only) ★★★★★
 
-**Score rationale:** Requires zero server changes. Works for gear pickup mid-session if `LocallyOwned` is inserted on
-the client before the removal message arrives (very likely since `OwnershipGranted` uses ordered-reliable channel).
-Risk: repurposing a CSP-designed API for a permanent authority model (see §4.9 design intent warning).
+**This is the chosen implementation.** Zero server changes required. The server continues broadcasting everything; the
+client uses `LocallyOwned` as an impenetrable shield for all owned components. This is a supported use of the CSP
+infrastructure — see §4.9.
 
 `LocallyOwned` is already a marker component. Registering it with receive markers lets the client override what happens
 when the server writes or removes `Position` (or any other component) on entities marked as locally owned.
@@ -558,7 +494,7 @@ pub fn noop_write<C: Component>(
     _entity: &mut DeferredEntity,
     message: &mut Bytes,
 ) -> Result<()> {
-    rule_fns.consume(ctx, message) // MUST consume bytes or stream becomes corrupted
+    rule_fns.consume(ctx, message) // advance the deserializer, discard the bytes
 }
 
 pub fn noop_remove(_ctx: &mut RemoveCtx, _entity: &mut DeferredEntity) {
@@ -566,65 +502,36 @@ pub fn noop_remove(_ctx: &mut RemoveCtx, _entity: &mut DeferredEntity) {
 }
 ```
 
-**⚠️ MUST call `rule_fns.consume(ctx, message)` in `noop_write`** — if the bytes are not consumed, the deserializer will
-be misaligned and all subsequent component updates in the same packet will be corrupted.
+`rule_fns.consume(ctx, message)` advances the deserializer past this component's bytes without applying them. This is
+the standard discard path — every receive function either writes data or discards it. Always call it in `noop_write`.
 
 **How it works for gear pickup mid-session:**
 
 1. Client picks up gear. Server sends `OwnershipGranted` for the gear entity (ordered-reliable channel).
 2. Client receives `OwnershipGranted`, inserts `LocallyOwned` on the gear entity.
-3. Server applies a component-scope visibility filter `MutePositionForOwner` on the gear entity (optional, saves
-   bandwidth).
-4. If the server sends a removal message for `Position` on that gear entity (from step 3), the client receives it, but
-   because `LocallyOwned` is now on the entity, `noop_remove` fires instead of `default_remove::<Position>`. Component
-   is NOT removed.
+3. All subsequent server writes for registered components on that entity are silently discarded via the noop functions.
+   No flicker, no component removal, no despawn.
 
-**Ordering guarantee:** `OwnershipGranted` is sent on an ordered-reliable channel. The removal message (from visibility
-filter change) is sent as a Replicon update. Since both are reliable, order is preserved: `OwnershipGranted` arrives and
-is processed before the removal message, assuming they were sent in the same frame or the ownership message was sent
-first. This is the most likely scenario. If there is a multi-frame gap between pickup authorization and visibility
-filter change, the ordering is guaranteed.
-
-**Risk:** If for any reason the removal message arrives before `LocallyOwned` is inserted (e.g., unreliable channel
-race, out-of-order processing), the component IS removed. Client must then re-add it. This is the same 1-frame flicker
-as Strategy B. In practice, using ordered-reliable channels for `OwnershipGranted` makes this very unlikely.
+**Boundary:** `noop_remove` only intercepts **Component Removal** packets. If the server despawns the entity,
+`bevy_replicon` sends an explicit **Despawn** packet which is processed at the packet-header level, before the component
+registry is consulted. The entity is destroyed regardless of `LocallyOwned`. The server retains full authority to
+destroy entities; the client controls only the data inside living entities. This is correct by design.
 
 ---
 
-### Strategy F — C2 at Spawn + E Receive Markers (Belt and Suspenders) ★★★★★
+### Strategy F — C2 + E Combined ✗ (0 Stars — Fundamentally Broken)
 
-**Score rationale:** Most robust. Server never sends the component. Client also never applies server writes. Handles
-both the base case (spawn-time filter) and the edge case (gear pickup mid-session via receive markers). Complex to set
-up but extremely reliable once in place.
+**Why it's broken:** Adding server-side visibility filters (the C2 part) is a trap. When a visibility filter loses
+visibility for an already-replicated entity, `bevy_replicon` processes the result based on the filter's `Scope` type:
 
-Combines:
+- `Scope = Entity`: the server sends a **Despawn** packet. This is processed at the packet-header level, before the
+  component registry is consulted. `noop_remove` is never invoked. The entity is destroyed on the client regardless of
+  `LocallyOwned`.
+- `Scope = SingleComponent<C>`: the server sends a **Component Removal** packet, which `noop_remove` would intercept.
+  But now we have two systems (server filter + client no-op) doing the same job redundantly, with Despawn risk if anyone
+  ever uses the wrong Scope.
 
-- **C2 at spawn**: When the server spawns the player entity, it applies `MutePositionForOwner` at spawn time. `Position`
-  is never included in any replication packet to the owning client.
-- **E receive markers**: The client registers `LocallyOwned` as a receive marker with no-op write/remove for `Position`.
-  This handles: (a) any case where C2 isn't applied yet (race condition), (b) gear entities picked up mid-session (where
-  C2 can't be applied at spawn), and (c) redundant protection.
-
-```rust
-// Server: at setup_mission_players spawn
-commands.spawn((
-    Replicated,
-    Position::default(),
-    /* ... */
-    MutePositionForOwner(owner_replicon_id), // C2 applied at spawn
-));
-
-// Client: in app_setup (registration)
-app.register_marker::<LocallyOwned>();
-app.set_marker_fns::<LocallyOwned, Position>(noop_write::<Position>, noop_remove);
-```
-
-When gear is picked up mid-session:
-
-- Server sends `OwnershipGranted` for the gear entity.
-- Client inserts `LocallyOwned` on gear entity → receive markers kick in, no-op for Position.
-- Server optionally applies `MutePositionForOwner` on the gear entity for bandwidth savings.
-- No removal dance, no 1-frame flicker.
+Do not combine visibility filters with receive markers for ownership. Trust Strategy E alone.
 
 ---
 
@@ -663,55 +570,17 @@ fail.
 
 ---
 
-### 5.7 The Component Removal Dance Problem (Gear Pickup Mid-Session)
+### 5.6 The Legitimate Use of Visibility Filters (Not Client Ownership)
 
-> This is a new issue that affects any strategy that applies a component-scope visibility filter AFTER the entity has
-> already been replicated to the client.
+Visibility filters are the right tool for a different problem we will need to solve: **clients that connect to the
+server should not immediately receive the entire replicated game world while still in the lobby.**
 
-**Scenario:**
+A filter on game-world entities (map, ghost, gear) that returns `false` for lobby-state clients keeps the initial
+connection from flooding clients with data they can't act on. When a client transitions to `InGame`, the filter is
+removed and Replicon sends the initial game state.
 
-1. A gear item (e.g., flashlight) is on the floor. Server replicates it to all clients, including the player who picks
-   it up. The gear entity has `Position` replicated. Client A (the owner-to-be) has the full entity including
-   `Position`.
-2. Client A picks up the gear. The server authorizes the pickup, inserts `LocallyOwned` on the server-side gear entity
-   (or sends `OwnershipGranted` to Client A).
-3. The server now wants to stop sending `Position` for the gear entity to Client A. It applies a `MutePositionForOwner`
-   filter (component scope, `SingleComponent<Position>`).
-4. ✅ CONFIRMED (see §4.7): The server sends an explicit `add_removal(fns_id)` message for `Position` to Client A.
-5. Client A receives the removal message. `default_remove::<Position>` is called. `Position` is removed from the gear
-   entity.
-6. The gear entity now has no `Position` on Client A's world. If anything renders based on `Position`, the entity may
-   disappear or teleport for one frame.
-
-**The "dance" (if not using receive markers):**
-
-1. Server sends removal → `Position` removed.
-2. Client detects removal (observer on `RemovedComponents<Position>` + `With<LocallyOwned>`).
-3. Client re-inserts `Position` with last known value (from before removal).
-4. Now client owns `Position` exclusively.
-
-The "dance" has a 1-frame gap where `Position` is absent. For visual components, this causes a 1-frame disappearance.
-For physics, it could cause a 1-frame reset. This is unacceptable for user-visible entities.
-
-**Solutions:**
-
-| Solution                        | Mechanism                               | 1-frame flicker? | Complexity |
-| ------------------------------- | --------------------------------------- | ---------------- | ---------- |
-| Apply filter at spawn time (C2) | Never existed → no removal              | ✗                | Low        |
-| Receive markers (E)             | `noop_remove` suppresses removal        | ✗                | Medium     |
-| Re-add observer (B)             | Detects removal, re-inserts immediately | ✓ (1 frame)      | Medium     |
-| Backup/restore buffer (G)       | Saves and restores every frame          | ✓ (subtle)       | High       |
-
-**Best solution: Receive markers (Strategy E).** `LocallyOwned` is already in the codebase. Registering it with a
-`noop_remove` function for `Position` means the removal message is received but `Position` is never removed from the
-entity. No dance, no flicker.
-
-**Ordering concern:** For this to work, `LocallyOwned` must be on the entity BEFORE the removal message arrives and is
-processed. The `OwnershipGranted` message uses an ordered-reliable channel. The visibility filter change (that triggers
-the removal message) happens on the server in the same frame or the next frame after the ownership event. This means
-`OwnershipGranted` → client inserts `LocallyOwned` → removal message arrives. The ordering is correct in the common
-case. If the removal message arrives before `OwnershipGranted` (pathological case), the component is still removed and
-the 1-frame flicker occurs. Combining C2 (for spawn-time entities) and E (for mid-session gear) covers this.
+This is the canonical fog-of-war / lobby-gating use case these filters were designed for. It is entirely separate from
+the client ownership problem.
 
 ---
 
@@ -732,47 +601,61 @@ Questions confirmed from source are marked ✅. Remaining unknowns are marked �
 
 ---
 
-## 7. Components That Need Ownership Filtering
+## 7. Component Ownership: What Gets Shielded
 
-Based on the replicated component registry (see `17_server_entity_replication_inventory.md`) and the ownership model,
-these are the components where the owning client should NOT receive server updates:
+**The rule is simple: every replicated component on a `LocallyOwned` entity is shielded.** When an entity is locally
+owned, the client is the authority on its state. Register `noop_write` and `noop_remove` for every component type that
+is replicated. Do not maintain a curated list — a list implies completeness and any new replicated component would
+silently bypass the shield.
 
-| Component                       | Why owner shouldn't receive it                                                                                          |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Position`                      | **Primary culprit.** Client writes this locally; server overwrites cause slow movement                                  |
-| `Stamina`                       | Client manages running/stamina locally. **BUT** the server may also write it (ghost damage?). Needs thought.            |
-| `PlayerSprite` (health, sanity) | Server writes health/sanity from ghost damage. Owner should probably still receive these. **NOT to be muted.**          |
-| `HeldObject`                    | Client manages gear locally. But gear changes go via interaction messages, so likely fine to keep server-authoritative. |
-| `PlayerGear`                    | Complex. Owner manages gear locally. Server replicates for pickup/drop decisions.                                       |
-| `Hiding`                        | Client-side action. Server should know, but if owner is authoritative, blocking inbound is fine.                        |
+### Component Taxonomy
 
-**Minimum viable fix:** Mute only `Position` for the owning client. Everything else can stay server-replicated for now.
-This alone should fix the slow movement bug.
+Three categories of components exist. Communicate them via **module scoping** rather than naming prefixes or suffixes:
+
+| Category                  | Description                                                                                                                    | Network behavior                                                                                                         | Example module path         |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
+| **Skeleton Ownable**      | Components the owning client writes; server tracks and rebroadcasts to others. Shield with `LocallyOwned`.                     | Replicated server→clients; client sends authoritative value back via `ExportStateMessage`. Incoming discarded by client. | `crate::skeleton::Position` |
+| **Skeleton Unshieldable** | Components the server controls even on owned entities (e.g., a server-applied status effect). Exempt from `noop` registration. | Replicated server→clients; client must receive.                                                                          | `crate::skeleton::Stunned`  |
+| **Skin**                  | Local/visual components. Never replicated.                                                                                     | Never on the network.                                                                                                    | `crate::skin::PlayerSprite` |
+
+**Module scoping as enforcement:** When reviewing a client-side system that mutates a `skeleton::` component without
+`With<LocallyOwned>`, that is an immediate code-review flag. The import path carries the intent. No suffixes needed.
+
+### Edge Case: Unshieldable Components
+
+At time of writing, no confirmed Skeleton Unshieldable components exist. When the need arises (e.g., server applies a
+stun to a locally-owned player), the two options are:
+
+1. Use a separate server-authoritative component exempt from the shield. Client observes it and applies consequences
+   locally.
+2. Route the effect through `ExportStateMessage` (client receives a server message, applies locally, includes result in
+   next export).
+
+Option 1 is simpler for most effects. Decide per-component when the need arises.
 
 ---
 
 ## 8. What the "Release Ownership" Flow Looks Like
 
-When the owning client releases ownership (e.g., disconnects, spectates, or we add a mechanism):
+When the owning client releases ownership (e.g., drops gear, disconnects, or the server revokes it):
 
-1. Client sends a `ReleaseOwnership { final_position, ... }` message to the server.
-2. Server receives it, **immediately** writes the final position to the server-side entity **in the same system** that
-   removes the filter. This is critical — it ensures the very first packet the client receives after re-subscribing
-   contains the correct up-to-date position.
-3. Server removes the visibility filter component from the entity.
-4. On the next replication tick, the server includes that entity in the packet to the client.
-5. If the entity is still in `ServerEntityMap`, the existing local entity receives the update. No re-spawn.
-6. If the entity was despawned (despawn-on-filter scenario), the server treats it as a new spawn and the client gets a
-   fresh entity. The `ServerEntityMap` gets a new entry.
+**With Strategy E (receive markers only — no server-side visibility filters):**
 
-This is only clean if Q1 is "no despawn." If despawn happens on filter application, release is also problematic.
+1. Client sends a final `ExportStateMessage` with its current authoritative state. The server applies it immediately,
+   ensuring it has the correct value before resuming authority.
+2. Client removes `LocallyOwned` from the entity.
+3. Receive markers no longer apply — server updates now land as normal on that entity.
+4. On the next replication tick the client receives the server's current value, which should be in sync with step 1.
+
+No filter to remove. No `ServerEntityMap` manipulation. The server was always broadcasting; the client simply stops
+discarding.
 
 ### Jitter/Pop Warning on Release
 
 There is a potential **1-frame position pop** when ownership is released. If the server's last-known position (from
 `ExportStateMessage`) differs significantly from the client's actual position when it sends `ReleaseOwnership`, the
-client will see a snap. Mitigation: include the final position in the `ReleaseOwnership` message and apply it
-immediately on the server before the filter is removed (step 2 above).
+client will see a snap. Mitigation: send the final `ExportStateMessage` in the same frame as removing `LocallyOwned`,
+before the marker is stripped, so the server has the latest value immediately.
 
 ### `ReleaseOwnership` Event Pattern
 
@@ -783,8 +666,7 @@ replication:
 #[derive(Event, Serialize, Deserialize, Reflect)]
 pub struct ReleaseOwnership {
     pub entity: Entity,  // Client-local ID; will be mapped to server ID automatically
-    pub final_position: Vec3,
-    // Add other owned state fields as needed
+    // Final state is carried by ExportStateMessage, not this event
 }
 ```
 
@@ -817,16 +699,16 @@ generation/index has no meaning on the server.
 
 ---
 
-## 10. Remaining Open Questions
+## 10. Open Questions — Status
 
-Most investigation items from earlier in this session are now resolved from source. Only two remain.
+All questions are now resolved or moot given Strategy E.
 
-| #   | Question                                                                                                    | Why it matters                                                        | Status                                                                                                                                               |
-| --- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Q5  | Does `bevy_replicon` 0.39 expose any API to remove a specific entry from the client-side `ServerEntityMap`? | Old FIXME mentioned `remove_by_server` was private in 0.38.2          | ❓ Not investigated. Strategy E (receive markers) makes this moot for our use case.                                                                  |
-| Q7  | At the moment `setup_mission_players` runs, is the owning client's `RepliconId` guaranteed to be available? | Required for Strategy C2/F — the filter needs the owner's ID at spawn | ❓ Likely yes (clients are identified before `InGame` is entered), but not verified in code. Check `process_newly_connected_clients` and lobby flow. |
+| #   | Question                                                                                                    | Status                                                                                                         |
+| --- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Q5  | Does `bevy_replicon` 0.39 expose any API to remove a specific entry from the client-side `ServerEntityMap`? | ✅ **Moot** — Strategy E does not touch `ServerEntityMap`. `remove_by_server` is a dead end; do not pursue it. |
+| Q7  | At the moment `setup_mission_players` runs, is the owning client's `RepliconId` guaranteed to be available? | ✅ **Moot** — Strategy E requires no `RepliconId` at spawn time. No server-side filter is applied.             |
 
-All Q1–Q4, Q6, Q8 are confirmed from source. See §6 for the full table.
+All other questions (Q1–Q4, Q6, Q8) are confirmed from source. See §6 for the full table.
 
 ---
 
@@ -843,37 +725,11 @@ The fix described in this document should be treated as **correctness work**, no
 
 ## 12. Should We File a GitHub Issue?
 
-**Short answer: Yes, if bandwidth allows. It is not a blocker.**
+**No. No issue is needed.**
 
-**What to request:** An official "client-authoritative component" primitive. Proposed names:
+The `Receive Markers` API (`AppMarkerExt`) covers our use case as a supported, stable feature. Permanently discarding
+server updates via `noop_write` / `noop_remove` is the "always trust client" end of the Client-Side Prediction spectrum
+— a first-class idiom in the library. The library authors cannot deprecate or break this without also breaking CSP
+itself.
 
-- `ClientAuthority<C>` — a component that, when present on an entity, tells Replicon to never overwrite component `C`
-  with server-sent values for the client that "owns" it.
-- `NoReplicateIncoming<C>` — an entity marker directing the client-side replication system to silently discard updates
-  for component `C`.
-
-**Why it's needed:** The goal is to have a component that is _written by the client_ and _read by the server_ (via
-`ExportStateMessage`), but never _sent back to_ the owning client by the server. `bevy_replicon` has no first-class
-concept for this — replication is strictly one direction (server → all clients).
-
-**Why our current workaround is risky:** We are repurposing:
-
-- Visibility filters (designed for fog-of-war / spatial visibility) to suppress server sends.
-- Receive markers (designed for client-side prediction / interpolation) to suppress client-side applies.
-
-Both APIs are documented with different intent. Future versions of `bevy_replicon` may change edge case behaviors
-(reconnection, mid-session join, entity respawn) in ways that break our repurposed usage without a deprecation warning.
-
-**What to include in the issue:**
-
-1. Use case: client-owned movement components in a hybrid authoritative model. Client sends position to server; server
-   broadcasts to others; owning client should not receive its own position back.
-2. Current workaround: visibility filters + receive markers. Functional but unintended use.
-3. Proposed API: something like `app.set_client_authority::<C>()` that internally does the receive-marker no-op and
-   optionally a visibility filter.
-4. Reference: the `ExportStateMessage` / CSP pattern is similar — there may already be roadmap items for this.
-
-**Upstream link:** `https://github.com/projectharmonia/bevy_replicon` — file under Issues as a Feature Request.
-
-**Priority:** Low. Our repurposed workaround (Strategies E or F) is functional. File the issue when convenient, not as a
-prerequisite to implementation.
+There is no feature gap. The existing API is sufficient and correctly captures our intent.
