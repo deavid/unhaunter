@@ -205,6 +205,10 @@ pub struct PlayerSprite {
     pub spawn_position: Position,
     /// The player's movement direction based on WASD controls.
     pub movement: Direction,
+    /// The current normalized input direction (raw velocity), used for animation.
+    /// Zero when the player is not moving, unit vector when moving.
+    #[serde(default)]
+    pub velocity: Vec2,
 }
 
 impl MapEntities for PlayerSprite {
@@ -222,6 +226,7 @@ impl Default for PlayerSprite {
             health: 100.0,
             spawn_position: Position::default(),
             movement: Direction::zero(),
+            velocity: Vec2::ZERO,
         }
     }
 }
@@ -244,6 +249,7 @@ impl PlayerSprite {
             health: 100.0,
             spawn_position,
             movement: Direction::zero(),
+            velocity: Vec2::ZERO,
         }
     }
 }

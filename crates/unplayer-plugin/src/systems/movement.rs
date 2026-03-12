@@ -140,7 +140,6 @@ pub(crate) fn player_movement_system(
         &mut Position,
         &mut Direction,
         &mut PlayerSprite,
-        &mut AnimationTimer,
         &PlayerGear,
         &PlayerInput,
         Option<&Hiding>,
@@ -179,7 +178,6 @@ pub(crate) fn player_movement_system(
         mut pos,
         mut dir,
         mut player,
-        mut anim,
         player_gear,
         player_input,
         hiding,
@@ -245,7 +243,11 @@ pub(crate) fn player_movement_system(
         let col_dotp = (d.dx * col_delta_n.x + d.dy * col_delta_n.y).clamp(0.0, 1.0);
         d.dx -= col_delta_n.x * col_dotp;
         d.dy -= col_delta_n.y * col_dotp;
-        let delta = d / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0;
+
+        // Store raw normalized input velocity for animation replication.
+        // Zero when not moving, unit vector when moving — the animation system
+        // reads this to reconstruct the original delta formula correctly.
+        player.velocity = Vec2::new(d.dx, d.dy);
 
         if is_spectating {
             let spectate_speed = PLAYER_SPEED * difficulty.0.player_speed * 2.0;
@@ -266,8 +268,6 @@ pub(crate) fn player_movement_system(
                 dir.dz = 0.0;
             }
 
-            let dscreen = perspective::direction_to_screen_coord(delta);
-            anim.set_range(CharacterAnimation::from_dir(dscreen.x, dscreen.y * 2.0).to_vec());
             continue;
         }
 
@@ -306,10 +306,6 @@ pub(crate) fn player_movement_system(
 
         // Check if Player is Hiding
         if hiding.is_some() {
-            let dscreen = perspective::direction_to_screen_coord(delta);
-            anim.set_range(
-                CharacterAnimation::from_dir(dscreen.x / 2000.0, dscreen.y / 1000.0).to_vec(),
-            );
             continue;
         }
 
@@ -328,17 +324,6 @@ pub(crate) fn player_movement_system(
             pos.x += pdx;
             pos.y += pdy;
         }
-
-        // Update player animation - make animations faster when running
-        let animation_speed_factor = if run_multiplier > 1.0 { 1.5 } else { 1.0 };
-        let dscreen = perspective::direction_to_screen_coord(delta);
-        anim.set_range(
-            CharacterAnimation::from_dir(
-                dscreen.x * animation_speed_factor,
-                dscreen.y * 2.0 * animation_speed_factor,
-            )
-            .to_vec(),
-        );
 
         if is_main_player
             && mouse_visibility
@@ -360,5 +345,51 @@ pub(crate) fn player_movement_system(
                 dir.dy /= DIR_RED;
             }
         }
+    }
+}
+
+/// System that drives sprite animation for all player entities from replicated state.
+///
+/// Runs on all clients (including join clients) for every player with an `AnimationTimer`,
+/// using only replicated components so remote players animate correctly without needing
+/// client-side `PlayerInput`.
+pub(crate) fn player_animation_system(
+    mut players: Query<(
+        &PlayerSprite,
+        &Direction,
+        &Stamina,
+        &mut AnimationTimer,
+        Option<&Hiding>,
+        Option<&InTruck>,
+    )>,
+) {
+    for (player, dir, stamina, mut anim, hiding, in_truck) in players.iter_mut() {
+        if in_truck.is_some() {
+            continue;
+        }
+
+        if hiding.is_some() {
+            // When hiding the player is stationary; keep the Standing animation.
+            anim.set_range(CharacterAnimation::from_dir(0.0, 0.0).to_vec());
+            continue;
+        }
+
+        // Reconstruct `delta` exactly as player_movement_system originally did:
+        //   delta = d / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0
+        // where `d` was the raw normalized input direction.
+        // `PlayerSprite.velocity` carries `d` and is replicated to join clients via
+        // ExportStateMessage → server → Replicon, so remote players animate correctly.
+        // When velocity is zero (not moving), delta is tiny → Standing with correct facing.
+        // When velocity is non-zero (moving), delta magnitude ≈ 10 → Walking.
+        let delta = Direction::from(player.velocity) / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0;
+        let animation_speed_factor = if stamina.running { 1.5 } else { 1.0 };
+        let dscreen = perspective::direction_to_screen_coord(delta);
+        anim.set_range(
+            CharacterAnimation::from_dir(
+                dscreen.x * animation_speed_factor,
+                dscreen.y * 2.0 * animation_speed_factor,
+            )
+            .to_vec(),
+        );
     }
 }

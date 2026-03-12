@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 use unspatial_core::position::Position;
 
 use unevents_core::events::roomchanged::InteractionExecutionType;
@@ -12,7 +13,7 @@ pub struct Target(pub Entity);
 pub struct PositionTarget(pub Position);
 
 /// Something that can be turned on or off.
-#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[derive(Component, Debug, Clone, Copy, Reflect, Default, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Toggleable {
     pub is_on: bool,

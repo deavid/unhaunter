@@ -17,7 +17,7 @@ use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
 use ungear_core::types::gear::kind::GearKind;
-use uninteraction_core::interaction::ExecuteInteractionEvent;
+use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSpectating, PlayerSprite, Stamina};
 use unrender_std::components::visuals::Viewer;
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -33,6 +33,7 @@ use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unreplicon_core::resources::LocalPlayer;
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
+use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use untypes_core::roles::is_pure_client;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
@@ -68,6 +69,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<TmxEntityId>();
     app.replicate::<Owner>();
     app.replicate::<Position>();
+    app.replicate::<Direction>();
     app.replicate::<PlayerSprite>();
     app.replicate::<Stamina>();
     app.replicate::<PlayerGear>();
@@ -76,18 +78,23 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<PlayerSpectating>();
     app.replicate::<GearMarker>();
     app.replicate::<GearKind>();
+    app.replicate::<Toggleable>();
 
     // Register LocallyOwned as a receive marker to shield client-driven components.
     app.register_marker::<LocallyOwned>();
     app.set_marker_fns::<LocallyOwned, TmxEntityId>(noop_write::<TmxEntityId>, noop_remove);
     app.set_marker_fns::<LocallyOwned, Owner>(noop_write::<Owner>, noop_remove);
     app.set_marker_fns::<LocallyOwned, Position>(noop_write::<Position>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, Direction>(noop_write::<Direction>, noop_remove);
     app.set_marker_fns::<LocallyOwned, PlayerSprite>(noop_write::<PlayerSprite>, noop_remove);
     app.set_marker_fns::<LocallyOwned, Stamina>(noop_write::<Stamina>, noop_remove);
     app.set_marker_fns::<LocallyOwned, PlayerGear>(noop_write::<PlayerGear>, noop_remove);
     app.set_marker_fns::<LocallyOwned, HeldObject>(noop_write::<HeldObject>, noop_remove);
     app.set_marker_fns::<LocallyOwned, Hiding>(noop_write::<Hiding>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, PlayerSpectating>(noop_write::<PlayerSpectating>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, PlayerSpectating>(
+        noop_write::<PlayerSpectating>,
+        noop_remove,
+    );
     app.set_marker_fns::<LocallyOwned, GearMarker>(noop_write::<GearMarker>, noop_remove);
     app.set_marker_fns::<LocallyOwned, GearKind>(noop_write::<GearKind>, noop_remove);
 
@@ -133,9 +140,19 @@ pub(super) fn app_setup(app: &mut App) {
     // All local players (offline, host, join): send own state to the authority every frame.
     app.add_systems(
         Update,
-        (send_export_state, send_export_gear_state)
+        send_export_state
             .run_if(in_state(AppState::InGame))
             .run_if(resource_exists::<LocalPlayerRole>),
+    );
+    // Gear state export only runs on pure join clients — the authority already has the
+    // ground truth locally. Running it on host/offline would create a feedback loop where
+    // send_export_gear_state sends the current state and handle_export_gear_state
+    // re-applies a one-frame-stale copy, causing the flashlight to flicker.
+    app.add_systems(
+        Update,
+        send_export_gear_state
+            .run_if(in_state(AppState::InGame))
+            .run_if(is_pure_client),
     );
 
     // Client-side: apply replicated player state to local components
@@ -241,6 +258,10 @@ fn setup_mission_players(
 
         let net_id = NetworkId::from(player.player_uuid);
 
+        // Determine the owner for this player's gear entities.
+        // Using same OwnerId logic as the player entity inserted below.
+        let gear_owner_id = player.current_socket.unwrap_or(OwnerId::Server);
+
         // --- Gear Initialization ---
         let mut player_gear = PlayerGear::default();
         let mut gear_id_counter = (net_id.0 % 1_000_000) * 1000;
@@ -249,27 +270,33 @@ fn setup_mission_players(
             let gear_entity =
                 gear_registry.spawn(&mut commands, difficulty.0.player_gear.left_hand);
             player_gear.left_hand = Some(gear_entity);
-            commands
-                .entity(gear_entity)
-                .insert((NetworkId(gear_id_counter), Replicated));
+            commands.entity(gear_entity).insert((
+                NetworkId(gear_id_counter),
+                Replicated,
+                Owner(gear_owner_id),
+            ));
             gear_id_counter += 1;
         }
         if difficulty.0.player_gear.right_hand.is_some() {
             let gear_entity =
                 gear_registry.spawn(&mut commands, difficulty.0.player_gear.right_hand);
             player_gear.right_hand = Some(gear_entity);
-            commands
-                .entity(gear_entity)
-                .insert((NetworkId(gear_id_counter), Replicated));
+            commands.entity(gear_entity).insert((
+                NetworkId(gear_id_counter),
+                Replicated,
+                Owner(gear_owner_id),
+            ));
             gear_id_counter += 1;
         }
         for kind in &difficulty.0.player_gear.inventory {
             if kind.is_some() {
                 let gear_entity = gear_registry.spawn(&mut commands, *kind);
                 player_gear.inventory.push(gear_entity);
-                commands
-                    .entity(gear_entity)
-                    .insert((NetworkId(gear_id_counter), Replicated));
+                commands.entity(gear_entity).insert((
+                    NetworkId(gear_id_counter),
+                    Replicated,
+                    Owner(gear_owner_id),
+                ));
                 gear_id_counter += 1;
             }
         }
@@ -389,36 +416,43 @@ fn spawn_late_joining_players(
         let mut player_gear = PlayerGear::default();
         let mut gear_id_counter = (net_id.0 % 1_000_000) * 1000;
 
+        let socket_owner_id = player.current_socket.unwrap();
+
         if difficulty.0.player_gear.left_hand.is_some() {
             let gear_entity =
                 gear_registry.spawn(&mut commands, difficulty.0.player_gear.left_hand);
             player_gear.left_hand = Some(gear_entity);
-            commands
-                .entity(gear_entity)
-                .insert((NetworkId(gear_id_counter), Replicated));
+            commands.entity(gear_entity).insert((
+                NetworkId(gear_id_counter),
+                Replicated,
+                Owner(socket_owner_id),
+            ));
             gear_id_counter += 1;
         }
         if difficulty.0.player_gear.right_hand.is_some() {
             let gear_entity =
                 gear_registry.spawn(&mut commands, difficulty.0.player_gear.right_hand);
             player_gear.right_hand = Some(gear_entity);
-            commands
-                .entity(gear_entity)
-                .insert((NetworkId(gear_id_counter), Replicated));
+            commands.entity(gear_entity).insert((
+                NetworkId(gear_id_counter),
+                Replicated,
+                Owner(socket_owner_id),
+            ));
             gear_id_counter += 1;
         }
         for kind in &difficulty.0.player_gear.inventory {
             if kind.is_some() {
                 let gear_entity = gear_registry.spawn(&mut commands, *kind);
                 player_gear.inventory.push(gear_entity);
-                commands
-                    .entity(gear_entity)
-                    .insert((NetworkId(gear_id_counter), Replicated));
+                commands.entity(gear_entity).insert((
+                    NetworkId(gear_id_counter),
+                    Replicated,
+                    Owner(socket_owner_id),
+                ));
                 gear_id_counter += 1;
             }
         }
 
-        let socket_owner_id = player.current_socket.unwrap();
         let entity = commands
             .spawn((
                 spawn_pos,
@@ -452,21 +486,29 @@ fn spawn_late_joining_players(
 }
 
 fn send_export_gear_state(
-    q_local_gear: Query<
-        (
-            Entity,
-            Option<&ungearitems_core::components::flashlight::Flashlight>,
-        ),
-        With<LocallyOwned>,
-    >,
+    q_local_player: Query<&PlayerGear, With<LocallyOwned>>,
+    q_flashlight: Query<&ungearitems_core::components::flashlight::Flashlight>,
     mut writer: MessageWriter<ExportGearStateMessage>,
 ) {
-    for (entity, flashlight) in q_local_gear.iter() {
-        if let Some(flashlight) = flashlight {
+    for gear in q_local_player.iter() {
+        let gear_entities = gear
+            .left_hand
+            .into_iter()
+            .chain(gear.right_hand)
+            .chain(gear.inventory.iter().copied());
+        for entity in gear_entities {
+            let Ok(flashlight) = q_flashlight.get(entity) else {
+                continue;
+            };
+            let status_level = match flashlight.status {
+                ungearitems_core::components::flashlight::FlashlightStatus::Off => 0,
+                ungearitems_core::components::flashlight::FlashlightStatus::Low => 1,
+                ungearitems_core::components::flashlight::FlashlightStatus::Mid => 2,
+                ungearitems_core::components::flashlight::FlashlightStatus::High => 3,
+            };
             writer.write(ExportGearStateMessage {
                 entity,
-                is_on: flashlight.status
-                    != ungearitems_core::components::flashlight::FlashlightStatus::Off,
+                status_level,
                 battery: 100.0, // TODO
                 temperature: flashlight.inner_temp,
             });
@@ -481,20 +523,26 @@ fn handle_export_gear_state(
         (
             &Owner,
             Option<&mut ungearitems_core::components::flashlight::Flashlight>,
+            Option<&mut Toggleable>,
         ),
         Without<LocallyOwned>,
     >,
 ) {
     for msg in reader.read() {
-        if let Ok((owner, flashlight)) = q_gear.get_mut(msg.message.entity) {
+        if let Ok((owner, flashlight, toggleable)) = q_gear.get_mut(msg.message.entity) {
             if from_owner_id(owner.0) != msg.client_id {
                 continue;
             }
+            let is_on = msg.message.status_level > 0;
+            if let Some(mut toggleable) = toggleable {
+                toggleable.is_on = is_on;
+            }
             if let Some(mut flashlight) = flashlight {
-                flashlight.status = if msg.message.is_on {
-                    ungearitems_core::components::flashlight::FlashlightStatus::High
-                } else {
-                    ungearitems_core::components::flashlight::FlashlightStatus::Off
+                flashlight.status = match msg.message.status_level {
+                    1 => ungearitems_core::components::flashlight::FlashlightStatus::Low,
+                    2 => ungearitems_core::components::flashlight::FlashlightStatus::Mid,
+                    3 => ungearitems_core::components::flashlight::FlashlightStatus::High,
+                    _ => ungearitems_core::components::flashlight::FlashlightStatus::Off,
                 };
                 flashlight.inner_temp = msg.message.temperature;
             }
@@ -509,6 +557,7 @@ fn handle_export_state(
         (
             &Owner,
             &mut Position,
+            &mut Direction,
             &mut Stamina,
             &mut PlayerSprite,
             Option<&mut PlayerSpectating>,
@@ -518,7 +567,7 @@ fn handle_export_state(
     mut commands: Commands,
 ) {
     for msg in reader.read() {
-        for (owner, mut pos, mut stamina, mut sprite, spectating) in q_players.iter_mut() {
+        for (owner, mut pos, mut dir, mut stamina, mut sprite, spectating) in q_players.iter_mut() {
             if from_owner_id(owner.0) != msg.client_id {
                 continue;
             }
@@ -527,11 +576,17 @@ fn handle_export_state(
             pos.y = msg.message.y;
             pos.z = msg.message.z;
 
+            dir.dx = msg.message.direction_dx;
+            dir.dy = msg.message.direction_dy;
+            dir.dz = msg.message.direction_dz;
+
             stamina.running = msg.message.is_running;
             stamina.current = msg.message.stamina * stamina.max;
 
             sprite.health = msg.message.health;
             sprite.sanity = msg.message.sanity;
+            sprite.velocity.x = msg.message.movement_dx;
+            sprite.velocity.y = msg.message.movement_dy;
 
             if msg.message.is_spectating
                 && spectating.is_none()
@@ -770,6 +825,7 @@ fn send_export_state(
     q_local: Query<
         (
             &Position,
+            &Direction,
             &PlayerSprite,
             &Stamina,
             Has<Hiding>,
@@ -779,17 +835,22 @@ fn send_export_state(
     >,
     mut writer: MessageWriter<ExportStateMessage>,
 ) {
-    for (pos, sprite, stamina, is_hiding, is_spectating) in q_local.iter() {
+    for (pos, dir, sprite, stamina, is_hiding, is_spectating) in q_local.iter() {
         writer.write(ExportStateMessage {
             x: pos.x,
             y: pos.y,
             z: pos.z,
+            direction_dx: dir.dx,
+            direction_dy: dir.dy,
+            direction_dz: dir.dz,
             is_running: stamina.running,
             frame: 0,
             is_hiding,
             stamina: stamina.percentage(),
             health: sprite.health,
             sanity: sprite.sanity,
+            movement_dx: sprite.velocity.x,
+            movement_dy: sprite.velocity.y,
             is_spectating,
         });
     }

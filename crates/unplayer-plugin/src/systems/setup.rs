@@ -67,6 +67,13 @@ pub(crate) fn app_setup_client(app: &mut App) {
         styling::update_player_styling.run_if(in_state(AppState::InGame)),
     );
 
+    app.add_systems(
+        Update,
+        movement::player_animation_system
+            .after(movement::player_movement_system)
+            .run_if(in_state(AppState::InGame)),
+    );
+
     // Set up input and movement systems with proper ordering
     app.add_systems(
         Update,

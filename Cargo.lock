@@ -7528,6 +7528,7 @@ name = "uninteraction-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "serde",
  "unevents-core",
  "unspatial-core",
 ]

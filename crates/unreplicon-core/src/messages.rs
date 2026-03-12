@@ -48,12 +48,17 @@ pub struct ExportStateMessage {
     pub x: f32,
     pub y: f32,
     pub z: f32,
+    pub direction_dx: f32,
+    pub direction_dy: f32,
+    pub direction_dz: f32,
     pub is_running: bool,
     pub frame: u16,
     pub is_hiding: bool,
     pub stamina: f32,
     pub health: f32,
     pub sanity: f32,
+    pub movement_dx: f32,
+    pub movement_dy: f32,
     pub is_spectating: bool,
 }
 
@@ -104,7 +109,8 @@ impl bevy::ecs::entity::MapEntities for RequestPickupGear {
 #[reflect(Default)]
 pub struct ExportGearStateMessage {
     pub entity: Entity,
-    pub is_on: bool,
+    /// Flashlight status level: 0=Off, 1=Low, 2=Mid, 3=High.
+    pub status_level: u8,
     pub battery: f32,
     pub temperature: f32,
 }
@@ -113,7 +119,7 @@ impl Default for ExportGearStateMessage {
     fn default() -> Self {
         Self {
             entity: Entity::PLACEHOLDER,
-            is_on: false,
+            status_level: 0,
             battery: 100.0,
             temperature: 20.0,
         }
