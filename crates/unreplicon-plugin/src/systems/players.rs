@@ -17,17 +17,16 @@ use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
 use ungear_core::types::gear::kind::GearKind;
+use ungearitems_core::components::flashlight::FlashlightStatus;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
-use unplayer_core::components::{Hiding, MainPlayer, PlayerSpectating, PlayerSprite, Stamina};
-use unrender_std::components::visuals::Viewer;
-use unrender_std::resources::visibility_data::VisibilityData;
+use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite, Stamina};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportStateMessage, FloorGearDespawnBroadcast, FloorGearSpawnBroadcast,
-    HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent, HostInteractionOccurred,
-    HostMovableMotionEvent, InteractionRequestMessage, MovableMotionBroadcast, OwnershipGranted,
-    OwnershipReleased, RemoteInteractionBroadcast, RequestPickupGear, TruckLoadoutAction,
-    TruckLoadoutMessage,
+    GearSkeletonState, HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent,
+    HostInteractionOccurred, HostMovableMotionEvent, InteractionRequestMessage,
+    MovableMotionBroadcast, OwnershipGranted, OwnershipReleased, RemoteInteractionBroadcast,
+    RequestPickupGear, TruckLoadoutAction, TruckLoadoutMessage,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -79,6 +78,13 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<GearMarker>();
     app.replicate::<GearKind>();
     app.replicate::<Toggleable>();
+    app.replicate::<ungearitems_core::components::flashlight::Flashlight>();
+    app.replicate::<ungearitems_core::components::uvtorch::UVTorch>();
+    app.replicate::<ungearitems_core::components::redtorch::RedTorch>();
+    app.replicate::<ungearitems_core::components::repellentflask::RepellentFlask>();
+    app.replicate::<ungearitems_core::components::salt::SaltData>();
+    app.replicate::<ungearitems_core::components::sage::SageBundleData>();
+    app.replicate::<ungearitems_core::components::quartz::QuartzStoneData>();
 
     // Register LocallyOwned as a receive marker to shield client-driven components.
     app.register_marker::<LocallyOwned>();
@@ -97,6 +103,31 @@ pub(super) fn app_setup(app: &mut App) {
     );
     app.set_marker_fns::<LocallyOwned, GearMarker>(noop_write::<GearMarker>, noop_remove);
     app.set_marker_fns::<LocallyOwned, GearKind>(noop_write::<GearKind>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::flashlight::Flashlight>(
+        noop_write,
+        noop_remove,
+    );
+    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::uvtorch::UVTorch>(
+        noop_write,
+        noop_remove,
+    );
+    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::redtorch::RedTorch>(
+        noop_write,
+        noop_remove,
+    );
+    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::repellentflask::RepellentFlask>(noop_write, noop_remove);
+    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::salt::SaltData>(
+        noop_write,
+        noop_remove,
+    );
+    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::sage::SageBundleData>(
+        noop_write,
+        noop_remove,
+    );
+    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::quartz::QuartzStoneData>(
+        noop_write,
+        noop_remove,
+    );
 
     // Host/offline: spawn and tag player entities when InGame starts.
     // Gated by AuthorityRole so it runs on Host and Dedicated Server.
@@ -162,15 +193,11 @@ pub(super) fn app_setup(app: &mut App) {
             apply_remote_interaction,
             handle_ownership_granted,
             fallback_player_ownership_from_uuid,
+            propagate_gear_ownership,
+            cleanup_gear_ownership,
         )
             .run_if(in_state(AppState::InGame))
             .run_if(is_pure_client),
-    );
-
-    // Debug system for player entities
-    app.add_systems(
-        Update,
-        debug_player_entities.run_if(in_state(AppState::InGame)),
     );
 
     // Cleanup the spawning-active marker when leaving InGame
@@ -202,6 +229,22 @@ fn hydrate_gear_system(
     for (entity, kind) in q_added.iter() {
         gear_registry.hydrate(&mut commands, entity, *kind);
         commands.entity(entity).insert(GearHydrated);
+
+        // Add skin components that are not in the registry hydrate path
+        match kind {
+            GearKind::SageBundle => {
+                commands
+                    .entity(entity)
+                    .insert(ungearitems_core::components::sage::SageBundleSkin::new());
+            }
+            GearKind::QuartzStone => {
+                commands
+                    .entity(entity)
+                    .insert(ungearitems_core::components::quartz::QuartzStoneSkin::default());
+            }
+            _ => {}
+        }
+
         info!(
             "hydrate_gear_system: hydrated gear entity {:?} kind={:?}",
             entity, kind
@@ -266,10 +309,14 @@ fn setup_mission_players(
         let mut player_gear = PlayerGear::default();
         let mut gear_id_counter = (net_id.0 % 1_000_000) * 1000;
 
+        // Store gear entities for later LocallyOwned insertion
+        let mut gear_entities = Vec::new();
+
         if difficulty.0.player_gear.left_hand.is_some() {
             let gear_entity =
                 gear_registry.spawn(&mut commands, difficulty.0.player_gear.left_hand);
             player_gear.left_hand = Some(gear_entity);
+            gear_entities.push(gear_entity);
             commands.entity(gear_entity).insert((
                 NetworkId(gear_id_counter),
                 Replicated,
@@ -281,6 +328,7 @@ fn setup_mission_players(
             let gear_entity =
                 gear_registry.spawn(&mut commands, difficulty.0.player_gear.right_hand);
             player_gear.right_hand = Some(gear_entity);
+            gear_entities.push(gear_entity);
             commands.entity(gear_entity).insert((
                 NetworkId(gear_id_counter),
                 Replicated,
@@ -292,6 +340,7 @@ fn setup_mission_players(
             if kind.is_some() {
                 let gear_entity = gear_registry.spawn(&mut commands, *kind);
                 player_gear.inventory.push(gear_entity);
+                gear_entities.push(gear_entity);
                 commands.entity(gear_entity).insert((
                     NetworkId(gear_id_counter),
                     Replicated,
@@ -331,6 +380,12 @@ fn setup_mission_players(
             commands
                 .entity(entity)
                 .insert((Owner(OwnerId::Server), LocallyOwned));
+
+            // Also grant LocallyOwned to all gear entities this player holds
+            for gear_entity in gear_entities {
+                commands.entity(gear_entity).insert(LocallyOwned);
+            }
+
             info!(
                 "setup_mission_players: spawned host skeleton {:?} for player {}",
                 entity, player.player_uuid
@@ -488,30 +543,49 @@ fn spawn_late_joining_players(
 fn send_export_gear_state(
     q_local_player: Query<&PlayerGear, With<LocallyOwned>>,
     q_flashlight: Query<&ungearitems_core::components::flashlight::Flashlight>,
+    q_uvtorch: Query<&ungearitems_core::components::uvtorch::UVTorch>,
+    q_redtorch: Query<&ungearitems_core::components::redtorch::RedTorch>,
+    q_repellent: Query<&ungearitems_core::components::repellentflask::RepellentFlask>,
+    q_salt: Query<&ungearitems_core::components::salt::SaltData>,
+    q_sage: Query<&ungearitems_core::components::sage::SageBundleData>,
+    q_quartz: Query<&ungearitems_core::components::quartz::QuartzStoneData>,
+    q_toggleable: Query<&Toggleable>,
     mut writer: MessageWriter<ExportGearStateMessage>,
 ) {
     for gear in q_local_player.iter() {
-        let gear_entities = gear
+        for &entity in gear
             .left_hand
-            .into_iter()
-            .chain(gear.right_hand)
-            .chain(gear.inventory.iter().copied());
-        for entity in gear_entities {
-            let Ok(flashlight) = q_flashlight.get(entity) else {
+            .iter()
+            .chain(gear.right_hand.iter())
+            .chain(&gear.inventory)
+        {
+            let state = if let Ok(flashlight) = q_flashlight.get(entity) {
+                GearSkeletonState::Flashlight(flashlight.status.clone())
+            } else if let Ok(uvtorch) = q_uvtorch.get(entity) {
+                GearSkeletonState::UVTorch(uvtorch.enabled)
+            } else if let Ok(redtorch) = q_redtorch.get(entity) {
+                GearSkeletonState::RedTorch(redtorch.enabled)
+            } else if let Ok(repellent) = q_repellent.get(entity) {
+                GearSkeletonState::RepellentFlask {
+                    qty: repellent.qty,
+                    liquid_content: repellent.liquid_content,
+                }
+            } else if let Ok(salt) = q_salt.get(entity) {
+                GearSkeletonState::Salt(salt.charges)
+            } else if let Ok(sage) = q_sage.get(entity) {
+                GearSkeletonState::Sage {
+                    is_active: sage.is_active,
+                    consumed: sage.consumed,
+                }
+            } else if let Ok(quartz) = q_quartz.get(entity) {
+                GearSkeletonState::Quartz(quartz.cracks)
+            } else if let Ok(toggleable) = q_toggleable.get(entity) {
+                GearSkeletonState::Toggleable(toggleable.is_on)
+            } else {
                 continue;
             };
-            let status_level = match flashlight.status {
-                ungearitems_core::components::flashlight::FlashlightStatus::Off => 0,
-                ungearitems_core::components::flashlight::FlashlightStatus::Low => 1,
-                ungearitems_core::components::flashlight::FlashlightStatus::Mid => 2,
-                ungearitems_core::components::flashlight::FlashlightStatus::High => 3,
-            };
-            writer.write(ExportGearStateMessage {
-                entity,
-                status_level,
-                battery: 100.0, // TODO
-                temperature: flashlight.inner_temp,
-            });
+
+            writer.write(ExportGearStateMessage { entity, state });
         }
     }
 }
@@ -522,29 +596,135 @@ fn handle_export_gear_state(
     mut q_gear: Query<
         (
             &Owner,
+            &GearKind,
             Option<&mut ungearitems_core::components::flashlight::Flashlight>,
+            Option<&mut ungearitems_core::components::uvtorch::UVTorch>,
+            Option<&mut ungearitems_core::components::redtorch::RedTorch>,
+            Option<&mut ungearitems_core::components::repellentflask::RepellentFlask>,
+            Option<&mut ungearitems_core::components::salt::SaltData>,
+            Option<&mut ungearitems_core::components::sage::SageBundleData>,
+            Option<&mut ungearitems_core::components::quartz::QuartzStoneData>,
             Option<&mut Toggleable>,
         ),
-        Without<LocallyOwned>,
+        (Without<LocallyOwned>, With<Replicated>),
     >,
 ) {
     for msg in reader.read() {
-        if let Ok((owner, flashlight, toggleable)) = q_gear.get_mut(msg.message.entity) {
-            if from_owner_id(owner.0) != msg.client_id {
-                continue;
+        let entity = msg.message.entity;
+        let state = msg.message.state.clone();
+
+        trace!(
+            "RECV: ExportGearStateMessage for entity {:?} from {:?}",
+            entity, msg.client_id
+        );
+
+        let Ok((
+            owner,
+            gear_kind,
+            flashlight,
+            uvtorch,
+            redtorch,
+            repellent,
+            salt,
+            sage,
+            quartz,
+            toggleable,
+        )) = q_gear.get_mut(entity)
+        else {
+            warn!(
+                "RECV: ExportGearStateMessage: Entity {:?} not found or missing required components in q_gear query",
+                entity
+            );
+            continue;
+        };
+        if from_owner_id(owner.0) != msg.client_id {
+            warn!(
+                "RECV: ExportGearStateMessage: Client ID mismatch. Expected {:?}, got {:?}",
+                from_owner_id(owner.0),
+                msg.client_id
+            );
+            continue;
+        }
+
+        // Handle different gear types based on GearKind
+        match gear_kind {
+            GearKind::Flashlight => {
+                if let (Some(mut f), GearSkeletonState::Flashlight(status)) = (flashlight, state) {
+                    if f.status != status {
+                        info!(
+                            "RECV: UPDATING FLASHLIGHT: Entity: {:?}, New Status: {:?}",
+                            entity, status
+                        );
+                    }
+                    let is_on = status != FlashlightStatus::Off;
+                    f.status = status;
+                    if let Some(mut t) = toggleable {
+                        t.is_on = is_on;
+                    }
+                } else {
+                    warn!(
+                        "RECV: Failed to apply Flashlight state. Check components for entity {:?}",
+                        entity
+                    );
+                }
             }
-            let is_on = msg.message.status_level > 0;
-            if let Some(mut toggleable) = toggleable {
-                toggleable.is_on = is_on;
+            GearKind::UVTorch => {
+                if let (Some(mut uv), GearSkeletonState::UVTorch(enabled)) = (uvtorch, state) {
+                    uv.enabled = enabled;
+                    if let Some(mut t) = toggleable {
+                        t.is_on = enabled;
+                    }
+                }
             }
-            if let Some(mut flashlight) = flashlight {
-                flashlight.status = match msg.message.status_level {
-                    1 => ungearitems_core::components::flashlight::FlashlightStatus::Low,
-                    2 => ungearitems_core::components::flashlight::FlashlightStatus::Mid,
-                    3 => ungearitems_core::components::flashlight::FlashlightStatus::High,
-                    _ => ungearitems_core::components::flashlight::FlashlightStatus::Off,
-                };
-                flashlight.inner_temp = msg.message.temperature;
+            GearKind::RedTorch => {
+                if let (Some(mut red), GearSkeletonState::RedTorch(enabled)) = (redtorch, state) {
+                    red.enabled = enabled;
+                    if let Some(mut t) = toggleable {
+                        t.is_on = enabled;
+                    }
+                }
+            }
+            GearKind::RepellentFlask => {
+                if let (
+                    Some(mut r),
+                    GearSkeletonState::RepellentFlask {
+                        qty,
+                        liquid_content,
+                    },
+                ) = (repellent, state)
+                {
+                    r.qty = qty;
+                    r.liquid_content = liquid_content;
+                    r.active = qty > 0 && liquid_content.is_some();
+                }
+            }
+            GearKind::Salt => {
+                if let (Some(mut s), GearSkeletonState::Salt(charges)) = (salt, state) {
+                    s.charges = charges;
+                }
+            }
+            GearKind::SageBundle => {
+                if let (
+                    Some(mut s),
+                    GearSkeletonState::Sage {
+                        is_active,
+                        consumed,
+                    },
+                ) = (sage, state)
+                {
+                    s.is_active = is_active;
+                    s.consumed = consumed;
+                }
+            }
+            GearKind::QuartzStone => {
+                if let (Some(mut q), GearSkeletonState::Quartz(cracks)) = (quartz, state) {
+                    q.cracks = cracks;
+                }
+            }
+            _ => {
+                if let (Some(mut t), GearSkeletonState::Toggleable(is_on)) = (toggleable, state) {
+                    t.is_on = is_on;
+                }
             }
         }
     }
@@ -724,6 +904,7 @@ fn handle_ownership_released(
             && from_owner_id(owner.0) == client_id
         {
             commands.entity(entity).remove::<Owner>();
+            commands.entity(entity).remove::<LocallyOwned>();
 
             // Pillar 5 Re-Adopt step (Server side)
             commands.entity(entity).insert(Replicated);
@@ -862,6 +1043,7 @@ fn send_export_state(
 /// acquires `LocallyOwned`, at which point it falls out of the query and becomes a no-op.
 fn fallback_player_ownership_from_uuid(
     q: Query<(Entity, &PlayerSprite), Without<LocallyOwned>>,
+    q_player_gear: Query<&PlayerGear>,
     local_player: Res<LocalPlayer>,
     mut commands: Commands,
     time: Res<Time>,
@@ -898,6 +1080,19 @@ fn fallback_player_ownership_from_uuid(
             );
             commands.entity(entity).insert(LocallyOwned);
             commands.entity(entity).remove::<Replicated>();
+
+            // Also grant LocallyOwned to all gear entities this player holds
+            if let Ok(gear) = q_player_gear.get(entity) {
+                if let Some(left_hand) = gear.left_hand {
+                    commands.entity(left_hand).insert(LocallyOwned);
+                }
+                if let Some(right_hand) = gear.right_hand {
+                    commands.entity(right_hand).insert(LocallyOwned);
+                }
+                for &gear_entity in &gear.inventory {
+                    commands.entity(gear_entity).insert(LocallyOwned);
+                }
+            }
             // NOTE: We intentionally do NOT remove ConfirmHistory here.
             //
             // ConfirmHistory is bevy_replicon's per-entity history buffer used to decode
@@ -924,12 +1119,94 @@ fn handle_ownership_granted(
     mut reader: MessageReader<OwnershipGranted>,
     entity_map: Res<ServerEntityMap>,
     mut commands: Commands,
+    q_player_gear: Query<&PlayerGear>,
 ) {
     for msg in reader.read() {
         let server_entity = msg.entity;
         if let Some(&client_entity) = entity_map.to_client().get(&server_entity) {
             info!("handle_ownership_granted: entity {:?}", client_entity);
             commands.entity(client_entity).insert(LocallyOwned);
+
+            // Also grant LocallyOwned to all gear entities this player holds
+            if let Ok(gear) = q_player_gear.get(client_entity) {
+                if let Some(entity) = gear.left_hand {
+                    commands.entity(entity).insert(LocallyOwned);
+                    debug!(
+                        "handle_ownership_granted: propagating LocallyOwned to left_hand {:?}",
+                        entity
+                    );
+                }
+                if let Some(entity) = gear.right_hand {
+                    commands.entity(entity).insert(LocallyOwned);
+                    debug!(
+                        "handle_ownership_granted: propagating LocallyOwned to right_hand {:?}",
+                        entity
+                    );
+                }
+                for &entity in &gear.inventory {
+                    commands.entity(entity).insert(LocallyOwned);
+                    debug!(
+                        "handle_ownership_granted: propagating LocallyOwned to inventory item {:?}",
+                        entity
+                    );
+                }
+            }
+        }
+    }
+}
+
+/// Client-side: propagate the `LocallyOwned` marker to all gear entities in local player slots.
+/// Runs constantly but filters on gear `Without<LocallyOwned>` to avoid redundant commands,
+/// catching gear entities that arrive/hydrate after the player entity is already setup.
+fn propagate_gear_ownership(
+    mut commands: Commands,
+    player_q: Query<(&PlayerGear, &LocallyOwned)>,
+    gear_q: Query<Entity, (With<GearMarker>, Without<LocallyOwned>)>,
+) {
+    for (player_gear, _locally_owned) in player_q.iter() {
+        let gear_entities = player_gear
+            .left_hand
+            .into_iter()
+            .chain(player_gear.right_hand)
+            .chain(player_gear.inventory.iter().copied());
+
+        for gear_entity in gear_entities {
+            if gear_q.get(gear_entity).is_ok() {
+                commands.entity(gear_entity).insert(LocallyOwned);
+                info!(
+                    "propagate_gear_ownership: Added LocallyOwned to gear entity {:?}",
+                    gear_entity
+                );
+            }
+        }
+    }
+}
+
+/// Client-side: when a player entity's `LocallyOwned` is removed (or the component is changed
+/// and it no longer exists), remove it from the gear entities as well.
+fn cleanup_gear_ownership(
+    mut commands: Commands,
+    mut removed: RemovedComponents<LocallyOwned>,
+    player_q: Query<&PlayerGear>,
+    gear_q: Query<Entity, (With<GearMarker>, With<LocallyOwned>)>,
+) {
+    for player_entity in removed.read() {
+        if let Ok(player_gear) = player_q.get(player_entity) {
+            let gear_entities = player_gear
+                .left_hand
+                .into_iter()
+                .chain(player_gear.right_hand)
+                .chain(player_gear.inventory.iter().copied());
+
+            for gear_entity in gear_entities {
+                if gear_q.get(gear_entity).is_ok() {
+                    commands.entity(gear_entity).remove::<LocallyOwned>();
+                    debug!(
+                        "cleanup_gear_ownership: Removed LocallyOwned from gear entity {:?}",
+                        gear_entity
+                    );
+                }
+            }
         }
     }
 }
@@ -950,51 +1227,4 @@ fn noop_write<C: Component>(
 /// Suppresses the server's component removal completely.
 fn noop_remove(_ctx: &mut RemoveCtx, _entity: &mut DeferredEntity) {
     // Intentionally empty.
-}
-
-/// Debug system for player entities.
-fn debug_player_entities(
-    q: Query<(
-        Entity,
-        &Owner,
-        Has<LocallyOwned>,
-        Has<Replicated>,
-        Has<MainPlayer>,
-        Has<Viewer>,
-    )>,
-    q_vis: Query<(
-        Has<VisibilityData>,
-        Has<Visibility>,
-        Has<InheritedVisibility>,
-        Has<ViewVisibility>,
-    )>,
-    q_state: Query<(
-        Has<Position>,
-        Has<unspatial_core::direction::Direction>,
-        Has<PlayerSprite>,
-        Has<unrender_std::components::animation::AnimationTimer>,
-        Has<ungear_core::components::playergear::PlayerGear>,
-        Has<unplayer_core::components::PlayerInput>,
-        Has<Stamina>,
-    )>,
-    time: Res<Time>,
-    mut timer: Local<f32>,
-) {
-    *timer -= time.delta_secs();
-    if *timer > 0.0 {
-        return;
-    }
-    *timer = 2.0;
-
-    for (entity, owner, is_local, is_replicated, is_mainplayer, is_viewer) in q.iter() {
-        let (has_visibility_data, has_visibility, has_inherited_visibility, has_view_visibility) =
-            q_vis.get(entity).unwrap_or_default();
-        let (has_pos, has_dir, has_sprite, has_anim, has_gear, has_input, has_stamina) =
-            q_state.get(entity).unwrap_or_default();
-
-        debug!(
-            "PLAYER: Entity: {:?}, Owner: {:?}, LocallyOwned: {}, Replicated: {}, Main Player: {}, Viewer: {}, data: {has_visibility_data}, pos: {has_pos}, dir: {has_dir}, spr: {has_sprite}, anim: {has_anim}, gear: {has_gear}, inp: {has_input}, stam: {has_stamina}, vis: {has_visibility}, inh_vis: {has_inherited_visibility}, view_vis: {has_view_visibility}",
-            entity, owner.0, is_local, is_replicated, is_mainplayer, is_viewer
-        );
-    }
 }

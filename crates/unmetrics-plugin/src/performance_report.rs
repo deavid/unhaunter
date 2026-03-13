@@ -25,14 +25,14 @@ pub fn report_performance(
         for diagnostic in diagnostics.iter() {
             if let Some(average) = diagnostic.average() {
                 let system_name = diagnostic.path().as_str();
-                if system_name.starts_with("un") || system_name == "fps" {
+                if system_name.starts_with("un") && system_name.contains("/systems/") {
                     system_times.push((system_name, average, diagnostic.suffix.to_string()));
                 }
             }
         }
         // Grab the top-N
         system_times.sort_by_key(|x| ordered_float::OrderedFloat::from(-x.1));
-        system_times.truncate(15);
+        system_times.truncate(1); // FIXME: Put top 15 back.
 
         system_times.sort_by_key(|x| x.0);
 

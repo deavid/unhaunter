@@ -1,7 +1,8 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Data structure for the Salt consumable.
-#[derive(Component, Debug, Clone, PartialEq, Eq)]
+#[derive(Component, Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 pub struct SaltData {
     /// Number of salt charges remaining (0-4).
     pub charges: u8,

@@ -4,65 +4,55 @@ use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
-pub(crate) use ungearitems_core::components::uvtorch::UVTorch;
+pub(crate) use ungearitems_core::components::uvtorch::{UVTorch, UVTorchSkin};
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::light::LightEmitter;
+use unreplicon_core::ownership::LocallyOwned;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 use crate::metrics;
 
-pub(crate) trait UVTorchExt {
-    fn calculate_output_power(&self, battery_level: f32, glitch_timer: f32) -> f32;
-    fn update_output_power(&mut self, battery_level: f32, glitch_timer: f32);
+pub(crate) trait UVTorchSkinExt {
+    fn calculate_output_power(enabled: bool, battery_level: f32, glitch_timer: f32) -> f32;
+    fn update_output_power(&mut self, enabled: bool, battery_level: f32, glitch_timer: f32);
 }
 
-impl UVTorchExt for UVTorch {
-    fn calculate_output_power(&self, battery_level: f32, glitch_timer: f32) -> f32 {
+impl UVTorchSkinExt for UVTorchSkin {
+    fn calculate_output_power(enabled: bool, battery_level: f32, glitch_timer: f32) -> f32 {
         if glitch_timer > 0.0 {
             return glitch_timer * 0.5; // Weaker flickering than flashlight
         }
 
-        match self.enabled {
-            false => 0.0,
-            true => 4.0 * (battery_level.sqrt() + 0.05),
+        if !enabled {
+            return 0.0;
         }
+
+        4.0 * (battery_level.sqrt() + 0.05)
     }
 
-    fn update_output_power(&mut self, battery_level: f32, glitch_timer: f32) {
-        let new_power = self.calculate_output_power(battery_level, glitch_timer);
+    fn update_output_power(&mut self, enabled: bool, battery_level: f32, glitch_timer: f32) {
+        let new_power = Self::calculate_output_power(enabled, battery_level, glitch_timer);
         self.output_power = (self.output_power * 10.0 + new_power) / 11.0;
     }
 }
 
-pub(crate) fn update_uvtorch(
-    mut q_uvtorch: Query<(
-        &mut UVTorch,
-        &mut LightEmitter,
-        &mut StatusText,
-        &mut GearSprite,
-        &Toggleable,
-        &mut Battery,
-        &mut Electronic,
-        &Position,
-        &ItemName,
-    )>,
+pub(crate) fn update_uvtorch_skeleton(
+    mut q_uvtorch: Query<
+        (
+            &mut UVTorch,
+            &mut Battery,
+            &Toggleable,
+            &Electronic,
+            &Position,
+        ),
+        With<LocallyOwned>,
+    >,
     mut ga: SoundEmitter,
 ) {
     let measure = metrics::UVTORCH_UPDATE.time_measure();
-    for (
-        mut uvtorch,
-        mut uvtorch_render,
-        mut status,
-        mut sprite,
-        toggle,
-        mut battery,
-        electronic,
-        pos,
-        name,
-    ) in q_uvtorch.iter_mut()
-    {
+    for (mut uvtorch, mut battery, toggle, electronic, pos) in q_uvtorch.iter_mut() {
         // Sync internal enabled with Toggleable
         uvtorch.enabled = toggle.is_on;
 
@@ -76,11 +66,40 @@ pub(crate) fn update_uvtorch(
         {
             ga.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
         }
+    }
 
-        uvtorch.update_output_power(battery.level, electronic.glitch_timer);
+    measure.end_ms();
+}
+
+pub(crate) fn update_uvtorch_skin(
+    mut q_uvtorch: Query<(
+        &UVTorch,
+        &mut UVTorchSkin,
+        &mut LightEmitter,
+        &mut StatusText,
+        &mut GearSprite,
+        &Electronic,
+        &Battery,
+        &ItemName,
+    )>,
+) {
+    let measure = metrics::UVTORCH_UPDATE.time_measure();
+    for (
+        uvtorch,
+        mut skin,
+        mut uvtorch_render,
+        mut status,
+        mut sprite,
+        electronic,
+        battery,
+        name,
+    ) in q_uvtorch.iter_mut()
+    {
+        // Update skin state from skeleton
+        skin.update_output_power(uvtorch.enabled, battery.level, electronic.glitch_timer);
 
         // Sync with Render Component
-        uvtorch_render.power = uvtorch.output_power;
+        uvtorch_render.power = skin.output_power;
         if electronic.glitch_intensity > 0.01 {
             let base_color = Color::srgb(0.60, 0.25, 1.00);
             let mut color = base_color.to_srgba();
@@ -128,6 +147,16 @@ pub(crate) fn update_uvtorch(
     measure.end_ms();
 }
 
+fn hydrate_uvtorch_skin(
+    mut commands: Commands,
+    q_new: Query<Entity, (Added<UVTorch>, Without<UVTorchSkin>)>,
+) {
+    for entity in q_new.iter() {
+        commands.entity(entity).insert(UVTorchSkin::default());
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_uvtorch);
+    app.add_systems(Update, update_uvtorch_skeleton);
+    app.add_systems(Update, (hydrate_uvtorch_skin, update_uvtorch_skin));
 }

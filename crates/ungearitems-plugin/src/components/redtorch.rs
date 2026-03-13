@@ -4,42 +4,31 @@ use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
-pub(crate) use ungearitems_core::components::redtorch::RedTorch;
+pub(crate) use ungearitems_core::components::redtorch::{RedTorch, RedTorchSkin};
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::light::LightEmitter;
+use unreplicon_core::ownership::LocallyOwned;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 use crate::metrics;
 
-pub(crate) fn update_redtorch(
-    mut q_redtorch: Query<(
-        &mut RedTorch,
-        &mut LightEmitter,
-        &mut StatusText,
-        &mut GearSprite,
-        &Toggleable,
-        &mut Battery,
-        &mut Electronic,
-        &Position,
-        &ItemName,
-    )>,
+pub(crate) fn update_redtorch_skeleton(
+    mut q_redtorch: Query<
+        (
+            &mut RedTorch,
+            &mut Battery,
+            &Toggleable,
+            &Electronic,
+            &Position,
+        ),
+        With<LocallyOwned>,
+    >,
     mut ga: SoundEmitter,
 ) {
     let measure = metrics::REDTORCH_UPDATE.time_measure();
-    for (
-        mut redtorch,
-        mut redtorch_render,
-        mut status,
-        mut sprite,
-        toggle,
-        mut battery,
-        electronic,
-        pos,
-        name,
-    ) in q_redtorch.iter_mut()
-    {
+    for (mut redtorch, mut battery, toggle, electronic, pos) in q_redtorch.iter_mut() {
         // Sync internal enabled with Toggleable
         redtorch.enabled = toggle.is_on;
 
@@ -53,20 +42,49 @@ pub(crate) fn update_redtorch(
         {
             ga.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
         }
+    }
 
-        // Update power
-        let mut new_power = if redtorch.enabled {
+    measure.end_ms();
+}
+
+pub(crate) fn update_redtorch_skin(
+    mut q_redtorch: Query<(
+        &RedTorch,
+        &mut RedTorchSkin,
+        &mut LightEmitter,
+        &mut StatusText,
+        &mut GearSprite,
+        &Electronic,
+        &Battery,
+        &ItemName,
+    )>,
+) {
+    let measure = metrics::REDTORCH_UPDATE.time_measure();
+    for (
+        redtorch,
+        mut skin,
+        mut redtorch_render,
+        mut status,
+        mut sprite,
+        electronic,
+        battery,
+        name,
+    ) in q_redtorch.iter_mut()
+    {
+        // Update skin state from skeleton
+        let new_power = if redtorch.enabled {
             2.5 * (battery.level.sqrt() + 0.1)
         } else {
             0.0
         };
         if redtorch.enabled && electronic.glitch_timer > 0.0 {
-            new_power = electronic.glitch_timer * 0.3;
+            skin.output_power = electronic.glitch_timer * 0.3;
+        } else {
+            skin.output_power = (skin.output_power * 5.0 + new_power) / 6.0;
         }
-        redtorch.output_power = (redtorch.output_power * 5.0 + new_power) / 6.0;
 
         // Sync with Render Component
-        redtorch_render.power = redtorch.output_power;
+        redtorch_render.power = skin.output_power;
         if electronic.glitch_intensity > 0.01 {
             let base_color = Color::srgb(1.0, 0.20, 0.07);
             let mut color = base_color.to_srgba();
@@ -114,6 +132,16 @@ pub(crate) fn update_redtorch(
     measure.end_ms();
 }
 
+fn hydrate_redtorch_skin(
+    mut commands: Commands,
+    q_new: Query<Entity, (Added<RedTorch>, Without<RedTorchSkin>)>,
+) {
+    for entity in q_new.iter() {
+        commands.entity(entity).insert(RedTorchSkin::default());
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_redtorch);
+    app.add_systems(Update, update_redtorch_skeleton);
+    app.add_systems(Update, (hydrate_redtorch_skin, update_redtorch_skin));
 }

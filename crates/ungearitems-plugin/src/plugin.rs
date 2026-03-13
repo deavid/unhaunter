@@ -1,5 +1,6 @@
 use crate::metrics;
 use bevy::prelude::*;
+use untypes_core::roles::LocalPlayerRole;
 
 pub struct UnhaunterGearItemsCorePlugin;
 
@@ -46,7 +47,8 @@ impl Plugin for UnhaunterGearItemsPlugin {
                 crate::systems::system_electronic_interference,
                 crate::systems::system_battery_drain,
             )
-                .run_if(in_state(untypes_core::states::AppState::InGame)),
+                .run_if(in_state(untypes_core::states::AppState::InGame))
+                .run_if(resource_exists::<LocalPlayerRole>),
         );
 
         metrics::register_all(app);

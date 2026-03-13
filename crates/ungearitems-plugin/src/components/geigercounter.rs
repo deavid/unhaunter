@@ -12,6 +12,7 @@ use unspatial_core::position::Position;
 use crate::metrics;
 
 use bevy::prelude::*;
+use untypes_core::roles::LocalPlayerRole;
 use rand::RngExt;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{
@@ -227,5 +228,5 @@ pub(crate) fn update_geigercounter(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_geigercounter);
+    app.add_systems(Update, update_geigercounter.run_if(resource_exists::<LocalPlayerRole>));
 }

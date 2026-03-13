@@ -1,116 +1,105 @@
-use crate::metrics;
-
 use bevy::prelude::*;
-use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::gear::EquipmentPosition;
 use unfoundation_core::utils::time::format_time;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
-use ungearitems_core::components::sage::{SageBundleData, SageSmokeParticle, SmokeParticleTimer};
+use ungearitems_core::components::sage::{
+    SageBundleData, SageBundleSkin, SageSmokeParticle, SmokeParticleTimer,
+};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use unreplicon_core::messages::SpawnParticleNetEvent;
+use unreplicon_core::ownership::LocallyOwned;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
+use untypes_core::roles::LocalPlayerRole;
 
-pub(crate) fn update_sage(
+use crate::metrics;
+
+pub(crate) fn update_sage_skeleton(
+    mut q_sage: Query<(Entity, &mut SageBundleData), With<LocallyOwned>>,
+    q_triggered: Query<&Triggered>,
+    mut commands: Commands,
+    mut gs_audio: SoundEmitter,
+) {
+    for (entity, mut sage) in q_sage.iter_mut() {
+        if q_triggered.get(entity).is_ok() && !sage.is_active && !sage.consumed {
+            sage.is_active = true;
+            commands.entity(entity).insert(SageBundleSkin::new());
+            gs_audio.play_audio_nopos("sounds/sage_activation.ogg".into(), 0.8);
+            commands.entity(entity).remove::<Triggered>();
+        }
+    }
+}
+
+pub(crate) fn update_sage_skin(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut q_sage: Query<(
-        Entity,
-        &mut SageBundleData,
+        &SageBundleData,
+        &mut SageBundleSkin,
         &mut StatusText,
         &mut GearSprite,
         &Position,
-        &EquipmentPosition,
-        Option<&Triggered>,
     )>,
-    mut gs_audio: SoundEmitter,
-    mut commands: Commands,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
-    asset_server: Res<AssetServer>,
-    mut ev_particles: MessageWriter<ToClients<SpawnParticleNetEvent>>,
+    time: Res<Time>,
 ) {
-    let is_authority = authority.is_some();
+    for (sage, mut skin, mut status, mut sprite, pos) in q_sage.iter_mut() {
+        if sage.is_active && !sage.consumed {
+            skin.burn_timer.tick(time.delta());
 
-    for (entity, mut sage, mut status, mut sprite, pos, _ep, triggered) in q_sage.iter_mut() {
-        if is_authority && triggered.is_some() && !sage.is_active && !sage.consumed {
-            sage.is_active = true;
-            sage.burn_timer.reset();
+            if skin.burn_timer.just_finished() {
+                // Note: We don't modify SageBundleData here as it's a skeleton field.
+                // The skeleton system should handle the transition.
+                // However, for visual consistency, we can stop smoke.
+            } else {
+                let target_smoke = (skin.burn_timer.elapsed_secs() * 3.0) as usize;
+                if skin.smoke_produced < target_smoke {
+                    for _ in skin.smoke_produced..target_smoke {
+                        let mut p = *pos;
+                        let mut rng = random_seed::rng();
+                        p.z += 0.2;
+                        p.x += rng.random_range(-0.2..0.2);
+                        p.y += rng.random_range(-0.2..0.2);
 
-            // Play activation sound
-            gs_audio.play_audio_nopos("sounds/sage_activation.ogg".into(), 0.8);
-
-            commands.entity(entity).remove::<Triggered>();
-        }
-
-        if is_authority && sage.is_active && !sage.consumed {
-            sage.burn_timer.tick(gs_audio.time.delta());
-
-            // Spawn smoke particles
-            if sage.burn_timer.just_finished() {
-                sage.is_active = false;
-                sage.consumed = true;
-            } else if (sage.smoke_produced as f32) < sage.burn_timer.elapsed_secs() * 3.0 {
-                let mut p = *pos;
-                let mut rng = random_seed::rng();
-                p.z += 0.2;
-                p.x += rng.random_range(-0.2..0.2);
-                p.y += rng.random_range(-0.2..0.2);
-
-                // Broadcast smoke particle to all connected clients (join clients).
-                ev_particles.write(ToClients {
-                    mode: SendMode::Broadcast,
-                    message: SpawnParticleNetEvent {
-                        particle_type: "smoke".to_string(),
-                        position: [p.x, p.y, p.z],
-                    },
-                });
-
-                // Also spawn the particle locally on the authority node.
-                //
-                // `handle_spawn_particle` only runs on non-server clients, so the
-                // listen-server host and offline-mode player would otherwise never
-                // see smoke or benefit from the ghost-calming effect applied by
-                // `sage_smoke_system`. Direct spawn fixes both issues.
-                commands
-                    .spawn(Sprite {
-                        image: asset_server.load("img/smoke.png"),
-                        color: Color::NONE,
-                        ..default()
-                    })
-                    .insert(
-                        Transform::from_translation(perspective::to_screen_coord(p))
-                            .with_scale(Vec3::new(0.2, 0.2, 0.2)),
-                    )
-                    .insert(SageSmokeParticle)
-                    .insert(GameSprite)
-                    .insert(p)
-                    .insert(Direction {
-                        dx: rng.random_range(-0.9..0.9),
-                        dy: rng.random_range(-0.9..0.9),
-                        dz: rng.random_range(-0.5..0.5),
-                    })
-                    .insert(MapColor {
-                        color: Color::srgba(1.0, 1.0, 1.0, 0.20),
-                    })
-                    .insert(SmokeParticleTimer(Timer::from_seconds(
-                        5.0,
-                        TimerMode::Once,
-                    )))
-                    .insert(SpriteLayer::default());
-
-                sage.smoke_produced += 1;
+                        commands
+                            .spawn(Sprite {
+                                image: asset_server.load("img/smoke.png"),
+                                color: Color::NONE,
+                                ..default()
+                            })
+                            .insert(
+                                Transform::from_translation(perspective::to_screen_coord(p))
+                                    .with_scale(Vec3::new(0.2, 0.2, 0.2)),
+                            )
+                            .insert(SageSmokeParticle)
+                            .insert(GameSprite)
+                            .insert(p)
+                            .insert(Direction {
+                                dx: rng.random_range(-0.9..0.9),
+                                dy: rng.random_range(-0.9..0.9),
+                                dz: rng.random_range(-0.5..0.5),
+                            })
+                            .insert(MapColor {
+                                color: Color::srgba(1.0, 1.0, 1.0, 0.20),
+                            })
+                            .insert(SmokeParticleTimer(Timer::from_seconds(
+                                5.0,
+                                TimerMode::Once,
+                            )))
+                            .insert(SpriteLayer::default());
+                    }
+                    skin.smoke_produced = target_smoke;
+                }
             }
         }
 
-        // Update StatusText
         if sage.consumed {
             status.0 = "Sage Bundle: Consumed".to_string();
         } else if !sage.is_active {
@@ -118,17 +107,16 @@ pub(crate) fn update_sage(
         } else {
             status.0 = format!(
                 "Sage Bundle: Burning: {}",
-                format_time(sage.burn_timer.remaining_secs())
+                format_time(skin.burn_timer.remaining_secs())
             );
         }
 
-        // Update GearSprite
         sprite.0 = if sage.consumed {
             GearSpriteID::SageBundle4.to_visual_key()
         } else if !sage.is_active {
             GearSpriteID::SageBundle0.to_visual_key()
         } else {
-            let remaining_time = sage.burn_timer.remaining_secs();
+            let remaining_time = skin.burn_timer.remaining_secs();
             if remaining_time > 5.0 {
                 GearSpriteID::SageBundle1.to_visual_key()
             } else if remaining_time > 3.0 {
@@ -142,7 +130,6 @@ pub(crate) fn update_sage(
     }
 }
 
-/// System to handle smoke particle logic.
 fn sage_smoke_system(
     mut commands: Commands,
     time: Res<Time>,
@@ -183,14 +170,12 @@ fn sage_smoke_system(
         .powf(2.0);
         map_color.color.set_alpha(a * 0.4);
 
-        // Make particles float upwards
         position.z += 0.3 * dt / (1.0 + elap.powi(2));
         position.x += dir.dx * dt;
         position.y += dir.dy * dt;
         transform.scale.x += 0.1 * dt;
         transform.scale.y += 0.1 * dt;
 
-        // Apply calming effect to ghost if within range
         for (mut ghost, ghost_position) in ghosts.iter_mut() {
             let dist = position.distance(ghost_position);
             if dist < 5.0 {
@@ -209,7 +194,19 @@ fn sage_smoke_system(
     measure.end_ms();
 }
 
+pub(crate) fn hydrate_sage_skin(
+    mut commands: Commands,
+    q_added: Query<Entity, (Added<SageBundleData>, Without<SageBundleSkin>)>,
+) {
+    for entity in q_added.iter() {
+        commands.entity(entity).insert(SageBundleSkin::new());
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_sage);
-    app.add_systems(Update, sage_smoke_system);
+    app.add_systems(Update, (update_sage_skeleton, hydrate_sage_skin));
+    app.add_systems(
+        Update,
+        (update_sage_skin, sage_smoke_system).run_if(resource_exists::<LocalPlayerRole>),
+    );
 }

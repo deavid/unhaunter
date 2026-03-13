@@ -9,20 +9,31 @@ pub(crate) use ungearitems_core::components::videocam::Videocam;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::light::LightEmitter;
-use unspatial_core::position::Position;
+use unreplicon_core::ownership::LocallyOwned;
 
 use crate::metrics;
 
-pub(crate) fn update_videocam(
+pub(crate) fn update_videocam_skeleton(
+    mut q_videocam: Query<(&mut Toggleable, &mut Battery), With<LocallyOwned>>,
+) {
+    let measure = metrics::VIDEOCAM_UPDATE.time_measure();
+    for (toggle, mut battery) in q_videocam.iter_mut() {
+        // Update Battery Drain Rate (only for local authority)
+        battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
+    }
+
+    measure.end_ms();
+}
+
+pub(crate) fn update_videocam_skin(
     mut q_videocam: Query<(
         &mut Videocam,
         &mut LightEmitter,
         &mut StatusText,
         &mut GearSprite,
-        &mut Toggleable,
-        &mut Battery,
+        &Toggleable,
         &Electronic,
-        &Position,
+        &Battery,
         &EquipmentPosition,
     )>,
 ) {
@@ -33,18 +44,12 @@ pub(crate) fn update_videocam(
         mut status,
         mut sprite,
         toggle,
-        mut battery,
         electronic,
-        _pos,
+        battery,
         _ep,
     ) in q_videocam.iter_mut()
     {
-        let mut rng = random_seed::rng();
-
-        // Update Battery Drain Rate
-        battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
-
-        // Update power
+        // Update power (computed on all clients)
         let mut new_power = if toggle.is_on {
             35.0 * (battery.level.sqrt() + 0.1)
         } else {
@@ -54,6 +59,8 @@ pub(crate) fn update_videocam(
             new_power = electronic.glitch_timer * 2.0;
         }
         videocam.output_power = (videocam.output_power * 8.0 + new_power) / 9.0;
+
+        let mut rng = random_seed::rng();
 
         // Sync with Render Component
         videocam_render.power = videocam.output_power;
@@ -98,5 +105,6 @@ pub(crate) fn update_videocam(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_videocam);
+    app.add_systems(Update, update_videocam_skeleton);
+    app.add_systems(Update, update_videocam_skin);
 }

@@ -1,10 +1,7 @@
-use crate::metrics;
-
 use bevy::prelude::*;
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::salt::{
@@ -15,28 +12,24 @@ use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
+use unreplicon_core::ownership::LocallyOwned;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
+use untypes_core::roles::LocalPlayerRole;
 
-pub(crate) fn update_salt(
-    mut q_salt: Query<(
-        Entity,
-        &mut SaltData,
-        &mut StatusText,
-        &mut GearSprite,
-        &Position,
-        &EquipmentPosition,
-        Option<&Triggered>,
-    )>,
+use crate::metrics;
+
+pub(crate) fn update_salt_skeleton(
+    mut q_salt: Query<(Entity, &mut SaltData, &Position), With<LocallyOwned>>,
+    q_triggered: Query<&Triggered>,
     mut gs_audio: SoundEmitter,
     mut commands: Commands,
 ) {
-    for (entity, mut salt, mut status, mut sprite, pos, _ep, triggered) in q_salt.iter_mut() {
-        if triggered.is_some() && salt.charges > 0 {
+    for (entity, mut salt, pos) in q_salt.iter_mut() {
+        if q_triggered.get(entity).is_ok() && salt.charges > 0 {
             salt.charges -= 1;
 
-            // Spawn salt pile entity
             commands
                 .spawn(Sprite {
                     image: gs_audio.asset_server.load("img/salt_pile.png"),
@@ -54,29 +47,26 @@ pub(crate) fn update_salt(
 
             commands.entity(entity).remove::<Triggered>();
         }
+    }
+}
 
-        // Update StatusText
+pub(crate) fn update_salt_skin(mut q_salt: Query<(&SaltData, &mut StatusText, &mut GearSprite)>) {
+    for (salt, mut status, mut sprite) in q_salt.iter_mut() {
         status.0 = format!("Charges: {}", salt.charges);
-
-        // Update GearSprite
         sprite.0 = match salt.charges {
             4 => GearSpriteID::Salt4.to_visual_key(),
             3 => GearSpriteID::Salt3.to_visual_key(),
             2 => GearSpriteID::Salt2.to_visual_key(),
             1 => GearSpriteID::Salt1.to_visual_key(),
-            // Empty
             _ => GearSpriteID::Salt0.to_visual_key(),
         };
     }
 }
 
-/// System to handle salt pile logic.
 fn salt_pile_system(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    // Retrieve Ghost Position
     mut ghosts: Query<(&mut GhostSprite, &Position)>,
-    // Retrieve SaltPile Position
     mut salt_piles: Query<(Entity, &Position), With<SaltPile>>,
 ) {
     let measure = metrics::SALT_PILE.time_measure();
@@ -86,21 +76,14 @@ fn salt_pile_system(
             if ghost_position.distance(salt_pile_position) < 2.0
                 && ghost.salty_effect_timer.elapsed_secs() > 1.0
             {
-                // Increase ghost rage
                 ghost.rage += 10.0;
-
-                // Reset salty_effect_timer to apply the side effect
                 ghost.salty_effect_timer.reset();
 
-                // Spawn salt particles
                 for _ in 0..5 {
-                    // Copy the salt pile's position
                     let mut particle_position = *salt_pile_position;
-
-                    // Add a random offset to the particle position
                     particle_position.x += random_seed::rng().random_range(-0.2..0.2);
                     particle_position.y += random_seed::rng().random_range(-0.2..0.2);
-                    let _salt_particle_entity = commands
+                    commands
                         .spawn(Sprite {
                             image: asset_server.load("img/salt_particle.png"),
                             custom_size: Some(Vec2::new(4.0, 4.0)),
@@ -109,19 +92,13 @@ fn salt_pile_system(
                         .insert(Transform::from_translation(perspective::to_screen_coord(
                             particle_position,
                         )))
-                        // Insert the modified Position
                         .insert(particle_position)
                         .insert(GameSprite)
                         .insert(SaltParticle)
-                        .insert(SaltParticleTimer(Timer::from_seconds(
-                            30.0,
-                            TimerMode::Once,
-                        )))
-                        .insert(SpriteLayer::default())
-                        .id();
+                        .insert(SaltParticleTimer(Timer::from_seconds(30.0, TimerMode::Once)))
+                        .insert(SpriteLayer::default());
                 }
 
-                // Despawn salt pile
                 commands.entity(salt_pile_entity).despawn();
             }
         }
@@ -130,7 +107,6 @@ fn salt_pile_system(
     measure.end_ms();
 }
 
-/// System to handle salt particle logic.
 fn salt_particle_system(
     mut commands: Commands,
     time: Res<Time>,
@@ -146,7 +122,6 @@ fn salt_particle_system(
             continue;
         }
 
-        // Apply fade-out effect
         transform.scale.x /= 1.05_f32.powf(dt);
         transform.scale.y /= 1.05_f32.powf(dt);
         transform.scale.z /= 1.05_f32.powf(dt);
@@ -157,7 +132,6 @@ fn salt_particle_system(
     measure.end_ms();
 }
 
-/// System to handle salt trace logic.
 fn salty_trace_system(
     mut commands: Commands,
     time: Res<Time>,
@@ -171,25 +145,18 @@ fn salty_trace_system(
     for (entity, mut map_color, mut uv_reactive, mut salty_trace_timer) in salty_traces.iter_mut() {
         salty_trace_timer.0.tick(time.delta());
 
-        // --- UV Reactivity Fading --- 3 minutes in seconds
         const UV_FADE_DURATION: f32 = 180.0;
         uv_reactive.0 =
             (2.0 - salty_trace_timer.0.elapsed_secs() / UV_FADE_DURATION).clamp(0.0, 1.0);
 
-        // --- Opacity Fading --- Start fading opacity after UV glow fades
         const OPACITY_FADE_START: f32 = UV_FADE_DURATION;
-
-        // 5 minutes in seconds
         const OPACITY_FADE_DURATION: f32 = 300.0;
         if salty_trace_timer.0.elapsed_secs() > OPACITY_FADE_START {
             let fade_progress =
                 (salty_trace_timer.0.elapsed_secs() - OPACITY_FADE_START) / OPACITY_FADE_DURATION;
-
-            // Linear fade
             map_color.color.set_alpha(1.0 - fade_progress);
         }
 
-        // --- Despawn ---
         if salty_trace_timer.0.is_finished() && map_color.color.alpha() == 0.0 {
             commands.entity(entity).despawn();
         }
@@ -199,8 +166,15 @@ fn salty_trace_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_salt);
-    app.add_systems(Update, salt_particle_system);
-    app.add_systems(Update, salt_pile_system);
-    app.add_systems(Update, salty_trace_system);
+    app.add_systems(Update, update_salt_skeleton);
+    app.add_systems(
+        Update,
+        (
+            update_salt_skin,
+            salt_particle_system,
+            salt_pile_system,
+            salty_trace_system,
+        )
+            .run_if(resource_exists::<LocalPlayerRole>),
+    );
 }

@@ -12,10 +12,12 @@ use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::Emissive;
+use unreplicon_core::ownership::LocallyOwned;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
+use untypes_core::roles::LocalPlayerRole;
 use untypes_core::states::AppState;
 
 use crate::metrics;
@@ -28,83 +30,94 @@ pub(crate) use ungearitems_core::components::repellentflask::RepellentFlask;
 // Colors for repellent particles
 const ELECTRIC_BLUE: Color = Color::srgba(0.0, 0.3, 1.0, 1.0);
 const BRIGHT_RED: Color = Color::srgba(1.0, 0.2, 0.0, 1.0);
+use std::collections::HashMap;
 use std::ops::{Add, Mul};
 
-pub(crate) fn update_repellentflask(
-    mut q_repellent: Query<(
-        Entity,
-        &mut RepellentFlask,
-        &mut StatusText,
-        &mut GearSprite,
-        &Position,
-        &EquipmentPosition,
-        Option<&Triggered>,
-    )>,
-    _gs_audio: SoundEmitter,
+pub(crate) fn update_repellentflask_skeleton(
+    mut q_repellent: Query<(Entity, &mut RepellentFlask), With<LocallyOwned>>,
+    q_triggered: Query<&Triggered>,
     mut summary: ResMut<SummaryData>,
     mut commands: Commands,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+    mut gs_audio: SoundEmitter,
 ) {
-    let is_authority = authority.is_some();
-    for (entity, mut repellent, mut status, mut sprite, pos, ep, triggered) in
-        q_repellent.iter_mut()
-    {
-        if triggered.is_some()
+    for (entity, mut repellent) in q_repellent.iter_mut() {
+        if q_triggered.get(entity).is_ok()
             && !repellent.active
             && repellent.qty > 0
             && repellent.liquid_content.is_some()
         {
             repellent.active = true;
+            gs_audio.play_audio_nopos("sounds/spray.ogg".into(), 0.8);
             commands.entity(entity).remove::<Triggered>();
         }
 
         if repellent.active {
             let mut rng = random_seed::rng();
             if rng.random_range(0.0..1.0) <= 0.5 {
-                if is_authority {
-                    if repellent.qty == RepellentFlask::MAX_QTY {
-                        summary.repellent_used_amt += 1;
-                    }
-                    repellent.qty -= 1;
-                    if repellent.qty <= 0 {
-                        repellent.qty = 0;
-                        repellent.active = false;
-                    }
+                if repellent.qty == RepellentFlask::MAX_QTY {
+                    summary.repellent_used_amt += 1;
                 }
-
-                if repellent.qty > 0
-                    && let Some(liquid_content) = repellent.liquid_content
-                {
-                    let mut pos = *pos;
-                    pos.z += 0.2;
-                    let spread: f32 = if matches!(ep, EquipmentPosition::Deployed) {
-                        0.1
-                    } else {
-                        0.4
-                    };
-                    pos.x += rng.random_range(-spread..spread);
-                    pos.y += rng.random_range(-spread..spread);
-                    commands
-                        .spawn(Sprite {
-                            color: Color::NONE,
-                            ..default()
-                        })
-                        .insert(pos)
-                        .insert(GameSprite)
-                        .insert(MapColor {
-                            color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
-                        })
-                        .insert(Emissive {
-                            color: css::YELLOW.into(),
-                            intensity: 1.0,
-                            light_reactivity: 2.0,
-                            pulse_speed: 10.0,
-                        })
-                        .insert(RepellentParticle::new(liquid_content))
-                        .insert(SpriteLayer::default());
+                repellent.qty -= 1;
+                if repellent.qty <= 0 {
+                    repellent.qty = 0;
+                    repellent.active = false;
                 }
             }
         }
+    }
+}
+
+pub(crate) fn update_repellentflask_skin(
+    mut q_repellent: Query<(
+        Entity,
+        &RepellentFlask,
+        &mut StatusText,
+        &mut GearSprite,
+        &Position,
+        &EquipmentPosition,
+    )>,
+    mut commands: Commands,
+    mut emitted_qty: Local<HashMap<Entity, i32>>,
+) {
+    for (entity, repellent, mut status, mut sprite, pos, ep) in q_repellent.iter_mut() {
+        let prev_qty = emitted_qty.get(&entity).copied().unwrap_or(repellent.qty);
+        if prev_qty > repellent.qty
+            && repellent.qty >= 0
+            && let Some(liquid_content) = repellent.liquid_content
+        {
+            let mut rng = random_seed::rng();
+            for _ in repellent.qty..prev_qty {
+                let mut particle_pos = *pos;
+                particle_pos.z += 0.2;
+                let spread: f32 = if matches!(ep, EquipmentPosition::Deployed) {
+                    0.1
+                } else {
+                    0.4
+                };
+                particle_pos.x += rng.random_range(-spread..spread);
+                particle_pos.y += rng.random_range(-spread..spread);
+
+                commands
+                    .spawn(Sprite {
+                        color: Color::NONE,
+                        ..default()
+                    })
+                    .insert(particle_pos)
+                    .insert(GameSprite)
+                    .insert(MapColor {
+                        color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
+                    })
+                    .insert(Emissive {
+                        color: css::YELLOW.into(),
+                        intensity: 1.0,
+                        light_reactivity: 2.0,
+                        pulse_speed: 10.0,
+                    })
+                    .insert(RepellentParticle::new(liquid_content))
+                    .insert(SpriteLayer::default());
+            }
+        }
+        emitted_qty.insert(entity, repellent.qty);
 
         // Update StatusText
         let name = "Repellent";
@@ -122,7 +135,8 @@ pub(crate) fn update_repellentflask(
 
         let msg = if repellent.qty > 0 && repellent.liquid_content.is_some() {
             if repellent.active {
-                "Emptying flask...\nGet close to the ghost!".to_string()
+                let remaining = (repellent.qty as f32 * 0.5) as i32; // approximate
+                format!("Emptying flask... {} units left", remaining)
             } else {
                 "Flask ready.\nActivate near the Ghost.".to_string()
             }
@@ -339,6 +353,11 @@ fn repellent_update(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_repellentflask);
-    app.add_systems(Update, repellent_update.run_if(in_state(AppState::InGame)));
+    app.add_systems(Update, update_repellentflask_skeleton);
+    app.add_systems(
+        Update,
+        (update_repellentflask_skin, repellent_update)
+            .run_if(in_state(AppState::InGame))
+            .run_if(resource_exists::<LocalPlayerRole>),
+    );
 }

@@ -104,24 +104,39 @@ impl bevy::ecs::entity::MapEntities for RequestPickupGear {
     }
 }
 
+use ungearitems_core::components::flashlight::FlashlightStatus;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Reflect)]
+pub enum GearSkeletonState {
+    Flashlight(FlashlightStatus),
+    UVTorch(bool),
+    RedTorch(bool),
+    RepellentFlask {
+        qty: i32,
+        liquid_content: Option<GhostType>,
+    },
+    Salt(u8),
+    Sage {
+        is_active: bool,
+        consumed: bool,
+    },
+    Quartz(u8),
+    Toggleable(bool),
+}
+
 /// Message sent by the client to the server to report its owned gear state.
 #[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]
 pub struct ExportGearStateMessage {
     pub entity: Entity,
-    /// Flashlight status level: 0=Off, 1=Low, 2=Mid, 3=High.
-    pub status_level: u8,
-    pub battery: f32,
-    pub temperature: f32,
+    pub state: GearSkeletonState,
 }
 
 impl Default for ExportGearStateMessage {
     fn default() -> Self {
         Self {
             entity: Entity::PLACEHOLDER,
-            status_level: 0,
-            battery: 100.0,
-            temperature: 20.0,
+            state: GearSkeletonState::Toggleable(false),
         }
     }
 }

@@ -1,6 +1,7 @@
 mod auth;
 mod bridge;
 mod connection;
+pub(crate) mod debug;
 pub(crate) mod ghost;
 pub(crate) mod lobby;
 pub(crate) mod map_sync;
@@ -21,4 +22,5 @@ pub(crate) fn app_setup(app: &mut App) {
     players::app_setup(app);
     ghost::app_setup(app);
     map_sync::app_setup(app);
+    debug::app_setup(app);
 }

@@ -15,6 +15,7 @@ pub(crate) struct SpiritBoxInternal {
 use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
+use untypes_core::roles::LocalPlayerRole;
 use bevy_persistent::Persistent;
 use rand::RngExt;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;
@@ -268,5 +269,5 @@ pub(crate) fn update_spiritbox(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_spiritbox);
+    app.add_systems(Update, update_spiritbox.run_if(resource_exists::<LocalPlayerRole>));
 }

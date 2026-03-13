@@ -1,16 +1,14 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Component, Debug, Clone)]
+/// Skeleton component for UVTorch - contains only replicated state.
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect, Default)]
 pub struct UVTorch {
     pub enabled: bool,
-    pub output_power: f32,
 }
 
-impl Default for UVTorch {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            output_power: 0.0,
-        }
-    }
+/// Skin component for UVTorch - contains local simulation state, never replicated.
+#[derive(Component, Debug, Clone, Reflect, Default)]
+pub struct UVTorchSkin {
+    pub output_power: f32,
 }

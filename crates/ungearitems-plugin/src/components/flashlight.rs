@@ -12,46 +12,34 @@ use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::RngExt;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
-pub(crate) use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
-use untypes_core::cli::CliOptions;
+pub(crate) use ungearitems_core::components::flashlight::{
+    Flashlight, FlashlightSkin, FlashlightStatus,
+};
+use unreplicon_core::ownership::LocallyOwned;
 
-pub(crate) fn update_flashlight(
+pub(crate) fn update_flashlight_skeleton(
     mut commands: Commands,
-    mut q_flashlight: Query<(
-        Entity,
-        &mut Flashlight,
-        &mut LightEmitter,
-        &mut StatusText,
-        &mut GearSprite,
-        &mut Toggleable,
-        &mut Battery,
-        &mut Electronic,
-        Option<&Triggered>,
-        &Position,
-        &ItemName,
-    )>,
-    mut ga: SoundEmitter,
-    _cli: Res<CliOptions>,
+    mut q_flashlight: Query<
+        (
+            Entity,
+            &mut Flashlight,
+            &mut Toggleable,
+            &Battery,
+            &Electronic,
+            Option<&Triggered>,
+        ),
+        With<LocallyOwned>,
+    >,
 ) {
     let measure = metrics::FLASHLIGHT_UPDATE.time_measure();
-    for (
-        entity,
-        mut flashlight,
-        mut flashlight_render,
-        mut status,
-        mut sprite,
-        mut toggle,
-        mut battery,
-        electronic,
-        triggered,
-        pos,
-        name,
-    ) in q_flashlight.iter_mut()
+    for (entity, mut flashlight, mut toggle, battery, electronic, triggered) in
+        q_flashlight.iter_mut()
     {
         // Handle Trigger
         if triggered.is_some() && electronic.glitch_timer <= 0.0 {
             let next_status = flashlight.status.next().unwrap_or_default();
-            if flashlight.can_enable_status(next_status.clone(), battery.level) {
+            let is_battery_ok = battery.level > 0.0;
+            if next_status == FlashlightStatus::Off || is_battery_ok {
                 flashlight.status = next_status;
             } else if flashlight.status != FlashlightStatus::Off {
                 flashlight.status = FlashlightStatus::Off;
@@ -62,39 +50,76 @@ pub(crate) fn update_flashlight(
 
         // Sync Toggleable with FlashlightStatus
         toggle.is_on = flashlight.status != FlashlightStatus::Off;
+    }
 
-        // Update Logic
-        flashlight.frame_counter += 1;
-        flashlight.frame_counter %= 210;
-        // if is_host { -- Enable simulation on client for prediction
-        {
-            if flashlight.frame_counter.is_multiple_of(5) {
-                flashlight.rand = random_seed::rng().random_range(0..12);
-                const HS_MASS: f32 = 2.0;
-                flashlight.heatsink_temp =
-                    (flashlight.heatsink_temp * HS_MASS + flashlight.inner_temp) / (HS_MASS + 1.0);
+    measure.end_ms();
+}
+
+pub(crate) fn update_flashlight_skin(
+    mut q_flashlight: Query<(
+        &mut Flashlight,
+        &mut FlashlightSkin,
+        &mut LightEmitter,
+        &mut StatusText,
+        &mut GearSprite,
+        &Electronic,
+        &mut Battery,
+        &ItemName,
+        &Position,
+        Option<&LocallyOwned>,
+    )>,
+    mut ga: SoundEmitter,
+) {
+    let measure = metrics::FLASHLIGHT_UPDATE.time_measure();
+    for (
+        mut flashlight,
+        mut skin,
+        mut flashlight_render,
+        mut status,
+        mut sprite,
+        electronic,
+        mut battery,
+        name,
+        pos,
+        locally_owned,
+    ) in q_flashlight.iter_mut()
+    {
+        skin.frame_counter = skin.frame_counter.wrapping_add(1) % 210;
+
+        if skin.frame_counter % 5 == 0 {
+            skin.rand = random_seed::rng().random_range(0..12);
+            const HS_MASS: f32 = 2.0;
+            skin.heatsink_temp = (skin.heatsink_temp * HS_MASS + skin.inner_temp) / (HS_MASS + 1.0);
+        }
+
+        // Update Battery Drain Rate (only for local authority)
+        if locally_owned.is_some() {
+            battery.drain_rate = match flashlight.status {
+                FlashlightStatus::Off => 0.0,
+                FlashlightStatus::Low => 4.0,
+                FlashlightStatus::Mid => 16.0,
+                FlashlightStatus::High => 64.0,
+            } / 5000.0;
+        }
+
+        if electronic.glitch_timer <= 0.0 {
+            if battery.level <= 0.0 && locally_owned.is_some() {
+                flashlight.status = FlashlightStatus::Off;
             }
-
-            // Update Battery Drain Rate
-            battery.drain_rate = flashlight.calculate_output_power() / 5000.0;
-
-            if electronic.glitch_timer <= 0.0 {
-                if battery.level <= 0.0 {
+            skin.inner_temp += skin.output_power / 50000.0;
+            skin.inner_temp /= 1.00032;
+            if skin.inner_temp > 1.0 && flashlight.status != FlashlightStatus::Off {
+                if locally_owned.is_some() {
                     flashlight.status = FlashlightStatus::Off;
                 }
-                flashlight.inner_temp += flashlight.output_power / 50000.0;
-                flashlight.inner_temp /= 1.00032;
-                if flashlight.inner_temp > 1.0 && flashlight.status != FlashlightStatus::Off {
-                    flashlight.status = FlashlightStatus::Off;
-                    ga.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
-                }
+                ga.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
             }
         }
 
-        flashlight.update_output_power(battery.level, electronic.glitch_timer);
+        skin.update_output_power(&flashlight.status, battery.level, electronic.glitch_timer);
 
         // Sync with Render Component
-        flashlight_render.power = flashlight.output_power;
+        flashlight_render.power = skin.output_power;
         if electronic.glitch_intensity > 0.01 {
             let mut color = Color::WHITE.to_srgba();
             let k = electronic.glitch_intensity.min(1.0);
@@ -109,7 +134,7 @@ pub(crate) fn update_flashlight(
         // Update Sprite
         sprite.0 = if electronic.glitch_timer > 0.0 {
             GearSpriteID::Flashlight3.to_visual_key()
-        } else if flashlight.rand == 0 {
+        } else if skin.rand == 0 {
             match flashlight.status {
                 FlashlightStatus::Off => GearSpriteID::FlashlightOff.to_visual_key(),
                 FlashlightStatus::Low => GearSpriteID::Flashlight2.to_visual_key(),
@@ -127,7 +152,7 @@ pub(crate) fn update_flashlight(
 
         // Update Status Text
         let on_s = flashlight.status.as_ref();
-        let overheat = if flashlight.heatsink_temp > 0.8 {
+        let overheat = if skin.heatsink_temp > 0.8 {
             "OVERHEAT"
         } else {
             ""
@@ -142,7 +167,7 @@ pub(crate) fn update_flashlight(
             };
             status.0 = format!("{}: {}  {}\n{}", name.0, on_s, overheat, garbled);
         } else {
-            let heat_temp = 15.0 + flashlight.heatsink_temp * 70.0;
+            let heat_temp = 15.0 + skin.heatsink_temp * 70.0;
             status.0 = format!(
                 "{}: {}  {}\nBattery:   {:>3.0}% {:>5.1}ºC",
                 name.0,
@@ -157,6 +182,16 @@ pub(crate) fn update_flashlight(
     measure.end_ms();
 }
 
+fn hydrate_flashlight_skin(
+    mut commands: Commands,
+    q_new: Query<Entity, (Added<Flashlight>, Without<FlashlightSkin>)>,
+) {
+    for entity in q_new.iter() {
+        commands.entity(entity).insert(FlashlightSkin::default());
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_flashlight);
+    app.add_systems(Update, update_flashlight_skeleton);
+    app.add_systems(Update, (hydrate_flashlight_skin, update_flashlight_skin));
 }

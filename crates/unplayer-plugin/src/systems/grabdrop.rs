@@ -15,6 +15,7 @@ use unrender_std::components::sprite_layer::SpriteLayer;
 use unreplicon_core::messages::{
     HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent, OwnershipReleased, RequestPickupGear,
 };
+use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::position::Position;
 
 fn sync_held_gear_position(
@@ -98,6 +99,7 @@ fn grab_object(
                         }
 
                         if grabbed {
+                            commands.entity(entity).insert(LocallyOwned);
                             commands.entity(entity).remove::<FloorItemCollidable>();
                             commands.entity(entity).remove::<DeployedGear>();
                             commands.entity(entity).remove::<Sprite>();
@@ -191,6 +193,7 @@ fn drop_object(
 
             if let Some(entity) = player_gear.right_hand.take() {
                 if authority.is_some() {
+                    commands.entity(entity).remove::<LocallyOwned>();
                     commands.entity(entity).insert(*player_pos);
                     commands.entity(entity).insert(FloorItemCollidable);
                     commands.entity(entity).insert(EquipmentPosition::Deployed);
@@ -215,6 +218,7 @@ fn drop_object(
                         });
                     }
                 } else {
+                    commands.entity(entity).remove::<LocallyOwned>();
                     writer_released.write(OwnershipReleased { entity });
                 }
 

@@ -7970,6 +7970,7 @@ dependencies = [
  "unevents-core",
  "unfoundation-core",
  "ungear-core",
+ "ungearitems-core",
  "unghost-core",
  "uuid",
 ]
