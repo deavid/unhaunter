@@ -1,14 +1,12 @@
 use crate::components::player::Stamina;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unghost_core::components::ghost_sprite::GhostSprite;
-use unreplicon_core::ownership::LocallyOwned;
-use untags_core::tags::GhostTag;
 use unbehavior::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
 use ungear_core::components::playergear::PlayerGear;
+use unghost_core::components::ghost_sprite::GhostSprite;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerInput;
@@ -16,9 +14,11 @@ use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;
+use unreplicon_core::ownership::LocallyOwned;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
+use untags_core::tags::GhostTag;
 use unthermal_core::resources::ThermalGrid;
 use untruck_core::components::in_truck::InTruck;
 use unui_core::components::game_ui::DamageBackground;
@@ -217,6 +217,7 @@ fn detect_and_apply_death(
         Without<PlayerSpectating>,
     >,
     mut ev_death: MessageWriter<PlayerDiedEvent>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
     for (entity, player, mut gear) in player_query.iter_mut() {
         if player.health <= 0.0 {
@@ -226,8 +227,8 @@ fn detect_and_apply_death(
             );
             commands.entity(entity).insert(PlayerSpectating);
 
-            // Despawn all gear
-            if let Some(ref mut gear) = gear {
+            // Despawn all gear (Authoritative only)
+            if let (Some(_), Some(gear)) = (authority.as_ref(), gear.as_mut()) {
                 if let Some(e) = gear.left_hand {
                     commands.entity(e).despawn();
                 }
