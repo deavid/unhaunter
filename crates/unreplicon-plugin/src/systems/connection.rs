@@ -50,7 +50,7 @@ fn handle_disconnect_request(
     }
     ev.clear();
 
-    info!(
+    warn!(
         "DisconnectRequest received — tearing down client transport and resetting to offline authority"
     );
 
