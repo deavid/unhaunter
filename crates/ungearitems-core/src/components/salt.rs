@@ -15,7 +15,8 @@ impl Default for SaltData {
 }
 
 /// Marker component for salt pile entities.
-#[derive(Component)]
+#[derive(Component, Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
 pub struct SaltPile;
 
 /// Marker component for salt particle entities.

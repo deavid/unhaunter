@@ -26,7 +26,7 @@ use unreplicon_core::messages::{
     GearSkeletonState, HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent,
     HostInteractionOccurred, HostMovableMotionEvent, InteractionRequestMessage,
     MovableMotionBroadcast, OwnershipGranted, OwnershipReleased, RemoteInteractionBroadcast,
-    RequestPickupGear, TruckLoadoutAction, TruckLoadoutMessage,
+    RequestPickupGear, SaltDroppedMessage, TruckLoadoutAction, TruckLoadoutMessage,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -43,6 +43,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_client_message::<ExportStateMessage>(Channel::Unreliable);
     app.add_client_message::<InteractionRequestMessage>(Channel::Ordered);
     app.add_client_message::<TruckLoadoutMessage>(Channel::Ordered);
+    app.add_client_message::<SaltDroppedMessage>(Channel::Ordered);
     app.add_mapped_client_message::<RequestPickupGear>(Channel::Ordered);
     app.add_mapped_client_message::<OwnershipReleased>(Channel::Ordered);
     app.add_mapped_client_message::<ExportGearStateMessage>(Channel::Unreliable);
@@ -83,6 +84,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<ungearitems_core::components::redtorch::RedTorch>();
     app.replicate::<ungearitems_core::components::repellentflask::RepellentFlask>();
     app.replicate::<ungearitems_core::components::salt::SaltData>();
+    app.replicate::<ungearitems_core::components::salt::SaltPile>();
     app.replicate::<ungearitems_core::components::sage::SageBundleData>();
     app.replicate::<ungearitems_core::components::quartz::QuartzStoneData>();
 
@@ -147,6 +149,7 @@ pub(super) fn app_setup(app: &mut App) {
             handle_request_pickup_gear,
             handle_ownership_released,
             handle_export_gear_state,
+            handle_salt_drop,
         )
             .run_if(resource_exists::<AuthorityRole>),
     );
@@ -730,6 +733,30 @@ fn handle_export_gear_state(
                 }
             }
         }
+    }
+}
+
+/// Server: handle `SaltDroppedMessage` from join clients.
+///
+/// Spawns a `Replicated` `SaltPile` entity at the reported position so that
+/// bevy_replicon broadcasts it to all connected clients.
+fn handle_salt_drop(
+    mut reader: MessageReader<FromClient<SaltDroppedMessage>>,
+    mut commands: Commands,
+) {
+    for msg in reader.read() {
+        let [x, y, z, visual_priority] = msg.message.pos;
+        let pos = unspatial_core::position::Position {
+            x,
+            y,
+            z,
+            visual_priority,
+        };
+        commands.spawn((
+            ungearitems_core::components::salt::SaltPile,
+            pos,
+            Replicated,
+        ));
     }
 }
 

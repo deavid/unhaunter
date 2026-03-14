@@ -12,11 +12,13 @@ use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
+use bevy_replicon::prelude::Replicated;
+use unreplicon_core::messages::SaltDroppedMessage;
 use unreplicon_core::ownership::LocallyOwned;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
-use untypes_core::roles::LocalPlayerRole;
+use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 
 use crate::metrics;
 
@@ -25,28 +27,49 @@ pub(crate) fn update_salt_skeleton(
     q_triggered: Query<&Triggered>,
     mut gs_audio: SoundEmitter,
     mut commands: Commands,
+    authority: Option<Res<AuthorityRole>>,
+    mut salt_drop_writer: MessageWriter<SaltDroppedMessage>,
 ) {
     for (entity, mut salt, pos) in q_salt.iter_mut() {
         if q_triggered.get(entity).is_ok() && salt.charges > 0 {
             salt.charges -= 1;
-
-            commands
-                .spawn(Sprite {
-                    image: gs_audio.asset_server.load("img/salt_pile.png"),
-                    ..default()
-                })
-                .insert(
-                    Transform::from_translation(perspective::to_screen_coord(*pos))
-                        .with_scale(Vec3::new(0.5, 0.5, 0.5)),
-                )
-                .insert(SaltPile)
-                .insert(GameSprite)
-                .insert(*pos)
-                .insert(SpriteLayer::default());
             gs_audio.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
-
             commands.entity(entity).remove::<Triggered>();
+
+            if authority.is_some() {
+                // Offline or PeerHost: authority spawns the replicated pile directly.
+                commands.spawn((SaltPile, *pos, Replicated));
+            } else {
+                // Pure join client: ask the authority to spawn the pile.
+                salt_drop_writer.write(SaltDroppedMessage {
+                    pos: [pos.x, pos.y, pos.z, pos.visual_priority],
+                });
+            }
         }
+    }
+}
+
+/// Adds visual components to a newly arrived `SaltPile` entity.
+///
+/// Runs on any node with a local player viewport. On the authority (offline/PeerHost)
+/// the entity is spawned without visuals and this system provides them. On pure join
+/// clients the entity arrives via replication and this system hydrates it.
+fn hydrate_salt_pile_visuals(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    q_new: Query<(Entity, &Position), (Added<SaltPile>, Without<Sprite>)>,
+) {
+    for (entity, pos) in q_new.iter() {
+        commands.entity(entity).insert((
+            Sprite {
+                image: asset_server.load("img/salt_pile.png"),
+                ..default()
+            },
+            Transform::from_translation(perspective::to_screen_coord(*pos))
+                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+            GameSprite,
+            SpriteLayer::default(),
+        ));
     }
 }
 
@@ -169,11 +192,15 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_salt_skeleton);
     app.add_systems(
         Update,
+        salt_pile_system.run_if(resource_exists::<AuthorityRole>),
+    );
+    app.add_systems(
+        Update,
         (
             update_salt_skin,
             salt_particle_system,
-            salt_pile_system,
             salty_trace_system,
+            hydrate_salt_pile_visuals,
         )
             .run_if(resource_exists::<LocalPlayerRole>),
     );

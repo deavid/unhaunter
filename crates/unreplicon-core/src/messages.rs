@@ -317,6 +317,17 @@ pub struct HostFloorGearPickedUpEvent {
     pub pos: [f32; 3],
 }
 
+/// Sent by a join client to notify the authority that the player dropped a salt pile.
+///
+/// On the authority this arrives as `FromClient<SaltDroppedMessage>`.
+/// The authority spawns a `Replicated` `SaltPile` entity at the given position,
+/// which bevy_replicon then replicates to all connected clients.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct SaltDroppedMessage {
+    /// World-space position `[x, y, z, visual_priority]` where the salt was dropped.
+    pub pos: [f32; 4],
+}
+
 /// Broadcast by the server to all join clients when a gear item is placed on the floor.
 ///
 /// Clients spawn a local gear entity with `FloorItemCollidable`, `DeployedGear`, and
