@@ -878,16 +878,21 @@ fn handle_interaction_request(
     }
 }
 
-/// Server: Detect behavior changes (doors opening, lights toggling, etc.) and broadcast the absolute final state.
-/// Any interaction that mutates Behavior will trigger this, ensuring all clients stay in sync.
+/// Server: Detect behavior changes on dynamic interactive entities and broadcast the absolute final state.
+/// Filters to only entities with `TmxEntityId` (doors, switches, lights, etc.).
+/// All clients stay in sync with the authoritative behavior changes.
 fn broadcast_authoritative_behavior_changes(
     q_changed: Query<
-        (&MapEntityFieldBPos, &unbehavior::behavior::Behavior),
+        (
+            &MapEntityFieldBPos,
+            &unbehavior::behavior::Behavior,
+            &TmxEntityId,
+        ),
         Changed<unbehavior::behavior::Behavior>,
     >,
     mut ev_broadcast: MessageWriter<ToClients<RemoteInteractionBroadcast>>,
 ) {
-    for (bpos, beh) in &q_changed {
+    for (bpos, beh, tmx_id) in &q_changed {
         let new_tileuid = beh.cfg().tileuid;
         let final_state = beh.state();
         info!(
@@ -897,6 +902,7 @@ fn broadcast_authoritative_behavior_changes(
         ev_broadcast.write(ToClients {
             mode: SendMode::Broadcast,
             message: RemoteInteractionBroadcast {
+                tmx_entity_id: Some(tmx_id.clone()),
                 position: [bpos.0.x as i32, bpos.0.y as i32, bpos.0.z as i32],
                 ietype: InteractionExecutionType::ChangeState,
                 force_tuid: Some(new_tileuid),
@@ -1097,20 +1103,30 @@ fn handle_truck_loadout_message(
 
 fn apply_remote_interaction(
     mut reader: MessageReader<RemoteInteractionBroadcast>,
-    q_interactive: Query<(Entity, &MapEntityFieldBPos), With<Interactive>>,
+    q_by_tmx: Query<(Entity, &TmxEntityId)>,
+    q_by_pos: Query<(Entity, &MapEntityFieldBPos), With<Interactive>>,
     mut ev_interact: MessageWriter<ExecuteInteractionEvent>,
 ) {
     for msg in reader.read() {
-        let target_bpos = BoardPosition {
-            x: msg.position[0] as i64,
-            y: msg.position[1] as i64,
-            z: msg.position[2] as i64,
+        // Prefer lookup by TmxEntityId if available — it's unambiguous even when multiple
+        // interactive entities share the same board position.
+        let found = if let Some(tmx_id) = &msg.tmx_entity_id {
+            q_by_tmx
+                .iter()
+                .find(|(_, got_tmx_id)| *got_tmx_id == tmx_id)
+                .map(|(e, _)| e)
+        } else {
+            // Fallback: look up by board position (for non-dynamic entities that broadcast)
+            let target_bpos = BoardPosition {
+                x: msg.position[0] as i64,
+                y: msg.position[1] as i64,
+                z: msg.position[2] as i64,
+            };
+            q_by_pos
+                .iter()
+                .find(|(_, bpos)| bpos.0 == target_bpos)
+                .map(|(e, _)| e)
         };
-
-        let found = q_interactive
-            .iter()
-            .find(|(_, bpos)| bpos.0 == target_bpos)
-            .map(|(e, _)| e);
 
         if let Some(entity) = found {
             ev_interact.write(ExecuteInteractionEvent {

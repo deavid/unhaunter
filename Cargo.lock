@@ -7968,6 +7968,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
+ "unbehavior",
  "unevents-core",
  "unfoundation-core",
  "ungear-core",
