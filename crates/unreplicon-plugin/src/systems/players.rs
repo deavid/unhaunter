@@ -1160,7 +1160,6 @@ fn fallback_player_ownership_from_uuid(
                 entity, local_uuid
             );
             commands.entity(entity).insert(LocallyOwned);
-            commands.entity(entity).remove::<Replicated>();
 
             // Also grant LocallyOwned to all gear entities this player holds
             if let Ok(gear) = q_player_gear.get(entity) {
