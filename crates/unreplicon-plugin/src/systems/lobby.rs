@@ -70,7 +70,7 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Server-side: broadcast InGame state to clients when the mission starts.
     app.add_systems(
-        OnEnter(AppState::InGame),
+        OnEnter(untypes_core::states::SimulationState::Ready),
         set_server_state_ingame.run_if(resource_exists::<AuthorityRole>),
     );
 

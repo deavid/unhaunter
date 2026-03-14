@@ -46,11 +46,11 @@ pub(super) fn app_setup(app: &mut App) {
         setup_ghost_entities.run_if(resource_exists::<AuthorityRole>),
     );
     app.add_systems(
-        OnEnter(AppState::InGame),
+        OnEnter(SimulationState::Spawning),
         setup_goal_entity.run_if(resource_exists::<AuthorityRole>),
     );
     app.add_systems(
-        OnExit(AppState::InGame),
+        OnEnter(SimulationState::TearingDown),
         cleanup_ghost_entities.run_if(resource_exists::<AuthorityRole>),
     );
 
@@ -77,7 +77,7 @@ pub(super) fn app_setup(app: &mut App) {
         Update,
         (handle_journal_evidence_toggle, handle_journal_ghost_toggle)
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(SimulationState::Ready)),
     );
 
     // Server: mission lifecycle

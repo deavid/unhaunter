@@ -132,7 +132,7 @@ pub(super) fn app_setup(app: &mut App) {
     // Host/offline: spawn and tag player entities when InGame starts.
     // Gated by AuthorityRole so it runs on Host and Dedicated Server.
     app.add_systems(
-        OnEnter(AppState::InGame),
+        OnEnter(SimulationState::Spawning),
         setup_mission_players.run_if(resource_exists::<AuthorityRole>),
     );
 
@@ -156,7 +156,7 @@ pub(super) fn app_setup(app: &mut App) {
         Update,
         spawn_late_joining_players
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(AppState::InGame))
+            .run_if(in_state(SimulationState::Ready))
             .run_if(resource_exists::<RepliconPlayerSpawningActive>),
     );
 
@@ -201,7 +201,10 @@ pub(super) fn app_setup(app: &mut App) {
     );
 
     // Cleanup the spawning-active marker when leaving InGame
-    app.add_systems(OnExit(AppState::InGame), cleanup_mission_players);
+    app.add_systems(
+        OnEnter(SimulationState::TearingDown),
+        cleanup_mission_players,
+    );
 
     // Client: hydrate gear entities that arrive via replication.
     app.add_systems(

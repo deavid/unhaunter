@@ -151,7 +151,8 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (fuse_box_overload_system, breaker_sync_system)
-            .run_if(in_state(untypes_core::states::AppState::InGame)),
+            .run_if(in_state(untypes_core::states::SimulationState::Ready))
+            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
     );
     app.add_systems(Startup, initialize_fuse_box_system);
 }
