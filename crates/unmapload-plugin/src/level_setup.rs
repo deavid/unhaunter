@@ -6,6 +6,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
+use bevy_replicon::prelude::Remote;
 use ndarray::Array3;
 use unbehavior::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::resources::board_topology::{
@@ -67,7 +68,7 @@ pub(crate) struct LoadLevelSystemParam<'w> {
 fn load_level_handler(
     mut ev: MessageReader<LevelLoadedEvent>,
     mut commands: Commands,
-    qgs: Query<Entity, Or<(With<GameSprite>, With<GameSound>)>>,
+    qgs: Query<Entity, (Or<(With<GameSprite>, With<GameSound>)>, Without<Remote>)>,
     mut p: LoadLevelSystemParam,
     mut ev_geometry_init: MessageWriter<MapGeometryInitializedEvent>,
     time: Res<Time>,
@@ -83,7 +84,7 @@ fn load_level_handler(
     *p.loading_status = LevelLoadingStatus::JustStarted;
 
     // --- 1. Cleanup & Reset ---
-    // Despawn existing game entities
+    // Despawn existing game entities (except remotely replicated!)
     for entity in &qgs {
         commands.entity(entity).despawn();
     }
