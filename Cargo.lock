@@ -8185,6 +8185,7 @@ dependencies = [
  "bevy-persistent",
  "bevy_asset_loader",
  "bevy_platform",
+ "bevy_replicon",
  "unbehavior",
  "undifficulty-core",
  "unevents-core",

@@ -1,6 +1,7 @@
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::types::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
+use bevy_replicon::prelude::Replicated;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -468,7 +469,7 @@ fn button_clicked(
     _craft_tracker: ResMut<RepellentCraftTracker>,
     gear_registry: Res<GearSpawnerRegistry>,
     mut commands: Commands,
-    lobby_presence: Option<Res<LobbyPresenceRole>>,
+    _lobby_presence: Option<Res<LobbyPresenceRole>>,
     authority: Option<Res<untypes_core::roles::AuthorityRole>>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
 ) {
@@ -485,33 +486,71 @@ fn button_clicked(
     match &ev.0 {
         LoadoutButton::Inventory(inv) => {
             let entity = match inv.hand {
+                Hand::Left => p_gear.left_hand,
+                Hand::Right => p_gear.right_hand,
+            };
+            if entity.is_none() {
+                warn!(
+                    "Inventory button clicked but no item in hand {:?}!",
+                    inv.hand
+                );
+                return;
+            }
+            if authority.is_none() {
+                // Pure Client: Just send the intent to the server and stop.
+                match inv.hand {
+                    Hand::Left => p_gear.left_hand = None,
+                    Hand::Right => p_gear.right_hand = None,
+                }
+                ev_loadout.write(TruckLoadoutMessage {
+                    action: TruckLoadoutAction::ClearHand(inv.hand),
+                });
+                return;
+            }
+
+            // Authority (Host) only below this line:
+            let entity = match inv.hand {
                 Hand::Left => p_gear.left_hand.take(),
                 Hand::Right => p_gear.right_hand.take(),
             };
             if let Some(e) = entity {
                 commands.entity(e).despawn();
-                if authority.is_none() {
-                    ev_loadout.write(TruckLoadoutMessage {
-                        action: TruckLoadoutAction::ClearHand(inv.hand),
-                    });
-                }
+            } else {
+                warn!(
+                    "Authority tried to clear hand {:?} but it was empty",
+                    inv.hand
+                );
             }
         }
         LoadoutButton::InventoryNext(invnext) => {
-            if let Some(idx) = invnext.idx
-                && idx < p_gear.inventory.len()
-            {
-                let e = p_gear.inventory.remove(idx);
-                commands.entity(e).despawn();
-                if authority.is_none() {
-                    ev_loadout.write(TruckLoadoutMessage {
-                        action: TruckLoadoutAction::ClearInventorySlot(idx),
-                    });
-                }
+            let Some(idx) = invnext.idx else {
+                warn!("InventoryNext button clicked but no index!");
+                return;
+            };
+            if idx >= p_gear.inventory.len() {
+                warn!(
+                    "InventoryNext button clicked but index {} is out of bounds!",
+                    idx
+                );
+                return;
             }
+
+            if authority.is_none() {
+                // Pure Client: Just send the intent to the server and stop.
+                p_gear.inventory.remove(idx);
+                ev_loadout.write(TruckLoadoutMessage {
+                    action: TruckLoadoutAction::ClearInventorySlot(idx),
+                });
+                return;
+            }
+
+            // Authority (Host) only below this line:
+            let e = p_gear.inventory.remove(idx);
+            commands.entity(e).despawn();
         }
         LoadoutButton::Van(kind) => {
             if *kind == GearKind::None {
+                warn!("Van button clicked but GearKind::None!");
                 return;
             }
             // Bail early if there is no room, to avoid a spurious spawn+despawn.
@@ -521,17 +560,30 @@ fn button_clicked(
             if !has_space {
                 return;
             }
+
+            if authority.is_none() {
+                // Pure Client: Just send the intent to the server and stop.
+                ev_loadout.write(TruckLoadoutMessage {
+                    action: TruckLoadoutAction::AddGear(*kind),
+                });
+                return;
+            }
+
+            // Authority (Host) only below this line:
             // Spawn item and put in hand or inventory
             let entity = gear_registry.spawn(&mut commands, *kind);
 
-            if lobby_presence.is_some() {
-                // Ensure the entity has a NetworkId so it can be synced to clients.
-                // We use heavy_rng_seed to avoid needing a direct dependency on `rand`,
-                // and clamp to >1000 to avoid reserved IDs.
-                let rng_val = unfoundation_core::random_seed::heavy_rng_seed();
-                let net_id = NetworkId(rng_val.max(1000));
-                commands.entity(entity).insert(net_id);
-            }
+            // Ensure the entity has a NetworkId so it can be synced to clients.
+            // We use heavy_rng_seed to avoid needing a direct dependency on `rand`,
+            // and clamp to >1000 to avoid reserved IDs.
+            let rng_val = unfoundation_core::random_seed::heavy_rng_seed();
+            let net_id = NetworkId(rng_val.max(1000));
+            commands.entity(entity).insert((
+                net_id,
+                Replicated,
+                unreplicon_core::ownership::Owner(unreplicon_core::ownership::OwnerId::Server),
+                unreplicon_core::ownership::LocallyOwned,
+            ));
 
             if p_gear.left_hand.is_none() {
                 p_gear.left_hand = Some(entity);
@@ -540,13 +592,6 @@ fn button_clicked(
             } else {
                 p_gear.inventory.push(entity);
             }
-            // For join clients, notify the server so it can mirror this selection
-            // in the server-side PlayerGear (used by sync_gear_to_net at mission start).
-            if authority.is_none() {
-                ev_loadout.write(TruckLoadoutMessage {
-                    action: TruckLoadoutAction::AddGear(*kind),
-                });
-            }
         }
     }
 }
@@ -554,7 +599,56 @@ fn button_clicked(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (update_loadout_buttons, update_loadout_icons, button_clicked)
+        (
+            update_loadout_buttons,
+            update_loadout_icons,
+            button_clicked,
+            auto_equip_replicated_gear,
+        )
             .run_if(in_state(GameState::Truck)),
     );
+}
+
+/// Client: Automatically equip gear entities that the server granted ownership of.
+/// Only runs for pure clients; host/authority manually equips in `button_clicked`.
+fn auto_equip_replicated_gear(
+    mut q_player_gear: Query<&mut PlayerGear, With<MainPlayer>>,
+    q_new_gear: Query<
+        Entity,
+        (
+            Added<unreplicon_core::ownership::LocallyOwned>,
+            With<ungear_core::resources::spawner::GearMarker>,
+        ),
+    >,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+) {
+    if authority.is_some() {
+        return;
+    }
+    let Some(mut p_gear) = q_player_gear.iter_mut().next() else {
+        return;
+    };
+
+    for entity in q_new_gear.iter() {
+        // If already in any slot, skip.
+        if p_gear.left_hand == Some(entity)
+            || p_gear.right_hand == Some(entity)
+            || p_gear.inventory.contains(&entity)
+        {
+            continue;
+        }
+
+        if p_gear.left_hand.is_none() {
+            p_gear.left_hand = Some(entity);
+        } else if p_gear.right_hand.is_none() {
+            p_gear.right_hand = Some(entity);
+        } else if p_gear.inventory.len() < 2 {
+            p_gear.inventory.push(entity);
+        } else {
+            warn!(
+                "Received ownership of gear entity {:?} but inventory is full!",
+                entity
+            );
+        }
+    }
 }

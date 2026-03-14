@@ -36,7 +36,7 @@ use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use untypes_core::roles::is_pure_client;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::{AppState, GameState};
+use untypes_core::states::{AppState, SimulationState};
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
@@ -165,7 +165,7 @@ pub(super) fn app_setup(app: &mut App) {
         Update,
         handle_truck_loadout_message
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(GameState::Truck)),
+            .run_if(in_state(SimulationState::Ready)),
     );
 
     // All local players (offline, host, join): send own state to the authority every frame.
@@ -926,14 +926,22 @@ fn handle_truck_loadout_message(
 ) {
     for msg in reader.read() {
         let sender_id = msg.client_id;
+        info!(
+            "TRUCK_NET: Received action {:?} from client {:?}",
+            msg.message.action, sender_id
+        );
 
-        let Some(mut p_gear) = q_players.iter_mut().find_map(|(owner, gear)| {
-            if from_owner_id(owner.0) == sender_id {
-                Some(gear)
+        let Some((owner, mut p_gear)) = q_players.iter_mut().find_map(|(owner, gear)| {
+            if crate::systems::players::from_owner_id(owner.0) == sender_id {
+                Some((owner, gear))
             } else {
                 None
             }
         }) else {
+            warn!(
+                "TRUCK_NET_FAIL: Could not find PlayerGear component for client {:?}",
+                sender_id
+            );
             continue;
         };
 
@@ -943,10 +951,28 @@ fn handle_truck_loadout_message(
                     || p_gear.right_hand.is_none()
                     || p_gear.inventory.len() < 2;
                 if !has_space {
+                    warn!(
+                        "TRUCK_NET_FAIL: Client {:?} AddGear but inventory is full on server!",
+                        sender_id
+                    );
                     continue;
                 }
                 let entity = gear_registry.spawn(&mut commands, kind);
-                commands.entity(entity).insert(Replicated);
+                let rng_val = unfoundation_core::random_seed::heavy_rng_seed();
+                let net_id = unreplicon_core::network_id::NetworkId(rng_val.max(1000));
+
+                commands.entity(entity).insert((
+                    bevy_replicon::prelude::Replicated,
+                    Owner(owner.0),
+                    net_id,
+                ));
+
+                let client_id = crate::systems::players::from_owner_id(owner.0);
+                commands.write_message(bevy_replicon::prelude::ToClients {
+                    mode: bevy_replicon::prelude::SendMode::Direct(client_id),
+                    message: unreplicon_core::messages::OwnershipGranted { entity },
+                });
+
                 if p_gear.left_hand.is_none() {
                     p_gear.left_hand = Some(entity);
                 } else if p_gear.right_hand.is_none() {
@@ -954,6 +980,10 @@ fn handle_truck_loadout_message(
                 } else {
                     p_gear.inventory.push(entity);
                 }
+                info!(
+                    "TRUCK_NET: Spawned {:?} and added to PlayerGear for {:?}",
+                    entity, sender_id
+                );
             }
             TruckLoadoutAction::ClearHand(hand) => {
                 let entity = match hand {
@@ -961,13 +991,34 @@ fn handle_truck_loadout_message(
                     Hand::Right => p_gear.right_hand.take(),
                 };
                 if let Some(e) = entity {
+                    info!("TRUCK_NET: Despawning entity {:?} from hand {:?}", e, hand);
                     commands.entity(e).despawn();
+                } else {
+                    warn!(
+                        "TRUCK_NET_FAIL: Client {:?} requested ClearHand({:?}) but server's PlayerGear slot was ALREADY EMPTY!",
+                        sender_id, hand
+                    );
+                    warn!(
+                        "TRUCK_NET_STATE: Server thinks gear is -> left: {:?}, right: {:?}, inv: {:?}",
+                        p_gear.left_hand, p_gear.right_hand, p_gear.inventory
+                    );
                 }
             }
             TruckLoadoutAction::ClearInventorySlot(idx) => {
                 if idx < p_gear.inventory.len() {
                     let e = p_gear.inventory.remove(idx);
+                    info!(
+                        "TRUCK_NET: Despawning entity {:?} from inventory slot {}",
+                        e, idx
+                    );
                     commands.entity(e).despawn();
+                } else {
+                    warn!(
+                        "TRUCK_NET_FAIL: Client {:?} requested ClearInventorySlot({}), but server's inventory length is {}",
+                        sender_id,
+                        idx,
+                        p_gear.inventory.len()
+                    );
                 }
             }
         }

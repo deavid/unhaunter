@@ -37,7 +37,7 @@ fn debug_gear_components(
     >,
 ) {
     timer.0.tick(time.delta());
-    if timer.0.elapsed_secs() < 1.0 {
+    if timer.0.elapsed_secs() < 10.0 {
         return;
     }
     timer.0.reset();
@@ -78,7 +78,7 @@ fn debug_gear_components(
             .unwrap_or_else(|| "None".to_string());
 
         info!(
-            "Entity[{:?}] Kind={:?} | {} | {} | {} | Owner={}\n  -> Flashlight={}\n  -> Pos={} Dir={}\n  -> Light={}",
+            "Entity[{:?}] Kind={:?} | {} | {} | {} | Owner={}\n  -> Flashlight={}  |  Pos={}  |  Dir={}  |  Light={}",
             entity,
             kind,
             ownership,
