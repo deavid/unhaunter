@@ -7592,6 +7592,7 @@ dependencies = [
  "unmetrics-core",
  "unplayer-core",
  "unrender-std",
+ "unreplicon-core",
  "unsettings-core",
  "unspatial-core",
  "untypes-core",

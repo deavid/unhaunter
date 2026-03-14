@@ -35,7 +35,7 @@ use crate::tile_spawning;
 ///
 /// Using this as a system parameter simplifies function signatures throughout the level loading process.
 #[derive(SystemParam)]
-pub(crate) struct LoadLevelSystemParam<'w> {
+pub(crate) struct LoadLevelSystemParam<'w, 's> {
     pub bf: ResMut<'w, BoardTopology>,
     pub bef: ResMut<'w, BoardEntityField>,
     pub bcf: ResMut<'w, BoardCollisionField>,
@@ -49,6 +49,8 @@ pub(crate) struct LoadLevelSystemParam<'w> {
     pub loading_status: ResMut<'w, LevelLoadingStatus>,
     pub cli: Res<'w, untypes_core::cli::CliOptions>,
     pub authority: Option<Res<'w, untypes_core::roles::AuthorityRole>>,
+    pub existing_tmx_entities:
+        Query<'w, 's, (Entity, &'static unbehavior::components::TmxEntityId)>,
 }
 
 /// Loads a new level based on the `LevelLoadedEvent`.
@@ -160,6 +162,12 @@ fn load_level_handler(
     sprite_db::populate_sprite_db(&mut p, &mut mesh_tileset);
 
     // --- 5. Entity Spawning ---
+    let existing_tmx_map: HashMap<_, _> = p
+        .existing_tmx_entities
+        .iter()
+        .map(|(e, id)| (id.clone(), e))
+        .collect();
+
     let mut depth_counter = 0.0;
     for (layer_idx, (maptiles, layer)) in tile_layers_iter().enumerate() {
         // Get floor z-index from the layer's floor_mapping
@@ -181,6 +189,7 @@ fn load_level_handler(
                 &mut p,
                 &mut commands,
                 &mut depth_counter,
+                &existing_tmx_map,
             );
         }
     }

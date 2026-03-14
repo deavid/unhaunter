@@ -21,6 +21,7 @@ use unrender_std::components::visuals::{
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::light::lerp_color;
+use unreplicon_core::ownership::LocallyOwned;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
@@ -62,6 +63,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 Option<&AlphaModulator>,
                 Option<&Emissive>,
             ),
+            Has<LocallyOwned>,
         ),
         With<MapTileSprite>,
     >,
@@ -256,8 +258,13 @@ pub(crate) fn apply_lighting_to_tiles_system(
             o_ecto_vis,
             o_spectral_clarity,
             (o_light_sens, o_ir_sens, o_uv_sens, o_map_color, o_miasma, o_alpha_mod, o_emissive),
+            is_locally_owned,
         )) = qt2.get_mut(*entity)
         {
+            if !is_locally_owned {
+                // Temporary debug log for remote entities
+                // warn!("Processing remote entity: {:?}", _entity_id);
+            }
             // --- Per-Entity Spectral & Visual Processing ---
             // This is the core 'flavor' of the investigation mechanics.
             // Objects react differently to UV, Red, and IR light, sometimes 'charging'
