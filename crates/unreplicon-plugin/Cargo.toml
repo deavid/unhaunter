@@ -28,6 +28,7 @@ undifficulty-core = { path = "../undifficulty-core" }
 unmapload-core = { workspace = true }
 unnavigation-core = { path = "../unnavigation-core" }
 unrender-std = { path = "../unrender-std" }
+unevents-core = { path = "../unevents-core" }
 unspatial-core = { path = "../unspatial-core" }
 unplayer-core = { path = "../unplayer-core" }
 unboard-core = { path = "../unboard-core" }

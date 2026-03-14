@@ -59,6 +59,10 @@ impl InteractiveStuff<'_, '_> {
         current_behavior: &Behavior,
     ) {
         let Some(bf) = self.bf.as_ref() else {
+            warn!(
+                "apply_visual_update: SpriteDB is None for entity {:?} tuid {:?} - Behavior will NOT be updated",
+                entity, tuid
+            );
             return;
         };
         let other = bf
@@ -70,6 +74,10 @@ impl InteractiveStuff<'_, '_> {
 
         let mut e_commands = self.commands.get_entity(entity).unwrap();
 
+        info!(
+            "apply_visual_update: inserting new Behavior for entity {:?} tuid {:?}",
+            entity, tuid
+        );
         // Update behavior (logic)
         e_commands.insert(beh);
 

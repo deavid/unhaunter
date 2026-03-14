@@ -9,9 +9,11 @@ use bevy_replicon::shared::replication::deferred_entity::DeferredEntity;
 use bevy_replicon::shared::replication::registry::ctx::{RemoveCtx, WriteCtx};
 use bevy_replicon::shared::replication::registry::rule_fns::RuleFns;
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
+use unbehavior::behavior::Interactive;
 use unbehavior::components::{FloorItemCollidable, TmxEntityId};
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unevents_core::events::roomchanged::InteractionExecutionType;
 use unfoundation_core::types::gear::Hand;
 use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
@@ -143,7 +145,6 @@ pub(super) fn app_setup(app: &mut App) {
         Update,
         (
             handle_interaction_request,
-            broadcast_host_interactions,
             broadcast_movable_motion,
             handle_export_state,
             handle_request_pickup_gear,
@@ -152,6 +153,14 @@ pub(super) fn app_setup(app: &mut App) {
             handle_salt_drop,
         )
             .run_if(resource_exists::<AuthorityRole>),
+    );
+
+    // Server-side: broadcast absolute behavior state AFTER all Update systems (and their
+    // deferred commands) have been applied. This ensures Changed<Behavior> is reliably detected
+    // even when the behavior is mutated via Commands during Update.
+    app.add_systems(
+        PostUpdate,
+        broadcast_authoritative_behavior_changes.run_if(resource_exists::<AuthorityRole>),
     );
 
     // Server-side: spawn player entities for clients that joined after mission start.
@@ -829,9 +838,8 @@ fn handle_export_state(
 /// Server: handle `InteractionRequestMessage` from connected clients.
 fn handle_interaction_request(
     mut reader: MessageReader<FromClient<InteractionRequestMessage>>,
-    q_interactive: Query<(Entity, &MapEntityFieldBPos)>,
+    q_interactive: Query<(Entity, &MapEntityFieldBPos), With<Interactive>>,
     mut ev_interact: MessageWriter<ExecuteInteractionEvent>,
-    mut ev_broadcast: MessageWriter<ToClients<RemoteInteractionBroadcast>>,
 ) {
     for msg in reader.read() {
         let target_bpos = BoardPosition {
@@ -846,36 +854,52 @@ fn handle_interaction_request(
             .map(|(e, _)| e);
 
         if let Some(entity) = found {
+            info!(
+                "SERVER: Validated door interaction at {:?} from client {:?}",
+                target_bpos, msg.client_id
+            );
+            info!(
+                "SERVER: Firing ExecuteInteractionEvent for entity {:?} (ietype={:?}, force_tuid={:?})",
+                entity, msg.message.ietype, msg.message.force_tuid
+            );
             ev_interact.write(ExecuteInteractionEvent {
                 entity,
                 ietype: msg.message.ietype.clone(),
                 force_tuid: msg.message.force_tuid,
             });
-
-            ev_broadcast.write(ToClients {
-                mode: SendMode::BroadcastExcept(msg.client_id),
-                message: RemoteInteractionBroadcast {
-                    position: msg.message.position,
-                    ietype: msg.message.ietype.clone(),
-                    force_tuid: msg.message.force_tuid,
-                },
-            });
+            // Server will process the interaction, which mutates Behavior.
+            // broadcast_authoritative_behavior_changes will detect the change and broadcast.
+        } else {
+            warn!(
+                "SERVER: Failed to find interactive entity at {:?}",
+                target_bpos
+            );
         }
     }
 }
 
-/// Server: broadcast host interactions.
-fn broadcast_host_interactions(
-    mut reader: MessageReader<HostInteractionOccurred>,
+/// Server: Detect behavior changes (doors opening, lights toggling, etc.) and broadcast the absolute final state.
+/// Any interaction that mutates Behavior will trigger this, ensuring all clients stay in sync.
+fn broadcast_authoritative_behavior_changes(
+    q_changed: Query<
+        (&MapEntityFieldBPos, &unbehavior::behavior::Behavior),
+        Changed<unbehavior::behavior::Behavior>,
+    >,
     mut ev_broadcast: MessageWriter<ToClients<RemoteInteractionBroadcast>>,
 ) {
-    for msg in reader.read() {
+    for (bpos, beh) in &q_changed {
+        let new_tileuid = beh.cfg().tileuid;
+        let final_state = beh.state();
+        info!(
+            "SERVER: Behavior changed at {:?} -> tileuid={}, state={:?} - broadcasting to all clients",
+            bpos.0, new_tileuid, final_state
+        );
         ev_broadcast.write(ToClients {
             mode: SendMode::Broadcast,
             message: RemoteInteractionBroadcast {
-                position: msg.position,
-                ietype: msg.ietype.clone(),
-                force_tuid: msg.force_tuid,
+                position: [bpos.0.x as i32, bpos.0.y as i32, bpos.0.z as i32],
+                ietype: InteractionExecutionType::ChangeState,
+                force_tuid: Some(new_tileuid),
             },
         });
     }
@@ -1073,7 +1097,7 @@ fn handle_truck_loadout_message(
 
 fn apply_remote_interaction(
     mut reader: MessageReader<RemoteInteractionBroadcast>,
-    q_interactive: Query<(Entity, &MapEntityFieldBPos)>,
+    q_interactive: Query<(Entity, &MapEntityFieldBPos), With<Interactive>>,
     mut ev_interact: MessageWriter<ExecuteInteractionEvent>,
 ) {
     for msg in reader.read() {

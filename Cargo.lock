@@ -7990,6 +7990,7 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
+ "unevents-core",
  "unfoundation-core",
  "ungear-core",
  "ungearitems-core",

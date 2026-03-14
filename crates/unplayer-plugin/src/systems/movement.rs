@@ -91,16 +91,16 @@ pub(crate) fn player_interaction_system(
                     {
                         ev.write(NpcHelpEvent::new(entity));
                     }
-                    ev_interaction.write(ExecuteInteractionEvent {
-                        entity,
-                        ietype: InteractionExecutionType::ChangeState,
-                        force_tuid: None,
-                    });
                     let bpos = item_pos.to_board_position();
                     let bpos_arr = [bpos.x as i32, bpos.y as i32, bpos.z as i32];
                     if authority.is_some() {
-                        // On the host (authority), signal the network layer to
+                        // On the host (authority), fire the event locally and signal the network layer to
                         // broadcast this interaction to all connected join clients.
+                        ev_interaction.write(ExecuteInteractionEvent {
+                            entity,
+                            ietype: InteractionExecutionType::ChangeState,
+                            force_tuid: None,
+                        });
                         ev_host_interact.write(HostInteractionOccurred {
                             position: bpos_arr,
                             ietype: InteractionExecutionType::ChangeState,
@@ -108,7 +108,8 @@ pub(crate) fn player_interaction_system(
                         });
                     } else {
                         // On join clients, forward the request to the server so
-                        // it is validated and then broadcast to other clients.
+                        // it is validated and then broadcast to all clients.
+                        // Do NOT fire the event locally; wait for the server's response.
                         ev_interaction_req.write(InteractionRequestMessage {
                             position: bpos_arr,
                             ietype: InteractionExecutionType::ChangeState,
