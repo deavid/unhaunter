@@ -49,7 +49,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_mapped_client_message::<ExportGearStateMessage>(Channel::Unreliable);
     // Register server → client messages
     app.add_server_message::<RemoteInteractionBroadcast>(Channel::Ordered);
-    app.add_server_message::<MovableMotionBroadcast>(Channel::Ordered);
+    app.add_mapped_server_message::<MovableMotionBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearSpawnBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearDespawnBroadcast>(Channel::Ordered);
     // NOTE: OwnershipGranted is registered as a plain (non-mapped) server message.
@@ -890,7 +890,7 @@ fn broadcast_movable_motion(
         ev_broadcast.write(ToClients {
             mode: SendMode::Broadcast,
             message: MovableMotionBroadcast {
-                map_bpos: msg.map_bpos,
+                entity: msg.entity,
                 start: msg.start,
                 end: msg.end,
                 duration: msg.duration,

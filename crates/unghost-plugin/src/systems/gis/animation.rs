@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::messages::MovableMotionBroadcast;
-use unspatial_core::boardposition::BoardPosition;
-use unspatial_core::components::NetworkOriginalMapPosition;
 use unspatial_core::position::Position;
 
 use crate::metrics;
@@ -62,51 +60,34 @@ fn tween_animation_system(
 /// Client (join mode only): receive a `MovableMotionBroadcast` from the server
 /// and replay the same tween animation on the matching local entity.
 ///
-/// The entity is identified by its `NetworkOriginalMapPosition` (its spawn-time
-/// board position), which is stable across all clients that loaded the same map.
+/// The entity is identified by its `Entity` handle, which is automatically
+/// mapped from server to client by `bevy_replicon`.
 fn apply_remote_movable_motion(
     mut reader: MessageReader<MovableMotionBroadcast>,
-    q_map_pos: Query<(Entity, &NetworkOriginalMapPosition)>,
     mut commands: Commands,
 ) {
     for msg in reader.read() {
-        let target_bpos = BoardPosition {
-            x: msg.map_bpos[0] as i64,
-            y: msg.map_bpos[1] as i64,
-            z: msg.map_bpos[2] as i64,
+        let ease_fn = match msg.ease {
+            1 => TweenEase::ParabolicArc,
+            2 => TweenEase::SineEaseOut,
+            _ => TweenEase::Linear,
         };
-        let found = q_map_pos
-            .iter()
-            .find(|(_, mp)| mp.position == target_bpos)
-            .map(|(e, _)| e);
-        if let Some(entity) = found {
-            let ease_fn = match msg.ease {
-                1 => TweenEase::ParabolicArc,
-                2 => TweenEase::SineEaseOut,
-                _ => TweenEase::Linear,
-            };
-            commands.entity(entity).insert(Tween {
-                start_pos: Position {
-                    x: msg.start[0],
-                    y: msg.start[1],
-                    z: msg.start[2],
-                    visual_priority: msg.start[3],
-                },
-                end_pos: Position {
-                    x: msg.end[0],
-                    y: msg.end[1],
-                    z: msg.end[2],
-                    visual_priority: msg.end[3],
-                },
-                timer: Timer::from_seconds(msg.duration, TimerMode::Once),
-                ease_fn,
-            });
-        } else {
-            warn!(
-                "apply_remote_movable_motion: no entity found at original board position {:?}",
-                target_bpos
-            );
-        }
+        commands.entity(msg.entity).insert(Tween {
+            start_pos: Position {
+                x: msg.start[0],
+                y: msg.start[1],
+                z: msg.start[2],
+                visual_priority: msg.start[3],
+            },
+            end_pos: Position {
+                x: msg.end[0],
+                y: msg.end[1],
+                z: msg.end[2],
+                visual_priority: msg.end[3],
+            },
+            timer: Timer::from_seconds(msg.duration, TimerMode::Once),
+            ease_fn,
+        });
     }
 }
 ///

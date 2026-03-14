@@ -13,7 +13,6 @@ use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::messages::HostInteractionOccurred;
 use unreplicon_core::messages::HostMovableMotionEvent;
-use unspatial_core::components::NetworkOriginalMapPosition;
 use unspatial_core::position::Position;
 
 use crate::metrics;
@@ -328,18 +327,17 @@ fn ghost_interaction_execution_system(
 /// forwards the animation parameters to all connected join clients as
 /// `MovableMotionBroadcast`, which they replay locally via `apply_remote_movable_motion`.
 fn watch_tween_insertions(
-    q_new_tweens: Query<(&NetworkOriginalMapPosition, &Tween), Added<Tween>>,
+    q_new_tweens: Query<(Entity, &Tween), Added<Tween>>,
     mut ev_host_movable: MessageWriter<HostMovableMotionEvent>,
 ) {
-    for (map_pos, tween) in q_new_tweens.iter() {
-        let bpos = &map_pos.position;
+    for (entity, tween) in q_new_tweens.iter() {
         let ease = match tween.ease_fn {
             TweenEase::Linear => 0u8,
             TweenEase::ParabolicArc => 1u8,
             TweenEase::SineEaseOut => 2u8,
         };
         ev_host_movable.write(HostMovableMotionEvent {
-            map_bpos: [bpos.x as i32, bpos.y as i32, bpos.z as i32],
+            entity,
             start: [
                 tween.start_pos.x,
                 tween.start_pos.y,

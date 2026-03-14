@@ -267,9 +267,8 @@ pub struct HostInteractionOccurred {
 /// can replay the same animation locally.
 #[derive(Debug, Clone, Message)]
 pub struct HostMovableMotionEvent {
-    /// Board-space original spawn position of the entity
-    /// (from `NetworkOriginalMapPosition`), used for entity lookup on clients.
-    pub map_bpos: [i32; 3],
+    /// The entity that is moving.
+    pub entity: Entity,
     /// World-space start position `[x, y, z, visual_priority]`.
     pub start: [f32; 4],
     /// World-space end position `[x, y, z, visual_priority]`.
@@ -285,8 +284,8 @@ pub struct HostMovableMotionEvent {
 /// animation locally to keep visual state in sync.
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct MovableMotionBroadcast {
-    /// Board-space original spawn position of the entity.
-    pub map_bpos: [i32; 3],
+    /// The entity that is moving.
+    pub entity: Entity,
     /// World-space start position `[x, y, z, visual_priority]`.
     pub start: [f32; 4],
     /// World-space end position `[x, y, z, visual_priority]`.
@@ -295,6 +294,24 @@ pub struct MovableMotionBroadcast {
     pub duration: f32,
     /// Ease function: 0 = Linear, 1 = ParabolicArc, 2 = SineEaseOut.
     pub ease: u8,
+}
+
+impl Default for MovableMotionBroadcast {
+    fn default() -> Self {
+        Self {
+            entity: Entity::PLACEHOLDER,
+            start: [0.0; 4],
+            end: [0.0; 4],
+            duration: 0.0,
+            ease: 0,
+        }
+    }
+}
+
+impl bevy::ecs::entity::MapEntities for MovableMotionBroadcast {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        self.entity = mapper.get_mapped(self.entity);
+    }
 }
 
 /// Local-only Bevy event fired by `drop_object` on the authority (listen-server host)
