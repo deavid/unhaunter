@@ -426,9 +426,25 @@ fn setup_mission_players(
     }
 }
 
-/// Server: on exit from `AppState::InGame`, remove the spawning-active marker.
-fn cleanup_mission_players(mut commands: Commands) {
+/// Server: on entering TearingDown, remove the spawning-active marker and despawn
+/// all player skeletons (and their gear) so they cannot carry over into the next mission.
+fn cleanup_mission_players(
+    mut commands: Commands,
+    q_players: Query<(Entity, &PlayerGear), With<PlayerSprite>>,
+) {
     commands.remove_resource::<RepliconPlayerSpawningActive>();
+    for (entity, gear) in q_players.iter() {
+        for maybe_gear_entity in [gear.left_hand, gear.right_hand]
+            .into_iter()
+            .chain(gear.inventory.iter().copied().map(Some))
+            .flatten()
+        {
+            if let Ok(mut ec) = commands.get_entity(maybe_gear_entity) {
+                ec.despawn();
+            }
+        }
+        commands.entity(entity).despawn();
+    }
 }
 
 /// Server: runs every frame during InGame to spawn player entities for clients that

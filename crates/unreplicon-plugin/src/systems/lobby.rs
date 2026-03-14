@@ -8,12 +8,14 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unprofile_core::profile::RuntimeInstallationId;
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
-use unreplicon_core::messages::{RequestSelectDifficulty, RequestSelectMap, RequestStartMission};
+use unreplicon_core::messages::{
+    RequestAbortMission, RequestSelectDifficulty, RequestSelectMap, RequestStartMission,
+};
 use unreplicon_core::ownership::OwnerId;
 use unreplicon_core::resources::{ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::{AppState, BootState};
+use untypes_core::states::{AppState, BootState, GameState, SimulationState};
 use uuid::Uuid;
 
 pub(super) fn app_setup(app: &mut App) {
@@ -21,6 +23,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_client_message::<RequestSelectMap>(Channel::Ordered);
     app.add_client_message::<RequestSelectDifficulty>(Channel::Ordered);
     app.add_client_message::<RequestStartMission>(Channel::Ordered);
+    app.add_client_message::<RequestAbortMission>(Channel::Ordered);
 
     // Register replicated components
     app.replicate::<LobbyInfo>();
@@ -81,6 +84,7 @@ pub(super) fn app_setup(app: &mut App) {
             handle_request_select_map,
             handle_request_select_difficulty,
             handle_request_start_mission,
+            handle_request_abort_mission,
         )
             .run_if(resource_exists::<AuthorityRole>),
     );
@@ -500,6 +504,44 @@ fn handle_request_start_mission(
                     difficulty_id: lobby.selected_difficulty.clone(),
                 },
             ));
+        }
+    }
+}
+
+fn handle_request_abort_mission(
+    mut reader: MessageReader<FromClient<RequestAbortMission>>,
+    q_lobby: Query<&LobbyInfo>,
+    uuid_map: Res<ClientUuidMap>,
+    q_selected_mission: Query<Entity, With<SelectedMission>>,
+    mut q_server_phase: Query<&mut ServerGamePhase>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    mut next_sim_state: ResMut<NextState<SimulationState>>,
+    mut commands: Commands,
+) {
+    for msg in reader.read() {
+        let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
+            continue;
+        };
+        for lobby in q_lobby.iter() {
+            if Some(sender_uuid) != lobby.leader_uuid {
+                warn!(
+                    "RequestAbortMission from non-leader {:?}; ignored",
+                    sender_uuid
+                );
+                continue;
+            }
+            info!("Aborting mission");
+            for entity in q_selected_mission.iter() {
+                commands.entity(entity).despawn();
+            }
+            // Trigger the same teardown path as MissionEvent::End so that
+            // cleanup_mission_players despawns existing PlayerSprite entities
+            // and server_teardown_grace_period eventually returns to AppState::Lobby.
+            next_game_state.set(GameState::Running);
+            next_sim_state.set(SimulationState::TearingDown);
+            for mut phase in q_server_phase.iter_mut() {
+                *phase = ServerGamePhase::Concluding;
+            }
         }
     }
 }

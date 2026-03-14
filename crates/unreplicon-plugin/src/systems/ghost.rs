@@ -95,6 +95,15 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>)
             .run_if(in_state(AppState::InGame)),
     );
+
+    // Client: if the server returns to Lobby (e.g. after an abort) while we are
+    // still InGame, transition back to AppState::Lobby immediately.
+    app.add_systems(
+        Update,
+        on_server_phase_lobby
+            .run_if(is_pure_client)
+            .run_if(in_state(AppState::InGame)),
+    );
 }
 
 fn setup_ghost_entities(
@@ -255,6 +264,18 @@ fn server_teardown_grace_period(
     next_sim_state.set(SimulationState::Unloaded);
     next_app_state.set(AppState::Lobby);
     *timer = None;
+}
+
+fn on_server_phase_lobby(
+    q_phase: Query<&ServerGamePhase, Changed<ServerGamePhase>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+) {
+    for phase in q_phase.iter() {
+        if *phase == ServerGamePhase::Lobby {
+            info!("ServerGamePhase::Lobby observed while InGame — returning to lobby");
+            next_app_state.set(AppState::Lobby);
+        }
+    }
 }
 
 fn on_mission_concluding(

@@ -37,6 +37,13 @@ pub struct RequestStartMission {
     pub map_seed: u64,
 }
 
+/// Sent by the (room-owner) client to abort a mission that has been started.
+///
+/// On the server this arrives as `FromClient<RequestAbortMission>`.
+/// The server validates ownership then despawns the `SelectedMission` entity.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct RequestAbortMission;
+
 // ---------------------------------------------------------------------------
 // Phase 3: Players, Movement, and Interactions
 // ---------------------------------------------------------------------------

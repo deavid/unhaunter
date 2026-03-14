@@ -14,7 +14,7 @@ use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
 use unprofile_core::profile::PlayerProfileData;
 use unreplicon_core::components::{LobbyInfo, SelectedMission};
-use unreplicon_core::messages::RequestStartMission;
+use unreplicon_core::messages::{RequestAbortMission, RequestStartMission};
 use unreplicon_core::resources::{CurrentMapSeed, LocalPlayer};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
@@ -44,6 +44,7 @@ pub(crate) enum LobbyMenuAction {
     SelectMap,
     SelectDifficulty,
     StartMission,
+    AbortMission,
     ExitLobby,
 }
 
@@ -119,15 +120,17 @@ pub(crate) fn setup_ui(
                 (LobbyMenuAction::SelectMap, "Select Map"),
                 (LobbyMenuAction::SelectDifficulty, "Select Difficulty"),
                 (LobbyMenuAction::StartMission, "Start Mission"),
+                (LobbyMenuAction::AbortMission, "Abort Mission"),
                 (LobbyMenuAction::ExitLobby, "Exit Lobby"),
             ];
 
             let mut menu_idx = 0;
             for (action, label) in items {
-                // Always create StartMission for everyone (visiblity controlled in update_display)
+                // Always create StartMission and AbortMission for everyone (visibility controlled in update_display)
                 if is_room_owner
                     || action == LobbyMenuAction::ExitLobby
                     || action == LobbyMenuAction::StartMission
+                    || action == LobbyMenuAction::AbortMission
                 {
                     templates::create_menu_item(s, label, menu_idx, false, &ui_assets)
                         .insert(action);
@@ -261,8 +264,6 @@ pub(crate) fn handle_clicks(
         &LobbyMenuAction,
     )>,
     q_lobby: Query<&LobbyInfo>,
-    authority_role: Option<Res<AuthorityRole>>,
-    local_player_role: Option<Res<LocalPlayerRole>>,
     time: Res<Time>,
     entry_timer: Res<StateEntryTimer>,
     local_player: Res<LocalPlayer>,
@@ -270,12 +271,12 @@ pub(crate) fn handle_clicks(
     mut current_map_seed: ResMut<CurrentMapSeed>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
     mut ev_start: MessageWriter<RequestStartMission>,
+    mut ev_abort: MessageWriter<RequestAbortMission>,
     mut ev_load: MessageWriter<LoadLevelEvent>,
 ) {
     let lobby_info = q_lobby.single().ok();
     let is_room_owner = match (local_player.0, lobby_info) {
         (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
-        (Some(_), None) => authority_role.is_some() && local_player_role.is_some(),
         _ => false,
     };
 
@@ -349,6 +350,12 @@ pub(crate) fn handle_clicks(
                     }
                 }
             }
+            Some(LobbyMenuAction::AbortMission) => {
+                if is_room_owner && !q_selected_mission.is_empty() {
+                    info!("Room owner requesting mission abort");
+                    ev_abort.write(RequestAbortMission);
+                }
+            }
             Some(LobbyMenuAction::ExitLobby) => {
                 next_app_state.set(AppState::MainMenu);
             }
@@ -395,51 +402,60 @@ pub(crate) fn update_display(
 
     // Update Menu Items (Start/Join Mission)
     for (action, mut vis, children) in q_menu_items.iter_mut() {
-        if *action == LobbyMenuAction::StartMission {
-            if host_in_mission {
-                // Server has confirmed the mission; everyone (including the owner) sees "Join Mission".
-                *vis = Visibility::Inherited;
-                for child in children {
-                    if let Some(mut text) = q_text
-                        .get_mut(*child)
-                        .ok()
-                        .filter(|t| t.as_str() != "Join Mission")
-                    {
-                        **text = "Join Mission".to_string();
+        match action {
+            LobbyMenuAction::StartMission => {
+                if host_in_mission {
+                    // Server has confirmed the mission; everyone (including the owner) sees "Join Mission".
+                    *vis = Visibility::Inherited;
+                    for child in children {
+                        if let Some(mut text) = q_text
+                            .get_mut(*child)
+                            .ok()
+                            .filter(|t| t.as_str() != "Join Mission")
+                        {
+                            **text = "Join Mission".to_string();
+                        }
                     }
-                }
-            } else if is_room_owner {
-                // No mission yet; owner sees "Start Mission".
-                *vis = Visibility::Inherited;
-                for child in children {
-                    if let Some(mut text) = q_text
-                        .get_mut(*child)
-                        .ok()
-                        .filter(|t| t.as_str() != "Start Mission")
-                    {
-                        **text = "Start Mission".to_string();
+                } else if is_room_owner {
+                    // No mission yet; owner sees "Start Mission".
+                    *vis = Visibility::Inherited;
+                    for child in children {
+                        if let Some(mut text) = q_text
+                            .get_mut(*child)
+                            .ok()
+                            .filter(|t| t.as_str() != "Start Mission")
+                        {
+                            **text = "Start Mission".to_string();
+                        }
                     }
-                }
-            } else {
-                *vis = Visibility::Hidden;
-                for child in children {
-                    if let Some(mut text) = q_text
-                        .get_mut(*child)
-                        .ok()
-                        .filter(|t| t.as_str() != "Start Mission")
-                    {
-                        **text = "Start Mission".to_string();
+                } else {
+                    *vis = Visibility::Hidden;
+                    for child in children {
+                        if let Some(mut text) = q_text
+                            .get_mut(*child)
+                            .ok()
+                            .filter(|t| t.as_str() != "Start Mission")
+                        {
+                            **text = "Start Mission".to_string();
+                        }
                     }
                 }
             }
-        } else if *action == LobbyMenuAction::SelectMap
-            || *action == LobbyMenuAction::SelectDifficulty
-        {
-            if host_in_mission {
-                *vis = Visibility::Hidden;
-            } else {
-                *vis = Visibility::Inherited;
+            LobbyMenuAction::AbortMission => {
+                if is_room_owner && host_in_mission {
+                    *vis = Visibility::Inherited;
+                } else {
+                    *vis = Visibility::Hidden;
+                }
             }
+            LobbyMenuAction::SelectMap | LobbyMenuAction::SelectDifficulty => {
+                if host_in_mission {
+                    *vis = Visibility::Hidden;
+                } else {
+                    *vis = Visibility::Inherited;
+                }
+            }
+            _ => {}
         }
     }
 
