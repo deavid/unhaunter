@@ -346,12 +346,12 @@ fn process_newly_connected_clients(
                     "Player {} joined lobby (socket={:?}, tint={})",
                     uuid, client_id, color_index
                 );
+            }
 
-                // If lobby has no leader, assign the first player.
-                if lobby.leader_uuid.is_none() {
-                    lobby.leader_uuid = Some(uuid);
-                    info!("Player {} assigned as lobby leader", uuid);
-                }
+            // If lobby has no leader, assign the first player (new or reconnected).
+            if lobby.leader_uuid.is_none() {
+                lobby.leader_uuid = Some(uuid);
+                info!("Player {} assigned as lobby leader", uuid);
             }
         }
     }
