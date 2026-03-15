@@ -14,14 +14,10 @@ fn update_single_visual(
     sdb: &SpriteDB,
     materials1: &mut Assets<CustomMaterial1>,
 ) {
-    if !behavior.p.is_house_powered {
-        return;
-    }
-
-    let visual_state = if has_power {
-        behavior.state()
-    } else {
+    let visual_state = if behavior.p.is_house_powered && !has_power {
         TileState::Off
+    } else {
+        behavior.state()
     };
 
     let cvo = behavior.key_cvo();

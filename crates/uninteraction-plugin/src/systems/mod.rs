@@ -8,8 +8,6 @@ use unbehavior::components::RoomState;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::RoomStateSyncEvent;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
-use unrender_std::board::spritedb::SpriteDB;
-use unrender_std::materials::CustomMaterial1;
 use unspatial_core::position::Position;
 
 pub(crate) fn app_setup(app: &mut App) {
@@ -26,13 +24,6 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         trigger_grid_rebuild_on_sync.run_if(in_state(untypes_core::states::SimulationState::Ready)),
-    );
-    // Local-player nodes: reactively update tile visuals when Behavior changes.
-    app.add_systems(
-        Update,
-        update_interactable_visuals_on_behavior_change
-            .run_if(in_state(untypes_core::states::SimulationState::Ready))
-            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
     );
 }
 
@@ -103,35 +94,3 @@ fn interaction_event_handler(
     }
 }
 
-// FIXME: This reactive visual system currently races with `power_visuals::update_power_visuals`
-// (in unlight-plugin). Because this system blindly applies the SpriteDB variant based on `Behavior.state()`,
-// it can cause unpowered lights to appear ON if their physical switch is ON, overriding the darkness.
-// Future fix: Ensure `power_visuals` runs strictly *after* this system in the Bevy schedule.
-/// Reactively updates tile visuals when a `Behavior` component changes.
-/// Runs on all nodes that have a local player (offline, host, join client).
-/// On pure clients this fires when bevy_replicon delivers a replicated Behavior update.
-fn update_interactable_visuals_on_behavior_change(
-    mut commands: Commands,
-    bf: Option<Res<SpriteDB>>,
-    mut materials1: Option<ResMut<Assets<CustomMaterial1>>>,
-    q_changed: Query<(Entity, &Behavior), Changed<Behavior>>,
-) {
-    let Some(bf) = bf.as_ref() else {
-        return;
-    };
-    for (entity, behavior) in q_changed.iter() {
-        let tuid = behavior.key_tuid();
-        let Some(mt) = bf.map_tile.get(&tuid) else {
-            continue;
-        };
-        let Some(materials1) = materials1.as_mut() else {
-            continue;
-        };
-        let b = mt.bundle.clone();
-        if let Some(mat) = materials1.get(&b.material) {
-            let mat = mat.clone();
-            let mat = materials1.add(mat);
-            commands.entity(entity).insert(MeshMaterial2d(mat));
-        }
-    }
-}

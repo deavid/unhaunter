@@ -13,77 +13,78 @@ fn hydration_generic_logic_system(
         let cfg = behavior.cfg();
 
         if behavior.p.is_door {
-            cmd.insert(Pickable::default())
-                .insert(Interactive::new(
+            cmd.insert_if_new(Pickable::default())
+                .insert_if_new(Interactive::new(
                     "sounds/door-open.ogg",
                     "sounds/door-close.ogg",
                 ))
-                .insert(components::FloorItemCollidable)
-                .insert(components::Door);
+                .insert_if_new(components::FloorItemCollidable)
+                .insert_if_new(components::Door);
         } else if behavior.p.is_room_switch {
             // Check for opposite_side property
             let opposite_side = cfg.properties.get_bool("switch:opposite_side");
 
-            cmd.insert(Pickable::default())
-                .insert(Interactive::new(
+            cmd.insert_if_new(Pickable::default())
+                .insert_if_new(Interactive::new(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
                 ))
-                .insert(components::RoomState::with_opposite_side(
+                .insert_if_new(components::RoomState::with_opposite_side(
                     &cfg.orientation,
                     opposite_side,
                 ));
         } else if behavior.p.is_switch {
-            cmd.insert(Pickable::default())
-                .insert(Interactive::new(
+            cmd.insert_if_new(Pickable::default())
+                .insert_if_new(Interactive::new(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
                 ))
-                .insert(components::RoomState::default());
+                .insert_if_new(components::RoomState::default());
         } else if behavior.p.is_breaker {
-            cmd.insert(Pickable::default()).insert(Interactive::new(
-                "sounds/switch-on-2.ogg",
-                "sounds/switch-off-1.ogg",
-            ));
+            cmd.insert_if_new(Pickable::default())
+                .insert_if_new(Interactive::new(
+                    "sounds/switch-on-2.ogg",
+                    "sounds/switch-off-1.ogg",
+                ));
         } else if behavior.p.is_wall_light {
-            cmd.insert(components::RoomState::default())
-                .insert(components::Light);
+            cmd.insert_if_new(components::RoomState::default())
+                .insert_if_new(components::Light);
         } else if behavior.p.is_floor_light || behavior.p.is_table_light {
-            cmd.insert(Pickable::default())
-                .insert(Interactive::new(
+            cmd.insert_if_new(Pickable::default())
+                .insert_if_new(Interactive::new(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
                 ))
-                .insert(components::FloorItemCollidable)
-                .insert(components::Light);
+                .insert_if_new(components::FloorItemCollidable)
+                .insert_if_new(components::Light);
         } else if behavior.p.movement.stair_offset != 0 {
-            cmd.insert(components::Stairs {
+            cmd.insert_if_new(components::Stairs {
                 z: behavior.p.movement.stair_offset,
             });
         }
 
         // Additional generic component attachment based on properties
         if behavior.p.is_ceiling_light {
-            cmd.insert(components::RoomState::default())
-                .insert(components::Light);
+            cmd.insert_if_new(components::RoomState::default())
+                .insert_if_new(components::Light);
         } else if behavior.p.is_street_light || behavior.p.is_candle_light {
-            cmd.insert(components::Light);
+            cmd.insert_if_new(components::Light);
         } else if behavior.p.is_appliance || behavior.p.is_stationary_collidable {
-            cmd.insert(components::FloorItemCollidable);
+            cmd.insert_if_new(components::FloorItemCollidable);
         }
 
         if behavior.can_emit_light() {
-            cmd.insert(components::HeatEmitter);
+            cmd.insert_if_new(components::HeatEmitter);
         }
 
         // Add Movable marker
         if behavior.p.object.movable {
-            cmd.insert(components::Movable);
+            cmd.insert_if_new(components::Movable);
         }
 
         // Add HidingSpot marker
         if behavior.p.object.hidingspot {
-            cmd.insert(components::HidingSpot);
+            cmd.insert_if_new(components::HidingSpot);
         }
     }
 }

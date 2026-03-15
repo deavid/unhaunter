@@ -154,6 +154,8 @@ pub struct Properties {
     pub is_appliance: bool,
     /// Whether the object is a stationary collidable object (furniture, decor, item).
     pub is_stationary_collidable: bool,
+    /// Whether this object should be replicated over the network.
+    pub is_replicated: bool,
 }
 
 /// Represents properties specific to objects in the game world.
@@ -397,12 +399,14 @@ impl SpriteConfig {
                 p.movement.is_dynamic = true;
                 p.light.opaque = self.state == TileState::Closed;
                 p.is_door = true;
+                p.is_replicated = true;
             }
             Class::Switch | Class::RoomSwitch | Class::Breaker => {
                 p.display.visual_priority = 0.000002;
                 p.is_breaker = self.class == Class::Breaker;
                 p.is_switch = self.class == Class::Switch || self.class == Class::RoomSwitch;
                 p.is_room_switch = self.class == Class::RoomSwitch;
+                p.is_replicated = true;
             }
             Class::Doorway => {
                 p.display.visual_priority = -0.00005;
@@ -456,6 +460,7 @@ impl SpriteConfig {
                 p.is_house_powered = true;
                 p.is_light_source = true;
                 p.is_wall_light = true;
+                p.is_replicated = true;
             }
             Class::FloorLamp | Class::TableLamp => {
                 p.display.visual_priority = 0.000050;
@@ -471,6 +476,7 @@ impl SpriteConfig {
                 p.is_light_source = true;
                 p.is_floor_light = self.class == Class::FloorLamp;
                 p.is_table_light = self.class == Class::TableLamp;
+                p.is_replicated = true;
             }
             Class::WallDecor => {
                 p.display.visual_priority = -0.00004;
@@ -486,6 +492,7 @@ impl SpriteConfig {
                 p.is_house_powered = true;
                 p.is_light_source = true;
                 p.is_ceiling_light = true;
+                p.is_replicated = true;
             }
             Class::StreetLight => {
                 p.display.disable = true;
@@ -499,6 +506,7 @@ impl SpriteConfig {
                 p.is_street_powered = true;
                 p.is_light_source = true;
                 p.is_street_light = true;
+                p.is_replicated = true;
             }
             Class::CandleLight => {
                 p.display.disable = true;
@@ -509,6 +517,7 @@ impl SpriteConfig {
                 p.light.color = LinearRgba::new(1.0, 0.75, 0.1, 1.0);
                 p.is_light_source = true;
                 p.is_candle_light = true;
+                p.is_replicated = true;
             }
             Class::Appliance => {
                 p.display.visual_priority = 0.000070;
@@ -558,6 +567,10 @@ impl SpriteConfig {
 
         if let Some(color) = self.properties.get_color("light:color") {
             p.light.color = color;
+        }
+
+        if p.object.movable {
+            p.is_replicated = true;
         }
     }
 }

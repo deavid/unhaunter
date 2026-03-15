@@ -187,13 +187,7 @@ pub(crate) fn process_and_spawn_tile(
     entity_commands.insert_if_new(beh.clone());
 
     // Determine if this entity is "dynamic" — needs network identity for replication.
-    let is_dynamic = beh.p.is_door
-        || beh.p.is_switch
-        || beh.p.is_room_switch
-        || beh.p.is_breaker
-        || beh.p.is_floor_light
-        || beh.p.is_table_light
-        || beh.p.object.movable;
+    let is_dynamic = beh.p.is_replicated;
 
     if is_dynamic {
         let tmx_id = TmxEntityId {
