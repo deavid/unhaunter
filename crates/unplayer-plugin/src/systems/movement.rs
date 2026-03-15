@@ -6,6 +6,7 @@ use unbehavior::components::RoomState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::npc_help::NpcHelpEvent;
 use unevents_core::events::roomchanged::InteractionExecutionType;
+use unevents_core::events::sound::SoundEvent;
 use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
@@ -15,12 +16,12 @@ use unplayer_core::components::PlayerInput;
 use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
-use unreplicon_core::messages::HostInteractionOccurred;
 use unreplicon_core::messages::InteractionRequestMessage;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
+use untypes_core::states::GameState;
 use unui_core::resources::MouseVisibility;
 
 const PLAYER_SPEED: f32 = 0.04;
@@ -47,7 +48,7 @@ pub(crate) fn player_interaction_system(
         (
             Entity,
             &Position,
-            &Interactive,
+            Option<&Interactive>,
             &Behavior,
             Option<&RoomState>,
         ),
@@ -55,7 +56,8 @@ pub(crate) fn player_interaction_system(
     >,
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut ev_interaction_req: MessageWriter<InteractionRequestMessage>,
-    mut ev_host_interact: MessageWriter<HostInteractionOccurred>,
+    mut game_next_state: ResMut<NextState<GameState>>,
+    mut ev_sound: MessageWriter<SoundEvent>,
     mut ev_npc: Option<MessageWriter<NpcHelpEvent>>,
     authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
@@ -67,6 +69,9 @@ pub(crate) fn player_interaction_system(
             let mut max_dist = 1.4;
             let mut selected_entity = None;
             for (entity, item_pos, interactive, behavior, _) in interactables.iter() {
+                let Some(interactive) = interactive else {
+                    continue;
+                };
                 let cp_delta = interactive.control_point_delta(behavior);
                 let item_pos = Position {
                     x: item_pos.x + cp_delta.x,
@@ -83,7 +88,7 @@ pub(crate) fn player_interaction_system(
                 }
             }
             if let Some(entity) = selected_entity {
-                for (entity, item_pos, _, behavior, _) in
+                for (entity, item_pos, interactive, behavior, _) in
                     interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
                 {
                     if behavior.is_npc()
@@ -91,30 +96,37 @@ pub(crate) fn player_interaction_system(
                     {
                         ev.write(NpcHelpEvent::new(entity));
                     }
-                    let bpos = item_pos.to_board_position();
-                    let bpos_arr = [bpos.x as i32, bpos.y as i32, bpos.z as i32];
-                    if authority.is_some() {
-                        // On the host (authority), fire the event locally and signal the network layer to
-                        // broadcast this interaction to all connected join clients.
-                        ev_interaction.write(ExecuteInteractionEvent {
-                            entity,
-                            ietype: InteractionExecutionType::ChangeState,
-                            force_tuid: None,
-                        });
-                        ev_host_interact.write(HostInteractionOccurred {
-                            position: bpos_arr,
-                            ietype: InteractionExecutionType::ChangeState,
-                            force_tuid: None,
-                        });
+                    if behavior.is_van_entry() {
+                        game_next_state.set(GameState::Truck);
+                        if let Some(interactive) = interactive {
+                            ev_sound.write(SoundEvent {
+                                sound_file: interactive.sound_for_moving_into_state(behavior),
+                                volume: 1.0,
+                                position: Some(*item_pos),
+                                broadcast: false,
+                            });
+                        }
                     } else {
-                        // On join clients, forward the request to the server so
-                        // it is validated and then broadcast to all clients.
-                        // Do NOT fire the event locally; wait for the server's response.
-                        ev_interaction_req.write(InteractionRequestMessage {
-                            position: bpos_arr,
-                            ietype: InteractionExecutionType::ChangeState,
-                            force_tuid: None,
-                        });
+                        let bpos = item_pos.to_board_position();
+                        let bpos_arr = [bpos.x as i32, bpos.y as i32, bpos.z as i32];
+                        if authority.is_some() {
+                            // On the host (authority), fire the event locally. bevy_replicon then
+                            // replicates the resulting Behavior change to all connected join clients.
+                            ev_interaction.write(ExecuteInteractionEvent {
+                                entity,
+                                ietype: InteractionExecutionType::ChangeState,
+                                force_tuid: None,
+                            });
+                        } else {
+                            // On join clients, forward the request to the server so
+                            // it is validated and then broadcast to all clients.
+                            // Do NOT fire the event locally; wait for the server's response.
+                            ev_interaction_req.write(InteractionRequestMessage {
+                                position: bpos_arr,
+                                ietype: InteractionExecutionType::ChangeState,
+                                force_tuid: None,
+                            });
+                        }
                     }
                 }
             }

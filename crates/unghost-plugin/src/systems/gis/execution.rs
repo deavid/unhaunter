@@ -11,7 +11,6 @@ use unevents_core::events::sound::SoundEvent;
 use unfoundation_core::random_seed;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unmetrics_core::metrics::SendMetric;
-use unreplicon_core::messages::HostInteractionOccurred;
 use unreplicon_core::messages::HostMovableMotionEvent;
 use unspatial_core::position::Position;
 
@@ -188,7 +187,6 @@ fn ghost_interaction_execution_system(
     )>,
     q_objects: Query<&Position, With<InteractableByGhost>>,
     mut ev_interaction_executor: MessageWriter<ExecuteInteractionEvent>,
-    mut ev_host_interact: MessageWriter<HostInteractionOccurred>,
     mut ev_sound: MessageWriter<SoundEvent>,
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
@@ -214,7 +212,6 @@ fn ghost_interaction_execution_system(
             GhostInteractionType::Toggle => {
                 execute_toggle_interaction(
                     &mut ev_interaction_executor,
-                    &mut ev_host_interact,
                     &mut ev_bdr,
                     &mut ev_room,
                     &q_targets,
@@ -225,7 +222,6 @@ fn ghost_interaction_execution_system(
             GhostInteractionType::DoorSlam => {
                 execute_door_slam_interaction(
                     &mut ev_interaction_executor,
-                    &mut ev_host_interact,
                     &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
@@ -236,7 +232,6 @@ fn ghost_interaction_execution_system(
             GhostInteractionType::DoorCreak => {
                 execute_door_creak_interaction(
                     &mut ev_interaction_executor,
-                    &mut ev_host_interact,
                     &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
@@ -306,7 +301,6 @@ fn ghost_interaction_execution_system(
                     &mut commands,
                     &asset_server,
                     &mut ev_interaction_executor,
-                    &mut ev_host_interact,
                     &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
@@ -359,7 +353,6 @@ fn watch_tween_insertions(
 /// Execute toggle interaction (lights, switches)
 fn execute_toggle_interaction(
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
-    ev_host_interact: &mut MessageWriter<HostInteractionOccurred>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     _ev_room: &mut MessageWriter<RoomChangedEvent>,
     q_targets: &Query<(
@@ -370,16 +363,9 @@ fn execute_toggle_interaction(
     )>,
     target: Entity,
 ) {
-    // Get the behavior component to execute the interaction
-    if let Ok((_, position, _, _)) = q_targets.get(target) {
-        let bpos = position.to_board_position();
+    if let Ok((_, _position, _, _)) = q_targets.get(target) {
         ev_interaction_executor.write(ExecuteInteractionEvent {
             entity: target,
-            ietype: InteractionExecutionType::ChangeState,
-            force_tuid: None,
-        });
-        ev_host_interact.write(HostInteractionOccurred {
-            position: [bpos.x as i32, bpos.y as i32, bpos.z as i32],
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });
@@ -394,7 +380,6 @@ fn execute_toggle_interaction(
 /// Execute door slam interaction (fast door closure)
 fn execute_door_slam_interaction(
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
-    ev_host_interact: &mut MessageWriter<HostInteractionOccurred>,
     ev_sound: &mut MessageWriter<SoundEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
@@ -405,17 +390,9 @@ fn execute_door_slam_interaction(
     )>,
     target: Entity,
 ) {
-    // Get the behavior component to execute the interaction
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
-        let bpos = position.to_board_position();
-        // Execute the toggle interaction using the existing InteractiveStuff system
         ev_interaction_executor.write(ExecuteInteractionEvent {
             entity: target,
-            ietype: InteractionExecutionType::ChangeState,
-            force_tuid: None,
-        });
-        ev_host_interact.write(HostInteractionOccurred {
-            position: [bpos.x as i32, bpos.y as i32, bpos.z as i32],
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });
@@ -437,7 +414,6 @@ fn execute_door_slam_interaction(
 /// Execute door creak interaction (slow door movement)
 fn execute_door_creak_interaction(
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
-    ev_host_interact: &mut MessageWriter<HostInteractionOccurred>,
     ev_sound: &mut MessageWriter<SoundEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
@@ -448,17 +424,9 @@ fn execute_door_creak_interaction(
     )>,
     target: Entity,
 ) {
-    // Get the behavior component to execute the interaction
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
-        let bpos = position.to_board_position();
-        // Execute the door creak using the existing InteractiveStuff system
         ev_interaction_executor.write(ExecuteInteractionEvent {
             entity: target,
-            ietype: InteractionExecutionType::ChangeState,
-            force_tuid: None,
-        });
-        ev_host_interact.write(HostInteractionOccurred {
-            position: [bpos.x as i32, bpos.y as i32, bpos.z as i32],
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });
@@ -694,7 +662,6 @@ fn execute_trip_breaker_interaction(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
-    ev_host_interact: &mut MessageWriter<HostInteractionOccurred>,
     ev_sound: &mut MessageWriter<SoundEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
@@ -706,17 +673,9 @@ fn execute_trip_breaker_interaction(
     target: Entity,
     local_player_role: Option<&untypes_core::roles::LocalPlayerRole>,
 ) {
-    // Get the behavior component to execute the interaction
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
-        let bpos = position.to_board_position();
-        // Execute the breaker trip using the existing InteractiveStuff system
         ev_interaction_executor.write(ExecuteInteractionEvent {
             entity: target,
-            ietype: InteractionExecutionType::ChangeState,
-            force_tuid: None,
-        });
-        ev_host_interact.write(HostInteractionOccurred {
-            position: [bpos.x as i32, bpos.y as i32, bpos.z as i32],
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });

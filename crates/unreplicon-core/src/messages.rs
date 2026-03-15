@@ -208,25 +208,6 @@ pub struct InteractionRequestMessage {
     pub force_tuid: Option<u32>,
 }
 
-/// Broadcast by the server to all join clients to notify them of a remote player's
-/// interaction with an interactive map object.
-///
-/// Registered as a server → client message via `app.add_server_message`.
-/// Clients receive this and fire `ExecuteInteractionEvent` on the matching local
-/// entity, keeping door/switch state in sync across all nodes.
-#[derive(Debug, Clone, Serialize, Deserialize, Message)]
-pub struct RemoteInteractionBroadcast {
-    /// Tiled-sourced entity ID: uniquely identifies an interactive map object
-    /// (layer_idx, tile_x, tile_y). Used for precise entity lookup on clients.
-    /// Only set for dynamic entities (doors, switches, etc.) that have TmxEntityId.
-    pub tmx_entity_id: Option<unbehavior::components::TmxEntityId>,
-    /// Board-space position of the interactive entity (fallback for non-dynamic lookups).
-    /// Same coordinate system as `InteractionRequestMessage::position`.
-    pub position: [i32; 3],
-    pub ietype: InteractionExecutionType,
-    pub force_tuid: Option<u32>,
-}
-
 /// One loadout action a join client can request from the server during the truck phase.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TruckLoadoutAction {
@@ -247,20 +228,6 @@ pub enum TruckLoadoutAction {
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct TruckLoadoutMessage {
     pub action: TruckLoadoutAction,
-}
-
-/// Local-only Bevy event fired by `player_interaction_system` on the authority
-/// (listen-server host) when the host player interacts with an object.
-///
-/// This event never travels over the network — it is a signal from
-/// `unplayer-plugin` to `unreplicon-plugin` so the network layer can broadcast
-/// the change to all connected join clients via `RemoteInteractionBroadcast`.
-#[derive(Debug, Clone, Message)]
-pub struct HostInteractionOccurred {
-    /// Board-space position of the interactive entity.
-    pub position: [i32; 3],
-    pub ietype: InteractionExecutionType,
-    pub force_tuid: Option<u32>,
 }
 
 /// Local-only Bevy event fired by `watch_tween_insertions` on the authority

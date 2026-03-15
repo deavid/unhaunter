@@ -160,7 +160,7 @@ pub(crate) fn process_and_spawn_tile(
 
     // Ensure unique z-ordering within the same floor level
     *c += 0.000000001;
-    pos.visual_priority = f32::from(mt.behavior.p.display.visual_priority) + *c;
+    pos.visual_priority = mt.behavior.p.display.visual_priority + *c;
 
     // Clone and configure behavior for this tile instance
     let mut beh = mt.behavior.clone();

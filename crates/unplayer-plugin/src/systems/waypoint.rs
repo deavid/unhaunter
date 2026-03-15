@@ -4,8 +4,6 @@ use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
 use unengine_core::GCameraArena;
 use unevents_core::events::npc_help::NpcHelpEvent;
-use unevents_core::events::roomchanged::InteractionExecutionType;
-use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
@@ -226,15 +224,12 @@ pub(crate) fn waypoint_following_system(
         &Behavior,
         Option<&unbehavior::components::RoomState>,
     )>,
-    mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
     q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
     if !q_in_truck.is_empty() {
         return;
     }
-    let is_authority = authority.is_some();
     for (player_entity, player_pos, waypoint_queue, mut player_input) in q_player.iter_mut() {
         if let Some(current_waypoint_entity) = waypoint_queue.next() {
             if let Ok((waypoint_pos, waypoint)) = q_waypoints.get(current_waypoint_entity) {
@@ -261,17 +256,8 @@ pub(crate) fn waypoint_following_system(
                                     ev_npc.write(NpcHelpEvent::new(*interaction_target));
                                 }
 
-                                if !is_authority {
-                                    // On the client, signal predictive intent
-                                    ev_interaction.write(ExecuteInteractionEvent {
-                                        entity: *interaction_target,
-                                        ietype: InteractionExecutionType::ChangeState,
-                                        force_tuid: None,
-                                    });
-                                }
-
                                 // Always signal intent via input. This will be processed
-                                // authoritatively by player_movement_system on the Host.
+                                // by player_interaction_system, which handles routing.
                                 player_input.interact = true;
                                 true // Complete the waypoint after interaction
                             } else {

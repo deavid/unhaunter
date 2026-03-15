@@ -9,11 +9,11 @@ use bevy_replicon::shared::replication::deferred_entity::DeferredEntity;
 use bevy_replicon::shared::replication::registry::ctx::{RemoveCtx, WriteCtx};
 use bevy_replicon::shared::replication::registry::rule_fns::RuleFns;
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
+use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::{FloorItemCollidable, TmxEntityId};
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unevents_core::events::roomchanged::InteractionExecutionType;
 use unfoundation_core::types::gear::Hand;
 use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
@@ -26,9 +26,9 @@ use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportStateMessage, FloorGearDespawnBroadcast, FloorGearSpawnBroadcast,
     GearSkeletonState, HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent,
-    HostInteractionOccurred, HostMovableMotionEvent, InteractionRequestMessage,
-    MovableMotionBroadcast, OwnershipGranted, OwnershipReleased, RemoteInteractionBroadcast,
-    RequestPickupGear, SaltDroppedMessage, TruckLoadoutAction, TruckLoadoutMessage,
+    HostMovableMotionEvent, InteractionRequestMessage, MovableMotionBroadcast, OwnershipGranted,
+    OwnershipReleased, RequestPickupGear, SaltDroppedMessage, TruckLoadoutAction,
+    TruckLoadoutMessage,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -50,7 +50,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_mapped_client_message::<OwnershipReleased>(Channel::Ordered);
     app.add_mapped_client_message::<ExportGearStateMessage>(Channel::Unreliable);
     // Register server → client messages
-    app.add_server_message::<RemoteInteractionBroadcast>(Channel::Ordered);
     app.add_mapped_server_message::<MovableMotionBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearSpawnBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearDespawnBroadcast>(Channel::Ordered);
@@ -62,7 +61,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_server_message::<OwnershipGranted>(Channel::Ordered);
 
     // Register local messages
-    app.add_message::<HostInteractionOccurred>();
     app.add_message::<HostMovableMotionEvent>();
     app.add_message::<HostFloorGearDroppedEvent>();
     app.add_message::<HostFloorGearPickedUpEvent>();
@@ -80,6 +78,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<PlayerSpectating>();
     app.replicate::<GearMarker>();
     app.replicate::<GearKind>();
+    app.replicate::<Behavior>();
     app.replicate::<Toggleable>();
     app.replicate::<ungearitems_core::components::flashlight::Flashlight>();
     app.replicate::<ungearitems_core::components::uvtorch::UVTorch>();
@@ -155,14 +154,6 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(resource_exists::<AuthorityRole>),
     );
 
-    // Server-side: broadcast absolute behavior state AFTER all Update systems (and their
-    // deferred commands) have been applied. This ensures Changed<Behavior> is reliably detected
-    // even when the behavior is mutated via Commands during Update.
-    app.add_systems(
-        PostUpdate,
-        broadcast_authoritative_behavior_changes.run_if(resource_exists::<AuthorityRole>),
-    );
-
     // Server-side: spawn player entities for clients that joined after mission start.
     app.add_systems(
         Update,
@@ -202,7 +193,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            apply_remote_interaction,
             handle_ownership_granted,
             fallback_player_ownership_from_uuid,
             propagate_gear_ownership,
@@ -867,47 +857,14 @@ fn handle_interaction_request(
                 ietype: msg.message.ietype.clone(),
                 force_tuid: msg.message.force_tuid,
             });
-            // Server will process the interaction, which mutates Behavior.
-            // broadcast_authoritative_behavior_changes will detect the change and broadcast.
+            // Server processes the interaction, mutating Behavior.
+            // bevy_replicon replicates the changed Behavior to all clients.
         } else {
             warn!(
                 "SERVER: Failed to find interactive entity at {:?}",
                 target_bpos
             );
         }
-    }
-}
-
-/// Server: Detect behavior changes on dynamic interactive entities and broadcast the absolute final state.
-/// Filters to only entities with `TmxEntityId` (doors, switches, lights, etc.).
-/// All clients stay in sync with the authoritative behavior changes.
-fn broadcast_authoritative_behavior_changes(
-    q_changed: Query<
-        (
-            &MapEntityFieldBPos,
-            &unbehavior::behavior::Behavior,
-            &TmxEntityId,
-        ),
-        Changed<unbehavior::behavior::Behavior>,
-    >,
-    mut ev_broadcast: MessageWriter<ToClients<RemoteInteractionBroadcast>>,
-) {
-    for (bpos, beh, tmx_id) in &q_changed {
-        let new_tileuid = beh.cfg().tileuid;
-        let final_state = beh.state();
-        info!(
-            "SERVER: Behavior changed at {:?} -> tileuid={}, state={:?} - broadcasting to all clients",
-            bpos.0, new_tileuid, final_state
-        );
-        ev_broadcast.write(ToClients {
-            mode: SendMode::Broadcast,
-            message: RemoteInteractionBroadcast {
-                tmx_entity_id: Some(tmx_id.clone()),
-                position: [bpos.0.x as i32, bpos.0.y as i32, bpos.0.z as i32],
-                ietype: InteractionExecutionType::ChangeState,
-                force_tuid: Some(new_tileuid),
-            },
-        });
     }
 }
 
@@ -1097,43 +1054,6 @@ fn handle_truck_loadout_message(
                     );
                 }
             }
-        }
-    }
-}
-
-fn apply_remote_interaction(
-    mut reader: MessageReader<RemoteInteractionBroadcast>,
-    q_by_tmx: Query<(Entity, &TmxEntityId)>,
-    q_by_pos: Query<(Entity, &MapEntityFieldBPos), With<Interactive>>,
-    mut ev_interact: MessageWriter<ExecuteInteractionEvent>,
-) {
-    for msg in reader.read() {
-        // Prefer lookup by TmxEntityId if available — it's unambiguous even when multiple
-        // interactive entities share the same board position.
-        let found = if let Some(tmx_id) = &msg.tmx_entity_id {
-            q_by_tmx
-                .iter()
-                .find(|(_, got_tmx_id)| *got_tmx_id == tmx_id)
-                .map(|(e, _)| e)
-        } else {
-            // Fallback: look up by board position (for non-dynamic entities that broadcast)
-            let target_bpos = BoardPosition {
-                x: msg.position[0] as i64,
-                y: msg.position[1] as i64,
-                z: msg.position[2] as i64,
-            };
-            q_by_pos
-                .iter()
-                .find(|(_, bpos)| bpos.0 == target_bpos)
-                .map(|(e, _)| e)
-        };
-
-        if let Some(entity) = found {
-            ev_interact.write(ExecuteInteractionEvent {
-                entity,
-                ietype: msg.ietype.clone(),
-                force_tuid: msg.force_tuid,
-            });
         }
     }
 }

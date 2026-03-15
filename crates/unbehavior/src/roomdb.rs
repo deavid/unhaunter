@@ -24,8 +24,8 @@ impl RoomTopology {
 /// Written exclusively on the Authority node (server or offline host).
 /// All nodes hold this resource (initialised to TileState::Off per room during
 /// `HydrationStage<2>`), but only the Authority mutates it after initialisation.
-/// Pure clients read the initial default values; state changes reach clients via
-/// `RemoteInteractionBroadcast` (existing mechanism, unchanged in this PR).
+/// Pure clients read this map while authoritative map tile `Behavior` changes are
+/// received through component replication.
 #[derive(Clone, Default, Resource)]
 pub struct RoomStateMap {
     pub room_state: HashMap<String, TileState>,

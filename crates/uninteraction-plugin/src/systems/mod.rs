@@ -7,14 +7,32 @@ use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomState;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::RoomStateSyncEvent;
-use uninteraction_core::interaction::{Authority, ExecuteInteractionEvent};
+use uninteraction_core::interaction::ExecuteInteractionEvent;
+use unrender_std::board::spritedb::SpriteDB;
+use unrender_std::materials::CustomMaterial1;
 use unspatial_core::position::Position;
+
 pub(crate) fn app_setup(app: &mut App) {
+    // Authority-only: mutate Behavior state in response to interactions and room syncs.
     app.add_systems(
         Update,
         (interaction_event_handler, room_state_sync_system)
             .chain()
-            .run_if(in_state(untypes_core::states::SimulationState::Ready)),
+            .run_if(in_state(untypes_core::states::SimulationState::Ready))
+            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+    );
+    // All nodes: rebuild board topology grids when any Behavior changes (including
+    // changes arriving via bevy_replicon replication on pure clients).
+    app.add_systems(
+        Update,
+        trigger_grid_rebuild_on_sync.run_if(in_state(untypes_core::states::SimulationState::Ready)),
+    );
+    // Local-player nodes: reactively update tile visuals when Behavior changes.
+    app.add_systems(
+        Update,
+        update_interactable_visuals_on_behavior_change
+            .run_if(in_state(untypes_core::states::SimulationState::Ready))
+            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
     );
 }
 
@@ -22,7 +40,6 @@ fn room_state_sync_system(
     mut ev_sync: MessageReader<RoomStateSyncEvent>,
     mut interactive_stuff: InteractiveStuff,
     q_interactables: Query<(Entity, &Position, &Behavior, &RoomState)>,
-    mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
 ) {
     if ev_sync.read().next().is_none() {
         return;
@@ -36,7 +53,15 @@ fn room_state_sync_system(
     }
 
     if changed {
-        debug!("Room state synchronization triggered a board topology rebuild.");
+        debug!("Room state synchronization updated Behavior; rebuild is handled reactively.");
+    }
+}
+
+fn trigger_grid_rebuild_on_sync(
+    q_changed_behavior: Query<(), Changed<Behavior>>,
+    mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
+) {
+    if !q_changed_behavior.is_empty() {
         ev_bdr.write(BoardTopologyToRebuild {
             lighting: true,
             collision: true,
@@ -47,7 +72,6 @@ fn room_state_sync_system(
 fn interaction_event_handler(
     mut ev_reader: MessageReader<ExecuteInteractionEvent>,
     mut interactive_stuff: InteractiveStuff,
-    authority_role: Option<Res<untypes_core::roles::AuthorityRole>>,
     q_interactive: Query<(
         Option<&Interactive>,
         &Behavior,
@@ -55,13 +79,7 @@ fn interaction_event_handler(
         &Position,
     )>,
     mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
-    mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
 ) {
-    let authority = if authority_role.is_some() {
-        Authority::Host
-    } else {
-        Authority::Client
-    };
     for ev in ev_reader.read() {
         if let Ok((interactive, behavior, room_state, pos)) = q_interactive.get(ev.entity) {
             if interactive_stuff.execute_interaction(
@@ -71,26 +89,49 @@ fn interaction_event_handler(
                 behavior,
                 room_state,
                 ev.ietype.clone(),
-                authority,
                 ev.force_tuid,
             ) {
-                debug!(
-                    "Interaction successful, rewriting board topology (authority={:?})",
-                    authority
-                );
-                if authority == Authority::Host {
-                    ev_room_sync.write(RoomStateSyncEvent);
-                }
-                ev_bdr.write(BoardTopologyToRebuild {
-                    lighting: true,
-                    collision: true,
-                });
+                debug!("Interaction successful, scheduling room sync");
+                ev_room_sync.write(RoomStateSyncEvent);
             }
         } else {
             warn!(
                 "Could not find interactive components for entity {:?}",
                 ev.entity
             );
+        }
+    }
+}
+
+// FIXME: This reactive visual system currently races with `power_visuals::update_power_visuals`
+// (in unlight-plugin). Because this system blindly applies the SpriteDB variant based on `Behavior.state()`,
+// it can cause unpowered lights to appear ON if their physical switch is ON, overriding the darkness.
+// Future fix: Ensure `power_visuals` runs strictly *after* this system in the Bevy schedule.
+/// Reactively updates tile visuals when a `Behavior` component changes.
+/// Runs on all nodes that have a local player (offline, host, join client).
+/// On pure clients this fires when bevy_replicon delivers a replicated Behavior update.
+fn update_interactable_visuals_on_behavior_change(
+    mut commands: Commands,
+    bf: Option<Res<SpriteDB>>,
+    mut materials1: Option<ResMut<Assets<CustomMaterial1>>>,
+    q_changed: Query<(Entity, &Behavior), Changed<Behavior>>,
+) {
+    let Some(bf) = bf.as_ref() else {
+        return;
+    };
+    for (entity, behavior) in q_changed.iter() {
+        let tuid = behavior.key_tuid();
+        let Some(mt) = bf.map_tile.get(&tuid) else {
+            continue;
+        };
+        let Some(materials1) = materials1.as_mut() else {
+            continue;
+        };
+        let b = mt.bundle.clone();
+        if let Some(mat) = materials1.get(&b.material) {
+            let mat = mat.clone();
+            let mat = materials1.add(mat);
+            commands.entity(entity).insert(MeshMaterial2d(mat));
         }
     }
 }

@@ -4,12 +4,9 @@ use unbehavior::components::RoomState;
 use unbehavior::roomdb::{RoomStateMap, RoomTopology};
 use unevents_core::events::roomchanged::InteractionExecutionType;
 use unevents_core::events::sound::SoundEvent;
-use uninteraction_core::interaction::Authority;
 use unrender_std::board::spritedb::SpriteDB;
-use unrender_std::materials::CustomMaterial1;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
-use untypes_core::states::GameState;
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
@@ -28,31 +25,23 @@ use bevy::prelude::*;
 /// * Triggering transitions to the truck UI when the player enters the van.
 #[derive(SystemParam)]
 pub struct InteractiveStuff<'w, 's> {
-    /// Database of sprites for map tiles. Used to retrieve alternative sprites for
-    /// interactive objects.
+    /// Database of sprites for map tiles. Used to retrieve the correct behavior variant
+    /// for interactive objects when their state changes.
     pub bf: Option<Res<'w, SpriteDB>>,
-    /// Used to spawn sound effects and potentially other entities related to
-    /// interactions.
+    /// Used to insert updated Behavior components on entities.
     pub commands: Commands<'w, 's>,
     /// Event writer for sending sound events.
     pub sound_events: MessageWriter<'w, SoundEvent>,
-    /// Access to the asset server for loading sound effects.
-    pub asset_server: Res<'w, AssetServer>,
-    /// Access to the materials used for rendering map tiles. Used to update tile
-    /// visuals when object states change.
-    pub materials1: Option<ResMut<'w, Assets<CustomMaterial1>>>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
     pub roomtopo: ResMut<'w, RoomTopology>,
     pub roomstate: ResMut<'w, RoomStateMap>,
-    /// Controls the transition to different game states, such as the truck UI.
-    pub game_next_state: ResMut<'w, NextState<GameState>>,
 }
 
 impl InteractiveStuff<'_, '_> {
-    /// Internal helper to update an entity's visual components (mesh material and behavior)
-    /// to match a specific tile identifier.
-    fn apply_visual_update(
+    /// Internal helper to update the Behavior component of an entity to match a specific
+    /// tile identifier. Visual updates are handled reactively by the Renderer system.
+    fn apply_behavior_update(
         &mut self,
         entity: Entity,
         tuid: &(String, u32),
@@ -60,7 +49,7 @@ impl InteractiveStuff<'_, '_> {
     ) {
         let Some(bf) = self.bf.as_ref() else {
             warn!(
-                "apply_visual_update: SpriteDB is None for entity {:?} tuid {:?} - Behavior will NOT be updated",
+                "apply_behavior_update: SpriteDB is None for entity {:?} tuid {:?} - Behavior will NOT be updated",
                 entity, tuid
             );
             return;
@@ -73,23 +62,11 @@ impl InteractiveStuff<'_, '_> {
         beh.flip(current_behavior.p.flip);
 
         let mut e_commands = self.commands.get_entity(entity).unwrap();
-
         info!(
-            "apply_visual_update: inserting new Behavior for entity {:?} tuid {:?}",
+            "apply_behavior_update: inserting new Behavior for entity {:?} tuid {:?}",
             entity, tuid
         );
-        // Update behavior (logic)
         e_commands.insert(beh);
-
-        // Update visuals (renderer) - only if materials are available
-        if let Some(materials1) = self.materials1.as_mut() {
-            let b = other.bundle.clone();
-            if let Some(mat) = materials1.get(&b.material) {
-                let mat = mat.clone();
-                let mat = materials1.add(mat);
-                e_commands.insert(MeshMaterial2d(mat));
-            }
-        }
     }
 
     /// Synchronizes the entity's state with the current RoomStateMap state.
@@ -146,7 +123,7 @@ impl InteractiveStuff<'_, '_> {
                     "synchronize_entity: Syncing entity {:?} to state {:?} (tuid={:?})",
                     entity, main_room_state, variant_tuid
                 );
-                self.apply_visual_update(entity, variant_tuid, behavior);
+                self.apply_behavior_update(entity, variant_tuid, behavior);
                 return true;
             }
         }
@@ -186,7 +163,6 @@ impl InteractiveStuff<'_, '_> {
         behavior: &Behavior,
         room_state: Option<&RoomState>,
         ietype: InteractionExecutionType,
-        authority: Authority,
         force_tuid: Option<u32>,
     ) -> bool {
         if ietype == InteractionExecutionType::ReadRoomState {
@@ -195,31 +171,12 @@ impl InteractiveStuff<'_, '_> {
             );
         }
         trace!(
-            "execute_interaction: entity={:?}, ietype={:?}, authority={:?}, force_tuid={:?}",
-            entity, ietype, authority, force_tuid
+            "execute_interaction: entity={:?}, ietype={:?}, force_tuid={:?}",
+            entity, ietype, force_tuid
         );
         let item_bpos = item_pos.to_board_position();
         let tuid = behavior.key_tuid();
         let cvo = behavior.key_cvo();
-        if behavior.is_van_entry() {
-            if ietype != InteractionExecutionType::ChangeState {
-                return false;
-            }
-            // Play sound regardless of authority
-            if let Some(interactive) = interactive {
-                let sound_file = interactive.sound_for_moving_into_state(behavior);
-                self.sound_events.write(SoundEvent {
-                    sound_file,
-                    volume: 1.0,
-                    position: Some(*item_pos),
-                    broadcast: true,
-                });
-            }
-            // Each instance handles their own truck entry locally
-            self.game_next_state.set(GameState::Truck);
-            // Note: InTruck component is added by a separate system that watches GameState changes
-            return false;
-        }
 
         let Some(bf) = self.bf.as_ref() else {
             return false;
@@ -259,9 +216,7 @@ impl InteractiveStuff<'_, '_> {
 
                 match ietype {
                     InteractionExecutionType::ChangeState => {
-                        if authority == Authority::Host
-                            && let Some(main_room_state) =
-                                self.roomstate.room_state.get_mut(&room_name)
+                        if let Some(main_room_state) = self.roomstate.room_state.get_mut(&room_name)
                         {
                             *main_room_state = beh_state.clone();
                         }
@@ -277,15 +232,14 @@ impl InteractiveStuff<'_, '_> {
             }
 
             trace!(
-                "execute_interaction: Changing entity {:?} state to tuid {:?} (authority={:?})",
-                entity, other_tuid, authority
+                "execute_interaction: Changing entity {:?} state to tuid {:?}",
+                entity, other_tuid
             );
 
-            self.apply_visual_update(entity, other_tuid, behavior);
+            self.apply_behavior_update(entity, other_tuid, behavior);
 
             if ietype == InteractionExecutionType::ChangeState
                 && let Some(interactive) = interactive
-                && authority == Authority::Host
             {
                 let sound_file = interactive.sound_for_moving_into_state(&other_behavior);
                 self.sound_events.write(SoundEvent {

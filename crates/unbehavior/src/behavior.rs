@@ -4,15 +4,18 @@ use crate::traits::AutoSerialize;
 use anyhow::{Context, Ok};
 use bevy::color::{LinearRgba, Srgba};
 use bevy::ecs::component::Component;
+use bevy::ecs::reflect::ReflectComponent;
 use bevy::log::warn;
 use bevy::math::Vec3;
+use bevy::reflect::Reflect;
+use bevy::reflect::std_traits::ReflectDefault;
 use bevy_platform::collections::HashMap;
-use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use unspatial_core::orientation::Orientation;
 
 /// The `Behavior` component defines the behavior of an object in the game world.
-#[derive(Component, Debug, Clone, PartialEq)]
+#[derive(Component, Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct Behavior {
     /// This `cfg` property is PRIVATE on purpose!
     cfg: SpriteConfig,
@@ -91,7 +94,7 @@ impl Behavior {
     }
 
     pub fn can_emit_light(&self) -> bool {
-        self.p.light.emission_power.into_inner() > 1.0
+        self.p.light.emission_power > 1.0
     }
 
     pub fn orientation(&self) -> Orientation {
@@ -100,7 +103,8 @@ impl Behavior {
 }
 
 /// Stores a collection of properties that define the behavior of an object.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, Reflect)]
+#[reflect(Default)]
 pub struct Properties {
     pub movement: Movement,
     pub light: Light,
@@ -153,19 +157,21 @@ pub struct Properties {
 }
 
 /// Represents properties specific to objects in the game world.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, Reflect)]
+#[reflect(Default)]
 pub struct Object {
     pub pickable: bool,
     pub movable: bool,
     pub hidingspot: bool,
-    pub weight: NotNan<f32>,
+    pub weight: f32,
     pub name: String,
     pub throwable: bool,
     pub nudgeable: bool,
     pub haunt_movable: bool,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Reflect)]
+#[reflect(Default)]
 pub enum Util {
     RoomDef(String),
     PlayerSpawn,
@@ -175,21 +181,23 @@ pub enum Util {
     None,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, Reflect)]
+#[reflect(Default)]
 pub struct Display {
     pub disable: bool,
-    pub visual_priority: NotNan<f32>,
+    pub visual_priority: f32,
     pub auto_hide: bool,
     pub light_recv_offset: (i64, i64),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
+#[reflect(Default)]
 pub struct Light {
     pub opaque: bool,
     pub see_through: bool,
     pub light_emission_enabled: bool,
     pub can_emit_light: bool,
-    pub emission_power: NotNan<f32>,
+    pub emission_power: f32,
     pub heat_coef: i32,
     pub flickering: bool,
     pub color: LinearRgba,
@@ -202,7 +210,7 @@ impl Default for Light {
             see_through: false,
             light_emission_enabled: false,
             can_emit_light: false,
-            emission_power: NotNan::new(0.0).unwrap(),
+            emission_power: 0.0,
             heat_coef: 0,
             flickering: false,
             color: LinearRgba::WHITE,
@@ -213,15 +221,20 @@ impl Default for Light {
 impl Light {
     pub fn emmisivity_lumens(&self) -> f32 {
         use fastapprox::faster;
+        let emission_power = if self.emission_power.is_finite() {
+            self.emission_power
+        } else {
+            0.0
+        };
         if self.flickering {
             if self.light_emission_enabled {
-                faster::exp(self.emission_power.into_inner()) * 0.4
+                faster::exp(emission_power) * 0.4
             } else {
-                faster::exp(self.emission_power.into_inner()) * 0.001
+                faster::exp(emission_power) * 0.001
             }
         } else {
             match self.light_emission_enabled {
-                true => faster::exp(self.emission_power.into_inner()),
+                true => faster::exp(emission_power),
                 false => 0.0,
             }
         }
@@ -232,7 +245,8 @@ impl Light {
     }
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Reflect)]
+#[reflect(Default)]
 pub struct Movement {
     pub walkable: bool,
     pub player_collision: bool,
@@ -241,7 +255,7 @@ pub struct Movement {
     pub stair_offset: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect)]
 pub struct SpriteCVOKey {
     pub(crate) class: Class,
     pub variant: String,
@@ -254,7 +268,7 @@ impl SpriteCVOKey {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, Reflect)]
 pub struct SpriteConfig {
     pub(crate) class: Class,
     pub variant: String,
@@ -360,45 +374,45 @@ impl SpriteConfig {
         match self.class {
             Class::Floor => {
                 p.movement.walkable = true;
-                p.display.visual_priority = (-0.00035).try_into().unwrap();
+                p.display.visual_priority = -0.00035;
                 p.is_floor = true;
             }
             Class::Wall => {
                 p.movement.player_collision = true;
                 p.movement.ghost_collision = true;
                 p.light.opaque = true;
-                p.display.visual_priority = (-0.00005).try_into().unwrap();
+                p.display.visual_priority = -0.00005;
                 p.is_wall = true;
             }
             Class::LowWall => {
                 p.movement.player_collision = true;
                 p.movement.ghost_collision = true;
                 p.light.see_through = true;
-                p.display.visual_priority = (-0.00005).try_into().unwrap();
+                p.display.visual_priority = -0.00005;
                 p.is_low_wall = true;
             }
             Class::Door => {
-                p.display.visual_priority = (0.000015).try_into().unwrap();
+                p.display.visual_priority = 0.000015;
                 p.movement.player_collision = self.state == TileState::Closed;
                 p.movement.is_dynamic = true;
                 p.light.opaque = self.state == TileState::Closed;
                 p.is_door = true;
             }
             Class::Switch | Class::RoomSwitch | Class::Breaker => {
-                p.display.visual_priority = (0.000002).try_into().unwrap();
+                p.display.visual_priority = 0.000002;
                 p.is_breaker = self.class == Class::Breaker;
                 p.is_switch = self.class == Class::Switch || self.class == Class::RoomSwitch;
                 p.is_room_switch = self.class == Class::RoomSwitch;
             }
             Class::Doorway => {
-                p.display.visual_priority = (-0.00005).try_into().unwrap();
+                p.display.visual_priority = -0.00005;
             }
             Class::Decor | Class::Item => {
-                p.display.visual_priority = (0.000065).try_into().unwrap();
+                p.display.visual_priority = 0.000065;
                 p.is_stationary_collidable = true;
             }
             Class::Furniture | Class::NPC => {
-                p.display.visual_priority = (0.000050).try_into().unwrap();
+                p.display.visual_priority = 0.000050;
                 p.is_npc = self.class == Class::NPC;
                 p.is_stationary_collidable = self.class == Class::Furniture;
             }
@@ -432,10 +446,10 @@ impl SpriteConfig {
                 p.util = Util::RoomDef(self.variant.clone());
             }
             Class::WallLamp => {
-                p.display.visual_priority = (-0.00004).try_into().unwrap();
+                p.display.visual_priority = -0.00004;
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = self.state == TileState::On;
-                p.light.emission_power = (3.0).try_into().unwrap();
+                p.light.emission_power = 3.0;
                 p.light.heat_coef = -1;
                 p.light.color = LinearRgba::new(1.0, 0.9, 0.75, 1.0);
                 p.is_electrical = true;
@@ -444,12 +458,12 @@ impl SpriteConfig {
                 p.is_wall_light = true;
             }
             Class::FloorLamp | Class::TableLamp => {
-                p.display.visual_priority = (0.000050).try_into().unwrap();
+                p.display.visual_priority = 0.000050;
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = match self.class {
-                    Class::FloorLamp => (2.0).try_into().unwrap(),
-                    _ => (1.0).try_into().unwrap(),
+                    Class::FloorLamp => 2.0,
+                    _ => 1.0,
                 };
                 p.light.color = LinearRgba::new(1.0, 0.8, 0.6, 1.0);
                 p.is_electrical = true;
@@ -459,13 +473,13 @@ impl SpriteConfig {
                 p.is_table_light = self.class == Class::TableLamp;
             }
             Class::WallDecor => {
-                p.display.visual_priority = (-0.00004).try_into().unwrap();
+                p.display.visual_priority = -0.00004;
             }
             Class::CeilingLight => {
                 p.display.disable = true;
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = self.state == TileState::On;
-                p.light.emission_power = (3.5).try_into().unwrap();
+                p.light.emission_power = 3.5;
                 p.light.heat_coef = -2;
                 p.light.color = LinearRgba::new(1.0, 0.96, 0.905, 1.0);
                 p.is_electrical = true;
@@ -477,7 +491,7 @@ impl SpriteConfig {
                 p.display.disable = true;
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = true;
-                p.light.emission_power = (5.0).try_into().unwrap();
+                p.light.emission_power = 5.0;
                 p.light.heat_coef = -6;
                 p.light.color = LinearRgba::new(0.95, 0.98, 1.0, 1.0);
                 p.is_electrical = true;
@@ -490,28 +504,28 @@ impl SpriteConfig {
                 p.display.disable = true;
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = true;
-                p.light.emission_power = (-0.5).try_into().unwrap();
+                p.light.emission_power = -0.5;
                 p.light.heat_coef = 6;
                 p.light.color = LinearRgba::new(1.0, 0.75, 0.1, 1.0);
                 p.is_light_source = true;
                 p.is_candle_light = true;
             }
             Class::Appliance => {
-                p.display.visual_priority = (0.000070).try_into().unwrap();
+                p.display.visual_priority = 0.000070;
                 p.is_electrical = true;
                 p.is_house_powered = true;
                 p.is_appliance = true;
             }
             Class::Van => {
-                p.display.visual_priority = (0.000050).try_into().unwrap();
+                p.display.visual_priority = 0.000050;
                 p.display.auto_hide = true;
                 p.display.light_recv_offset = (5, 0);
             }
             Class::Window => {
-                p.display.visual_priority = (-0.00004).try_into().unwrap();
+                p.display.visual_priority = -0.00004;
             }
             Class::StairsDown | Class::StairsUp => {
-                p.display.visual_priority = (0.000005).try_into().unwrap();
+                p.display.visual_priority = 0.000005;
                 p.movement.stair_offset = match self.class {
                     Class::StairsDown => -1,
                     _ => 1,
@@ -523,7 +537,7 @@ impl SpriteConfig {
         p.object.pickable = self.properties.get_bool("object:pickable");
         p.object.movable = self.properties.get_bool("object:movable");
         p.object.hidingspot = self.properties.get_bool("object:hidingspot");
-        p.object.weight = NotNan::new(self.properties.get_float("object:weight")).unwrap();
+        p.object.weight = self.properties.get_float("object:weight");
         p.object.name = self.properties.get_string("object:name");
         if p.object.name.is_empty() {
             p.object.name.clone_from(&self.variant);
@@ -548,24 +562,57 @@ impl SpriteConfig {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect)]
+pub enum UnhaunterPropertyValue {
+    BoolValue(bool),
+    FloatValue(f32),
+    IntValue(i32),
+    StringValue(String),
+    ColorValue([u8; 4]),
+    FileValue(String),
+    ObjectValue(u32),
+    ClassValue { property_type: String },
+}
+
+impl From<&tiled::PropertyValue> for UnhaunterPropertyValue {
+    fn from(value: &tiled::PropertyValue) -> Self {
+        match value {
+            tiled::PropertyValue::BoolValue(v) => Self::BoolValue(*v),
+            tiled::PropertyValue::FloatValue(v) => Self::FloatValue(*v),
+            tiled::PropertyValue::IntValue(v) => Self::IntValue(*v),
+            tiled::PropertyValue::StringValue(v) => Self::StringValue(v.clone()),
+            tiled::PropertyValue::ColorValue(v) => {
+                Self::ColorValue([v.red, v.green, v.blue, v.alpha])
+            }
+            tiled::PropertyValue::FileValue(v) => Self::FileValue(v.clone()),
+            tiled::PropertyValue::ObjectValue(v) => Self::ObjectValue(*v),
+            tiled::PropertyValue::ClassValue { property_type, .. } => Self::ClassValue {
+                property_type: property_type.clone(),
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, Reflect)]
+#[reflect(Default)]
 pub struct BehaviorProperties {
-    properties: HashMap<String, tiled::PropertyValue>,
+    properties: HashMap<String, UnhaunterPropertyValue>,
 }
 
 impl BehaviorProperties {
     pub fn from_tiled(tiled_tile: &tiled::Tile) -> Self {
-        let mut properties = HashMap::new();
-        for (key, value) in &tiled_tile.properties {
-            properties.insert(key.clone(), value.clone());
-        }
+        let properties = tiled_tile
+            .properties
+            .iter()
+            .map(|(key, value)| (key.clone(), UnhaunterPropertyValue::from(value)))
+            .collect();
         Self { properties }
     }
 
     pub fn get_bool(&self, key: &str) -> bool {
         self.properties
             .get(key)
-            .map(|x| matches!(x, tiled::PropertyValue::BoolValue(true)))
+            .map(|x| matches!(x, UnhaunterPropertyValue::BoolValue(true)))
             .unwrap_or(false)
     }
 
@@ -573,7 +620,7 @@ impl BehaviorProperties {
         self.properties
             .get(key)
             .map(|x| match x {
-                tiled::PropertyValue::FloatValue(n) => *n,
+                UnhaunterPropertyValue::FloatValue(n) if n.is_finite() => *n,
                 _ => 0.0,
             })
             .unwrap_or(0.0)
@@ -581,26 +628,26 @@ impl BehaviorProperties {
 
     pub fn get_color(&self, key: &str) -> Option<LinearRgba> {
         self.properties.get(key).and_then(|x| match x {
-            tiled::PropertyValue::ColorValue(c) => {
-                Some(Srgba::rgba_u8(c.red, c.green, c.blue, c.alpha).into())
+            UnhaunterPropertyValue::ColorValue([red, green, blue, alpha]) => {
+                Some(Srgba::rgba_u8(*red, *green, *blue, *alpha).into())
             }
             _ => None,
         })
     }
 
     pub fn get_string_opt(&self, key: &str) -> Option<String> {
-        let parse = |x: &tiled::PropertyValue| -> String {
+        let parse = |x: &UnhaunterPropertyValue| -> String {
             match x {
-                tiled::PropertyValue::BoolValue(x) => x.to_string(),
-                tiled::PropertyValue::FloatValue(x) => x.to_string(),
-                tiled::PropertyValue::IntValue(x) => x.to_string(),
-                tiled::PropertyValue::ColorValue(x) => {
-                    format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
+                UnhaunterPropertyValue::BoolValue(x) => x.to_string(),
+                UnhaunterPropertyValue::FloatValue(x) => x.to_string(),
+                UnhaunterPropertyValue::IntValue(x) => x.to_string(),
+                UnhaunterPropertyValue::ColorValue([red, green, blue, alpha]) => {
+                    format!("{red},{green},{blue},{alpha}")
                 }
-                tiled::PropertyValue::StringValue(x) => x.to_string(),
-                tiled::PropertyValue::FileValue(x) => x.to_string(),
-                tiled::PropertyValue::ObjectValue(x) => x.to_string(),
-                tiled::PropertyValue::ClassValue { property_type, .. } => property_type.to_string(),
+                UnhaunterPropertyValue::StringValue(x) => x.to_string(),
+                UnhaunterPropertyValue::FileValue(x) => x.to_string(),
+                UnhaunterPropertyValue::ObjectValue(x) => x.to_string(),
+                UnhaunterPropertyValue::ClassValue { property_type } => property_type.to_string(),
             }
         };
         self.properties.get(key).map(parse)
@@ -614,7 +661,7 @@ impl BehaviorProperties {
         self.properties
             .get(key)
             .map(|x| match x {
-                tiled::PropertyValue::IntValue(n) => *n,
+                UnhaunterPropertyValue::IntValue(n) => *n,
                 _ => 0,
             })
             .unwrap_or(0)
