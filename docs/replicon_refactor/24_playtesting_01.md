@@ -54,13 +54,13 @@ They should.
 
 ## Setting Evidence
 
-**[D.1] Can't set evidence, seems read-only:** Both in-truck clicking the buttons and in-mission pressing [C] do not
-seem to do anything at all. The player can't change the evidence. I believe this is replicated in the server.
+**[FIXED] [D.1] Can't set evidence, seems read-only:** Both in-truck clicking the buttons and in-mission pressing [C] do
+not seem to do anything at all. The player can't change the evidence. I believe this is replicated in the server.
 
 ## On the truck
 
-**[E.1] End mission most of the time is not enabled:** In theory, we need all alive+connected+non-AFK players in the
-truck. During these tests there is only 1 player connected, in the truck and we don't see the button enabled.
+**[FIXED] [E.1] End mission most of the time is not enabled:** In theory, we need all alive+connected+non-AFK players in
+the truck. During these tests there is only 1 player connected, in the truck and we don't see the button enabled.
 
 ## Gear
 
