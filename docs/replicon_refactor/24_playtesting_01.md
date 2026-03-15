@@ -17,9 +17,9 @@ auto-hitting "Join Mission".
 
 ## On mission - World Interactions
 
-**[B.1] Cannot enter the van:** The van has a special entity that when interacting with it opens the van. Currently for
-some strange reason we are sending the event to the server, and the server is failing to find an interactive entity
-there:
+**[FIXED] [B.1] Cannot enter the van:** The van has a special entity that when interacting with it opens the van.
+Currently for some strange reason we are sending the event to the server, and the server is failing to find an
+interactive entity there:
 
 ```text
 2026-03-15T08:08:55.640803Z  WARN unreplicon_plugin::systems::players: SERVER: Failed to find interactive entity at BoardPosition { x: 22, y: 10, z: 0 }
@@ -36,20 +36,21 @@ to other players.
 
 In short, currently it doesn't work at all because it is trying to do something with the server that is not needed.
 
-**[B.2] Light switches do not work:** There seems to be some issue with the RoomStateMap (refactored from the original
-RoomDB), where clicking the switch does not change the RoomStateMap. I believe that RoomStateMap is to be replicated so
-this means that the probable way of operation for this is, we interact with a switch, the server updates RoomStateMap,
-we receive in the client the update of RoomStateMap, then we recompute the lights. Uh no no. Wait. This is probably
-incorrect because the server would be in control of the light statuses as well - so it means that the server upon
-updating RoomStateMap has to update all lights of the room - as a single player game would - then these new light states
-have to be replicated in the client. And I'm aware that we are not replicating on the client the Behavior component on
-the excuse of "it's too big", which is making things more complicated. In the end - switches don't work. They should.
+**[FIXED] [B.2] Light switches do not work:** There seems to be some issue with the RoomStateMap (refactored from the
+original RoomDB), where clicking the switch does not change the RoomStateMap. I believe that RoomStateMap is to be
+replicated so this means that the probable way of operation for this is, we interact with a switch, the server updates
+RoomStateMap, we receive in the client the update of RoomStateMap, then we recompute the lights. Uh no no. Wait. This is
+probably incorrect because the server would be in control of the light statuses as well - so it means that the server
+upon updating RoomStateMap has to update all lights of the room - as a single player game would - then these new light
+states have to be replicated in the client. And I'm aware that we are not replicating on the client the Behavior
+component on the excuse of "it's too big", which is making things more complicated. In the end - switches don't work.
+They should.
 
 ## On mission - Grab & Drop
 
-**[C.1] Cannot grab at all:** No idea why. The key just doesn't seem to do anything on multiplayer.
+**[FIXED] [C.1] Cannot grab at all:** No idea why. The key just doesn't seem to do anything on multiplayer.
 
-**[C.2] Cannot drop at all:** No idea why. The key just doesn't seem to do anything on multiplayer.
+**[FIXED] [C.2] Cannot drop at all:** No idea why. The key just doesn't seem to do anything on multiplayer.
 
 ## Setting Evidence
 
@@ -63,6 +64,6 @@ truck. During these tests there is only 1 player connected, in the truck and we 
 
 ## Gear
 
-**[F.1] Pressing [R] to activate sometimes fails or feels bouncy:** Activating the gear sometimes doesn't work,
+**[FIXED] [F.1] Pressing [R] to activate sometimes fails or feels bouncy:** Activating the gear sometimes doesn't work,
 sometimes seems to fail or be bouncy. This should be a local component, a local action - we shouldn't need the server
 here and the server should not override these.
