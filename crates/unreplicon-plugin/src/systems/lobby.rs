@@ -11,7 +11,7 @@ use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, S
 use unreplicon_core::messages::{
     RequestAbortMission, RequestSelectDifficulty, RequestSelectMap, RequestStartMission,
 };
-use unreplicon_core::ownership::OwnerId;
+use unreplicon_core::ownership::{Owner, OwnerId};
 use unreplicon_core::resources::{ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
@@ -46,6 +46,12 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         process_newly_connected_clients.run_if(resource_exists::<AuthorityRole>),
+    );
+    app.add_systems(
+        Update,
+        reconcile_reconnected_player_ownership
+            .run_if(resource_exists::<AuthorityRole>)
+            .run_if(in_state(SimulationState::Ready)),
     );
 
     // Two hooks so the transition to Lobby is caught regardless of which state
@@ -357,6 +363,85 @@ fn process_newly_connected_clients(
                 lobby.leader_uuid = Some(uuid);
                 info!("Player {} assigned as lobby leader", uuid);
             }
+        }
+    }
+}
+
+/// Server: while a mission is running, reconcile ownership of already-spawned player and gear
+/// entities after a reconnect.
+///
+/// Reconnects can change the underlying socket owner from `Client(...v0)` to `Client(...v1)`.
+/// If avatar/gear entities keep the old `Owner`, state exports from the reconnected client are
+/// rejected as sender mismatches.
+fn reconcile_reconnected_player_ownership(
+    q_lobby: Query<&LobbyInfo>,
+    q_players: Query<(
+        Entity,
+        &unplayer_core::components::PlayerSprite,
+        &ungear_core::components::playergear::PlayerGear,
+        &Owner,
+        Has<unplayer_core::components::PlayerDisconnected>,
+    )>,
+    q_owned: Query<&Owner>,
+    mut commands: Commands,
+) {
+    let Ok(lobby) = q_lobby.single() else {
+        return;
+    };
+
+    for lobby_player in &lobby.players {
+        if !lobby_player.connected {
+            continue;
+        }
+
+        let Some(expected_owner) = lobby_player.current_socket else {
+            continue;
+        };
+
+        let Some((player_entity, _sprite, player_gear, owner, is_disconnected)) = q_players
+            .iter()
+            .find(|(_entity, sprite, _gear, _owner, _disconnected)| {
+                sprite.id == lobby_player.player_uuid
+            })
+        else {
+            continue;
+        };
+
+        let mut changed = false;
+
+        if owner.0 != expected_owner {
+            commands.entity(player_entity).insert(Owner(expected_owner));
+            changed = true;
+        }
+
+        for gear_entity in player_gear
+            .left_hand
+            .into_iter()
+            .chain(player_gear.right_hand)
+            .chain(player_gear.inventory.iter().copied())
+        {
+            let Ok(gear_owner) = q_owned.get(gear_entity) else {
+                continue;
+            };
+
+            if gear_owner.0 != expected_owner {
+                commands.entity(gear_entity).insert(Owner(expected_owner));
+                changed = true;
+            }
+        }
+
+        if is_disconnected {
+            commands
+                .entity(player_entity)
+                .remove::<unplayer_core::components::PlayerDisconnected>();
+            changed = true;
+        }
+
+        if changed {
+            info!(
+                "Reconciled ownership after reconnect for player {} (owner={:?})",
+                lobby_player.player_uuid, expected_owner
+            );
         }
     }
 }
