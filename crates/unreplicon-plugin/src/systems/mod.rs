@@ -4,7 +4,7 @@ mod connection;
 pub(crate) mod debug;
 pub(crate) mod ghost;
 pub(crate) mod lobby;
-pub(crate) mod players;
+pub mod players;
 pub(crate) mod procman;
 
 use bevy::prelude::*;

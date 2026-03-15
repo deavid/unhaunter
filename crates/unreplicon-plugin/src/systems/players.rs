@@ -106,6 +106,7 @@ pub(super) fn app_setup(app: &mut App) {
     );
     app.set_marker_fns::<LocallyOwned, GearMarker>(noop_write::<GearMarker>, noop_remove);
     app.set_marker_fns::<LocallyOwned, GearKind>(noop_write::<GearKind>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, Toggleable>(noop_write, noop_remove);
     app.set_marker_fns::<LocallyOwned, ungearitems_core::components::flashlight::Flashlight>(
         noop_write,
         noop_remove,
@@ -561,7 +562,7 @@ fn spawn_late_joining_players(
     }
 }
 
-fn send_export_gear_state(
+pub fn send_export_gear_state(
     q_local_player: Query<&PlayerGear, With<LocallyOwned>>,
     q_flashlight: Query<&ungearitems_core::components::flashlight::Flashlight>,
     q_uvtorch: Query<&ungearitems_core::components::uvtorch::UVTorch>,

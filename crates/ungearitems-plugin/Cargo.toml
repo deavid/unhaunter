@@ -31,6 +31,7 @@ unsound-core = { path = "../unsound-core" }
 unsummary-core = { path = "../unsummary-core" }
 unthermal-core = { path = "../unthermal-core" }
 unprofile-core = { path = "../unprofile-core" }
+unreplicon-plugin = { path = "../unreplicon-plugin" }
 
 unreplicon-core = { workspace = true }
 

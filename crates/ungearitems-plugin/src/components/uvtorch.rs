@@ -157,6 +157,15 @@ fn hydrate_uvtorch_skin(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_uvtorch_skeleton);
-    app.add_systems(Update, (hydrate_uvtorch_skin, update_uvtorch_skin));
+    app.add_systems(
+        Update,
+        update_uvtorch_skeleton
+            .before(unreplicon_plugin::systems::players::send_export_gear_state)
+            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+    );
+    app.add_systems(
+        Update,
+        (hydrate_uvtorch_skin, update_uvtorch_skin)
+            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+    );
 }

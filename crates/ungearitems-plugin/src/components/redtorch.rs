@@ -142,6 +142,15 @@ fn hydrate_redtorch_skin(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_redtorch_skeleton);
-    app.add_systems(Update, (hydrate_redtorch_skin, update_redtorch_skin));
+    app.add_systems(
+        Update,
+        update_redtorch_skeleton
+            .before(unreplicon_plugin::systems::players::send_export_gear_state)
+            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+    );
+    app.add_systems(
+        Update,
+        (hydrate_redtorch_skin, update_redtorch_skin)
+            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+    );
 }
