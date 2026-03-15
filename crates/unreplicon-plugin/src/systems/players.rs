@@ -24,11 +24,11 @@ use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite, Stamina};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
-    ExportGearStateMessage, ExportStateMessage, FloorGearDespawnBroadcast, FloorGearSpawnBroadcast,
-    GearSkeletonState, HostFloorGearDroppedEvent, HostFloorGearPickedUpEvent,
-    HostMovableMotionEvent, InteractionRequestMessage, MovableMotionBroadcast, OwnershipGranted,
-    OwnershipReleased, RequestPickupGear, SaltDroppedMessage, TruckLoadoutAction,
-    TruckLoadoutMessage,
+    ExportGearStateMessage, ExportPlayerGearMessage, ExportStateMessage, FloorGearDespawnBroadcast,
+    FloorGearSpawnBroadcast, GearSkeletonState, HostFloorGearDroppedEvent,
+    HostFloorGearPickedUpEvent, HostMovableMotionEvent, InteractionRequestMessage,
+    MovableMotionBroadcast, OwnershipGranted, OwnershipReleased, RequestPickupGear,
+    SaltDroppedMessage, TruckLoadoutAction, TruckLoadoutMessage,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -49,6 +49,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_mapped_client_message::<RequestPickupGear>(Channel::Ordered);
     app.add_mapped_client_message::<OwnershipReleased>(Channel::Ordered);
     app.add_mapped_client_message::<ExportGearStateMessage>(Channel::Unreliable);
+    app.add_mapped_client_message::<ExportPlayerGearMessage>(Channel::Unreliable);
     // Register server → client messages
     app.add_mapped_server_message::<MovableMotionBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearSpawnBroadcast>(Channel::Ordered);
@@ -147,6 +148,7 @@ pub(super) fn app_setup(app: &mut App) {
             handle_interaction_request,
             broadcast_movable_motion,
             handle_export_state,
+            handle_export_player_gear_state,
             handle_request_pickup_gear,
             handle_ownership_released,
             handle_export_gear_state,
@@ -826,6 +828,23 @@ fn handle_export_state(
     }
 }
 
+/// Server: handle `ExportPlayerGearMessage` from connected clients.
+fn handle_export_player_gear_state(
+    mut reader: MessageReader<FromClient<ExportPlayerGearMessage>>,
+    mut q_players: Query<(&Owner, &mut PlayerGear), Without<LocallyOwned>>,
+) {
+    for msg in reader.read() {
+        for (owner, mut gear) in q_players.iter_mut() {
+            if from_owner_id(owner.0) == msg.client_id {
+                gear.left_hand = msg.message.left_hand;
+                gear.right_hand = msg.message.right_hand;
+                gear.inventory = msg.message.inventory.clone();
+                break;
+            }
+        }
+    }
+}
+
 /// Server: handle `InteractionRequestMessage` from connected clients.
 fn handle_interaction_request(
     mut reader: MessageReader<FromClient<InteractionRequestMessage>>,
@@ -1067,14 +1086,16 @@ fn send_export_state(
             &Direction,
             &PlayerSprite,
             &Stamina,
+            &PlayerGear,
             Has<Hiding>,
             Has<PlayerSpectating>,
         ),
         With<LocallyOwned>,
     >,
     mut writer: MessageWriter<ExportStateMessage>,
+    mut gear_writer: MessageWriter<ExportPlayerGearMessage>,
 ) {
-    for (pos, dir, sprite, stamina, is_hiding, is_spectating) in q_local.iter() {
+    for (pos, dir, sprite, stamina, gear, is_hiding, is_spectating) in q_local.iter() {
         writer.write(ExportStateMessage {
             x: pos.x,
             y: pos.y,
@@ -1091,6 +1112,12 @@ fn send_export_state(
             movement_dx: sprite.velocity.x,
             movement_dy: sprite.velocity.y,
             is_spectating,
+        });
+
+        gear_writer.write(ExportPlayerGearMessage {
+            left_hand: gear.left_hand,
+            right_hand: gear.right_hand,
+            inventory: gear.inventory.clone(),
         });
     }
 }

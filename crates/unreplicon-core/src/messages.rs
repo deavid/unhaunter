@@ -90,6 +90,29 @@ impl bevy::ecs::entity::MapEntities for OwnershipGranted {
     }
 }
 
+/// Message sent by the client to report hand/inventory entity assignments.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect, Default)]
+#[reflect(Default)]
+pub struct ExportPlayerGearMessage {
+    pub left_hand: Option<Entity>,
+    pub right_hand: Option<Entity>,
+    pub inventory: Vec<Entity>,
+}
+
+impl bevy::ecs::entity::MapEntities for ExportPlayerGearMessage {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        if let Some(left_hand) = self.left_hand.as_mut() {
+            *left_hand = mapper.get_mapped(*left_hand);
+        }
+        if let Some(right_hand) = self.right_hand.as_mut() {
+            *right_hand = mapper.get_mapped(*right_hand);
+        }
+        for gear_entity in &mut self.inventory {
+            *gear_entity = mapper.get_mapped(*gear_entity);
+        }
+    }
+}
+
 /// Message sent by a client to request picking up a gear entity.
 #[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]
