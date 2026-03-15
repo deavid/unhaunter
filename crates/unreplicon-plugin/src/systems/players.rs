@@ -4,7 +4,6 @@ use bevy_replicon::prelude::{
     AppMarkerExt, AppRuleExt, Channel, ClientId, ClientMessageAppExt, FromClient, Replicated,
     SendMode, ServerMessageAppExt, ToClients,
 };
-use bevy_replicon::server::visibility::client_visibility::ClientVisibility;
 use bevy_replicon::shared::replication::deferred_entity::DeferredEntity;
 use bevy_replicon::shared::replication::registry::ctx::{RemoveCtx, WriteCtx};
 use bevy_replicon::shared::replication::registry::rule_fns::RuleFns;
@@ -14,7 +13,8 @@ use unbehavior::behavior::Interactive;
 use unbehavior::components::{FloorItemCollidable, TmxEntityId};
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unfoundation_core::types::gear::Hand;
+use unfoundation_core::types::gear::{EquipmentPosition, Hand};
+use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
@@ -25,10 +25,9 @@ use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite, Stamina}
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportPlayerGearMessage, ExportStateMessage, FloorGearDespawnBroadcast,
-    FloorGearSpawnBroadcast, GearSkeletonState, HostFloorGearDroppedEvent,
-    HostFloorGearPickedUpEvent, HostMovableMotionEvent, InteractionRequestMessage,
-    MovableMotionBroadcast, OwnershipGranted, OwnershipReleased, RequestPickupGear,
-    SaltDroppedMessage, TruckLoadoutAction, TruckLoadoutMessage,
+    FloorGearSpawnBroadcast, GearSkeletonState, HostMovableMotionEvent, InteractionRequestMessage,
+    MovableMotionBroadcast, OwnershipGranted, RequestDrop, RequestGrab, SaltDroppedMessage,
+    TruckLoadoutAction, TruckLoadoutMessage,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -46,8 +45,8 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_client_message::<InteractionRequestMessage>(Channel::Ordered);
     app.add_client_message::<TruckLoadoutMessage>(Channel::Ordered);
     app.add_client_message::<SaltDroppedMessage>(Channel::Ordered);
-    app.add_mapped_client_message::<RequestPickupGear>(Channel::Ordered);
-    app.add_mapped_client_message::<OwnershipReleased>(Channel::Ordered);
+    app.add_mapped_client_message::<RequestGrab>(Channel::Ordered);
+    app.add_mapped_client_message::<RequestDrop>(Channel::Ordered);
     app.add_mapped_client_message::<ExportGearStateMessage>(Channel::Unreliable);
     app.add_mapped_client_message::<ExportPlayerGearMessage>(Channel::Unreliable);
     // Register server → client messages
@@ -63,8 +62,6 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Register local messages
     app.add_message::<HostMovableMotionEvent>();
-    app.add_message::<HostFloorGearDroppedEvent>();
-    app.add_message::<HostFloorGearPickedUpEvent>();
 
     // Register replicated components
     app.replicate::<TmxEntityId>();
@@ -80,6 +77,8 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<GearMarker>();
     app.replicate::<GearKind>();
     app.replicate::<Behavior>();
+    app.replicate::<FloorItemCollidable>();
+    app.replicate::<ungear_core::components::deployedgear::DeployedGear>();
     app.replicate::<Toggleable>();
     app.replicate::<ungearitems_core::components::flashlight::Flashlight>();
     app.replicate::<ungearitems_core::components::uvtorch::UVTorch>();
@@ -107,6 +106,11 @@ pub(super) fn app_setup(app: &mut App) {
     );
     app.set_marker_fns::<LocallyOwned, GearMarker>(noop_write::<GearMarker>, noop_remove);
     app.set_marker_fns::<LocallyOwned, GearKind>(noop_write::<GearKind>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, FloorItemCollidable>(noop_write, noop_remove);
+    app.set_marker_fns::<LocallyOwned, ungear_core::components::deployedgear::DeployedGear>(
+        noop_write,
+        noop_remove,
+    );
     app.set_marker_fns::<LocallyOwned, Toggleable>(noop_write, noop_remove);
     app.set_marker_fns::<LocallyOwned, ungearitems_core::components::flashlight::Flashlight>(
         noop_write,
@@ -149,8 +153,8 @@ pub(super) fn app_setup(app: &mut App) {
             broadcast_movable_motion,
             handle_export_state,
             handle_export_player_gear_state,
-            handle_request_pickup_gear,
-            handle_ownership_released,
+            handle_request_grab,
+            handle_request_drop,
             handle_export_gear_state,
             handle_salt_drop,
         )
@@ -416,10 +420,16 @@ fn setup_mission_players(
             // belongs to it, and send_export_state (which queries With<LocallyOwned>)
             // will never fire for that client.
             let client_id = from_owner_id(socket_owner_id);
-            commands.write_message(ToClients {
-                mode: SendMode::Direct(client_id),
-                message: OwnershipGranted { entity },
-            });
+            if client_id == bevy_replicon::prelude::ClientId::Server {
+                commands
+                    .entity(entity)
+                    .insert(unreplicon_core::ownership::LocallyOwned);
+            } else {
+                commands.write_message(ToClients {
+                    mode: SendMode::Direct(client_id),
+                    message: OwnershipGranted { entity },
+                });
+            }
             info!(
                 "setup_mission_players: spawned remote skeleton {:?} for player {} (owner={:?})",
                 entity, player.player_uuid, socket_owner_id
@@ -833,12 +843,14 @@ fn handle_export_player_gear_state(
     mut reader: MessageReader<FromClient<ExportPlayerGearMessage>>,
     mut q_players: Query<(&Owner, &mut PlayerGear), Without<LocallyOwned>>,
 ) {
+    // TODO: Theoretical race condition: if an unreliable ExportPlayerGearMessage arrives out-of-order AFTER a RequestDrop has been processed, the server might briefly put the dropped item back into the player's inventory.
     for msg in reader.read() {
         for (owner, mut gear) in q_players.iter_mut() {
             if from_owner_id(owner.0) == msg.client_id {
                 gear.left_hand = msg.message.left_hand;
                 gear.right_hand = msg.message.right_hand;
                 gear.inventory = msg.message.inventory.clone();
+                gear.held_item = msg.message.held_item.clone();
                 break;
             }
         }
@@ -907,65 +919,84 @@ fn broadcast_movable_motion(
     }
 }
 
-fn handle_request_pickup_gear(
-    mut reader: MessageReader<FromClient<RequestPickupGear>>,
+fn handle_request_grab(
+    mut reader: MessageReader<FromClient<RequestGrab>>,
     mut commands: Commands,
-    q_gear: Query<(Entity, Option<&Owner>), With<FloorItemCollidable>>,
-    filter_bit: Res<crate::plugin::GlobalFilterBit>,
-    mut q_clients: Query<&mut ClientVisibility>,
+    q_items: Query<
+        (Entity, Option<&Owner>, Has<GearKind>, Has<Behavior>),
+        With<FloorItemCollidable>,
+    >,
 ) {
     for msg in reader.read() {
         let client_id = msg.client_id;
-        let gear_entity = msg.message.entity;
+        let item_entity = msg.message.entity;
 
-        if let Ok((entity, owner)) = q_gear.get(gear_entity)
+        if let Ok((entity, owner, is_gear, is_furniture)) = q_items.get(item_entity)
             && owner.is_none()
         {
             let owner_id = to_owner_id(client_id);
-            // Grant ownership
             commands.entity(entity).insert(Owner(owner_id));
+            commands.entity(entity).remove::<FloorItemCollidable>();
+            commands
+                .entity(entity)
+                .remove::<ungear_core::components::deployedgear::DeployedGear>();
 
-            // Pillar 5 Orphan step
-            // commands.entity(entity).remove::<Replicated>(); // REVERTED: Server must keep Replicated
-
-            if let OwnerId::Client(client_entity) = owner_id
-                && let Ok(mut visibility) = q_clients.get_mut(client_entity)
-            {
-                visibility.set(entity, filter_bit.0, false);
+            if is_gear {
+                // Gear visual cleanup is handled reactively on clients.
             }
 
-            commands.write_message(ToClients {
-                mode: SendMode::Direct(client_id),
-                message: OwnershipGranted { entity },
-            });
+            if is_furniture {
+                // Furniture keeps its visuals while carried.
+            }
+
+            if client_id == bevy_replicon::prelude::ClientId::Server {
+                commands
+                    .entity(entity)
+                    .insert(unreplicon_core::ownership::LocallyOwned);
+            } else {
+                commands.write_message(ToClients {
+                    mode: SendMode::Direct(client_id),
+                    message: OwnershipGranted { entity },
+                });
+            }
         }
     }
 }
 
-fn handle_ownership_released(
-    mut reader: MessageReader<FromClient<OwnershipReleased>>,
+fn handle_request_drop(
+    mut reader: MessageReader<FromClient<RequestDrop>>,
     mut commands: Commands,
-    q_gear: Query<(Entity, &Owner)>,
-    filter_bit: Res<crate::plugin::GlobalFilterBit>,
-    mut q_clients: Query<&mut ClientVisibility>,
+    q_items: Query<(Entity, &Owner, Has<GearKind>, Has<Behavior>)>,
 ) {
     for msg in reader.read() {
         let client_id = msg.client_id;
-        let gear_entity = msg.message.entity;
+        let item_entity = msg.message.entity;
 
-        if let Ok((entity, owner)) = q_gear.get(gear_entity)
+        if let Ok((entity, owner, is_gear, is_furniture)) = q_items.get(item_entity)
             && from_owner_id(owner.0) == client_id
         {
             commands.entity(entity).remove::<Owner>();
-            commands.entity(entity).remove::<LocallyOwned>();
+            commands.entity(entity).insert(FloorItemCollidable);
+            commands.entity(entity).insert(Position {
+                x: msg.message.position[0],
+                y: msg.message.position[1],
+                z: msg.message.position[2],
+                ..Default::default()
+            });
 
-            // Pillar 5 Re-Adopt step (Server side)
-            commands.entity(entity).insert(Replicated);
+            if is_gear {
+                commands.entity(entity).insert(DeployedGear {
+                    direction: Direction {
+                        dx: msg.message.direction[0],
+                        dy: msg.message.direction[1],
+                        dz: msg.message.direction[2],
+                    },
+                });
+                commands.entity(entity).insert(EquipmentPosition::Deployed);
+            }
 
-            if let ClientId::Client(client_entity) = client_id
-                && let Ok(mut visibility) = q_clients.get_mut(client_entity)
-            {
-                visibility.set(entity, filter_bit.0, true);
+            if is_furniture {
+                // Furniture visuals are preserved while carried; no extra components needed.
             }
         }
     }
@@ -1021,10 +1052,12 @@ fn handle_truck_loadout_message(
                 ));
 
                 let client_id = crate::systems::players::from_owner_id(owner.0);
-                commands.write_message(bevy_replicon::prelude::ToClients {
-                    mode: bevy_replicon::prelude::SendMode::Direct(client_id),
-                    message: unreplicon_core::messages::OwnershipGranted { entity },
-                });
+                if client_id != bevy_replicon::prelude::ClientId::Server {
+                    commands.write_message(bevy_replicon::prelude::ToClients {
+                        mode: bevy_replicon::prelude::SendMode::Direct(client_id),
+                        message: unreplicon_core::messages::OwnershipGranted { entity },
+                    });
+                }
 
                 if p_gear.left_hand.is_none() {
                     p_gear.left_hand = Some(entity);
@@ -1118,6 +1151,7 @@ fn send_export_state(
             left_hand: gear.left_hand,
             right_hand: gear.right_hand,
             inventory: gear.inventory.clone(),
+            held_item: gear.held_item.clone(),
         });
     }
 }
@@ -1207,33 +1241,36 @@ fn handle_ownership_granted(
 ) {
     for msg in reader.read() {
         let server_entity = msg.entity;
-        if let Some(&client_entity) = entity_map.to_client().get(&server_entity) {
-            info!("handle_ownership_granted: entity {:?}", client_entity);
-            commands.entity(client_entity).insert(LocallyOwned);
+        let client_entity = entity_map
+            .to_client()
+            .get(&server_entity)
+            .copied()
+            .unwrap_or(server_entity);
+        info!("handle_ownership_granted: entity {:?}", client_entity);
+        commands.entity(client_entity).insert(LocallyOwned);
 
-            // Also grant LocallyOwned to all gear entities this player holds
-            if let Ok(gear) = q_player_gear.get(client_entity) {
-                if let Some(entity) = gear.left_hand {
-                    commands.entity(entity).insert(LocallyOwned);
-                    debug!(
-                        "handle_ownership_granted: propagating LocallyOwned to left_hand {:?}",
-                        entity
-                    );
-                }
-                if let Some(entity) = gear.right_hand {
-                    commands.entity(entity).insert(LocallyOwned);
-                    debug!(
-                        "handle_ownership_granted: propagating LocallyOwned to right_hand {:?}",
-                        entity
-                    );
-                }
-                for &entity in &gear.inventory {
-                    commands.entity(entity).insert(LocallyOwned);
-                    debug!(
-                        "handle_ownership_granted: propagating LocallyOwned to inventory item {:?}",
-                        entity
-                    );
-                }
+        // Also grant LocallyOwned to all gear entities this player holds
+        if let Ok(gear) = q_player_gear.get(client_entity) {
+            if let Some(entity) = gear.left_hand {
+                commands.entity(entity).insert(LocallyOwned);
+                debug!(
+                    "handle_ownership_granted: propagating LocallyOwned to left_hand {:?}",
+                    entity
+                );
+            }
+            if let Some(entity) = gear.right_hand {
+                commands.entity(entity).insert(LocallyOwned);
+                debug!(
+                    "handle_ownership_granted: propagating LocallyOwned to right_hand {:?}",
+                    entity
+                );
+            }
+            for &entity in &gear.inventory {
+                commands.entity(entity).insert(LocallyOwned);
+                debug!(
+                    "handle_ownership_granted: propagating LocallyOwned to inventory item {:?}",
+                    entity
+                );
             }
         }
     }

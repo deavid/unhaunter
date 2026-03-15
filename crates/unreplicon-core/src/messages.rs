@@ -6,6 +6,7 @@ use unghost_core::types::ghost::types::GhostType;
 
 use crate::network_id::NetworkId;
 use unfoundation_core::types::gear::Hand;
+use ungear_core::components::playergear::HeldObject;
 use ungear_core::types::gear::kind::GearKind;
 
 /// Sent by the (room-owner) client to request a map change.
@@ -97,6 +98,7 @@ pub struct ExportPlayerGearMessage {
     pub left_hand: Option<Entity>,
     pub right_hand: Option<Entity>,
     pub inventory: Vec<Entity>,
+    pub held_item: Option<HeldObject>,
 }
 
 impl bevy::ecs::entity::MapEntities for ExportPlayerGearMessage {
@@ -110,17 +112,20 @@ impl bevy::ecs::entity::MapEntities for ExportPlayerGearMessage {
         for gear_entity in &mut self.inventory {
             *gear_entity = mapper.get_mapped(*gear_entity);
         }
+        if let Some(held_item) = self.held_item.as_mut() {
+            held_item.entity = mapper.get_mapped(held_item.entity);
+        }
     }
 }
 
 /// Message sent by a client to request picking up a gear entity.
 #[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]
-pub struct RequestPickupGear {
+pub struct RequestGrab {
     pub entity: Entity,
 }
 
-impl Default for RequestPickupGear {
+impl Default for RequestGrab {
     fn default() -> Self {
         Self {
             entity: Entity::PLACEHOLDER,
@@ -128,7 +133,7 @@ impl Default for RequestPickupGear {
     }
 }
 
-impl bevy::ecs::entity::MapEntities for RequestPickupGear {
+impl bevy::ecs::entity::MapEntities for RequestGrab {
     fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
         self.entity = mapper.get_mapped(self.entity);
     }
@@ -180,19 +185,23 @@ impl bevy::ecs::entity::MapEntities for ExportGearStateMessage {
 /// Message sent by the client to the server to release ownership.
 #[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]
-pub struct OwnershipReleased {
+pub struct RequestDrop {
     pub entity: Entity,
+    pub position: [f32; 3],
+    pub direction: [f32; 3],
 }
 
-impl Default for OwnershipReleased {
+impl Default for RequestDrop {
     fn default() -> Self {
         Self {
             entity: Entity::PLACEHOLDER,
+            position: [0.0, 0.0, 0.0],
+            direction: [0.0, 0.0, 0.0],
         }
     }
 }
 
-impl bevy::ecs::entity::MapEntities for OwnershipReleased {
+impl bevy::ecs::entity::MapEntities for RequestDrop {
     fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
         self.entity = mapper.get_mapped(self.entity);
     }

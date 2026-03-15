@@ -599,56 +599,7 @@ fn button_clicked(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (
-            update_loadout_buttons,
-            update_loadout_icons,
-            button_clicked,
-            auto_equip_replicated_gear,
-        )
+        (update_loadout_buttons, update_loadout_icons, button_clicked)
             .run_if(in_state(GameState::Truck)),
     );
-}
-
-/// Client: Automatically equip gear entities that the server granted ownership of.
-/// Only runs for pure clients; host/authority manually equips in `button_clicked`.
-fn auto_equip_replicated_gear(
-    mut q_player_gear: Query<&mut PlayerGear, With<MainPlayer>>,
-    q_new_gear: Query<
-        Entity,
-        (
-            Added<unreplicon_core::ownership::LocallyOwned>,
-            With<ungear_core::resources::spawner::GearMarker>,
-        ),
-    >,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
-) {
-    if authority.is_some() {
-        return;
-    }
-    let Some(mut p_gear) = q_player_gear.iter_mut().next() else {
-        return;
-    };
-
-    for entity in q_new_gear.iter() {
-        // If already in any slot, skip.
-        if p_gear.left_hand == Some(entity)
-            || p_gear.right_hand == Some(entity)
-            || p_gear.inventory.contains(&entity)
-        {
-            continue;
-        }
-
-        if p_gear.left_hand.is_none() {
-            p_gear.left_hand = Some(entity);
-        } else if p_gear.right_hand.is_none() {
-            p_gear.right_hand = Some(entity);
-        } else if p_gear.inventory.len() < 2 {
-            p_gear.inventory.push(entity);
-        } else {
-            warn!(
-                "Received ownership of gear entity {:?} but inventory is full!",
-                entity
-            );
-        }
-    }
 }

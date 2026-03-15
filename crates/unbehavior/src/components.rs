@@ -22,7 +22,8 @@ pub struct Door;
 pub struct Stairs {
     pub z: i32,
 }
-#[derive(Component, Debug, Clone, PartialEq, Eq)]
+#[derive(Component, Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct FloorItemCollidable;
 
 /// Marker component for movable objects.
@@ -44,7 +45,9 @@ pub struct HidingSpot;
 /// `tile_layers_iter()` in `unmapload-plugin/src/level_setup.rs`.
 /// `x` and `y` are the raw `tile.pos.x` and `tile.pos.y` from the Tiled map,
 /// **before** the coordinate transformation applied in `process_and_spawn_tile`.
-#[derive(Component, Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Reflect)]
+#[derive(
+    Component, Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Reflect,
+)]
 #[reflect(Component)]
 pub struct TmxEntityId {
     pub layer_idx: usize,
