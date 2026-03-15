@@ -8008,6 +8008,7 @@ dependencies = [
  "unspatial-core",
  "unsummary-core",
  "untags-core",
+ "untruck-core",
  "untypes-core",
  "uuid",
 ]
@@ -8177,6 +8178,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
+ "serde",
  "unfoundation-core",
  "unghost-core",
 ]

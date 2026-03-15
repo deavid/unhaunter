@@ -73,6 +73,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<PlayerGear>();
     app.replicate::<HeldObject>();
     app.replicate::<Hiding>();
+    app.replicate::<untruck_core::components::in_truck::InTruck>();
     app.replicate::<PlayerSpectating>();
     app.replicate::<GearMarker>();
     app.replicate::<GearKind>();
@@ -100,6 +101,10 @@ pub(super) fn app_setup(app: &mut App) {
     app.set_marker_fns::<LocallyOwned, PlayerGear>(noop_write::<PlayerGear>, noop_remove);
     app.set_marker_fns::<LocallyOwned, HeldObject>(noop_write::<HeldObject>, noop_remove);
     app.set_marker_fns::<LocallyOwned, Hiding>(noop_write::<Hiding>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, untruck_core::components::in_truck::InTruck>(
+        noop_write,
+        noop_remove,
+    );
     app.set_marker_fns::<LocallyOwned, PlayerSpectating>(
         noop_write::<PlayerSpectating>,
         noop_remove,
@@ -793,6 +798,7 @@ fn handle_export_state(
     mut reader: MessageReader<FromClient<ExportStateMessage>>,
     mut q_players: Query<
         (
+            Entity,
             &Owner,
             &mut Position,
             &mut Direction,
@@ -805,7 +811,9 @@ fn handle_export_state(
     mut commands: Commands,
 ) {
     for msg in reader.read() {
-        for (owner, mut pos, mut dir, mut stamina, mut sprite, spectating) in q_players.iter_mut() {
+        for (entity, owner, mut pos, mut dir, mut stamina, mut sprite, spectating) in
+            q_players.iter_mut()
+        {
             if from_owner_id(owner.0) != msg.client_id {
                 continue;
             }
@@ -820,6 +828,22 @@ fn handle_export_state(
 
             stamina.running = msg.message.is_running;
             stamina.current = msg.message.stamina * stamina.max;
+
+            if msg.message.is_hiding {
+                commands.entity(entity).insert(Hiding { hiding_spot: None });
+            } else {
+                commands.entity(entity).remove::<Hiding>();
+            }
+
+            if msg.message.in_truck {
+                commands
+                    .entity(entity)
+                    .insert(untruck_core::components::in_truck::InTruck);
+            } else {
+                commands
+                    .entity(entity)
+                    .remove::<untruck_core::components::in_truck::InTruck>();
+            }
 
             sprite.health = msg.message.health;
             sprite.sanity = msg.message.sanity;
@@ -1121,6 +1145,7 @@ fn send_export_state(
             &Stamina,
             &PlayerGear,
             Has<Hiding>,
+            Has<untruck_core::components::in_truck::InTruck>,
             Has<PlayerSpectating>,
         ),
         With<LocallyOwned>,
@@ -1128,7 +1153,7 @@ fn send_export_state(
     mut writer: MessageWriter<ExportStateMessage>,
     mut gear_writer: MessageWriter<ExportPlayerGearMessage>,
 ) {
-    for (pos, dir, sprite, stamina, gear, is_hiding, is_spectating) in q_local.iter() {
+    for (pos, dir, sprite, stamina, gear, is_hiding, in_truck, is_spectating) in q_local.iter() {
         writer.write(ExportStateMessage {
             x: pos.x,
             y: pos.y,
@@ -1139,6 +1164,7 @@ fn send_export_state(
             is_running: stamina.running,
             frame: 0,
             is_hiding,
+            in_truck,
             stamina: stamina.percentage(),
             health: sprite.health,
             sanity: sprite.sanity,

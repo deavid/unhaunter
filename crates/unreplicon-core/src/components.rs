@@ -92,5 +92,5 @@ pub struct RepliconGhostSpawningActive;
 /// This entity carries replicated journal components (`GhostGuess`,
 /// `SummaryData`) so clients can receive them from the server without the
 /// need for a per-ghost or per-player lookup.
-#[derive(Component, Debug, Default)]
+#[derive(Component, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct MissionGoalEntity;

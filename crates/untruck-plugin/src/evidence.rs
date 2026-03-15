@@ -97,6 +97,7 @@ pub(crate) fn keyboard_evidence(
                 let mark_as_found = !gg.evidences_found.contains(&evidence);
                 ev_evidence_toggle.write(RequestJournalEvidenceToggle {
                     evidence,
+                    discard: false,
                     mark_as_found,
                 });
             }

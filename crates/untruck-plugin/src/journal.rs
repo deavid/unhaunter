@@ -155,26 +155,23 @@ fn button_system(mut p: JournalButtonParams) {
         }
     } else {
         if let Some((evidence, discard)) = clicked_evidence_type {
-            let mark_as_found = if discard {
-                false // shift-click: mark as missing/discarded
-            } else {
-                !p.gg.evidences_found.contains(&evidence)
-            };
+            let mark_as_found = !discard && !p.gg.evidences_found.contains(&evidence);
             p.ev_evidence_toggle.write(RequestJournalEvidenceToggle {
                 evidence,
+                discard,
                 mark_as_found,
             });
         }
-        // Note: ghost discard (shift-click) is not yet supported via replicon protocol.
-        if let Some((ghost_type, discard)) = clicked_ghost_type
-            && !discard
-        {
-            let new_guess = if p.gg.ghost_type == Some(ghost_type) {
+        if let Some((ghost_type, discard)) = clicked_ghost_type {
+            let new_guess = if discard {
+                Some(ghost_type)
+            } else if p.gg.ghost_type == Some(ghost_type) {
                 None
             } else {
                 Some(ghost_type)
             };
             p.ev_ghost_toggle.write(RequestJournalGhostToggle {
+                discard,
                 ghost_type: new_guess,
             });
         }

@@ -31,6 +31,7 @@ unrender-std = { path = "../unrender-std" }
 unevents-core = { path = "../unevents-core" }
 unspatial-core = { path = "../unspatial-core" }
 unplayer-core = { path = "../unplayer-core" }
+untruck-core = { path = "../untruck-core" }
 unboard-core = { path = "../unboard-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 unghost-core = { path = "../unghost-core" }

@@ -50,7 +50,7 @@ pub struct RequestAbortMission;
 // ---------------------------------------------------------------------------
 
 /// Message sent by a client to report its owned entity state.
-#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]
 pub struct ExportStateMessage {
     pub x: f32,
@@ -62,12 +62,36 @@ pub struct ExportStateMessage {
     pub is_running: bool,
     pub frame: u16,
     pub is_hiding: bool,
+    pub in_truck: bool,
     pub stamina: f32,
     pub health: f32,
     pub sanity: f32,
     pub movement_dx: f32,
     pub movement_dy: f32,
     pub is_spectating: bool,
+}
+
+impl Default for ExportStateMessage {
+    fn default() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            direction_dx: 0.0,
+            direction_dy: 0.0,
+            direction_dz: 0.0,
+            is_running: false,
+            frame: 0,
+            is_hiding: false,
+            in_truck: false,
+            stamina: 0.0,
+            health: 0.0,
+            sanity: 0.0,
+            movement_dx: 0.0,
+            movement_dy: 0.0,
+            is_spectating: false,
+        }
+    }
 }
 
 /// Message sent by the server to grant ownership of an entity to a client.
@@ -400,6 +424,7 @@ pub struct SpawnParticleNetEvent {
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct RequestJournalEvidenceToggle {
     pub evidence: Evidence,
+    pub discard: bool,
     pub mark_as_found: bool,
 }
 
@@ -408,6 +433,7 @@ pub struct RequestJournalEvidenceToggle {
 /// `ghost_type = None` means "clear the current guess".
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct RequestJournalGhostToggle {
+    pub discard: bool,
     pub ghost_type: Option<GhostType>,
 }
 

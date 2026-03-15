@@ -31,6 +31,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<SpectralClarity>();
     app.replicate::<GhostGuess>();
     app.replicate::<SummaryData>();
+    app.replicate::<MissionGoalEntity>();
 
     // Register server → client messages.
     app.add_server_message::<SpawnParticleNetEvent>(Channel::Ordered);
@@ -204,12 +205,23 @@ fn handle_journal_evidence_toggle(
         return;
     };
     for msg in reader.read() {
-        if msg.message.mark_as_found {
+        if msg.message.discard {
+            if ghost_guess
+                .evidences_missing
+                .contains(&msg.message.evidence)
+            {
+                ghost_guess.evidences_missing.remove(&msg.message.evidence);
+            } else {
+                ghost_guess.evidences_missing.insert(msg.message.evidence);
+                ghost_guess.evidences_found.remove(&msg.message.evidence);
+            }
+        } else if msg.message.mark_as_found {
             ghost_guess.evidences_found.insert(msg.message.evidence);
             ghost_guess.evidences_missing.remove(&msg.message.evidence);
         } else {
             ghost_guess.evidences_found.remove(&msg.message.evidence);
-            ghost_guess.evidences_missing.insert(msg.message.evidence);
+            // Non-discard clear maps to "unset".
+            ghost_guess.evidences_missing.remove(&msg.message.evidence);
         }
     }
 }
@@ -222,7 +234,20 @@ fn handle_journal_ghost_toggle(
         return;
     };
     for msg in reader.read() {
-        ghost_guess.ghost_type = msg.message.ghost_type;
+        if msg.message.discard {
+            if let Some(ghost_type) = msg.message.ghost_type {
+                if ghost_guess.ghosts_discarded.contains(&ghost_type) {
+                    ghost_guess.ghosts_discarded.remove(&ghost_type);
+                } else {
+                    ghost_guess.ghosts_discarded.insert(ghost_type);
+                    if ghost_guess.ghost_type == Some(ghost_type) {
+                        ghost_guess.ghost_type = None;
+                    }
+                }
+            }
+        } else {
+            ghost_guess.ghost_type = msg.message.ghost_type;
+        }
     }
 }
 

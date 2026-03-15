@@ -21,6 +21,7 @@ pub(crate) fn evaluate_mission_end(
     >,
     mut ev_mission: MessageWriter<MissionEvent>,
     mut mission_end_requested: ResMut<MissionEndRequested>,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
     time: Res<Time>,
     mut empty_timer: Local<Option<f32>>,
 ) {
@@ -50,7 +51,9 @@ pub(crate) fn evaluate_mission_end(
         let now = time.elapsed_secs();
         let start = empty_timer.get_or_insert(now);
         if now - *start > 2.0 {
-            ev_mission.write(MissionEvent::End);
+            if authority.is_some() {
+                ev_mission.write(MissionEvent::End);
+            }
             *empty_timer = None;
         }
     } else {
