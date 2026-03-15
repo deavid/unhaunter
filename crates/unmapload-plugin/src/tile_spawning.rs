@@ -47,6 +47,7 @@ pub(crate) fn process_and_spawn_tile(
     commands: &mut Commands,
     c: &mut f32,
     existing_tmx_map: &bevy_platform::collections::HashMap<TmxEntityId, Entity>,
+    q_positions: &Query<&Position>,
 ) {
     // Get the map tile components from the SpriteDB
     let mt = p
@@ -99,6 +100,9 @@ pub(crate) fn process_and_spawn_tile(
 
     // Spawn the base entity, or reuse existing replicated entity for stitch.
     let mut entity_commands = if let Some(existing) = stitch_entity {
+        if let Ok(server_pos) = q_positions.get(existing) {
+            pos = *server_pos;
+        }
         warn!(
             "Existing entity: {existing:?} - {}",
             beh.key_cvo().to_key_string()
@@ -175,7 +179,7 @@ pub(crate) fn process_and_spawn_tile(
     entity_commands.insert_if_new(MapEntityFieldBPos(pos.to_board_position()));
 
     // Add standard components to all tile entities
-    let mut transform = Transform::from_xyz(t_x, t_y, pos.visual_priority);
+    let mut transform = Transform::from_xyz(pos.x, pos.y, pos.visual_priority);
     let rf = mt.bundle.resolution_factor.ratio();
     transform.scale = Vec3::new(rf, rf, 1.0);
     if tile.flip_x {
@@ -206,7 +210,9 @@ pub(crate) fn process_and_spawn_tile(
     entity_commands
         .insert_if_new(GameSprite)
         .insert_if_new(MapTileSprite)
-        .insert(pos) // <- FIXME: We purposedly rewrite Position here so that the system for updating Transform from Position does re-trigger after this. Not the best, because the Position might have been different on the server.
+        // We intentionally insert `pos` here (even if it matches the server's replicated Position)
+        // to guarantee `Changed<Position>` fires, triggering `apply_perspective` to compute the correct isometric Transform.
+        .insert(pos)
         .insert(Visibility::Hidden)
         .insert(transform);
 }

@@ -18,6 +18,7 @@ use unmapload_core::events::loadlevel::{LevelLoadedEvent, MapGeometryInitialized
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::{GameSound, GameSprite};
 use unrender_std::materials::CustomMaterial1;
+use unspatial_core::position::Position;
 use untiled_core::tiled::MapTileSetDb;
 use untiled_core::tiledmap::map::MapLayerType;
 use untypes_core::states::{AppState, SimulationState};
@@ -71,6 +72,7 @@ fn load_level_handler(
     mut ev: MessageReader<LevelLoadedEvent>,
     mut commands: Commands,
     qgs: Query<Entity, (Or<(With<GameSprite>, With<GameSound>)>, Without<Remote>)>,
+    q_positions: Query<&Position>,
     mut p: LoadLevelSystemParam,
     mut ev_geometry_init: MessageWriter<MapGeometryInitializedEvent>,
     time: Res<Time>,
@@ -190,6 +192,7 @@ fn load_level_handler(
                 &mut commands,
                 &mut depth_counter,
                 &existing_tmx_map,
+                &q_positions,
             );
         }
     }
