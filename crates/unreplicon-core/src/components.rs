@@ -68,6 +68,9 @@ pub struct SelectedMission {
     pub map_seed: u64,
     /// String key of the difficulty chosen for this mission.
     pub difficulty_id: String,
+    /// Server-side unix timestamp (seconds) when this mission was started.
+    #[serde(default)]
+    pub started_at_unix_secs: f64,
 }
 
 /// Marker resource: inserted by `unreplicon-plugin` when replicon-based player

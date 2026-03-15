@@ -7,7 +7,7 @@ the --join flag.
 
 ## On the menu
 
-**[A.1]: Clicking "Start Mission" is confusing:** The server starts, the client swaps to "Join mission" but the player
+**[FIXED] [A.1]: Clicking "Start Mission" is confusing:** The server starts, the client swaps to "Join mission" but the player
 is utterly confused that nothing happened. This was done on purpose because there are bugs if the client joins the
 mission before the server spins up and all entities are replicated on the client. And we should wait for the server, but
 we also need some way to signal the user that we are in a loading state, and auto-join them eventually without them

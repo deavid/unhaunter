@@ -23,4 +23,5 @@ unassets-core = { path = "../unassets-core" }
 unmapload-core = { path = "../unmapload-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unprofile-core = { path = "../unprofile-core" }
+unrender-std = { path = "../unrender-std" }
 bevy-persistent = { workspace = true }

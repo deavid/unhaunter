@@ -4,6 +4,7 @@ use bevy_replicon::prelude::{
     ServerState,
 };
 use std::str::FromStr;
+use std::time::{SystemTime, UNIX_EPOCH};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unprofile_core::profile::RuntimeInstallationId;
@@ -12,11 +13,17 @@ use unreplicon_core::messages::{
     RequestAbortMission, RequestSelectDifficulty, RequestSelectMap, RequestStartMission,
 };
 use unreplicon_core::ownership::{Owner, OwnerId};
-use unreplicon_core::resources::{ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer};
+use unreplicon_core::resources::{
+    ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer, MissionAutoJoinArmed,
+};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::{AppState, BootState, GameState, SimulationState};
 use uuid::Uuid;
+
+const AUTO_JOIN_BUFFER_SECS: f32 = 2.0;
+const AUTO_JOIN_WAITING_LOBBY_SECS: f32 = 0.75;
+const AUTO_JOIN_MAX_MISSION_AGE_SECS: f64 = 30.0;
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
@@ -37,6 +44,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.init_resource::<ClientUuidMap>();
     app.init_resource::<LocalPlayer>();
     app.init_resource::<CurrentMapSeed>();
+    app.init_resource::<MissionAutoJoinArmed>();
     app.init_resource::<HostGone>();
     app.init_resource::<unreplicon_core::resources::RoomIdentification>();
 
@@ -101,60 +109,115 @@ pub(super) fn app_setup(app: &mut App) {
         observe_simulation_ready_to_enter_game.run_if(in_state(AppState::MissionLoading)),
     );
 
-    // Client-side: when SelectedMission is replicated from the server, start loading the map.
-    app.add_observer(on_selected_mission_added);
+    app.add_systems(Update, process_auto_join);
 }
 
-/// Client-side observer: fires when a `SelectedMission` entity is added (via replication).
-/// Triggers local map loading so the client catches up with the server.
-fn on_selected_mission_added(
-    trigger: On<Add, SelectedMission>,
+fn process_auto_join(
     q_mission: Query<&SelectedMission>,
+    q_server_phase: Query<&ServerGamePhase>,
     local_player: Option<Res<LocalPlayerRole>>,
     authority: Option<Res<AuthorityRole>>,
     app_state: Res<State<AppState>>,
+    sim_state: Res<State<SimulationState>>,
     mut current_map_seed: ResMut<CurrentMapSeed>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
     mut ev_load: MessageWriter<LoadLevelEvent>,
     mut next_app_state: ResMut<NextState<AppState>>,
+    mut auto_join_armed: ResMut<MissionAutoJoinArmed>,
+    time: Res<Time>,
+    mut sync_timer: Local<Option<f32>>,
+    mut lobby_wait_started_at: Local<Option<f32>>,
+    mut tracked_mission_seed: Local<Option<u64>>,
+    mut tracked_mission_joinable: Local<bool>,
 ) {
-    // Only act on pure clients (not authority -- server handles this itself).
     if authority.is_some() || local_player.is_none() {
+        auto_join_armed.0 = false;
         return;
     }
-    // Only act if we already clicked "Join Mission" and are in MissionLoading.
-    // A --join client landing in the Lobby sees SelectedMission replicated but
-    // must not auto-join; they still need to click the button themselves.
-    if *app_state != AppState::MissionLoading {
-        for mission in q_mission.iter() {
-            debug!(
-                "SelectedMission replicated while in {:?}; map={}. Waiting for user action.",
-                *app_state, mission.map_path
-            );
-        }
+    if *app_state.get() != AppState::Lobby {
+        auto_join_armed.0 = false;
+        *sync_timer = None;
+        *lobby_wait_started_at = None;
+        *tracked_mission_seed = None;
+        *tracked_mission_joinable = false;
         return;
     }
-    let Ok(mission) = q_mission.get(trigger.entity) else {
-        warn!("on_selected_mission_added: SelectedMission component not found on entity");
+
+    let now = time.elapsed_secs();
+    if lobby_wait_started_at.is_none() {
+        *lobby_wait_started_at = Some(now);
+    }
+
+    let Some(mission) = q_mission.iter().next() else {
+        auto_join_armed.0 = false;
+        *sync_timer = None;
+        *tracked_mission_seed = None;
+        *tracked_mission_joinable = false;
         return;
     };
+
+    if *tracked_mission_seed != Some(mission.map_seed) {
+        *tracked_mission_seed = Some(mission.map_seed);
+        *sync_timer = None;
+
+        let waited_in_lobby_long_enough = lobby_wait_started_at
+            .map(|started| now - started >= AUTO_JOIN_WAITING_LOBBY_SECS)
+            .unwrap_or(false);
+
+        let mission_age_ok = current_unix_time_secs()
+            .map(|unix_now| {
+                mission.started_at_unix_secs > 0.0
+                    && unix_now >= mission.started_at_unix_secs
+                    && (unix_now - mission.started_at_unix_secs) <= AUTO_JOIN_MAX_MISSION_AGE_SECS
+            })
+            .unwrap_or(false);
+
+        *tracked_mission_joinable = waited_in_lobby_long_enough && mission_age_ok;
+    }
+
+    if !*tracked_mission_joinable {
+        auto_join_armed.0 = false;
+        return;
+    }
+
+    auto_join_armed.0 = true;
+
+    let ready_by_sim_state = *sim_state.get() == SimulationState::Ready;
+    let ready_by_server_phase = q_server_phase
+        .iter()
+        .any(|phase| *phase == ServerGamePhase::InProgress);
+    if !ready_by_sim_state && !ready_by_server_phase {
+        *sync_timer = None;
+        return;
+    }
+
+    let start = sync_timer.get_or_insert(now);
+    if now - *start < AUTO_JOIN_BUFFER_SECS {
+        return;
+    }
+
     current_map_seed.0 = mission.map_seed;
     if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
         *current_difficulty = CurrentDifficulty::new(diff);
     } else {
         warn!(
-            "on_selected_mission_added: unknown difficulty '{}'; keeping current",
+            "process_auto_join: unknown difficulty '{}'; keeping current",
             mission.difficulty_id
         );
     }
-    info!(
-        "SelectedMission replicated from server; loading map={}",
-        mission.map_path
-    );
     ev_load.write(LoadLevelEvent {
         map_filepath: mission.map_path.clone(),
     });
     next_app_state.set(AppState::MissionLoading);
+    auto_join_armed.0 = false;
+    *sync_timer = None;
+}
+
+fn current_unix_time_secs() -> Option<f64> {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .ok()
+        .map(|d| d.as_secs_f64())
 }
 
 /// Helper to get UUID for a Replicon ClientId
@@ -587,6 +650,7 @@ fn handle_request_start_mission(
                     map_path: map_filepath.clone(),
                     map_seed: msg.message.map_seed,
                     difficulty_id: lobby.selected_difficulty.clone(),
+                    started_at_unix_secs: current_unix_time_secs().unwrap_or(0.0),
                 },
             ));
         }

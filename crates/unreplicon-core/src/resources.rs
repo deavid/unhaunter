@@ -33,6 +33,13 @@ pub struct HostGone(pub bool);
 #[derive(Resource, Default, Debug, Clone)]
 pub struct CurrentMapSeed(pub u64);
 
+/// Client-side flag indicating whether mission auto-join is currently armed.
+///
+/// When `true`, lobby UI can show deployment progress text and hide the manual
+/// Join button. When `false`, clients should use the normal manual Join flow.
+#[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MissionAutoJoinArmed(pub bool);
+
 /// Credentials returned by the hub server that identify this client's room.
 ///
 /// `code` is a human-readable join code; `secret` is used for hub server auth.

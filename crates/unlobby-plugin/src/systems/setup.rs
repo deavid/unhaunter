@@ -19,7 +19,11 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_systems(OnExit(LobbyScreen::Main), lobby_main::cleanup_ui)
         .add_systems(
             Update,
-            (lobby_main::handle_clicks, lobby_main::update_display)
+            (
+                lobby_main::handle_clicks,
+                lobby_main::update_display,
+                lobby_main::update_deployment_status_ui,
+            )
                 .run_if(in_state(AppState::Lobby).and(in_state(LobbyScreen::Main))),
         )
         // Map Selection

@@ -13,12 +13,13 @@ use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
 use unprofile_core::profile::PlayerProfileData;
+use unrender_std::components::visuals::AlphaModulator;
 use unreplicon_core::components::{LobbyInfo, SelectedMission};
 use unreplicon_core::messages::{RequestAbortMission, RequestStartMission};
-use unreplicon_core::resources::{CurrentMapSeed, LocalPlayer};
+use unreplicon_core::resources::{CurrentMapSeed, LocalPlayer, MissionAutoJoinArmed};
 use untypes_core::difficulty::Difficulty;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::{AppState, LobbyScreen};
+use untypes_core::states::{AppState, LobbyScreen, SimulationState};
 use unui_core::assets::UiAssets;
 
 #[derive(Component)]
@@ -38,6 +39,12 @@ pub(crate) struct LobbyPlayerList;
 
 #[derive(Component)]
 pub(crate) struct LobbyRoomCode;
+
+#[derive(Component)]
+pub(crate) struct DeploymentStatusText;
+
+#[derive(Component)]
+pub(crate) struct MissionLaunchControl;
 
 #[derive(Clone, Copy, Component, Debug, PartialEq, Eq)]
 pub(crate) enum LobbyMenuAction {
@@ -132,11 +139,36 @@ pub(crate) fn setup_ui(
                     || action == LobbyMenuAction::StartMission
                     || action == LobbyMenuAction::AbortMission
                 {
-                    templates::create_menu_item(s, label, menu_idx, false, &ui_assets)
-                        .insert(action);
+                    let mut menu_item =
+                        templates::create_menu_item(s, label, menu_idx, false, &ui_assets);
+                    menu_item.insert(action);
+                    if action == LobbyMenuAction::StartMission {
+                        menu_item.insert(MissionLaunchControl);
+                    }
                     menu_idx += 1;
                 }
             }
+
+            s.spawn((
+                Text::new("INITIALIZING DEPLOYMENT..."),
+                TextFont {
+                    font: ui_assets.font_londrina_light.clone(),
+                    font_size: 38.0 * FONT_SCALE,
+                    ..default()
+                },
+                TextColor(colors::MENU_ITEM_COLOR_ON),
+                Node {
+                    padding: UiRect::all(Val::Px(10.0 * UI_SCALE)),
+                    margin: UiRect::vertical(Val::Px(5.0 * UI_SCALE)),
+                    ..default()
+                },
+                Visibility::Hidden,
+                DeploymentStatusText,
+                AlphaModulator {
+                    amplitude: 0.5,
+                    frequency: 3.0,
+                },
+            ));
         });
 
         // Right content area - Informational only (no MenuRoot here)
@@ -605,5 +637,55 @@ pub(crate) fn update_display(
                 });
             }
         });
+    }
+}
+
+pub(crate) fn update_deployment_status_ui(
+    q_mission: Query<&SelectedMission>,
+    mut q_buttons: Query<
+        &mut Visibility,
+        (With<MissionLaunchControl>, Without<DeploymentStatusText>),
+    >,
+    mut q_status: Query<
+        (&mut Visibility, &mut Text, &mut TextColor, &AlphaModulator),
+        (With<DeploymentStatusText>, Without<MissionLaunchControl>),
+    >,
+    auto_join_armed: Option<Res<MissionAutoJoinArmed>>,
+    sim_state: Res<State<SimulationState>>,
+    time: Res<Time>,
+) {
+    let should_show_status = !q_mission.is_empty() && auto_join_armed.is_some_and(|r| r.0);
+    if !should_show_status {
+        for mut visibility in q_buttons.iter_mut() {
+            *visibility = Visibility::Inherited;
+        }
+        for (mut visibility, _, mut text_color, _) in q_status.iter_mut() {
+            *visibility = Visibility::Hidden;
+            text_color.0.set_alpha(1.0);
+        }
+        return;
+    }
+
+    for mut visibility in q_buttons.iter_mut() {
+        *visibility = Visibility::Hidden;
+    }
+
+    let status_text = if *sim_state.get() == SimulationState::Ready {
+        "SYNCING TELEMETRY..."
+    } else {
+        "INITIALIZING DEPLOYMENT..."
+    };
+
+    for (mut visibility, mut text, mut text_color, alpha_mod) in q_status.iter_mut() {
+        *visibility = Visibility::Inherited;
+        if text.as_str() != status_text {
+            text.0 = status_text.to_string();
+        }
+        let phase = (time.elapsed_secs() * alpha_mod.frequency).fract();
+        let pulse = 1.0 - ((2.0 * phase) - 1.0).abs();
+        // Make the pulse much more legible in UI text than world-space alpha flicker.
+        let min_alpha = (1.0 - (alpha_mod.amplitude * 1.8)).clamp(0.08, 0.95);
+        let alpha = min_alpha + (1.0 - min_alpha) * pulse;
+        text_color.0.set_alpha(alpha.clamp(0.05, 1.0));
     }
 }
