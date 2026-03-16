@@ -167,7 +167,7 @@ impl TmxMap {
             if let Some(c_val) = grade_c
                 && grade_d.is_none()
             {
-                grade_d = Some((c_val as f32 / GOLDEN_RATIO).round() as i64);
+                grade_d = Some((c_val as f32 * GOLDEN_RATIO).round() as i64);
             }
         } else if let Some(d_val) = grade_d {
             if grade_c.is_none() {

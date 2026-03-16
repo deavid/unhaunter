@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unassets_core::resources::maps::Maps;
+use untmxmap_core::resources::maps::Maps;
 use unengine_core::MenuUI;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};

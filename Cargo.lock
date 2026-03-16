@@ -7055,8 +7055,6 @@ version = "0.3.2-dev"
 dependencies = [
  "anyhow",
  "bevy",
- "bevy_platform",
- "thiserror 2.0.18",
  "untypes-core",
  "walkdir",
 ]
@@ -7069,7 +7067,6 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "fastapprox",
- "ordered-float",
  "serde",
  "serde_json",
  "tiled",
@@ -7092,12 +7089,12 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "unassets-core",
  "undifficulty-core",
  "unfoundation-core",
  "unmapload-core",
  "unmenu-core",
  "unprofile-core",
+ "untmxmap-core",
  "untypes-core",
  "unui-core",
 ]
@@ -7109,7 +7106,6 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_platform",
- "bevy_replicon",
  "ordered-float",
  "rand 0.10.0",
  "unassets-core",
@@ -7172,7 +7168,6 @@ dependencies = [
  "bevy",
  "bevy_asset_loader",
  "bevy_replicon",
- "unassets-core",
  "unbehavior",
  "unboard-core",
  "unengine-core",
@@ -7182,6 +7177,7 @@ dependencies = [
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",
+ "untmxmap-core",
  "untypes-core",
  "unui-core",
 ]
@@ -7606,7 +7602,6 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "enum-iterator",
- "unassets-core",
  "undifficulty-core",
  "unengine-core",
  "unfoundation-core",
@@ -7615,6 +7610,7 @@ dependencies = [
  "unprofile-core",
  "unrender-std",
  "unreplicon-core",
+ "untmxmap-core",
  "untypes-core",
  "unui-core",
 ]
@@ -7648,11 +7644,11 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
- "unassets-core",
  "undifficulty-core",
  "unfoundation-core",
  "unmanual-core",
  "unmapload-core",
+ "untmxmap-core",
  "untypes-core",
  "unui-core",
 ]
@@ -7701,6 +7697,7 @@ dependencies = [
  "unrender-std",
  "unspatial-core",
  "untiled-core",
+ "untmxmap-core",
  "untypes-core",
 ]
 
@@ -7969,7 +7966,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
- "unbehavior",
  "unevents-core",
  "unfoundation-core",
  "ungear-core",
@@ -7992,7 +7988,6 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
- "unevents-core",
  "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
@@ -8095,7 +8090,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "unassets-core",
  "unboard-core",
  "undifficulty-core",
  "unfoundation-core",
@@ -8103,6 +8097,7 @@ dependencies = [
  "unplayer-core",
  "unprofile-core",
  "unsummary-core",
+ "untmxmap-core",
  "untypes-core",
  "unui-core",
 ]
@@ -8155,6 +8150,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "untmxmap-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "thiserror 2.0.18",
+ "untypes-core",
+]
+
+[[package]]
 name = "untmxmap-plugin"
 version = "0.3.2-dev"
 dependencies = [
@@ -8169,6 +8174,7 @@ dependencies = [
  "unrender-std",
  "unsettings-core",
  "untiled-core",
+ "untmxmap-core",
  "untypes-core",
 ]
 

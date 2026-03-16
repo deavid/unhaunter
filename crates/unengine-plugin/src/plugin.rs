@@ -1,7 +1,7 @@
 use crate::systems;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use unassets_core::resources::maps::Maps;
+use untmxmap_core::resources::maps::Maps;
 use untypes_core::states::{AppState, BootState, GameState, SimulationState};
 
 pub struct UnhaunterEngineCorePlugin;

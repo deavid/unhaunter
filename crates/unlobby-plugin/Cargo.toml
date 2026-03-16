@@ -17,9 +17,9 @@ unfoundation-core = { path = "../unfoundation-core" }
 unengine-core = { path = "../unengine-core" }
 unui-core = { path = "../unui-core" }
 untypes-core = { path = "../untypes-core" }
+untmxmap-core = { path = "../untmxmap-core" }
 unmenu-core = { path = "../unmenu-core" }
 unreplicon-core = { workspace = true }
-unassets-core = { path = "../unassets-core" }
 unmapload-core = { path = "../unmapload-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unprofile-core = { path = "../unprofile-core" }

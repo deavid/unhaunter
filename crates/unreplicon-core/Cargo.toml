@@ -19,4 +19,3 @@ ungear-core = { path = "../ungear-core" }
 ungearitems-core = { path = "../ungearitems-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unghost-core = { path = "../unghost-core" }
-unbehavior = { path = "../unbehavior" }

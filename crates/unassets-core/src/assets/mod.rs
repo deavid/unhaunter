@@ -1,6 +1,4 @@
-//! This module adds tooling for addding new assets for Bevy.
+//! This module provides tooling for adding new assets for Bevy.
 
 pub mod index;
 pub mod index_updater;
-pub mod tmxmap;
-pub mod tsxsheet;

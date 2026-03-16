@@ -20,7 +20,7 @@ use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
-use unassets_core::resources::maps::Maps;
+use untmxmap_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::colors;
@@ -212,7 +212,7 @@ fn handle_selection_input(
 }
 
 fn format_mission_details(
-    m: &unassets_core::types::mission_data::MissionData,
+    m: &untmxmap_core::types::mission_data::MissionData,
     mode: MissionSelectMode,
     dif: &CurrentDifficulty,
 ) -> (String, String) {
@@ -286,8 +286,8 @@ pub(crate) fn update_mission_selection(
 }
 
 fn sort_maps(
-    a: &(usize, &unassets_core::types::root::map::Map),
-    b: &(usize, &unassets_core::types::root::map::Map),
+    a: &(usize, &untmxmap_core::types::root::map::Map),
+    b: &(usize, &untmxmap_core::types::root::map::Map),
 ) -> std::cmp::Ordering {
     a.1.mission_data
         .order
@@ -302,7 +302,7 @@ fn sort_maps(
 }
 
 fn get_most_advanced_affordable_mission_idx(
-    sorted_available_maps: &[(usize, &unassets_core::types::root::map::Map)],
+    sorted_available_maps: &[(usize, &untmxmap_core::types::root::map::Map)],
     player_profile: &unprofile_core::profile::PlayerProfileData,
 ) -> usize {
     sorted_available_maps
@@ -337,7 +337,7 @@ pub(crate) fn setup_ui(
     commands.spawn(Camera2d).insert(MissionSelectCamera);
 
     let player_level = player_profile_resource.progression.player_level;
-    let mut filtered_maps: Vec<(usize, &unassets_core::types::root::map::Map)> = maps_resource
+    let mut filtered_maps: Vec<(usize, &untmxmap_core::types::root::map::Map)> = maps_resource
         .maps
         .iter()
         .enumerate()
@@ -517,7 +517,7 @@ pub(crate) fn setup_ui(
 fn create_mission_list_item(
     mission_list: &mut ChildSpawnerCommands,
     ui_assets: &UiAssets,
-    map: &unassets_core::types::root::map::Map,
+    map: &untmxmap_core::types::root::map::Map,
     player_profile: &unprofile_core::profile::PlayerProfileData,
     ui_index: usize,
     is_selected: bool,

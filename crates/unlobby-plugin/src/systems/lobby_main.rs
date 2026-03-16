@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unassets_core::resources::maps::Maps;
+use untmxmap_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unengine_core::MenuUI;

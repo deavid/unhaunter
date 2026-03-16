@@ -35,7 +35,6 @@ unpicking-core = { path = "../unpicking-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 unreplicon-core = { workspace = true }
 bevy = { workspace = true }
-bevy_replicon = { workspace = true }
 bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }
 rand = { workspace = true }

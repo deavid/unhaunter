@@ -70,6 +70,7 @@ members = [
     "crates/untiled-core",
     "crates/untruck-core",
     "crates/untruck-plugin",
+    "crates/untmxmap-core",
     "crates/untmxmap-plugin",
     "crates/unui-core",
     "crates/unui-plugin",
@@ -237,6 +238,7 @@ unthermal-plugin = { path = "crates/unthermal-plugin" }
 untiled-core = { path = "crates/untiled-core" }
 untruck-core = { path = "crates/untruck-core" }
 untruck-plugin = { path = "crates/untruck-plugin" }
+untmxmap-core = { path = "crates/untmxmap-core" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unui-core = { path = "crates/unui-core" }
 unui-plugin = { path = "crates/unui-plugin" }

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::io::Cursor;
-use unassets_core::assets::{tmxmap::TmxMap, tsxsheet::TsxSheet};
-use unassets_core::resources::maps::Maps;
+use untmxmap_core::assets::{tmxmap::TmxMap, tsxsheet::TsxSheet};
+use untmxmap_core::resources::maps::Maps;
 
 struct TmxMemoryReader<'a> {
     maps: &'a Res<'a, Maps>,

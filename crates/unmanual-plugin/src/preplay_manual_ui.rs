@@ -2,7 +2,7 @@
 //! which is shown as a tutorial before starting a new game on certain difficulty levels.
 use crate::resources::manual::{CurrentManualPage, Manual};
 use bevy::prelude::*;
-use unassets_core::resources::maps::Maps;
+use untmxmap_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_state::DifficultySelectionState;
 use undifficulty_core::manual_types::ManualChapterIndex;

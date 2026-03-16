@@ -16,7 +16,7 @@ bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 
 undifficulty-core = { path = "../undifficulty-core" }
-unassets-core = { path = "../unassets-core" }
+untmxmap-core = { path = "../untmxmap-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
 untypes-core = { path = "../untypes-core" }

@@ -1,5 +1,5 @@
 [package]
-name = "unassets-core"
+name = "untmxmap-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -11,11 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-untypes-core = { path = "../untypes-core" }
 bevy = { workspace = true }
-anyhow = { workspace = true }
-walkdir = { workspace = true }
-
-[[bin]]
-name = "assetidx_updater"
-path = "src/bin/assetidx_updater.rs"
+bevy_platform = { workspace = true }
+thiserror = { workspace = true }
+untypes-core = { path = "../untypes-core" }

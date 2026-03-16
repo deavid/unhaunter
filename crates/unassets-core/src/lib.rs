@@ -4,4 +4,3 @@
 
 pub mod assets;
 pub mod resources;
-pub mod types;

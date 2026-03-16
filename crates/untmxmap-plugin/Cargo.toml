@@ -14,6 +14,7 @@ workspace = true
 
 unboard-core = { path = "../unboard-core" }
 unassets-core = { path = "../unassets-core" }
+untmxmap-core = { path = "../untmxmap-core" }
 unmapload-core = { path = "../unmapload-core" }
 untypes-core = { path = "../untypes-core" }
 untiled-core = { path = "../untiled-core" }

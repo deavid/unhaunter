@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use unassets_core::assets::index::AssetIdx;
-use unassets_core::assets::tmxmap::TmxMap;
-use unassets_core::assets::tsxsheet::TsxSheet;
-use unassets_core::resources::maps::Maps;
 use unassets_core::resources::upscale::UpscaleIndex;
-use unassets_core::types::mission_data::MissionData;
-use unassets_core::types::root::map::Map;
-use unassets_core::types::root::map::Sheet;
+use untmxmap_core::assets::tmxmap::TmxMap;
+use untmxmap_core::assets::tsxsheet::TsxSheet;
+use untmxmap_core::resources::maps::Maps;
+use untmxmap_core::types::mission_data::MissionData;
+use untmxmap_core::types::root::map::Map;
+use untmxmap_core::types::root::map::Sheet;
 use untypes_core::cli::CliOptions;
 use untypes_core::difficulty::Difficulty;
 

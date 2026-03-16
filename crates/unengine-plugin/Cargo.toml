@@ -15,12 +15,12 @@ unfoundation-core = { path = "../unfoundation-core" }
 unengine-core = { path = "../unengine-core" }
 untypes-core = { path = "../untypes-core" }
 unui-core = { path = "../unui-core" }
+untmxmap-core = { path = "../untmxmap-core" }
 unrender-std = { path = "../unrender-std" }
 unboard-core = { path = "../unboard-core" }
 unbehavior = { path = "../unbehavior" }
 unevents-core = { path = "../unevents-core" }
 unspatial-core = { path = "../unspatial-core" }
-unassets-core = { path = "../unassets-core" }
 unnoise-core = { path = "../unnoise-core" }
 unreplicon-core = { workspace = true }
 

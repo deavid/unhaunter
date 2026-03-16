@@ -1,7 +1,7 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
-use unassets_core::resources::maps::Maps;
+use untmxmap_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::grade::Grade;

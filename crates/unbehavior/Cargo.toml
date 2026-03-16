@@ -17,6 +17,5 @@ bevy_platform = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
-ordered-float = { workspace = true }
 fastapprox = { workspace = true }
 tiled = { workspace = true }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::Remote;
-use unassets_core::resources::maps::Maps;
+use untmxmap_core::resources::maps::Maps;
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
