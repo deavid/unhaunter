@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ordered_float::OrderedFloat;
 use rand::prelude::IndexedRandom;
-use unassets_core::resources::upscale::UpscaleIndex;
 use unbehavior::components::Movable;
 use unbehavior::roomdb::RoomTopology;
 use unboard_core::components::mapcolor::MapColor;
@@ -38,6 +37,7 @@ use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::GhostTag;
+use untmxmap_core::resources::upscale::UpscaleIndex;
 
 /// Marker inserted once a player entity has been fully hydrated with visuals and input.
 #[derive(Component)]

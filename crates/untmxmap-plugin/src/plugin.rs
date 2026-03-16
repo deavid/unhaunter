@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use unassets_core::assets::index::{AssetIdx, AssetIdxLoader};
-use unassets_core::resources::upscale::UpscaleIndex;
 use untiled_core::tiled::MapTileSetDb;
+use untmxmap_core::assets::index::{AssetIdx, AssetIdxLoader};
 use untmxmap_core::assets::tmxmap::{TmxMap, TmxMapLoader};
 use untmxmap_core::assets::tsxsheet::{TsxSheet, TsxSheetLoader};
+use untmxmap_core::resources::upscale::UpscaleIndex;
 
 use crate::init_maps::MapAssetIndexHandle;
 

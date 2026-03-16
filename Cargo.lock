@@ -7050,16 +7050,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c1ae7cc0fdb8b842d65d127cb981574b0d2b249b74d1c7a2986863dc134f71"
 
 [[package]]
-name = "unassets-core"
-version = "0.3.2-dev"
-dependencies = [
- "anyhow",
- "bevy",
- "untypes-core",
- "walkdir",
-]
-
-[[package]]
 name = "unbehavior"
 version = "0.3.2-dev"
 dependencies = [
@@ -7108,7 +7098,6 @@ dependencies = [
  "bevy_platform",
  "ordered-float",
  "rand 0.10.0",
- "unassets-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -7129,6 +7118,7 @@ dependencies = [
  "unspatial-core",
  "unsummary-core",
  "untags-core",
+ "untmxmap-core",
  "untypes-core",
  "unui-core",
 ]
@@ -7383,7 +7373,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "clap",
- "unassets-core",
  "uncampaign-plugin",
  "unclassic-mode-plugin",
  "undifficulty-plugin",
@@ -7415,6 +7404,7 @@ dependencies = [
  "unsound-plugin",
  "unsummary-plugin",
  "unthermal-plugin",
+ "untmxmap-core",
  "untmxmap-plugin",
  "untruck-plugin",
  "untypes-core",
@@ -7688,7 +7678,6 @@ dependencies = [
  "bevy_platform",
  "bevy_replicon",
  "ndarray",
- "unassets-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -8153,10 +8142,12 @@ dependencies = [
 name = "untmxmap-core"
 version = "0.3.2-dev"
 dependencies = [
+ "anyhow",
  "bevy",
  "bevy_platform",
  "thiserror 2.0.18",
  "untypes-core",
+ "walkdir",
 ]
 
 [[package]]
@@ -8168,7 +8159,6 @@ dependencies = [
  "bevy_platform",
  "normalize-path",
  "tiled",
- "unassets-core",
  "unboard-core",
  "unmapload-core",
  "unrender-std",

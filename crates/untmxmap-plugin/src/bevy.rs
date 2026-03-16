@@ -2,12 +2,12 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use std::path::{Path, PathBuf};
-use unassets_core::resources::upscale::UpscaleIndex;
 use unboard_core::types::floor::FloorLevelMapping;
 use unrender_std::materials::CustomMaterial1;
 use unsettings_core::video::VideoSettings;
 use untiled_core::tiled::{AtlasData, MapTileSet, MapTileSetDb};
 use untiled_core::tiledmap::map::{MapLayer, MapLayerGroup, MapLayerType};
+use untmxmap_core::resources::upscale::UpscaleIndex;
 
 use super::load::load_tile_layer_iter;
 

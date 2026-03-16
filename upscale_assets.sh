@@ -144,5 +144,5 @@ FORCE_ARG=""
 
 echo "$ALL_ASSETS" | xargs -d '\n' -I {} -P "$(nproc)" "$SCRIPT_PATH" $FORCE_ARG "$ZOOM" --file "{}"
 
-echo "Done. Running asset index update..."
-cargo run -p unassets-core --bin assetidx_updater
+echo "Done. Remember to run the game to update the asset index!"
+

@@ -9,7 +9,6 @@ members = [
     "crates/unclassic-mode-plugin",
     "crates/unengine-core",
     "crates/unengine-plugin",
-    "crates/unassets-core",
     "crates/unbehavior",
     "crates/unboard-core",
     "crates/unevents-core",
@@ -174,7 +173,6 @@ unhub = { path = "crates/tools/unhub" }
 unprocman = { path = "crates/tools/unprocman" }
 walkie_voice_generator = { path = "crates/tools/text_to_speech/walkie_voice_generator" }
 untypes-core = { path = "crates/untypes-core" }
-unassets-core = { path = "crates/unassets-core" }
 uncampaign-plugin = { path = "crates/uncampaign-plugin" }
 unclassic-mode-plugin = { path = "crates/unclassic-mode-plugin" }
 unengine-core = { path = "crates/unengine-core" }
@@ -269,8 +267,7 @@ wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
 
 untypes-core = { workspace = true }
-unassets-core = { workspace = true }
-
+untmxmap-core = { workspace = true }
 uncampaign-plugin = { workspace = true }
 unclassic-mode-plugin = { workspace = true }
 unengine-plugin = { workspace = true }

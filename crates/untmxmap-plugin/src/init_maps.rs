@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use unassets_core::assets::index::AssetIdx;
-use unassets_core::resources::upscale::UpscaleIndex;
+use untmxmap_core::assets::index::AssetIdx;
 use untmxmap_core::assets::tmxmap::TmxMap;
 use untmxmap_core::assets::tsxsheet::TsxSheet;
 use untmxmap_core::resources::maps::Maps;
+use untmxmap_core::resources::upscale::UpscaleIndex;
 use untmxmap_core::types::mission_data::MissionData;
 use untmxmap_core::types::root::map::Map;
 use untmxmap_core::types::root::map::Sheet;

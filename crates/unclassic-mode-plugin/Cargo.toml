@@ -26,13 +26,13 @@ unengine-core = { path = "../unengine-core" }
 untags-core = { path = "../untags-core" }
 unmapload-core = { path = "../unmapload-core" }
 unsettings-core = { path = "../unsettings-core" }
-unassets-core = { path = "../unassets-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 unlight-core = { path = "../unlight-core" }
 untypes-core = { path = "../untypes-core" }
 unui-core = { path = "../unui-core" }
 unpicking-core = { path = "../unpicking-core" }
 uninteraction-core = { path = "../uninteraction-core" }
+untmxmap-core = { path = "../untmxmap-core" }
 unreplicon-core = { workspace = true }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

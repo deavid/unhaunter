@@ -11,7 +11,10 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+untypes-core = { path = "../untypes-core" }
+
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 thiserror = { workspace = true }
-untypes-core = { path = "../untypes-core" }
+anyhow = { workspace = true }
+walkdir = { workspace = true }
