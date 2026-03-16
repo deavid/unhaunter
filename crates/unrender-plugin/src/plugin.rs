@@ -4,10 +4,6 @@
 
 use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
-
-use unboard_core::resources::board_topology::{
-    BoardCollisionField, BoardEntityField, BoardTopology,
-};
 use unmetrics_core::metrics::SendMetric;
 use unspatial_core::lerp_position::LerpPosition;
 use unspatial_core::perspective;
@@ -73,10 +69,7 @@ impl Plugin for UnhaunterRenderCorePlugin {
         crate::systems::hydration::app_setup(app);
         metrics::register_all(app);
 
-        app.init_resource::<BoardTopology>()
-            .init_resource::<BoardEntityField>()
-            .init_resource::<BoardCollisionField>()
-            .init_resource::<SpriteDB>();
+        app.init_resource::<SpriteDB>();
 
         if headless {
             // In headless mode, register stub Assets<T> for the resources LoadLevelSystemParam requires
