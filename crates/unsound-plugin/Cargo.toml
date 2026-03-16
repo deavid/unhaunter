@@ -17,10 +17,9 @@ unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 untypes-core = { path = "../untypes-core" }
-unbehavior = { path = "../unbehavior" }
 unmapload-core = { path = "../unmapload-core" }
 unreplicon-core = { workspace = true }
-bevy_replicon   = { workspace = true }
+bevy_replicon = { workspace = true }
 
 bevy = { workspace = true }
 rand = { workspace = true }

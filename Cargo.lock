@@ -8051,7 +8051,6 @@ dependencies = [
  "bevy",
  "bevy_replicon",
  "rand 0.10.0",
- "unbehavior",
  "unboard-core",
  "unfoundation-core",
  "unmapload-core",
