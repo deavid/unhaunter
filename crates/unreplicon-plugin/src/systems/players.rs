@@ -197,6 +197,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         send_export_gear_state
+            .in_set(ungearitems_core::GearStateExportSet)
             .run_if(in_state(AppState::InGame))
             .run_if(is_pure_client),
     );

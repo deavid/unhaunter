@@ -7329,7 +7329,6 @@ dependencies = [
  "unprofile-core",
  "unrender-std",
  "unreplicon-core",
- "unreplicon-plugin",
  "unsound-core",
  "unspatial-core",
  "unsummary-core",

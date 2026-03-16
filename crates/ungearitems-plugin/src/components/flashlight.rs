@@ -195,7 +195,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         update_flashlight_skeleton
-            .before(unreplicon_plugin::systems::players::send_export_gear_state)
+            .before(ungearitems_core::GearStateExportSet)
             .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
     );
     app.add_systems(
