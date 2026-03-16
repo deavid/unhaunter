@@ -2,7 +2,7 @@ use crate::resources::ambient_mute::AmbientMuteController;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
-use unbehavior::roomdb::RoomTopology;
+use unboard_core::resources::roomdb::RoomTopology;
 use unfoundation_core::types::sound::SoundType;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSpectating;

@@ -3,7 +3,7 @@ use crate::maplight::visibility::compute_visibility;
 use crate::metrics::PLAYER_VISIBILITY;
 use bevy::prelude::*;
 use ndarray::Array3;
-use unbehavior::roomdb::RoomTopology;
+use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use unfoundation_core::types::gear::{EquipmentPosition, Hand};
 use unfoundation_core::types::light::LightType;

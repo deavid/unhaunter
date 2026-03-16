@@ -1,7 +1,7 @@
 use crate::components::player::Stamina;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unbehavior::roomdb::RoomTopology;
+use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;

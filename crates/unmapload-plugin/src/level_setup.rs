@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use bevy_replicon::prelude::Remote;
 use ndarray::Array3;
-use unbehavior::roomdb::{RoomStateMap, RoomTopology};
+use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };

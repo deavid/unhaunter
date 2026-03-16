@@ -22,3 +22,18 @@ pub enum TileState {
 }
 
 impl AutoSerialize for TileState {}
+
+impl TileState {
+    pub fn to_bool(&self) -> bool {
+        match &self {
+            TileState::On => true,
+            TileState::Off => false,
+            TileState::Open => true,
+            TileState::Closed => false,
+            TileState::Full => true,
+            TileState::Partial => true,
+            TileState::Minimum => false,
+            TileState::None => false,
+        }
+    }
+}

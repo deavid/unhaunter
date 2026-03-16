@@ -7074,6 +7074,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "unboard-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "unboard-core",
+]
+
+[[package]]
 name = "uncampaign-plugin"
 version = "0.3.2-dev"
 dependencies = [
@@ -7373,6 +7381,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "clap",
+ "unboard-plugin",
  "uncampaign-plugin",
  "unclassic-mode-plugin",
  "undifficulty-plugin",
@@ -7525,6 +7534,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "unbehavior",
+ "unboard-core",
  "unevents-core",
  "uninteraction-core",
  "unrender-std",
@@ -8266,6 +8276,7 @@ dependencies = [
  "enum-iterator",
  "rand 0.10.0",
  "unbehavior",
+ "unboard-core",
  "undifficulty-core",
  "unfoundation-core",
  "ungear-core",

@@ -4,8 +4,8 @@ use crate::components::fade_out::FadeOut;
 use crate::metrics::GHOST_ENRAGE;
 use bevy::prelude::*;
 use rand::RngExt;
-use unbehavior::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::BoardCollisionField;
+use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use unfoundation_core::random_seed;
@@ -375,7 +375,10 @@ pub(crate) fn calculate_rage_update(
             angry2 * inv_sanity + player_sprite.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
 
         let player_board_position = player_pos.to_board_position();
-        if room_topology.room_tiles.contains_key(&player_board_position) {
+        if room_topology
+            .room_tiles
+            .contains_key(&player_board_position)
+        {
             player_in_room = true;
             total_inv_sanity += inv_sanity;
         }

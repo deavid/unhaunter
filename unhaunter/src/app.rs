@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
 use std::time::Duration;
+use unboard_plugin::plugin::UnhaunterBoardPlugin;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
 use unclassic_mode_plugin::plugin::{ClassicModePlugin, UnhaunterClassicModeCorePlugin};
 use undifficulty_plugin::plugin::UnhaunterDifficultyPlugin;
@@ -145,6 +146,7 @@ pub fn app_run(cli_options: CliOptions) {
     app.add_plugins((
         UnhaunterSettingsPlugin,
         UnhaunterDifficultyPlugin,
+        UnhaunterBoardPlugin,
         UnhaunterEngineCorePlugin,
         UnhaunterSummaryCorePlugin,
         UnhaunterMetricsPlugin,

@@ -1,8 +1,29 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-
-use crate::state::TileState;
 use unspatial_core::boardposition::BoardPosition;
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
+pub enum RoomState {
+    On,
+    #[default]
+    Off,
+}
+
+impl RoomState {
+    pub fn to_bool(&self) -> bool {
+        match &self {
+            RoomState::On => true,
+            RoomState::Off => false,
+        }
+    }
+
+    pub fn from_bool(v: bool) -> Self {
+        match v {
+            true => RoomState::On,
+            false => RoomState::Off,
+        }
+    }
+}
 
 /// Maps each board position to the room name it belongs to.
 ///
@@ -28,7 +49,7 @@ impl RoomTopology {
 /// received through component replication.
 #[derive(Clone, Default, Resource)]
 pub struct RoomStateMap {
-    pub room_state: HashMap<String, TileState>,
+    pub room_state: HashMap<String, RoomState>,
 }
 
 impl RoomStateMap {

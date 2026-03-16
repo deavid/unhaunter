@@ -1,9 +1,9 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use rand::prelude::*;
-use unbehavior::roomdb::RoomTopology;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
+use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use ungearitems_core::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};

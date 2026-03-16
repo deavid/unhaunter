@@ -1,7 +1,8 @@
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
-use unbehavior::components::RoomState;
-use unbehavior::roomdb::{RoomStateMap, RoomTopology};
+use unbehavior::components::RoomStateDelta;
+use unboard_core::resources::roomdb::RoomState;
+use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use unevents_core::events::roomchanged::InteractionExecutionType;
 use unevents_core::events::sound::SoundEvent;
 use unrender_std::board::spritedb::SpriteDB;
@@ -81,7 +82,7 @@ impl InteractiveStuff<'_, '_> {
         entity: Entity,
         item_pos: &Position,
         behavior: &Behavior,
-        room_state: &RoomState,
+        room_state: &RoomStateDelta,
     ) -> bool {
         let item_bpos = item_pos.to_board_position();
         let item_roombpos = BoardPosition {
@@ -100,7 +101,7 @@ impl InteractiveStuff<'_, '_> {
             return false;
         };
 
-        if behavior.state() == *main_room_state {
+        if behavior.state().to_bool() == main_room_state.to_bool() {
             return false;
         }
 
@@ -115,7 +116,7 @@ impl InteractiveStuff<'_, '_> {
             let is_match = bf
                 .map_tile
                 .get(variant_tuid)
-                .map(|other| other.behavior.state() == *main_room_state)
+                .map(|other| other.behavior.state().to_bool() == main_room_state.to_bool())
                 .unwrap_or(false);
 
             if is_match {
@@ -161,7 +162,7 @@ impl InteractiveStuff<'_, '_> {
         item_pos: &Position,
         interactive: Option<&Interactive>,
         behavior: &Behavior,
-        room_state: Option<&RoomState>,
+        room_state: Option<&RoomStateDelta>,
         ietype: InteractionExecutionType,
         force_tuid: Option<u32>,
     ) -> bool {
@@ -218,12 +219,12 @@ impl InteractiveStuff<'_, '_> {
                     InteractionExecutionType::ChangeState => {
                         if let Some(main_room_state) = self.roomstate.room_state.get_mut(&room_name)
                         {
-                            *main_room_state = beh_state.clone();
+                            *main_room_state = RoomState::from_bool(beh_state.to_bool());
                         }
                     }
                     InteractionExecutionType::ReadRoomState => {
                         if let Some(main_room_state) = self.roomstate.room_state.get(&room_name)
-                            && *main_room_state != beh_state
+                            && main_room_state.to_bool() != beh_state.to_bool()
                         {
                             continue;
                         }

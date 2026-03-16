@@ -5,7 +5,7 @@ use bevy_persistent::Persistent;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::Door;
 use unbehavior::components::HidingSpot;
-use unbehavior::roomdb::RoomTopology;
+use unboard_core::resources::roomdb::RoomTopology;
 use unbehavior::state::TileState;
 use ungear_core::components::playergear::PlayerGear;
 use unmetrics_core::metrics::SendMetric;

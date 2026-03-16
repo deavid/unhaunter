@@ -77,11 +77,11 @@ pub struct InteractableByGhost;
 ///
 /// - `room_delta`: Offset vector from the entity pos to a tile inside the target room.
 #[derive(Component, Debug, Clone, PartialEq, Eq, Default)]
-pub struct RoomState {
+pub struct RoomStateDelta {
     pub room_delta: BoardPosition,
 }
 
-impl RoomState {
+impl RoomStateDelta {
     pub fn new_for_room(orientation: &Orientation) -> Self {
         Self {
             room_delta: match orientation {

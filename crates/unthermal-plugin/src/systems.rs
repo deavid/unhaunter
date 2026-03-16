@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use rand::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::HeatEmitter;
-use unbehavior::roomdb::RoomTopology;
+use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::components::physics::ThermalEmitter;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;

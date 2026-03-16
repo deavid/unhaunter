@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use interactivestuff::InteractiveStuff;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
-use unbehavior::components::RoomState;
+use unbehavior::components::RoomStateDelta;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::RoomStateSyncEvent;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
@@ -30,7 +30,7 @@ pub(crate) fn app_setup(app: &mut App) {
 fn room_state_sync_system(
     mut ev_sync: MessageReader<RoomStateSyncEvent>,
     mut interactive_stuff: InteractiveStuff,
-    q_interactables: Query<(Entity, &Position, &Behavior, &RoomState)>,
+    q_interactables: Query<(Entity, &Position, &Behavior, &RoomStateDelta)>,
 ) {
     if ev_sync.read().next().is_none() {
         return;
@@ -66,7 +66,7 @@ fn interaction_event_handler(
     q_interactive: Query<(
         Option<&Interactive>,
         &Behavior,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
         &Position,
     )>,
     mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
@@ -93,4 +93,3 @@ fn interaction_event_handler(
         }
     }
 }
-

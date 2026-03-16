@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::prelude::*;
 use std::mem::swap;
-use unbehavior::roomdb::RoomTopology;
+use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::components::physics::SoundEmitter;
 use unfoundation_core::random_seed;
 use unmapload_core::events::loadlevel::MapGeometryInitializedEvent;

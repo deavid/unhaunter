@@ -1,6 +1,6 @@
 use ndarray::Array3;
 use std::collections::VecDeque;
-use unbehavior::roomdb::RoomTopology;
+use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::types::fielddata::CollisionFieldData;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;

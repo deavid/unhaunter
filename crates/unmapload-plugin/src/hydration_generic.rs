@@ -29,7 +29,7 @@ fn hydration_generic_logic_system(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
                 ))
-                .insert_if_new(components::RoomState::with_opposite_side(
+                .insert_if_new(components::RoomStateDelta::with_opposite_side(
                     &cfg.orientation,
                     opposite_side,
                 ));
@@ -39,7 +39,7 @@ fn hydration_generic_logic_system(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
                 ))
-                .insert_if_new(components::RoomState::default());
+                .insert_if_new(components::RoomStateDelta::default());
         } else if behavior.p.is_breaker {
             cmd.insert_if_new(Pickable::default())
                 .insert_if_new(Interactive::new(
@@ -47,7 +47,7 @@ fn hydration_generic_logic_system(
                     "sounds/switch-off-1.ogg",
                 ));
         } else if behavior.p.is_wall_light {
-            cmd.insert_if_new(components::RoomState::default())
+            cmd.insert_if_new(components::RoomStateDelta::default())
                 .insert_if_new(components::Light);
         } else if behavior.p.is_floor_light || behavior.p.is_table_light {
             cmd.insert_if_new(Pickable::default())
@@ -65,7 +65,7 @@ fn hydration_generic_logic_system(
 
         // Additional generic component attachment based on properties
         if behavior.p.is_ceiling_light {
-            cmd.insert_if_new(components::RoomState::default())
+            cmd.insert_if_new(components::RoomStateDelta::default())
                 .insert_if_new(components::Light);
         } else if behavior.p.is_street_light || behavior.p.is_candle_light {
             cmd.insert_if_new(components::Light);

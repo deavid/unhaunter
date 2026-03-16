@@ -2,7 +2,7 @@ use crate::components::player::{Hiding, Stamina};
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
-use unbehavior::components::RoomState;
+use unbehavior::components::RoomStateDelta;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::npc_help::NpcHelpEvent;
 use unevents_core::events::roomchanged::InteractionExecutionType;
@@ -50,7 +50,7 @@ pub(crate) fn player_interaction_system(
             &Position,
             Option<&Interactive>,
             &Behavior,
-            Option<&RoomState>,
+            Option<&RoomStateDelta>,
         ),
         Without<PlayerSprite>,
     >,
@@ -168,7 +168,7 @@ pub(crate) fn player_movement_system(
             &Position,
             &Interactive,
             &Behavior,
-            Option<&RoomState>,
+            Option<&RoomStateDelta>,
         ),
         Without<PlayerSprite>,
     >,

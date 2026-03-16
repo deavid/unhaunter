@@ -11,6 +11,7 @@ members = [
     "crates/unengine-plugin",
     "crates/unbehavior",
     "crates/unboard-core",
+    "crates/unboard-plugin",
     "crates/unevents-core",
     "crates/unfoundation-core",
     "crates/untypes-core",
@@ -179,6 +180,7 @@ unengine-core = { path = "crates/unengine-core" }
 unengine-plugin = { path = "crates/unengine-plugin" }
 unbehavior = { path = "crates/unbehavior" }
 unboard-core = { path = "crates/unboard-core" }
+unboard-plugin = { path = "crates/unboard-plugin" }
 unevents-core = { path = "crates/unevents-core" }
 unfoundation-core = { path = "crates/unfoundation-core" }
 undifficulty-core = { path = "crates/undifficulty-core" }
@@ -269,6 +271,7 @@ bevy = { workspace = true }
 untypes-core = { workspace = true }
 untmxmap-core = { workspace = true }
 uncampaign-plugin = { workspace = true }
+unboard-plugin = { workspace = true }
 unclassic-mode-plugin = { workspace = true }
 unengine-plugin = { workspace = true }
 unfog-plugin = { workspace = true }

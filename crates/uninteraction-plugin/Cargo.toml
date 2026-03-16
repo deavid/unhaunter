@@ -15,6 +15,7 @@ uninteraction-core = { path = "../uninteraction-core" }
 unevents-core = { path = "../unevents-core" }
 unspatial-core = { path = "../unspatial-core" }
 untypes-core = { path = "../untypes-core" }
+unboard-core = { path = "../unboard-core" }
 unbehavior = { path = "../unbehavior" }
 unrender-std = { path = "../unrender-std" }
 

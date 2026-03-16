@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use unbehavior::behavior::{Behavior, Util};
 use unbehavior::components;
-use unbehavior::roomdb::{RoomStateMap, RoomTopology};
-use unbehavior::state::TileState;
+use unboard_core::resources::roomdb::{RoomState, RoomStateMap, RoomTopology};
 use unmetrics_core::metrics::SendMetric;
 use untypes_core::hydration::HydrationStage;
 
@@ -30,7 +29,7 @@ fn hydration_simulation_system(
             roomtopo
                 .room_tiles
                 .insert(pos.to_board_position(), name.to_owned());
-            roomstate.room_state.insert(name.clone(), TileState::Off);
+            roomstate.room_state.insert(name.clone(), RoomState::Off);
         }
     }
     measure.end_ms();

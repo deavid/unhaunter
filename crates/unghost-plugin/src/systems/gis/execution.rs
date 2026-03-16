@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
-use unbehavior::components::{InteractableByGhost, RoomState};
+use unbehavior::components::{InteractableByGhost, RoomStateDelta};
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
@@ -183,7 +183,7 @@ fn ghost_interaction_execution_system(
         &Behavior,
         &Position,
         Option<&Interactive>,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
     )>,
     q_objects: Query<&Position, With<InteractableByGhost>>,
     mut ev_interaction_executor: MessageWriter<ExecuteInteractionEvent>,
@@ -359,7 +359,7 @@ fn execute_toggle_interaction(
         &Behavior,
         &Position,
         Option<&Interactive>,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
     )>,
     target: Entity,
 ) {
@@ -386,7 +386,7 @@ fn execute_door_slam_interaction(
         &Behavior,
         &Position,
         Option<&Interactive>,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
     )>,
     target: Entity,
 ) {
@@ -420,7 +420,7 @@ fn execute_door_creak_interaction(
         &Behavior,
         &Position,
         Option<&Interactive>,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
     )>,
     target: Entity,
 ) {
@@ -454,7 +454,7 @@ fn execute_throw_interaction(
         &Behavior,
         &Position,
         Option<&Interactive>,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
     )>,
     q_objects: &Query<&Position, With<InteractableByGhost>>,
     target: Entity,
@@ -509,7 +509,7 @@ fn execute_nudge_interaction(
         &Behavior,
         &Position,
         Option<&Interactive>,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
     )>,
     q_objects: &Query<&Position, With<InteractableByGhost>>,
     target: Entity,
@@ -577,7 +577,7 @@ fn execute_haunted_move_interaction(
         &Behavior,
         &Position,
         Option<&Interactive>,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
     )>,
     q_objects: &Query<&Position, With<InteractableByGhost>>,
     target: Entity,
@@ -632,7 +632,7 @@ fn execute_lock_interaction(
         &Behavior,
         &Position,
         Option<&Interactive>,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
     )>,
     target: Entity,
 ) {
@@ -668,7 +668,7 @@ fn execute_trip_breaker_interaction(
         &Behavior,
         &Position,
         Option<&Interactive>,
-        Option<&RoomState>,
+        Option<&RoomStateDelta>,
     )>,
     target: Entity,
     local_player_role: Option<&untypes_core::roles::LocalPlayerRole>,

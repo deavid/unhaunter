@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unbehavior::roomdb::RoomTopology;
 use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::roomdb::RoomTopology;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_influence::GhostInfluence;
 use unghost_core::resources::haunt_state::HauntState;
