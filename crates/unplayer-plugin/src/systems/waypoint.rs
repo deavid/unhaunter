@@ -2,7 +2,6 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
-use untags_core::game::GCameraArena;
 use unevents_core::events::npc_help::NpcHelpEvent;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
@@ -14,6 +13,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
+use untags_core::game::GCameraArena;
 use untruck_core::components::in_truck::InTruck;
 use unui_core::resources::MouseVisibility;
 

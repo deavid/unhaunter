@@ -15,3 +15,6 @@ bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
 untypes-core = { path = "../untypes-core" }
 unui-core = { path = "../unui-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unrender-std = { path = "../unrender-std" }
+unreplicon-core = { workspace = true }

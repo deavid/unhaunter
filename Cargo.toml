@@ -10,7 +10,6 @@ members = [
     "crates/unclassic-mode-orchestrator-plugin",
     "crates/unclassic-mode-render-plugin",
     "crates/unclassic-mode-ui-plugin",
-    "crates/unengine-plugin",
     "crates/unbehavior",
     "crates/unboard-core",
     "crates/unboard-plugin",
@@ -181,7 +180,6 @@ unclassic-mode-gameplay-plugin = { path = "crates/unclassic-mode-gameplay-plugin
 unclassic-mode-orchestrator-plugin = { path = "crates/unclassic-mode-orchestrator-plugin" }
 unclassic-mode-render-plugin = { path = "crates/unclassic-mode-render-plugin" }
 unclassic-mode-ui-plugin = { path = "crates/unclassic-mode-ui-plugin" }
-unengine-plugin = { path = "crates/unengine-plugin" }
 unbehavior = { path = "crates/unbehavior" }
 unboard-core = { path = "crates/unboard-core" }
 unboard-plugin = { path = "crates/unboard-plugin" }
@@ -280,7 +278,6 @@ unclassic-mode-gameplay-plugin = { workspace = true }
 unclassic-mode-orchestrator-plugin = { workspace = true }
 unclassic-mode-render-plugin = { workspace = true }
 unclassic-mode-ui-plugin = { workspace = true }
-unengine-plugin = { workspace = true }
 unfog-plugin = { workspace = true }
 unfps-plugin = { workspace = true }
 ungear-plugin = { workspace = true }

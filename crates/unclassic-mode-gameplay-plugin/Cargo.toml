@@ -21,6 +21,7 @@ unplayer-core = { path = "../unplayer-core" }
 unrender-std = { path = "../unrender-std" }
 unspatial-core = { path = "../unspatial-core" }
 untags-core = { path = "../untags-core" }
+untmxmap-core = { workspace = true }
 untypes-core = { path = "../untypes-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

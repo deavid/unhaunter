@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::RngExt;
-use untypes_core::roles::LocalPlayerRole;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;
@@ -18,6 +17,7 @@ use unprofile_core::profile::PlayerProfileData;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
+use untypes_core::roles::LocalPlayerRole;
 
 use crate::metrics;
 
@@ -172,5 +172,8 @@ pub(crate) fn update_thermometer(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_thermometer.run_if(resource_exists::<LocalPlayerRole>));
+    app.add_systems(
+        Update,
+        update_thermometer.run_if(resource_exists::<LocalPlayerRole>),
+    );
 }

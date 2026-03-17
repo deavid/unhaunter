@@ -15,7 +15,6 @@ pub(crate) struct SpiritBoxInternal {
 use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
-use untypes_core::roles::LocalPlayerRole;
 use bevy_persistent::Persistent;
 use rand::RngExt;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;
@@ -28,6 +27,7 @@ use unlight_core::resources::light_grid::LightGrid;
 use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
+use untypes_core::roles::LocalPlayerRole;
 
 use crate::metrics;
 
@@ -269,5 +269,8 @@ pub(crate) fn update_spiritbox(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_spiritbox.run_if(resource_exists::<LocalPlayerRole>));
+    app.add_systems(
+        Update,
+        update_spiritbox.run_if(resource_exists::<LocalPlayerRole>),
+    );
 }

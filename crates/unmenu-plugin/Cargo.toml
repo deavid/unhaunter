@@ -16,5 +16,6 @@ workspace = true
 unfoundation-core = { path = "../unfoundation-core" }
 untypes-core = { path = "../untypes-core" }
 unmenu-core = { path = "../unmenu-core" }
+untags-core = { path = "../untags-core" }
 
 bevy = { workspace = true }

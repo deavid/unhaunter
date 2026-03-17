@@ -7078,7 +7078,12 @@ name = "unboard-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "unbehavior",
  "unboard-core",
+ "unevents-core",
+ "unrender-std",
+ "unspatial-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -7116,6 +7121,7 @@ dependencies = [
  "unrender-std",
  "unspatial-core",
  "untags-core",
+ "untmxmap-core",
  "untypes-core",
 ]
 
@@ -7150,6 +7156,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_replicon",
  "unbehavior",
  "unboard-core",
  "unghost-core",
@@ -7200,28 +7207,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "undifficulty-core",
-]
-
-[[package]]
-name = "unengine-plugin"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_asset_loader",
- "bevy_replicon",
- "unbehavior",
- "unboard-core",
- "unevents-core",
- "unfoundation-core",
- "unmenu-core",
- "unnoise-core",
- "unrender-std",
- "unreplicon-core",
- "unspatial-core",
- "untags-core",
- "untmxmap-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -7434,7 +7419,6 @@ dependencies = [
  "unclassic-mode-render-plugin",
  "unclassic-mode-ui-plugin",
  "undifficulty-plugin",
- "unengine-plugin",
  "unfog-plugin",
  "unfps-plugin",
  "ungear-plugin",
@@ -7765,6 +7749,7 @@ dependencies = [
  "bevy",
  "unfoundation-core",
  "unmenu-core",
+ "untags-core",
  "untypes-core",
 ]
 
@@ -8292,6 +8277,9 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
+ "unfoundation-core",
+ "unrender-std",
+ "unreplicon-core",
  "untypes-core",
  "unui-core",
 ]

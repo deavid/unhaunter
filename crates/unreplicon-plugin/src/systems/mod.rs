@@ -6,6 +6,7 @@ pub(crate) mod ghost;
 pub(crate) mod lobby;
 pub mod players;
 pub(crate) mod procman;
+pub(crate) mod roles;
 
 use bevy::prelude::*;
 use bevy_replicon::prelude::RepliconPlugins;
@@ -21,4 +22,5 @@ pub(crate) fn app_setup(app: &mut App) {
     players::app_setup(app);
     ghost::app_setup(app);
     debug::app_setup(app);
+    roles::app_setup(app);
 }

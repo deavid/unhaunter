@@ -27,3 +27,4 @@ untmxmap-core = { path = "../untmxmap-core" }
 untypes-core = { path = "../untypes-core" }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
+bevy_replicon = { workspace = true }

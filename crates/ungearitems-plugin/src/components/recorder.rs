@@ -9,7 +9,6 @@ use unsound_core::emitter::SoundEmitter;
 use unsound_core::resources::SoundGrid;
 
 use bevy::prelude::*;
-use untypes_core::roles::LocalPlayerRole;
 use rand::RngExt;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
@@ -17,6 +16,7 @@ use ungearitems_core::components::recorder::Recorder;
 use unghost_core::types::evidence::Evidence;
 use unmetrics_core::metrics::SendMetric;
 use unspatial_core::position::Position;
+use untypes_core::roles::LocalPlayerRole;
 
 use crate::metrics;
 
@@ -249,5 +249,8 @@ pub(crate) fn update_recorder(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_recorder.run_if(resource_exists::<LocalPlayerRole>));
+    app.add_systems(
+        Update,
+        update_recorder.run_if(resource_exists::<LocalPlayerRole>),
+    );
 }

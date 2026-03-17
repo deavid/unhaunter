@@ -1,10 +1,13 @@
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use unfoundation_core::colors;
-use unmenu_core::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot, PrincipalMenuText};
+use unmenu_core::components::{
+    MenuItemInteractive, MenuMouseTracker, MenuRoot, MenuUI, PrincipalMenuText,
+};
 use unmenu_core::events::KeyboardNavigate;
 use unmenu_core::events::MenuEscapeEvent;
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::events::MenuItemSelected;
+use untags_core::game::MCamera;
 use untypes_core::states::AppState;
 
 /// Detects mouse movement to enable hover selection. Mouse movement is tracked to prevent
@@ -196,7 +199,26 @@ fn update_menu_item_visuals(
     }
 }
 
+pub(crate) fn setup_menu_camera(mut commands: Commands) {
+    commands.spawn(Camera2d).insert(MCamera);
+}
+
+pub(crate) fn cleanup_menu(
+    mut commands: Commands,
+    qc: Query<Entity, With<MCamera>>,
+    qm: Query<Entity, With<MenuUI>>,
+) {
+    for cam in qc.iter() {
+        commands.entity(cam).despawn();
+    }
+    for ui_entity in qm.iter() {
+        commands.entity(ui_entity).despawn();
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(OnEnter(AppState::MainMenu), setup_menu_camera);
+    app.add_systems(OnExit(AppState::MainMenu), cleanup_menu);
     app.add_systems(
         Update,
         (

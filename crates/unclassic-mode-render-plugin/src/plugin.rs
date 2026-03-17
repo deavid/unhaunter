@@ -10,6 +10,7 @@ impl Plugin for ClassicModeRenderPlugin {
                 .run_if(in_state(untypes_core::states::AppState::InGame)),
         );
 
+        crate::cleanup::app_setup(app);
         crate::hydration::app_setup(app);
         crate::camera::app_setup(app);
     }

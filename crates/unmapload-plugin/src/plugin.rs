@@ -6,7 +6,7 @@ use unmapload_core::events::loadlevel::{
     MapGeometryInitializedEvent,
 };
 use untypes_core::cli::CliOptions;
-use untypes_core::states::AppState;
+use untypes_core::states::{AppState, BootState, GameState, SimulationState};
 
 /// Plugin for map loading functionality
 ///
@@ -21,6 +21,14 @@ impl Plugin for UnhaunterMapLoadPlugin {
             .get_resource::<CliOptions>()
             .map(|cli| cli.dedicated)
             .unwrap_or(false);
+
+        app.init_state::<AppState>()
+            .init_state::<BootState>()
+            .init_state::<GameState>()
+            .init_state::<SimulationState>()
+            .add_loading_state(
+                LoadingState::new(AppState::EngineBoot).continue_to_state(AppState::MainMenu),
+            );
 
         if !is_headless {
             app.add_loading_state(

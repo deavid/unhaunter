@@ -13,6 +13,12 @@ pub struct UnhaunterGhostCorePlugin;
 
 impl Plugin for UnhaunterGhostCorePlugin {
     fn build(&self, app: &mut App) {
+        let is_headless = app
+            .world()
+            .get_resource::<untypes_core::cli::CliOptions>()
+            .map(|cli| cli.dedicated)
+            .unwrap_or(false);
+
         app.add_message::<unevents_core::events::ghost_interaction::GhostInteractionEvent>();
         crate::systems::hydration::app_setup(app);
         crate::systems::evidence_decay::app_setup(app);
@@ -22,6 +28,12 @@ impl Plugin for UnhaunterGhostCorePlugin {
         app.init_resource::<ObjectInteractionConfig>()
             .init_resource::<HauntState>()
             .init_resource::<CurrentEvidenceReadings>();
+
+        if is_headless {
+            app.insert_resource(unnoise_core::perlin::PerlinNoise::new_low_mem(1));
+        } else {
+            app.init_resource::<unnoise_core::perlin::PerlinNoise>();
+        }
     }
 }
 

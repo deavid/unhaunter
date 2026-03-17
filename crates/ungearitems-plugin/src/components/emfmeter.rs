@@ -19,12 +19,12 @@ use unghost_core::types::evidence::Evidence;
 use unspatial_core::position::Position;
 
 use bevy::prelude::*;
-use untypes_core::roles::LocalPlayerRole;
 use rand::RngExt;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::emfmeter::{EMFLevel, EMFMeter};
+use untypes_core::roles::LocalPlayerRole;
 
 pub(crate) fn update_emfmeter(
     mut q_emf: Query<(
@@ -241,5 +241,8 @@ pub(crate) fn update_emfmeter(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_emfmeter.run_if(resource_exists::<LocalPlayerRole>));
+    app.add_systems(
+        Update,
+        update_emfmeter.run_if(resource_exists::<LocalPlayerRole>),
+    );
 }

@@ -1,7 +1,6 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
-use untmxmap_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::grade::Grade;
@@ -10,6 +9,7 @@ use unghost_core::types::ghost::types::GhostType;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
 use unsummary_core::summary::{ActiveMissionEvaluator, SummaryData};
+use untmxmap_core::resources::maps::Maps;
 use untypes_core::roles::LobbyPresenceRole;
 use untypes_core::states::AppState;
 use untypes_core::states::GameState;

@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::Replicated;
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
@@ -12,7 +13,6 @@ use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use bevy_replicon::prelude::Replicated;
 use unreplicon_core::messages::SaltDroppedMessage;
 use unreplicon_core::ownership::LocallyOwned;
 use unsound_core::emitter::SoundEmitter;
@@ -118,7 +118,10 @@ fn salt_pile_system(
                         .insert(particle_position)
                         .insert(GameSprite)
                         .insert(SaltParticle)
-                        .insert(SaltParticleTimer(Timer::from_seconds(30.0, TimerMode::Once)))
+                        .insert(SaltParticleTimer(Timer::from_seconds(
+                            30.0,
+                            TimerMode::Once,
+                        )))
                         .insert(SpriteLayer::default());
                 }
 

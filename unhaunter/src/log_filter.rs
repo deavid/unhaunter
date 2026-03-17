@@ -7,8 +7,6 @@ const UNHAUNTER_CRATES: &[&str] = &[
     "unclassic_mode_plugin",
     "undifficulty_core",
     "undifficulty_plugin",
-    "unengine_core",
-    "unengine_plugin",
     "unevents_core",
     "unfog_core",
     "unfog_plugin",

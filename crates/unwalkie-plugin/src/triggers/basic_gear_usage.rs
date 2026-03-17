@@ -218,7 +218,10 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
                     in_hotspot = true;
                 }
                 if let Some(ghost_live_pos) = current_ghost_live_pos_opt
-                    && player_room == room_topology.room_tiles.get(&ghost_live_pos.to_board_position())
+                    && player_room
+                        == room_topology
+                            .room_tiles
+                            .get(&ghost_live_pos.to_board_position())
                 {
                     // In live ghost's current room
                     in_hotspot = true;

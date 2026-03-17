@@ -8,10 +8,10 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use bevy_replicon::prelude::Remote;
 use ndarray::Array3;
-use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
+use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unmapload_core::events::loadlevel::{LevelLoadedEvent, MapGeometryInitializedEvent};

@@ -12,7 +12,6 @@ use unspatial_core::position::Position;
 use crate::metrics;
 
 use bevy::prelude::*;
-use untypes_core::roles::LocalPlayerRole;
 use rand::RngExt;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{
@@ -22,6 +21,7 @@ use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::geigercounter::GeigerCounter;
 use uninteraction_core::interaction::Toggleable;
+use untypes_core::roles::LocalPlayerRole;
 
 pub(crate) trait GeigerCounterExt {
     fn calculate_output_sound(&self, haunt_state: &HauntState) -> f32;
@@ -228,5 +228,8 @@ pub(crate) fn update_geigercounter(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_geigercounter.run_if(resource_exists::<LocalPlayerRole>));
+    app.add_systems(
+        Update,
+        update_geigercounter.run_if(resource_exists::<LocalPlayerRole>),
+    );
 }

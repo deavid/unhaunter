@@ -4,6 +4,7 @@
 //! including entity hydration (mesh/materials setup), camera control, and visual synchronization.
 
 pub(crate) mod camera;
+pub(crate) mod cleanup;
 pub(crate) mod hydration;
 
 pub mod plugin;

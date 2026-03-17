@@ -10,7 +10,6 @@ use unclassic_mode_orchestrator_plugin::plugin::ClassicModeOrchestratorPlugin;
 use unclassic_mode_render_plugin::plugin::ClassicModeRenderPlugin;
 use unclassic_mode_ui_plugin::plugin::ClassicModeUiPlugin;
 use undifficulty_plugin::plugin::UnhaunterDifficultyPlugin;
-use unengine_plugin::plugin::{UnhaunterEngineCorePlugin, UnhaunterEnginePlugin};
 use unfog_plugin::plugin::{UnhaunterFogCorePlugin, UnhaunterFogPlugin};
 use unfps_plugin::plugin::UnhaunterFpsPlugin;
 use ungear_plugin::plugin::{UnhaunterGearCorePlugin, UnhaunterGearPlugin};
@@ -150,7 +149,6 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterSettingsPlugin,
         UnhaunterDifficultyPlugin,
         UnhaunterBoardPlugin,
-        UnhaunterEngineCorePlugin,
         UnhaunterSummaryCorePlugin,
         UnhaunterMetricsPlugin,
         UnhaunterRenderCorePlugin,
@@ -189,7 +187,6 @@ pub fn app_run(cli_options: CliOptions) {
             UnhaunterManualPlugin,
             UnhaunterSummaryPlugin,
             UnhaunterPlayerPlugin,
-            UnhaunterEnginePlugin,
             UnhaunterMenuPlugin,
             UnhaunterTruckPlugin,
             UnhaunterWalkiePlugin,

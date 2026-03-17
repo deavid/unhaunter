@@ -12,8 +12,8 @@ use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, LightSensitive,
-    ResolutionFactor, ShadowCaster, SpectralClarity, UltravioletSensitive, Viewer,
+    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, LightSensitive, ResolutionFactor,
+    ShadowCaster, SpectralClarity, UltravioletSensitive, Viewer,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;

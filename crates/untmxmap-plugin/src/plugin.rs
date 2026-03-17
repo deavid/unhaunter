@@ -3,6 +3,7 @@ use untiled_core::tiled::MapTileSetDb;
 use untmxmap_core::assets::index::{AssetIdx, AssetIdxLoader};
 use untmxmap_core::assets::tmxmap::{TmxMap, TmxMapLoader};
 use untmxmap_core::assets::tsxsheet::{TsxSheet, TsxSheetLoader};
+use untmxmap_core::resources::maps::Maps;
 use untmxmap_core::resources::upscale::UpscaleIndex;
 
 use crate::init_maps::MapAssetIndexHandle;
@@ -14,6 +15,7 @@ impl Plugin for UnhaunterTmxMapPlugin {
         app.init_resource::<MapTileSetDb>()
             .init_resource::<MapAssetIndexHandle>()
             .init_resource::<UpscaleIndex>()
+            .init_resource::<Maps>()
             .init_asset::<TmxMap>()
             .init_asset::<TsxSheet>()
             .init_asset::<AssetIdx>()

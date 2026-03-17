@@ -6,7 +6,7 @@ use untypes_core::states::{AppState, GameState};
 use unui_core::assets::UiAssets;
 
 #[derive(Debug, Component)]
-pub struct PauseUI;
+struct PauseUI;
 
 const PAUSEUI_BGCOLOR: Color = Color::srgba(0.082, 0.094, 0.118, 0.6);
 const PAUSEUI_PANEL_BGCOLOR: Color = Color::srgba(0.106, 0.129, 0.157, 0.8);
@@ -41,6 +41,26 @@ fn keyboard(
 fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
     for e in qtui.iter() {
         commands.entity(e).despawn();
+    }
+}
+
+fn keyboard_pause(
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    if *app_state.get() != AppState::InGame {
+        return;
+    }
+
+    let can_pause = *game_state.get() == GameState::Running;
+    if *game_state.get() == GameState::Pause {
+        return;
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Escape) && can_pause {
+        game_next_state.set(GameState::Pause);
     }
 }
 
@@ -125,8 +145,9 @@ fn setup_ui(
         });
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(GameState::Pause), setup_ui);
     app.add_systems(OnExit(GameState::Pause), cleanup);
     app.add_systems(Update, keyboard.run_if(in_state(GameState::Pause)));
+    app.add_systems(Update, keyboard_pause.run_if(in_state(AppState::InGame)));
 }

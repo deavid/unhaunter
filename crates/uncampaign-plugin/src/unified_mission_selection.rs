@@ -20,7 +20,6 @@ use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
-use untmxmap_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::colors;
@@ -36,6 +35,7 @@ use unmenu_core::{
     events::{MenuEscapeEvent, MenuItemClicked},
     scrollbar, templates,
 };
+use untmxmap_core::resources::maps::Maps;
 use untypes_core::states::{AppState, MapHubState};
 use unui_core::assets::UiAssets;
 
