@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use undifficulty_core::manual_types::ManualChapterIndex;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::quartz::QuartzStoneData;
@@ -119,12 +118,8 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     }
 
     // 2. Chapter Check: Only trigger for Chapter 5 or non-tutorial difficulties
-    let current_chapter_index = difficulty
-        .0
-        .tutorial_chapter
-        .map(|c| c.index())
-        .unwrap_or(usize::MAX); // usize::MAX if not tutorial
-    if current_chapter_index < ManualChapterIndex::Chapter5.index() {
+    let current_chapter_index = difficulty.0.difficulty.index();
+    if current_chapter_index < untypes_core::difficulty::Difficulty::TutorialChapter5.index() {
         // If it's a tutorial chapter AND it's before Chapter 5, exit.
         // Non-tutorial difficulties (where tutorial_chapter is None, so current_chapter_index is usize::MAX) will pass this.
         return;
@@ -208,12 +203,10 @@ fn trigger_sage_unused_in_relevant_situation_system(
     }
 
     // 2. Chapter Check: Only trigger for Chapter 5 or non-tutorial difficulties
-    let current_chapter_index = difficulty
-        .0
-        .tutorial_chapter
-        .map(|c| c.index())
-        .unwrap_or(usize::MAX);
-    if current_chapter_index < ManualChapterIndex::Chapter5.index() {
+    let current_chapter_index = difficulty.0.difficulty.index();
+    if current_chapter_index < 4 {
+        // If it's a tutorial chapter AND it's before Chapter 5 (index 4), exit.
+        // Non-tutorial difficulties (index 5+) will pass this.
         return;
     }
 
@@ -343,12 +336,8 @@ fn trigger_sage_activated_ineffectively_system(
         }
         return;
     }
-    let current_chapter_index = difficulty
-        .0
-        .tutorial_chapter
-        .map(|c| c.index())
-        .unwrap_or(usize::MAX);
-    if current_chapter_index < ManualChapterIndex::Chapter5.index() {
+    let current_chapter_index = difficulty.0.difficulty.index();
+    if current_chapter_index < 4 {
         if tracker.is_tracking_this_sage_burn {
             *tracker = SageEffectivenessTracker::default();
         }
@@ -498,12 +487,8 @@ fn trigger_sage_unused_defensively_during_hunt_system(
         // Tracker reset is handled by `reset_hunt_sage_tracker_on_mission_change`
         return;
     }
-    let current_chapter_index = difficulty
-        .0
-        .tutorial_chapter
-        .map(|c| c.index())
-        .unwrap_or(usize::MAX);
-    if current_chapter_index < ManualChapterIndex::Chapter5.index() {
+    let current_chapter_index = difficulty.0.difficulty.index();
+    if current_chapter_index < 4 {
         return;
     }
 

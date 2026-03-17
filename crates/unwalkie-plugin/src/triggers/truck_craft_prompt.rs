@@ -3,6 +3,7 @@ use bevy_platform::collections::HashSet;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
+use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::types::evidence::Evidence;
@@ -79,7 +80,7 @@ fn trigger_almost_ready_to_craft_repellent_system(
     }
 
     // Find which ghosts are compatible with the clear evidences
-    let mission_ghosts = difficulty.0.ghost_set.as_vec();
+    let mission_ghosts = difficulty.0.difficulty.ghost_set().as_vec();
     let mut compatible_ghosts = Vec::new();
     for ghost_type in mission_ghosts {
         let ghost_evidences = ghost_type.evidences();

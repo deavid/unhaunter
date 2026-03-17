@@ -7193,8 +7193,6 @@ dependencies = [
  "bevy_platform",
  "serde",
  "unfoundation-core",
- "ungear-core",
- "unghost-core",
  "untypes-core",
 ]
 
@@ -7316,6 +7314,7 @@ dependencies = [
  "unfoundation-core",
  "unghost-core",
  "unspatial-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -7398,6 +7397,7 @@ dependencies = [
  "serde",
  "unfoundation-core",
  "unspatial-core",
+ "untypes-core",
 ]
 
 [[package]]

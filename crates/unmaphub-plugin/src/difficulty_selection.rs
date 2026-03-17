@@ -1,9 +1,6 @@
 use bevy::prelude::*;
-use bevy_platform::time::Instant;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use undifficulty_core::difficulty_state::DifficultySelectionState;
-use unevents_core::events::map_selected::MapSelectedEvent;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
@@ -46,42 +43,23 @@ pub(crate) fn app_setup(app: &mut App) {
         );
 }
 
-/// Sets up the difficulty selection screen UI and initializes the difficulty state
+/// Sets up the difficulty selection screen UI
 pub(crate) fn setup_systems(
     mut commands: Commands,
     ui_assets: Res<UiAssets>,
-    mut map_selected_events: MessageReader<MapSelectedEvent>,
+    mut ev_menu_clicks: MessageReader<MenuItemClicked>,
+    mut ev_menu_selection: MessageReader<MenuItemSelected>,
 ) {
+    // Clear event readers to prevent phantom inputs on state entry
+    ev_menu_clicks.clear();
+    ev_menu_selection.clear();
+
     // Filter for non-tutorial difficulties to display
     let available_difficulties: Vec<Difficulty> = Difficulty::all()
         .filter(|d| !d.is_tutorial_difficulty())
         .collect();
 
     setup_ui(&mut commands, &ui_assets, &available_difficulties);
-
-    // Default to the first *non-tutorial* difficulty, or a sensible fallback
-    let default_difficulty = available_difficulties
-        .first()
-        .copied()
-        .unwrap_or_else(|| {
-            // Fallback if no non-tutorial difficulties are enabled for some reason
-            // This shouldn't happen if is_enabled() is set up correctly
-            warn!("No non-tutorial difficulties found for Custom Mission. Defaulting to StandardChallenge.");
-            Difficulty::StandardChallenge
-        });
-
-    // Get the selected map index from the most recent MapSelectedEvent
-    let selected_map_idx = map_selected_events
-        .read()
-        .last()
-        .map(|event| event.map_idx)
-        .unwrap_or(0);
-
-    commands.insert_resource(DifficultySelectionState {
-        selected_difficulty: default_difficulty,
-        selected_map_idx,
-        state_entered_at: Instant::now(),
-    });
 }
 
 /// Cleans up the difficulty selection screen UI
@@ -99,21 +77,10 @@ pub(crate) fn handle_difficulty_click(
     mut ev_menu_clicks: MessageReader<MenuItemClicked>,
     mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut difficulty_resource: ResMut<CurrentDifficulty>,
-    difficulty_selection_state: Res<DifficultySelectionState>,
     mut next_app_state: ResMut<NextState<AppState>>,
     q_items: Query<(&DifficultySelectionItem, &MenuItemInteractive)>,
     mut mission_select_mode: ResMut<CurrentMissionSelectMode>,
 ) {
-    if difficulty_selection_state
-        .state_entered_at
-        .elapsed()
-        .as_secs_f32()
-        < 0.1
-    {
-        ev_menu_clicks.clear();
-        return;
-    }
-
     // Get the list of non-tutorial difficulties actually displayed in the UI
     let displayed_difficulties: Vec<Difficulty> = Difficulty::all()
         .filter(|d| !d.is_tutorial_difficulty())
@@ -163,20 +130,9 @@ pub(crate) fn handle_difficulty_click(
 /// Updates the description text when a different difficulty is selected
 pub(crate) fn update_difficulty_description(
     mut ev_menu_selection: MessageReader<MenuItemSelected>,
-    mut difficulty_selection_state: ResMut<DifficultySelectionState>,
     mut q_desc_text: Query<(&mut Text, &mut TextColor), With<DifficultyDescriptionUI>>,
     q_items: Query<(&DifficultySelectionItem, &MenuItemInteractive)>,
 ) {
-    if difficulty_selection_state
-        .state_entered_at
-        .elapsed()
-        .as_secs_f32()
-        < 0.1
-    {
-        ev_menu_selection.clear();
-        return;
-    }
-
     // Get the list of non-tutorial difficulties actually displayed in the UI
     let displayed_difficulties: Vec<Difficulty> = Difficulty::all()
         .filter(|d| !d.is_tutorial_difficulty())
@@ -189,9 +145,6 @@ pub(crate) fn update_difficulty_description(
             if ev.0 == total_displayed_difficulties {
                 text.0 = "Select a challenge level for your custom mission.".to_string();
                 text_color.0 = colors::MENU_ITEM_COLOR_OFF;
-                // Reset selected_difficulty to a default non-tutorial one or keep the last valid one
-                difficulty_selection_state.selected_difficulty =
-                    displayed_difficulties.first().copied().unwrap_or_default();
                 continue;
             }
 
@@ -213,7 +166,6 @@ pub(crate) fn update_difficulty_description(
 
                     text.0 = new_text;
                     text_color.0 = colors::MENU_ITEM_COLOR_OFF;
-                    difficulty_selection_state.selected_difficulty = selected_difficulty;
                 }
             }
         }

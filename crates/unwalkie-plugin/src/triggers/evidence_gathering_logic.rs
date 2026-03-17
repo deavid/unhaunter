@@ -2,9 +2,9 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use enum_iterator::all;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
+use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
@@ -132,7 +132,7 @@ fn trigger_journal_conflicting_evidence_system(
                 // Additional check: Only conflict if NO ghost in difficulty has this evidence
                 let any_difficulty_ghost_has_evidence = available_ghosts
                     .iter()
-                    .any(|ghost| ghost.evidences().contains(&marked_evidence_type));
+                    .any(|&ghost| ghost.evidences().contains(&marked_evidence_type));
 
                 if !any_difficulty_ghost_has_evidence {
                     current_conflict_exists = true;

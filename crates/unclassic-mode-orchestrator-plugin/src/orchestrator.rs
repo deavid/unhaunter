@@ -6,6 +6,7 @@ use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, Va
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::sound::SoundType;
 use unghost_core::components::ghost_breach::GhostBreach;
@@ -83,7 +84,7 @@ pub(crate) fn classic_mode_orchestrator(
                 .copied()
                 .unwrap_or(Position::new_i64(0, 0, 0));
 
-            let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set.as_vec();
+            let possible_ghost_types: Vec<_> = p.difficulty.0.difficulty.ghost_set().as_vec();
             let ghost_sprite =
                 GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
             let ghost_types = vec![ghost_sprite.class];

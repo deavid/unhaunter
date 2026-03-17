@@ -4,6 +4,8 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use ungear_core::difficulty_ext::DifficultyGearExt;
+use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unghost_core::types::evidence::Evidence;
@@ -181,7 +183,8 @@ fn button_system(mut p: JournalButtonParams) {
     let possible_ghosts: Vec<GhostType> = p
         .difficulty
         .0
-        .ghost_set
+        .difficulty
+        .ghost_set()
         .as_vec()
         .into_iter()
         .filter(|ghost_type| {
@@ -234,7 +237,8 @@ fn button_system(mut p: JournalButtonParams) {
                 let gear_available = p
                     .difficulty
                     .0
-                    .truck_gear
+                    .difficulty
+                    .truck_gear()
                     .iter()
                     .filter_map(|gear_kind| Evidence::try_from(gear_kind).ok())
                     .any(|e| e == ev);

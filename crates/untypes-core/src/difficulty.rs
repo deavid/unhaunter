@@ -79,4 +79,11 @@ impl Difficulty {
                 | Difficulty::TutorialChapter5
         )
     }
+
+    /// Returns the zero-based index of this difficulty in the difficulty list.
+    ///
+    /// Useful for comparing tutorial chapters or ordering difficulties for UI display.
+    pub fn index(&self) -> usize {
+        all::<Difficulty>().position(|d| d == *self).unwrap_or(0)
+    }
 }

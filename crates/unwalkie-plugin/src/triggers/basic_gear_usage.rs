@@ -3,7 +3,6 @@
 use bevy::prelude::*;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use undifficulty_core::manual_types::ManualChapterIndex;
 use ungear_core::components::core::Battery;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
@@ -183,12 +182,8 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
         }
         return;
     }
-    let current_chapter_index = difficulty
-        .0
-        .tutorial_chapter
-        .map(|c| c.index())
-        .unwrap_or(usize::MAX);
-    if current_chapter_index > ManualChapterIndex::Chapter2.index() {
+    let current_chapter_index = difficulty.0.difficulty.index();
+    if current_chapter_index > untypes_core::difficulty::Difficulty::TutorialChapter2.index() {
         // Only for Chapter 1 & 2 (or non-tutorial)
         if tracker.is_some() {
             *tracker = None;
@@ -354,7 +349,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     }
 }
 
-const MIN_CHAPTER_FOR_CYCLE_HINT: ManualChapterIndex = ManualChapterIndex::Chapter2;
+const MIN_CHAPTER_FOR_CYCLE_HINT: usize = 1; // TutorialChapter2 is at index 1
 const TOOL_ACTIVE_THRESHOLD_SECONDS: f32 = 90.0;
 const Q_PRESS_INACTIVITY_THRESHOLD_SECONDS: f32 = 75.0;
 
@@ -383,12 +378,8 @@ fn trigger_did_not_cycle_to_other_gear_system(
         *tracker = GearCycleUsageTracker::default(); // Reset on state change
         return;
     }
-    let current_chapter_index = difficulty
-        .0
-        .tutorial_chapter
-        .map(|c| c.index())
-        .unwrap_or(usize::MAX);
-    if current_chapter_index < MIN_CHAPTER_FOR_CYCLE_HINT.index() {
+    let current_chapter_index = difficulty.0.difficulty.index();
+    if current_chapter_index < MIN_CHAPTER_FOR_CYCLE_HINT {
         *tracker = GearCycleUsageTracker::default();
         return;
     }

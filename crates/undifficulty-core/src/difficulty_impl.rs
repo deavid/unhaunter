@@ -3,11 +3,8 @@
 //! This module provides all the gameplay settings for each difficulty level.
 
 use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
-use crate::manual_types::ManualChapterIndex;
 use unfoundation_core::types::truck::TabContents;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
-use ungear_core::types::gear::kind::{GearKind, PlayerGearKind};
-use unghost_core::types::ghost::definitions::GhostSet;
 use untypes_core::difficulty::Difficulty;
 
 impl DifficultySettings for Difficulty {
@@ -400,92 +397,6 @@ impl DifficultySettings for Difficulty {
         }
     }
 
-    fn player_gear(&self) -> PlayerGearKind {
-        match self {
-            Difficulty::TutorialChapter1 => PlayerGearKind {
-                left_hand: GearKind::Flashlight,
-                right_hand: GearKind::Thermometer,
-                inventory: vec![GearKind::EMFMeter, GearKind::None],
-            },
-            Difficulty::TutorialChapter2 => PlayerGearKind {
-                left_hand: GearKind::UVTorch,
-                right_hand: GearKind::Thermometer,
-                inventory: vec![GearKind::Videocam, GearKind::EMFMeter],
-            },
-            _ => PlayerGearKind {
-                left_hand: GearKind::Flashlight,
-                right_hand: GearKind::None,
-                inventory: vec![GearKind::None, GearKind::None],
-            },
-        }
-    }
-
-    fn ghost_set(&self) -> GhostSet {
-        match self {
-            Difficulty::TutorialChapter1 => GhostSet::TmpEMF,
-            Difficulty::TutorialChapter2 => GhostSet::TmpEMFUVOrbs,
-            Difficulty::TutorialChapter3 => GhostSet::TmpEMFUVOrbsEVPCPM,
-            Difficulty::TutorialChapter4 => GhostSet::Twenty,
-            _ => GhostSet::All, // TutorialChapter5 and all Challenges use all ghosts
-        }
-    }
-
-    fn truck_gear(&self) -> Vec<GearKind> {
-        use ungear_core::types::gear::kind::GearKind::*;
-        let mut gear = Vec::new();
-
-        match self {
-            Difficulty::TutorialChapter1 => {
-                gear.push(Flashlight);
-                gear.push(Thermometer);
-                gear.push(EMFMeter);
-            }
-            Difficulty::TutorialChapter2 => {
-                gear.extend(Self::TutorialChapter1.truck_gear());
-                gear.push(UVTorch);
-                gear.push(Videocam);
-            }
-            Difficulty::TutorialChapter3 => {
-                gear.extend(Self::TutorialChapter2.truck_gear());
-                gear.push(Recorder);
-                gear.push(GeigerCounter);
-            }
-            Difficulty::TutorialChapter4 => {
-                gear.extend(Self::TutorialChapter3.truck_gear());
-                gear.push(SpiritBox);
-                gear.push(RedTorch);
-            }
-            Difficulty::TutorialChapter5 => {
-                gear.extend(Self::TutorialChapter4.truck_gear());
-                gear.push(Salt);
-                gear.push(QuartzStone);
-                gear.push(SageBundle);
-            }
-            // For StandardChallenge and above, they get all gear from TutorialChapter5
-            Difficulty::StandardChallenge
-            | Difficulty::HardChallenge
-            | Difficulty::ExpertChallenge
-            | Difficulty::MasterChallenge => {
-                gear = Self::TutorialChapter5.truck_gear();
-            }
-        }
-
-        // This is for debugging purposes, to add gear that isn't functional yet.
-        const ENABLE_INCOMPLETE: bool = false;
-        if ENABLE_INCOMPLETE {
-            let mut incomplete: Vec<GearKind> = vec![
-                IonMeter,
-                ThermalImager,
-                Photocam,
-                Compass,
-                EStaticMeter,
-                MotionSensor,
-            ];
-            gear.append(&mut incomplete);
-        }
-        gear
-    }
-
     // --- UI and Scoring ---
     /// Returns the display name for the difficulty level.
     fn difficulty_name(&self) -> &'static str {
@@ -553,17 +464,6 @@ impl DifficultySettings for Difficulty {
         }
     }
 
-    fn tutorial_chapter(&self) -> Option<ManualChapterIndex> {
-        match self {
-            Difficulty::TutorialChapter1 => Some(ManualChapterIndex::Chapter1),
-            Difficulty::TutorialChapter2 => Some(ManualChapterIndex::Chapter2),
-            Difficulty::TutorialChapter3 => Some(ManualChapterIndex::Chapter3),
-            Difficulty::TutorialChapter4 => Some(ManualChapterIndex::Chapter4),
-            Difficulty::TutorialChapter5 => Some(ManualChapterIndex::Chapter5),
-            _ => None,
-        }
-    }
-
     /// Creates a `DifficultyStruct` instance with the settings for the current
     /// difficulty level.
     ///
@@ -595,14 +495,10 @@ impl DifficultySettings for Difficulty {
             van_auto_open: self.van_auto_open(),
             default_van_tab: self.default_van_tab(),
             repellent_craft_limit: self.repellent_craft_limit(),
-            player_gear: self.player_gear(),
-            ghost_set: self.ghost_set(),
             difficulty: *self,
             difficulty_name: self.difficulty_name().to_string(),
             difficulty_description: self.difficulty_description().to_owned(),
             difficulty_score_multiplier: self.difficulty_score_multiplier(),
-            tutorial_chapter: self.tutorial_chapter(),
-            truck_gear: self.truck_gear(),
         }
     }
 }

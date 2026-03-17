@@ -5,7 +5,6 @@ use bevy::prelude::*;
 use untmxmap_core::resources::maps::Maps;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_state::DifficultySelectionState;
-use undifficulty_core::manual_types::ManualChapterIndex;
 use unfoundation_core::platform::plt::FONT_SCALE;
 use unmanual_core::assets::ManualAssets;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
@@ -70,23 +69,23 @@ pub(crate) fn preplay_manual_system(
             }
 
             PreplayManualNavigationAction::Continue => {
-                if let Some(Some(chapter)) = difficulty
-                    .0
-                    .tutorial_chapter
-                    .map(|c: ManualChapterIndex| manual.chapters.get(c.index()))
-                {
-                    let current_chapter_size = chapter.pages.len();
+                let chapter_idx = difficulty.0.difficulty.index();
+                let is_tutorial = difficulty.0.difficulty.is_tutorial_difficulty();
+                if is_tutorial && chapter_idx < manual.chapters.len() {
+                    if let Some(chapter) = manual.chapters.get(chapter_idx) {
+                        let current_chapter_size = chapter.pages.len();
 
-                    if current_manual_page.1 + 1 < current_chapter_size {
-                        current_manual_page.1 += 1;
-                    } else {
-                        // Last page, start game
-                        let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
-                            .path
-                            .clone();
-                        ev_load_level.write(LoadLevelEvent { map_filepath });
-                        // SP-5: exit to InGame is handled by SimulationState observer in unreplicon-plugin.
-                        next_state.set(AppState::MissionLoading);
+                        if current_manual_page.1 + 1 < current_chapter_size {
+                            current_manual_page.1 += 1;
+                        } else {
+                            // Last page, start game
+                            let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
+                                .path
+                                .clone();
+                            ev_load_level.write(LoadLevelEvent { map_filepath });
+                            // SP-5: exit to InGame is handled by SimulationState observer in unreplicon-plugin.
+                            next_state.set(AppState::MissionLoading);
+                        }
                     }
                 } else {
                     // No tutorial chapter, start game immediately.
@@ -260,15 +259,12 @@ pub(crate) fn setup_preplay_ui(
     ui_assets: Res<UiAssets>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    commands.insert_resource(CurrentManualPage(
-        difficulty
-            .0
-            .tutorial_chapter
-            .as_ref()
-            .map(|x: &ManualChapterIndex| x.index())
-            .unwrap_or_default(),
-        0,
-    ));
+    let chapter_idx = if difficulty.0.difficulty.is_tutorial_difficulty() {
+        difficulty.0.difficulty.index()
+    } else {
+        0
+    };
+    commands.insert_resource(CurrentManualPage(chapter_idx, 0));
     commands.spawn(Camera2d).insert(ManualCamera);
 
     draw_manual_ui(&mut commands, &ui_assets);

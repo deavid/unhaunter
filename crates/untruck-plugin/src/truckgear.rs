@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unmapload_core::events::loadlevel::LevelLoadedEvent;
 use untruck_core::truckgear::TruckGear;
@@ -24,7 +25,7 @@ fn initialize_truck_gear(
             commands.entity(entity).despawn();
         }
 
-        for kind in &difficulty.0.truck_gear {
+        for kind in &difficulty.0.difficulty.truck_gear() {
             let entity = gear_registry.spawn(&mut commands, *kind);
             truck_gear.inventory.push(entity);
         }

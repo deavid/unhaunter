@@ -8,6 +8,7 @@ use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::gear::Hand;
 use unfoundation_core::types::gear::VisualKey;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
@@ -183,7 +184,7 @@ pub(crate) fn setup_loadout_ui(
                 },
             ))
             .with_children(|p| {
-                for gear_kind in &difficulty.0.truck_gear {
+                for gear_kind in &difficulty.0.difficulty.truck_gear() {
                     let sprite_idx = gear_registry
                         .metadata
                         .get(gear_kind)

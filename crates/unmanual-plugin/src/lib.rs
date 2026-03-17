@@ -1,6 +1,5 @@
 pub mod manual_logic;
 pub mod plugin;
-pub(crate) mod preplay_manual_ui;
 pub(crate) mod resources;
 pub(crate) mod types;
 pub(crate) mod user_manual_ui;

@@ -17,6 +17,7 @@ use unfoundation_core::types::gear::{EquipmentPosition, Hand};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::FlashlightStatus;
@@ -330,9 +331,9 @@ fn setup_mission_players(
         // Store gear entities for later LocallyOwned insertion
         let mut gear_entities = Vec::new();
 
-        if difficulty.0.player_gear.left_hand.is_some() {
-            let gear_entity =
-                gear_registry.spawn(&mut commands, difficulty.0.player_gear.left_hand);
+        let player_gear_loadout = difficulty.0.difficulty.player_gear();
+        if player_gear_loadout.left_hand.is_some() {
+            let gear_entity = gear_registry.spawn(&mut commands, player_gear_loadout.left_hand);
             player_gear.left_hand = Some(gear_entity);
             gear_entities.push(gear_entity);
             commands.entity(gear_entity).insert((
@@ -342,9 +343,8 @@ fn setup_mission_players(
             ));
             gear_id_counter += 1;
         }
-        if difficulty.0.player_gear.right_hand.is_some() {
-            let gear_entity =
-                gear_registry.spawn(&mut commands, difficulty.0.player_gear.right_hand);
+        if player_gear_loadout.right_hand.is_some() {
+            let gear_entity = gear_registry.spawn(&mut commands, player_gear_loadout.right_hand);
             player_gear.right_hand = Some(gear_entity);
             gear_entities.push(gear_entity);
             commands.entity(gear_entity).insert((
@@ -354,7 +354,7 @@ fn setup_mission_players(
             ));
             gear_id_counter += 1;
         }
-        for kind in &difficulty.0.player_gear.inventory {
+        for kind in &player_gear_loadout.inventory {
             if kind.is_some() {
                 let gear_entity = gear_registry.spawn(&mut commands, *kind);
                 player_gear.inventory.push(gear_entity);
@@ -513,9 +513,10 @@ fn spawn_late_joining_players(
 
         let socket_owner_id = player.current_socket.unwrap();
 
-        if difficulty.0.player_gear.left_hand.is_some() {
-            let gear_entity =
-                gear_registry.spawn(&mut commands, difficulty.0.player_gear.left_hand);
+        let player_gear_loadout = difficulty.0.difficulty.player_gear();
+
+        if player_gear_loadout.left_hand.is_some() {
+            let gear_entity = gear_registry.spawn(&mut commands, player_gear_loadout.left_hand);
             player_gear.left_hand = Some(gear_entity);
             commands.entity(gear_entity).insert((
                 NetworkId(gear_id_counter),
@@ -524,9 +525,8 @@ fn spawn_late_joining_players(
             ));
             gear_id_counter += 1;
         }
-        if difficulty.0.player_gear.right_hand.is_some() {
-            let gear_entity =
-                gear_registry.spawn(&mut commands, difficulty.0.player_gear.right_hand);
+        if player_gear_loadout.right_hand.is_some() {
+            let gear_entity = gear_registry.spawn(&mut commands, player_gear_loadout.right_hand);
             player_gear.right_hand = Some(gear_entity);
             commands.entity(gear_entity).insert((
                 NetworkId(gear_id_counter),
@@ -535,7 +535,7 @@ fn spawn_late_joining_players(
             ));
             gear_id_counter += 1;
         }
-        for kind in &difficulty.0.player_gear.inventory {
+        for kind in &player_gear_loadout.inventory {
             if kind.is_some() {
                 let gear_entity = gear_registry.spawn(&mut commands, *kind);
                 player_gear.inventory.push(gear_entity);

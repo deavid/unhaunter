@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::types::evidence::Evidence;
 use untruck_core::components::truck_ui_button::TruckButtonTypeExt;
 use unui_core::assets::UiAssets; // Use CurrentDifficulty
@@ -129,8 +130,8 @@ pub(crate) fn setup_journal_ui(
     })
     .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR))
     .with_children(|ghost_selection| {
-        // Use difficulty.0 (DifficultyStruct) to get the ghost_set
-        for ghost_type in difficulty.0.ghost_set.as_vec() {
+        // Use difficulty.0 (CurrentDifficulty) to get the ghost_set via extension trait
+        for ghost_type in difficulty.0.difficulty.ghost_set().as_vec() {
             ghost_selection
                 .spawn(Button)
                 .insert(Node {
