@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unengine_core::MenuUI;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unmenu_core::components::MenuUI;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::templates;
 use unreplicon_core::components::LobbyInfo;

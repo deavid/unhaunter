@@ -1,6 +1,6 @@
 use crate::systems::{difficulty_select, lobby_main, map_select};
 use bevy::prelude::*;
-use unengine_core::MenuUI;
+use unmenu_core::components::MenuUI;
 use untypes_core::states::{AppState, LobbyScreen};
 
 #[derive(Component)]

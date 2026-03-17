@@ -10,7 +10,6 @@ members = [
     "crates/unclassic-mode-orchestrator-plugin",
     "crates/unclassic-mode-render-plugin",
     "crates/unclassic-mode-ui-plugin",
-    "crates/unengine-core",
     "crates/unengine-plugin",
     "crates/unbehavior",
     "crates/unboard-core",
@@ -182,7 +181,6 @@ unclassic-mode-gameplay-plugin = { path = "crates/unclassic-mode-gameplay-plugin
 unclassic-mode-orchestrator-plugin = { path = "crates/unclassic-mode-orchestrator-plugin" }
 unclassic-mode-render-plugin = { path = "crates/unclassic-mode-render-plugin" }
 unclassic-mode-ui-plugin = { path = "crates/unclassic-mode-ui-plugin" }
-unengine-core = { path = "crates/unengine-core" }
 unengine-plugin = { path = "crates/unengine-plugin" }
 unbehavior = { path = "crates/unbehavior" }
 unboard-core = { path = "crates/unboard-core" }

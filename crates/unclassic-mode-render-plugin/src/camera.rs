@@ -1,6 +1,6 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
-use unengine_core::GCameraArena;
+use untags_core::game::GCameraArena;
 use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::controls::ControlKeys;

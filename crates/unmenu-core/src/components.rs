@@ -49,3 +49,7 @@ pub struct MenuStrip;
 /// A component that marks an entity as the help text for a menu
 #[derive(Component, Debug)]
 pub struct MenuHelpText;
+
+/// Marker component for the UI root in menus.
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MenuUI;

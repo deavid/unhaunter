@@ -137,4 +137,18 @@ dumping there everything.
 
 Good thing: they are 100% isolated though.
 
+### undifficulty-core + undifficulty-plugin
 
+Status: Green.
+
+Category: Tier 1 (Game Primitives).
+
+What this is: The core `Difficulty` enum and mathematical multipliers for game rules.
+
+The plugin is very thin, too thin - as it only registers a single resource.
+
+The giant DifficultyStruct probably should be removed eventually, and use just traits to get the static values.
+
+These traits could live on the respective places of the code, ghost, gear, etc.
+
+But for now, this crate is self contained and in good shape.

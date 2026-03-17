@@ -1,12 +1,12 @@
 use bevy::prelude::*;
-use untmxmap_core::resources::maps::Maps;
-use unengine_core::MenuUI;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unmenu_core::components::MenuUI;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::scrollbar::{self, ScrollableListContainer};
 use unmenu_core::templates;
 use unreplicon_core::components::LobbyInfo;
 use unreplicon_core::messages::RequestSelectMap;
+use untmxmap_core::resources::maps::Maps;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::LobbyScreen;
 use unui_core::assets::UiAssets;

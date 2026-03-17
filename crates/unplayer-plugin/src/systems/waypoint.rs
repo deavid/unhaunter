@@ -2,7 +2,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
-use unengine_core::GCameraArena;
+use untags_core::game::GCameraArena;
 use unevents_core::events::npc_help::NpcHelpEvent;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,

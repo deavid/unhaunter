@@ -13,7 +13,6 @@ workspace = true
 [dependencies]
 unbehavior = { path = "../unbehavior" }
 unboard-core = { path = "../unboard-core" }
-unengine-core = { path = "../unengine-core" }
 unghost-core = { path = "../unghost-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 unplayer-core = { path = "../unplayer-core" }

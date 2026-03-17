@@ -7106,7 +7106,6 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
- "unengine-core",
  "unevents-core",
  "unfoundation-core",
  "ungear-core",
@@ -7153,7 +7152,6 @@ dependencies = [
  "bevy-persistent",
  "unbehavior",
  "unboard-core",
- "unengine-core",
  "unghost-core",
  "unmapload-core",
  "unnavigation-core",
@@ -7205,13 +7203,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "unengine-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
-]
-
-[[package]]
 name = "unengine-plugin"
 version = "0.3.2-dev"
 dependencies = [
@@ -7220,13 +7211,14 @@ dependencies = [
  "bevy_replicon",
  "unbehavior",
  "unboard-core",
- "unengine-core",
  "unevents-core",
  "unfoundation-core",
+ "unmenu-core",
  "unnoise-core",
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",
+ "untags-core",
  "untmxmap-core",
  "untypes-core",
  "unui-core",
@@ -7523,11 +7515,11 @@ dependencies = [
  "rand 0.10.0",
  "reqwest",
  "tokio",
- "unengine-core",
  "unhub-client",
  "unmenu-core",
  "unprofile-core",
  "unreplicon-core",
+ "untags-core",
  "untypes-core",
  "unui-core",
  "uuid",
@@ -7660,7 +7652,6 @@ dependencies = [
  "bevy-persistent",
  "enum-iterator",
  "undifficulty-core",
- "unengine-core",
  "unfoundation-core",
  "unmapload-core",
  "unmenu-core",
@@ -7678,7 +7669,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "unengine-core",
  "unfoundation-core",
  "unmenu-core",
  "unprofile-core",
@@ -7905,7 +7895,6 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
- "unengine-core",
  "unevents-core",
  "unfog-core",
  "unfoundation-core",
