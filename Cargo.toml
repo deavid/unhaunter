@@ -6,7 +6,10 @@ members = [
     "crates/tools/unprocman",
     "crates/tools/text_to_speech/walkie_voice_generator",
     "crates/uncampaign-plugin",
-    "crates/unclassic-mode-plugin",
+    "crates/unclassic-mode-gameplay-plugin",
+    "crates/unclassic-mode-orchestrator-plugin",
+    "crates/unclassic-mode-render-plugin",
+    "crates/unclassic-mode-ui-plugin",
     "crates/unengine-core",
     "crates/unengine-plugin",
     "crates/unbehavior",
@@ -175,7 +178,10 @@ unprocman = { path = "crates/tools/unprocman" }
 walkie_voice_generator = { path = "crates/tools/text_to_speech/walkie_voice_generator" }
 untypes-core = { path = "crates/untypes-core" }
 uncampaign-plugin = { path = "crates/uncampaign-plugin" }
-unclassic-mode-plugin = { path = "crates/unclassic-mode-plugin" }
+unclassic-mode-gameplay-plugin = { path = "crates/unclassic-mode-gameplay-plugin" }
+unclassic-mode-orchestrator-plugin = { path = "crates/unclassic-mode-orchestrator-plugin" }
+unclassic-mode-render-plugin = { path = "crates/unclassic-mode-render-plugin" }
+unclassic-mode-ui-plugin = { path = "crates/unclassic-mode-ui-plugin" }
 unengine-core = { path = "crates/unengine-core" }
 unengine-plugin = { path = "crates/unengine-plugin" }
 unbehavior = { path = "crates/unbehavior" }
@@ -272,7 +278,10 @@ untypes-core = { workspace = true }
 untmxmap-core = { workspace = true }
 uncampaign-plugin = { workspace = true }
 unboard-plugin = { workspace = true }
-unclassic-mode-plugin = { workspace = true }
+unclassic-mode-gameplay-plugin = { workspace = true }
+unclassic-mode-orchestrator-plugin = { workspace = true }
+unclassic-mode-render-plugin = { workspace = true }
+unclassic-mode-ui-plugin = { workspace = true }
 unengine-plugin = { workspace = true }
 unfog-plugin = { workspace = true }
 unfps-plugin = { workspace = true }

@@ -11,10 +11,8 @@ pub(crate) fn setup_ui_gear_inv_left(
     ui_assets: &UiAssets,
     gear_assets: &GearAssets,
 ) {
-    // Leftmost side panel - inventory
     p.spawn(Node {
         flex_direction: FlexDirection::Column,
-        // Vertical alignment
         align_items: AlignItems::Center,
         margin: UiRect::left(Val::Px(6.0 * UI_SCALE)),
         ..Default::default()
@@ -85,7 +83,6 @@ pub(crate) fn setup_ui_gear_inv_right(
     ui_assets: &UiAssets,
     gear_assets: &GearAssets,
 ) {
-    // Right side panel - inventory
     p.spawn(Node {
         flex_direction: FlexDirection::Row,
         flex_grow: 1.0,

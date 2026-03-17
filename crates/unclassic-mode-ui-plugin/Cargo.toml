@@ -1,0 +1,24 @@
+[package]
+name = "unclassic-mode-ui-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+unbehavior = { path = "../unbehavior" }
+unevents-core = { path = "../unevents-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+ungear-core = { path = "../ungear-core" }
+unplayer-core = { path = "../unplayer-core" }
+unrender-std = { path = "../unrender-std" }
+unui-core = { path = "../unui-core" }
+unsettings-core = { path = "../unsettings-core" }
+untypes-core = { path = "../untypes-core" }
+bevy = { workspace = true }
+bevy-persistent = { workspace = true }

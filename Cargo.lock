@@ -7098,14 +7098,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "unclassic-mode-plugin"
+name = "unclassic-mode-gameplay-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy-persistent",
  "bevy_platform",
- "ordered-float",
- "rand 0.10.0",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -7116,6 +7113,48 @@ dependencies = [
  "unghost-core",
  "uninteraction-core",
  "unlight-core",
+ "unplayer-core",
+ "unrender-std",
+ "unspatial-core",
+ "untags-core",
+ "untypes-core",
+]
+
+[[package]]
+name = "unclassic-mode-orchestrator-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "ordered-float",
+ "rand 0.10.0",
+ "unbehavior",
+ "unboard-core",
+ "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
+ "unghost-core",
+ "unmapload-core",
+ "unplayer-core",
+ "unrender-std",
+ "unreplicon-core",
+ "unspatial-core",
+ "unsummary-core",
+ "untags-core",
+ "untmxmap-core",
+ "untypes-core",
+]
+
+[[package]]
+name = "unclassic-mode-render-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "unbehavior",
+ "unboard-core",
+ "unengine-core",
+ "unghost-core",
  "unmapload-core",
  "unnavigation-core",
  "unpicking-core",
@@ -7124,9 +7163,24 @@ dependencies = [
  "unreplicon-core",
  "unsettings-core",
  "unspatial-core",
- "unsummary-core",
  "untags-core",
  "untmxmap-core",
+ "untypes-core",
+]
+
+[[package]]
+name = "unclassic-mode-ui-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "unbehavior",
+ "unevents-core",
+ "unfoundation-core",
+ "ungear-core",
+ "unplayer-core",
+ "unrender-std",
+ "unsettings-core",
  "untypes-core",
  "unui-core",
 ]
@@ -7383,7 +7437,10 @@ dependencies = [
  "clap",
  "unboard-plugin",
  "uncampaign-plugin",
- "unclassic-mode-plugin",
+ "unclassic-mode-gameplay-plugin",
+ "unclassic-mode-orchestrator-plugin",
+ "unclassic-mode-render-plugin",
+ "unclassic-mode-ui-plugin",
  "undifficulty-plugin",
  "unengine-plugin",
  "unfog-plugin",

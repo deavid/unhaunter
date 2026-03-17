@@ -1,0 +1,27 @@
+[package]
+name = "unclassic-mode-gameplay-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+unbehavior = { path = "../unbehavior" }
+unboard-core = { path = "../unboard-core" }
+undifficulty-core = { path = "../undifficulty-core" }
+unevents-core = { path = "../unevents-core" }
+unengine-core = { path = "../unengine-core" }
+ungear-core = { path = "../ungear-core" }
+unghost-core = { path = "../unghost-core" }
+uninteraction-core = { path = "../uninteraction-core" }
+unlight-core = { path = "../unlight-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unplayer-core = { path = "../unplayer-core" }
+unrender-std = { path = "../unrender-std" }
+unspatial-core = { path = "../unspatial-core" }
+untags-core = { path = "../untags-core" }
+untypes-core = { path = "../untypes-core" }
+bevy = { workspace = true }
+bevy_platform = { workspace = true }

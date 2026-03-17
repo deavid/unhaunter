@@ -5,7 +5,10 @@ use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
 use std::time::Duration;
 use unboard_plugin::plugin::UnhaunterBoardPlugin;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
-use unclassic_mode_plugin::plugin::{ClassicModePlugin, UnhaunterClassicModeCorePlugin};
+use unclassic_mode_gameplay_plugin::plugin::ClassicModeGameplayPlugin;
+use unclassic_mode_orchestrator_plugin::plugin::ClassicModeOrchestratorPlugin;
+use unclassic_mode_render_plugin::plugin::ClassicModeRenderPlugin;
+use unclassic_mode_ui_plugin::plugin::ClassicModeUiPlugin;
 use undifficulty_plugin::plugin::UnhaunterDifficultyPlugin;
 use unengine_plugin::plugin::{UnhaunterEngineCorePlugin, UnhaunterEnginePlugin};
 use unfog_plugin::plugin::{UnhaunterFogCorePlugin, UnhaunterFogPlugin};
@@ -166,7 +169,8 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterLobbyPlugin,
         UnhaunterTmxMapPlugin,
         UnhaunterMapLoadPlugin,
-        UnhaunterClassicModeCorePlugin,
+        ClassicModeOrchestratorPlugin,
+        ClassicModeGameplayPlugin,
         UnhaunterGearItemsCorePlugin,
     ));
 
@@ -192,7 +196,8 @@ pub fn app_run(cli_options: CliOptions) {
             UnhaunterNPCPlugin,
             UnhaunterMenuSettingsPlugin,
             UnhaunterCoreMenuPlugin,
-            ClassicModePlugin,
+            ClassicModeRenderPlugin,
+            ClassicModeUiPlugin,
         ));
         app.add_plugins((
             UnhaunterGhostPlugin,

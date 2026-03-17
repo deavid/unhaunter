@@ -1,0 +1,29 @@
+[package]
+name = "unclassic-mode-orchestrator-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+unbehavior = { path = "../unbehavior" }
+unboard-core = { path = "../unboard-core" }
+undifficulty-core = { path = "../undifficulty-core" }
+unevents-core = { path = "../unevents-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unghost-core = { path = "../unghost-core" }
+unmapload-core = { path = "../unmapload-core" }
+unplayer-core = { path = "../unplayer-core" }
+unrender-std = { path = "../unrender-std" }
+unreplicon-core = { workspace = true }
+unspatial-core = { path = "../unspatial-core" }
+unsummary-core = { path = "../unsummary-core" }
+untags-core = { path = "../untags-core" }
+untmxmap-core = { path = "../untmxmap-core" }
+untypes-core = { path = "../untypes-core" }
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+ordered-float = { workspace = true }
+rand = { workspace = true }
