@@ -4,7 +4,7 @@ use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::{InteractableByGhost, RoomStateDelta};
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
+use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use unevents_core::events::sound::SoundEvent;

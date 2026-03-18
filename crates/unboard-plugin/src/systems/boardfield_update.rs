@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unboard_core::BoardUpdateSet;
+use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::position::Position;
 

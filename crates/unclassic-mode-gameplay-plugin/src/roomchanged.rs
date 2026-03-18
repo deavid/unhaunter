@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
+use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::RoomChangedEvent;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use untags_core::game::GCameraArena;

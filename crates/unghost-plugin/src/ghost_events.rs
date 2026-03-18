@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
-use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
+use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 
 // NOTE: Old GhostEvent enum removed - replaced by GhostInteractionEvent system
 // The new system provides more sophisticated ghost AI with personality-driven behavior

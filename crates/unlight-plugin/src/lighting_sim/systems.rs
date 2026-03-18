@@ -6,7 +6,7 @@ use ndarray::Array3;
 use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
+use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightFieldData;
 use unlight_core::types::prebaked_lighting_data::{

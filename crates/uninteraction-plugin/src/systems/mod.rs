@@ -5,7 +5,7 @@ use interactivestuff::InteractiveStuff;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomStateDelta;
-use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
+use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::RoomStateSyncEvent;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unspatial_core::position::Position;

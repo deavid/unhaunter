@@ -8,7 +8,7 @@ pub struct UnhaunterBoardPlugin;
 
 impl Plugin for UnhaunterBoardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild>();
+        app.add_message::<unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild>();
         systems::app_setup(app);
         app.init_resource::<RoomTopology>()
             .init_resource::<RoomStateMap>()
