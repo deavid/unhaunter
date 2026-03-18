@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unghost_core::components::ghost_breach::GhostBreach;
@@ -44,7 +45,7 @@ fn update_ghost_behavior_dynamics_system(
 ) {
     let measure = metrics::GHOST_BEHAVIOR_DYNAMICS.time_measure();
     let elapsed_seconds = time.elapsed_secs();
-    let evidence_visibility_recip = difficulty.0.evidence_visibility.recip();
+    let evidence_visibility_recip = difficulty.0.evidence_visibility().recip();
     *report_time += time.delta_secs();
     for (ghost_sprite, mut dynamics) in query.iter_mut() {
         // Iterate through all 8 actual Evidence enum variants

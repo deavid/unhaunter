@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
@@ -85,7 +86,7 @@ pub(crate) fn update_quartz_skeleton(
     let dt = gs_audio.time.delta_secs();
     for (mut quartz, mut skin, pos, _ep) in q_quartz.iter_mut() {
         // Update logic
-        if skin.energy_absorbed > 10.0 * difficulty.0.ghost_hunt_duration.sqrt()
+        if skin.energy_absorbed > 10.0 * difficulty.0.ghost_hunt_duration().sqrt()
             && quartz.cracks <= MAX_CRACKS
         {
             skin.energy_absorbed = 0.0;

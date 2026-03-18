@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::RngExt;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::components::core::{
@@ -82,7 +83,7 @@ pub(crate) fn update_thermometer(
             let bpos = pos.to_board_position();
             let temperature = tg.temperature_field[bpos.ndidx()];
             let temp_reading = temperature;
-            let air_mass: f32 = 5.0 / difficulty.0.equipment_sensitivity;
+            let air_mass: f32 = 5.0 / difficulty.0.equipment_sensitivity();
 
             // Double noise reduction to remove any noise from measurement.
             let n = thermometer.frame_counter as usize % thermometer.temp_l2.len();

@@ -8,6 +8,7 @@ use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, Va
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -68,7 +69,7 @@ pub(crate) fn classic_mode_orchestrator(
         .unwrap_or(OrderedFloat(1000.0))
         .into_inner();
 
-    let open_van = dist_to_van < 8.0 && p.difficulty.0.van_auto_open;
+    let open_van = dist_to_van < 8.0 && p.difficulty.0.van_auto_open();
 
     // Join clients do not spawn the ghost locally; they receive the replicated entity
     // from the server and set up its visuals via hydrate_ghosts_system.
@@ -80,12 +81,12 @@ pub(crate) fn classic_mode_orchestrator(
                 .copied()
                 .unwrap_or(Position::new_i64(0, 0, 0));
 
-            let possible_ghost_types: Vec<_> = p.difficulty.0.difficulty.ghost_set().as_vec();
+            let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set().as_vec();
             let ghost_sprite =
                 GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
             let ghost_types = vec![ghost_sprite.class];
 
-            commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));
+            commands.insert_resource(SummaryData::new(ghost_types, *p.difficulty));
 
             let breach_id = {
                 let mut ec = commands.spawn(ghost_spawn);

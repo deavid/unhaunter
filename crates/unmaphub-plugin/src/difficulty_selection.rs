@@ -99,7 +99,7 @@ pub(crate) fn handle_difficulty_click(
             // Ensure the clicked item is a non-tutorial difficulty
             if !item_data.difficulty.is_tutorial_difficulty() {
                 // Set the difficulty based on selection
-                difficulty_resource.0 = item_data.difficulty.as_struct();
+                difficulty_resource.0 = item_data.difficulty;
 
                 // Set the mission select mode to Custom
                 mission_select_mode.0 = MissionSelectMode::Custom;
@@ -155,13 +155,12 @@ pub(crate) fn update_difficulty_description(
                 // Ensure the selected item is a non-tutorial difficulty
                 if !item_data.difficulty.is_tutorial_difficulty() {
                     let selected_difficulty = item_data.difficulty;
-                    let dif_struct = selected_difficulty.as_struct();
 
                     let new_text = format!(
-                        "Challenge: <{}>:\n{}\n\nScore Bonus: {:.2}x", // Changed "Difficulty" to "Challenge"
-                        dif_struct.difficulty_name,
-                        dif_struct.difficulty_description,
-                        dif_struct.difficulty_score_multiplier
+                        "Challenge: <{}>:\n{}\n\nScore Bonus: {:.2}x",
+                        selected_difficulty.difficulty_name(),
+                        selected_difficulty.difficulty_description(),
+                        selected_difficulty.difficulty_score_multiplier()
                     );
 
                     text.0 = new_text;
@@ -198,12 +197,12 @@ pub(crate) fn setup_ui(
         Difficulty::StandardChallenge // Fallback
     });
 
-    let initial_dif_struct = initial_difficulty.as_struct();
+    let initial_dif_struct = initial_difficulty;
     let initial_desc = format!(
-        "Challenge: <{}>:\n{}\n\nScore Bonus: {:.2}x", // Changed "Difficulty" to "Challenge"
-        initial_dif_struct.difficulty_name,
-        initial_dif_struct.difficulty_description,
-        initial_dif_struct.difficulty_score_multiplier
+        "Challenge: <{}>:\n{}\n\nScore Bonus: {:.2}x",
+        initial_dif_struct.difficulty_name(),
+        initial_dif_struct.difficulty_description(),
+        initial_dif_struct.difficulty_score_multiplier()
     );
 
     commands

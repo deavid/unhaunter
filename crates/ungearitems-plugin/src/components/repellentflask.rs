@@ -2,6 +2,7 @@ use ndarray::Array3;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
@@ -321,7 +322,7 @@ fn repellent_update(
             while ghost.repellent_hits_frame >= 1.0 {
                 ghost.repellent_hits += 1;
                 ghost.repellent_hits_frame -= 1.0;
-                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
+                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood();
             }
             ghost.repellent_hits_delta = 1.0;
         } else {
@@ -336,7 +337,7 @@ fn repellent_update(
             while ghost.repellent_misses_frame >= 1.0 {
                 ghost.repellent_misses += 1;
                 ghost.repellent_misses_frame -= 1.0;
-                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
+                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood();
             }
             ghost.repellent_misses_delta = 1.0;
         } else {

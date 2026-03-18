@@ -25,7 +25,7 @@ fn initialize_truck_gear(
             commands.entity(entity).despawn();
         }
 
-        for kind in &difficulty.0.difficulty.truck_gear() {
+        for kind in &difficulty.0.truck_gear() {
             let entity = gear_registry.spawn(&mut commands, *kind);
             truck_gear.inventory.push(entity);
         }

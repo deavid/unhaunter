@@ -113,7 +113,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
         bf,
         &lg,
         vf,
-        &difficulty.0.difficulty,
+        &difficulty.0,
     );
 
     let mut rng = random_seed::rng();

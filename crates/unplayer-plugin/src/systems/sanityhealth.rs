@@ -4,6 +4,7 @@ use bevy_persistent::Persistent;
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::types::grade::Grade;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -78,13 +79,13 @@ fn lose_sanity(
         }
         let crazy = lux.max(0.00001).recip() / f_temp * f_temp2 * ps.mean_sound * 10.0
             + ps.mean_sound / f_temp * f_temp2;
-        let sanity_recover: f32 = if ps.sanity < difficulty.0.max_recoverable_sanity {
-            4.0 / 100.0 / difficulty.0.sanity_drain_rate
+        let sanity_recover: f32 = if ps.sanity < difficulty.0.max_recoverable_sanity() {
+            4.0 / 100.0 / difficulty.0.sanity_drain_rate()
         } else {
             0.0
         };
         ps.crazyness +=
-            (crazy.clamp(0.000000001, 10000000.0).sqrt() * 0.2 * difficulty.0.sanity_drain_rate
+            (crazy.clamp(0.000000001, 10000000.0).sqrt() * 0.2 * difficulty.0.sanity_drain_rate()
                 - sanity_recover * ps.crazyness / (1.0 + ps.mean_sound * 10.0))
                 * dt;
         if ps.crazyness < 0.0 {
@@ -103,7 +104,7 @@ fn health_regen(
     for mut ps in &mut qp {
         if ps.health < 100.0 && ps.health > 0.0 {
             ps.health += (0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0)
-                * difficulty.0.health_recovery_rate;
+                * difficulty.0.health_recovery_rate();
         }
         if ps.health > 100.0 {
             ps.health = 100.0;
@@ -127,7 +128,7 @@ fn recover_sanity(
             // Clamp health to a maximum of 100%
             ps.health = ps.health.min(100.0);
         }
-        if ps.sanity < difficulty.0.max_recoverable_sanity {
+        if ps.sanity < difficulty.0.max_recoverable_sanity() {
             ps.crazyness /= 1.07_f32.powf(dt);
         } else {
             ps.crazyness /= 1.005_f32.powf(dt);
@@ -195,15 +196,15 @@ fn update_player_stamina(
 
         // When health is low, stamina depletes faster and recovers slower
         if health_percentage < 0.3 {
-            stamina.depletion_rate = 1.2 * difficulty.0.health_recovery_rate; // Depletes 50% faster when health is critical
-            stamina.recovery_rate = 0.15 * difficulty.0.health_recovery_rate; // Recovers 50% slower when health is critical
+            stamina.depletion_rate = 1.2 * difficulty.0.health_recovery_rate(); // Depletes 50% faster when health is critical
+            stamina.recovery_rate = 0.15 * difficulty.0.health_recovery_rate(); // Recovers 50% slower when health is critical
         } else if health_percentage < 0.6 {
-            stamina.depletion_rate = 1.0 * difficulty.0.health_recovery_rate; // Depletes 25% faster when health is low
-            stamina.recovery_rate = 0.2 * difficulty.0.health_recovery_rate; // Recovers 33% slower when health is low
+            stamina.depletion_rate = 1.0 * difficulty.0.health_recovery_rate(); // Depletes 25% faster when health is low
+            stamina.recovery_rate = 0.2 * difficulty.0.health_recovery_rate(); // Recovers 33% slower when health is low
         } else {
             // Reset to default rates based on difficulty
-            stamina.depletion_rate = 0.8 * difficulty.0.health_recovery_rate;
-            stamina.recovery_rate = 0.3 * difficulty.0.health_recovery_rate;
+            stamina.depletion_rate = 0.8 * difficulty.0.health_recovery_rate();
+            stamina.recovery_rate = 0.3 * difficulty.0.health_recovery_rate();
         }
     }
 }
@@ -274,7 +275,7 @@ fn update_profile_death_stats(
             player_profile.statistics.total_deaths += 1;
 
             let map_path_str = board_topology.map_path.clone();
-            let current_difficulty_variant = difficulty_res.0.difficulty;
+            let current_difficulty_variant = difficulty_res.0;
 
             let map_specific_stats = player_profile
                 .map_statistics
@@ -398,7 +399,7 @@ fn client_ghost_aura_damage(
         };
         let dist2 = dx * dx + dy * dy + dz * dz + 2.0;
 
-        let dmg = dist2.recip() * difficulty.0.health_drain_rate;
+        let dmg = dist2.recip() * difficulty.0.health_drain_rate();
         let damage_to_apply = dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
         player.health -= damage_to_apply;
     }

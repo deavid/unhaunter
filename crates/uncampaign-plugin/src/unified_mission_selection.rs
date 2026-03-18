@@ -155,7 +155,7 @@ fn handle_selection_input(
 
                 match mission_select_mode.0 {
                     MissionSelectMode::Campaign => {
-                        difficulty_resource.0 = mission_data.difficulty.as_struct();
+                        difficulty_resource.0 = mission_data.difficulty;
                         info!(
                             "Setting difficulty for mission: {:?} (Mode: Campaign)",
                             mission_data.difficulty
@@ -164,7 +164,7 @@ fn handle_selection_input(
                     MissionSelectMode::Custom => {
                         info!(
                             "Using pre-selected difficulty for mission: {:?} (Mode: Custom)",
-                            difficulty_resource.0.difficulty_name
+                            difficulty_resource.0.difficulty_name()
                         );
                     }
                 }
@@ -217,17 +217,14 @@ fn format_mission_details(
     dif: &CurrentDifficulty,
 ) -> (String, String) {
     let (dname, dmult, prefix) = match mode {
-        MissionSelectMode::Campaign => {
-            let d = m.difficulty.as_struct();
-            (
-                d.difficulty_name,
-                d.difficulty_score_multiplier,
-                "Difficulty",
-            )
-        }
+        MissionSelectMode::Campaign => (
+            m.difficulty.difficulty_name().to_string(),
+            m.difficulty.difficulty_score_multiplier(),
+            "Difficulty",
+        ),
         MissionSelectMode::Custom => (
-            dif.0.difficulty_name.clone(),
-            dif.0.difficulty_score_multiplier,
+            dif.0.difficulty_name().to_string(),
+            dif.0.difficulty_score_multiplier(),
             "Challenge",
         ),
     };
@@ -436,7 +433,10 @@ pub(crate) fn setup_ui(
     let subtitle = match mission_select_mode.0 {
         MissionSelectMode::Campaign => "Select Mission".to_string(),
         MissionSelectMode::Custom => {
-            format!("Select Map\n  ({})", difficulty_resource.0.difficulty_name)
+            format!(
+                "Select Map\n  ({})",
+                difficulty_resource.0.difficulty_name()
+            )
         }
     };
 
@@ -575,7 +575,7 @@ fn create_mission_list_item(
                 ));
                 let tdif = match mode.0 {
                     MissionSelectMode::Campaign => m.difficulty,
-                    MissionSelectMode::Custom => dif.0.difficulty,
+                    MissionSelectMode::Custom => dif.0,
                 };
                 BadgeUtils::create_badge(
                     row,

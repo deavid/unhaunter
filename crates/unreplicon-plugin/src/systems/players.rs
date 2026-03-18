@@ -331,7 +331,7 @@ fn setup_mission_players(
         // Store gear entities for later LocallyOwned insertion
         let mut gear_entities = Vec::new();
 
-        let player_gear_loadout = difficulty.0.difficulty.player_gear();
+        let player_gear_loadout = difficulty.0.player_gear();
         if player_gear_loadout.left_hand.is_some() {
             let gear_entity = gear_registry.spawn(&mut commands, player_gear_loadout.left_hand);
             player_gear.left_hand = Some(gear_entity);
@@ -513,7 +513,7 @@ fn spawn_late_joining_players(
 
         let socket_owner_id = player.current_socket.unwrap();
 
-        let player_gear_loadout = difficulty.0.difficulty.player_gear();
+        let player_gear_loadout = difficulty.0.player_gear();
 
         if player_gear_loadout.left_hand.is_some() {
             let gear_entity = gear_registry.spawn(&mut commands, player_gear_loadout.left_hand);

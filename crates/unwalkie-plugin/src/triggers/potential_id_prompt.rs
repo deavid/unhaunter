@@ -21,7 +21,7 @@ fn potential_id_prompt_system(
     time: Res<Time>,
 ) {
     let difficulty_info = &difficulty.0;
-    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+    if !difficulty_info.is_tutorial_difficulty() {
         return;
     }
 
@@ -42,7 +42,7 @@ fn potential_id_prompt_system(
             let mut simulated_found_evidences = ghost_guess.evidences_found.clone();
             simulated_found_evidences.insert(timed_evidence);
             let simulated_missing_evidences = ghost_guess.evidences_missing.clone();
-            let mission_ghosts = difficulty.0.difficulty.ghost_set().as_vec();
+            let mission_ghosts = difficulty.0.ghost_set().as_vec();
             let mut possible_ghosts_recheck = Vec::new();
 
             for ghost_candidate in mission_ghosts {
@@ -92,7 +92,7 @@ fn potential_id_prompt_system(
                 let mut simulated_found_evidences = ghost_guess.evidences_found.clone();
                 simulated_found_evidences.insert(current_ev_candidate);
                 let simulated_missing_evidences = ghost_guess.evidences_missing.clone();
-                let mission_ghosts = difficulty.0.difficulty.ghost_set().as_vec();
+                let mission_ghosts = difficulty.0.ghost_set().as_vec();
                 let mut possible_ghosts = Vec::new();
 
                 for ghost_candidate in mission_ghosts {

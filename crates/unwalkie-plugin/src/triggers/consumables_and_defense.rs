@@ -118,7 +118,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     }
 
     // 2. Chapter Check: Only trigger for Chapter 5 or non-tutorial difficulties
-    let current_chapter_index = difficulty.0.difficulty.index();
+    let current_chapter_index = difficulty.0.index();
     if current_chapter_index < untypes_core::difficulty::Difficulty::TutorialChapter5.index() {
         // If it's a tutorial chapter AND it's before Chapter 5, exit.
         // Non-tutorial difficulties (where tutorial_chapter is None, so current_chapter_index is usize::MAX) will pass this.
@@ -203,7 +203,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
     }
 
     // 2. Chapter Check: Only trigger for Chapter 5 or non-tutorial difficulties
-    let current_chapter_index = difficulty.0.difficulty.index();
+    let current_chapter_index = difficulty.0.index();
     if current_chapter_index < 4 {
         // If it's a tutorial chapter AND it's before Chapter 5 (index 4), exit.
         // Non-tutorial difficulties (index 5+) will pass this.
@@ -336,7 +336,7 @@ fn trigger_sage_activated_ineffectively_system(
         }
         return;
     }
-    let current_chapter_index = difficulty.0.difficulty.index();
+    let current_chapter_index = difficulty.0.index();
     if current_chapter_index < 4 {
         if tracker.is_tracking_this_sage_burn {
             *tracker = SageEffectivenessTracker::default();
@@ -487,7 +487,7 @@ fn trigger_sage_unused_defensively_during_hunt_system(
         // Tracker reset is handled by `reset_hunt_sage_tracker_on_mission_change`
         return;
     }
-    let current_chapter_index = difficulty.0.difficulty.index();
+    let current_chapter_index = difficulty.0.index();
     if current_chapter_index < 4 {
         return;
     }

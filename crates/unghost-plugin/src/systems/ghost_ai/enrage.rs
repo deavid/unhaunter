@@ -8,6 +8,7 @@ use unaudiobg_core::events::AmbientSoundMuteEvent;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::mean::MeanValue;
 use unfoundation_core::utils::time::PrintingTimer;
@@ -362,7 +363,7 @@ pub(crate) fn calculate_rage_update(
         let inv_sanity = (120.0 - sanity) / 100.0;
 
         let dist2 = calculate_weighted_distance_squared(ghost_position, player_pos)
-            / difficulty.0.hunt_provocation_radius
+            / difficulty.0.hunt_provocation_radius()
             * (0.01 + sanity)
             + 0.1
             + sanity / 100.0;
@@ -396,13 +397,13 @@ pub(crate) fn calculate_rage_update(
 
     // Apply rage increases
     if player_in_room {
-        ghost.rage += dt * difficulty.0.ghost_rage_likelihood * 5.2 * total_inv_sanity;
+        ghost.rage += dt * difficulty.0.ghost_rage_likelihood() * 5.2 * total_inv_sanity;
     }
     ghost.rage +=
-        angry * dt / 10.0 / (1.0 + ghost.calm_time_secs) * difficulty.0.ghost_rage_likelihood;
+        angry * dt / 10.0 / (1.0 + ghost.calm_time_secs) * difficulty.0.ghost_rage_likelihood();
 
     // Update hunting decay
-    ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration;
+    ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration();
     if ghost.hunting < 0.0 {
         ghost.hunting = 0.0;
     }
@@ -411,7 +412,7 @@ pub(crate) fn calculate_rage_update(
 
     // Calculate rage limit
     let rage_limit =
-        400.0 * difficulty.0.ghost_rage_likelihood.sqrt() * ghost.rage_limit_multiplier
+        400.0 * difficulty.0.ghost_rage_likelihood().sqrt() * ghost.rage_limit_multiplier
             / (dynamics.rage_tendency_multiplier + 1.01);
     ghost.rage_limit = rage_limit;
 
@@ -444,7 +445,7 @@ pub(crate) fn trigger_hunt_start(
     ghost.rage_limit_multiplier *= 1.3;
 
     let prev_rage = ghost.rage;
-    ghost.rage /= 1.0 + difficulty.0.ghost_hunt_cooldown;
+    ghost.rage /= 1.0 + difficulty.0.ghost_hunt_cooldown();
     ghost.hunting += prev_rage / 50.0 + 5.0;
     ghost.hunt_warning_active = false;
 

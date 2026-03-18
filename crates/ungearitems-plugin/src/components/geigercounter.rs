@@ -1,5 +1,6 @@
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
@@ -93,16 +94,16 @@ pub(crate) fn update_geigercounter(
                 geiger.sound_l.push(sound_reading);
             }
             let n = (geiger.frame_counter as usize + i) % geiger.sound_l.len();
-            geiger.sound_l[n] /= 4.0 * difficulty.0.equipment_sensitivity;
+            geiger.sound_l[n] /= 4.0 * difficulty.0.equipment_sensitivity();
             if toggle.is_on {
                 geiger.sound_l[n] +=
-                    sound_reading * 40.0 + breach_energy * difficulty.0.equipment_sensitivity;
+                    sound_reading * 40.0 + breach_energy * difficulty.0.equipment_sensitivity();
             }
         }
 
         geiger.sound_l.iter_mut().for_each(|x| *x /= 1.06);
 
-        let mass: f32 = 8.0 * difficulty.0.equipment_sensitivity;
+        let mass: f32 = 8.0 * difficulty.0.equipment_sensitivity();
         if toggle.is_on {
             // Calculate the *current* output sound.
             let current_output_sound = geiger.calculate_output_sound(&haunt_state);

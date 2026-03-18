@@ -184,7 +184,7 @@ pub(crate) fn setup_loadout_ui(
                 },
             ))
             .with_children(|p| {
-                for gear_kind in &difficulty.0.difficulty.truck_gear() {
+                for gear_kind in &difficulty.0.truck_gear() {
                     let sprite_idx = gear_registry
                         .metadata
                         .get(gear_kind)

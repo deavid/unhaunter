@@ -6,6 +6,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
@@ -36,7 +37,7 @@ pub(crate) fn init_repellent_tracker(
     mut craft_tracker: ResMut<RepellentCraftTracker>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    craft_tracker.reset(difficulty.0.repellent_craft_limit);
+    craft_tracker.reset(difficulty.0.repellent_craft_limit());
 }
 
 // Reset the repellent craft tracker when leaving the game

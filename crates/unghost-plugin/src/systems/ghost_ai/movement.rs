@@ -5,6 +5,7 @@ use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use ungearitems_core::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
@@ -108,9 +109,9 @@ pub(crate) fn ghost_movement(
                         delta.dy /= (dlen + 1.5) / 4.0;
                         delta.dz /= (dlen + 1.5) / 4.0;
                     }
-                    pos.x += delta.dx / 70.0 * dt * difficulty.0.ghost_hunting_aggression;
-                    pos.y += delta.dy / 70.0 * dt * difficulty.0.ghost_hunting_aggression;
-                    pos.z += delta.dz / 10.0 * dt * difficulty.0.ghost_hunting_aggression;
+                    pos.x += delta.dx / 70.0 * dt * difficulty.0.ghost_hunting_aggression();
+                    pos.y += delta.dy / 70.0 * dt * difficulty.0.ghost_hunting_aggression();
+                    pos.z += delta.dz / 10.0 * dt * difficulty.0.ghost_hunting_aggression();
                     ghost.hunting -= dt / 60.0;
                 }
                 if ghost.hunting < 0.0 {
@@ -125,9 +126,9 @@ pub(crate) fn ghost_movement(
                     info!("Hunt finished");
                 }
             } else {
-                pos.x += delta.dx / 200.0 * dt * difficulty.0.ghost_speed;
-                pos.y += delta.dy / 200.0 * dt * difficulty.0.ghost_speed;
-                pos.z += delta.dz / 20.0 * dt * difficulty.0.ghost_speed;
+                pos.x += delta.dx / 200.0 * dt * difficulty.0.ghost_speed();
+                pos.y += delta.dy / 200.0 * dt * difficulty.0.ghost_speed();
+                pos.z += delta.dz / 20.0 * dt * difficulty.0.ghost_speed();
             }
             pos.z = pos.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
             if dlen < 0.5 {
@@ -233,7 +234,7 @@ pub(crate) fn ghost_movement(
                     let mut score = 1.0; // Base score
                     score +=
                         calculate_object_influence_score(candidate_dest, &object_query, &config)
-                            / difficulty.0.ghost_attraction_to_breach.max(0.1); // Scale object influence
+                            / difficulty.0.ghost_attraction_to_breach().max(0.1); // Scale object influence
                     let penalty = 1.0
                         + calculate_movement_penalties(
                             candidate_dest,

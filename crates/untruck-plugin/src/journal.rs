@@ -183,7 +183,6 @@ fn button_system(mut p: JournalButtonParams) {
     let possible_ghosts: Vec<GhostType> = p
         .difficulty
         .0
-        .difficulty
         .ghost_set()
         .as_vec()
         .into_iter()
@@ -237,7 +236,6 @@ fn button_system(mut p: JournalButtonParams) {
                 let gear_available = p
                     .difficulty
                     .0
-                    .difficulty
                     .truck_gear()
                     .iter()
                     .filter_map(|gear_kind| Evidence::try_from(gear_kind).ok())

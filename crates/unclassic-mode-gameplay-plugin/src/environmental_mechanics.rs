@@ -3,6 +3,7 @@ use unbehavior::behavior::Behavior;
 use unbehavior::components::Light;
 use unbehavior::state::TileState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};
 use uninteraction_core::events::InteractionExecutionType;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
@@ -74,7 +75,7 @@ fn fuse_box_overload_system(
     // Adjust threshold based on difficulty
     // Higher difficulty = easier to overload (lower threshold)
     let threshold =
-        base_threshold * (2.0 - difficulty.0.ghost_interaction_frequency.clamp(0.5, 2.0));
+        base_threshold * (2.0 - difficulty.0.ghost_interaction_frequency().clamp(0.5, 2.0));
 
     // Check if we've exceeded the threshold
     // Minimum 6-light bonus: Only check for overload if more than 6 lights are actually on.

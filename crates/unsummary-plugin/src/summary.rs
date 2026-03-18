@@ -2,6 +2,7 @@ use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::grade::Grade;
 use unfoundation_core::utils::time::format_time;
@@ -55,7 +56,7 @@ pub(crate) fn update_time(
     // and mission-end evaluation (all_dead logic) to unmission-plugin. This function currently mixes
     // summary presentation concerns with mission lifecycle concerns — ideally unmission-plugin would own
     // the end-of-mission evaluation, and unsummary-plugin would receive the snapshot via SummaryData.
-    sd.difficulty = difficulty.clone();
+    sd.difficulty = *difficulty;
     sd.time_taken_secs += time.delta_secs();
     let total_sanity: f32 = qp.iter().map(|x| x.sanity).sum();
     let player_count = qp.iter().count();
@@ -544,7 +545,7 @@ pub(crate) fn update_ui(
                 text.0 = format!("Map: {}", map_name);
             }
             SummaryUIType::DifficultyName => {
-                text.0 = format!("Difficulty: {}", rsd.difficulty.0.difficulty_name);
+                text.0 = format!("Difficulty: {}", rsd.difficulty.0.difficulty_name());
             }
             SummaryUIType::PlayersAlive => {
                 text.0 = format!("Players Alive: {}/{}", rsd.alive_count, rsd.player_count)
@@ -722,7 +723,7 @@ pub(crate) fn finalize_profile_update(
 
     // Always use the actual played difficulty from SummaryData (which is sourced from CurrentDifficulty)
     // as the key for map statistics. This ensures custom difficulty settings are respected.
-    let difficulty_to_save_stats_under = sd.difficulty.0.difficulty;
+    let difficulty_to_save_stats_under = sd.difficulty.0;
 
     // Log if the map definition wasn't found in the Maps resource,
     // but this doesn't prevent saving stats under the played difficulty.

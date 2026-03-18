@@ -76,7 +76,7 @@ fn ghost_near_hunt(
     q_gear: Query<&GearKind>,
     time: Res<Time>,
 ) {
-    if !difficulty.0.difficulty.is_tutorial_difficulty() {
+    if !difficulty.0.is_tutorial_difficulty() {
         // Not in tutorial mode, no need to tell the player.
         return;
     }

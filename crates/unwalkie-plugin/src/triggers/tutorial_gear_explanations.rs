@@ -37,7 +37,7 @@ fn trigger_evidence_gear_explanations(
     q_toggle: Query<&Toggleable>,
 ) {
     let difficulty_info = &current_difficulty_res.0;
-    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+    if !difficulty_info.is_tutorial_difficulty() {
         return;
     }
 
@@ -92,7 +92,7 @@ fn trigger_support_item_explanations(
     q_gear: Query<&GearKind>,
 ) {
     let difficulty_info = &current_difficulty_res.0;
-    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+    if !difficulty_info.is_tutorial_difficulty() {
         return;
     }
 

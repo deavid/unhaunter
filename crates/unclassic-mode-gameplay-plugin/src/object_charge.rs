@@ -2,6 +2,7 @@
 //! that influence ghost behavior.
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
@@ -77,7 +78,7 @@ fn check_ghost_proximity(
                 let distance_to_breach = breach_position.distance_zf(object_position, 3.0);
 
                 // If distance <= hunt_provocation_radius and charge_value is above threshold:
-                if distance_to_breach <= difficulty.0.hunt_provocation_radius
+                if distance_to_breach <= difficulty.0.hunt_provocation_radius()
                     && ghost_influence.charge_value > 0.8
                 {
                     ghost_sprite.rage += 0.2;
@@ -111,7 +112,7 @@ fn check_ghost_proximity(
     // --- Increase Anger for Removed Attractive Objects ---
     let delta_time = time.delta_secs();
     for _ in removed_attractive_objects.iter() {
-        ghost_sprite.rage += difficulty.0.attractive_removal_anger_rate * delta_time;
+        ghost_sprite.rage += difficulty.0.attractive_removal_anger_rate() * delta_time;
     }
 }
 

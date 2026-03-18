@@ -182,7 +182,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
         }
         return;
     }
-    let current_chapter_index = difficulty.0.difficulty.index();
+    let current_chapter_index = difficulty.0.index();
     if current_chapter_index > untypes_core::difficulty::Difficulty::TutorialChapter2.index() {
         // Only for Chapter 1 & 2 (or non-tutorial)
         if tracker.is_some() {
@@ -381,7 +381,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
         *tracker = GearCycleUsageTracker::default(); // Reset on state change
         return;
     }
-    let current_chapter_index = difficulty.0.difficulty.index();
+    let current_chapter_index = difficulty.0.index();
     if current_chapter_index < MIN_CHAPTER_FOR_CYCLE_HINT {
         *tracker = GearCycleUsageTracker::default();
         return;

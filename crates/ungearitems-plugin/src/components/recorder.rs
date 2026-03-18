@@ -1,5 +1,6 @@
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{GearSprite, ItemName, PerceivedClarity, StatusText};
 use unghost_core::resources::haunt_state::HauntState;
@@ -132,7 +133,7 @@ pub(crate) fn update_recorder(
 
             if evp_recorded {
                 let clarity = haunt_state.ghost_dynamics.evp_recording_clarity.max(0.0);
-                recorder.amt_recorded += dt * difficulty.0.equipment_sensitivity * 2.1 * clarity;
+                recorder.amt_recorded += dt * difficulty.0.equipment_sensitivity() * 2.1 * clarity;
             } else {
                 recorder.amt_recorded -= dt * 0.1;
             }

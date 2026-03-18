@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::types::grade::Grade;
 use unghost_core::types::ghost::types::GhostType;
 
@@ -78,7 +79,7 @@ impl SummaryData {
         self.base_score = base_score;
 
         // Store the difficulty multiplier
-        let difficulty_multiplier = self.difficulty.0.difficulty_score_multiplier;
+        let difficulty_multiplier = self.difficulty.0.difficulty_score_multiplier();
         self.difficulty_multiplier = difficulty_multiplier;
 
         // Apply difficulty multiplier to final score

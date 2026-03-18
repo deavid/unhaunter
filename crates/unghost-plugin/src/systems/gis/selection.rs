@@ -7,6 +7,7 @@ use unbehavior::components::{Door, InteractableByGhost};
 use unbehavior::state::TileState;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};
@@ -61,7 +62,7 @@ fn ghost_interaction_selection_system(
         let rage_ratio = (ghost_sprite.rage / ghost_sprite.rage_limit).clamp(0.0, 1.0);
 
         // Apply difficulty multiplier to interaction frequency
-        let difficulty_multiplier = difficulty.0.ghost_interaction_frequency;
+        let difficulty_multiplier = difficulty.0.ghost_interaction_frequency();
 
         // Check each interaction type for probability
         let interaction_types = [

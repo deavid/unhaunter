@@ -232,7 +232,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
     q_repellent: Query<&RepellentFlask>,
 ) {
     let difficulty_info = &current_difficulty_res.0;
-    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+    if !difficulty_info.is_tutorial_difficulty() {
         return;
     }
 
@@ -337,7 +337,7 @@ fn trigger_repellent_exhausted_correct_type_system(
     q_repellent: Query<&RepellentFlask>,
 ) {
     let difficulty_info = &current_difficulty_res.0;
-    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+    if !difficulty_info.is_tutorial_difficulty() {
         return;
     }
 

@@ -131,7 +131,7 @@ pub(crate) fn setup_journal_ui(
     .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR))
     .with_children(|ghost_selection| {
         // Use difficulty.0 (CurrentDifficulty) to get the ghost_set via extension trait
-        for ghost_type in difficulty.0.difficulty.ghost_set().as_vec() {
+        for ghost_type in difficulty.0.ghost_set().as_vec() {
             ghost_selection
                 .spawn(Button)
                 .insert(Node {

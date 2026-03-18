@@ -4,6 +4,7 @@ use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomStateDelta;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::events::InteractionExecutionType;
@@ -263,7 +264,7 @@ pub(crate) fn player_movement_system(
         player.velocity = Vec2::new(d.dx, d.dy);
 
         if is_spectating {
-            let spectate_speed = PLAYER_SPEED * difficulty.0.player_speed * 2.0;
+            let spectate_speed = PLAYER_SPEED * difficulty.0.player_speed() * 2.0;
             pos.x += d.dx * spectate_speed * dt;
             pos.y += d.dy * spectate_speed * dt;
 
@@ -324,9 +325,9 @@ pub(crate) fn player_movement_system(
 
         // Apply speed penalty and run multiplier
         let pdx =
-            PLAYER_SPEED * d.dx * dt * speed_penalty * difficulty.0.player_speed * run_multiplier;
+            PLAYER_SPEED * d.dx * dt * speed_penalty * difficulty.0.player_speed() * run_multiplier;
         let pdy =
-            PLAYER_SPEED * d.dy * dt * speed_penalty * difficulty.0.player_speed * run_multiplier;
+            PLAYER_SPEED * d.dy * dt * speed_penalty * difficulty.0.player_speed() * run_multiplier;
 
         *avg_running = (*avg_running + is_running * dt) / (1.0 + dt);
 

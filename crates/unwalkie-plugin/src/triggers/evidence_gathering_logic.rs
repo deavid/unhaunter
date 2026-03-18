@@ -35,7 +35,7 @@ fn trigger_emf_non_emf5_fixation_system(
     mut incorrect_marker_state: Local<IncorrectEvidenceMarkedState>,
 ) {
     let difficulty_info = &current_difficulty_res.0;
-    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+    if !difficulty_info.is_tutorial_difficulty() {
         return;
     }
 
@@ -112,12 +112,12 @@ fn trigger_journal_conflicting_evidence_system(
         return;
     }
     let difficulty_info = &current_difficulty_res.0;
-    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+    if !difficulty_info.is_tutorial_difficulty() {
         return;
     }
 
     // Get all ghosts available in the current difficulty
-    let available_ghosts = difficulty_info.difficulty.ghost_set().as_vec();
+    let available_ghosts = difficulty_info.ghost_set().as_vec();
 
     // 2. Check for Any Conflicting Evidence
     // Only trigger if NO ghost in the current difficulty matches the selected evidence
@@ -446,7 +446,7 @@ fn trigger_evidence_confirmed_feedback_system(
     current_difficulty_res: Res<CurrentDifficulty>,
 ) {
     let difficulty_info = &current_difficulty_res.0;
-    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+    if !difficulty_info.is_tutorial_difficulty() {
         return;
     }
 

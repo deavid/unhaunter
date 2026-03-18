@@ -1,5 +1,6 @@
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfog_core::miasma::MiasmaGrid;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{
@@ -120,7 +121,7 @@ pub(crate) fn update_emfmeter(
                 let sound = sg.sound_field.get(&bpos).cloned().unwrap_or_default();
                 let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
                 let temp_reading = temperature / 10.0 + sound_reading;
-                let air_mass: f32 = 5.0 / difficulty.0.equipment_sensitivity;
+                let air_mass: f32 = 5.0 / difficulty.0.equipment_sensitivity();
                 if emf.temp_l2.len() < 2 {
                     emf.temp_l2.push(temp_reading);
                 }
@@ -139,8 +140,8 @@ pub(crate) fn update_emfmeter(
                     let sum_temp: f32 = emf.temp_l2.iter().sum();
                     let avg_temp: f32 = sum_temp / emf.temp_l2.len() as f32;
                     let mut new_emf = (avg_temp - emf.temp_l1).abs() * 3.0;
-                    emf.emf -= 0.2 * difficulty.0.equipment_sensitivity;
-                    emf.emf /= 1.4_f32.powf(difficulty.0.equipment_sensitivity);
+                    emf.emf -= 0.2 * difficulty.0.equipment_sensitivity();
+                    emf.emf /= 1.4_f32.powf(difficulty.0.equipment_sensitivity());
 
                     if haunt_state.evidences.contains(&Evidence::EMFLevel5) {
                         let emf5_evidence = haunt_state.ghost_dynamics.emf_level5_clarity.max(-0.2);

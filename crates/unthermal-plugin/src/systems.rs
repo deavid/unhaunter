@@ -8,6 +8,7 @@ use unboard_core::components::physics::ThermalEmitter;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
 use unmapload_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
@@ -42,7 +43,7 @@ pub fn temperature_update(
         let bpos: BoardPosition = pos.to_board_position();
         let prev_temp = thermal_grid.temperature_field[bpos.ndidx()];
         let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
-        let t_out = h_out * k * 0.2 * difficulty.0.light_heat;
+        let t_out = h_out * k * 0.2 * difficulty.0.light_heat();
         thermal_grid.temperature_field[bpos.ndidx()] += t_out;
     }
     for (emitter, pos) in qe.iter() {

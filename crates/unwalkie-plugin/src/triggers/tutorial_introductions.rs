@@ -30,7 +30,7 @@ fn trigger_chapter_intros(
         return;
     }
 
-    let difficulty = current_difficulty_res.0.difficulty;
+    let difficulty = current_difficulty_res.0;
 
     if walkie_play.set(
         WalkieEvent::ChapterIntro(difficulty),

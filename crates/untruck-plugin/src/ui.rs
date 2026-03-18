@@ -6,6 +6,7 @@ use crate::components::truck_ui_button::TruckButtonTypeExt;
 use crate::uibutton::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::resources::spawner::GearSpawnerRegistry;
@@ -24,7 +25,7 @@ impl FromTab for TruckTab {
     /// Creates a new `TruckTab` from a `TabContents` enum.
     fn from_tab(tab: TabContents, difficulty: &CurrentDifficulty) -> Self {
         // Set the tab state based on difficulty
-        let state = if tab == difficulty.0.default_van_tab {
+        let state = if tab == difficulty.0.default_van_tab() {
             TabState::Selected
         } else {
             tab.default_state()

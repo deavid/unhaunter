@@ -1,5 +1,6 @@
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_platform::collections::HashSet;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::ghost_breach::GhostBreach;
@@ -80,7 +81,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     }
 
     // Only trigger if van auto-open is enabled in difficulty settings
-    if !difficulty.0.van_auto_open {
+    if !difficulty.0.van_auto_open() {
         return;
     }
 

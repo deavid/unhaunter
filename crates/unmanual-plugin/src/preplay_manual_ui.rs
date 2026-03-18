@@ -69,8 +69,8 @@ pub(crate) fn preplay_manual_system(
             }
 
             PreplayManualNavigationAction::Continue => {
-                let chapter_idx = difficulty.0.difficulty.index();
-                let is_tutorial = difficulty.0.difficulty.is_tutorial_difficulty();
+                let chapter_idx = difficulty.0.index();
+                let is_tutorial = difficulty.0.is_tutorial_difficulty();
                 if is_tutorial && chapter_idx < manual.chapters.len() {
                     if let Some(chapter) = manual.chapters.get(chapter_idx) {
                         let current_chapter_size = chapter.pages.len();
@@ -259,8 +259,8 @@ pub(crate) fn setup_preplay_ui(
     ui_assets: Res<UiAssets>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let chapter_idx = if difficulty.0.difficulty.is_tutorial_difficulty() {
-        difficulty.0.difficulty.index()
+    let chapter_idx = if difficulty.0.is_tutorial_difficulty() {
+        difficulty.0.index()
     } else {
         0
     };

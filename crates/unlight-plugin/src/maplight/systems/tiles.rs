@@ -141,7 +141,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
         bf,
         &lg,
         vf,
-        &difficulty.0.difficulty,
+        &difficulty.0,
     );
 
     // --- End of Shared Lighting Sampling Logic ---

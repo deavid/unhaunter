@@ -2,7 +2,7 @@
 //!
 //! This module provides all the gameplay settings for each difficulty level.
 
-use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
+use crate::difficulty_settings::DifficultySettings;
 use unfoundation_core::types::truck::TabContents;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
 use untypes_core::difficulty::Difficulty;
@@ -461,44 +461,6 @@ impl DifficultySettings for Difficulty {
             Difficulty::HardChallenge => 20.0,
             Difficulty::ExpertChallenge => 50.0,
             Difficulty::MasterChallenge => 100.0,
-        }
-    }
-
-    /// Creates a `DifficultyStruct` instance with the settings for the current
-    /// difficulty level.
-    ///
-    /// This method aggregates all the individual parameter settings defined by the
-    /// other methods in this trait implementation.
-    fn as_struct(&self) -> DifficultyStruct {
-        DifficultyStruct {
-            ghost_speed: self.ghost_speed(),
-            ghost_rage_likelihood: self.ghost_rage_likelihood(),
-            ghost_hunting_aggression: self.ghost_hunting_aggression(),
-            ghost_interaction_frequency: self.ghost_interaction_frequency(),
-            ghost_hunt_duration: self.ghost_hunt_duration(),
-            ghost_hunt_cooldown: self.ghost_hunt_cooldown(),
-            ghost_attraction_to_breach: self.ghost_attraction_to_breach(),
-            hunt_provocation_radius: self.hunt_provocation_radius(),
-            attractive_removal_anger_rate: self.attractive_removal_anger_rate(),
-            ambient_temperature: self.ambient_temperature(),
-            temperature_spread_speed: self.temperature_spread_speed(),
-            light_heat: self.light_heat(),
-            darkness_intensity: self.darkness_intensity(),
-            environment_gamma: self.environment_gamma(),
-            max_recoverable_sanity: self.max_recoverable_sanity(),
-            sanity_drain_rate: self.sanity_drain_rate(),
-            health_drain_rate: self.health_drain_rate(),
-            health_recovery_rate: self.health_recovery_rate(),
-            player_speed: self.player_speed(),
-            evidence_visibility: self.evidence_visibility(),
-            equipment_sensitivity: self.equipment_sensitivity(),
-            van_auto_open: self.van_auto_open(),
-            default_van_tab: self.default_van_tab(),
-            repellent_craft_limit: self.repellent_craft_limit(),
-            difficulty: *self,
-            difficulty_name: self.difficulty_name().to_string(),
-            difficulty_description: self.difficulty_description().to_owned(),
-            difficulty_score_multiplier: self.difficulty_score_multiplier(),
         }
     }
 }

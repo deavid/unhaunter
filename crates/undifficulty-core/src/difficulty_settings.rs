@@ -3,10 +3,7 @@
 //! This trait defines the interface for querying gameplay settings based on difficulty level.
 //! The implementation is in the undifficulty-core crate to avoid circular dependencies.
 
-use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
 use unfoundation_core::types::truck::TabContents;
-use untypes_core::difficulty::Difficulty;
 
 /// Trait for querying difficulty-specific game settings
 pub trait DifficultySettings {
@@ -46,47 +43,4 @@ pub trait DifficultySettings {
     fn difficulty_name(&self) -> &'static str;
     fn difficulty_description(&self) -> &'static str;
     fn difficulty_score_multiplier(&self) -> f32;
-
-    // Struct assembly
-    fn as_struct(&self) -> DifficultyStruct;
-}
-
-/// A struct that holds all difficulty settings
-#[derive(Debug, Clone, Serialize, Deserialize, Resource, PartialEq, Reflect)]
-#[reflect(Resource, Default, PartialEq)]
-pub struct DifficultyStruct {
-    pub ghost_speed: f32,
-    pub ghost_rage_likelihood: f32,
-    pub ghost_hunting_aggression: f32,
-    pub ghost_interaction_frequency: f32,
-    pub ghost_hunt_duration: f32,
-    pub ghost_hunt_cooldown: f32,
-    pub ghost_attraction_to_breach: f32,
-    pub hunt_provocation_radius: f32,
-    pub attractive_removal_anger_rate: f32,
-    pub ambient_temperature: f32,
-    pub temperature_spread_speed: f32,
-    pub light_heat: f32,
-    pub darkness_intensity: f32,
-    pub environment_gamma: f32,
-    pub max_recoverable_sanity: f32,
-    pub sanity_drain_rate: f32,
-    pub health_drain_rate: f32,
-    pub health_recovery_rate: f32,
-    pub player_speed: f32,
-    pub evidence_visibility: f32,
-    pub equipment_sensitivity: f32,
-    pub van_auto_open: bool,
-    pub default_van_tab: TabContents,
-    pub repellent_craft_limit: u32,
-    pub difficulty: Difficulty,
-    pub difficulty_name: String,
-    pub difficulty_description: String,
-    pub difficulty_score_multiplier: f32,
-}
-
-impl Default for DifficultyStruct {
-    fn default() -> Self {
-        Difficulty::default().as_struct()
-    }
 }

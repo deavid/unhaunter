@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use rand::RngExt;
 use unboard_core::resources::board_topology::BoardTopology;
-use undifficulty_core::difficulty_settings::DifficultyStruct;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
@@ -84,11 +84,11 @@ pub(crate) fn apply_alpha_modulator_visuals(am: &AlphaModulator, elapsed: f32, o
     *opacity *= (am.frequency * elapsed).sin() * am.amplitude + (1.0 - am.amplitude);
 }
 
-pub(crate) fn apply_ethereal_visuals(
+pub(crate) fn apply_ethereal_visuals<D: DifficultySettings>(
     ethereal: &Ethereal,
     spectral_clarity: Option<&SpectralClarity>,
     ld: &LightData,
-    difficulty: &DifficultyStruct,
+    difficulty: &D,
     elapsed: f32,
     opacity: &mut f32,
     dst_color: &mut Color,
@@ -96,10 +96,10 @@ pub(crate) fn apply_ethereal_visuals(
     let orig_opacity = *opacity;
 
     // Make the ghost oscilate to increase visibility:
-    let osc1 = (elapsed * 1.0 * difficulty.evidence_visibility).sin() * 0.25 + 0.75;
-    let osc2 = (elapsed * 1.15 * difficulty.evidence_visibility).cos() * 0.5 + 0.5;
+    let osc1 = (elapsed * 1.0 * difficulty.evidence_visibility()).sin() * 0.25 + 0.75;
+    let osc2 = (elapsed * 1.15 * difficulty.evidence_visibility()).cos() * 0.5 + 0.5;
     *opacity =
-        opacity.min(osc1 + 0.2) / (1.0 + ethereal.warp / 5.0) * difficulty.evidence_visibility;
+        opacity.min(osc1 + 0.2) / (1.0 + ethereal.warp / 5.0) * difficulty.evidence_visibility();
     let l = (dst_color.luminance() + osc2) / 2.0;
     *dst_color = dst_color.with_luminance(l);
     let r = dst_color.to_srgba().red;
@@ -107,9 +107,9 @@ pub(crate) fn apply_ethereal_visuals(
     let clarity = spectral_clarity.cloned().unwrap_or_default();
     let e_uv = ld.ultraviolet * 13.0 * clarity.uv.max(0.0);
     let e_rl = (ld.red * 52.0 * clarity.rl.max(0.0)).clamp(0.0, 1.5);
-    let e_infra = (ld.infrared * 1.1 * difficulty.evidence_visibility).sqrt();
+    let e_infra = (ld.infrared * 1.1 * difficulty.evidence_visibility()).sqrt();
     let f =
-        (ld.visible * difficulty.evidence_visibility * 0.5 + ld.infrared * 4.0).clamp(0.001, 0.999);
+        (ld.visible * difficulty.evidence_visibility() * 0.5 + ld.infrared * 4.0).clamp(0.001, 0.999);
     *opacity = *opacity * f + orig_opacity * (1.0 - f);
     *opacity *= (clarity.alpha * 0.5
         + 0.5
@@ -118,7 +118,7 @@ pub(crate) fn apply_ethereal_visuals(
         + ld.ultraviolet * 2.0
         + ld.red * 10.0
         + ld.infrared)
-        .clamp(difficulty.evidence_visibility * 0.1, 1.0);
+        .clamp(difficulty.evidence_visibility() * 0.1, 1.0);
     let srgba = dst_color
         .with_luminance((l * ld.visible - ld.infrared - ethereal.hit_delta * 3.0).clamp(0.0, 1.0))
         .to_srgba();
@@ -152,17 +152,17 @@ pub(crate) fn apply_ethereal_visuals(
     *dst_color = dst_color.with_luminance((dst_color.luminance() - e_infra / 2.0).clamp(0.0, 1.0));
 }
 
-pub(crate) fn apply_ecto_visuals(
+pub(crate) fn apply_ecto_visuals<D: DifficultySettings>(
     ld: &LightData,
-    difficulty: &DifficultyStruct,
+    difficulty: &D,
     elapsed: f32,
     opacity: &mut f32,
     dst_color: &mut Color,
     visibility_at_pos: f32,
     mut rng: impl Rng,
 ) {
-    let e_nv = ld.ultraviolet.cbrt() / 10.0 * difficulty.evidence_visibility - ld.infrared * 3.0
-        + (difficulty.evidence_visibility / 7.0 + ld.visible * difficulty.evidence_visibility
+    let e_nv = ld.ultraviolet.cbrt() / 10.0 * difficulty.evidence_visibility() - ld.infrared * 3.0
+        + (difficulty.evidence_visibility() / 7.0 + ld.visible * difficulty.evidence_visibility()
             - ld.infrared)
             .powi(3);
     *opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.9);
@@ -179,12 +179,12 @@ pub(crate) fn apply_ecto_visuals(
     *dst_color = lin_dst_color
         .with_green(
             lin_dst_color.green
-                + ld.ultraviolet * difficulty.evidence_visibility * (1.3 - osc1 + rnd_f / 14.0),
+                + ld.ultraviolet * difficulty.evidence_visibility() * (1.3 - osc1 + rnd_f / 14.0),
         )
         .with_red(
             lin_dst_color.red
                 + ld.ultraviolet
-                    * difficulty.evidence_visibility
+                    * difficulty.evidence_visibility()
                     * 1.2
                     * (1.4 - osc1 + rnd_f / 24.0),
         )

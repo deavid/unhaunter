@@ -14,6 +14,7 @@ use unboard_core::resources::board_topology::{
 use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unmapload_core::events::loadlevel::{LevelLoadedEvent, MapGeometryInitializedEvent};
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::GameSprite;
@@ -145,7 +146,7 @@ fn load_level_handler(
         bf.map_size = map_size;
         bf.origin = origin;
         bf.map_path = loaded_event.map_filepath.clone();
-        bf.ambient_temp = p.difficulty.0.ambient_temperature;
+        bf.ambient_temp = p.difficulty.0.ambient_temperature();
         bf.level_ready_time = time.elapsed_secs();
         bf.floor_z_map = loaded_event.floor_mapping.floor_to_z.clone();
         bf.z_floor_map = loaded_event.floor_mapping.z_to_floor.clone();
