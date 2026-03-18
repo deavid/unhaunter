@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use unevents_core::events::map_selected::MapSelectedEvent;
 use untypes_core::states::AppState;
 use untypes_core::states::MapHubState;
 
@@ -9,8 +8,7 @@ pub struct UnhaunterMapHubPlugin;
 
 impl Plugin for UnhaunterMapHubPlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<MapHubState>()
-            .add_message::<MapSelectedEvent>();
+        app.init_state::<MapHubState>();
         app_setup_local(app);
         difficulty_selection::app_setup(app);
     }
