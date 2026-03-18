@@ -16,7 +16,7 @@ use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unmapload_core::events::loadlevel::{LevelLoadedEvent, MapGeometryInitializedEvent};
 use unrender_std::board::spritedb::SpriteDB;
-use unrender_std::components::game::{GameSound, GameSprite};
+use unrender_std::components::game::GameSprite;
 use unrender_std::materials::CustomMaterial1;
 use unspatial_core::position::Position;
 use untiled_core::tiled::MapTileSetDb;
@@ -60,18 +60,18 @@ pub(crate) struct LoadLevelSystemParam<'w, 's> {
 /// - Cleans up existing game entities
 /// - Processes map data to determine size and floor levels
 /// - Initializes field data (temperature, collision, lighting, etc.)
-/// - Spawns all tile entities, special entities, and ambient sounds
+/// - Spawns all tile entities and special entities
 ///
 /// # Arguments
 /// * `ev` - Event reader for LevelLoadedEvent
 /// * `commands` - Command buffer for entity operations
-/// * `qgs` - Query for existing game sprites and sounds to despawn
+/// * `qgs` - Query for existing game sprites to despawn
 /// * `p` - Level system parameters containing all needed resources
 /// * `ev_geometry_init` - Event writer to signal when level geometry is ready
 fn load_level_handler(
     mut ev: MessageReader<LevelLoadedEvent>,
     mut commands: Commands,
-    qgs: Query<Entity, (Or<(With<GameSprite>, With<GameSound>)>, Without<Remote>)>,
+    qgs: Query<Entity, (With<GameSprite>, Without<Remote>)>,
     q_positions: Query<&Position>,
     mut p: LoadLevelSystemParam,
     mut ev_geometry_init: MessageWriter<MapGeometryInitializedEvent>,

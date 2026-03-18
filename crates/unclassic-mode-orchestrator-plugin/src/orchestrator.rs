@@ -9,14 +9,12 @@ use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::sound::SoundType;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::resources::haunt_state::HauntState;
 use unmapload_core::events::loadlevel::{LevelReadyEvent, MapEntitiesReadyEvent};
 use unplayer_core::components::PlayerSprite;
-use unrender_std::components::game::GameSound;
 use unrender_std::components::visuals::{InfraredSensitive, LightSensitive, UltravioletSensitive};
 use unreplicon_core::network_id::NetworkId;
 use unspatial_core::position::Position;
@@ -25,9 +23,7 @@ use untags_core::tags::GhostTag;
 
 #[derive(SystemParam)]
 pub(crate) struct OrchestratorParam<'w> {
-    pub local_player_role: Option<Res<'w, untypes_core::roles::LocalPlayerRole>>,
     pub authority_role: Option<Res<'w, untypes_core::roles::AuthorityRole>>,
-    pub asset_server: Res<'w, AssetServer>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub board_topology: Res<'w, BoardTopology>,
@@ -95,9 +91,6 @@ pub(crate) fn classic_mode_orchestrator(
                 let mut ec = commands.spawn(ghost_spawn);
 
                 ec.insert(GhostBreach)
-                    .insert(GameSound {
-                        class: SoundType::BackgroundHouse,
-                    })
                     .insert(unspatial_core::boardposition::MapEntityFieldBPos(
                         ghost_spawn.to_board_position(),
                     ))
@@ -150,10 +143,6 @@ pub(crate) fn classic_mode_orchestrator(
                 .insert(SoundEmitter::default());
             let _ghost_id = ec.id();
 
-            if p.local_player_role.is_some() {
-                spawn_ambient_sounds(&p, &mut commands);
-            }
-
             crate::influence_system::assign_ghost_influence(
                 &mut commands,
                 &movable_objects,
@@ -168,72 +157,4 @@ pub(crate) fn classic_mode_orchestrator(
     } // end if !Join
 
     ev_level_ready.write(LevelReadyEvent { open_van });
-}
-
-fn spawn_ambient_sounds(p: &OrchestratorParam, commands: &mut Commands) {
-    commands
-        .spawn(AudioPlayer::new(
-            p.asset_server.load("sounds/background-noise-house-1.ogg"),
-        ))
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::Linear(0.00001),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(GameSound {
-            class: SoundType::BackgroundHouse,
-        });
-
-    commands
-        .spawn(AudioPlayer::new(
-            p.asset_server.load("sounds/ambient-clean.ogg"),
-        ))
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::Linear(0.00001),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(GameSound {
-            class: SoundType::BackgroundStreet,
-        });
-
-    commands
-        .spawn(AudioPlayer::new(
-            p.asset_server.load("sounds/heartbeat-1.ogg"),
-        ))
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::Linear(0.00001),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(GameSound {
-            class: SoundType::HeartBeat,
-        });
-
-    commands
-        .spawn(AudioPlayer::new(p.asset_server.load("sounds/insane-1.ogg")))
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::Linear(0.00001),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(GameSound {
-            class: SoundType::Insane,
-        });
 }

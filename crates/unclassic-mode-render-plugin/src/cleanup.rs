@@ -3,7 +3,7 @@ use bevy_replicon::prelude::Remote;
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
-use unrender_std::components::game::{GameSound, GameSprite};
+use unrender_std::components::game::GameSprite;
 use untags_core::game::GCameraArena;
 use untypes_core::states::{AppState, SimulationState};
 
@@ -11,7 +11,6 @@ fn cleanup_game(
     mut commands: Commands,
     qc: Query<Entity, (With<GCameraArena>, Without<Remote>)>,
     qgs: Query<Entity, (With<GameSprite>, Without<Remote>)>,
-    qs: Query<Entity, (With<GameSound>, Without<Remote>)>,
     mut bf: ResMut<BoardTopology>,
     mut bcf: ResMut<BoardCollisionField>,
     mut bef: ResMut<BoardEntityField>,
@@ -30,11 +29,6 @@ fn cleanup_game(
     // Despawn game sprites if not used
     for gs in qgs.iter() {
         commands.entity(gs).despawn();
-    }
-
-    // Despawn game sound
-    for s in qs.iter() {
-        commands.entity(s).despawn();
     }
 }
 

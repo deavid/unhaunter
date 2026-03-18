@@ -11,7 +11,6 @@ authors.workspace = true
 unbehavior = { path = "../unbehavior" }
 unboard-core = { path = "../unboard-core" }
 undifficulty-core = { path = "../undifficulty-core" }
-unevents-core = { path = "../unevents-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unghost-core = { path = "../unghost-core" }
 unmapload-core = { path = "../unmapload-core" }
@@ -21,7 +20,6 @@ unreplicon-core = { workspace = true }
 unspatial-core = { path = "../unspatial-core" }
 unsummary-core = { path = "../unsummary-core" }
 untags-core = { path = "../untags-core" }
-untmxmap-core = { path = "../untmxmap-core" }
 untypes-core = { path = "../untypes-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

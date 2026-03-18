@@ -15,9 +15,7 @@ workspace = true
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unui-core = { path = "../unui-core" }
-unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 unmenu-core = { path = "../unmenu-core" }
 
 bevy = { workspace = true }
-bevy_platform = { workspace = true }

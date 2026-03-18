@@ -1,18 +1,17 @@
-use crate::resources::ambient_mute::AmbientMuteController;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
 use unboard_core::resources::roomdb::RoomTopology;
-use unfoundation_core::types::sound::SoundType;
-use unplayer_core::components::MainPlayer;
-use unplayer_core::components::PlayerSpectating;
-use unrender_std::components::game::GameSound;
+use unplayer_core::components::{MainPlayer, PlayerSpectating};
 use unrender_std::components::visuals::Viewer;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unsettings_core::audio::AudioSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
-use untypes_core::states::AppState;
+
+use unaudiobg_core::components::{GameSound, SoundType};
+use unaudiobg_core::mute::AmbientMuteController;
+use unaudiobg_core::smooth::smooth_volume_db;
 
 /// Calculates the ambient sound volumes based on player visibility.
 ///
@@ -90,11 +89,11 @@ fn calculate_ambient_sound_volumes(
 /// 1. Calculates ambient sound volumes based on player visibility
 /// 2. Calculates HeartBeat volume based on player health (analog/fuzzy logic)
 /// 3. Calculates Insane volume based on player sanity (analog/fuzzy logic)
-/// 4. Applies logarithmic smoothing (IIR filter in log space) for perceptual volume transitions
+/// 4. Applies dB-based smoothing for perceptual volume transitions
 /// 5. Applies audio settings (volume_ambient, volume_master)
 /// 6. Applies mute effects from the ambient mute controller
 /// 7. Updates the actual AudioSink volumes for GameSound entities
-fn update_ambient_sound_volumes(
+pub(crate) fn update_ambient_sound_volumes(
     mut game_sound_query: Query<(&GameSound, &mut AudioSink)>,
     player_query: Query<
         (&Position, &Viewer, &VisibilityData, Has<PlayerSpectating>),
@@ -104,6 +103,7 @@ fn update_ambient_sound_volumes(
     audio_settings: Res<Persistent<AudioSettings>>,
     ambient_mute_controller: Res<AmbientMuteController>,
     global_volume: Res<bevy::audio::GlobalVolume>,
+    time: Res<Time>,
 ) {
     // Get player position and viewer data
     let Ok((player_pos, viewer, visibility_data, is_spectating)) = player_query.single() else {
@@ -146,10 +146,13 @@ fn update_ambient_sound_volumes(
     // Apply mute effects (multiplicative)
     let mute_multiplier = ambient_mute_controller.current_multiplier();
 
-    // Original IIR smoothing constant (simple and robust)
-    const SMOOTH: f32 = 60.0;
+    // Volume scaling factors
     let volume_factor =
         2.0 * master_volume_setting * ambient_volume_setting * global_volume.volume.to_linear();
+
+    // Unified dB smoothing: 10 dB per second
+    let dt_secs = time.delta_secs();
+    const DB_PER_SECOND: f32 = 10.0;
 
     // Update each ambient sound entity
     for (game_sound, mut audio_sink) in &mut game_sound_query {
@@ -163,28 +166,12 @@ fn update_ambient_sound_volumes(
         // Calculate target volume: base * mute (settings are applied in volume_factor)
         let calculated_volume = base_volume * mute_multiplier;
 
-        // Apply original logarithmic smoothing logic (reads current volume from AudioSink)
-        let ln_volume = (audio_sink.volume().to_linear() / (volume_factor + 0.0000001) + 0.000001)
-            .max(0.000001)
-            .ln();
-        let v = (ln_volume * SMOOTH + calculated_volume.ln()) / (SMOOTH + 1.0);
-        let new_volume = v.exp() * volume_factor;
+        // Apply dB-based smoothing for all tracks
+        let current_linear = audio_sink.volume().to_linear();
+        let target_linear = calculated_volume * volume_factor;
+        let new_volume = smooth_volume_db(current_linear, target_linear, DB_PER_SECOND, dt_secs);
 
         // Apply to audio sink
         audio_sink.set_volume(bevy::audio::Volume::Linear(new_volume.clamp(0.00001, 10.0)));
     }
-}
-
-/// Sets up the ambient sound systems for the application.
-/// Registers the mute controller resource, mute events, and ambient sound volume systems.
-pub(crate) fn app_setup(app: &mut App) {
-    app.init_resource::<AmbientMuteController>();
-    app.add_systems(
-        Update,
-        (
-            crate::systems::ambient_sound_mute::process_ambient_mute_events
-                .run_if(in_state(AppState::InGame)),
-            update_ambient_sound_volumes.run_if(in_state(AppState::InGame)),
-        ),
-    );
 }

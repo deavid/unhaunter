@@ -4,7 +4,7 @@ use untypes_core::states::{AppState, SimulationState};
 
 use unlight_core::resources::light_grid::LightGrid;
 
-use crate::{audio, lighting_sim, maplight, metrics, systems::power_visuals};
+use crate::{lighting_sim, maplight, metrics, systems::power_visuals};
 
 pub struct UnhaunterLightCorePlugin;
 
@@ -40,7 +40,6 @@ pub struct UnhaunterLightPlugin;
 
 impl Plugin for UnhaunterLightPlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent>();
         app.add_systems(
             PostUpdate,
             (
@@ -55,7 +54,6 @@ impl Plugin for UnhaunterLightPlugin {
                 .after(BoardUpdateSet::Lighting)
                 .run_if(in_state(AppState::InGame).and(in_state(SimulationState::Ready))),
         );
-        audio::app_setup(app);
         maplight::systems::app_setup(app);
     }
 }

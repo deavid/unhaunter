@@ -5,14 +5,14 @@ use std::time::Duration;
 /// Used by game systems to temporarily reduce ambient sound volume during important events.
 #[derive(Message, Debug, Clone)]
 pub struct AmbientSoundMuteEvent {
-    /// How quickly to fade out (default: 500ms)
+    /// How quickly to fade out (default: 3500ms)
     pub fade_out_duration: Duration,
-    /// How long to stay muted (default: 500ms)
+    /// How long to stay muted (default: 2500ms)
     pub mute_duration: Duration,
-    /// How long to fade back in (default: 5s)
+    /// How long to fade back in (default: 15s)
     pub fade_in_duration: Duration,
-    /// Volume reduction factor during mute phase (default: 10.0 = reduce volume 10x)
-    /// 1.0 = no reduction, 10.0 = 1/10th volume, 100.0 = 1/100th volume
+    /// Volume reduction factor during mute phase (default: 3.0 = reduce volume 3x)
+    /// 1.0 = no reduction, 3.0 = 1/3 volume reduction, 10.0 = 1/10th volume
     pub reduction_factor: f32,
 }
 

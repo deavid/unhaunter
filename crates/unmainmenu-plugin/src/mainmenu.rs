@@ -9,7 +9,6 @@ use unmenu_core::events::MenuItemClicked;
 use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use unmenu_core::templates;
 use unprofile_core::profile::PlayerProfileData;
-use unsettings_core::audio::AudioSettings;
 use untypes_core::states::{AppState, MapHubState};
 use unui_core::assets::UiAssets;
 
@@ -43,19 +42,12 @@ impl std::fmt::Display for MenuID {
     }
 }
 
-#[derive(Component, Debug, Default)]
-pub(crate) struct MenuSound {
-    despawn: bool,
-}
-
 #[derive(Component, Debug)]
 pub(crate) struct MenuUILayout;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::MainMenu), (setup, setup_ui))
-        .add_systems(Update, menu_event)
-        .add_systems(Update, despawn_sound)
-        .add_systems(Update, manage_title_song);
+        .add_systems(Update, menu_event);
 }
 
 pub(crate) fn setup(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
@@ -211,75 +203,6 @@ pub(crate) fn menu_event(
             }
         } else {
             warn!("Clicked menu item identifier {} not found in query", ev.pos);
-        }
-    }
-}
-
-pub(crate) fn manage_title_song(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut q_sound: Query<&mut MenuSound>,
-    app_state: Res<State<AppState>>,
-    audio_settings: Res<Persistent<AudioSettings>>,
-    global_volume: Res<bevy::audio::GlobalVolume>,
-) {
-    let should_play_song = !matches!(app_state.get(), AppState::InGame);
-
-    if let Ok(mut menusound) = q_sound.single_mut() {
-        if !should_play_song && !menusound.despawn {
-            menusound.despawn = true;
-        } else if should_play_song && menusound.despawn {
-            menusound.despawn = false;
-        }
-    } else if should_play_song {
-        // Only spawn the song if the volume is greater than 0
-        let desired_volume = audio_settings.volume_music.as_f32()
-            * audio_settings.volume_master.as_f32()
-            * global_volume.volume.to_linear();
-        if desired_volume > 0.0 {
-            commands
-                .spawn(MenuSound::default())
-                .insert(AudioPlayer::<AudioSource>(
-                    asset_server.load("music/unhaunter_intro.ogg"),
-                ))
-                .insert(PlaybackSettings {
-                    mode: bevy::audio::PlaybackMode::Loop,
-                    volume: bevy::audio::Volume::Linear(desired_volume),
-                    speed: 1.0,
-                    paused: false,
-                    spatial: false,
-                    spatial_scale: None,
-                    ..default()
-                });
-        }
-    }
-}
-
-pub(crate) fn despawn_sound(
-    mut commands: Commands,
-    mut qs: Query<(Entity, &mut AudioSink, &MenuSound)>,
-    audio_settings: Res<Persistent<AudioSettings>>,
-    global_volume: Res<bevy::audio::GlobalVolume>,
-) {
-    for (entity, mut sink, menusound) in &mut qs {
-        let vol = sink.volume().to_linear();
-        let v = if menusound.despawn {
-            vol / 1.02
-        } else {
-            let desired_vol = audio_settings.volume_music.as_f32()
-                * audio_settings.volume_master.as_f32()
-                * global_volume.volume.to_linear();
-            const STEPS: f32 = 120.0;
-            if vol < desired_vol / 2.0 {
-                f32::max(vol * 1.02, 0.002)
-            } else {
-                (vol * STEPS + desired_vol) / (STEPS + 1.0)
-            }
-        };
-        sink.set_volume(bevy::audio::Volume::Linear(v));
-        if v < 0.001 {
-            commands.entity(entity).despawn();
-            debug!("Song despawned");
         }
     }
 }

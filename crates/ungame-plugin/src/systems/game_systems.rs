@@ -4,7 +4,7 @@ use unboard_core::resources::board_topology::BoardTopology;
 use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unplayer_core::resources::game_config::GameConfig;
-use unrender_std::components::game::{GameSound, GameSprite};
+use unrender_std::components::game::GameSprite;
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::direction::Direction;
@@ -36,7 +36,6 @@ fn cleanup(
     mut commands: Commands,
     qc: Query<Entity, With<GCameraArena>>,
     qgs: Query<Entity, With<GameSprite>>,
-    qs: Query<Entity, With<GameSound>>,
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
@@ -45,11 +44,6 @@ fn cleanup(
 
     // Despawn game sprites if not used
     for gs in qgs.iter() {
-        commands.entity(gs).despawn();
-    }
-
-    // Despawn game sound
-    for gs in qs.iter() {
         commands.entity(gs).despawn();
     }
 }

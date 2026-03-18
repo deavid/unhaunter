@@ -7050,6 +7050,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c1ae7cc0fdb8b842d65d127cb981574b0d2b249b74d1c7a2986863dc134f71"
 
 [[package]]
+name = "unaudiobg-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
+name = "unaudiobg-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "ndarray",
+ "unaudiobg-core",
+ "unboard-core",
+ "unplayer-core",
+ "unrender-std",
+ "unsettings-core",
+ "unspatial-core",
+ "untypes-core",
+]
+
+[[package]]
 name = "unbehavior"
 version = "0.3.2-dev"
 dependencies = [
@@ -7136,7 +7159,6 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
- "unevents-core",
  "unfoundation-core",
  "unghost-core",
  "unmapload-core",
@@ -7146,7 +7168,6 @@ dependencies = [
  "unspatial-core",
  "unsummary-core",
  "untags-core",
- "untmxmap-core",
  "untypes-core",
 ]
 
@@ -7180,7 +7201,6 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "unbehavior",
- "unevents-core",
  "unfoundation-core",
  "ungear-core",
  "unplayer-core",
@@ -7385,6 +7405,7 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_replicon",
  "rand 0.10.0",
+ "unaudiobg-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -7412,6 +7433,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "clap",
+ "unaudiobg-plugin",
  "unboard-plugin",
  "uncampaign-plugin",
  "unclassic-mode-gameplay-plugin",
@@ -7656,7 +7678,6 @@ dependencies = [
  "unfoundation-core",
  "unmenu-core",
  "unprofile-core",
- "unsettings-core",
  "untypes-core",
  "unui-core",
 ]
@@ -7689,9 +7710,7 @@ name = "unmaphub-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_platform",
  "undifficulty-core",
- "unevents-core",
  "unfoundation-core",
  "unmenu-core",
  "untypes-core",

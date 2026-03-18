@@ -73,6 +73,33 @@ literally use this as a rubric for your Audit Log:
 
 These are technically not part of the Bevy app and therefore are out of scope of this analysis
 
+### unaudiobg-core + unaudiobg-plugin
+
+Status: Green - Textbook Vertical Slice.
+
+Category: Presentation (Tier 3).
+
+What this is: The domain responsible for all continuous background audio tracks (Menu music, House Ambient, Street
+Ambient, Heartbeat, Insanity). It owns the volume calculations, decibel smoothing math, and muting effects.
+
+Architecture Notes:
+
+- **Clean Core:** `unaudiobg-core` holds pure math (`smooth.rs`), state definitions (`mute.rs`), and the
+  `AmbientSoundMuteEvent`. It has zero game dependencies, relying only on Bevy.
+- **Data-Driven Lifecycle:** Instead of violently spawning and despawning background tracks during map loads (which
+  previously polluted the Orchestrator and Render plugins), this domain spawns tracks once at `Startup` and smoothly
+  transitions their volume to `0.0` when not in use.
+- **Proper Tier 3 Sizing:** This plugin correctly acts as a consumer. It reads `VisibilityData`, `RoomTopology`, and
+  Player Health/Sanity to calculate volumes, without forcing any lower-level systems to know about audio sinks.
+- **Major Decoupling Win:** By creating this, we successfully removed audio components/events from `unrender-std`,
+  `unfoundation-core`, `unevents-core`, and `unmainmenu-plugin`.
+
+Conclusion: A perfectly scoped presentation domain. Keep as is.
+
+NOTE: This could be even better and act like an external plugin, where everything is ECS driven. Just imagine: Entities
+are the tracks we want to have, components would carry the intended state, the current state and expose all the API, and
+the other crates would interact with it.
+
 ### unbehavior
 
 Status: Lime - with caveats.
