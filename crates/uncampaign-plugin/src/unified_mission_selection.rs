@@ -212,7 +212,7 @@ fn handle_selection_input(
 }
 
 fn format_mission_details(
-    m: &untmxmap_core::types::mission_data::MissionData,
+    m: &untmxmap_core::types::mission_data::TmxMissionData,
     mode: MissionSelectMode,
     dif: &CurrentDifficulty,
 ) -> (String, String) {

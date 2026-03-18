@@ -6,7 +6,8 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unevents_core::events::mission::MissionEvent;
+use unmission_core::types::MissionEvent;
+use unmission_core::resources::MissionEndRequested;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
@@ -14,7 +15,6 @@ use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unreplicon_core::network_id::NetworkId;
-use unreplicon_core::resources::MissionEndRequested;
 use unsettings_core::audio::AudioSettings;
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
@@ -417,7 +417,7 @@ fn update_craft_button_text(
 }
 
 fn update_end_mission_button_status(
-    mission_end_req: Res<unreplicon_core::resources::MissionEndRequested>,
+    mission_end_req: Res<unmission_core::resources::MissionEndRequested>,
     mut q_button: Query<&mut TruckUIButton, With<Button>>,
 ) {
     if !mission_end_req.is_changed() {

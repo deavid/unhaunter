@@ -5,6 +5,7 @@ use bevy_replicon::prelude::{
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::ghost_guess::GhostGuess;
+use unmission_core::resources::MissionConcludingCinematic;
 use unrender_std::components::visuals::SpectralClarity;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
@@ -13,7 +14,6 @@ use unreplicon_core::messages::{
     GhostSoundFieldBroadcast, RequestJournalEvidenceToggle, RequestJournalGhostToggle,
     SpawnParticleNetEvent,
 };
-use unreplicon_core::resources::MissionConcludingCinematic;
 use unspatial_core::lerp_position::LerpPosition;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;

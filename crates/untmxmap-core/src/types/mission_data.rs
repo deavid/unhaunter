@@ -1,7 +1,7 @@
 use untypes_core::difficulty::Difficulty;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MissionData {
+pub struct TmxMissionData {
     /// Unique identifier for the mission, could be derived from file path or an explicit ID.
     /// For now, let's use the map file path as a simple unique ID.
     pub id: String, // Typically the map_filepath

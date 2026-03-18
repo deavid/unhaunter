@@ -51,6 +51,10 @@ pub(crate) fn update_time(
     difficulty: Res<CurrentDifficulty>,
     mut death_timer: Local<Option<f32>>,
 ) {
+    // TODO: Consider moving mission stat-tracking (time_taken_secs, player_count, alive_count, average_sanity)
+    // and mission-end evaluation (all_dead logic) to unmission-plugin. This function currently mixes
+    // summary presentation concerns with mission lifecycle concerns — ideally unmission-plugin would own
+    // the end-of-mission evaluation, and unsummary-plugin would receive the snapshot via SummaryData.
     sd.difficulty = difficulty.clone();
     sd.time_taken_secs += time.delta_secs();
     let total_sanity: f32 = qp.iter().map(|x| x.sanity).sum();

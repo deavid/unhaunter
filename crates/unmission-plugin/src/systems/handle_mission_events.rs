@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unboard_core::resources::board_topology::BoardTopology;
-use unevents_core::events::mission::MissionEvent;
+use unmission_core::types::MissionEvent;
 use unprofile_core::profile::PlayerProfileData;
 use unreplicon_core::components::{LobbyInfo, ServerGamePhase};
 use unsummary_core::summary::SummaryData;

@@ -4,7 +4,7 @@ use untmxmap_core::assets::tmxmap::TmxMap;
 use untmxmap_core::assets::tsxsheet::TsxSheet;
 use untmxmap_core::resources::maps::Maps;
 use untmxmap_core::resources::upscale::UpscaleIndex;
-use untmxmap_core::types::mission_data::MissionData;
+use untmxmap_core::types::mission_data::TmxMissionData;
 use untmxmap_core::types::root::map::Map;
 use untmxmap_core::types::root::map::Sheet;
 use untypes_core::cli::CliOptions;
@@ -190,7 +190,7 @@ fn tmxmap_preload(
 }
 
 /// Create a MissionData instance from a TmxMap's properties if it's a valid mission
-fn create_mission_data(tmx: &TmxMap, path: &str) -> MissionData {
+fn create_mission_data(tmx: &TmxMap, path: &str) -> TmxMissionData {
     let props = &tmx.props;
 
     // Determine if this is a campaign mission
@@ -221,7 +221,7 @@ fn create_mission_data(tmx: &TmxMap, path: &str) -> MissionData {
         Difficulty::StandardChallenge // Default difficulty for maps without specifics
     };
 
-    MissionData {
+    TmxMissionData {
         id: path.to_string(),
         map_filepath: path.to_string(),
         display_name: props.display_name.clone(),

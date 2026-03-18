@@ -26,6 +26,7 @@ base64 = { workspace = true }
 
 undifficulty-core = { path = "../undifficulty-core" }
 unmapload-core = { workspace = true }
+unmission-core = { path = "../unmission-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 unrender-std = { path = "../unrender-std" }
 unspatial-core = { path = "../unspatial-core" }

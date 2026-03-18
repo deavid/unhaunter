@@ -15,12 +15,6 @@ pub struct ClientUuidMap(pub HashMap<crate::ownership::OwnerId, Uuid>);
 #[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LocalPlayer(pub Option<Uuid>);
 
-/// Accumulator flag: set to `true` once all players are back in the truck.
-///
-/// Gated by the mission-end logic; the truck UI reads it to enable the "End Mission" button.
-#[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct MissionEndRequested(pub bool);
-
 /// Set to `true` when the host has disconnected from the game.
 ///
 /// Clients use this to detect a lost connection and display the appropriate UI.
@@ -47,17 +41,6 @@ pub struct MissionAutoJoinArmed(pub bool);
 pub struct RoomIdentification {
     pub code: Option<String>,
     pub secret: Option<String>,
-}
-
-/// Inserted by the client when ServerGamePhase::Concluding is observed.
-/// Tracks the local fade-to-black timer before transitioning to Summary.
-#[derive(Resource)]
-pub struct MissionConcludingCinematic {
-    /// Countdown timer. When finished, the client transitions to AppState::Summary
-    /// provided SummaryData also exists.
-    pub timer: Timer,
-    /// Whether player inputs have been disabled for the duration of this cinematic.
-    pub inputs_blocked: bool,
 }
 
 /// A single floor gear item currently present in the game world.

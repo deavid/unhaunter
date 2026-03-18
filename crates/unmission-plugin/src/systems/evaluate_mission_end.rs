@@ -1,10 +1,10 @@
 use bevy::prelude::*;
-use unevents_core::events::mission::MissionEvent;
+use unmission_core::types::MissionEvent;
+use unmission_core::resources::MissionEndRequested;
 use unplayer_core::components::PlayerDisconnected;
 use unplayer_core::components::PlayerInactive;
 use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
-use unreplicon_core::resources::MissionEndRequested;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 

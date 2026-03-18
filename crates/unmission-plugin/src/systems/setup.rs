@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unevents_core::events::mission::MissionEvent;
-use unreplicon_core::resources::MissionEndRequested;
+use unmission_core::types::MissionEvent;
+use unmission_core::resources::MissionEndRequested;
 use untypes_core::states::AppState;
 
 use crate::systems::evaluate_mission_end;
