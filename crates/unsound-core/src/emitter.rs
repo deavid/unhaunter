@@ -1,5 +1,5 @@
+use crate::events::SoundEvent;
 use bevy::{ecs::system::SystemParam, prelude::*};
-use unevents_core::events::sound::SoundEvent;
 use unspatial_core::position::Position;
 
 /// A collection of resources frequently used for audio playback.

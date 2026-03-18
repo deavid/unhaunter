@@ -13,7 +13,6 @@ workspace = true
 [dependencies]
 unboard-core = { path = "../unboard-core" }
 unmission-core = { path = "../unmission-core" }
-unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 unsummary-core = { path = "../unsummary-core" }
 unprofile-core = { path = "../unprofile-core" }

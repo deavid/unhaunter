@@ -17,7 +17,6 @@ unaudiobg-core = { path = "../unaudiobg-core" }
 unbehavior = { path = "../unbehavior" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
-unevents-core = { path = "../unevents-core" }
 unsummary-core = { path = "../unsummary-core" }
 unrender-std = { path = "../unrender-std" }
 unplayer-core = { path = "../unplayer-core" }

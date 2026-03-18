@@ -3,9 +3,9 @@ use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomStateDelta;
 use unboard_core::resources::roomdb::RoomState;
 use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
-use unevents_core::events::roomchanged::InteractionExecutionType;
-use unevents_core::events::sound::SoundEvent;
+use uninteraction_core::events::InteractionExecutionType;
 use unrender_std::board::spritedb::SpriteDB;
+use unsound_core::events::SoundEvent;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 

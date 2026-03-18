@@ -5,9 +5,9 @@
 use bevy::prelude::*;
 
 pub mod components;
+pub mod events;
 pub mod resources;
 pub mod types;
-pub mod events;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum BoardUpdateSet {

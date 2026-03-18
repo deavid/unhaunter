@@ -14,4 +14,3 @@ workspace = true
 bevy = { workspace = true }
 serde = { workspace = true }
 unspatial-core = { path = "../unspatial-core" }
-unevents-core = { path = "../unevents-core" }

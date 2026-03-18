@@ -17,12 +17,12 @@ unspatial-core = { path = "../unspatial-core" }
 unbehavior = { path = "../unbehavior" }
 undifficulty-core = { path = "../undifficulty-core" }
 unboard-core = { path = "../unboard-core" }
-unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 untiled-core = { path = "../untiled-core" }
 unrender-std = { path = "../unrender-std" }
 untmxmap-core = { path = "../untmxmap-core" }
 unmapload-core = { path = "../unmapload-core" }
+uninteraction-core = { path = "../uninteraction-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use unspatial_core::position::Position;
 
-use unevents_core::events::roomchanged::InteractionExecutionType;
+use crate::events::InteractionExecutionType;
 
 /// A generic wrapper for targeting entities without knowing their type.
 #[derive(Component)]

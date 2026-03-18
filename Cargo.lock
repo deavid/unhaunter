@@ -7103,7 +7103,6 @@ dependencies = [
  "bevy",
  "unbehavior",
  "unboard-core",
- "unevents-core",
  "unrender-std",
  "unspatial-core",
  "untypes-core",
@@ -7134,7 +7133,6 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
- "unevents-core",
  "unfoundation-core",
  "ungear-core",
  "unghost-core",
@@ -7230,15 +7228,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "unevents-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "serde",
- "unspatial-core",
-]
-
-[[package]]
 name = "unfog-core"
 version = "0.3.2-dev"
 dependencies = [
@@ -7322,13 +7311,13 @@ dependencies = [
  "bevy-persistent",
  "bevy_asset_loader",
  "unboard-core",
- "unevents-core",
  "unfoundation-core",
  "ungear-core",
  "unmetrics-core",
  "unplayer-core",
  "unrender-std",
  "unsettings-core",
+ "unsound-core",
  "unspatial-core",
  "untags-core",
  "untruck-core",
@@ -7409,7 +7398,6 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
- "unevents-core",
  "unfoundation-core",
  "ungearitems-core",
  "unghost-core",
@@ -7579,7 +7567,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
- "unevents-core",
  "unspatial-core",
 ]
 
@@ -7590,9 +7577,9 @@ dependencies = [
  "bevy",
  "unbehavior",
  "unboard-core",
- "unevents-core",
  "uninteraction-core",
  "unrender-std",
+ "unsound-core",
  "unspatial-core",
  "untypes-core",
 ]
@@ -7632,7 +7619,6 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
- "unevents-core",
  "unfog-core",
  "unfoundation-core",
  "ungear-core",
@@ -7741,7 +7727,7 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
- "unevents-core",
+ "uninteraction-core",
  "unmapload-core",
  "unrender-std",
  "unspatial-core",
@@ -7811,7 +7797,6 @@ name = "unmission-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "unevents-core",
 ]
 
 [[package]]
@@ -7821,7 +7806,6 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "unboard-core",
- "unevents-core",
  "unmission-core",
  "unplayer-core",
  "unprofile-core",
@@ -7851,14 +7835,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "unnpc-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "unnpc-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "unbehavior",
- "unevents-core",
  "unfoundation-core",
  "unmapload-core",
+ "unnpc-core",
  "unplayer-core",
  "unrender-std",
  "unspatial-core",
@@ -7908,7 +7899,6 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
- "unevents-core",
  "unfog-core",
  "unfoundation-core",
  "ungear-core",
@@ -7916,6 +7906,7 @@ dependencies = [
  "uninteraction-core",
  "unlight-core",
  "unnavigation-core",
+ "unnpc-core",
  "unplayer-core",
  "unprofile-core",
  "unrender-std",
@@ -8024,11 +8015,11 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
- "unevents-core",
  "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
+ "uninteraction-core",
  "uuid",
 ]
 
@@ -8100,7 +8091,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
- "unevents-core",
  "unspatial-core",
 ]
 

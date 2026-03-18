@@ -12,4 +12,3 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-unevents-core = { path = "../unevents-core" }

@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::FloorItemCollidable;
 use unboard_core::resources::board_topology::BoardCollisionField;
-use unevents_core::events::sound::SoundEvent;
 use unfoundation_core::types::gear::{EquipmentPosition, Hand};
 use ungear_core::components::playergear::{HeldObject, PlayerGear};
 use ungear_core::resources::spawner::GearMarker;
@@ -10,6 +9,7 @@ use ungear_core::types::gear::kind::GearKind;
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unreplicon_core::messages::{RequestDrop, RequestGrab};
 use unreplicon_core::ownership::LocallyOwned;
+use unsound_core::events::SoundEvent;
 use unspatial_core::position::Position;
 
 fn sync_held_gear_position(
@@ -92,7 +92,7 @@ fn drop_object(
     board_collision: Res<BoardCollisionField>,
     pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,
     mut writer_drop: MessageWriter<RequestDrop>,
-    mut ev_sound: MessageWriter<unevents_core::events::sound::SoundEvent>,
+    mut ev_sound: MessageWriter<SoundEvent>,
 ) {
     for (mut player_gear, player_pos, player_input, player_sprite) in players.iter_mut() {
         if player_input.drop {
@@ -134,7 +134,7 @@ fn drop_object(
                     player_sprite.movement.dz,
                 ],
             });
-            ev_sound.write(unevents_core::events::sound::SoundEvent {
+            ev_sound.write(SoundEvent {
                 sound_file: "sounds/item-drop-clunk.ogg".to_string(),
                 volume: 1.0,
                 position: Some(*player_pos),

@@ -15,7 +15,6 @@ ungear-core = { path = "../ungear-core" }
 unrender-std = { path = "../unrender-std" }
 unspatial-core = { path = "../unspatial-core" }
 unfoundation-core = { path = "../unfoundation-core" }
-unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 unboard-core = { path = "../unboard-core" }
 unplayer-core = { path = "../unplayer-core" }
@@ -23,6 +22,7 @@ unsettings-core = { path = "../unsettings-core" }
 untags-core = { path = "../untags-core" }
 untruck-core = { path = "../untruck-core" }
 unmetrics-core = { path = "../unmetrics-core" }
+unsound-core = { path = "../unsound-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

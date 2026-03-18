@@ -2,11 +2,11 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
-use unevents_core::events::npc_help::NpcHelpEvent;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
 use unnavigation_core::pathfinding::Pathfinder;
+use unnpc_core::events::NpcHelpEvent;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::{MainPlayer, PlayerInput};
 use unrender_std::components::game::GameSprite;

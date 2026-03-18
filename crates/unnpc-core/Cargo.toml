@@ -1,5 +1,5 @@
 [package]
-name = "unevents-core"
+name = "unnpc-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -11,6 +11,4 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unspatial-core = { path = "../unspatial-core" }
 bevy = { workspace = true }
-serde = { workspace = true }

@@ -1,6 +1,6 @@
 use crate::systems;
 use bevy::prelude::*;
-use unevents_core::events::roomchanged::RoomStateSyncEvent;
+use uninteraction_core::events::RoomStateSyncEvent;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 
 pub struct UnhaunterInteractionCorePlugin;

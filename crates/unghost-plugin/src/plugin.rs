@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use untypes_core::states::AppState;
 
+use unghost_core::events::GhostInteractionEvent;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
@@ -19,7 +20,7 @@ impl Plugin for UnhaunterGhostCorePlugin {
             .map(|cli| cli.dedicated)
             .unwrap_or(false);
 
-        app.add_message::<unevents_core::events::ghost_interaction::GhostInteractionEvent>();
+        app.add_message::<GhostInteractionEvent>();
         crate::systems::hydration::app_setup(app);
         crate::systems::evidence_decay::app_setup(app);
         crate::systems::ghost_ai::app_setup(app);

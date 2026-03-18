@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use unevents_core::events::roomchanged::InteractionExecutionType;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
+use uninteraction_core::events::InteractionExecutionType;
 
 use crate::network_id::NetworkId;
 use unfoundation_core::types::gear::Hand;

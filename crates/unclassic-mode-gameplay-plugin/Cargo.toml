@@ -11,7 +11,6 @@ authors.workspace = true
 unbehavior = { path = "../unbehavior" }
 unboard-core = { path = "../unboard-core" }
 undifficulty-core = { path = "../undifficulty-core" }
-unevents-core = { path = "../unevents-core" }
 ungear-core = { path = "../ungear-core" }
 unghost-core = { path = "../unghost-core" }
 uninteraction-core = { path = "../uninteraction-core" }

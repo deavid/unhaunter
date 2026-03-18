@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::{Interactive, NpcHelpDialog};
-use unevents_core::events::npc_help::NpcHelpEvent;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unnpc_core::events::NpcHelpEvent;
 use unplayer_core::components::MainPlayer;
 use unrender_std::materials::UIPanelMaterial;
 use unspatial_core::direction::Direction;

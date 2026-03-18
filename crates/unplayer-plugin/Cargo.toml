@@ -17,7 +17,6 @@ unbehavior = { path = "../unbehavior" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
 unlight-core = { path = "../unlight-core" }
-unevents-core = { path = "../unevents-core" }
 unplayer-core = { path = "../unplayer-core" }
 untypes-core = { path = "../untypes-core" }
 unsummary-core = { path = "../unsummary-core" }
@@ -28,6 +27,8 @@ unrender-std = { path = "../unrender-std" }
 uninteraction-core = { path = "../uninteraction-core" }
 untruck-core = { path = "../untruck-core" }
 ungear-core = { path = "../ungear-core" }
+unnpc-core = { path = "../unnpc-core" }
+unsound-core = { path = "../unsound-core" }
 unghost-core = { path = "../unghost-core" }
 untags-core = { path = "../untags-core" }
 
@@ -36,7 +37,6 @@ unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unspatial-core = { path = "../unspatial-core" }
 unthermal-core = { path = "../unthermal-core" }
-unsound-core = { path = "../unsound-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

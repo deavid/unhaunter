@@ -15,7 +15,6 @@ members = [
     "crates/unbehavior",
     "crates/unboard-core",
     "crates/unboard-plugin",
-    "crates/unevents-core",
     "crates/unfoundation-core",
     "crates/untypes-core",
     "crates/undifficulty-core",
@@ -188,7 +187,6 @@ unaudiobg-core = { path = "crates/unaudiobg-core" }
 unaudiobg-plugin = { path = "crates/unaudiobg-plugin" }
 unboard-core = { path = "crates/unboard-core" }
 unboard-plugin = { path = "crates/unboard-plugin" }
-unevents-core = { path = "crates/unevents-core" }
 unfoundation-core = { path = "crates/unfoundation-core" }
 undifficulty-core = { path = "crates/undifficulty-core" }
 undifficulty-plugin = { path = "crates/undifficulty-plugin" }

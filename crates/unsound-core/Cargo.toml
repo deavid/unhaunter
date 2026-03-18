@@ -12,6 +12,5 @@ workspace = true
 
 [dependencies]
 unspatial-core = { path = "../unspatial-core" }
-unevents-core = { path = "../unevents-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
