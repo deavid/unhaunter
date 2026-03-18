@@ -1,7 +1,7 @@
 use bevy::ecs::entity::{EntityMapper, MapEntities};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use unfoundation_core::types::gear::Hand;
+use ungear_core::types::gear::Hand;
 use ungearitems_core::gear_details::GearDetails;
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::resources::Uuid;

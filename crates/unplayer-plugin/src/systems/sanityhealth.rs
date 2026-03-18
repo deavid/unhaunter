@@ -5,7 +5,7 @@ use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::types::grade::Grade;
+use unsummary_core::grade::Grade;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unlight_core::resources::light_grid::LightGrid;

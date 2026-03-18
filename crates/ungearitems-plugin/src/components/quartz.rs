@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::types::gear::EquipmentPosition;
+use ungear_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::quartz::{QuartzStoneData, QuartzStoneSkin};

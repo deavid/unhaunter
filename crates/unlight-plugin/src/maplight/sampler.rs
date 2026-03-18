@@ -4,7 +4,7 @@ use bevy_platform::collections::HashMap;
 use ndarray::Array3;
 use std::cell::RefCell;
 use unboard_core::resources::board_topology::BoardTopology;
-use unfoundation_core::types::light::LightType;
+use unlight_core::types::LightType;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::tonemapping::{self, TonemappingParams};
 use unlight_core::types::light::{LightData, LightFieldData};

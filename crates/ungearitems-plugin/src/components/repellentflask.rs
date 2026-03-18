@@ -4,8 +4,8 @@ use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
+use ungear_core::types::gear::EquipmentPosition;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use uninteraction_core::interaction::Triggered;

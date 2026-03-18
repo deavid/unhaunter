@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use rand::RngExt;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, StatusText};
+use ungear_core::types::gear::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::videocam::Videocam;

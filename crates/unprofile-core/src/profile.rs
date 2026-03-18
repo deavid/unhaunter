@@ -1,7 +1,7 @@
 use bevy::prelude::Resource;
 use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Serialize};
-use unfoundation_core::types::grade::Grade;
+use unsummary_core::grade::Grade;
 use unghost_core::types::evidence::Evidence;
 use untypes_core::difficulty::Difficulty;
 use uuid::Uuid;

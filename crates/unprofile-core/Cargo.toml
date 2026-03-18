@@ -17,4 +17,5 @@ serde = { workspace = true }
 uuid = { workspace = true }
 unfoundation-core = { path = "../unfoundation-core" }
 unghost-core = { path = "../unghost-core" }
+unsummary-core = { path = "../unsummary-core" }
 untypes-core = { path = "../untypes-core" }

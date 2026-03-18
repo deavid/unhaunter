@@ -21,7 +21,7 @@ use unspatial_core::position::Position;
 
 use bevy::prelude::*;
 use rand::RngExt;
-use unfoundation_core::types::gear::EquipmentPosition;
+use ungear_core::types::gear::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::emfmeter::{EMFLevel, EMFMeter};

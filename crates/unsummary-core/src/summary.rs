@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::types::grade::Grade;
+use crate::grade::Grade;
 use unghost_core::types::ghost::types::GhostType;
 
 #[derive(

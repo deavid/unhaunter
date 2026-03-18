@@ -6,7 +6,7 @@ use unboard_core::resources::board_topology::{
 };
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
-use unfoundation_core::types::light::LightType;
+use unlight_core::types::LightType;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 

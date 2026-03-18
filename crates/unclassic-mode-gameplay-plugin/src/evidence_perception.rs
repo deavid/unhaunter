@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unfoundation_core::types::light::LightType;
+use unlight_core::types::LightType;
 use ungear_core::components::core::{Electronic, EvidenceSensor, PerceivedClarity};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;

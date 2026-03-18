@@ -3,7 +3,7 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Serialize};
-use unfoundation_core::types::gear::VisualKey;
+use crate::types::gear::VisualKey;
 use unspatial_core::position::Position;
 
 /// A marker component for all gear entities.

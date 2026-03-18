@@ -3,8 +3,6 @@
 //! This trait defines the interface for querying gameplay settings based on difficulty level.
 //! The implementation is in the undifficulty-core crate to avoid circular dependencies.
 
-use unfoundation_core::types::truck::TabContents;
-
 /// Trait for querying difficulty-specific game settings
 pub trait DifficultySettings {
     // Ghost behavior
@@ -39,7 +37,6 @@ pub trait DifficultySettings {
 
     // UI/Gameplay
     fn van_auto_open(&self) -> bool;
-    fn default_van_tab(&self) -> TabContents;
     fn difficulty_name(&self) -> &'static str;
     fn difficulty_description(&self) -> &'static str;
     fn difficulty_score_multiplier(&self) -> f32;

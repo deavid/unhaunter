@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
+use ungear_core::types::gear::Hand;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unreplicon_core::messages::RequestJournalEvidenceToggle;
@@ -22,8 +23,8 @@ pub(crate) fn update_evidence_ui(
     for (_ps, playergear) in q_gear.iter() {
         for txt_entity in qs.iter_mut() {
             let hand_entity = match looking_gear.hand() {
-                unfoundation_core::types::gear::Hand::Left => playergear.left_hand,
-                unfoundation_core::types::gear::Hand::Right => playergear.right_hand,
+                Hand::Left => playergear.left_hand,
+                Hand::Right => playergear.right_hand,
             };
             let o_evidence = hand_entity
                 .and_then(|e| q_sensor.get(e).ok())
@@ -74,8 +75,8 @@ pub(crate) fn keyboard_evidence(
 ) {
     for (input_mapping, playergear) in &players {
         let hand_entity = match looking_gear.hand() {
-            unfoundation_core::types::gear::Hand::Left => playergear.left_hand,
-            unfoundation_core::types::gear::Hand::Right => playergear.right_hand,
+            Hand::Left => playergear.left_hand,
+            Hand::Right => playergear.right_hand,
         };
         let Some(evidence) = hand_entity
             .and_then(|e| q_sensor.get(e).ok())

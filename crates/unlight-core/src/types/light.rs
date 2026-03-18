@@ -1,4 +1,4 @@
-use unfoundation_core::types::light::LightType;
+use super::light_type::LightType;
 
 /// Stores the intensity of different light types at a specific location.
 ///

@@ -5,8 +5,7 @@ use bevy_replicon::prelude::Replicated;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unfoundation_core::types::gear::Hand;
-use unfoundation_core::types::gear::VisualKey;
+use ungear_core::types::gear::{Hand, VisualKey};
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
@@ -317,8 +316,8 @@ fn update_loadout_buttons(
         match lbut {
             LoadoutButton::Inventory(inv) => {
                 let entity = match inv.hand {
-                    unfoundation_core::types::gear::Hand::Left => _p_gear.left_hand,
-                    unfoundation_core::types::gear::Hand::Right => _p_gear.right_hand,
+                    Hand::Left => _p_gear.left_hand,
+                    Hand::Right => _p_gear.right_hand,
                 };
                 entity
                     .and_then(|e| q_gearkind.get(e).ok())
@@ -340,8 +339,8 @@ fn update_loadout_buttons(
     let click_help = if let Some(lbut) = &elem {
         match lbut {
             LoadoutButton::Inventory(inv) => match &inv.hand {
-                unfoundation_core::types::gear::Hand::Left => "(Click to unequip Left Hand item)",
-                unfoundation_core::types::gear::Hand::Right => "(Click to unequip Right Hand item)",
+                Hand::Left => "(Click to unequip Left Hand item)",
+                Hand::Right => "(Click to unequip Right Hand item)",
             },
             LoadoutButton::InventoryNext(_) => "(Click to unequip Backpack item)",
             LoadoutButton::Van(_) => "(Click to equip item)",

@@ -15,6 +15,7 @@ workspace = true
 
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
+unsummary-core = { path = "../unsummary-core" }
 unui-core = { path = "../unui-core" }
 untmxmap-core = { path = "../untmxmap-core" }
 

@@ -119,7 +119,7 @@ fn set_window_icon(_marker: NonSendMarker, // Forces system to run on main threa
     use bevy::winit::WINIT_WINDOWS;
     // This only works on native. WASM uses the HTML icon.
     use winit::window::Icon;
-    let Some(assets_path) = unfoundation_core::utils::find_assets_directory() else {
+    let Some(assets_path) = untypes_core::utils::find_assets_directory() else {
         warn!("Assets directory not found.");
         return;
     };

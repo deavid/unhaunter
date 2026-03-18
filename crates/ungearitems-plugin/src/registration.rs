@@ -1,12 +1,11 @@
 use bevy::prelude::*;
 use unbehavior::components::{Collision, InteractableByGhost};
-use unfoundation_core::types::gear::EquipmentPosition;
-use unfoundation_core::types::light::LightType;
 use ungear_core::components::core::{
     Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
     PerceivedClarity, StatusText,
 };
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
+use ungear_core::types::gear::EquipmentPosition;
 use ungear_core::types::gear::kind::GearKind;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::flashlight::{Flashlight, FlashlightSkin};
@@ -17,6 +16,7 @@ use ungearitems_core::components::salt::SaltData;
 use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
+use unlight_core::types::LightType;
 use unrender_std::components::light::LightEmitter;
 use untypes_core::roles::AuthorityRole;
 

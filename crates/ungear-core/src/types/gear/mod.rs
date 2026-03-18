@@ -1,5 +1,8 @@
+pub mod equipment;
 pub mod kind;
 pub mod sprite_id;
 pub mod utils;
 
-pub type SpriteID = unfoundation_core::types::gear::VisualKey;
+pub use equipment::{EquipmentPosition, Hand, VisualKey};
+
+pub type SpriteID = VisualKey;

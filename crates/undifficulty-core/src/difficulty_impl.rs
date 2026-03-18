@@ -3,7 +3,6 @@
 //! This module provides all the gameplay settings for each difficulty level.
 
 use crate::difficulty_settings::DifficultySettings;
-use unfoundation_core::types::truck::TabContents;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
 use untypes_core::difficulty::Difficulty;
 
@@ -386,14 +385,6 @@ impl DifficultySettings for Difficulty {
             Difficulty::HardChallenge => 3,
             Difficulty::ExpertChallenge => 3,
             Difficulty::MasterChallenge => 3,
-        }
-    }
-
-    /// Returns the default tab selected in the van UI.
-    fn default_van_tab(&self) -> TabContents {
-        match self {
-            Difficulty::TutorialChapter1 | Difficulty::TutorialChapter2 => TabContents::Journal,
-            _ => TabContents::Loadout,
         }
     }
 

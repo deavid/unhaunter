@@ -1,7 +1,7 @@
+use super::equipment::VisualKey;
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
-use unfoundation_core::types::gear::VisualKey;
 
 /// Unique identifiers for different gear sprites.
 ///

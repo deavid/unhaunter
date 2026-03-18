@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use unfoundation_core::types::gear::Hand;
+use crate::types::gear::Hand;
 
 #[derive(Debug, Clone, Resource, Default)]
 pub struct LookingGear {
