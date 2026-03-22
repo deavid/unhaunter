@@ -13,7 +13,7 @@ use ungear_core::components::playergear::PlayerGear;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
 use unplayer_core::components::MainPlayer;
-use unrender_core::resources::visibility_data::VisibilityData;
+use unboard_core::resources::visibility_data::VisibilityData;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, InfraredSensitive, LightSensitive,

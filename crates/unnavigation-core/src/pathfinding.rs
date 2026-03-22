@@ -4,11 +4,18 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unrender_core::resources::visibility_data::VisibilityData;
+use unboard_core::resources::visibility_data::VisibilityData;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
 /// A SystemParam to easily perform pathfinding in systems.
+///
+/// ## Note on VisibilityData
+///
+/// `VisibilityData` is a per-agent `Component` (not a global `Resource`), since different
+/// agents (player, ghost) will have distinct visibility cones. This prevents it from being
+/// included in the `Pathfinder` SystemParam directly. Callers must query their own agent's
+/// `VisibilityData` and pass it explicitly to `find_path` or `find_path_to_interactive`.
 #[derive(SystemParam)]
 pub struct Pathfinder<'w> {
     pub board_topology: Res<'w, BoardTopology>,
@@ -17,6 +24,8 @@ pub struct Pathfinder<'w> {
 
 impl Pathfinder<'_> {
     /// Performs A* pathfinding from start to goal position.
+    ///
+    /// Returns a smoothed path if one exists, or an empty vector if no path is found.
     pub fn find_path(
         &self,
         start: Position,
@@ -33,6 +42,10 @@ impl Pathfinder<'_> {
     }
 
     /// Performs A* pathfinding from start to an interactive object's position.
+    ///
+    /// Unlike `find_path`, this treats the goal position as walkable even if it has collision,
+    /// which is useful for pathfinding to interactive objects like closed doors.
+    /// Returns a smoothed path if one exists, or an empty vector if no path is found.
     pub fn find_path_to_interactive(
         &self,
         start: Position,
@@ -42,20 +55,6 @@ impl Pathfinder<'_> {
         find_path_to_interactive(
             start,
             goal,
-            &self.board_topology,
-            &self.board_collision,
-            visibility_data,
-        )
-    }
-
-    /// Smooths a path by removing unnecessary waypoints.
-    pub fn smooth_path(
-        &self,
-        path: Vec<BoardPosition>,
-        visibility_data: &VisibilityData,
-    ) -> Vec<BoardPosition> {
-        smooth_path(
-            path,
             &self.board_topology,
             &self.board_collision,
             visibility_data,
@@ -438,7 +437,7 @@ fn get_neighbors_to_interactive(
 /// Smooths a path by removing unnecessary waypoints using line-of-sight checks.
 /// This creates more natural-looking paths that move diagonally when possible
 /// while still avoiding collisions and invisible areas.
-pub fn smooth_path(
+fn smooth_path(
     path: Vec<BoardPosition>,
     board_topology: &BoardTopology,
     board_collision: &BoardCollisionField,

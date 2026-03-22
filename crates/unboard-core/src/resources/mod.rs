@@ -1,2 +1,3 @@
 pub mod board_topology;
 pub mod roomdb;
+pub mod visibility_data;

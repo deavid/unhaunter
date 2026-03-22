@@ -18,7 +18,7 @@ use unrender_std::components::visuals::{
     ShadowCaster, SpectralClarity, SpectralInfluence, UltravioletSensitive,
 };
 use unrender_std::materials::CustomMaterial1;
-use unrender_core::resources::visibility_data::VisibilityData;
+use unboard_core::resources::visibility_data::VisibilityData;
 use unrender_std::utils::light::lerp_color;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::position::Position;

@@ -7066,7 +7066,6 @@ dependencies = [
  "unaudiobg-core",
  "unboard-core",
  "unplayer-core",
- "unrender-core",
  "unsettings-core",
  "unspatial-core",
  "untypes-core",
@@ -7161,7 +7160,6 @@ dependencies = [
  "uninteraction-core",
  "unlight-core",
  "unplayer-core",
- "unrender-core",
  "unrender-std",
  "unspatial-core",
  "untags-core",
@@ -7207,7 +7205,6 @@ dependencies = [
  "unnavigation-core",
  "unpicking-core",
  "unplayer-core",
- "unrender-core",
  "unrender-std",
  "unreplicon-core",
  "unsettings-core",
@@ -7281,7 +7278,6 @@ dependencies = [
  "unmetrics-core",
  "unnoise-core",
  "unplayer-core",
- "unrender-core",
  "unrender-std",
  "unsettings-core",
  "unspatial-core",
@@ -7427,7 +7423,6 @@ dependencies = [
  "unmetrics-core",
  "unnoise-core",
  "unplayer-core",
- "unrender-core",
  "unrender-std",
  "unreplicon-core",
  "unsoundfield-core",
@@ -7688,7 +7683,6 @@ dependencies = [
  "unmapload-core",
  "unmetrics-core",
  "unplayer-core",
- "unrender-core",
  "unrender-std",
  "unreplicon-core",
  "unsettings-core",
@@ -7905,7 +7899,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "unboard-core",
- "unrender-core",
  "unspatial-core",
 ]
 
@@ -7993,7 +7986,6 @@ dependencies = [
  "unnpc-core",
  "unplayer-core",
  "unprofile-core",
- "unrender-core",
  "unrender-std",
  "unreplicon-core",
  "unsoundfield-core",
@@ -8055,7 +8047,6 @@ name = "unrender-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "ndarray",
 ]
 
 [[package]]
@@ -8129,7 +8120,6 @@ dependencies = [
  "unnavigation-core",
  "unplayer-core",
  "unprofile-core",
- "unrender-core",
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",

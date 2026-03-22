@@ -21,7 +21,6 @@ unsummary-core = { path = "../unsummary-core" }
 unsoundfield-core = { path = "../unsoundfield-core" }
 unaudiospatial-core = { path = "../unaudiospatial-core" }
 unrender-std = { path = "../unrender-std" }
-unrender-core = { path = "../unrender-core" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 unnoise-core = { path = "../unnoise-core" }

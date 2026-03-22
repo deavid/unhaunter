@@ -10,7 +10,7 @@ use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::LightType;
-use unrender_core::resources::visibility_data::VisibilityData;
+use unboard_core::resources::visibility_data::VisibilityData;
 use unrender_std::components::light::LightEmitter;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;

@@ -14,7 +14,6 @@ workspace = true
 unaudiobg-core = { path = "../unaudiobg-core" }
 unsettings-core = { path = "../unsettings-core" }
 unplayer-core = { path = "../unplayer-core" }
-unrender-core = { path = "../unrender-core" }
 unboard-core = { path = "../unboard-core" }
 unspatial-core = { path = "../unspatial-core" }
 untypes-core = { path = "../untypes-core" }
