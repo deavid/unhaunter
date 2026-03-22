@@ -1,9 +1,11 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::Replicated;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::types::ghost::types::GhostType;
+use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 
 /// Crafts a repellent for the specified ghost type.
 /// Returns true if a new bottle was consumed (should count as a craft).
@@ -51,6 +53,10 @@ pub fn craft_repellent(
     if flask_entity.is_none() {
         // Spawn new flask
         let entity = gear_registry.spawn(commands, GearKind::RepellentFlask);
+
+        commands
+            .entity(entity)
+            .insert((Owner(OwnerId::Server), LocallyOwned, Replicated));
 
         // Put in right hand (swap if needed)
         if let Some(old_rh) = playergear.right_hand.take() {
