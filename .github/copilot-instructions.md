@@ -198,6 +198,10 @@ This codebase is organized following DDD and Hexagonal Architecture principles. 
 **group**. The canonical placement of every crate is the comment block in `[workspace.members]` inside `Cargo.toml`.
 **Read that block before touching any crate boundary.**
 
+IMPORTANT NOTE: DDD and Hexagonal Architecture principles are STRICTLY LESS IMPORTANT than Domain completeness, TDA,
+Information hiding, System Membership and VSA. Always execute those kinds of reviews first before trying to enforce
+Tiers.
+
 ### The Tier Model
 
 ```
