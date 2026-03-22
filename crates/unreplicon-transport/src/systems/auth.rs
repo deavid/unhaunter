@@ -1,4 +1,3 @@
-use crate::systems::procman::RoomAuth;
 use bevy::prelude::*;
 use bevy_renet::RenetServer;
 use bevy_renet::netcode::NetcodeServerTransport;
@@ -6,6 +5,8 @@ use bevy_replicon::prelude::ConnectedClient;
 use bevy_replicon::shared::backend::connected_client::NetworkId;
 use unreplicon_core::ownership::OwnerId;
 use unreplicon_core::resources::ClientUuidMap;
+
+use crate::resources::{ProcManChannel, RoomAuth};
 
 pub(super) fn app_setup(app: &mut App) {
     // Observe Add<ConnectedClient> — fires after bevy_replicon_renet has already spawned the
@@ -21,7 +22,7 @@ fn validate_new_connection_observer(
     mut server: ResMut<RenetServer>,
     transport: Option<Res<NetcodeServerTransport>>,
     room_auth: Res<RoomAuth>,
-    procman: Option<Res<crate::systems::procman::ProcManChannel>>,
+    procman: Option<Res<ProcManChannel>>,
     mut uuid_map: ResMut<ClientUuidMap>,
     q_network_id: Query<&NetworkId>,
 ) {
@@ -44,9 +45,6 @@ fn validate_new_connection_observer(
     };
     let owner_id = OwnerId::Client(entity);
 
-    // --- New Logic Starts Here ---
-
-    // Extract the raw 256 bytes from Renet's transport
     let user_data_bytes = transport
         .as_ref()
         .and_then(|t| t.user_data(client_id))
@@ -61,9 +59,7 @@ fn validate_new_connection_observer(
         return;
     };
 
-    // Determine the expected secret and room based on topology
     let (expected_secret, expected_room) = if procman.is_some() {
-        // Hub Mode (Dedicated Server)
         let secret = room_auth.ticket_hmac_secret.as_deref().unwrap_or_default();
         let room = room_auth.room_code.as_deref().unwrap_or_default();
 
@@ -77,11 +73,9 @@ fn validate_new_connection_observer(
         }
         (secret, room)
     } else {
-        // Direct Connect Mode (PeerHost)
         ("", ":DIRECT")
     };
 
-    // Attempt to decode and verify the HMAC signature
     let ticket = match unhub_client::tickets::decode_ticket(&user_data, expected_secret) {
         Ok(t) => t,
         Err(e) => {
@@ -94,7 +88,6 @@ fn validate_new_connection_observer(
         }
     };
 
-    // Validate Room Code
     if ticket.room_code != expected_room {
         error!(
             "Rejecting client {:?} (room mismatch): expected '{}', got '{}'",
@@ -104,7 +97,6 @@ fn validate_new_connection_observer(
         return;
     }
 
-    // Validate Expiration
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
@@ -115,7 +107,6 @@ fn validate_new_connection_observer(
         return;
     }
 
-    // Validation passed! Map the UUID to the connection.
     uuid_map.0.insert(owner_id, ticket.player_uuid);
     info!(
         "Client {:?} authenticated successfully for Player: {}",

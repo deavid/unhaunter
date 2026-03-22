@@ -20,3 +20,4 @@ untruck-core = { workspace = true }
 unspatial-core = { workspace = true }
 
 bevy = { workspace = true }
+bevy_replicon = { workspace = true }

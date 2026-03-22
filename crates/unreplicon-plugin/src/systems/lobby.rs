@@ -8,7 +8,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
-use unprofile_core::profile::RuntimeInstallationId;
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
 use unreplicon_core::messages::{
     RequestAbortMission, RequestSelectDifficulty, RequestSelectMap, RequestStartMission,
@@ -239,7 +238,7 @@ fn to_owner_id(client_id: ClientId) -> OwnerId {
 
 /// Server: In hub-less dedicated mode, transition to Lobby immediately.
 fn auto_start_headless_lobby(
-    procman: Option<Res<crate::systems::procman::ProcManChannel>>,
+    procman: Option<Res<unreplicon_transport::resources::ProcManChannel>>,
     mut next_state: ResMut<NextState<AppState>>,
     authority: Option<Res<AuthorityRole>>,
     local_player: Option<Res<LocalPlayerRole>>,
@@ -266,7 +265,7 @@ fn spawn_lobby_entity_if_missing(
     q_lobby: Query<(), With<LobbyInfo>>,
     mut commands: Commands,
     local_player: Option<Res<LocalPlayerRole>>,
-    runtime_id: Option<Res<RuntimeInstallationId>>,
+    local_player_res: Option<Res<LocalPlayer>>,
     mut uuid_map: ResMut<ClientUuidMap>,
 ) {
     if !q_lobby.is_empty() {
@@ -278,9 +277,9 @@ fn spawn_lobby_entity_if_missing(
     let mut leader_uuid = None;
 
     if local_player.is_some()
-        && let Some(id) = runtime_id
+        && let Some(lp) = local_player_res
+        && let Some(uuid) = lp.0
     {
-        let uuid = id.0;
         players.push(LobbyPlayerInfo {
             player_uuid: uuid,
             current_socket: None, // Local host player

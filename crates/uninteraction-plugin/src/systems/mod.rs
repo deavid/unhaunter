@@ -2,17 +2,23 @@ pub mod interactivestuff;
 
 use bevy::picking::events::{Out, Over, Pointer};
 use bevy::prelude::*;
+use bevy_replicon::prelude::AppRuleExt;
 use interactivestuff::InteractiveStuff;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
-use unbehavior_core::components::RoomStateDelta;
+use unbehavior_core::components::{FloorItemCollidable, RoomStateDelta, TmxEntityId};
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use uninteraction_core::events::RoomStateSyncEvent;
-use uninteraction_core::interaction::ExecuteInteractionEvent;
+use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unplayer_core::components::{MainPlayer, PlayerSpectating};
 use unspatial_core::position::Position;
 
 pub(crate) fn app_setup(app: &mut App) {
+    app.replicate::<TmxEntityId>();
+    app.replicate::<Behavior>();
+    app.replicate::<FloorItemCollidable>();
+    app.replicate::<Toggleable>();
+
     // Authority-only: mutate Behavior state in response to interactions and room syncs.
     app.add_systems(
         Update,

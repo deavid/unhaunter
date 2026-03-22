@@ -18,7 +18,7 @@ use untypes_core::roles::AuthorityRole;
 
 /// Unique identifier for this game's protocol version.
 /// Clients and servers with different values cannot connect to each other.
-const PROTOCOL_ID: u64 = 0x556e_6861_756e_7465; // "Unhaunte" in bytes
+const PROTOCOL_ID: u64 = 0x556e_6861_756e_7465;
 
 /// Maximum simultaneous connections a server will accept.
 const MAX_CLIENTS: usize = 4;
@@ -54,21 +54,15 @@ fn handle_disconnect_request(
         "DisconnectRequest received — tearing down client transport and resetting to offline authority"
     );
 
-    // 1. Remove the transport-layer resources. bevy_renet stops ticking
-    //    and closes the UDP socket automatically when these are dropped.
     commands.remove_resource::<RenetClient>();
     commands.remove_resource::<NetcodeClientTransport>();
 
-    // 2. Despawn all entities that were replicated from the remote server.
     for entity in q_replicated.iter() {
         commands.entity(entity).despawn();
     }
 
-    // 3. Retract the network role resources and restore local authority.
     commands.remove_resource::<untypes_core::roles::LobbyPresenceRole>();
     commands.insert_resource(untypes_core::roles::AuthorityRole);
-
-    // 4. (Callers are responsible for transitioning AppState back to MainMenu or similar.)
 }
 
 fn startup_transport_system(
@@ -93,16 +87,12 @@ fn startup_transport_system(
     };
 
     match &cli.net_mode {
-        CliNetMode::Offline => {
-            // Singleplayer — no transport needed.
-        }
+        CliNetMode::Offline => {}
         CliNetMode::PeerHost {
             port,
             bind_addresses,
         } => {
             let port = *port;
-            // TODO Phase 1.4: switch to Secure with a per-session private key distributed
-            // via the Hub. Unsecure is intentional here during Phase 1.3.
 
             let mut public_addresses = vec![SocketAddr::from(([0, 0, 0, 0], port))];
 
@@ -110,7 +100,6 @@ fn startup_transport_system(
                 match addr_str.parse::<SocketAddr>() {
                     Ok(addr) => public_addresses.push(addr),
                     Err(_) => {
-                        // Might be just an IP
                         if let Ok(ip) = addr_str.parse::<std::net::IpAddr>() {
                             public_addresses.push(SocketAddr::new(ip, port));
                         } else {
@@ -158,13 +147,11 @@ fn startup_transport_system(
                 }
             };
 
-            // Use the installation_id as the stable client_id.
             let installation_id = installation_id
                 .expect("RuntimeInstallationId must exist for non-dedicated clients");
             let client_id = installation_id.0.as_u128() as u64;
 
             let user_data = if let Some(t_str) = ticket {
-                // 1. Hub Mode: Decode the Base64 string from the REST API into exactly 256 bytes
                 let mut data = [0u8; bevy_renet::netcode::NETCODE_USER_DATA_BYTES];
                 if let Ok(decoded) = B64.decode(t_str.as_bytes()) {
                     if decoded.len() == data.len() {
@@ -179,16 +166,14 @@ fn startup_transport_system(
                     None
                 }
             } else {
-                // 2. Direct Connect Mode: Generate a permanent :DIRECT ticket locally
-                let id = installation_id.0; // Access the Uuid directly
-                let t = ConnectionTicket {
+                let id = installation_id.0;
+                let ticket = ConnectionTicket {
                     room_code: ":DIRECT".to_string(),
                     installation_id: id,
                     player_uuid: id,
-                    exp: u64::MAX, // Never expires
+                    exp: u64::MAX,
                 };
-                // Empty string for HMAC secret in Direct Connect
-                Some(encode_ticket(&t, "").unwrap_or([0u8; 256]))
+                Some(encode_ticket(&ticket, "").unwrap_or([0u8; 256]))
             };
 
             let authentication = ClientAuthentication::Unsecure {
@@ -219,19 +204,16 @@ fn startup_transport_system(
     }
 }
 
-/// Monitors `RenetClient` state each frame and logs transitions
-/// (connecting → connected → disconnected).
 fn monitor_renet_client_status(
     client: Option<Res<RenetClient>>,
     mut last_state: Local<u8>,
-    // 0 = resource absent, 1 = connecting, 2 = connected, 3 = disconnected
 ) {
     let state: u8 = match client.as_ref() {
         None => 0,
-        Some(c) => {
-            if c.is_connected() {
+        Some(client) => {
+            if client.is_connected() {
                 2
-            } else if c.is_disconnected() {
+            } else if client.is_disconnected() {
                 3
             } else {
                 1
@@ -244,7 +226,7 @@ fn monitor_renet_client_status(
             1 => info!("RenetClient: connecting to server..."),
             2 => info!("RenetClient: CONNECTED to server"),
             3 => {
-                let reason = client.as_ref().and_then(|c| c.disconnect_reason());
+                let reason = client.as_ref().and_then(|client| client.disconnect_reason());
                 warn!(
                     "RenetClient: DISCONNECTED from server (reason: {:?})",
                     reason
@@ -256,7 +238,6 @@ fn monitor_renet_client_status(
     }
 }
 
-/// Monitors `RenetServer` renet-level client count each frame and logs changes.
 fn monitor_renet_server_clients(server: Option<Res<RenetServer>>, mut last_count: Local<usize>) {
     let Some(server) = server else {
         return;

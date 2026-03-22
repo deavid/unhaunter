@@ -1,8 +1,10 @@
+mod replication;
+
 use bevy::prelude::*;
 use bevy_replicon::bytes::Bytes;
 use bevy_replicon::prelude::{
-    AppMarkerExt, AppRuleExt, Channel, ClientId, ClientMessageAppExt, FromClient, Replicated,
-    SendMode, ServerMessageAppExt, ToClients,
+    Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode, ServerMessageAppExt,
+    ToClients,
 };
 use bevy_replicon::shared::replication::deferred_entity::DeferredEntity;
 use bevy_replicon::shared::replication::registry::ctx::{RemoveCtx, WriteCtx};
@@ -10,11 +12,10 @@ use bevy_replicon::shared::replication::registry::rule_fns::RuleFns;
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
-use unbehavior_core::components::{FloorItemCollidable, TmxEntityId};
+use unbehavior_core::components::FloorItemCollidable;
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::deployedgear::DeployedGear;
-use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
@@ -66,90 +67,7 @@ pub(super) fn app_setup(app: &mut App) {
     // Register local messages
     app.add_message::<HostMovableMotionEvent>();
 
-    // Register replicated components
-    app.replicate::<TmxEntityId>();
-    app.replicate::<Owner>();
-    app.replicate::<Position>();
-    app.replicate::<Direction>();
-    app.replicate::<PlayerSprite>();
-    app.replicate::<PlayerLocomotionState>();
-    app.replicate::<PlayerGear>();
-    app.replicate::<HeldObject>();
-    app.replicate::<Hiding>();
-    app.replicate::<untruck_core::components::in_truck::InTruck>();
-    app.replicate::<PlayerSpectating>();
-    app.replicate::<GearMarker>();
-    app.replicate::<GearKind>();
-    app.replicate::<Behavior>();
-    app.replicate::<FloorItemCollidable>();
-    app.replicate::<ungear_core::components::deployedgear::DeployedGear>();
-    app.replicate::<Toggleable>();
-    app.replicate::<ungearitems_core::components::flashlight::Flashlight>();
-    app.replicate::<ungearitems_core::components::uvtorch::UVTorch>();
-    app.replicate::<ungearitems_core::components::redtorch::RedTorch>();
-    app.replicate::<ungearitems_core::components::repellentflask::RepellentFlask>();
-    app.replicate::<ungearitems_core::components::salt::SaltData>();
-    app.replicate::<ungearitems_core::components::salt::SaltPile>();
-    app.replicate::<ungearitems_core::components::sage::SageBundleData>();
-    app.replicate::<ungearitems_core::components::quartz::QuartzStoneData>();
-
-    // Register LocallyOwned as a receive marker to shield client-driven components.
-    app.register_marker::<LocallyOwned>();
-    app.set_marker_fns::<LocallyOwned, TmxEntityId>(noop_write::<TmxEntityId>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, Owner>(noop_write::<Owner>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, Position>(noop_write::<Position>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, Direction>(noop_write::<Direction>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, PlayerSprite>(noop_write::<PlayerSprite>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, PlayerLocomotionState>(
-        noop_write::<PlayerLocomotionState>,
-        noop_remove,
-    );
-    app.set_marker_fns::<LocallyOwned, PlayerVitals>(noop_write::<PlayerVitals>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, Stamina>(noop_write::<Stamina>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, PlayerGear>(noop_write::<PlayerGear>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, HeldObject>(noop_write::<HeldObject>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, Hiding>(noop_write::<Hiding>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, untruck_core::components::in_truck::InTruck>(
-        noop_write,
-        noop_remove,
-    );
-    app.set_marker_fns::<LocallyOwned, PlayerSpectating>(
-        noop_write::<PlayerSpectating>,
-        noop_remove,
-    );
-    app.set_marker_fns::<LocallyOwned, GearMarker>(noop_write::<GearMarker>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, GearKind>(noop_write::<GearKind>, noop_remove);
-    app.set_marker_fns::<LocallyOwned, FloorItemCollidable>(noop_write, noop_remove);
-    app.set_marker_fns::<LocallyOwned, ungear_core::components::deployedgear::DeployedGear>(
-        noop_write,
-        noop_remove,
-    );
-    app.set_marker_fns::<LocallyOwned, Toggleable>(noop_write, noop_remove);
-    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::flashlight::Flashlight>(
-        noop_write,
-        noop_remove,
-    );
-    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::uvtorch::UVTorch>(
-        noop_write,
-        noop_remove,
-    );
-    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::redtorch::RedTorch>(
-        noop_write,
-        noop_remove,
-    );
-    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::repellentflask::RepellentFlask>(noop_write, noop_remove);
-    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::salt::SaltData>(
-        noop_write,
-        noop_remove,
-    );
-    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::sage::SageBundleData>(
-        noop_write,
-        noop_remove,
-    );
-    app.set_marker_fns::<LocallyOwned, ungearitems_core::components::quartz::QuartzStoneData>(
-        noop_write,
-        noop_remove,
-    );
+    replication::app_setup(app);
 
     // Host/offline: spawn and tag player entities when InGame starts.
     // Gated by AuthorityRole so it runs on Host and Dedicated Server.

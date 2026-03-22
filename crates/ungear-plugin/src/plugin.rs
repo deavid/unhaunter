@@ -1,10 +1,14 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use bevy_replicon::prelude::AppRuleExt;
+use ungear_core::components::deployedgear::DeployedGear;
+use ungear_core::components::playergear::{HeldObject, PlayerGear};
+use ungear_core::resources::spawner::{GearMarker, GearSpawnerRegistry};
+use ungear_core::types::gear::kind::GearKind;
 use untypes_core::states::AppState;
 
 use super::systems;
 use crate::metrics;
-use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unrender_std::assets::GearAssets;
 
 pub struct UnhaunterGearCorePlugin;
@@ -12,6 +16,12 @@ pub struct UnhaunterGearCorePlugin;
 impl Plugin for UnhaunterGearCorePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GearSpawnerRegistry>();
+
+        app.replicate::<PlayerGear>();
+        app.replicate::<HeldObject>();
+        app.replicate::<GearMarker>();
+        app.replicate::<GearKind>();
+        app.replicate::<DeployedGear>();
 
         metrics::register_all(app);
     }

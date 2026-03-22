@@ -3,7 +3,6 @@ use bevy_replicon::prelude::{
     AppRuleExt, Channel, ClientMessageAppExt, FromClient, Replicated, ServerMessageAppExt,
 };
 use unghost_core::components::ghost_breach::GhostBreach;
-use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unmission_core::resources::MissionConcludingCinematic;
 use unreplicon_core::components::{
@@ -23,12 +22,8 @@ use untypes_core::states::SimulationState;
 
 pub(super) fn app_setup(app: &mut App) {
     // Register Phase 2 replicated components.
-    app.replicate::<GhostTag>();
-    app.replicate::<GhostBreach>();
-    app.replicate::<GhostSprite>();
-    app.replicate::<GhostBehaviorDynamics>();
-    app.replicate::<GhostGuess>();
-    app.replicate::<SummaryData>();
+    // Ghost domain types are now registered in unghost-plugin.
+    // SummaryData is now registered in unmission-plugin.
     app.replicate::<MissionGoalEntity>();
 
     // Register server → client messages.

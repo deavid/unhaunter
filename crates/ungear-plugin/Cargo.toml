@@ -22,4 +22,5 @@ untruck-core = { workspace = true }
 unmetrics-core = { workspace = true }
 
 bevy = { workspace = true }
+bevy_replicon = { workspace = true }
 bevy_asset_loader = { workspace = true }

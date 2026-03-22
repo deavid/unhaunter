@@ -7369,6 +7369,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
+ "bevy_replicon",
  "unboard-core",
  "ungear-core",
  "unmetrics-core",
@@ -7668,6 +7669,7 @@ name = "uninteraction-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_replicon",
  "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
@@ -7957,6 +7959,7 @@ name = "unmission-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_replicon",
  "unboard-core",
  "unmission-core",
  "unplayer-core",
@@ -8062,6 +8065,7 @@ dependencies = [
  "bevy",
  "bevy_asset_loader",
  "bevy_platform",
+ "bevy_replicon",
  "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
@@ -8075,6 +8079,7 @@ dependencies = [
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",
+ "untruck-core",
  "untypes-core",
 ]
 
@@ -8207,17 +8212,33 @@ dependencies = [
  "unmission-core",
  "unnavigation-core",
  "unplayer-core",
- "unprofile-core",
  "unrender-std",
  "unreplicon-core",
+ "unreplicon-transport",
  "unsensing-core",
  "unspatial-core",
- "unsummary-core",
  "untags-core",
  "untruck-core",
  "untypes-core",
  "unvitals-core",
  "uuid",
+]
+
+[[package]]
+name = "unreplicon-transport"
+version = "0.3.2-dev"
+dependencies = [
+ "base64",
+ "bevy",
+ "bevy_renet",
+ "bevy_replicon",
+ "bevy_replicon_renet",
+ "crossbeam-channel",
+ "serde_json",
+ "unhub-client",
+ "unprofile-core",
+ "unreplicon-core",
+ "untypes-core",
 ]
 
 [[package]]

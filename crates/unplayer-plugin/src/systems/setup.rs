@@ -1,4 +1,9 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::AppRuleExt;
+use unlocomotion_core::components::PlayerLocomotionState;
+use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite};
+use unspatial_core::direction::Direction;
+use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::AppState;
 
 use crate::systems::hide;
@@ -8,6 +13,13 @@ use crate::systems::styling;
 use crate::systems::walk_target_indicator;
 
 pub(crate) fn app_setup_core(app: &mut App) {
+    app.replicate::<Direction>();
+    app.replicate::<PlayerSprite>();
+    app.replicate::<PlayerLocomotionState>();
+    app.replicate::<Hiding>();
+    app.replicate::<InTruck>();
+    app.replicate::<PlayerSpectating>();
+
     hydration::app_setup(app);
 
     // Configure the authoritative logic set

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_persistent::prelude::*;
 use std::path::Path;
 use unprofile_core::profile::{PlayerProfileData, RuntimeInstallationId};
+use unreplicon_core::resources::LocalPlayer;
 use untypes_core::cli::CliOptions;
 use uuid::Uuid;
 
@@ -47,7 +48,12 @@ impl Plugin for UnhaunterProfilePlugin {
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Startup,
-        (initialize_installation_id, recover_stuck_insurance_deposit),
+        (
+            initialize_installation_id,
+            initialize_local_player_identity,
+            recover_stuck_insurance_deposit,
+        )
+            .chain(),
     )
     .add_systems(
         Update,
@@ -130,6 +136,17 @@ fn initialize_installation_id(
     }
 
     commands.insert_resource(RuntimeInstallationId(installation_id.unwrap()));
+}
+
+fn initialize_local_player_identity(
+    runtime_id: Res<RuntimeInstallationId>,
+    mut commands: Commands,
+) {
+    // TODO: Remove LocalPlayer once installation identity can be read from a lower-tier
+    // resource directly. For now unprofile-plugin writes the T2 wrapper so unreplicon no
+    // longer needs a dedicated bridge system just to copy RuntimeInstallationId.
+    commands.insert_resource(LocalPlayer(Some(runtime_id.0)));
+    info!("LocalPlayer identity set to UUID: {}", runtime_id.0);
 }
 
 fn recover_stuck_insurance_deposit(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {

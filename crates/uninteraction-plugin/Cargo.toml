@@ -22,3 +22,4 @@ unplayer-core = { workspace = true }
 
 
 bevy = { workspace = true }
+bevy_replicon = { workspace = true }

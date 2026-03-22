@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::AppRuleExt;
 use unbehavior_core::components::{Collision, InteractableByGhost};
 use ungear_core::components::core::{
     Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
@@ -12,7 +13,7 @@ use ungearitems_core::components::flashlight::{Flashlight, FlashlightSkin};
 use ungearitems_core::components::quartz::{QuartzStoneData, QuartzStoneSkin};
 use ungearitems_core::components::recorder::Recorder;
 use ungearitems_core::components::sage::{SageBundleData, SageBundleSkin};
-use ungearitems_core::components::salt::SaltData;
+use ungearitems_core::components::salt::{SaltData, SaltPile};
 use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
@@ -35,6 +36,15 @@ use crate::components::uvtorch::{UVTorch, UVTorchSkin};
 use crate::components::videocam::Videocam;
 
 pub(crate) fn register_all(app: &mut App) {
+    app.replicate::<Flashlight>();
+    app.replicate::<UVTorch>();
+    app.replicate::<RedTorch>();
+    app.replicate::<RepellentFlask>();
+    app.replicate::<SaltData>();
+    app.replicate::<SaltPile>();
+    app.replicate::<SageBundleData>();
+    app.replicate::<QuartzStoneData>();
+
     let is_authority = app.world().get_resource::<AuthorityRole>().is_some();
     let mut registry = app.world_mut().resource_mut::<GearSpawnerRegistry>();
 

@@ -118,7 +118,8 @@ members = [
     "crates/unprofile-plugin",
 
     # ── 3c: External Network Clients ─────────────────────────────────────
-    "crates/unhub-client", # HTTP client for the hub server
+    "crates/unreplicon-transport", # Netcode/auth/procman adapters for Replicon
+    "crates/unhub-client",         # HTTP client for the hub server
     "crates/unhub-plugin",
 
     # ════════════════════════════════════════════════════════════════════════
@@ -370,7 +371,8 @@ unprofile-core = { path = "crates/unprofile-core" }       # Player save-file dat
 unprofile-plugin = { path = "crates/unprofile-plugin" }
 
 # ── 3c: External Network Clients ─────────────────────────────────────────
-unhub-client = { path = "crates/unhub-client" } # HTTP client for the hub server
+unreplicon-transport = { path = "crates/unreplicon-transport" } # Netcode/auth/procman adapters for Replicon
+unhub-client = { path = "crates/unhub-client" }                 # HTTP client for the hub server
 unhub-plugin = { path = "crates/unhub-plugin" }
 
 # ════════════════════════════════════════════════════════════════════════════

@@ -1,7 +1,11 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::AppRuleExt;
 use bevy_asset_loader::prelude::*;
+use bevy_replicon::prelude::AppRuleExt;
+use unghost_core::components::ghost_breach::GhostBreach;
+use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
+use unghost_core::resources::ghost_guess::GhostGuess;
 use unsensing_core::components::SpectralClarity;
+use untags_core::tags::GhostTag;
 use untypes_core::states::AppState;
 
 use unghost_core::events::GhostInteractionEvent;
@@ -23,6 +27,11 @@ impl Plugin for UnhaunterGhostCorePlugin {
             .unwrap_or(false);
 
         app.add_message::<GhostInteractionEvent>();
+        app.replicate::<GhostTag>();
+        app.replicate::<GhostBreach>();
+        app.replicate::<GhostSprite>();
+        app.replicate::<GhostBehaviorDynamics>();
+        app.replicate::<GhostGuess>();
         app.replicate::<SpectralClarity>();
         crate::systems::hydration::app_setup(app);
         crate::systems::evidence_decay::app_setup(app);

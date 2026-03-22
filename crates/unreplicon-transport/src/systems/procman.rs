@@ -1,33 +1,9 @@
 use bevy::prelude::*;
-use crossbeam_channel::{Receiver, Sender};
 use std::io::{BufRead, Write};
 use unhub_client::protocol::{DedicatedToProcMan, ProcManToDedicated};
 use untypes_core::cli::{CliNetMode, CliOptions};
 
-/// Bidirectional channel to the process manager over stdin/stdout.
-///
-/// Only present when `CliOptions::procman_channel == Some("stdin")`.
-#[derive(Resource)]
-pub(crate) struct ProcManChannel {
-    /// Sender for outgoing messages to procman (player events, state sync).
-    /// Used in Phase 2+ systems that report game state back to procman.
-    #[allow(dead_code)]
-    pub tx: Sender<DedicatedToProcMan>,
-    pub rx: Receiver<ProcManToDedicated>,
-}
-
-/// Authentication state received from the process manager via `AssignRoom`.
-///
-/// Populated once procman assigns a room to this dedicated server.  Before
-/// that point (when both fields are `None`) all incoming Renet connections are
-/// rejected.
-#[derive(Resource, Default)]
-pub(crate) struct RoomAuth {
-    /// The room code this server is currently hosting, or `None` if idle.
-    pub room_code: Option<String>,
-    /// HMAC-SHA256 key (hex-encoded 32 bytes) for validating JWT tickets.
-    pub ticket_hmac_secret: Option<String>,
-}
+use crate::resources::{ProcManChannel, RoomAuth};
 
 pub(super) fn app_setup(app: &mut App) {
     app.init_resource::<RoomAuth>();
@@ -43,7 +19,6 @@ fn setup_procman_system(mut commands: Commands, cli: Res<CliOptions>) {
     let (tx_to_procman, rx_from_bevy) = crossbeam_channel::unbounded::<DedicatedToProcMan>();
     let (tx_to_bevy, rx_from_procman) = crossbeam_channel::unbounded::<ProcManToDedicated>();
 
-    // Stdin reader thread — blocked on I/O, so it lives on its own OS thread.
     std::thread::spawn(move || {
         let stdin = std::io::stdin();
         for line in stdin.lock().lines().map_while(Result::ok) {
@@ -53,7 +28,6 @@ fn setup_procman_system(mut commands: Commands, cli: Res<CliOptions>) {
         }
     });
 
-    // Stdout writer thread — receives messages from Bevy and forwards to stdout.
     std::thread::spawn(move || {
         let mut stdout = std::io::stdout();
         while let Ok(msg) = rx_from_bevy.recv() {
@@ -64,7 +38,6 @@ fn setup_procman_system(mut commands: Commands, cli: Res<CliOptions>) {
         }
     });
 
-    // Send the initial Ready signal so procman knows the server is up.
     if let CliNetMode::PeerHost { port, .. } = cli.net_mode {
         let _ = tx_to_procman.send(DedicatedToProcMan::Ready { port });
     }
@@ -104,7 +77,6 @@ fn update_procman_system(
             } => {
                 info!("ProcMan: Room renamed to '{}'.", new_code);
                 room_auth.room_code = Some(new_code);
-                // Ticket secret stays the same — it is per-procman, not per-room.
             }
             ProcManToDedicated::WipeRoom { reason } => {
                 info!("ProcMan: Room wiped: {}", reason);
