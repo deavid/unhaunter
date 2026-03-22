@@ -2,14 +2,12 @@ use super::systems;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use unplayer_core::assets::PlayerAssets;
-use unplayer_core::resources::game_config::GameConfig;
 use untypes_core::states::AppState;
 
 pub struct UnhaunterPlayerCorePlugin;
 
 impl Plugin for UnhaunterPlayerCorePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<GameConfig>();
         systems::setup::app_setup_core(app);
     }
 }
