@@ -1,4 +1,4 @@
-pub mod menu_music;
-pub mod mute;
-pub mod spawn;
-pub mod volume;
+pub(crate) mod menu_music;
+pub(crate) mod mute;
+pub(crate) mod spawn;
+pub(crate) mod volume;

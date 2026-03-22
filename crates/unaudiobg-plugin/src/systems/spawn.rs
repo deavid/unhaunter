@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use unaudiobg_core::components::{GameSound, SoundType};
 
 /// Settings for spawning background audio tracks
-pub struct PlaybackSettingsTemplate;
+struct PlaybackSettingsTemplate;
 
 impl PlaybackSettingsTemplate {
     /// Creates standard PlaybackSettings for background audio tracks
-    pub fn for_background_track() -> PlaybackSettings {
+    fn for_background_track() -> PlaybackSettings {
         PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Loop,
             volume: bevy::audio::Volume::Linear(0.00001),
