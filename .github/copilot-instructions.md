@@ -172,38 +172,42 @@ A system that only reads foreign domain types and writes to foreign domain types
 Example: a death-handler that reads a network player ID, writes to a persistence profile, and populates a summary struct
 — while never touching the vitals component — does not belong in the vitals plugin.
 
-### How This Interacts With Tier Rules
+### 5. Physics Field Rule
 
-Tier rules (dependency direction) catch _import_ violations. The principles above catch _responsibility_ violations.
-Both matter, but a crate can have perfect tier compliance while being deeply architecturally wrong. Always apply the
-signal-direction and domain-completeness checks first.
+Field crates (`unfog`, `unsoundfield`, `unlight`, `unthermal`) compute diffusion/propagation math exclusively, using
+ontology components (`ThermalEmitter`, `Opaque`, etc.) as inputs. They must never import T4. If a field crate calls into
+audio or rendering, it is a violation regardless of how the computation is framed.
 
-When a tier violation exists _because_ an upstream domain needs to tell a downstream domain something, the fix is an
-event type at a lower tier — not moving logic around. The goal is to preserve the causal direction while removing the
-upward import.
+### 6. Deletable Silo Test
 
-### Review Behavior for These Principles
+A healthy domain: deleting its crates leaves holes in the simulation but not cascading failures in unrelated domains. If
+unrelated domains break when you remove X, responsibilities have leaked out of X.
 
-When reviewing any crate, always check and report:
+### Domain Audit Protocol
 
-1. **Domain completeness:** Are the domain's types actually in this domain? Is there a `-core`?
-2. **TDA:** For each system that reads a foreign domain, is the foreign domain pushing a signal, or is this system
-   pulling and re-deriving meaning?
-3. **Information hiding:** Does any system encode decisions (thresholds, curves, formatting) that belong to another
-   domain?
-4. **System membership:** Does each system read or write this domain's own types? If not, flag it as misplaced.
+When asked to **audit domain X** (e.g., `unvitals`, `unghost`, `ungear`):
+
+1. **Gather**: Read `Cargo.toml` of all `unX-*` crates to map deps. Read all source files.
+2. **Check in priority order** — tier compliance is last, not first:
+   - **Domain completeness:** Is there a `-core`? Do the primary types live here or in foreign crates?
+   - **TDA:** For each foreign `un*` read, is that domain pushing this signal, or is this system pulling it?
+   - **Information hiding:** Does any system encode decisions (thresholds, curves, colors) that belong elsewhere?
+   - **System membership:** Does each system write _this_ domain's own types? If not, it is misplaced.
+   - **Tier violations:** Does the crate import anything higher-tier? (flag, but weight less when recommending fixes)
+3. **Output**: A written report. Flag violations. Do not modify code unless separately instructed.
+
+Tier rules catch _import_ violations. The four checks above catch _responsibility_ violations. Both are reported, but
+responsibility violations take priority in diagnosis and fix recommendations.
 
 ---
 
-## Domain-Driven Architecture (DDD / Hexagonal)
+## Crate Tier Reference
 
-This codebase is organized following DDD and Hexagonal Architecture principles. Every crate belongs to a **tier** and a
-**group**. The canonical placement of every crate is the comment block in `[workspace.members]` inside `Cargo.toml`.
-**Read that block before touching any crate boundary.**
+The workspace uses a tier model to enforce dependency direction. The canonical placement of every crate is in
+`[workspace.members]` inside `Cargo.toml`. **Read that block before touching any crate boundary.**
 
-IMPORTANT NOTE: DDD and Hexagonal Architecture principles are STRICTLY LESS IMPORTANT than Domain completeness, TDA,
-Information hiding, System Membership and VSA. Always execute those kinds of reviews first before trying to enforce
-Tiers.
+Tier compliance (import direction) is secondary to signal-direction and domain-completeness checks. Report tier
+violations but do not let them dominate fix recommendations.
 
 ### The Tier Model
 
@@ -224,10 +228,9 @@ T4  Presentation       — rendering, audio, UI. Client-side only.
       4c  UI           — unui, menus, screens, HUD
 ```
 
-### Binding Rules — Always Enforced
+### Tier Rules
 
-These rules apply to **every task**, not only architectural ones. Code must never be left in a worse state than it was
-found. Existing drift is tolerated; new drift is not.
+These rules apply to every task. Existing drift is tolerated; new drift is not.
 
 1. **Dependency direction is downward only.** A crate may depend on crates in its own tier or lower tiers. It must
    **never** depend on a crate in a higher tier. A T1 crate importing a T4 type is a hard violation.
@@ -256,13 +259,5 @@ found. Existing drift is tolerated; new drift is not.
    reason. If a domain concept needs to _trigger_ a visual or audio effect, it does so through an **event** (a T0/T1
    data type), not by calling into T4 directly.
 
-### Review Behavior
-
-When reviewing code or architecture (not implementing), always check and report:
-
-- Any crate dependency that crosses tiers in the wrong direction.
-- Any `-core` / `-plugin` pair that is in different tiers.
-- Any T3 type that has leaked into a T1 or T0 crate.
-- Any T4 import in a T0–T3 crate.
-
-Flag these as violations even if you are not asked to fix them.
+When reviewing code, always flag: any upward tier dependency, any `-core`/`-plugin` pair in different tiers, any T3 type
+in T0–T2, any T4 import in T0–T3. These are violations even if not asked to fix them.
