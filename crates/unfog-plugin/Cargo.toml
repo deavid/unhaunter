@@ -24,6 +24,7 @@ unplayer-core = { workspace = true }
 unmetrics-core = { workspace = true }
 unnoise-core = { workspace = true }
 unfog-core = { workspace = true }
+unmission-core = { workspace = true }
 unsettings-core = { workspace = true }
 
 bevy = { workspace = true }

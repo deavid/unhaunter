@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use undifficulty_core::difficulty::Difficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unmenu_core::components::MenuUI;
@@ -6,7 +7,6 @@ use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::templates;
 use unreplicon_core::components::LobbyInfo;
 use unreplicon_core::messages::RequestSelectDifficulty;
-use untypes_core::difficulty::Difficulty;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::LobbyScreen;
 use unui_core::assets::UiAssets;

@@ -14,9 +14,7 @@ impl Plugin for UnhaunterFogCorePlugin {
         app.add_systems(
             Update,
             crate::systems::initialize_miasma
-                .run_if(
-                    bevy::prelude::on_message::<unmapload_core::events::loadlevel::LevelReadyEvent>,
-                )
+                .run_if(bevy::prelude::on_message::<unmission_core::events::LevelReadyEvent>)
                 .after(crate::systems::init_miasma_grid),
         );
         app.add_systems(

@@ -6,6 +6,7 @@ use bevy_replicon::prelude::{
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty::Difficulty;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unprofile_core::profile::RuntimeInstallationId;
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
@@ -16,7 +17,6 @@ use unreplicon_core::ownership::{Owner, OwnerId};
 use unreplicon_core::resources::{
     ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer, MissionAutoJoinArmed,
 };
-use untypes_core::difficulty::Difficulty;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::{AppState, BootState, GameState, SimulationState};
 use uuid::Uuid;

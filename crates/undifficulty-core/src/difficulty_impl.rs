@@ -2,9 +2,9 @@
 //!
 //! This module provides all the gameplay settings for each difficulty level.
 
+use crate::difficulty::Difficulty;
 use crate::difficulty_settings::DifficultySettings;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
-use untypes_core::difficulty::Difficulty;
 
 impl DifficultySettings for Difficulty {
     // --- Ghost Behavior ---

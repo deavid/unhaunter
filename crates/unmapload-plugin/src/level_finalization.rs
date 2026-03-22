@@ -12,7 +12,7 @@ use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::roomdb::RoomTopology;
 use uninteraction_core::events::{RoomChangedEvent, RoomStateSyncEvent};
-use unmapload_core::events::loadlevel::LevelReadyEvent;
+use unmission_core::events::LevelReadyEvent;
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::components::visuals::ResolutionFactor;
 use unrender_std::utils::collision::rebuild_collision_data;
@@ -197,7 +197,7 @@ fn rebuild_collision_on_level_ready(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use unmapload_core::events::loadlevel::LevelReadyEvent;
+    use unmission_core::events::LevelReadyEvent;
 
     app.add_systems(Update, process_pre_meshes).add_systems(
         Update,

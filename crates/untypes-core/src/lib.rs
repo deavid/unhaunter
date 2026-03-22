@@ -3,7 +3,6 @@
 //! This crate contains game-specific types that bridge foundation types and components.
 
 pub mod cli;
-pub mod difficulty;
 pub mod hydration;
 pub mod platform;
 pub mod roles;

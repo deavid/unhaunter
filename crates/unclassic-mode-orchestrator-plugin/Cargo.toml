@@ -17,6 +17,7 @@ undifficulty-core = { workspace = true }
 unfoundation-core = { workspace = true }
 unghost-core = { workspace = true }
 unmapload-core = { workspace = true }
+unmission-core = { workspace = true }
 unplayer-core = { workspace = true }
 unrender-std = { workspace = true }
 unreplicon-core = { workspace = true }

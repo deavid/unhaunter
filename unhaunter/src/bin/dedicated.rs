@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::str::FromStr;
+use undifficulty_core::difficulty::Difficulty;
 use untypes_core::cli::CliOptions;
-use untypes_core::difficulty::Difficulty;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]

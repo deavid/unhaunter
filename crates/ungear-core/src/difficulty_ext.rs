@@ -4,7 +4,7 @@
 //! ungear-core now provides this extension trait to define what gear is available for each difficulty.
 
 use crate::types::gear::kind::{GearKind, PlayerGearKind};
-use untypes_core::difficulty::Difficulty;
+use undifficulty_core::difficulty::Difficulty;
 
 /// Extension trait providing gear-related difficulty settings.
 ///

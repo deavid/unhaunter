@@ -16,7 +16,7 @@ unwalkie-types = { workspace = true }
 
 unfoundation-core = { workspace = true }
 unghost-core = { workspace = true }
-untypes-core = { workspace = true }
+undifficulty-core = { workspace = true }
 ungear-core = { workspace = true }
 
 bevy = { workspace = true }

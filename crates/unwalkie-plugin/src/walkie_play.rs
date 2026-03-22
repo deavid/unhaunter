@@ -2,7 +2,7 @@ use bevy::{audio::Volume, prelude::*, time::Stopwatch};
 use bevy_persistent::Persistent;
 use rand::seq::IndexedRandom;
 use unfoundation_core::random_seed;
-use unmapload_core::events::loadlevel::LevelReadyEvent;
+use unmission_core::events::LevelReadyEvent;
 use unsettings_core::audio::AudioSettings;
 use untypes_core::states::{AppState, GameState};
 use unui_core::components::game_ui::WalkieText;

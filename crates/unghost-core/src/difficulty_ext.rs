@@ -4,7 +4,7 @@
 //! unghost-core now provides this extension trait to define what ghosts are available for each difficulty.
 
 use crate::types::ghost::definitions::GhostSet;
-use untypes_core::difficulty::Difficulty;
+use undifficulty_core::difficulty::Difficulty;
 
 /// Extension trait providing ghost-related difficulty settings.
 ///

@@ -127,20 +127,21 @@ contributor to the ecosystem rather than only a consumer.
 Full definition lives in `copilot-instructions.md`. Reproduced here for quick reference:
 
 ```text
-T0  Domain Kernel      — pure types, math, markers. No internal game deps.
+PL  Portable Libraries — game-agnostic Bevy plugins. No un* deps. Extractable to crates.io. (unfps)
+T0  Domain Kernel      — pure types, math, markers. No internal game deps. (incl. unsettings-core)
 T1  Domain Core        — the game's world and rules. Headless-safe.
       1a  The Stage    — board, physics fields (thermal, sound, fog, light, nav)
       1b  The Actors   — ghost, player, NPC, locomotion
       1c  The Mechanics— gear, interaction, inventory, vitals, difficulty, truck, walkie
 T2  Application Layer  — mission lifecycle, game-mode orchestration, input, networking
-T3  Infrastructure     — external I/O and persistence (Tiled ACL, settings, profiles, hub)
+T3  Infrastructure     — external I/O and persistence (Tiled ACL, settings-plugin, profiles, hub)
       3a  Map Pipeline — Tiled ACL (untiled, untmxmap, unmapload, unbehavior)
-      3b  Persistence  — settings, profile
+      3b  Persistence  — settings-plugin, profile
       3c  Net Clients  — unhub
 T4  Presentation       — rendering, audio, UI. Client-side only.
       4a  Rendering    — unrender, unpicking
       4b  Audio        — unaudiobg, unaudiospatial
-      4c  UI           — unui, menus, screens, HUD
+      4c  UI           — unui, menus, screens, HUD (incl. unmaphub-plugin)
 ```
 
 Dependency direction is **downward only**. A crate may depend on its own tier or lower. Never higher.
@@ -149,20 +150,21 @@ Dependency direction is **downward only**. A crate may depend on its own tier or
 
 ## Audit Files by Tier
 
-| File                       | Section                        | Status              |
-| -------------------------- | ------------------------------ | ------------------- |
-| [02_t0.md](02_t0.md)       | T0 · Domain Kernel             | 6 entries — CURRENT |
-| [02_t1a.md](02_t1a.md)     | T1·1a · The Stage              | 7 entries — CURRENT |
-| [02_t1b.md](02_t1b.md)     | T1·1b · The Actors             | 4 entries — CURRENT |
-| [02_t1c.md](02_t1c.md)     | T1·1c · The Mechanics          | 8 entries — CURRENT |
-| [02_t2.md](02_t2.md)       | T2 · Application Layer         | 6 entries — CURRENT |
-| [02_t3a.md](02_t3a.md)     | T3·3a · Map Pipeline           | PENDING             |
-| [02_t3b.md](02_t3b.md)     | T3·3b · Persistence            | PENDING             |
-| [02_t3c.md](02_t3c.md)     | T3·3c · Net Clients            | PENDING             |
-| [02_t4a.md](02_t4a.md)     | T4·4a · Rendering              | PENDING             |
-| [02_t4b.md](02_t4b.md)     | T4·4b · Audio                  | PENDING             |
-| [02_t4c.md](02_t4c.md)     | T4·4c · UI                     | PENDING             |
-| [02_stale.md](02_stale.md) | Stale Entries (pre-2026-03-20) | STALE               |
+| File                             | Section                        | Status              |
+| -------------------------------- | ------------------------------ | ------------------- |
+| [02_portable.md](02_portable.md) | PL · Portable Libraries        | 1 entry — CURRENT   |
+| [02_t0.md](02_t0.md)             | T0 · Domain Kernel             | 7 entries — CURRENT |
+| [02_t1a.md](02_t1a.md)           | T1·1a · The Stage              | 7 entries — CURRENT |
+| [02_t1b.md](02_t1b.md)           | T1·1b · The Actors             | 4 entries — CURRENT |
+| [02_t1c.md](02_t1c.md)           | T1·1c · The Mechanics          | 8 entries — CURRENT |
+| [02_t2.md](02_t2.md)             | T2 · Application Layer         | 6 entries — CURRENT |
+| [02_t3a.md](02_t3a.md)           | T3·3a · Map Pipeline           | PENDING             |
+| [02_t3b.md](02_t3b.md)           | T3·3b · Persistence            | 4 entries — CURRENT |
+| [02_t3c.md](02_t3c.md)           | T3·3c · Net Clients            | PENDING             |
+| [02_t4a.md](02_t4a.md)           | T4·4a · Rendering              | PENDING             |
+| [02_t4b.md](02_t4b.md)           | T4·4b · Audio                  | PENDING             |
+| [02_t4c.md](02_t4c.md)           | T4·4c · UI                     | PENDING             |
+| [02_stale.md](02_stale.md)       | Stale Entries (pre-2026-03-20) | STALE               |
 
 Pure primitives: types, math, markers. Must have **zero internal game dependencies**. Any `un*` import in a T0 crate is
 a violation by definition.

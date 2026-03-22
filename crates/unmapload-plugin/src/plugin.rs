@@ -1,10 +1,8 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use unmapload_core::assets::{MapAssets, MissionAssets};
-use unmapload_core::events::loadlevel::{
-    LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent, MapEntitiesReadyEvent,
-    MapGeometryInitializedEvent,
-};
+use unmapload_core::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent, MapEntitiesReadyEvent};
+use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
 use untypes_core::cli::CliOptions;
 use untypes_core::states::{AppState, BootState, GameState, SimulationState};
 

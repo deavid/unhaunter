@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use undifficulty_core::difficulty::Difficulty;
 use untmxmap_core::assets::index::AssetIdx;
 use untmxmap_core::assets::tmxmap::TmxMap;
 use untmxmap_core::assets::tsxsheet::TsxSheet;
@@ -8,7 +9,6 @@ use untmxmap_core::types::mission_data::TmxMissionData;
 use untmxmap_core::types::root::map::Map;
 use untmxmap_core::types::root::map::Sheet;
 use untypes_core::cli::CliOptions;
-use untypes_core::difficulty::Difficulty;
 
 pub(crate) struct PreLoad<A: Asset> {
     path: String,

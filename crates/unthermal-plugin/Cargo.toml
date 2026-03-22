@@ -15,7 +15,7 @@ unthermal-core = { workspace = true }
 unboard-core = { workspace = true }
 unspatial-core = { workspace = true }
 unfoundation-core = { workspace = true }
-unmapload-core = { workspace = true }
+unmission-core = { workspace = true }
 unmetrics-core = { workspace = true }
 untypes-core = { workspace = true }
 undifficulty-core = { workspace = true }

@@ -5,6 +5,7 @@ use ndarray::Array3;
 use std::cell::RefCell;
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::visibility_data::VisibilityData;
+use undifficulty_core::difficulty::Difficulty;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::tonemapping::{self, TonemappingParams};
 use unlight_core::types::light::{LightData, LightFieldData};
@@ -12,7 +13,6 @@ use unlight_core::types::light_type::LightType;
 use unrender_std::components::visuals::{LightSensitive, SpectralInfluence, SpectralInfluenceType};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
-use untypes_core::difficulty::Difficulty;
 
 pub(crate) fn calculate_tutorial_light_factor(difficulty: &Difficulty) -> f32 {
     match difficulty {

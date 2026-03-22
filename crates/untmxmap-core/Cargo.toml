@@ -11,6 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+undifficulty-core = { workspace = true }
 untypes-core = { workspace = true }
 
 bevy = { workspace = true }

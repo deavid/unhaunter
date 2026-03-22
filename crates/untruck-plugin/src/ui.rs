@@ -26,8 +26,8 @@ impl FromTab for TruckTab {
         // Determine the default tab based on difficulty (tutorials show Journal)
         let is_tutorial = matches!(
             difficulty.0,
-            untypes_core::difficulty::Difficulty::TutorialChapter1
-                | untypes_core::difficulty::Difficulty::TutorialChapter2
+            undifficulty_core::difficulty::Difficulty::TutorialChapter1
+                | undifficulty_core::difficulty::Difficulty::TutorialChapter2
         );
         let default_tab = if is_tutorial {
             TabContents::Journal

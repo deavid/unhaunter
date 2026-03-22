@@ -32,7 +32,7 @@ unplayer-core = { workspace = true }
 unrender-std = { workspace = true }
 unghost-core = { workspace = true }
 unmetrics-core = { workspace = true }
-unmapload-core = { workspace = true }
+unmission-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

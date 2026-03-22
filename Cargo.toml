@@ -8,6 +8,13 @@ members = [
     "crates/tools/unprocman",
     "crates/tools/text_to_speech/walkie_voice_generator",
 
+    # ── Portable Libraries ─────────────────────────────────────────────────
+    # Game-agnostic Bevy plugins. Zero Unhaunter-specific knowledge.
+    # Strong candidates for extraction to crates.io. No -core/-plugin split.
+    # These are the foundation the tier stack rests on — outside the hexagon.
+    "crates/unfps-core",   # Frame-rate limiter data (game-agnostic)
+    "crates/unfps-plugin", # Frame-rate limiter via std::thread::sleep
+
     # ════════════════════════════════════════════════════════════════════════
     # Tier 0 · Domain Kernel
     # Pure primitives: types, math, and markers.
@@ -20,6 +27,7 @@ members = [
     "crates/untags-core",       # Global ECS marker components
     "crates/unmetrics-core",    # Performance diagnostic data structures
     "crates/unmetrics-plugin",  # Diagnostic systems
+    "crates/unsettings-core",   # Persistent configuration data (pure data, no game deps)
 
     # ════════════════════════════════════════════════════════════════════════
     # Tier 1 · Domain Core
@@ -77,8 +85,6 @@ members = [
     "crates/unclassic-mode-gameplay-plugin",     # Phasmo-style ruleset
     "crates/unclassic-mode-orchestrator-plugin", # Ghost selection and level setup
     "crates/uninput-plugin",                     # Physical key → game action binding
-    "crates/unfps-core",                         # Frame-rate tracking data
-    "crates/unfps-plugin",
     "crates/unreplicon-core",                    # Networking / replication (God Crate — being drained)
     "crates/unreplicon-plugin",
 
@@ -96,11 +102,9 @@ members = [
     "crates/untmxmap-plugin",
     "crates/unmapload-core",   # Map file metadata definitions
     "crates/unmapload-plugin",
-    "crates/unmaphub-plugin",  # Map hub integration
     "crates/unbehavior",       # ACL: Tiled object properties → domain components
 
     # ── 3b: Persistence ──────────────────────────────────────────────────
-    "crates/unsettings-core",   # Persistent configuration storage
     "crates/unsettings-plugin",
     "crates/unprofile-core",    # Player save-file data structures
     "crates/unprofile-plugin",
@@ -133,6 +137,7 @@ members = [
     "crates/unmenu-plugin",
     "crates/unmainmenu-plugin",            # Title screen
     "crates/uncampaign-plugin",            # Mission selection screen
+    "crates/unmaphub-plugin",              # Difficulty selection UI screen (map hub)
     "crates/unlobby-plugin",               # Multiplayer lobby screen
     "crates/unmenusettings-plugin",        # Settings UI
     "crates/unmanual-core",                # Tutorial / field manual data
@@ -238,6 +243,13 @@ unhub = { path = "crates/tools/unhub" }
 unprocman = { path = "crates/tools/unprocman" }
 walkie_voice_generator = { path = "crates/tools/text_to_speech/walkie_voice_generator" }
 
+# ── Portable Libraries ───────────────────────────────────────────────────────
+# Game-agnostic Bevy plugins. Zero Unhaunter-specific knowledge.
+# Strong candidates for extraction to crates.io. No -core/-plugin split.
+# These are the foundation the tier stack rests on — outside the hexagon.
+unfps-core = { path = "crates/unfps-core" }     # Frame-rate limiter data (game-agnostic)
+unfps-plugin = { path = "crates/unfps-plugin" } # Frame-rate limiter via std::thread::sleep
+
 # ════════════════════════════════════════════════════════════════════════════
 # Tier 0 · Domain Kernel
 # Pure primitives: types, math, and markers.
@@ -250,6 +262,7 @@ unnoise-core = { path = "crates/unnoise-core" }           # Procedural noise mat
 untags-core = { path = "crates/untags-core" }             # Global ECS marker components
 unmetrics-core = { path = "crates/unmetrics-core" }       # Performance diagnostic data
 unmetrics-plugin = { path = "crates/unmetrics-plugin" }   # Diagnostic systems
+unsettings-core = { path = "crates/unsettings-core" }     # Persistent configuration data (pure data, no game deps)
 
 # ════════════════════════════════════════════════════════════════════════════
 # Tier 1 · Domain Core
@@ -316,8 +329,6 @@ unmission-plugin = { path = "crates/unmission-plugin" }
 unclassic-mode-gameplay-plugin = { path = "crates/unclassic-mode-gameplay-plugin" }         # Phasmo-style ruleset
 unclassic-mode-orchestrator-plugin = { path = "crates/unclassic-mode-orchestrator-plugin" } # Ghost selection and level setup
 uninput-plugin = { path = "crates/uninput-plugin" }                                         # Physical key → game action binding
-unfps-core = { path = "crates/unfps-core" }                                                 # Frame-rate tracking data
-unfps-plugin = { path = "crates/unfps-plugin" }
 unreplicon-core = { path = "crates/unreplicon-core" }                                       # Networking / replication (God Crate — being drained)
 unreplicon-plugin = { path = "crates/unreplicon-plugin" }
 
@@ -335,11 +346,9 @@ untmxmap-core = { path = "crates/untmxmap-core" }       # High-level map loader 
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unmapload-core = { path = "crates/unmapload-core" }     # Map file metadata definitions
 unmapload-plugin = { path = "crates/unmapload-plugin" }
-unmaphub-plugin = { path = "crates/unmaphub-plugin" }   # Map hub integration
 unbehavior = { path = "crates/unbehavior" }             # ACL: Tiled object properties → domain components
 
 # ── 3b: Persistence ──────────────────────────────────────────────────────
-unsettings-core = { path = "crates/unsettings-core" }     # Persistent configuration storage
 unsettings-plugin = { path = "crates/unsettings-plugin" }
 unprofile-core = { path = "crates/unprofile-core" }       # Player save-file data structures
 unprofile-plugin = { path = "crates/unprofile-plugin" }
@@ -373,6 +382,7 @@ unmenu-core = { path = "crates/unmenu-core" }                                   
 unmenu-plugin = { path = "crates/unmenu-plugin" }
 unmainmenu-plugin = { path = "crates/unmainmenu-plugin" }                       # Title screen
 uncampaign-plugin = { path = "crates/uncampaign-plugin" }                       # Mission selection screen
+unmaphub-plugin = { path = "crates/unmaphub-plugin" }                           # Difficulty selection UI screen (map hub)
 unlobby-plugin = { path = "crates/unlobby-plugin" }                             # Multiplayer lobby screen
 unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }               # Settings UI
 unmanual-core = { path = "crates/unmanual-core" }                               # Tutorial / field manual data
@@ -403,6 +413,7 @@ clap = { workspace = true }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
 
+undifficulty-core = { workspace = true }
 untypes-core = { workspace = true }
 unvitals-plugin = { workspace = true }
 uninventory-plugin = { workspace = true }

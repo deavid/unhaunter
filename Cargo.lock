@@ -7181,6 +7181,7 @@ dependencies = [
  "unfoundation-core",
  "unghost-core",
  "unmapload-core",
+ "unmission-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
@@ -7237,9 +7238,10 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
+ "enum-iterator",
  "serde",
+ "strum",
  "unfoundation-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7276,6 +7278,7 @@ dependencies = [
  "unghost-core",
  "unmapload-core",
  "unmetrics-core",
+ "unmission-core",
  "unnoise-core",
  "unplayer-core",
  "unrender-std",
@@ -7318,9 +7321,9 @@ dependencies = [
  "enum-iterator",
  "serde",
  "thiserror 2.0.18",
+ "undifficulty-core",
  "unghost-core",
  "unspatial-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7398,9 +7401,9 @@ dependencies = [
  "itertools 0.14.0",
  "rand 0.10.0",
  "serde",
+ "undifficulty-core",
  "unfoundation-core",
  "unspatial-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7447,6 +7450,7 @@ dependencies = [
  "unclassic-mode-orchestrator-plugin",
  "unclassic-mode-render-plugin",
  "unclassic-mode-ui-plugin",
+ "undifficulty-core",
  "undifficulty-plugin",
  "unfog-plugin",
  "unfps-plugin",
@@ -7680,8 +7684,8 @@ dependencies = [
  "ungearitems-core",
  "uninteraction-core",
  "unlight-core",
- "unmapload-core",
  "unmetrics-core",
+ "unmission-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
@@ -7806,6 +7810,7 @@ dependencies = [
  "undifficulty-core",
  "uninteraction-core",
  "unmapload-core",
+ "unmission-core",
  "unrender-std",
  "unspatial-core",
  "untiled-core",
@@ -8024,9 +8029,9 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "serde",
+ "undifficulty-core",
  "unghost-core",
  "unsummary-core",
- "untypes-core",
  "uuid",
 ]
 
@@ -8174,8 +8179,8 @@ dependencies = [
  "rand 0.10.0",
  "unboard-core",
  "unfoundation-core",
- "unmapload-core",
  "unmetrics-core",
+ "unmission-core",
  "unsoundfield-core",
  "unspatial-core",
  "untypes-core",
@@ -8248,8 +8253,8 @@ dependencies = [
  "unboard-core",
  "undifficulty-core",
  "unfoundation-core",
- "unmapload-core",
  "unmetrics-core",
+ "unmission-core",
  "unsettings-core",
  "unspatial-core",
  "unthermal-core",
@@ -8274,6 +8279,7 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "thiserror 2.0.18",
+ "undifficulty-core",
  "untypes-core",
  "walkdir",
 ]
@@ -8288,6 +8294,7 @@ dependencies = [
  "normalize-path",
  "tiled",
  "unboard-core",
+ "undifficulty-core",
  "unmapload-core",
  "unrender-std",
  "unsettings-core",
@@ -8403,10 +8410,10 @@ dependencies = [
  "bevy_platform",
  "enum-iterator",
  "rand 0.10.0",
+ "undifficulty-core",
  "unfoundation-core",
  "ungear-core",
  "unghost-core",
- "untypes-core",
  "unwalkie-types",
 ]
 
@@ -8428,8 +8435,8 @@ dependencies = [
  "unghost-core",
  "uninteraction-core",
  "unlight-core",
- "unmapload-core",
  "unmetrics-core",
+ "unmission-core",
  "unplayer-core",
  "unprofile-core",
  "unrender-std",

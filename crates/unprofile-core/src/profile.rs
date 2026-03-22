@@ -1,9 +1,9 @@
 use bevy::prelude::Resource;
 use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use undifficulty_core::difficulty::Difficulty;
 use unghost_core::types::evidence::Evidence;
 use unsummary_core::grade::Grade;
-use untypes_core::difficulty::Difficulty;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -2,9 +2,9 @@
 //!
 //! Holds the currently active difficulty settings.
 
+use crate::difficulty::Difficulty;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use untypes_core::difficulty::Difficulty;
 
 /// Resource that holds the current difficulty settings
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Resource, PartialEq, Default, Reflect)]

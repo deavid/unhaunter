@@ -16,9 +16,9 @@ use crate::{
     traits::ConceptTrait,
 };
 use bevy::log::warn;
+use undifficulty_core::difficulty::Difficulty;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
-use untypes_core::difficulty::Difficulty;
 use unwalkie_types::types::VoiceLineData;
 
 struct NullVoice;

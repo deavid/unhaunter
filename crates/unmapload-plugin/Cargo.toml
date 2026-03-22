@@ -22,6 +22,7 @@ untiled-core = { workspace = true }
 unrender-std = { workspace = true }
 untmxmap-core = { workspace = true }
 unmapload-core = { workspace = true }
+unmission-core = { workspace = true }
 uninteraction-core = { workspace = true }
 
 bevy = { workspace = true }

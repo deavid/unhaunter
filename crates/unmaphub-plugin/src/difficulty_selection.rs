@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty::Difficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -9,7 +10,6 @@ use unmenu_core::{
     events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
-use untypes_core::difficulty::Difficulty;
 use untypes_core::states::AppState;
 use untypes_core::states::MapHubState;
 use unui_core::assets::UiAssets;

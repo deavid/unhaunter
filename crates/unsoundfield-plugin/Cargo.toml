@@ -17,7 +17,7 @@ unfoundation-core = { workspace = true }
 unboard-core = { workspace = true }
 unmetrics-core = { workspace = true }
 untypes-core = { workspace = true }
-unmapload-core = { workspace = true }
+unmission-core = { workspace = true }
 
 bevy = { workspace = true }
 rand = { workspace = true }

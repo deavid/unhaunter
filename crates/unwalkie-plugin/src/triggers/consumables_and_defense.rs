@@ -119,7 +119,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
 
     // 2. Chapter Check: Only trigger for Chapter 5 or non-tutorial difficulties
     let current_chapter_index = difficulty.0.index();
-    if current_chapter_index < untypes_core::difficulty::Difficulty::TutorialChapter5.index() {
+    if current_chapter_index < undifficulty_core::difficulty::Difficulty::TutorialChapter5.index() {
         // If it's a tutorial chapter AND it's before Chapter 5, exit.
         // Non-tutorial difficulties (where tutorial_chapter is None, so current_chapter_index is usize::MAX) will pass this.
         return;
