@@ -49,7 +49,13 @@ pub(crate) fn app_setup(app: &mut App) {
         Startup,
         (initialize_installation_id, recover_stuck_insurance_deposit),
     )
-    .add_systems(Update, crate::systems::record_death_to_profile);
+    .add_systems(
+        Update,
+        (
+            crate::systems::apply_mission_completion_to_profile,
+            crate::systems::record_death_to_profile,
+        ),
+    );
 }
 
 fn initialize_installation_id(

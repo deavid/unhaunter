@@ -48,6 +48,7 @@ members = [
     "crates/unfog-plugin",
     "crates/unlight-core",        # Illumination model
     "crates/unlight-plugin",
+    "crates/unsensing-core",      # Spectral/sensing component types (UV, IR, spectral clarity)
     "crates/unnavigation-core",   # Pathfinding graph (data only, no systems)
 
     # ── 1b: The Actors (Entities & AI) ───────────────────────────────────
@@ -87,6 +88,8 @@ members = [
     # ════════════════════════════════════════════════════════════════════════
     "crates/unmission-core",                     # Mission lifecycle data (start/end events)
     "crates/unmission-plugin",
+    "crates/uncareer-core",                      # Career progression state (persists between missions)
+    "crates/uncareer-plugin",                    # Career and economy systems
     "crates/unclassic-mode-gameplay-plugin",     # Phasmo-style ruleset
     "crates/unclassic-mode-orchestrator-plugin", # Ghost selection and level setup
     "crates/uninput-plugin",                     # Physical key → game action binding
@@ -292,6 +295,7 @@ unfog-core = { path = "crates/unfog-core" }                   # Miasma fog
 unfog-plugin = { path = "crates/unfog-plugin" }
 unlight-core = { path = "crates/unlight-core" }               # Illumination model
 unlight-plugin = { path = "crates/unlight-plugin" }
+unsensing-core = { path = "crates/unsensing-core" }           # Spectral/sensing component types (UV, IR, spectral clarity)
 
 # Other:
 unnavigation-core = { path = "crates/unnavigation-core" } # Pathfinding graph (data only)
@@ -336,6 +340,8 @@ unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 # ════════════════════════════════════════════════════════════════════════════
 unmission-core = { path = "crates/unmission-core" }                                         # Mission lifecycle data (start/end events)
 unmission-plugin = { path = "crates/unmission-plugin" }
+uncareer-core = { path = "crates/uncareer-core" }                                           # Career progression state (persists between missions)
+uncareer-plugin = { path = "crates/uncareer-plugin" }                                       # Career and economy systems
 unclassic-mode-gameplay-plugin = { path = "crates/unclassic-mode-gameplay-plugin" }         # Phasmo-style ruleset
 unclassic-mode-orchestrator-plugin = { path = "crates/unclassic-mode-orchestrator-plugin" } # Ghost selection and level setup
 uninput-plugin = { path = "crates/uninput-plugin" }                                         # Physical key → game action binding

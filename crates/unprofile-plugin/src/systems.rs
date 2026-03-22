@@ -2,10 +2,26 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unmission_core::events::MissionCompletedEvent;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
 use unreplicon_core::resources::LocalPlayer;
 use unvitals_core::events::PlayerDiedEvent;
+
+pub(crate) fn apply_mission_completion_to_profile(
+    mut ev_mission_completed: MessageReader<MissionCompletedEvent>,
+    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
+) {
+    for _ in ev_mission_completed.read() {
+        let initial_deposit_held = player_profile.progression.insurance_deposit;
+        player_profile.progression.bank += initial_deposit_held;
+        player_profile.progression.insurance_deposit = 0;
+
+        if let Err(e) = player_profile.persist() {
+            warn!("Failed to persist PlayerProfileData after mission completion: {:?}", e);
+        }
+    }
+}
 
 pub(crate) fn record_death_to_profile(
     mut ev_death: MessageReader<PlayerDiedEvent>,

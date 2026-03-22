@@ -11,13 +11,14 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
 use unfoundation_core::random_seed;
 use ungear_core::components::playergear::PlayerGear;
+use unlight_core::components::LightSensitive;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
 use unplayer_core::components::MainPlayer;
+use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, InfraredSensitive, LightSensitive,
-    SpectralClarity, SpectralInfluence, UltravioletSensitive,
+    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::utils::light::lerp_color;
@@ -34,8 +35,8 @@ use crate::maplight::definitions::{ActiveFlashlights, GridResources};
 use crate::maplight::sampler::{LightingSampler, SpectralParams};
 use crate::maplight::visuals::{
     apply_alpha_modulator_visuals, apply_ecto_visuals, apply_emissive_visuals,
-    apply_ethereal_visuals, apply_ir_visuals, apply_miasma_pressure, apply_uv_visuals,
-    step_alpha_clamped, update_spectral_influence,
+    apply_ethereal_visuals, apply_ir_visuals, apply_miasma_pressure,
+    apply_uv_visuals, step_alpha_clamped, update_spectral_influence,
 };
 use crate::metrics::APPLY_LIGHTING;
 use unmetrics_core::metrics::SendMetric;
@@ -56,8 +57,6 @@ pub(crate) fn apply_lighting_to_tiles_system(
             Option<&SpectralClarity>,
             (
                 Option<&LightSensitive>,
-                Option<&InfraredSensitive>,
-                Option<&UltravioletSensitive>,
                 Option<&MapColor>,
                 Option<&MiasmaSprite>,
                 Option<&AlphaModulator>,
@@ -251,7 +250,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
             o_ethereal,
             o_ecto_vis,
             o_spectral_clarity,
-            (o_light_sens, o_ir_sens, o_uv_sens, o_map_color, o_miasma, o_alpha_mod, o_emissive),
+            (o_light_sens, o_map_color, o_miasma, o_alpha_mod, o_emissive),
             is_locally_owned,
         )) = qt2.get_mut(*entity)
         {
@@ -451,26 +450,6 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 apply_alpha_modulator_visuals(am, elapsed, &mut opacity);
             }
 
-            if let Some(uv_sens) = o_uv_sens {
-                apply_uv_visuals(
-                    uv_sens,
-                    &ld,
-                    vf.visibility_field[bpos.ndidx()],
-                    &mut dst_color,
-                    &mut opacity,
-                );
-            }
-
-            if let Some(ir_sens) = o_ir_sens {
-                apply_ir_visuals(
-                    ir_sens,
-                    &light_data,
-                    vf.visibility_field[bpos.ndidx()],
-                    &mut opacity,
-                    &mut smooth_a,
-                );
-            }
-
             if let Some(ethereal) = o_ethereal.filter(|e| !e.warning_active && !e.hunt_target) {
                 apply_ethereal_visuals(
                     ethereal,
@@ -507,6 +486,17 @@ pub(crate) fn apply_lighting_to_tiles_system(
                     vf.visibility_field[bpos.ndidx()],
                     &mut dst_color,
                 );
+            }
+
+            if let Some(si) = o_spectral_influence.as_deref() {
+                apply_uv_visuals(
+                    si,
+                    &ld,
+                    vf.visibility_field[bpos.ndidx()],
+                    &mut opacity,
+                    &mut dst_color,
+                );
+                apply_ir_visuals(si, &light_data, vf.visibility_field[bpos.ndidx()], &mut opacity);
             }
 
             if !is_tile {

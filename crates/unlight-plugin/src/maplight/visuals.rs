@@ -8,15 +8,14 @@ use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
 use unlight_core::types::light::LightData;
-use unrender_std::components::visuals::{
-    AlphaModulator, Emissive, Ethereal, InfraredSensitive, SpectralClarity, UltravioletSensitive,
-};
+use unsensing_core::components::{SpectralClarity, SpectralInfluence};
+use unrender_std::components::visuals::{AlphaModulator, Emissive, Ethereal};
 use unrender_std::utils::light::lerp_color;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_spectral_influence(
-    si: &mut unrender_std::components::visuals::SpectralInfluence,
+    si: &mut SpectralInfluence,
     light_data: &LightData,
     dt: f32,
 ) {
@@ -29,6 +28,55 @@ pub(crate) fn update_spectral_influence(
     update_charge(light_data.ultraviolet, &mut si.uv_charge);
     update_charge(light_data.red, &mut si.red_charge);
     update_charge(light_data.infrared, &mut si.ir_charge);
+}
+
+pub(crate) fn apply_uv_visuals(
+    si: &SpectralInfluence,
+    ld: &LightData,
+    visibility_at_pos: f32,
+    opacity: &mut f32,
+    dst_color: &mut Color,
+) {
+    if !si.is_uv_sensitive() {
+        return;
+    }
+
+    let uv_visibility = (ld.ultraviolet * si.uv_intensity * visibility_at_pos).clamp(0.0, 1.0);
+    *opacity = opacity.max(uv_visibility);
+
+    let color_shift = (uv_visibility * si.uv_color_shift).clamp(0.0, 1.0);
+    if color_shift > 0.0 {
+        *dst_color = lerp_color(*dst_color, css::MEDIUM_SLATE_BLUE.into(), color_shift);
+    }
+}
+
+pub(crate) fn apply_ir_visuals(
+    si: &SpectralInfluence,
+    ld_abs: &LightData,
+    visibility_at_pos: f32,
+    opacity: &mut f32,
+) {
+    if !si.is_ir_sensitive() {
+        return;
+    }
+
+    let infrared = ld_abs.infrared * si.ir_intensity;
+    if let Some(threshold) = si.ir_threshold {
+        let total_light = ld_abs.visible + ld_abs.red + ld_abs.ultraviolet + infrared + 0.1;
+        let ir_ratio = infrared / total_light;
+        if ir_ratio > threshold && infrared > 0.1 && ld_abs.visible < 0.5 {
+            let threshold_ratio = ((ir_ratio - threshold) / (1.0 - threshold).max(0.001))
+                .clamp(0.0, 1.0);
+            *opacity = ((threshold_ratio * 2.0 - 1.0).max(0.0)).powi(2)
+                * infrared.sqrt()
+                * visibility_at_pos;
+            *opacity = opacity.clamp(0.0, 1.0);
+        } else {
+            *opacity = 0.0;
+        }
+    } else {
+        *opacity = opacity.max((infrared.sqrt() * visibility_at_pos).clamp(0.0, 1.0));
+    }
 }
 
 pub(crate) fn apply_miasma_pressure(
@@ -44,40 +92,6 @@ pub(crate) fn apply_miasma_pressure(
     }
     total_pressure /= 10.0;
     *opacity *= (1.0_f32 - total_pressure).clamp(0.0_f32, 1.0_f32);
-}
-
-pub(crate) fn apply_uv_visuals(
-    uv_sens: &UltravioletSensitive,
-    ld: &LightData,
-    visibility: f32,
-    dst_color: &mut Color,
-    opacity: &mut f32,
-) {
-    *opacity = (*opacity + ld.ultraviolet * uv_sens.intensity * visibility).clamp(0.0, 1.3);
-    let f = (ld.ultraviolet * uv_sens.color_shift * visibility).clamp(0.0, 1.0);
-    *dst_color = lerp_color(*dst_color, css::MEDIUM_SLATE_BLUE.into(), f);
-}
-
-pub(crate) fn apply_ir_visuals(
-    ir_sens: &InfraredSensitive,
-    ld_abs: &LightData,
-    visibility: f32,
-    opacity: &mut f32,
-    smooth: &mut f32,
-) {
-    if let Some(threshold) = ir_sens.thresholds {
-        *smooth = 10.0;
-        let total_light = ld_abs.visible + ld_abs.red + ld_abs.ultraviolet + ld_abs.infrared + 0.1;
-        let ir_ratio = ld_abs.infrared / total_light;
-        if ir_ratio > threshold && ld_abs.infrared > 0.1 && ld_abs.visible < 0.5 {
-            *opacity = (ir_ratio * 2.0 - 1.0).powi(2) * ld_abs.infrared.sqrt() * visibility;
-            *opacity = (*opacity * ir_sens.intensity).clamp(0.0, 1.0);
-        } else {
-            *opacity = 0.0;
-        }
-    } else {
-        *opacity = (*opacity + ld_abs.infrared * ir_sens.intensity).clamp(0.0, 1.3);
-    }
 }
 
 pub(crate) fn apply_alpha_modulator_visuals(am: &AlphaModulator, elapsed: f32, opacity: &mut f32) {

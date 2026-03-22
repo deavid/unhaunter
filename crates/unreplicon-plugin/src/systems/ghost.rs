@@ -6,7 +6,6 @@ use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unmission_core::resources::MissionConcludingCinematic;
-use unrender_std::components::visuals::SpectralClarity;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
 };
@@ -16,7 +15,7 @@ use unreplicon_core::messages::{
 };
 use unspatial_core::lerp_position::LerpPosition;
 use unspatial_core::position::Position;
-use unsummary_core::summary::SummaryData;
+use unmission_core::summary::SummaryData;
 use untags_core::tags::GhostTag;
 use untypes_core::roles::{AuthorityRole, is_pure_client};
 use untypes_core::states::AppState;
@@ -28,7 +27,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<GhostBreach>();
     app.replicate::<GhostSprite>();
     app.replicate::<GhostBehaviorDynamics>();
-    app.replicate::<SpectralClarity>();
     app.replicate::<GhostGuess>();
     app.replicate::<SummaryData>();
     app.replicate::<MissionGoalEntity>();

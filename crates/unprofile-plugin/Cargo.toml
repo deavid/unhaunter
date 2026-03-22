@@ -12,6 +12,8 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
+unmission-core = { workspace = true }
+
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 dirs = { workspace = true }

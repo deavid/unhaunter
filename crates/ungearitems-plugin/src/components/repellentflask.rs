@@ -17,7 +17,7 @@ use unrender_std::components::visuals::Emissive;
 use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
-use unsummary_core::summary::SummaryData;
+use unmission_core::summary::SummaryData;
 use untypes_core::roles::LocalPlayerRole;
 use untypes_core::states::AppState;
 

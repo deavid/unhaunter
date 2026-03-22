@@ -13,6 +13,8 @@ workspace = true
 [dependencies]
 
 unspatial-core = { workspace = true }
+unlight-core = { workspace = true }
+unsensing-core = { workspace = true }
 unbehavior-core = { workspace = true }
 unfoundation-core = { workspace = true }
 unboard-core = { workspace = true }

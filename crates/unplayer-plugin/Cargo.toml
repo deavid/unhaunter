@@ -16,6 +16,7 @@ unbehavior-core = { workspace = true }
 unfoundation-core = { workspace = true }
 unboard-core = { workspace = true }
 unplayer-core = { workspace = true }
+unlocomotion-core = { workspace = true }
 uninput-core = { workspace = true }
 untypes-core = { workspace = true }
 unnavigation-core = { workspace = true }

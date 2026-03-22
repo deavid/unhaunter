@@ -8,18 +8,19 @@ use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use uninput_core::components::{PlayerInput, PlayerInputMapping};
+use unlight_core::components::LightSensitive;
+use unlocomotion_core::animation::{AnimationTimer, CharacterAnimation};
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, LightSensitive, ResolutionFactor,
-    ShadowCaster, SpectralClarity, UltravioletSensitive,
+    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ResolutionFactor, ShadowCaster,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::utils::quadcc::QuadCC;
 use unreplicon_core::resources::LocalPlayer;
+use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unsettings_core::video::VideoSettings;
 use unsoundfield_core::components::SoundFieldSource;
 use unspatial_core::boardposition::MapEntityFieldBPos;
@@ -300,10 +301,7 @@ pub(crate) fn hydrate_ghosts_system(
                 exposure_factor: 0.5,
                 bias: 0.01,
             })
-            .insert(UltravioletSensitive {
-                intensity: 1.0,
-                ..default()
-            })
+            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 0.0))
             .insert(ThermalEmitter {
                 room_restricted: true,
                 ..default()
@@ -423,10 +421,7 @@ pub(crate) fn hydrate_breach_system(
                 exposure_factor: 1.1,
                 bias: 0.02,
             })
-            .insert(UltravioletSensitive {
-                intensity: 1.0,
-                color_shift: 1.0,
-            })
+            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 1.0))
             .insert(ThermalEmitter {
                 room_restricted: true,
                 ..default()

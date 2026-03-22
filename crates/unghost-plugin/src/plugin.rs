@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::AppRuleExt;
 use bevy_asset_loader::prelude::*;
+use unsensing_core::components::SpectralClarity;
 use untypes_core::states::AppState;
 
 use unghost_core::events::GhostInteractionEvent;
@@ -21,6 +23,7 @@ impl Plugin for UnhaunterGhostCorePlugin {
             .unwrap_or(false);
 
         app.add_message::<GhostInteractionEvent>();
+        app.replicate::<SpectralClarity>();
         crate::systems::hydration::app_setup(app);
         crate::systems::evidence_decay::app_setup(app);
         crate::systems::ghost_ai::app_setup(app);

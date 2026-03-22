@@ -5,6 +5,7 @@
 use bevy::prelude::*;
 
 pub mod components;
+pub mod entity;
 pub mod events;
 pub mod resources;
 pub mod types;

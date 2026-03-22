@@ -4,9 +4,9 @@ use unaudiospatial_core::emitter::AudioEmitter;
 use unbehavior_core::behavior::Behavior;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::components::PlayerInput;
+use unlocomotion_core::animation::AnimationTimer;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unrender_std::components::animation::AnimationTimer;
 use unrender_std::components::visuals::ResolutionFactor;
 use unspatial_core::position::Position;
 

@@ -29,6 +29,7 @@ unfog-core = { workspace = true }
 unaudiospatial-core = { workspace = true }
 unsoundfield-core = { workspace = true }
 unsummary-core = { workspace = true }
+unmission-core = { workspace = true }
 unthermal-core = { workspace = true }
 unprofile-core = { workspace = true }
 

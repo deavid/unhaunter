@@ -14,12 +14,9 @@ workspace = true
 unboard-core = { workspace = true }
 unmission-core = { workspace = true }
 untypes-core = { workspace = true }
-unsummary-core = { workspace = true }
-unprofile-core = { workspace = true }
 unplayer-core = { workspace = true }
 unreplicon-core = { workspace = true }
 untruck-core = { workspace = true }
 unspatial-core = { workspace = true }
 
 bevy = { workspace = true }
-bevy-persistent = { workspace = true }

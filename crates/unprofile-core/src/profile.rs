@@ -3,7 +3,7 @@ use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use undifficulty_core::difficulty::Difficulty;
 use unghost_core::types::evidence::Evidence;
-use unsummary_core::grade::Grade;
+use unmission_core::grade::Grade;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

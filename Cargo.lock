@@ -7149,11 +7149,29 @@ dependencies = [
  "unfoundation-core",
  "unmapload-core",
  "unmenu-core",
+ "unmission-core",
  "unprofile-core",
  "unsummary-core",
  "untmxmap-core",
  "untypes-core",
  "unui-core",
+]
+
+[[package]]
+name = "uncareer-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
+]
+
+[[package]]
+name = "uncareer-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "uncareer-core",
+ "unmission-core",
 ]
 
 [[package]]
@@ -7190,11 +7208,13 @@ dependencies = [
  "undifficulty-core",
  "unfoundation-core",
  "unghost-core",
+ "unlight-core",
  "unmapload-core",
  "unmission-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
+ "unsensing-core",
  "unsoundfield-core",
  "unspatial-core",
  "unsummary-core",
@@ -7213,6 +7233,7 @@ dependencies = [
  "unboard-core",
  "unghost-core",
  "uninput-core",
+ "unlight-core",
  "unlocomotion-core",
  "unmapload-core",
  "unnavigation-core",
@@ -7220,6 +7241,7 @@ dependencies = [
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
+ "unsensing-core",
  "unsettings-core",
  "unsoundfield-core",
  "unspatial-core",
@@ -7289,12 +7311,14 @@ dependencies = [
  "unfog-core",
  "unfoundation-core",
  "unghost-core",
+ "unlight-core",
  "unmapload-core",
  "unmetrics-core",
  "unmission-core",
  "unnoise-core",
  "unplayer-core",
  "unrender-std",
+ "unsensing-core",
  "unsettings-core",
  "unspatial-core",
  "untypes-core",
@@ -7391,6 +7415,7 @@ dependencies = [
  "uninteraction-core",
  "unlight-core",
  "unmetrics-core",
+ "unmission-core",
  "unprofile-core",
  "unrender-std",
  "unreplicon-core",
@@ -7436,10 +7461,12 @@ dependencies = [
  "unghost-core",
  "uninteraction-core",
  "unmetrics-core",
+ "unmission-core",
  "unnoise-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
+ "unsensing-core",
  "unsoundfield-core",
  "unspatial-core",
  "unsummary-core",
@@ -7715,6 +7742,7 @@ dependencies = [
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
+ "unsensing-core",
  "unsettings-core",
  "unspatial-core",
  "untypes-core",
@@ -7756,6 +7784,7 @@ dependencies = [
  "bevy",
  "unaudiospatial-core",
  "unbehavior-core",
+ "unboard-core",
  "undifficulty-core",
  "unfog-core",
  "ungear-core",
@@ -7915,6 +7944,12 @@ name = "unmission-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "serde",
+ "unboard-core",
+ "undifficulty-core",
+ "unghost-core",
+ "untruck-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -7922,14 +7957,11 @@ name = "unmission-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy-persistent",
  "unboard-core",
  "unmission-core",
  "unplayer-core",
- "unprofile-core",
  "unreplicon-core",
  "unspatial-core",
- "unsummary-core",
  "untruck-core",
  "untypes-core",
 ]
@@ -8037,6 +8069,7 @@ dependencies = [
  "ungear-core",
  "uninput-core",
  "uninteraction-core",
+ "unlocomotion-core",
  "unnavigation-core",
  "unplayer-core",
  "unrender-std",
@@ -8072,7 +8105,7 @@ dependencies = [
  "serde",
  "undifficulty-core",
  "unghost-core",
- "unsummary-core",
+ "unmission-core",
  "uuid",
 ]
 
@@ -8086,6 +8119,7 @@ dependencies = [
  "ron 0.12.0",
  "unboard-core",
  "undifficulty-core",
+ "unmission-core",
  "unplayer-core",
  "unprofile-core",
  "unreplicon-core",
@@ -8109,6 +8143,7 @@ dependencies = [
  "image",
  "unbehavior-core",
  "unboard-core",
+ "unlocomotion-core",
  "unmetrics-core",
  "unrender-std",
  "unspatial-core",
@@ -8175,6 +8210,7 @@ dependencies = [
  "unprofile-core",
  "unrender-std",
  "unreplicon-core",
+ "unsensing-core",
  "unspatial-core",
  "unsummary-core",
  "untags-core",
@@ -8189,6 +8225,14 @@ name = "unsafe-libyaml"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
+
+[[package]]
+name = "unsensing-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
+]
 
 [[package]]
 name = "unsettings-core"
@@ -8252,6 +8296,7 @@ dependencies = [
  "serde",
  "undifficulty-core",
  "unghost-core",
+ "unmission-core",
 ]
 
 [[package]]
@@ -8264,6 +8309,7 @@ dependencies = [
  "undifficulty-core",
  "unfoundation-core",
  "unghost-core",
+ "unmission-core",
  "unplayer-core",
  "unprofile-core",
  "unreplicon-core",

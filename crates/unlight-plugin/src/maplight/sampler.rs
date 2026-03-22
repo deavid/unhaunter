@@ -6,11 +6,12 @@ use std::cell::RefCell;
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::visibility_data::VisibilityData;
 use undifficulty_core::difficulty::Difficulty;
+use unlight_core::components::LightSensitive;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::tonemapping::{self, TonemappingParams};
 use unlight_core::types::light::{LightData, LightFieldData};
 use unlight_core::types::light_type::LightType;
-use unrender_std::components::visuals::{LightSensitive, SpectralInfluence, SpectralInfluenceType};
+use unsensing_core::components::{SpectralInfluence, SpectralInfluenceType};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
@@ -49,9 +50,17 @@ pub(crate) struct SpectralParams {
 impl From<Option<&SpectralInfluence>> for SpectralParams {
     fn from(si: Option<&SpectralInfluence>) -> Self {
         si.map(|x| {
-            let (att, rep) = match x.influence_type {
-                SpectralInfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
-                SpectralInfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
+            let (att, rep) = if x.has_visual_charge() {
+                match x.influence_type {
+                    SpectralInfluenceType::Attractive => {
+                        (x.charge_value.abs().sqrt() + 0.01, 0.0)
+                    }
+                    SpectralInfluenceType::Repulsive => {
+                        (0.0, x.charge_value.abs().sqrt() + 0.01)
+                    }
+                }
+            } else {
+                (0.0, 0.0)
             };
             Self {
                 att_charge: att,

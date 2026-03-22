@@ -20,6 +20,7 @@ untmxmap-core = { workspace = true }
 unfoundation-core = { workspace = true }
 unboard-core = { workspace = true }
 untypes-core = { workspace = true }
+unmission-core = { workspace = true }
 unsummary-core = { workspace = true }
 unui-core = { workspace = true }
 unprofile-core = { workspace = true }

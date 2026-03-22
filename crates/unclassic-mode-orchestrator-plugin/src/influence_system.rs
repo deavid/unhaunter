@@ -6,7 +6,7 @@ use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_influence::GhostInfluence;
 use unghost_core::resources::haunt_state::HauntState;
 use unplayer_core::components::PlayerSprite;
-use unrender_std::components::visuals::SpectralInfluence;
+use unsensing_core::components::SpectralInfluence;
 use unspatial_core::position::Position;
 
 pub(crate) fn assign_ghost_influence(

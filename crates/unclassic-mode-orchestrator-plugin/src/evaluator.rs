@@ -1,5 +1,5 @@
-use unsummary_core::grade::Grade;
-use unsummary_core::summary::{MissionEvaluator, SummaryData};
+use unmission_core::grade::Grade;
+use unmission_core::summary::{MissionEvaluator, SummaryData};
 
 pub(crate) struct ClassicEvaluator;
 

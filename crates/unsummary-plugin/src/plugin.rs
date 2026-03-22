@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unsummary_core::summary::SummaryData;
+use unmission_core::summary::SummaryData;
 use untypes_core::states::{AppState, SimulationState};
 
 use crate::summary::{

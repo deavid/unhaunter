@@ -1,3 +1,4 @@
+pub mod components;
 pub mod exposure;
 pub mod resources;
 pub mod tonemapping;

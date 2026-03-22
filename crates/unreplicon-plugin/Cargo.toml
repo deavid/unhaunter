@@ -42,4 +42,5 @@ untags-core = { workspace = true }
 ungearitems-core = { workspace = true }
 ungear-core = { workspace = true }
 unsummary-core = { workspace = true }
+unsensing-core = { workspace = true }
 unfoundation-core = { workspace = true }

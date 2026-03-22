@@ -14,14 +14,15 @@ use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::resources::haunt_state::HauntState;
+use unlight_core::components::LightSensitive;
 use unmapload_core::events::loadlevel::MapEntitiesReadyEvent;
 use unmission_core::events::LevelReadyEvent;
+use unmission_core::summary::SummaryData;
 use unplayer_core::components::PlayerSprite;
-use unrender_std::components::visuals::{InfraredSensitive, LightSensitive, UltravioletSensitive};
 use unreplicon_core::network_id::NetworkId;
+use unsensing_core::components::SpectralInfluence;
 use unsoundfield_core::components::SoundFieldSource;
 use unspatial_core::position::Position;
-use unsummary_core::summary::SummaryData;
 use untags_core::tags::GhostTag;
 
 #[derive(SystemParam)]
@@ -101,10 +102,7 @@ pub(crate) fn classic_mode_orchestrator(
                         exposure_factor: 1.1,
                         bias: 0.02,
                     })
-                    .insert(UltravioletSensitive {
-                        intensity: 1.0,
-                        color_shift: 1.0,
-                    })
+                    .insert(SpectralInfluence::default().with_ultraviolet(1.0, 1.0))
                     .insert(ThermalEmitter {
                         room_restricted: true,
                         ..default()
@@ -130,14 +128,7 @@ pub(crate) fn classic_mode_orchestrator(
                     exposure_factor: 0.5,
                     bias: 0.01,
                 })
-                .insert(UltravioletSensitive {
-                    intensity: 1.0,
-                    ..default()
-                })
-                .insert(InfraredSensitive {
-                    intensity: 1.0,
-                    ..default()
-                })
+                .insert(SpectralInfluence::default().with_ultraviolet(1.0, 0.0))
                 .insert(ThermalEmitter {
                     room_restricted: true,
                     ..default()

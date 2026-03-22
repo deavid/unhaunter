@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
+use unlocomotion_core::animation::AnimationTimer;
 use unmetrics_core::metrics::SendMetric;
-use unrender_std::components::animation::AnimationTimer;
 use unrender_std::materials::CustomMaterial1;
 use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::AppState;

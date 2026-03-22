@@ -16,3 +16,4 @@ bevy = { workspace = true }
 serde = { workspace = true }
 unghost-core = { workspace = true }
 undifficulty-core = { workspace = true }
+unmission-core = { workspace = true }

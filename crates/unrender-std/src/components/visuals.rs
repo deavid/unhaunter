@@ -1,23 +1,4 @@
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
-
-/// Component that controls how an entity reacts to general lighting and exposure.
-#[derive(Component, Debug, Clone, Copy)]
-pub struct LightSensitive {
-    /// Multiplier for the calculated relative exposure (default: 1.0).
-    pub exposure_factor: f32,
-    /// Constant bias added to exposure (default: 0.0).
-    pub bias: f32,
-}
-
-impl Default for LightSensitive {
-    fn default() -> Self {
-        Self {
-            exposure_factor: 1.0,
-            bias: 0.0,
-        }
-    }
-}
 
 /// Component that stores the upscale factor of the asset (e.g., 3.0 for zoom03x).
 /// Used to downscale the Transform so the object maintains its intended size.
@@ -36,50 +17,6 @@ impl ResolutionFactor {
     }
 }
 
-/// Component that gives the renderer information about how to render the ghost implementation.
-#[derive(Component, Debug, Clone, Copy, Reflect, Default, Serialize, Deserialize)]
-#[reflect(Component, Default)]
-pub struct SpectralClarity {
-    pub uv: f32,
-    pub rl: f32,
-    pub alpha: f32,
-}
-
-/// Component for entities that react to Ultraviolet light (evidence/fluorescence).
-#[derive(Component, Debug, Clone, Copy)]
-pub struct UltravioletSensitive {
-    /// How much the UV light affects the brightness (fluorescence).
-    pub intensity: f32,
-    /// How much the UV light shifts the color towards a specific tint.
-    pub color_shift: f32,
-}
-
-impl Default for UltravioletSensitive {
-    fn default() -> Self {
-        Self {
-            intensity: 1.0,
-            color_shift: 0.0,
-        }
-    }
-}
-
-/// Component for entities that react to Infrared light (Ghost Orbs, NVG).
-#[derive(Component, Debug, Clone, Copy)]
-pub struct InfraredSensitive {
-    /// Multiplier for infrared light reception.
-    pub intensity: f32,
-    /// If true, the entity is only visible via infrared/NVG.
-    pub thresholds: Option<f32>,
-}
-
-impl Default for InfraredSensitive {
-    fn default() -> Self {
-        Self {
-            intensity: 1.0,
-            thresholds: None,
-        }
-    }
-}
 
 /// Component for entities that should oscillate or flicker their alpha/brightness.
 #[derive(Component, Debug, Clone, Copy)]
@@ -171,26 +108,6 @@ impl Default for Ethereal {
             miss_delta: 0.0,
         }
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, Default)]
-pub enum SpectralInfluenceType {
-    #[default]
-    Attractive,
-    Repulsive,
-}
-
-/// Component for entities that have a "spectral signature" that reacts to non-visible light (UV/IR).
-#[derive(Component, Debug, Clone, Copy, PartialEq, Default, Reflect)]
-pub struct SpectralInfluence {
-    pub influence_type: SpectralInfluenceType,
-    pub charge_value: f32,
-    /// Persistence of UV light exposure (0.0 to 1.0+)
-    pub uv_charge: f32,
-    /// Persistence of Red light exposure (0.0 to 1.0+)
-    pub red_charge: f32,
-    /// Persistence of Infrared light exposure (0.0 to 1.0+)
-    pub ir_charge: f32,
 }
 
 /// Component for solid entities that should cast shadows or have standard responsive lighting.

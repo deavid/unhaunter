@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unsummary_core::grade::Grade;
+use unmission_core::grade::Grade;
 use unui_core::assets::UiAssets;
 
 /// Utility for creating badge UI elements in the map hub

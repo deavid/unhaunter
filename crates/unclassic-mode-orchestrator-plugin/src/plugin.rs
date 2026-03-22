@@ -5,7 +5,7 @@ pub struct ClassicModeOrchestratorPlugin;
 
 impl Plugin for ClassicModeOrchestratorPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(unsummary_core::summary::ActiveMissionEvaluator(Box::new(
+        app.insert_resource(unmission_core::summary::ActiveMissionEvaluator(Box::new(
             crate::evaluator::ClassicEvaluator,
         )));
         app.add_systems(

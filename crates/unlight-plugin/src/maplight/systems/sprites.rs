@@ -11,12 +11,13 @@ use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::salt::UVReactive;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
+use unlight_core::components::LightSensitive;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::MainPlayer;
+use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, InfraredSensitive, LightSensitive,
-    ShadowCaster, SpectralClarity, SpectralInfluence, UltravioletSensitive,
+    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ShadowCaster,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::utils::light::lerp_color;
@@ -27,8 +28,8 @@ use crate::maplight::definitions::{ActiveFlashlights, GridResources};
 use crate::maplight::sampler::{LightingSampler, SpectralParams};
 use crate::maplight::visuals::{
     apply_alpha_modulator_visuals, apply_ecto_visuals, apply_emissive_visuals,
-    apply_ethereal_visuals, apply_ir_visuals, apply_miasma_cloud_visuals, apply_uv_visuals,
-    update_spectral_influence,
+    apply_ethereal_visuals, apply_ir_visuals, apply_miasma_cloud_visuals,
+    apply_uv_visuals, update_spectral_influence,
 };
 use crate::metrics;
 
@@ -76,8 +77,6 @@ pub(crate) fn apply_lighting_to_sprites_system(
             Option<&SpectralClarity>,
             (
                 Option<&LightSensitive>,
-                Option<&InfraredSensitive>,
-                Option<&UltravioletSensitive>,
                 Option<&ShadowCaster>,
                 Option<&MapColor>,
                 Option<&UVReactive>,
@@ -123,8 +122,6 @@ pub(crate) fn apply_lighting_to_sprites_system(
         o_spectral_clarity,
         (
             o_light_sens,
-            o_ir_sens,
-            o_uv_sens,
             o_shadow_caster,
             o_color,
             uv_reactive,
@@ -186,11 +183,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
             dst_color = dcl.into();
         }
 
-        let mut smooth_a: f32 = quality_factor;
-
-        if let Some(uv_sens) = o_uv_sens {
-            apply_uv_visuals(uv_sens, &ld, visibility, &mut dst_color, &mut opacity);
-        }
+        let smooth_a: f32 = quality_factor;
 
         if let Some(uv_react) = uv_reactive {
             let uv_react = uv_react.0 * visibility;
@@ -209,8 +202,9 @@ pub(crate) fn apply_lighting_to_sprites_system(
             dst_color = srgba.into();
         }
 
-        if let Some(ir_sens) = o_ir_sens {
-            apply_ir_visuals(ir_sens, &ld_abs, visibility, &mut opacity, &mut smooth_a);
+        if let Some(si) = o_spectral_influence.as_deref() {
+            apply_uv_visuals(si, &ld, visibility, &mut opacity, &mut dst_color);
+            apply_ir_visuals(si, &ld_abs, visibility, &mut opacity);
         }
 
         if let Some(am) = o_alpha_mod {

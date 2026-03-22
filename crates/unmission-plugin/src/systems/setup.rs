@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use unmission_core::events::MissionCompletedEvent;
 use unmission_core::resources::MissionEndRequested;
 use unmission_core::types::MissionEvent;
 use untypes_core::states::AppState;
@@ -8,6 +9,7 @@ use crate::systems::handle_mission_events;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_message::<MissionEvent>()
+        .add_message::<MissionCompletedEvent>()
         .init_resource::<MissionEndRequested>()
         .add_systems(
             Update,
