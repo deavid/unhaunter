@@ -3,13 +3,13 @@ use std::f64::consts::PI;
 use bevy::prelude::*;
 use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::prelude::*;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::components::visuals::ResolutionFactor;
 use unreplicon_core::messages::SpawnParticleNetEvent;
-use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 use crate::components::fade_out::FadeOut;
@@ -33,7 +33,7 @@ pub(crate) fn ghost_fade_out_system(
         Option<&GhostSprite>,
         Option<&mut GhostBehaviorDynamics>,
     )>,
-    mut ga: SoundEmitter,
+    mut ga: AudioEmitter,
     mut ev_particles: MessageWriter<ToClients<SpawnParticleNetEvent>>,
 ) {
     let mut rng = random_seed::rng();
@@ -213,4 +213,6 @@ pub(crate) fn app_setup(app: &mut App) {
 
     // Initialize dynamic behavior update system
     crate::systems::dynamic_behavior_update::app_setup(app);
+    // Ghost sound field pulse (authority generates, clients receive)
+    crate::systems::sound_field_pulse::app_setup(app);
 }

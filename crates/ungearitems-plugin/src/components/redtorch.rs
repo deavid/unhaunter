@@ -9,7 +9,7 @@ use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::light::LightEmitter;
 use unreplicon_core::ownership::LocallyOwned;
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 
 use crate::metrics;
@@ -25,7 +25,7 @@ pub(crate) fn update_redtorch_skeleton(
         ),
         With<LocallyOwned>,
     >,
-    mut ga: SoundEmitter,
+    mut ga: AudioEmitter,
 ) {
     let measure = metrics::REDTORCH_UPDATE.time_measure();
     for (mut redtorch, mut battery, toggle, electronic, pos) in q_redtorch.iter_mut() {

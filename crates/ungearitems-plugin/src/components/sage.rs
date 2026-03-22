@@ -14,7 +14,7 @@ use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unreplicon_core::ownership::LocallyOwned;
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
@@ -26,7 +26,7 @@ pub(crate) fn update_sage_skeleton(
     mut q_sage: Query<(Entity, &mut SageBundleData), With<LocallyOwned>>,
     q_triggered: Query<&Triggered>,
     mut commands: Commands,
-    mut gs_audio: SoundEmitter,
+    mut gs_audio: AudioEmitter,
 ) {
     for (entity, mut sage) in q_sage.iter_mut() {
         if q_triggered.get(entity).is_ok() && !sage.is_active && !sage.consumed {

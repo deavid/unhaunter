@@ -1,5 +1,5 @@
 [package]
-name = "unsound-core"
+name = "unsoundfield-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -11,6 +11,5 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unspatial-core = { path = "../unspatial-core" }
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
+unspatial-core = { path = "../unspatial-core" }

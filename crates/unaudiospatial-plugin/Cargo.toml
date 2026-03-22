@@ -1,5 +1,5 @@
 [package]
-name = "unsound-plugin"
+name = "unaudiospatial-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -11,15 +11,13 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unsound-core = { path = "../unsound-core" }
+unaudiospatial-core = { path = "../unaudiospatial-core" }
 unspatial-core = { path = "../unspatial-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unboard-core = { path = "../unboard-core" }
+unsettings-core = { path = "../unsettings-core" }
+unplayer-core = { path = "../unplayer-core" }
+untags-core = { path = "../untags-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 untypes-core = { path = "../untypes-core" }
-unmapload-core = { path = "../unmapload-core" }
-unreplicon-core = { workspace = true }
-bevy_replicon = { workspace = true }
 
 bevy = { workspace = true }
-rand = { workspace = true }
+bevy-persistent = { workspace = true }

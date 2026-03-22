@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::RngExt;
 use unfoundation_core::random_seed;
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 
 /// Enables/disables debug logs for hunting behavior.
@@ -77,7 +77,7 @@ pub(crate) enum RoarReason {
 pub(crate) fn execute_roar_decision(
     roar_decision: &RoarDecision,
     last_roar: &mut f32,
-    ga: &mut SoundEmitter,
+    ga: &mut AudioEmitter,
     ghost_position: &Position,
 ) {
     if roar_decision.should_play_now {

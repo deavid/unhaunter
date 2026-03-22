@@ -18,6 +18,7 @@ unplayer-core = { path = "../unplayer-core" }
 unrender-std = { path = "../unrender-std" }
 unreplicon-core = { workspace = true }
 unspatial-core = { path = "../unspatial-core" }
+unsoundfield-core = { path = "../unsoundfield-core" }
 unsummary-core = { path = "../unsummary-core" }
 untags-core = { path = "../untags-core" }
 untypes-core = { path = "../untypes-core" }

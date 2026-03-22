@@ -9,7 +9,7 @@ use ungear_core::types::gear::{EquipmentPosition, Hand};
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unreplicon_core::messages::{RequestDrop, RequestGrab};
 use unreplicon_core::ownership::LocallyOwned;
-use unsound_core::events::SoundEvent;
+use unaudiospatial_core::events::SoundEvent;
 use unspatial_core::position::Position;
 
 fn sync_held_gear_position(

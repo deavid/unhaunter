@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
+use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
+use unsoundfield_core::components::SoundFieldSource;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
@@ -119,12 +120,12 @@ fn update_ghost_behavior_dynamics_system(
     measure.end_ms();
 }
 
-fn sync_ghost_emitters(
+fn sync_ghost_field_sources(
     haunt_state: Res<HauntState>,
     mut q_emitters: Query<(
         &mut ThermalEmitter,
         &mut FluidEmitter,
-        &mut SoundEmitter,
+        &mut SoundFieldSource,
         Option<&GhostSprite>,
         Option<&GhostBreach>,
     )>,
@@ -165,7 +166,7 @@ pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
         (
             update_ghost_behavior_dynamics_system
                 .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
-            sync_ghost_emitters,
+            sync_ghost_field_sources,
         )
             .chain(),
     );

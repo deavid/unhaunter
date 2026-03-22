@@ -1,5 +1,5 @@
 [package]
-name = "uninteraction-plugin"
+name = "unsoundfield-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -11,13 +11,13 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-uninteraction-core = { path = "../uninteraction-core" }
+unsoundfield-core = { path = "../unsoundfield-core" }
 unspatial-core = { path = "../unspatial-core" }
-untypes-core = { path = "../untypes-core" }
+unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
-unbehavior = { path = "../unbehavior" }
-unrender-std = { path = "../unrender-std" }
-unaudiospatial-core = { path = "../unaudiospatial-core" }
-
+unmetrics-core = { path = "../unmetrics-core" }
+untypes-core = { path = "../untypes-core" }
+unmapload-core = { path = "../unmapload-core" }
 
 bevy = { workspace = true }
+rand = { workspace = true }

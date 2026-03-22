@@ -28,7 +28,8 @@ uninteraction-core = { path = "../uninteraction-core" }
 untruck-core = { path = "../untruck-core" }
 ungear-core = { path = "../ungear-core" }
 unnpc-core = { path = "../unnpc-core" }
-unsound-core = { path = "../unsound-core" }
+unaudiospatial-core = { path = "../unaudiospatial-core" }
+unsoundfield-core = { path = "../unsoundfield-core" }
 unghost-core = { path = "../unghost-core" }
 untags-core = { path = "../untags-core" }
 

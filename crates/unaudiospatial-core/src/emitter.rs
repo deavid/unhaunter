@@ -4,7 +4,7 @@ use unspatial_core::position::Position;
 
 /// A collection of resources frequently used for audio playback.
 #[derive(SystemParam)]
-pub struct SoundEmitter<'w> {
+pub struct AudioEmitter<'w> {
     /// Provides access to the asset server for loading sound effects.
     pub asset_server: Res<'w, AssetServer>,
     /// Access to the current game time.
@@ -13,7 +13,7 @@ pub struct SoundEmitter<'w> {
     pub sound_events: MessageWriter<'w, SoundEvent>,
 }
 
-impl SoundEmitter<'_> {
+impl AudioEmitter<'_> {
     /// Plays a sound effect using the specified file path and volume from the given
     /// position.
     pub fn play_audio(&mut self, sound_file: String, volume: f32, position: &Position) {

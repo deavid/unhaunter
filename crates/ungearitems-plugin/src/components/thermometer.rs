@@ -15,7 +15,7 @@ use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
 use untypes_core::roles::LocalPlayerRole;
@@ -34,7 +34,7 @@ pub(crate) fn update_thermometer(
         &ItemName,
         &mut PerceivedClarity,
     )>,
-    mut gs_audio: SoundEmitter,
+    mut gs_audio: AudioEmitter,
     tg: If<Res<ThermalGrid>>,
     difficulty: Res<CurrentDifficulty>,
     player_profile: Res<Persistent<PlayerProfileData>>,

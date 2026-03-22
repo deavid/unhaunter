@@ -20,10 +20,3 @@ pub struct FluidEmitter {
     /// The pressure/influence this emitter contributes.
     pub pressure: f32,
 }
-
-/// A component that emits sound into the environment.
-#[derive(Component, Debug, Clone, Copy, Default)]
-pub struct SoundEmitter {
-    /// The volume/intensity of the sound being emitted.
-    pub volume: f32,
-}

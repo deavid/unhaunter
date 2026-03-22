@@ -8,7 +8,7 @@ use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{MainPlayer, PlayerInput};
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 
 use crate::components::flashlight::Flashlight;
@@ -16,7 +16,7 @@ use crate::components::repellentflask::RepellentFlask;
 use crate::metrics;
 
 pub(crate) fn system_electronic_interference(
-    gs_audio: SoundEmitter,
+    gs_audio: AudioEmitter,
     haunt_state: Res<HauntState>,
     mut q_electronic: Query<(&Position, &mut Electronic, &Toggleable)>,
 ) {

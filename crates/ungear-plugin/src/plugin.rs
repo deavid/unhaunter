@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use unplayer_core::resources::game_config::GameConfig;
-use unsound_core::events::SoundEvent;
 use untypes_core::states::AppState;
 
 use super::systems;
@@ -14,8 +13,7 @@ pub struct UnhaunterGearCorePlugin;
 impl Plugin for UnhaunterGearCorePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GameConfig>()
-            .init_resource::<GearSpawnerRegistry>()
-            .add_message::<SoundEvent>();
+            .init_resource::<GearSpawnerRegistry>();
 
         metrics::register_all(app);
     }

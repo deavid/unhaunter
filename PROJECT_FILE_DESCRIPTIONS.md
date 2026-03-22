@@ -75,7 +75,8 @@ Low-level foundation shared across the project. Zero game logic (no systems or o
 - **\`unmenu-core\`**: Shared UI templates and mission selection data.
 - **\`unpicking-core\`**: Low-level picking logic and backend components.
 - **\`unplayer-core\`**: Core player components and animation data.
-- **\`unsound-core\`**: Sound-related resources and types.
+- **\`unsoundfield-core\`**: Sound field simulation data and \`SoundGrid\`.
+- **\`unaudiospatial-core\`**: Audio emission contracts and \`SoundEvent\`.
 - **\`untruck-core\`**: Truck-specific components, journal, and loadout data.
 - **\`unwalkie-core\`**: Walkie-talkie traits, events, and resources.
 - **\`unreplicon-core\`**: Core types and components for replication logic.
@@ -112,7 +113,8 @@ High-level game flow and specific gameplay mechanics. Logic is contained in \`Pl
 - **\`unrender-plugin\`**: Higher-level rendering orchestration.
 - **\`unrender-core\`**: Shared rendering orchestration types and traits.
 - **\`unpicking-plugin\`**: Custom picking backend for map sprites.
-- **\`unsound-plugin\`**: Audio playback and sound triggering logic.
+- **\`unsoundfield-plugin\`**: Sound field propagation and diffusion simulation.
+- **\`unaudiospatial-plugin\`**: Spatial audio playback and distance attenuation.
 - **\`unthermal-plugin\`**: Thermal vision and heat signature simulation.
 - **\`unmetrics-plugin\`**: Performance monitoring and reporting.
 - **\`unclassic-mode-plugin\`**: Classic mode gameplay logic and mission evaluation.

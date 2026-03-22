@@ -27,7 +27,8 @@ unghost-core = { path = "../unghost-core" }
 unplayer-core = { path = "../unplayer-core" }
 untypes-core = { path = "../untypes-core" }
 unfog-core = { path = "../unfog-core" }
-unsound-core = { path = "../unsound-core" }
+unaudiospatial-core = { path = "../unaudiospatial-core" }
+unsoundfield-core = { path = "../unsoundfield-core" }
 unsummary-core = { path = "../unsummary-core" }
 unthermal-core = { path = "../unthermal-core" }
 unprofile-core = { path = "../unprofile-core" }

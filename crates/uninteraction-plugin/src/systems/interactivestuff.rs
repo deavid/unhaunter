@@ -1,3 +1,4 @@
+use unaudiospatial_core::emitter::AudioEmitter;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomStateDelta;
@@ -5,7 +6,6 @@ use unboard_core::resources::roomdb::RoomState;
 use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use uninteraction_core::events::InteractionExecutionType;
 use unrender_std::board::spritedb::SpriteDB;
-use unsound_core::events::SoundEvent;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
@@ -31,8 +31,8 @@ pub struct InteractiveStuff<'w, 's> {
     pub bf: Option<Res<'w, SpriteDB>>,
     /// Used to insert updated Behavior components on entities.
     pub commands: Commands<'w, 's>,
-    /// Event writer for sending sound events.
-    pub sound_events: MessageWriter<'w, SoundEvent>,
+    /// System param for playing spatial audio events.
+    pub audio: AudioEmitter<'w>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
     pub roomtopo: ResMut<'w, RoomTopology>,
@@ -243,12 +243,7 @@ impl InteractiveStuff<'_, '_> {
                 && let Some(interactive) = interactive
             {
                 let sound_file = interactive.sound_for_moving_into_state(&other_behavior);
-                self.sound_events.write(SoundEvent {
-                    sound_file,
-                    volume: 1.0,
-                    position: Some(*item_pos),
-                    broadcast: true,
-                });
+                self.audio.play_audio(sound_file, 1.0, item_pos);
             }
             return true;
         }

@@ -65,8 +65,10 @@ members = [
     "crates/unspatial-core",
     "crates/unsummary-core",
     "crates/unsummary-plugin",
-    "crates/unsound-core",
-    "crates/unsound-plugin",
+    "crates/unsoundfield-core",
+    "crates/unsoundfield-plugin",
+    "crates/unaudiospatial-core",
+    "crates/unaudiospatial-plugin",
     "crates/untags-core",
     "crates/unthermal-core",
     "crates/unthermal-plugin",
@@ -236,8 +238,10 @@ unsettings-plugin = { path = "crates/unsettings-plugin" }
 unspatial-core = { path = "crates/unspatial-core" }
 unsummary-core = { path = "crates/unsummary-core" }
 unsummary-plugin = { path = "crates/unsummary-plugin" }
-unsound-core = { path = "crates/unsound-core" }
-unsound-plugin = { path = "crates/unsound-plugin" }
+unsoundfield-core = { path = "crates/unsoundfield-core" }
+unsoundfield-plugin = { path = "crates/unsoundfield-plugin" }
+unaudiospatial-core = { path = "crates/unaudiospatial-core" }
+unaudiospatial-plugin = { path = "crates/unaudiospatial-plugin" }
 untags-core = { path = "crates/untags-core" }
 unthermal-core = { path = "crates/unthermal-core" }
 unthermal-plugin = { path = "crates/unthermal-plugin" }
@@ -303,7 +307,8 @@ unprofile-plugin = { workspace = true }
 unsettings-plugin = { workspace = true }
 unsummary-plugin = { workspace = true }
 unthermal-plugin = { workspace = true }
-unsound-plugin = { workspace = true }
+unsoundfield-plugin = { workspace = true }
+unaudiospatial-plugin = { workspace = true }
 unrender-plugin = { workspace = true }
 unmanual-plugin = { workspace = true }
 unpicking-plugin = { workspace = true }

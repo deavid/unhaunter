@@ -7073,6 +7073,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "unaudiospatial-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "unspatial-core",
+]
+
+[[package]]
+name = "unaudiospatial-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "unaudiospatial-core",
+ "unmetrics-core",
+ "unplayer-core",
+ "unsettings-core",
+ "unspatial-core",
+ "untags-core",
+ "untypes-core",
+]
+
+[[package]]
 name = "unbehavior"
 version = "0.3.2-dev"
 dependencies = [
@@ -7164,6 +7187,7 @@ dependencies = [
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
+ "unsoundfield-core",
  "unspatial-core",
  "unsummary-core",
  "untags-core",
@@ -7187,6 +7211,7 @@ dependencies = [
  "unrender-std",
  "unreplicon-core",
  "unsettings-core",
+ "unsoundfield-core",
  "unspatial-core",
  "untags-core",
  "untmxmap-core",
@@ -7318,7 +7343,6 @@ dependencies = [
  "unplayer-core",
  "unrender-std",
  "unsettings-core",
- "unsound-core",
  "unspatial-core",
  "untags-core",
  "untruck-core",
@@ -7348,6 +7372,7 @@ dependencies = [
  "enum-iterator",
  "ndarray",
  "rand 0.10.0",
+ "unaudiospatial-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -7363,7 +7388,7 @@ dependencies = [
  "unprofile-core",
  "unrender-std",
  "unreplicon-core",
- "unsound-core",
+ "unsoundfield-core",
  "unspatial-core",
  "unsummary-core",
  "untags-core",
@@ -7396,6 +7421,7 @@ dependencies = [
  "bevy_replicon",
  "rand 0.10.0",
  "unaudiobg-core",
+ "unaudiospatial-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -7408,7 +7434,7 @@ dependencies = [
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
- "unsound-core",
+ "unsoundfield-core",
  "unspatial-core",
  "unsummary-core",
  "untags-core",
@@ -7423,6 +7449,7 @@ dependencies = [
  "bevy",
  "clap",
  "unaudiobg-plugin",
+ "unaudiospatial-plugin",
  "unboard-plugin",
  "uncampaign-plugin",
  "unclassic-mode-gameplay-plugin",
@@ -7454,7 +7481,7 @@ dependencies = [
  "unrender-plugin",
  "unreplicon-plugin",
  "unsettings-plugin",
- "unsound-plugin",
+ "unsoundfield-plugin",
  "unsummary-plugin",
  "unthermal-plugin",
  "untmxmap-core",
@@ -7576,11 +7603,11 @@ name = "uninteraction-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "unaudiospatial-core",
  "unbehavior",
  "unboard-core",
  "uninteraction-core",
  "unrender-std",
- "unsound-core",
  "unspatial-core",
  "untypes-core",
 ]
@@ -7898,6 +7925,7 @@ dependencies = [
  "bevy-persistent",
  "bevy_asset_loader",
  "bevy_platform",
+ "unaudiospatial-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -7914,7 +7942,7 @@ dependencies = [
  "unrender-std",
  "unreplicon-core",
  "unsettings-core",
- "unsound-core",
+ "unsoundfield-core",
  "unspatial-core",
  "unsummary-core",
  "untags-core",
@@ -8090,27 +8118,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "unsound-core"
+name = "unsoundfield-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_platform",
  "unspatial-core",
 ]
 
 [[package]]
-name = "unsound-plugin"
+name = "unsoundfield-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_replicon",
  "rand 0.10.0",
  "unboard-core",
  "unfoundation-core",
  "unmapload-core",
  "unmetrics-core",
- "unreplicon-core",
- "unsound-core",
+ "unsoundfield-core",
  "unspatial-core",
  "untypes-core",
 ]

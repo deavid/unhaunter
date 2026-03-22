@@ -1,0 +1,15 @@
+[package]
+name = "unaudiospatial-core"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+unspatial-core = { path = "../unspatial-core" }
+bevy = { workspace = true }

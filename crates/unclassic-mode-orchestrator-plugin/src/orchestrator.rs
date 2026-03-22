@@ -3,7 +3,8 @@ use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::prelude::IndexedRandom;
 use unbehavior::components::Movable;
-use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
+use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
+use unsoundfield_core::components::SoundFieldSource;
 use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
@@ -108,7 +109,7 @@ pub(crate) fn classic_mode_orchestrator(
                         ..default()
                     })
                     .insert(FluidEmitter::default())
-                    .insert(SoundEmitter::default());
+                    .insert(SoundFieldSource::default());
 
                 ec.id()
             };
@@ -141,7 +142,7 @@ pub(crate) fn classic_mode_orchestrator(
                     ..default()
                 })
                 .insert(FluidEmitter::default())
-                .insert(SoundEmitter::default());
+                .insert(SoundFieldSource::default());
             let _ghost_id = ec.id();
 
             crate::influence_system::assign_ghost_influence(

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_platform::collections::HashMap;
+use std::collections::HashMap;
 use unspatial_core::boardposition::BoardPosition;
 
 #[derive(Clone, Debug, Resource, Default)]

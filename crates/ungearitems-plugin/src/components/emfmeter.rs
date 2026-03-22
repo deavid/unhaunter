@@ -10,8 +10,8 @@ use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
-use unsound_core::emitter::SoundEmitter;
-use unsound_core::resources::SoundGrid;
+use unaudiospatial_core::emitter::AudioEmitter;
+use unsoundfield_core::resources::SoundGrid;
 use unthermal_core::resources::ThermalGrid;
 
 use crate::metrics;
@@ -40,7 +40,7 @@ pub(crate) fn update_emfmeter(
         &EquipmentPosition,
         &mut PerceivedClarity,
     )>,
-    mut gs_audio: SoundEmitter,
+    mut gs_audio: AudioEmitter,
     miasma: If<Res<MiasmaGrid>>,
     tg: If<Res<ThermalGrid>>,
     sg: If<Res<SoundGrid>>,

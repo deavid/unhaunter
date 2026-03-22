@@ -14,7 +14,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::Emissive;
 use unreplicon_core::ownership::LocallyOwned;
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
@@ -39,7 +39,7 @@ pub(crate) fn update_repellentflask_skeleton(
     q_triggered: Query<&Triggered>,
     mut summary: ResMut<SummaryData>,
     mut commands: Commands,
-    mut gs_audio: SoundEmitter,
+    mut gs_audio: AudioEmitter,
 ) {
     for (entity, mut repellent) in q_repellent.iter_mut() {
         if q_triggered.get(entity).is_ok()

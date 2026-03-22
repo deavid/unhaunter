@@ -15,7 +15,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unreplicon_core::messages::SaltDroppedMessage;
 use unreplicon_core::ownership::LocallyOwned;
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
@@ -25,7 +25,7 @@ use crate::metrics;
 pub(crate) fn update_salt_skeleton(
     mut q_salt: Query<(Entity, &mut SaltData, &Position), With<LocallyOwned>>,
     q_triggered: Query<&Triggered>,
-    mut gs_audio: SoundEmitter,
+    mut gs_audio: AudioEmitter,
     mut commands: Commands,
     authority: Option<Res<AuthorityRole>>,
     mut salt_drop_writer: MessageWriter<SaltDroppedMessage>,

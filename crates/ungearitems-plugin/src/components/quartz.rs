@@ -8,7 +8,7 @@ use ungearitems_core::components::quartz::{QuartzStoneData, QuartzStoneSkin};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::ownership::LocallyOwned;
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 use untags_core::tags::GhostTag;
 use untypes_core::roles::LocalPlayerRole;
@@ -69,7 +69,7 @@ impl QuartzStoneDataExt for QuartzStoneData {
 }
 
 pub(crate) fn update_quartz_skeleton(
-    mut gs_audio: SoundEmitter,
+    mut gs_audio: AudioEmitter,
     difficulty: Res<CurrentDifficulty>,
     mut q_quartz: Query<
         (

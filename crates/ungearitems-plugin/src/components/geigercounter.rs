@@ -6,8 +6,8 @@ use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
-use unsound_core::emitter::SoundEmitter;
-use unsound_core::resources::SoundGrid;
+use unaudiospatial_core::emitter::AudioEmitter;
+use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 
 use crate::metrics;
@@ -50,7 +50,7 @@ pub(crate) fn update_geigercounter(
         &EquipmentPosition,
         &mut PerceivedClarity,
     )>,
-    mut gs_audio: SoundEmitter,
+    mut gs_audio: AudioEmitter,
     sg: If<Res<SoundGrid>>,
     difficulty: Res<CurrentDifficulty>,
     haunt_state: Res<HauntState>,

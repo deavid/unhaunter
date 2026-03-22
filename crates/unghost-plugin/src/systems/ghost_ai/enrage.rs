@@ -16,7 +16,7 @@ use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{
     Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite,
 };
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 
@@ -50,7 +50,7 @@ pub(crate) fn ghost_enrage(
             Without<InTruck>,
         ),
     >,
-    mut gs_audio: SoundEmitter,
+    mut gs_audio: AudioEmitter,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
     mut last_roar: Local<f32>,

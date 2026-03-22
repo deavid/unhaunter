@@ -17,7 +17,7 @@ use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unreplicon_core::messages::InteractionRequestMessage;
-use unsound_core::events::SoundEvent;
+use unaudiospatial_core::events::SoundEvent;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;

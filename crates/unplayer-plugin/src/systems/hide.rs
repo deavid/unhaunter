@@ -6,7 +6,7 @@ use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unrender_std::components::animation::AnimationTimer;
 use unrender_std::components::visuals::ResolutionFactor;
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 
 /// Component to tag the hiding overlay visual, linking it to the player.
@@ -32,7 +32,7 @@ fn hide_player(
         (Entity, &Position, &Behavior, Option<&ResolutionFactor>),
         Without<PlayerSprite>,
     >,
-    mut ga: SoundEmitter,
+    mut ga: AudioEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
     for (player_entity, input_mapping, mut player_pos, player_gear) in players.iter_mut() {

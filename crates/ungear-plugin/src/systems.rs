@@ -1,6 +1,4 @@
-use bevy::audio::SpatialScale;
 use bevy::prelude::*;
-use bevy_persistent::Persistent;
 use unboard_core::components::mapcolor::MapColor;
 use ungear_core::components::core::GearSprite;
 use ungear_core::components::core::StatusText;
@@ -16,8 +14,6 @@ use unrender_std::assets::GearAssets;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
-use unsettings_core::audio::{AudioSettings, SoundOutput};
-use unsound_core::events::SoundEvent;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
@@ -56,63 +52,6 @@ fn update_deployed_gear_sprites(
                 SpriteLayer::default(),
                 MapColor::default(),
             ));
-        }
-    }
-    measure.end_ms();
-}
-
-fn sound_playback_system(
-    mut sound_events: MessageReader<SoundEvent>,
-    asset_server: Res<AssetServer>,
-    qp: Query<&Position, With<PlayerTag>>,
-    mut commands: Commands,
-    audio_settings: Res<Persistent<AudioSettings>>,
-    time: Res<Time>,
-    mut last_error_log: Local<f32>,
-) {
-    let measure = metrics::SOUND_PLAYBACK.time_measure();
-    let now = time.elapsed_secs();
-    let mut can_log = now - *last_error_log > 1.0;
-    for sound_event in sound_events.read() {
-        let Some(player_position) = qp.iter().next() else {
-            measure.end_ms();
-            return;
-        };
-        if !player_position.is_finite() && can_log {
-            error!("Player position is not finite: {player_position:?}");
-            *last_error_log = now;
-            can_log = false;
-        }
-        let dist = sound_event
-            .position
-            .map(|pos| player_position.distance(&pos))
-            .unwrap_or(0.0);
-        let mut adjusted_volume = (sound_event.volume * (1.0 + dist * 0.2)).clamp(0.0, 1.0);
-        if audio_settings.sound_output == SoundOutput::Mono {
-            adjusted_volume /= 1.0 + dist * 0.4;
-        }
-
-        let mut sound = commands.spawn(AudioPlayer::<AudioSource>(
-            asset_server.load(sound_event.sound_file.clone()),
-        ));
-        sound.insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Despawn,
-            volume: bevy::audio::Volume::Linear(
-                adjusted_volume
-                    * audio_settings.volume_effects.as_f32()
-                    * audio_settings.volume_master.as_f32(),
-            ),
-            speed: 1.0,
-            paused: false,
-            spatial: sound_event.position.is_some()
-                && audio_settings.sound_output != SoundOutput::Mono,
-            spatial_scale: Some(SpatialScale::new(0.005)),
-            ..default()
-        });
-        if let Some(position) = sound_event.position {
-            let mut spos_vec = perspective::to_screen_coord(position);
-            spos_vec.z -= 10.0 / audio_settings.sound_output.to_ear_offset();
-            sound.insert(Transform::from_translation(spos_vec));
         }
     }
     measure.end_ms();
@@ -240,8 +179,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(FixedUpdate, update_gear_ui)
         .add_systems(
             Update,
-            (update_deployed_gear_sprites, sound_playback_system)
-                .run_if(in_state(AppState::InGame)),
+            update_deployed_gear_sprites.run_if(in_state(AppState::InGame)),
         )
         .add_systems(Update, keyboard_gear.run_if(in_state(AppState::InGame)));
 }

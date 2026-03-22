@@ -16,7 +16,7 @@ use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;
 use unreplicon_core::ownership::LocallyOwned;
-use unsound_core::resources::SoundGrid;
+use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::GhostTag;

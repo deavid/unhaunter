@@ -2,7 +2,8 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unboard_core::components::mapcolor::MapColor;
-use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
+use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
+use unsoundfield_core::components::SoundFieldSource;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -312,7 +313,7 @@ pub(crate) fn hydrate_ghosts_system(
                 ..default()
             })
             .insert(FluidEmitter::default())
-            .insert(SoundEmitter::default())
+            .insert(SoundFieldSource::default())
             .insert(unspatial_core::lerp_position::LerpPosition::new(*pos));
 
         // --- Attach visual mesh ---
@@ -435,7 +436,7 @@ pub(crate) fn hydrate_breach_system(
                 ..default()
             })
             .insert(FluidEmitter::default())
-            .insert(SoundEmitter::default());
+            .insert(SoundFieldSource::default());
 
         // --- Attach visual mesh ---
         if let (Some(meshes), Some(materials1), Some(ghost_assets)) =

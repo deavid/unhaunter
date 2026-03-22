@@ -18,6 +18,7 @@ unnavigation-core = { path = "../unnavigation-core" }
 unplayer-core = { path = "../unplayer-core" }
 unmapload-core = { path = "../unmapload-core" }
 unpicking-core = { path = "../unpicking-core" }
+unsoundfield-core = { path = "../unsoundfield-core" }
 unrender-std = { path = "../unrender-std" }
 unreplicon-core = { workspace = true }
 unsettings-core = { path = "../unsettings-core" }

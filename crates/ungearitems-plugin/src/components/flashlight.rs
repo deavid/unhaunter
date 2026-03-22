@@ -3,7 +3,7 @@ use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, S
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::light::LightEmitter;
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 
 use crate::metrics;
@@ -68,7 +68,7 @@ pub(crate) fn update_flashlight_skin(
         &Position,
         Option<&LocallyOwned>,
     )>,
-    mut ga: SoundEmitter,
+    mut ga: AudioEmitter,
 ) {
     let measure = metrics::FLASHLIGHT_UPDATE.time_measure();
     for (

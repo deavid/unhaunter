@@ -7,7 +7,7 @@ use unbehavior::components::Interactive;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSpectating, PlayerSprite};
-use unsound_core::emitter::SoundEmitter;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 
@@ -18,7 +18,7 @@ pub(crate) fn player_gear_usage_system(
         (With<PlayerSprite>, Without<PlayerSpectating>),
     >,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
-    mut ga: SoundEmitter,
+    mut ga: AudioEmitter,
     authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
     let is_authority = authority.is_some();

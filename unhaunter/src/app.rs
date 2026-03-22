@@ -35,7 +35,8 @@ use unprofile_plugin::plugin::UnhaunterProfilePlugin;
 use unrender_plugin::plugin::{UnhaunterRenderCorePlugin, UnhaunterRenderPlugin};
 use unreplicon_plugin::plugin::UnrepliconPlugin;
 use unsettings_plugin::plugin::UnhaunterSettingsPlugin;
-use unsound_plugin::plugin::UnhaunterSoundPlugin;
+use unaudiospatial_plugin::plugin::UnhaunterSpatialAudioPlugin;
+use unsoundfield_plugin::plugin::UnhaunterSoundFieldPlugin;
 use unsummary_plugin::plugin::{UnhaunterSummaryCorePlugin, UnhaunterSummaryPlugin};
 use unthermal_plugin::plugin::UnhaunterThermalPlugin;
 use untmxmap_plugin::plugin::UnhaunterTmxMapPlugin;
@@ -155,6 +156,7 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterRenderCorePlugin,
         UnhaunterGearCorePlugin,
         UnhaunterInteractionCorePlugin,
+        UnhaunterSoundFieldPlugin,
         UnhaunterMissionPlugin,
         UnhaunterHubPlugin,
     ));
@@ -199,7 +201,7 @@ pub fn app_run(cli_options: CliOptions) {
         ));
         app.add_plugins((
             UnhaunterGhostPlugin,
-            UnhaunterSoundPlugin,
+            UnhaunterSpatialAudioPlugin,
             UnhaunterAudioBgPlugin,
             UnhaunterLightPlugin,
             UnhaunterFogPlugin,
