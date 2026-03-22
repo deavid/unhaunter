@@ -1,11 +1,10 @@
 use bevy::prelude::*;
-use untypes_core::states::{AppState, GameState, SimulationState};
+use untypes_core::states::{AppState, SimulationState};
 
 use crate::systems::hide;
 use crate::systems::hydration;
 use crate::systems::input;
 use crate::systems::styling;
-use crate::systems::viewer_sync;
 use crate::systems::walk_target_indicator;
 use crate::systems::waypoint;
 
@@ -74,18 +73,5 @@ pub(crate) fn app_setup_client(app: &mut App) {
         crate::systems::keyboard::adjust_elevation_on_stairs
             .after(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
             .run_if(in_state(AppState::InGame)),
-    );
-
-    app.add_systems(
-        Update,
-        // Sync viewer data for rendering
-        viewer_sync::sync_vitals_to_viewer.run_if(
-            in_state(AppState::InGame).and(
-                in_state(GameState::Running)
-                    .or(in_state(GameState::Truck))
-                    .or(in_state(GameState::NpcHelp))
-                    .or(in_state(GameState::Pause)),
-            ),
-        ),
     );
 }

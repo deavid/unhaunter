@@ -21,7 +21,7 @@ use unplayer_core::components::MainPlayer;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::LightSensitive;
-use unrender_std::resources::visibility_data::VisibilityData;
+use unrender_core::resources::visibility_data::VisibilityData;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::BoardPosition;

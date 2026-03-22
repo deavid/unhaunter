@@ -13,7 +13,6 @@ workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
-unfoundation-core = { path = "../unfoundation-core" }
 untypes-core = { path = "../untypes-core" }
 unghost-core = { path = "../unghost-core" }
 

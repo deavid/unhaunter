@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use unreplicon_core::network_id::NetworkId;
 
 /// Component that controls how an entity reacts to general lighting and exposure.
 #[derive(Component, Debug, Clone, Copy)]
@@ -170,24 +169,6 @@ impl Default for Ethereal {
             calm_time_secs: 0.0,
             hit_delta: 0.0,
             miss_delta: 0.0,
-        }
-    }
-}
-
-/// Component that identifies an entity as a light viewer (usually the player's eyes).
-#[derive(Component, Clone, Copy, Debug, Reflect)]
-pub struct Viewer {
-    pub id: NetworkId,
-    pub health: f32,
-    pub sanity: f32,
-}
-
-impl Default for Viewer {
-    fn default() -> Self {
-        Self {
-            id: NetworkId(0),
-            health: 100.0,
-            sanity: 100.0,
         }
     }
 }

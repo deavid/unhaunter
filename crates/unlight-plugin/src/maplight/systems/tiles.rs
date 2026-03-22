@@ -13,13 +13,13 @@ use ungear_core::components::playergear::PlayerGear;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
 use unplayer_core::components::MainPlayer;
+use unrender_core::resources::visibility_data::VisibilityData;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, InfraredSensitive, LightSensitive,
-    SpectralClarity, SpectralInfluence, UltravioletSensitive, Viewer,
+    SpectralClarity, SpectralInfluence, UltravioletSensitive,
 };
 use unrender_std::materials::CustomMaterial1;
-use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::light::lerp_color;
 use unreplicon_core::ownership::LocallyOwned;
 use unsettings_core::video::VideoSettings;
@@ -68,7 +68,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
         With<MapTileSprite>,
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
-    qp: Query<(&Position, &Viewer, &Direction, &PlayerGear, Has<MainPlayer>)>,
+    qp: Query<(&Position, &Direction, &PlayerGear, Has<MainPlayer>)>,
     q_special: Query<
         Entity,
         (
@@ -123,7 +123,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
         return;
     }
 
-    if let Some((pos, _viewer, _direction, _gear, _)) = qp.iter().find(|x| x.4) {
+    if let Some((pos, _direction, _gear, _)) = qp.iter().find(|x| x.3) {
         player_pos = *pos;
     }
 
@@ -136,13 +136,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
 
     // --- Shared Lighting Sampling Logic ---
 
-    let sampler = LightingSampler::new(
-        &active_flashlights.list,
-        bf,
-        &lg,
-        vf,
-        &difficulty.0,
-    );
+    let sampler = LightingSampler::new(&active_flashlights.list, bf, &lg, vf, &difficulty.0);
 
     // --- End of Shared Lighting Sampling Logic ---
 

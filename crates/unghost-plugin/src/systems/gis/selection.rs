@@ -12,7 +12,7 @@ use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};
 use unmetrics_core::metrics::SendMetric;
-use unrender_std::resources::visibility_data::VisibilityData;
+use unrender_core::resources::visibility_data::VisibilityData;
 use unspatial_core::position::Position;
 
 use crate::metrics;

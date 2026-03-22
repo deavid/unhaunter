@@ -14,5 +14,4 @@ untypes-core = { path = "../untypes-core" }
 unui-core = { path = "../unui-core" }
 untags-core = { path = "../untags-core" }
 unbehavior = { path = "../unbehavior" }
-unreplicon-core = { path = "../unreplicon-core" }
 bevy-persistent = { workspace = true }

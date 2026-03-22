@@ -4,7 +4,7 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unrender_std::resources::visibility_data::VisibilityData;
+use unrender_core::resources::visibility_data::VisibilityData;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 

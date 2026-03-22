@@ -2,9 +2,8 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
 use unboard_core::resources::roomdb::RoomTopology;
-use unplayer_core::components::{MainPlayer, PlayerSpectating};
-use unrender_std::components::visuals::Viewer;
-use unrender_std::resources::visibility_data::VisibilityData;
+use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerVitals};
+use unrender_core::resources::visibility_data::VisibilityData;
 use unsettings_core::audio::AudioSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
@@ -96,7 +95,12 @@ fn calculate_ambient_sound_volumes(
 pub(crate) fn update_ambient_sound_volumes(
     mut game_sound_query: Query<(&GameSound, &mut AudioSink)>,
     player_query: Query<
-        (&Position, &Viewer, &VisibilityData, Has<PlayerSpectating>),
+        (
+            &Position,
+            &PlayerVitals,
+            &VisibilityData,
+            Has<PlayerSpectating>,
+        ),
         With<MainPlayer>,
     >,
     room_topology: Res<RoomTopology>,
@@ -106,7 +110,7 @@ pub(crate) fn update_ambient_sound_volumes(
     time: Res<Time>,
 ) {
     // Get player position and viewer data
-    let Ok((player_pos, viewer, visibility_data, is_spectating)) = player_query.single() else {
+    let Ok((player_pos, vitals, visibility_data, is_spectating)) = player_query.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -117,7 +121,7 @@ pub(crate) fn update_ambient_sound_volumes(
 
     // Calculate HeartBeat volume based on health (analog/fuzzy logic)
     // HeartBeat should get louder as health gets lower
-    let health_ratio = (viewer.health / 100.0).clamp(0.0, 1.0);
+    let health_ratio = (vitals.health / 100.0).clamp(0.0, 1.0);
     let heartbeat_volume = if !is_spectating && health_ratio < 0.5 {
         // Health is below 50%, calculate heartbeat intensity
         let health_deficit = 1.0 - health_ratio; // 0.5 to 1.0
@@ -129,7 +133,7 @@ pub(crate) fn update_ambient_sound_volumes(
 
     // Calculate Insane volume based on sanity (analog/fuzzy logic)
     // Insane sounds should get louder as sanity gets lower
-    let sanity_ratio = (viewer.sanity / 100.0).clamp(0.0, 1.0);
+    let sanity_ratio = (vitals.sanity / 100.0).clamp(0.0, 1.0);
     let insane_volume = if !is_spectating && sanity_ratio < 0.7 {
         // Sanity is below 70%, calculate insane sound intensity
         let sanity_deficit = 1.0 - sanity_ratio; // 0.3 to 1.0

@@ -9,7 +9,7 @@ use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::tonemapping::{self, TonemappingParams};
 use unlight_core::types::light::{LightData, LightFieldData};
 use unrender_std::components::visuals::{LightSensitive, SpectralInfluence, SpectralInfluenceType};
-use unrender_std::resources::visibility_data::VisibilityData;
+use unrender_core::resources::visibility_data::VisibilityData;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 use untypes_core::difficulty::Difficulty;

@@ -12,3 +12,4 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+ndarray = { workspace = true }

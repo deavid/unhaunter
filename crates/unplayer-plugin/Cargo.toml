@@ -24,6 +24,7 @@ unnavigation-core = { path = "../unnavigation-core" }
 unui-core = { path = "../unui-core" }
 unfog-core = { path = "../unfog-core" }
 unrender-std = { path = "../unrender-std" }
+unrender-core = { path = "../unrender-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 untruck-core = { path = "../untruck-core" }
 ungear-core = { path = "../ungear-core" }
@@ -34,7 +35,6 @@ unghost-core = { path = "../unghost-core" }
 untags-core = { path = "../untags-core" }
 
 unreplicon-core = { workspace = true }
-unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unspatial-core = { path = "../unspatial-core" }
 unthermal-core = { path = "../unthermal-core" }

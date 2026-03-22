@@ -13,6 +13,4 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
-serde = { workspace = true }
-enum-iterator = { workspace = true }
 rand = { workspace = true }

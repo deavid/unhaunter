@@ -19,6 +19,7 @@ unboard-core = { path = "../unboard-core" }
 unmapload-core = { path = "../unmapload-core" }
 unghost-core = { path = "../unghost-core" }
 untypes-core = { path = "../untypes-core" }
+unrender-core = { path = "../unrender-core" }
 unrender-std = { path = "../unrender-std" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }

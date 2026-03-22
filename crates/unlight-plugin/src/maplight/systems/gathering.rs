@@ -13,14 +13,13 @@ use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::LightType;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{MainPlayer, PlayerSpectating};
+use unrender_core::resources::visibility_data::VisibilityData;
 use unrender_std::components::light::LightEmitter;
-use unrender_std::components::visuals::Viewer;
-use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
 pub(crate) fn player_visibility_system(
-    mut q_vf: Query<(&Position, &mut VisibilityData), With<Viewer>>,
+    mut q_vf: Query<(&Position, &mut VisibilityData), With<MainPlayer>>,
     bcf: Res<BoardCollisionField>,
     mut room_topology: ResMut<RoomTopology>,
 ) {

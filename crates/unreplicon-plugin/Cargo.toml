@@ -29,6 +29,7 @@ unmapload-core = { workspace = true }
 unmission-core = { path = "../unmission-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 unrender-std = { path = "../unrender-std" }
+unrender-core = { path = "../unrender-core" }
 unspatial-core = { path = "../unspatial-core" }
 unplayer-core = { path = "../unplayer-core" }
 untruck-core = { path = "../untruck-core" }

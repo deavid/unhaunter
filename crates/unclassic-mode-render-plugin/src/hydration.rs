@@ -3,24 +3,24 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
-use unsoundfield_core::components::SoundFieldSource;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite};
+use unrender_core::resources::visibility_data::VisibilityData;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, LightSensitive, ResolutionFactor,
-    ShadowCaster, SpectralClarity, UltravioletSensitive, Viewer,
+    ShadowCaster, SpectralClarity, UltravioletSensitive,
 };
 use unrender_std::materials::CustomMaterial1;
-use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::quadcc::QuadCC;
 use unreplicon_core::resources::LocalPlayer;
 use unsettings_core::video::VideoSettings;
+use unsoundfield_core::components::SoundFieldSource;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
@@ -188,12 +188,7 @@ pub(crate) fn hydrate_players_system(
                     controls: ***control_settings,
                 });
             }
-            ec.insert(MainPlayer)
-                .insert(Viewer {
-                    id: player_sprite.network_id,
-                    ..default()
-                })
-                .insert(VisibilityData::default());
+            ec.insert(MainPlayer).insert(VisibilityData::default());
             if let Some(audio_settings) = &p.audio_settings {
                 ec.insert(SpatialListener::new(
                     -audio_settings.sound_output.to_ear_offset(),

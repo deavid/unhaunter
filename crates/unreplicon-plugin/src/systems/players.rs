@@ -396,7 +396,7 @@ fn setup_mission_players(
                 unnavigation_core::components::waypoint::WaypointQueue::default(),
                 unspatial_core::boardposition::MapEntityFieldBPos(spawn_pos.to_board_position()),
                 untags_core::tags::PlayerTag,
-                unrender_std::resources::visibility_data::VisibilityData::default(),
+                unrender_core::resources::visibility_data::VisibilityData::default(),
                 unplayer_core::components::PlayerInput::default(),
                 Replicated,
             ),
@@ -579,7 +579,7 @@ fn spawn_late_joining_players(
                 unnavigation_core::components::waypoint::WaypointQueue::default(),
                 unspatial_core::boardposition::MapEntityFieldBPos(spawn_pos.to_board_position()),
                 untags_core::tags::PlayerTag,
-                unrender_std::resources::visibility_data::VisibilityData::default(),
+                unrender_core::resources::visibility_data::VisibilityData::default(),
                 unplayer_core::components::PlayerInput::default(),
                 Owner(socket_owner_id),
                 Replicated,
@@ -832,8 +832,16 @@ fn handle_export_state(
     mut commands: Commands,
 ) {
     for msg in reader.read() {
-        for (entity, owner, mut pos, mut dir, mut stamina, mut vitals, mut locomotion, spectating) in
-            q_players.iter_mut()
+        for (
+            entity,
+            owner,
+            mut pos,
+            mut dir,
+            mut stamina,
+            mut vitals,
+            mut locomotion,
+            spectating,
+        ) in q_players.iter_mut()
         {
             if from_owner_id(owner.0) != msg.client_id {
                 continue;

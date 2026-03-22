@@ -15,9 +15,9 @@ ungear-core = { path = "../ungear-core" }
 unghost-core = { path = "../unghost-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 unlight-core = { path = "../unlight-core" }
-unfoundation-core = { path = "../unfoundation-core" }
 unplayer-core = { path = "../unplayer-core" }
 unrender-std = { path = "../unrender-std" }
+unrender-core = { path = "../unrender-core" }
 unspatial-core = { path = "../unspatial-core" }
 untags-core = { path = "../untags-core" }
 untmxmap-core = { workspace = true }

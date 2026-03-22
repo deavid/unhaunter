@@ -14,7 +14,6 @@ workspace = true
 bevy = { workspace = true }
 unplayer-core = { path = "../unplayer-core" }
 untypes-core = { path = "../untypes-core" }
-unfoundation-core = { path = "../unfoundation-core" }
 unspatial-core = { path = "../unspatial-core" }
 unbehavior = { path = "../unbehavior" }
 unnavigation-core = { path = "../unnavigation-core" }
