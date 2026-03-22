@@ -1,8 +1,8 @@
 use bevy::prelude::*;
+use unaudiospatial_core::emitter::AudioEmitter;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSpectating, PlayerSprite};
-use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 
 pub(crate) fn toggle_gear_from_use_intent(

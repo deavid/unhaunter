@@ -12,10 +12,10 @@ workspace = true
 
 [dependencies]
 
-undifficulty-core = { path = "../undifficulty-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unui-core = { path = "../unui-core" }
-untypes-core = { path = "../untypes-core" }
-unmenu-core = { path = "../unmenu-core" }
+undifficulty-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unui-core = { workspace = true }
+untypes-core = { workspace = true }
+unmenu-core = { workspace = true }
 
 bevy = { workspace = true }

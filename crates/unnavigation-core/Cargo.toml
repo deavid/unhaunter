@@ -12,5 +12,5 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-unspatial-core = { path = "../unspatial-core" }
-unboard-core = { path = "../unboard-core" }
+unspatial-core = { workspace = true }
+unboard-core = { workspace = true }

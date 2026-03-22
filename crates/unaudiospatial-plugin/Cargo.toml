@@ -11,12 +11,12 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unaudiospatial-core = { path = "../unaudiospatial-core" }
-unspatial-core = { path = "../unspatial-core" }
-unsettings-core = { path = "../unsettings-core" }
-untags-core = { path = "../untags-core" }
-unmetrics-core = { path = "../unmetrics-core" }
-untypes-core = { path = "../untypes-core" }
+unaudiospatial-core = { workspace = true }
+unspatial-core = { workspace = true }
+unsettings-core = { workspace = true }
+untags-core = { workspace = true }
+unmetrics-core = { workspace = true }
+untypes-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

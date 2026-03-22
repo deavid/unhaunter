@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
-pub use uuid::Uuid;
+use uuid::Uuid;
 
 /// Server-side mapping from an active OwnerId to the
 /// player's stable installation UUID (extracted from the JWT ticket at

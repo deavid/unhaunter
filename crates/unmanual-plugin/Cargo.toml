@@ -12,13 +12,13 @@ workspace = true
 
 [dependencies]
 
-untmxmap-core = { path = "../untmxmap-core" }
-untypes-core = { path = "../untypes-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unmapload-core = { path = "../unmapload-core" }
-undifficulty-core = { path = "../undifficulty-core" }
-unmanual-core = { path = "../unmanual-core" }
-unui-core = { path = "../unui-core" }
+untmxmap-core = { workspace = true }
+untypes-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unmapload-core = { workspace = true }
+undifficulty-core = { workspace = true }
+unmanual-core = { workspace = true }
+unui-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

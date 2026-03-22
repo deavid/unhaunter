@@ -11,21 +11,21 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unbehavior = { path = "../unbehavior" }
-unboard-core = { path = "../unboard-core" }
-unghost-core = { path = "../unghost-core" }
-unnavigation-core = { path = "../unnavigation-core" }
-unplayer-core = { path = "../unplayer-core" }
-unmapload-core = { path = "../unmapload-core" }
-unpicking-core = { path = "../unpicking-core" }
-unsoundfield-core = { path = "../unsoundfield-core" }
-unrender-std = { path = "../unrender-std" }
+unbehavior = { workspace = true }
+unboard-core = { workspace = true }
+unghost-core = { workspace = true }
+unnavigation-core = { workspace = true }
+unplayer-core = { workspace = true }
+unmapload-core = { workspace = true }
+unpicking-core = { workspace = true }
+unsoundfield-core = { workspace = true }
+unrender-std = { workspace = true }
 unreplicon-core = { workspace = true }
-unsettings-core = { path = "../unsettings-core" }
-unspatial-core = { path = "../unspatial-core" }
-untags-core = { path = "../untags-core" }
-untmxmap-core = { path = "../untmxmap-core" }
-untypes-core = { path = "../untypes-core" }
+unsettings-core = { workspace = true }
+unspatial-core = { workspace = true }
+untags-core = { workspace = true }
+untmxmap-core = { workspace = true }
+untypes-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 bevy_replicon = { workspace = true }

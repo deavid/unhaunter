@@ -1,17 +1,24 @@
 [package]
 name = "uninput-plugin"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-unplayer-core = { path = "../unplayer-core" }
-unsettings-core = { path = "../unsettings-core" }
-unspatial-core = { path = "../unspatial-core" }
-unnavigation-core = { path = "../unnavigation-core" }
-untruck-core = { path = "../untruck-core" }
-untypes-core = { path = "../untypes-core" }
-unui-core = { path = "../unui-core" }
-untags-core = { path = "../untags-core" }
-unbehavior = { path = "../unbehavior" }
+unplayer-core = { workspace = true }
+unsettings-core = { workspace = true }
+unspatial-core = { workspace = true }
+unnavigation-core = { workspace = true }
+untruck-core = { workspace = true }
+untypes-core = { workspace = true }
+unui-core = { workspace = true }
+untags-core = { workspace = true }
+unbehavior = { workspace = true }
 bevy-persistent = { workspace = true }

@@ -11,15 +11,15 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unboard-core = { path = "../unboard-core" }
-unmission-core = { path = "../unmission-core" }
-untypes-core = { path = "../untypes-core" }
-unsummary-core = { path = "../unsummary-core" }
-unprofile-core = { path = "../unprofile-core" }
-unplayer-core = { path = "../unplayer-core" }
+unboard-core = { workspace = true }
+unmission-core = { workspace = true }
+untypes-core = { workspace = true }
+unsummary-core = { workspace = true }
+unprofile-core = { workspace = true }
+unplayer-core = { workspace = true }
 unreplicon-core = { workspace = true }
-untruck-core = { path = "../untruck-core" }
-unspatial-core = { path = "../unspatial-core" }
+untruck-core = { workspace = true }
+unspatial-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

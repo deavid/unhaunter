@@ -11,7 +11,9 @@ use uninteraction_core::events::InteractionExecutionType;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unnpc_core::events::NpcHelpEvent;
-use unplayer_core::components::{MainPlayer, PlayerInput, PlayerLocomotionState, PlayerSprite, Hiding, Stamina, PlayerSpectating};
+use unplayer_core::components::{
+    Hiding, MainPlayer, PlayerInput, PlayerLocomotionState, PlayerSpectating, PlayerSprite, Stamina,
+};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unreplicon_core::messages::InteractionRequestMessage;
 use unspatial_core::direction::Direction;
@@ -270,7 +272,11 @@ pub(crate) fn apply_movement_intent(
 
         let miasma_factor = if let Some(miasma) = miasma.as_ref() {
             let bpos = pos.to_board_position();
-            miasma.pressure_field.get(bpos.ndidx()).map(|pressure| (*pressure / 100.0).max(0.0).cbrt().clamp(0.0, 0.7)).unwrap_or(0.0)
+            miasma
+                .pressure_field
+                .get(bpos.ndidx())
+                .map(|pressure| (*pressure / 100.0).max(0.0).cbrt().clamp(0.0, 0.7))
+                .unwrap_or(0.0)
         } else {
             0.0
         };

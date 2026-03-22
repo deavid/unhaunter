@@ -1,5 +1,5 @@
+use crate::types::gear::equipment::VisualKey;
 use bevy::prelude::*;
-use crate::types::gear::VisualKey;
 use unghost_core::types::evidence::Evidence;
 
 /// The display name of an item.

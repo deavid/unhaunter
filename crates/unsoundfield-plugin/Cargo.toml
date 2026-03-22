@@ -11,13 +11,13 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unsoundfield-core = { path = "../unsoundfield-core" }
-unspatial-core = { path = "../unspatial-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unboard-core = { path = "../unboard-core" }
-unmetrics-core = { path = "../unmetrics-core" }
-untypes-core = { path = "../untypes-core" }
-unmapload-core = { path = "../unmapload-core" }
+unsoundfield-core = { workspace = true }
+unspatial-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unboard-core = { workspace = true }
+unmetrics-core = { workspace = true }
+untypes-core = { workspace = true }
+unmapload-core = { workspace = true }
 
 bevy = { workspace = true }
 rand = { workspace = true }

@@ -12,12 +12,12 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
-unwalkie-types = { path = "../unwalkie-types" }
+unwalkie-types = { workspace = true }
 
-unfoundation-core = { path = "../unfoundation-core" }
-unghost-core = { path = "../unghost-core" }
-untypes-core = { path = "../untypes-core" }
-ungear-core = { path = "../ungear-core" }
+unfoundation-core = { workspace = true }
+unghost-core = { workspace = true }
+untypes-core = { workspace = true }
+ungear-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

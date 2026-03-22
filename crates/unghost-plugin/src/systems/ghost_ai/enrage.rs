@@ -2,21 +2,21 @@ use super::movement::spawn_salty_trace;
 use super::roar::{RoarDecision, RoarReason, RoarType, execute_roar_decision};
 use crate::components::fade_out::FadeOut;
 use crate::metrics::GHOST_ENRAGE;
+use crate::utils::{mean::MeanValue, time::PrintingTimer};
 use bevy::prelude::*;
 use rand::RngExt;
 use unaudiobg_core::events::AmbientSoundMuteEvent;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
-use crate::utils::{mean::MeanValue, time::PrintingTimer};
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{
     Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerVitals,
 };
-use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 
@@ -520,5 +520,3 @@ pub(crate) fn debug_log_ghost_state(
         roar_decision.reason
     );
 }
-
-

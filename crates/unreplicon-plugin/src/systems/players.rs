@@ -18,8 +18,8 @@ use ungear_core::components::playergear::HeldObject;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
+use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
-use ungear_core::types::gear::{EquipmentPosition, Hand};
 use ungearitems_core::components::flashlight::FlashlightStatus;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unplayer_core::components::{
@@ -385,7 +385,7 @@ fn setup_mission_players(
                 unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
                 PlayerSprite::new(player.player_uuid, net_id),
                 PlayerLocomotionState::new(spawn_pos),
-                PlayerVitals::new(),
+                PlayerVitals::default(),
                 net_id,
                 Stamina::default(),
                 player_gear,
@@ -568,7 +568,7 @@ fn spawn_late_joining_players(
                 unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
                 PlayerSprite::new(player.player_uuid, net_id),
                 PlayerLocomotionState::new(spawn_pos),
-                PlayerVitals::new(),
+                PlayerVitals::default(),
                 net_id,
                 Stamina::default(),
                 player_gear,

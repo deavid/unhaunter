@@ -7,21 +7,24 @@ repository.workspace = true
 license.workspace = true
 authors.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
-unbehavior = { path = "../unbehavior" }
-unboard-core = { path = "../unboard-core" }
-undifficulty-core = { path = "../undifficulty-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unghost-core = { path = "../unghost-core" }
-unmapload-core = { path = "../unmapload-core" }
-unplayer-core = { path = "../unplayer-core" }
-unrender-std = { path = "../unrender-std" }
+unbehavior = { workspace = true }
+unboard-core = { workspace = true }
+undifficulty-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unghost-core = { workspace = true }
+unmapload-core = { workspace = true }
+unplayer-core = { workspace = true }
+unrender-std = { workspace = true }
 unreplicon-core = { workspace = true }
-unspatial-core = { path = "../unspatial-core" }
-unsoundfield-core = { path = "../unsoundfield-core" }
-unsummary-core = { path = "../unsummary-core" }
-untags-core = { path = "../untags-core" }
-untypes-core = { path = "../untypes-core" }
+unspatial-core = { workspace = true }
+unsoundfield-core = { workspace = true }
+unsummary-core = { workspace = true }
+untags-core = { workspace = true }
+untypes-core = { workspace = true }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 ordered-float = { workspace = true }

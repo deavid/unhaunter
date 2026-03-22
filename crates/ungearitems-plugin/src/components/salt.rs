@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
 use rand::RngExt;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{GearSprite, StatusText};
@@ -15,7 +16,6 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unreplicon_core::messages::SaltDroppedMessage;
 use unreplicon_core::ownership::LocallyOwned;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};

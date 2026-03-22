@@ -13,8 +13,8 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
-untypes-core = { path = "../untypes-core" }
-unui-core = { path = "../unui-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unrender-std = { path = "../unrender-std" }
+untypes-core = { workspace = true }
+unui-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unrender-std = { workspace = true }
 unreplicon-core = { workspace = true }

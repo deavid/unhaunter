@@ -1,4 +1,5 @@
 use bevy_persistent::Persistent;
+use unaudiospatial_core::emitter::AudioEmitter;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
@@ -6,7 +7,6 @@ use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 
@@ -14,10 +14,10 @@ use crate::metrics;
 
 use bevy::prelude::*;
 use rand::RngExt;
-use ungear_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, PerceivedClarity, StatusText,
 };
+use ungear_core::types::gear::equipment::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::geigercounter::GeigerCounter;

@@ -11,16 +11,16 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unthermal-core = { path = "../unthermal-core" }
-unboard-core = { path = "../unboard-core" }
-unspatial-core = { path = "../unspatial-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unmapload-core = { path = "../unmapload-core" }
-unmetrics-core = { path = "../unmetrics-core" }
-untypes-core = { path = "../untypes-core" }
-undifficulty-core = { path = "../undifficulty-core" }
-unbehavior = { path = "../unbehavior" }
-unsettings-core = { path = "../unsettings-core" }
+unthermal-core = { workspace = true }
+unboard-core = { workspace = true }
+unspatial-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unmapload-core = { workspace = true }
+unmetrics-core = { workspace = true }
+untypes-core = { workspace = true }
+undifficulty-core = { workspace = true }
+unbehavior = { workspace = true }
+unsettings-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 bevy_platform = { workspace = true }

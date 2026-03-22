@@ -5,8 +5,8 @@ use unghost_core::types::ghost::types::GhostType;
 use uninteraction_core::events::InteractionExecutionType;
 
 use crate::network_id::NetworkId;
-use ungear_core::types::gear::Hand;
 use ungear_core::components::playergear::HeldObject;
+use ungear_core::types::gear::equipment::Hand;
 use ungear_core::types::gear::kind::GearKind;
 
 /// Sent by the (room-owner) client to request a map change.

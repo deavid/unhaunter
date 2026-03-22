@@ -13,16 +13,16 @@ workspace = true
 
 [dependencies]
 
-undifficulty-core = { path = "../undifficulty-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unsummary-core = { path = "../unsummary-core" }
-unui-core = { path = "../unui-core" }
-untmxmap-core = { path = "../untmxmap-core" }
+undifficulty-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unsummary-core = { workspace = true }
+unui-core = { workspace = true }
+untmxmap-core = { workspace = true }
 
-unmapload-core = { path = "../unmapload-core" }
-untypes-core = { path = "../untypes-core" }
-unmenu-core = { path = "../unmenu-core" }
-unprofile-core = { path = "../unprofile-core" }
+unmapload-core = { workspace = true }
+untypes-core = { workspace = true }
+unmenu-core = { workspace = true }
+unprofile-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

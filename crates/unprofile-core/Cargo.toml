@@ -15,6 +15,6 @@ bevy = { workspace = true }
 bevy_platform = { workspace = true }
 serde = { workspace = true }
 uuid = { workspace = true }
-unghost-core = { path = "../unghost-core" }
-unsummary-core = { path = "../unsummary-core" }
-untypes-core = { path = "../untypes-core" }
+unghost-core = { workspace = true }
+unsummary-core = { workspace = true }
+untypes-core = { workspace = true }

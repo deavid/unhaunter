@@ -13,4 +13,4 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 serde = { workspace = true }
-unspatial-core = { path = "../unspatial-core" }
+unspatial-core = { workspace = true }

@@ -11,7 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unpicking-core = { path = "../unpicking-core" }
-unrender-std = { path = "../unrender-std" }
+unpicking-core = { workspace = true }
+unrender-std = { workspace = true }
 bevy = { workspace = true }
 bevy_picking = { workspace = true }

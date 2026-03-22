@@ -2,8 +2,6 @@ use bevy::prelude::*;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::orientation::Orientation;
 
-pub use crate::behavior::{Interactive, NpcHelpDialog};
-
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Ground;
 #[derive(Component, Debug, Clone, PartialEq, Eq)]

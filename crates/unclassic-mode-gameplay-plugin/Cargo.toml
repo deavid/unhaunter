@@ -8,18 +8,18 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-unbehavior = { path = "../unbehavior" }
-unboard-core = { path = "../unboard-core" }
-undifficulty-core = { path = "../undifficulty-core" }
-ungear-core = { path = "../ungear-core" }
-unghost-core = { path = "../unghost-core" }
-uninteraction-core = { path = "../uninteraction-core" }
-unlight-core = { path = "../unlight-core" }
-unplayer-core = { path = "../unplayer-core" }
-unrender-std = { path = "../unrender-std" }
-unspatial-core = { path = "../unspatial-core" }
-untags-core = { path = "../untags-core" }
+unbehavior = { workspace = true }
+unboard-core = { workspace = true }
+undifficulty-core = { workspace = true }
+ungear-core = { workspace = true }
+unghost-core = { workspace = true }
+uninteraction-core = { workspace = true }
+unlight-core = { workspace = true }
+unplayer-core = { workspace = true }
+unrender-std = { workspace = true }
+unspatial-core = { workspace = true }
+untags-core = { workspace = true }
 untmxmap-core = { workspace = true }
-untypes-core = { path = "../untypes-core" }
+untypes-core = { workspace = true }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

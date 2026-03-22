@@ -6,13 +6,13 @@ use unbehavior::behavior::Behavior;
 use unbehavior::components::{Door, InteractableByGhost};
 use unbehavior::state::TileState;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
+use unboard_core::resources::visibility_data::VisibilityData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};
 use unmetrics_core::metrics::SendMetric;
-use unboard_core::resources::visibility_data::VisibilityData;
 use unspatial_core::position::Position;
 
 use crate::metrics;

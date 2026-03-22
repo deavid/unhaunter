@@ -11,12 +11,12 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unaudiobg-core = { path = "../unaudiobg-core" }
-unsettings-core = { path = "../unsettings-core" }
-unplayer-core = { path = "../unplayer-core" }
-unboard-core = { path = "../unboard-core" }
-unspatial-core = { path = "../unspatial-core" }
-untypes-core = { path = "../untypes-core" }
+unaudiobg-core = { workspace = true }
+unsettings-core = { workspace = true }
+unplayer-core = { workspace = true }
+unboard-core = { workspace = true }
+unspatial-core = { workspace = true }
+untypes-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

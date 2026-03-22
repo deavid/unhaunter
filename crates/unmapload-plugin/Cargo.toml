@@ -13,16 +13,16 @@ workspace = true
 
 [dependencies]
 bevy_replicon = { workspace = true }
-unspatial-core = { path = "../unspatial-core" }
-unbehavior = { path = "../unbehavior" }
-undifficulty-core = { path = "../undifficulty-core" }
-unboard-core = { path = "../unboard-core" }
-untypes-core = { path = "../untypes-core" }
-untiled-core = { path = "../untiled-core" }
-unrender-std = { path = "../unrender-std" }
-untmxmap-core = { path = "../untmxmap-core" }
-unmapload-core = { path = "../unmapload-core" }
-uninteraction-core = { path = "../uninteraction-core" }
+unspatial-core = { workspace = true }
+unbehavior = { workspace = true }
+undifficulty-core = { workspace = true }
+unboard-core = { workspace = true }
+untypes-core = { workspace = true }
+untiled-core = { workspace = true }
+unrender-std = { workspace = true }
+untmxmap-core = { workspace = true }
+unmapload-core = { workspace = true }
+uninteraction-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

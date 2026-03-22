@@ -13,9 +13,9 @@ workspace = true
 
 [dependencies]
 
-unui-core = { path = "../unui-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-untypes-core = { path = "../untypes-core" }
-unprofile-core = { path = "../unprofile-core" }
+unui-core = { workspace = true }
+unfoundation-core = { workspace = true }
+untypes-core = { workspace = true }
+unprofile-core = { workspace = true }
 
 bevy = { workspace = true }

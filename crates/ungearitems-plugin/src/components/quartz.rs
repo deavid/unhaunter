@@ -1,14 +1,14 @@
 use bevy::prelude::*;
+use unaudiospatial_core::emitter::AudioEmitter;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use ungear_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
+use ungear_core::types::gear::equipment::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::quartz::{QuartzStoneData, QuartzStoneSkin};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::ownership::LocallyOwned;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 use untags_core::tags::GhostTag;
 use untypes_core::roles::LocalPlayerRole;

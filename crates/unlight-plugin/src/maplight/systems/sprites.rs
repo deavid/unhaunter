@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::resources::visibility_data::VisibilityData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
 use unfoundation_core::random_seed;
@@ -18,7 +19,6 @@ use unrender_std::components::visuals::{
     ShadowCaster, SpectralClarity, SpectralInfluence, UltravioletSensitive,
 };
 use unrender_std::materials::CustomMaterial1;
-use unboard_core::resources::visibility_data::VisibilityData;
 use unrender_std::utils::light::lerp_color;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::position::Position;
@@ -108,13 +108,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
     let elapsed = time.elapsed_secs();
     let dt = time.delta_secs();
 
-    let sampler = LightingSampler::new(
-        &active_flashlights.list,
-        bf,
-        &lg,
-        vf,
-        &difficulty.0,
-    );
+    let sampler = LightingSampler::new(&active_flashlights.list, bf, &lg, vf, &difficulty.0);
 
     let mut rng = random_seed::rng();
 

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
-use ungear_core::types::gear::Hand;
+use ungear_core::types::gear::equipment::Hand;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
 use unreplicon_core::messages::RequestJournalEvidenceToggle;

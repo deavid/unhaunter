@@ -1,13 +1,13 @@
 use bevy::ecs::entity::{EntityMapper, MapEntities};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use ungear_core::types::gear::Hand;
+use ungear_core::types::gear::equipment::Hand;
 use ungearitems_core::gear_details::GearDetails;
 use unreplicon_core::network_id::NetworkId;
-use unreplicon_core::resources::Uuid;
 use unsettings_core::controls::ControlKeys;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
+use uuid::Uuid;
 
 #[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
 #[reflect(Component, Default)]
@@ -293,12 +293,6 @@ impl PlayerLocomotionState {
             spawn_position,
             ..default()
         }
-    }
-}
-
-impl PlayerVitals {
-    pub fn new() -> Self {
-        Self::default()
     }
 }
 

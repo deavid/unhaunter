@@ -1,2 +1,2 @@
-pub mod events;
 pub mod emitter;
+pub mod events;

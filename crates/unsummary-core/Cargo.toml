@@ -14,5 +14,5 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 serde = { workspace = true }
-unghost-core = { path = "../unghost-core" }
-undifficulty-core = { path = "../undifficulty-core" }
+unghost-core = { workspace = true }
+undifficulty-core = { workspace = true }

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rand::RngExt;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
@@ -9,7 +10,6 @@ use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::light::LightEmitter;
 use unreplicon_core::ownership::LocallyOwned;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 
 use crate::metrics;

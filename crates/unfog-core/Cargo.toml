@@ -13,7 +13,7 @@ workspace = true
 
 [dependencies]
 
-unspatial-core = { path = "../unspatial-core" }
+unspatial-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

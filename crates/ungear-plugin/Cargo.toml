@@ -11,15 +11,15 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-ungear-core = { path = "../ungear-core" }
-unrender-std = { path = "../unrender-std" }
-unspatial-core = { path = "../unspatial-core" }
-untypes-core = { path = "../untypes-core" }
-unboard-core = { path = "../unboard-core" }
-unplayer-core = { path = "../unplayer-core" }
-untags-core = { path = "../untags-core" }
-untruck-core = { path = "../untruck-core" }
-unmetrics-core = { path = "../unmetrics-core" }
+ungear-core = { workspace = true }
+unrender-std = { workspace = true }
+unspatial-core = { workspace = true }
+untypes-core = { workspace = true }
+unboard-core = { workspace = true }
+unplayer-core = { workspace = true }
+untags-core = { workspace = true }
+untruck-core = { workspace = true }
+unmetrics-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

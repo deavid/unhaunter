@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rand::prelude::*;
+use unaudiospatial_core::events::SoundEvent;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::{InteractableByGhost, RoomStateDelta};
@@ -11,7 +12,6 @@ use uninteraction_core::events::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::messages::HostMovableMotionEvent;
-use unaudiospatial_core::events::SoundEvent;
 use unspatial_core::position::Position;
 
 use crate::metrics;

@@ -108,8 +108,8 @@ pub(crate) fn apply_ethereal_visuals<D: DifficultySettings>(
     let e_uv = ld.ultraviolet * 13.0 * clarity.uv.max(0.0);
     let e_rl = (ld.red * 52.0 * clarity.rl.max(0.0)).clamp(0.0, 1.5);
     let e_infra = (ld.infrared * 1.1 * difficulty.evidence_visibility()).sqrt();
-    let f =
-        (ld.visible * difficulty.evidence_visibility() * 0.5 + ld.infrared * 4.0).clamp(0.001, 0.999);
+    let f = (ld.visible * difficulty.evidence_visibility() * 0.5 + ld.infrared * 4.0)
+        .clamp(0.001, 0.999);
     *opacity = *opacity * f + orig_opacity * (1.0 - f);
     *opacity *= (clarity.alpha * 0.5
         + 0.5

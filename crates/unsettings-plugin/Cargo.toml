@@ -16,4 +16,4 @@ bevy-persistent = { workspace = true }
 dirs = { workspace = true }
 serde = { workspace = true }
 
-unsettings-core = { path = "../unsettings-core" }
+unsettings-core = { workspace = true }

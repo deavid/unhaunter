@@ -15,6 +15,6 @@ bevy = { workspace = true }
 serde = { workspace = true }
 enum-iterator = { workspace = true }
 strum = { workspace = true }
-unfoundation-core = { path = "../unfoundation-core" }
-unghost-core = { path = "../unghost-core" }
-ungear-core = { path = "../ungear-core" }
+unfoundation-core = { workspace = true }
+unghost-core = { workspace = true }
+ungear-core = { workspace = true }

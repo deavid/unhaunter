@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rand::prelude::*;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic};
 use ungear_core::components::playergear::PlayerGear;
@@ -8,7 +9,6 @@ use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{MainPlayer, PlayerInput};
-use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 
 use crate::components::flashlight::Flashlight;

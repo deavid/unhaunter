@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rand::RngExt;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::time::format_time;
@@ -14,7 +15,6 @@ use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unreplicon_core::ownership::LocallyOwned;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;

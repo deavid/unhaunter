@@ -3,7 +3,7 @@ use bevy::{
     picking::events::{Out, Over, Pointer},
     prelude::*,
 };
-use unbehavior::components::Interactive;
+use unbehavior::behavior::Interactive;
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSpectating, PlayerSprite};
 use untruck_core::components::in_truck::InTruck;
 

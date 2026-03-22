@@ -1,8 +1,8 @@
+use unaudiospatial_core::emitter::AudioEmitter;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
-use unaudiospatial_core::emitter::AudioEmitter;
 use unsoundfield_core::resources::SoundGrid;
 use unthermal_core::resources::ThermalGrid;
 

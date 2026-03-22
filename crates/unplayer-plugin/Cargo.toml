@@ -12,31 +12,31 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-undifficulty-core = { path = "../undifficulty-core" }
-unbehavior = { path = "../unbehavior" }
-unfoundation-core = { path = "../unfoundation-core" }
-unboard-core = { path = "../unboard-core" }
-unlight-core = { path = "../unlight-core" }
-unplayer-core = { path = "../unplayer-core" }
-untypes-core = { path = "../untypes-core" }
-unsummary-core = { path = "../unsummary-core" }
-unnavigation-core = { path = "../unnavigation-core" }
-unui-core = { path = "../unui-core" }
-unfog-core = { path = "../unfog-core" }
-unrender-std = { path = "../unrender-std" }
-uninteraction-core = { path = "../uninteraction-core" }
-untruck-core = { path = "../untruck-core" }
-ungear-core = { path = "../ungear-core" }
-unnpc-core = { path = "../unnpc-core" }
-unaudiospatial-core = { path = "../unaudiospatial-core" }
-unsoundfield-core = { path = "../unsoundfield-core" }
-unghost-core = { path = "../unghost-core" }
-untags-core = { path = "../untags-core" }
+undifficulty-core = { workspace = true }
+unbehavior = { workspace = true }
+unfoundation-core = { workspace = true }
+unboard-core = { workspace = true }
+unlight-core = { workspace = true }
+unplayer-core = { workspace = true }
+untypes-core = { workspace = true }
+unsummary-core = { workspace = true }
+unnavigation-core = { workspace = true }
+unui-core = { workspace = true }
+unfog-core = { workspace = true }
+unrender-std = { workspace = true }
+uninteraction-core = { workspace = true }
+untruck-core = { workspace = true }
+ungear-core = { workspace = true }
+unnpc-core = { workspace = true }
+unaudiospatial-core = { workspace = true }
+unsoundfield-core = { workspace = true }
+unghost-core = { workspace = true }
+untags-core = { workspace = true }
 
 unreplicon-core = { workspace = true }
-unprofile-core = { path = "../unprofile-core" }
-unspatial-core = { path = "../unspatial-core" }
-unthermal-core = { path = "../unthermal-core" }
+unprofile-core = { workspace = true }
+unspatial-core = { workspace = true }
+unthermal-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

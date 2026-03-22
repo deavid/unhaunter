@@ -7,7 +7,7 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
-unwalkie-types = { path = "../../../unwalkie-types" }
+unwalkie-types = { workspace = true }
 clap = { workspace = true }
 serde = { workspace = true }
 ron = { workspace = true }

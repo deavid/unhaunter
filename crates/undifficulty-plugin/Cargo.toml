@@ -11,5 +11,5 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-undifficulty-core = { path = "../undifficulty-core" }
+undifficulty-core = { workspace = true }
 bevy = { workspace = true }

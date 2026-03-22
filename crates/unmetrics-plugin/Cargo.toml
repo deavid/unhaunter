@@ -11,8 +11,8 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unmetrics-core = { path = "../unmetrics-core" }
-untypes-core = { path = "../untypes-core" }
-unreplicon-core = { path = "../unreplicon-core" }
+unmetrics-core = { workspace = true }
+untypes-core = { workspace = true }
+unreplicon-core = { workspace = true }
 bevy = { workspace = true }
 ordered-float = { workspace = true }

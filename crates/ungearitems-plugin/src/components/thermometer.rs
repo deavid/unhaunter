@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::RngExt;
+use unaudiospatial_core::emitter::AudioEmitter;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
@@ -15,7 +16,6 @@ use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
 use untypes_core::roles::LocalPlayerRole;

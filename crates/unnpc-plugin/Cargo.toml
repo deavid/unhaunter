@@ -12,14 +12,14 @@ workspace = true
 
 [dependencies]
 
-unspatial-core = { path = "../unspatial-core" }
-unbehavior = { path = "../unbehavior" }
-unnpc-core = { path = "../unnpc-core" }
-unui-core = { path = "../unui-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-untypes-core = { path = "../untypes-core" }
-unrender-std = { path = "../unrender-std" }
-unplayer-core = { path = "../unplayer-core" }
-unmapload-core = { path = "../unmapload-core" }
+unspatial-core = { workspace = true }
+unbehavior = { workspace = true }
+unnpc-core = { workspace = true }
+unui-core = { workspace = true }
+unfoundation-core = { workspace = true }
+untypes-core = { workspace = true }
+unrender-std = { workspace = true }
+unplayer-core = { workspace = true }
+unmapload-core = { workspace = true }
 
 bevy = { workspace = true }

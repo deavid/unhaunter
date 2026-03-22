@@ -1,9 +1,9 @@
+use crate::types::gear::equipment::VisualKey;
 use crate::types::gear::kind::GearKind;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Serialize};
-use crate::types::gear::VisualKey;
 use unspatial_core::position::Position;
 
 /// A marker component for all gear entities.

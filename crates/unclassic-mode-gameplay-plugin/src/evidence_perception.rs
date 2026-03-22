@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use unboard_core::resources::visibility_data::VisibilityData;
 use ungear_core::components::core::{Electronic, EvidenceSensor, PerceivedClarity};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
@@ -9,8 +10,7 @@ use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::resources::light_grid::LightGrid;
-use unlight_core::types::LightType;
-use unboard_core::resources::visibility_data::VisibilityData;
+use unlight_core::types::light_type::LightType;
 use unrender_std::components::light::LightEmitter;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;

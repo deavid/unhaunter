@@ -13,9 +13,9 @@ workspace = true
 
 [dependencies]
 
-unfoundation-core = { path = "../unfoundation-core" }
-untypes-core = { path = "../untypes-core" }
-unmenu-core = { path = "../unmenu-core" }
-untags-core = { path = "../untags-core" }
+unfoundation-core = { workspace = true }
+untypes-core = { workspace = true }
+unmenu-core = { workspace = true }
+untags-core = { workspace = true }
 
 bevy = { workspace = true }

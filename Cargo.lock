@@ -7586,7 +7586,7 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
 name = "uninput-plugin"
-version = "0.1.0"
+version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7962,6 +7962,7 @@ dependencies = [
  "unreplicon-core",
  "unsettings-core",
  "unspatial-core",
+ "uuid",
 ]
 
 [[package]]
@@ -8383,7 +8384,6 @@ dependencies = [
  "unlight-core",
  "unplayer-core",
  "unprofile-core",
- "unrender-std",
  "unreplicon-core",
  "unsoundfield-core",
  "unspatial-core",

@@ -11,9 +11,9 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unboard-core = { path = "../unboard-core" }
-unbehavior = { path = "../unbehavior" }
-unrender-std = { path = "../unrender-std" }
-unspatial-core = { path = "../unspatial-core" }
-untypes-core = { path = "../untypes-core" }
+unboard-core = { workspace = true }
+unbehavior = { workspace = true }
+unrender-std = { workspace = true }
+unspatial-core = { workspace = true }
+untypes-core = { workspace = true }
 bevy = { workspace = true }

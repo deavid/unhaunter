@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use enum_iterator::all;
 use std::collections::HashMap;
-use ungear_core::types::gear::VisualKey;
+use ungear_core::types::gear::equipment::VisualKey;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 
 #[derive(Resource, Debug, Default, Clone)]

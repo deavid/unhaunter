@@ -11,6 +11,6 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unfps-core = { path = "../unfps-core" }
-unmetrics-core = { path = "../unmetrics-core" }
+unfps-core = { workspace = true }
+unmetrics-core = { workspace = true }
 bevy = { workspace = true }

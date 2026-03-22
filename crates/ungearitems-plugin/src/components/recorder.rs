@@ -1,4 +1,5 @@
 use bevy_persistent::Persistent;
+use unaudiospatial_core::emitter::AudioEmitter;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
@@ -6,7 +7,6 @@ use ungear_core::components::core::{GearSprite, ItemName, PerceivedClarity, Stat
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
 use unprofile_core::profile::PlayerProfileData;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unsoundfield_core::resources::SoundGrid;
 
 use bevy::prelude::*;

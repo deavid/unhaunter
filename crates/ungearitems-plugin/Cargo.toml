@@ -12,26 +12,26 @@ workspace = true
 
 [dependencies]
 
-unspatial-core = { path = "../unspatial-core" }
-unbehavior = { path = "../unbehavior" }
-undifficulty-core = { path = "../undifficulty-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unboard-core = { path = "../unboard-core" }
-unlight-core = { path = "../unlight-core" }
-unrender-std = { path = "../unrender-std" }
-uninteraction-core = { path = "../uninteraction-core" }
-unmetrics-core = { path = "../unmetrics-core" }
-ungear-core = { path = "../ungear-core" }
-untags-core = { path = "../untags-core" }
-unghost-core = { path = "../unghost-core" }
-unplayer-core = { path = "../unplayer-core" }
-untypes-core = { path = "../untypes-core" }
-unfog-core = { path = "../unfog-core" }
-unaudiospatial-core = { path = "../unaudiospatial-core" }
-unsoundfield-core = { path = "../unsoundfield-core" }
-unsummary-core = { path = "../unsummary-core" }
-unthermal-core = { path = "../unthermal-core" }
-unprofile-core = { path = "../unprofile-core" }
+unspatial-core = { workspace = true }
+unbehavior = { workspace = true }
+undifficulty-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unboard-core = { workspace = true }
+unlight-core = { workspace = true }
+unrender-std = { workspace = true }
+uninteraction-core = { workspace = true }
+unmetrics-core = { workspace = true }
+ungear-core = { workspace = true }
+untags-core = { workspace = true }
+unghost-core = { workspace = true }
+unplayer-core = { workspace = true }
+untypes-core = { workspace = true }
+unfog-core = { workspace = true }
+unaudiospatial-core = { workspace = true }
+unsoundfield-core = { workspace = true }
+unsummary-core = { workspace = true }
+unthermal-core = { workspace = true }
+unprofile-core = { workspace = true }
 
 unreplicon-core = { workspace = true }
 
@@ -41,4 +41,4 @@ bevy_replicon = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }
 enum-iterator = { workspace = true }
-ungearitems-core = { path = "../ungearitems-core" }
+ungearitems-core = { workspace = true }

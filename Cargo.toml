@@ -230,6 +230,7 @@ unmetrics-plugin = { path = "crates/unmetrics-plugin" }
 unmission-core = { path = "crates/unmission-core" }
 unmission-plugin = { path = "crates/unmission-plugin" }
 unnavigation-core = { path = "crates/unnavigation-core" }
+unnpc-core = { path = "crates/unnpc-core" }
 unnpc-plugin = { path = "crates/unnpc-plugin" }
 unnoise-core = { path = "crates/unnoise-core" }
 unpicking-plugin = { path = "crates/unpicking-plugin" }
@@ -238,6 +239,7 @@ unplayer-plugin = { path = "crates/unplayer-plugin" }
 unplayer-core = { path = "crates/unplayer-core" }
 unprofile-core = { path = "crates/unprofile-core" }
 unprofile-plugin = { path = "crates/unprofile-plugin" }
+unrender-core = { path = "crates/unrender-core" }
 unrender-std = { path = "crates/unrender-std" }
 unrender-plugin = { path = "crates/unrender-plugin" }
 unsettings-core = { path = "crates/unsettings-core" }
@@ -261,6 +263,7 @@ unui-core = { path = "crates/unui-core" }
 unui-plugin = { path = "crates/unui-plugin" }
 unvitals-plugin = { path = "crates/unvitals-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
+unwalkie-types = { path = "crates/unwalkie-types" }
 unwalkie-core = { path = "crates/unwalkie-core" }
 unreplicon-core = { path = "crates/unreplicon-core" }
 unreplicon-plugin = { path = "crates/unreplicon-plugin" }

@@ -15,5 +15,5 @@ bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
 bevy_platform = { workspace = true }
 tiled = { workspace = true }
-unboard-core = { path = "../unboard-core" }
-untiled-core = { path = "../untiled-core" }
+unboard-core = { workspace = true }
+untiled-core = { workspace = true }

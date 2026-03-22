@@ -12,11 +12,11 @@ workspace = true
 
 [dependencies]
 
-unfoundation-core = { path = "../unfoundation-core" }
-unui-core = { path = "../unui-core" }
-untypes-core = { path = "../untypes-core" }
-unmenu-core = { path = "../unmenu-core" }
-unprofile-core = { path = "../unprofile-core" }
+unfoundation-core = { workspace = true }
+unui-core = { workspace = true }
+untypes-core = { workspace = true }
+unmenu-core = { workspace = true }
+unprofile-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

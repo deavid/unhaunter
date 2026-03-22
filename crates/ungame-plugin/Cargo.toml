@@ -14,14 +14,14 @@ workspace = true
 
 [dependencies]
 
-unspatial-core = { path = "../unspatial-core" }
-unboard-core = { path = "../unboard-core" }
-untypes-core = { path = "../untypes-core" }
-untags-core = { path = "../untags-core" }
-unrender-std = { path = "../unrender-std" }
-unplayer-core = { path = "../unplayer-core" }
-unpicking-core = { path = "../unpicking-core" }
-unsettings-core = { path = "../unsettings-core" }
+unspatial-core = { workspace = true }
+unboard-core = { workspace = true }
+untypes-core = { workspace = true }
+untags-core = { workspace = true }
+unrender-std = { workspace = true }
+unplayer-core = { workspace = true }
+unpicking-core = { workspace = true }
+unsettings-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

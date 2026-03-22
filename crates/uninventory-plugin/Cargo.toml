@@ -12,12 +12,12 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-unplayer-core = { path = "../unplayer-core" }
-untypes-core = { path = "../untypes-core" }
-ungear-core = { path = "../ungear-core" }
-unspatial-core = { path = "../unspatial-core" }
-unboard-core = { path = "../unboard-core" }
+unplayer-core = { workspace = true }
+untypes-core = { workspace = true }
+ungear-core = { workspace = true }
+unspatial-core = { workspace = true }
+unboard-core = { workspace = true }
 unreplicon-core = { workspace = true }
-unaudiospatial-core = { path = "../unaudiospatial-core" }
-unbehavior = { path = "../unbehavior" }
-unrender-std = { path = "../unrender-std" }
+unaudiospatial-core = { workspace = true }
+unbehavior = { workspace = true }
+unrender-std = { workspace = true }

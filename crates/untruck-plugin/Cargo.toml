@@ -11,23 +11,23 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-untruck-core = { path = "../untruck-core" }
-undifficulty-core = { path = "../undifficulty-core" }
-unfoundation-core = { path = "../unfoundation-core" }
-unmission-core = { path = "../unmission-core" }
-untypes-core = { path = "../untypes-core" }
-unui-core = { path = "../unui-core" }
-unplayer-core = { path = "../unplayer-core" }
-unrender-std = { path = "../unrender-std" }
-ungear-core = { path = "../ungear-core" }
-ungearitems-core = { path = "../ungearitems-core" }
-unsettings-core = { path = "../unsettings-core" }
-unprofile-core = { path = "../unprofile-core" }
-unreplicon-core = { path = "../unreplicon-core" }
-unwalkie-core = { path = "../unwalkie-core" }
-unghost-core = { path = "../unghost-core" }
-unbehavior = { path = "../unbehavior" }
-unmapload-core = { path = "../unmapload-core" }
+untruck-core = { workspace = true }
+undifficulty-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unmission-core = { workspace = true }
+untypes-core = { workspace = true }
+unui-core = { workspace = true }
+unplayer-core = { workspace = true }
+unrender-std = { workspace = true }
+ungear-core = { workspace = true }
+ungearitems-core = { workspace = true }
+unsettings-core = { workspace = true }
+unprofile-core = { workspace = true }
+unreplicon-core = { workspace = true }
+unwalkie-core = { workspace = true }
+unghost-core = { workspace = true }
+unbehavior = { workspace = true }
+unmapload-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }

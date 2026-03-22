@@ -12,19 +12,19 @@ workspace = true
 
 [dependencies]
 
-unspatial-core = { path = "../unspatial-core" }
-unbehavior = { path = "../unbehavior" }
-unfoundation-core = { path = "../unfoundation-core" }
-unboard-core = { path = "../unboard-core" }
-unmapload-core = { path = "../unmapload-core" }
-unghost-core = { path = "../unghost-core" }
-untypes-core = { path = "../untypes-core" }
-unrender-std = { path = "../unrender-std" }
-unplayer-core = { path = "../unplayer-core" }
-unmetrics-core = { path = "../unmetrics-core" }
-unnoise-core = { path = "../unnoise-core" }
-unfog-core = { path = "../unfog-core" }
-unsettings-core = { path = "../unsettings-core" }
+unspatial-core = { workspace = true }
+unbehavior = { workspace = true }
+unfoundation-core = { workspace = true }
+unboard-core = { workspace = true }
+unmapload-core = { workspace = true }
+unghost-core = { workspace = true }
+untypes-core = { workspace = true }
+unrender-std = { workspace = true }
+unplayer-core = { workspace = true }
+unmetrics-core = { workspace = true }
+unnoise-core = { workspace = true }
+unfog-core = { workspace = true }
+unsettings-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

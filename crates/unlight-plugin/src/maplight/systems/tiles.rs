@@ -6,6 +6,7 @@ use rand::RngExt;
 
 use unbehavior::behavior::{Behavior, Interactive};
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::resources::visibility_data::VisibilityData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
 use unfoundation_core::random_seed;
@@ -13,7 +14,6 @@ use ungear_core::components::playergear::PlayerGear;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
 use unplayer_core::components::MainPlayer;
-use unboard_core::resources::visibility_data::VisibilityData;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, InfraredSensitive, LightSensitive,

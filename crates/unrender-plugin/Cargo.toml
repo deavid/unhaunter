@@ -13,13 +13,13 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 
-unbehavior = { path = "../unbehavior" }
-unrender-std = { path = "../unrender-std" }
-untypes-core = { path = "../untypes-core" }
-unspatial-core = { path = "../unspatial-core" }
-unboard-core = { path = "../unboard-core" }
-unmetrics-core = { path = "../unmetrics-core" }
-untruck-core = { path = "../untruck-core" }
+unbehavior = { workspace = true }
+unrender-std = { workspace = true }
+untypes-core = { workspace = true }
+unspatial-core = { workspace = true }
+unboard-core = { workspace = true }
+unmetrics-core = { workspace = true }
+untruck-core = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 winit = { workspace = true }

@@ -11,13 +11,13 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unbehavior = { path = "../unbehavior" }
-unfoundation-core = { path = "../unfoundation-core" }
-ungear-core = { path = "../ungear-core" }
-unplayer-core = { path = "../unplayer-core" }
-unrender-std = { path = "../unrender-std" }
-unui-core = { path = "../unui-core" }
-unsettings-core = { path = "../unsettings-core" }
-untypes-core = { path = "../untypes-core" }
+unbehavior = { workspace = true }
+unfoundation-core = { workspace = true }
+ungear-core = { workspace = true }
+unplayer-core = { workspace = true }
+unrender-std = { workspace = true }
+unui-core = { workspace = true }
+unsettings-core = { workspace = true }
+untypes-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
