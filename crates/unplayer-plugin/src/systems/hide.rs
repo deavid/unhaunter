@@ -1,12 +1,12 @@
 use crate::components::player::Hiding;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
+use unaudiospatial_core::emitter::AudioEmitter;
 use unbehavior::behavior::Behavior;
 use ungear_core::components::playergear::PlayerGear;
-use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unrender_std::components::animation::AnimationTimer;
 use unrender_std::components::visuals::ResolutionFactor;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 
 /// Component to tag the hiding overlay visual, linking it to the player.
@@ -21,15 +21,10 @@ struct HidingOverlay {
 /// valid hiding spot. If so, the player character enters the hiding spot, becoming
 /// partially hidden. A visual overlay is added to the hiding spot to indicate the
 /// player's presence.
-///
-/// TODO [intent-boundary]: This system reads ButtonInput<KeyCode> directly. It should
-/// instead read a `PlayerInput.hide_requested: bool` field. The input adapter should
-/// set this flag, not this domain system. This violates the intent boundary pattern.
 fn enter_hidespot(
     mut commands: Commands,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
-        (Entity, &PlayerInputMapping, &mut Position, &PlayerGear),
+        (Entity, &PlayerInput, &mut Position, &PlayerGear),
         (With<MainPlayer>, Without<Hiding>, Without<Behavior>),
     >,
     hiding_spots: Query<
@@ -39,12 +34,12 @@ fn enter_hidespot(
     mut ga: AudioEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
-    for (player_entity, input_mapping, mut player_pos, player_gear) in players.iter_mut() {
+    for (player_entity, player_input, mut player_pos, player_gear) in players.iter_mut() {
         // Get the player's hold timer or create a new one
         let timer = hold_timers
             .entry(player_entity)
             .or_insert_with(|| Timer::from_seconds(0.3, TimerMode::Once));
-        if keyboard_input.pressed(input_mapping.controls.activate) {
+        if player_input.hide_requested {
             if player_gear.held_item.is_some() {
                 // Player cannot hide while carrying furniture.
                 continue;
@@ -55,7 +50,14 @@ fn enter_hidespot(
                 .iter()
                 // Manually filter for hiding spots
                 .filter(|(_, _, behavior, _)| behavior.p.object.hidingspot)
-                .find(|(_, hiding_spot_pos, _, _)| player_pos.distance(hiding_spot_pos) < 1.3)
+                .find(
+                    |(_, hiding_spot_pos, _, _): &(
+                        Entity,
+                        &Position,
+                        &Behavior,
+                        Option<&ResolutionFactor>,
+                    )| player_pos.distance(hiding_spot_pos) < 1.3,
+                )
             {
                 // Key is held down, tick the timer
                 timer.tick(ga.time.delta());
@@ -105,20 +107,12 @@ fn enter_hidespot(
 /// This system checks if the player is pressing the 'activate' key and is
 /// currently hiding. If so, the player character exits the hiding spot, their
 /// visibility is restored, and the visual overlay is removed from the hiding spot.
-///
-/// TODO [intent-boundary]: This system reads ButtonInput<KeyCode> directly. It should
-/// instead read a `PlayerInput.unhide_requested: bool` field. The input adapter should
-/// set this flag, not this domain system. This violates the intent boundary pattern.
 fn exit_hidespot(
     mut commands: Commands,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<
-        (Entity, &PlayerInputMapping, &Hiding),
-        (With<MainPlayer>, With<PlayerSprite>),
-    >,
+    mut players: Query<(Entity, &PlayerInput, &Hiding), (With<MainPlayer>, With<PlayerSprite>)>,
 ) {
-    for (player_entity, input_mapping, _) in players.iter_mut() {
-        if keyboard_input.just_pressed(input_mapping.controls.activate) {
+    for (player_entity, player_input, _) in players.iter_mut() {
+        if player_input.unhide_requested {
             // Using 'activate' for unhiding Remove the Hiding component
             commands.entity(player_entity).remove::<Hiding>();
 

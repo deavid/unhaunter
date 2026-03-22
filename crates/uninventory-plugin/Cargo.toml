@@ -1,0 +1,25 @@
+[package]
+name = "uninventory-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+unplayer-core = { path = "../unplayer-core" }
+untypes-core = { path = "../untypes-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+uninteraction-core = { path = "../uninteraction-core" }
+ungear-core = { path = "../ungear-core" }
+unspatial-core = { path = "../unspatial-core" }
+unboard-core = { path = "../unboard-core" }
+unreplicon-core = { workspace = true }
+unaudiospatial-core = { path = "../unaudiospatial-core" }
+unbehavior = { path = "../unbehavior" }
+unrender-std = { path = "../unrender-std" }

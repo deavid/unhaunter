@@ -1,7 +1,7 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
 use unpicking_core::picking::CustomSpritePickingCamera;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerLocomotionState};
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::direction::Direction;
@@ -32,14 +32,14 @@ fn camera_follow_system(
     game_state: Res<State<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut camera: Query<(&mut Transform, &mut Direction), With<GCameraArena>>,
-    pc: Query<(&PlayerSprite, &Transform), (Without<GCameraArena>, With<MainPlayer>)>,
+    pc: Query<(&PlayerLocomotionState, &Transform), (Without<GCameraArena>, With<MainPlayer>)>,
     time: Res<Time>,
     game_settings: Res<Persistent<GameplaySettings>>,
     control_settings: Res<Persistent<ControlKeys>>,
     mut warn_count: Local<u32>,
 ) {
     let in_game = *game_state.get() == GameState::Running;
-    let Ok((player, p_transform)) = pc.single() else {
+    let Ok((player_loco, p_transform)) = pc.single() else {
         *warn_count += 1;
         if *warn_count > 60 {
             warn!("Camera error - Player not found (or too many)");
@@ -64,7 +64,7 @@ fn camera_follow_system(
     // Move the reference point a bit up since we have the UI on the bottom, so the player is better centered on the remaining available space.
     ref_point.y -= 10.0;
     // let sc_dir = p_dir.to_screen_coord();
-    let sc_dir = perspective::direction_to_screen_coord(player.movement);
+    let sc_dir = perspective::direction_to_screen_coord(player_loco.movement);
     const CAMERA_AHEAD_FACTOR: f32 = 0.11 / 1.8;
     ref_point.y += 20.0 + sc_dir.y * CAMERA_AHEAD_FACTOR;
     ref_point.x += sc_dir.x * CAMERA_AHEAD_FACTOR;

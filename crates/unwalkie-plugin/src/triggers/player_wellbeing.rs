@@ -4,7 +4,7 @@ use bevy::time::Stopwatch;
 use unboard_core::resources::roomdb::RoomTopology;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unlight_core::resources::light_grid::LightGrid;
-use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
+use unplayer_core::components::{Hiding, MainPlayer, PlayerVitals};
 use unrender_std::components::light::LightLevel;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
@@ -26,7 +26,7 @@ const MIN_INTERACTION_DURATION_SECONDS: f32 = 7.0; // Reduced from 10 to 7 secon
 /// This has been made more sensitive to help players when their sanity is critically low.
 fn very_low_sanity_no_truck_return(
     mut walkie_play: ResMut<WalkiePlay>,
-    qp: Query<(&PlayerSprite, &Position)>,
+    qp: Query<(&PlayerVitals, &Position)>,
     room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
@@ -37,10 +37,10 @@ fn very_low_sanity_no_truck_return(
         stopwatch.reset();
         return;
     }
-    let Some((player, pos)) = qp.iter().next() else {
+    let Some((vitals, pos)) = qp.iter().next() else {
         return;
     };
-    if player.sanity >= 45.0 {
+    if vitals.sanity >= 45.0 {
         stopwatch.reset();
         return;
     }
@@ -64,7 +64,7 @@ fn very_low_sanity_no_truck_return(
 /// Triggers a warning if the player's health drops below 50% for 30 seconds while inside the location.
 fn low_health_general_warning(
     mut walkie_play: ResMut<WalkiePlay>,
-    qp: Query<(&PlayerSprite, &Position)>,
+    qp: Query<(&PlayerVitals, &Position)>,
     room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
     _game_state: Res<State<GameState>>,
@@ -75,10 +75,10 @@ fn low_health_general_warning(
         stopwatch.reset();
         return;
     }
-    let Some((player, pos)) = qp.iter().next() else {
+    let Some((vitals, pos)) = qp.iter().next() else {
         return;
     };
-    if player.health >= 50.0 {
+    if vitals.health >= 50.0 {
         stopwatch.reset();
         return;
     }
@@ -105,7 +105,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
     mut walkie_play: ResMut<WalkiePlay>,
     // FIXME: WTF is "LightLevel"? this does not exist, this seems a hallucination from the original code.
     player_query: Query<
-        (&PlayerSprite, &Position, &LightLevel),
+        (&PlayerVitals, &Position, &LightLevel),
         (With<MainPlayer>, Without<Hiding>),
     >,
     room_topology: Res<RoomTopology>,
@@ -122,7 +122,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
         return;
     }
 
-    for (player_sprite, player_pos, light_level) in player_query.iter() {
+    for (player_vitals, player_pos, light_level) in player_query.iter() {
         let player_bpos = player_pos.to_board_position();
         if room_topology.room_tiles.get(&player_bpos).is_none() {
             continue;
@@ -147,7 +147,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
                     // but rather the overall MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS implies a prolonged period.
                     // Let's assume the intent is: if they enter darkness, start tracking. If that period
                     // exceeds MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS, and other conditions met, fire.
-                    *darkness_sanity_tracker = Some((player_sprite.sanity, Stopwatch::new()));
+                    *darkness_sanity_tracker = Some((player_vitals.sanity, Stopwatch::new()));
                     *hint_triggered_this_episode = false; // Reset hint flag for new darkness episode
                 }
             }
@@ -164,8 +164,8 @@ fn trigger_sanity_dropped_due_to_darkness_system(
             }
             // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
             if timer.elapsed_secs() >= MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS
-                && player_sprite.sanity < MAX_SANITY_FOR_HINT_PERCENT_SHARED
-                && (*initial_sanity - player_sprite.sanity) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
+                && player_vitals.sanity < MAX_SANITY_FOR_HINT_PERCENT_SHARED
+                && (*initial_sanity - player_vitals.sanity) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
                 && walkie_play.set(
                     WalkieEvent::SanityDroppedBelowThresholdDarkness,
                     time.elapsed_secs_f64(),
@@ -181,7 +181,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
 fn trigger_sanity_dropped_due_to_ghost_system(
     time: Res<Time>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerSprite, &Position, Option<&Hiding>), With<MainPlayer>>,
+    player_query: Query<(&PlayerVitals, &Position, Option<&Hiding>), With<MainPlayer>>,
     ghost_query: Query<(Entity, &GhostSprite, &Position)>, // Query Entity to track specific ghost
     room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
@@ -197,7 +197,7 @@ fn trigger_sanity_dropped_due_to_ghost_system(
     }
 
     // Iterate all players and ghosts (Simulation pattern)
-    for (player_sprite, player_pos, maybe_hiding) in player_query.iter() {
+    for (player_vitals, player_pos, maybe_hiding) in player_query.iter() {
         // 2.b. Reset Conditions - Player not inside location or is hiding
         if room_topology
             .room_tiles
@@ -250,7 +250,7 @@ fn trigger_sanity_dropped_due_to_ghost_system(
                 _ => {
                     // New interaction or different ghost
                     *interaction_sanity_tracker =
-                        Some((player_sprite.sanity, Stopwatch::new(), interacting_ghost_e));
+                        Some((player_vitals.sanity, Stopwatch::new(), interacting_ghost_e));
                     *hint_triggered_this_episode = false; // Reset hint flag for new interaction episode
                 }
             }
@@ -269,8 +269,8 @@ fn trigger_sanity_dropped_due_to_ghost_system(
             }
             // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
             if timer.elapsed_secs() >= MIN_INTERACTION_DURATION_SECONDS
-                && player_sprite.sanity < MAX_SANITY_FOR_HINT_PERCENT_SHARED
-                && (*initial_sanity - player_sprite.sanity) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
+                && player_vitals.sanity < MAX_SANITY_FOR_HINT_PERCENT_SHARED
+                && (*initial_sanity - player_vitals.sanity) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
                 && walkie_play.set(
                     WalkieEvent::SanityDroppedBelowThresholdGhost,
                     time.elapsed_secs_f64(),

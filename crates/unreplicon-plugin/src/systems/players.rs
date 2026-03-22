@@ -22,7 +22,9 @@ use ungear_core::types::gear::kind::GearKind;
 use ungear_core::types::gear::{EquipmentPosition, Hand};
 use ungearitems_core::components::flashlight::FlashlightStatus;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
-use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite, Stamina};
+use unplayer_core::components::{
+    Hiding, PlayerLocomotionState, PlayerSpectating, PlayerSprite, PlayerVitals, Stamina,
+};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportPlayerGearMessage, ExportStateMessage, FloorGearDespawnBroadcast,
@@ -70,6 +72,8 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<Position>();
     app.replicate::<Direction>();
     app.replicate::<PlayerSprite>();
+    app.replicate::<PlayerLocomotionState>();
+    app.replicate::<PlayerVitals>();
     app.replicate::<Stamina>();
     app.replicate::<PlayerGear>();
     app.replicate::<HeldObject>();
@@ -98,6 +102,11 @@ pub(super) fn app_setup(app: &mut App) {
     app.set_marker_fns::<LocallyOwned, Position>(noop_write::<Position>, noop_remove);
     app.set_marker_fns::<LocallyOwned, Direction>(noop_write::<Direction>, noop_remove);
     app.set_marker_fns::<LocallyOwned, PlayerSprite>(noop_write::<PlayerSprite>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, PlayerLocomotionState>(
+        noop_write::<PlayerLocomotionState>,
+        noop_remove,
+    );
+    app.set_marker_fns::<LocallyOwned, PlayerVitals>(noop_write::<PlayerVitals>, noop_remove);
     app.set_marker_fns::<LocallyOwned, Stamina>(noop_write::<Stamina>, noop_remove);
     app.set_marker_fns::<LocallyOwned, PlayerGear>(noop_write::<PlayerGear>, noop_remove);
     app.set_marker_fns::<LocallyOwned, HeldObject>(noop_write::<HeldObject>, noop_remove);
@@ -370,14 +379,18 @@ fn setup_mission_players(
         // Spawn the player skeleton. Every node (host, join client, dedicated server)
         // that replicates will receive this entity. Visual components are NOT added
         // here — hydrate_players_system handles that.
-        let entity = commands
-            .spawn((
+        let entity_commands = commands.spawn((
+            (
                 spawn_pos,
                 unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
-                PlayerSprite::new(player.player_uuid, net_id, spawn_pos),
+                PlayerSprite::new(player.player_uuid, net_id),
+                PlayerLocomotionState::new(spawn_pos),
+                PlayerVitals::new(),
                 net_id,
                 Stamina::default(),
                 player_gear,
+            ),
+            (
                 unspatial_core::direction::Direction::new_right(),
                 unbehavior::components::Movable,
                 unnavigation_core::components::waypoint::WaypointQueue::default(),
@@ -386,8 +399,9 @@ fn setup_mission_players(
                 unrender_std::resources::visibility_data::VisibilityData::default(),
                 unplayer_core::components::PlayerInput::default(),
                 Replicated,
-            ))
-            .id();
+            ),
+        ));
+        let entity = entity_commands.id();
 
         let is_host = player.current_socket.is_none();
 
@@ -548,14 +562,18 @@ fn spawn_late_joining_players(
             }
         }
 
-        let entity = commands
-            .spawn((
+        let entity_commands = commands.spawn((
+            (
                 spawn_pos,
                 unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
-                PlayerSprite::new(player.player_uuid, net_id, spawn_pos),
+                PlayerSprite::new(player.player_uuid, net_id),
+                PlayerLocomotionState::new(spawn_pos),
+                PlayerVitals::new(),
                 net_id,
                 Stamina::default(),
                 player_gear,
+            ),
+            (
                 unspatial_core::direction::Direction::new_right(),
                 unbehavior::components::Movable,
                 unnavigation_core::components::waypoint::WaypointQueue::default(),
@@ -565,8 +583,9 @@ fn spawn_late_joining_players(
                 unplayer_core::components::PlayerInput::default(),
                 Owner(socket_owner_id),
                 Replicated,
-            ))
-            .id();
+            ),
+        ));
+        let entity = entity_commands.id();
 
         let client_id = from_owner_id(socket_owner_id);
         commands.write_message(ToClients {
@@ -804,7 +823,8 @@ fn handle_export_state(
             &mut Position,
             &mut Direction,
             &mut Stamina,
-            &mut PlayerSprite,
+            &mut PlayerVitals,
+            &mut PlayerLocomotionState,
             Option<&mut PlayerSpectating>,
         ),
         Without<LocallyOwned>,
@@ -812,7 +832,7 @@ fn handle_export_state(
     mut commands: Commands,
 ) {
     for msg in reader.read() {
-        for (entity, owner, mut pos, mut dir, mut stamina, mut sprite, spectating) in
+        for (entity, owner, mut pos, mut dir, mut stamina, mut vitals, mut locomotion, spectating) in
             q_players.iter_mut()
         {
             if from_owner_id(owner.0) != msg.client_id {
@@ -846,10 +866,10 @@ fn handle_export_state(
                     .remove::<untruck_core::components::in_truck::InTruck>();
             }
 
-            sprite.health = msg.message.health;
-            sprite.sanity = msg.message.sanity;
-            sprite.velocity.x = msg.message.movement_dx;
-            sprite.velocity.y = msg.message.movement_dy;
+            vitals.health = msg.message.health;
+            vitals.sanity = msg.message.sanity;
+            locomotion.velocity.x = msg.message.movement_dx;
+            locomotion.velocity.y = msg.message.movement_dy;
 
             if msg.message.is_spectating
                 && spectating.is_none()
@@ -1142,7 +1162,8 @@ fn send_export_state(
         (
             &Position,
             &Direction,
-            &PlayerSprite,
+            &PlayerVitals,
+            &PlayerLocomotionState,
             &Stamina,
             &PlayerGear,
             Has<Hiding>,
@@ -1154,7 +1175,9 @@ fn send_export_state(
     mut writer: MessageWriter<ExportStateMessage>,
     mut gear_writer: MessageWriter<ExportPlayerGearMessage>,
 ) {
-    for (pos, dir, sprite, stamina, gear, is_hiding, in_truck, is_spectating) in q_local.iter() {
+    for (pos, dir, vitals, locomotion, stamina, gear, is_hiding, in_truck, is_spectating) in
+        q_local.iter()
+    {
         writer.write(ExportStateMessage {
             x: pos.x,
             y: pos.y,
@@ -1167,10 +1190,10 @@ fn send_export_state(
             is_hiding,
             in_truck,
             stamina: stamina.percentage(),
-            health: sprite.health,
-            sanity: sprite.sanity,
-            movement_dx: sprite.velocity.x,
-            movement_dy: sprite.velocity.y,
+            health: vitals.health,
+            sanity: vitals.sanity,
+            movement_dx: locomotion.velocity.x,
+            movement_dy: locomotion.velocity.y,
             is_spectating,
         });
 

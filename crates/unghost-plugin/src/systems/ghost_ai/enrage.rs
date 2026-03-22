@@ -14,7 +14,7 @@ use crate::utils::{mean::MeanValue, time::PrintingTimer};
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{
-    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite,
+    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerVitals,
 };
 use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
@@ -42,7 +42,7 @@ pub(crate) fn ghost_enrage(
     mut avg_angry: Local<MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
     q_player: Query<
-        (&PlayerSprite, &Position, Option<&Hiding>),
+        (&PlayerVitals, &Position, Option<&Hiding>),
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
@@ -207,7 +207,7 @@ fn handle_salty_trace_spawning_simple(
 fn calculate_min_player_distance(
     ghost_position: &Position,
     q_player: &Query<
-        (&PlayerSprite, &Position, Option<&Hiding>),
+        (&PlayerVitals, &Position, Option<&Hiding>),
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
@@ -218,9 +218,9 @@ fn calculate_min_player_distance(
 ) -> f32 {
     q_player
         .iter()
-        .filter(|(p, _, _)| p.health > 0.0)
-        .map(|(_, pos, _)| calculate_weighted_distance(ghost_position, pos))
-        .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+        .filter(|(v, _, _)| v.health > 0.0)
+        .map(|(_, pos, _)| ghost_position.weighted_distance(pos))
+        .min_by(|a: &f32, b: &f32| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .unwrap_or(1000.0)
         .clamp(1.0, 1000.0)
 }
@@ -338,7 +338,7 @@ pub(crate) fn calculate_rage_update(
     ghost: &mut GhostSprite,
     ghost_position: &Position,
     q_player: &Query<
-        (&PlayerSprite, &Position, Option<&Hiding>),
+        (&PlayerVitals, &Position, Option<&Hiding>),
         (
             Without<PlayerSpectating>,
             Without<PlayerDisconnected>,
@@ -357,22 +357,22 @@ pub(crate) fn calculate_rage_update(
     let mut player_in_room = false;
     let mut total_inv_sanity = 0.0;
 
-    for (player_sprite, player_pos, _) in q_player.iter() {
-        let sanity = player_sprite.sanity;
+    for (player_vitals, player_pos, _) in q_player.iter() {
+        let sanity = player_vitals.sanity;
         let inv_sanity = (120.0 - sanity) / 100.0;
 
-        let dist2 = calculate_weighted_distance_squared(ghost_position, player_pos)
+        let dist2 = ghost_position.weighted_distance_squared(player_pos)
             / difficulty.0.hunt_provocation_radius()
             * (0.01 + sanity)
             + 0.1
             + sanity / 100.0;
 
         let angry2 = dist2.recip() * 1000000.0 / sanity
-            * player_sprite.mean_sound
-            * (player_sprite.health / 100.0).clamp(0.0, 1.0);
+            * player_vitals.mean_sound
+            * (player_vitals.health / 100.0).clamp(0.0, 1.0);
 
         total_angry2 +=
-            angry2 * inv_sanity + player_sprite.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
+            angry2 * inv_sanity + player_vitals.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
 
         let player_board_position = player_pos.to_board_position();
         if room_topology
@@ -521,44 +521,4 @@ pub(crate) fn debug_log_ghost_state(
     );
 }
 
-/// Calculate distance with Z component multiplied by 10 if on different floors
-/// This makes the ghost less effective at damaging players across floors
-pub(crate) fn calculate_weighted_distance(ghost_pos: &Position, player_pos: &Position) -> f32 {
-    let dx = player_pos.x - ghost_pos.x;
-    let dy = player_pos.y - ghost_pos.y;
 
-    // Check if they're on different floors by comparing rounded Z values
-    let ghost_floor = ghost_pos.z.round();
-    let player_floor = player_pos.z.round();
-
-    let dz = if ghost_floor != player_floor {
-        // Multiply Z component by 10 when on different floors
-        (player_pos.z - ghost_pos.z) * 10.0
-    } else {
-        player_pos.z - ghost_pos.z
-    };
-
-    (dx * dx + dy * dy + dz * dz).sqrt()
-}
-
-/// Calculate squared distance with Z component multiplied by 10 if on different floors
-pub(crate) fn calculate_weighted_distance_squared(
-    ghost_pos: &Position,
-    player_pos: &Position,
-) -> f32 {
-    let dx = player_pos.x - ghost_pos.x;
-    let dy = player_pos.y - ghost_pos.y;
-
-    // Check if they're on different floors by comparing rounded Z values
-    let ghost_floor = ghost_pos.z.round();
-    let player_floor = player_pos.z.round();
-
-    let dz = if ghost_floor != player_floor {
-        // Multiply Z component by 10 when on different floors
-        (player_pos.z - ghost_pos.z) * 10.0
-    } else {
-        player_pos.z - ghost_pos.z
-    };
-
-    dx * dx + dy * dy + dz * dz
-}

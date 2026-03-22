@@ -1,4 +1,3 @@
-use crate::components::player::{Hiding, Stamina};
 use bevy::prelude::*;
 use unaudiospatial_core::events::SoundEvent;
 use unbehavior::behavior::Behavior;
@@ -12,11 +11,7 @@ use uninteraction_core::events::InteractionExecutionType;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unnpc_core::events::NpcHelpEvent;
-use unplayer_core::components::MainPlayer;
-use unplayer_core::components::PlayerInput;
-use unplayer_core::components::PlayerLocomotionState;
-use unplayer_core::components::PlayerSpectating;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerInput, PlayerLocomotionState, PlayerSprite, Hiding, Stamina, PlayerSpectating};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unreplicon_core::messages::InteractionRequestMessage;
 use unspatial_core::direction::Direction;
@@ -112,17 +107,12 @@ pub(crate) fn dispatch_interact_intent(
                         let bpos = item_pos.to_board_position();
                         let bpos_arr = [bpos.x as i32, bpos.y as i32, bpos.z as i32];
                         if authority.is_some() {
-                            // On the host (authority), fire the event locally. bevy_replicon then
-                            // replicates the resulting Behavior change to all connected join clients.
                             ev_interaction.write(ExecuteInteractionEvent {
                                 entity,
                                 ietype: InteractionExecutionType::ChangeState,
                                 force_tuid: None,
                             });
                         } else {
-                            // On join clients, forward the request to the server so
-                            // it is validated and then broadcast to all clients.
-                            // Do NOT fire the event locally; wait for the server's response.
                             ev_interaction_req.write(InteractionRequestMessage {
                                 position: bpos_arr,
                                 ietype: InteractionExecutionType::ChangeState,
@@ -136,18 +126,6 @@ pub(crate) fn dispatch_interact_intent(
     }
 }
 
-/// System responsible for applying movement to the player based on the PlayerInput component.
-///
-/// This system handles all player movement logic including:
-/// - Reading movement input from the PlayerInput component (populated by input systems)
-/// - Applying movement speed, running, and stamina calculations
-/// - Collision detection and handling
-/// - Direction updates and animation
-/// - Interaction with objects (E key)
-/// - Running state management
-///
-/// This system decouples movement logic from input sources, allowing both keyboard
-/// and click-to-move input to use the same movement implementation.
 pub(crate) fn apply_movement_intent(
     time: Res<Time>,
     authority: Option<Res<untypes_core::roles::AuthorityRole>>,
@@ -176,7 +154,7 @@ pub(crate) fn apply_movement_intent(
         Without<PlayerSprite>,
     >,
     difficulty: Res<CurrentDifficulty>,
-    miasma: If<Res<MiasmaGrid>>,
+    miasma: Option<Res<MiasmaGrid>>,
     mut avg_running: Local<f32>,
     mut last_error_log: Local<f32>,
     mouse_visibility: Option<Res<MouseVisibility>>,
@@ -247,7 +225,6 @@ pub(crate) fn apply_movement_intent(
             col_delta = Vec3::ZERO;
         }
 
-        // Get movement direction from PlayerInput component
         let input_vec = player_input.movement;
         let mut d = Direction {
             dx: input_vec.x,
@@ -261,9 +238,6 @@ pub(crate) fn apply_movement_intent(
         d.dx -= col_delta_n.x * col_dotp;
         d.dy -= col_delta_n.y * col_dotp;
 
-        // Store raw normalized input velocity for animation replication.
-        // Zero when not moving, unit vector when moving — the animation system
-        // reads this to reconstruct the original delta formula correctly.
         player_loco.velocity = Vec2::new(d.dx, d.dy);
 
         if is_spectating {
@@ -271,14 +245,12 @@ pub(crate) fn apply_movement_intent(
             pos.x += d.dx * spectate_speed * dt;
             pos.y += d.dy * spectate_speed * dt;
 
-            // Apply collision detection for spectators (keeps them in bounds)
             col_delta = colhand.spectator_delta(&pos);
             if col_delta.is_finite() {
                 pos.x -= col_delta.x;
                 pos.y -= col_delta.y;
             }
 
-            // Update orientation immediately
             if d.distance() > 0.001 {
                 dir.dx = d.dx;
                 dir.dy = d.dy;
@@ -288,24 +260,21 @@ pub(crate) fn apply_movement_intent(
             continue;
         }
 
-        // Speed Penalty Based on Held Object Weight
         let speed_penalty = if player_gear.held_item.is_some() {
             0.5
         } else {
             1.0
         };
 
-        // Check for Running with Stamina System
         let wants_to_run = player_input.run;
 
-        // Miasma Logic
-        let bpos = pos.to_board_position();
-        let Some(pressure) = miasma.pressure_field.get(bpos.ndidx()) else {
-            continue;
+        let miasma_factor = if let Some(miasma) = miasma.as_ref() {
+            let bpos = pos.to_board_position();
+            miasma.pressure_field.get(bpos.ndidx()).map(|pressure| (*pressure / 100.0).max(0.0).cbrt().clamp(0.0, 0.7)).unwrap_or(0.0)
+        } else {
+            0.0
         };
-        let miasma_factor = (*pressure / 100.0).max(0.0).cbrt().clamp(0.0, 0.7);
 
-        // Stamina Modification
         stamina.depletion_rate = miasma_factor;
         let is_running = stamina.update(dt, wants_to_run).cbrt();
         let run_multiplier = 1.0 + RUN_ADD_MULTIPLIER * is_running;
@@ -321,12 +290,10 @@ pub(crate) fn apply_movement_intent(
             player_loco.movement.dy /= DIR_RED;
         }
 
-        // Check if Player is Hiding
         if hiding.is_some() {
             continue;
         }
 
-        // Apply speed penalty and run multiplier
         let pdx =
             PLAYER_SPEED * d.dx * dt * speed_penalty * difficulty.0.player_speed() * run_multiplier;
         let pdy =
@@ -348,7 +315,6 @@ pub(crate) fn apply_movement_intent(
                 .map(|m| m.is_visible)
                 .unwrap_or(false)
         {
-            // Let mouse_aim_system handle Direction for MainPlayer
         } else if player_input.aim_direction.length_squared() > 0.001 {
             dir.dx = player_input.aim_direction.x;
             dir.dy = player_input.aim_direction.y;
@@ -365,11 +331,6 @@ pub(crate) fn apply_movement_intent(
     }
 }
 
-/// System that drives sprite animation for all player entities from replicated state.
-///
-/// Runs on all clients (including join clients) for every player with an `AnimationTimer`,
-/// using only replicated components so remote players animate correctly without needing
-/// client-side `PlayerInput`.
 pub(crate) fn drive_character_animation(
     mut players: Query<(
         &PlayerLocomotionState,
@@ -386,18 +347,10 @@ pub(crate) fn drive_character_animation(
         }
 
         if hiding.is_some() {
-            // When hiding the player is stationary; keep the Standing animation.
             anim.set_range(CharacterAnimation::from_dir(0.0, 0.0).to_vec());
             continue;
         }
 
-        // Reconstruct `delta` exactly as apply_movement_intent originally did:
-        //   delta = d / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0
-        // where `d` was the raw normalized input direction.
-        // `PlayerLocomotionState.velocity` carries `d` and is replicated to join clients via
-        // ExportStateMessage → server → Replicon, so remote players animate correctly.
-        // When velocity is zero (not moving), delta is tiny → Standing with correct facing.
-        // When velocity is non-zero (moving), delta magnitude ≈ 10 → Walking.
         let delta =
             Direction::from(player_loco.velocity) / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0;
         let animation_speed_factor = if stamina.running { 1.5 } else { 1.0 };
@@ -410,4 +363,16 @@ pub(crate) fn drive_character_animation(
             .to_vec(),
         );
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            dispatch_interact_intent,
+            apply_movement_intent,
+            drive_character_animation,
+        )
+            .run_if(in_state(GameState::Running)),
+    );
 }

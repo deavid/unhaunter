@@ -63,6 +63,12 @@ pub struct PlayerInput {
     /// Whether the player wants to drop an object.
     pub drop: bool,
 
+    /// Whether the player wants to hide.
+    pub hide_requested: bool,
+
+    /// Whether the player wants to stop hiding.
+    pub unhide_requested: bool,
+
     /// Whether the player wants to use the item in their right hand.
     pub use_right_hand: bool,
 
@@ -100,6 +106,8 @@ impl Default for PlayerInput {
             interact: false,
             grab: false,
             drop: false,
+            hide_requested: false,
+            unhide_requested: false,
             use_right_hand: false,
             use_left_hand: false,
             target_right_hand: None,
@@ -128,6 +136,8 @@ impl PlayerInput {
         self.interact = false;
         self.grab = false;
         self.drop = false;
+        self.hide_requested = false;
+        self.unhide_requested = false;
         self.use_right_hand = false;
         self.use_left_hand = false;
         self.target_right_hand = None;
@@ -183,8 +193,7 @@ impl InventoryStats {
 
 /// Represents a player character in the game world.
 ///
-/// This component stores the player's attributes, sanity level,
-/// health, and mean sound exposure.
+/// This component stores the player's identity and network identifiers.
 #[derive(Component, Debug, Serialize, Deserialize, Reflect)]
 #[reflect(Component, Default)]
 pub struct PlayerSprite {
@@ -192,23 +201,6 @@ pub struct PlayerSprite {
     pub id: Uuid,
     /// The unique identifier for the player's Replicon client (u64).
     pub network_id: NetworkId,
-    /// The player's accumulated "craziness" level. Higher craziness reduces sanity.
-    pub crazyness: f32,
-    /// The player's current sanity level (0.0 - 100.0).
-    pub sanity: f32,
-    /// The average sound level the player has been exposed to, used for sanity
-    /// calculations.
-    pub mean_sound: f32,
-    /// The player's current health. A value of 0 indicates the player is incapacitated.
-    pub health: f32,
-    /// The player's initial spawn position when the level started.
-    pub spawn_position: Position,
-    /// The player's movement direction based on WASD controls.
-    pub movement: Direction,
-    /// The current normalized input direction (raw velocity), used for animation.
-    /// Zero when the player is not moving, unit vector when moving.
-    #[serde(default)]
-    pub velocity: Vec2,
 }
 
 impl MapEntities for PlayerSprite {
@@ -220,13 +212,64 @@ impl Default for PlayerSprite {
         Self {
             id: Uuid::nil(),
             network_id: NetworkId(0),
+        }
+    }
+}
+
+/// Component for managing player locomotion state.
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
+pub struct PlayerLocomotionState {
+    /// The player's initial spawn position when the level started.
+    pub spawn_position: Position,
+    /// The player's movement direction based on WASD controls.
+    pub movement: Direction,
+    /// The current normalized input direction (raw velocity), used for animation.
+    /// Zero when the player is not moving, unit vector when moving.
+    #[serde(default)]
+    pub velocity: Vec2,
+}
+
+impl MapEntities for PlayerLocomotionState {
+    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
+}
+
+impl Default for PlayerLocomotionState {
+    fn default() -> Self {
+        Self {
+            spawn_position: Position::default(),
+            movement: Direction::zero(),
+            velocity: Vec2::ZERO,
+        }
+    }
+}
+
+/// Component for managing player vitals (health, sanity, etc.).
+#[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
+pub struct PlayerVitals {
+    /// The player's accumulated "craziness" level. Higher craziness reduces sanity.
+    pub crazyness: f32,
+    /// The player's current sanity level (0.0 - 100.0).
+    pub sanity: f32,
+    /// The average sound level the player has been exposed to, used for sanity
+    /// calculations.
+    pub mean_sound: f32,
+    /// The player's current health. A value of 0 indicates the player is incapacitated.
+    pub health: f32,
+}
+
+impl MapEntities for PlayerVitals {
+    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
+}
+
+impl Default for PlayerVitals {
+    fn default() -> Self {
+        Self {
             crazyness: 0.0,
             sanity: 100.0,
             mean_sound: 0.0,
             health: 100.0,
-            spawn_position: Position::default(),
-            movement: Direction::zero(),
-            velocity: Vec2::ZERO,
         }
     }
 }
@@ -239,18 +282,23 @@ pub struct PlayerInputMapping {
 
 impl PlayerSprite {
     /// Creates a new `PlayerSprite` with the specified identity.
-    pub fn new(id: Uuid, network_id: NetworkId, spawn_position: Position) -> Self {
+    pub fn new(id: Uuid, network_id: NetworkId) -> Self {
+        Self { id, network_id }
+    }
+}
+
+impl PlayerLocomotionState {
+    pub fn new(spawn_position: Position) -> Self {
         Self {
-            id,
-            network_id,
-            crazyness: 0.0,
-            sanity: 100.0,
-            mean_sound: 0.0,
-            health: 100.0,
             spawn_position,
-            movement: Direction::zero(),
-            velocity: Vec2::ZERO,
+            ..default()
         }
+    }
+}
+
+impl PlayerVitals {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

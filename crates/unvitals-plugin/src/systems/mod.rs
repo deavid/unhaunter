@@ -1,37 +1,32 @@
-use crate::components::player::Stamina;
 use bevy::prelude::*;
-use bevy_persistent::Persistent;
-use unboard_core::resources::board_topology::BoardTopology;
-use unboard_core::resources::roomdb::RoomTopology;
+use unplayer_core::components::{PlayerVitals, PlayerSprite, MainPlayer, PlayerInput, PlayerSpectating, Stamina};
+use unspatial_core::position::Position;
+use untruck_core::components::in_truck::InTruck;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use ungear_core::components::playergear::PlayerGear;
-use unghost_core::components::ghost_sprite::GhostSprite;
-use unlight_core::resources::light_grid::LightGrid;
-use unplayer_core::components::MainPlayer;
-use unplayer_core::components::PlayerInput;
-use unplayer_core::components::PlayerSpectating;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::components::PlayerVitals;
-use unprofile_core::profile::PlayerProfileData;
-use unrender_std::utils::light::lerp_color;
-use unreplicon_core::ownership::LocallyOwned;
 use unsoundfield_core::resources::SoundGrid;
-use unspatial_core::position::Position;
-use unsummary_core::grade::Grade;
-use unsummary_core::summary::SummaryData;
-use untags_core::tags::GhostTag;
+use unlight_core::resources::light_grid::LightGrid;
+use unboard_core::resources::roomdb::RoomTopology;
 use unthermal_core::resources::ThermalGrid;
-use untruck_core::components::in_truck::InTruck;
+use unsummary_core::summary::SummaryData;
+use unsummary_core::grade::Grade;
+use unghost_core::components::ghost_sprite::GhostSprite;
+use untags_core::tags::GhostTag;
+use unreplicon_core::ownership::LocallyOwned;
+use unreplicon_core::messages::PlayerDiedEvent;
+use unprofile_core::profile::PlayerProfileData;
+use bevy_persistent::Persistent;
+use unboard_core::resources::board_topology::BoardTopology;
 use unui_core::components::game_ui::DamageBackground;
+use unrender_std::utils::light::lerp_color;
 
-pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
+pub fn calculate_sanity(crazyness: f32) -> f32 {
     const LINEAR: f32 = 30.0;
     const SCALE: f32 = 100.0;
     (SCALE * LINEAR) / ((crazyness + LINEAR * LINEAR).max(0.01).sqrt())
 }
 
-fn drain_sanity_from_environment(
+pub(crate) fn drain_sanity_from_environment(
     time: Res<Time>,
     mut qp: Query<
         (&mut PlayerVitals, &Position),
@@ -41,13 +36,16 @@ fn drain_sanity_from_environment(
             Without<PlayerSpectating>,
         ),
     >,
-    thermal_grid: If<Res<ThermalGrid>>,
-    sound_grid: If<Res<SoundGrid>>,
-    lg: If<Res<LightGrid>>,
+    thermal_grid: Option<Res<ThermalGrid>>,
+    sound_grid: Option<Res<SoundGrid>>,
+    lg: Option<Res<LightGrid>>,
     room_topology: Res<RoomTopology>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let dt = time.delta_secs();
+    let (Some(thermal_grid), Some(sound_grid), Some(lg)) = (thermal_grid, sound_grid, lg) else {
+        return;
+    };
     for (mut ps, pos) in &mut qp {
         let bpos = pos.to_board_position();
         let p = bpos.ndidx();
@@ -96,7 +94,7 @@ fn drain_sanity_from_environment(
     }
 }
 
-fn regenerate_health_over_time(
+pub(crate) fn regenerate_health_over_time(
     time: Res<Time>,
     mut qp: Query<&mut PlayerVitals, (Without<InTruck>, Without<PlayerSpectating>)>,
     difficulty: Res<CurrentDifficulty>,
@@ -113,7 +111,7 @@ fn regenerate_health_over_time(
     }
 }
 
-fn recover_sanity_in_truck(
+pub(crate) fn recover_sanity_in_truck(
     time: Res<Time>,
     mut qp: Query<&mut PlayerVitals, (With<MainPlayer>, With<InTruck>, Without<PlayerSpectating>)>,
     difficulty: Res<CurrentDifficulty>,
@@ -138,7 +136,7 @@ fn recover_sanity_in_truck(
     }
 }
 
-fn update_damage_vignette_color(
+pub(crate) fn update_damage_vignette_color(
     qp: Query<(&PlayerVitals, Has<PlayerSpectating>), With<MainPlayer>>,
     mut qb: Query<(
         Option<&mut ImageNode>,
@@ -187,7 +185,7 @@ fn update_damage_vignette_color(
     }
 }
 
-fn scale_stamina_rates_by_health(
+pub(crate) fn scale_stamina_rates_by_health(
     mut players: Query<(&PlayerVitals, &mut Stamina)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -210,23 +208,19 @@ fn scale_stamina_rates_by_health(
     }
 }
 
-use unreplicon_core::messages::PlayerDiedEvent;
-
-fn transition_to_spectator_on_death(
+pub(crate) fn transition_to_spectator_on_death(
     mut commands: Commands,
     mut player_query: Query<
         (
             Entity,
             &PlayerSprite,
             &PlayerVitals,
-            Option<&mut PlayerGear>,
         ),
         Without<PlayerSpectating>,
     >,
     mut ev_death: MessageWriter<PlayerDiedEvent>,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
 ) {
-    for (entity, player, vitals, mut gear) in player_query.iter_mut() {
+    for (entity, player, vitals) in player_query.iter_mut() {
         if vitals.health <= 0.0 {
             info!(
                 "Player {:?} ({:?}) died! Entering spectate mode.",
@@ -234,23 +228,6 @@ fn transition_to_spectator_on_death(
             );
             commands.entity(entity).insert(PlayerSpectating);
 
-            // Despawn all gear (Authoritative only)
-            if let (Some(_), Some(gear)) = (authority.as_ref(), gear.as_mut()) {
-                if let Some(e) = gear.left_hand {
-                    commands.entity(e).despawn();
-                }
-                if let Some(e) = gear.right_hand {
-                    commands.entity(e).despawn();
-                }
-                for e in gear.inventory.iter() {
-                    commands.entity(*e).despawn();
-                }
-                if let Some(h) = &gear.held_item {
-                    commands.entity(h.entity).despawn();
-                }
-                // Empty the inventory
-                **gear = PlayerGear::default();
-            }
             ev_death.write(PlayerDiedEvent {
                 id: player.network_id,
             });
@@ -258,7 +235,7 @@ fn transition_to_spectator_on_death(
     }
 }
 
-fn record_death_to_profile(
+pub(crate) fn record_death_to_profile(
     mut ev_death: MessageReader<PlayerDiedEvent>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     local_player: Res<unreplicon_core::resources::LocalPlayer>,
@@ -306,9 +283,12 @@ fn record_death_to_profile(
 }
 
 pub(crate) fn debug_kill_spectator(
-    keyboard_input: If<Res<ButtonInput<KeyCode>>>,
+    keyboard_input: Option<Res<ButtonInput<KeyCode>>>,
     mut player_query: Query<&mut PlayerVitals, With<MainPlayer>>,
 ) {
+    let Some(keyboard_input) = keyboard_input else {
+        return;
+    };
     let shift =
         keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight);
     let ctrl = keyboard_input.pressed(KeyCode::ControlLeft)
@@ -330,21 +310,7 @@ pub(crate) fn sync_client_reported_sanity(
     }
 }
 
-/// Client-side: apply ghost aura damage to the locally-owned player.
-///
-/// Replaces the server-side health damage removed from `handle_hunting_phase`.
-/// Runs only on instances with a local player (`LocalPlayerRole`).
-/// Queries only the locally-owned entity (`With<LocallyOwned>`) so that on a
-/// PeerHost the host's own player is damaged, but not the server copies of
-/// remote player entities.
-///
-/// `GhostSprite` is replicated from the server, so the client has a current
-/// copy of `hunt_target`, `hunting`, and `calm_time_secs`.
-///
-/// The `Local<f32> hunt_start` timer avoids using `ghost.hunt_time_secs`
-/// (a server-absolute timestamp) with the client's local `Time::elapsed_secs()`.
-/// See architecture notes for the reason this subtraction is incorrect.
-fn apply_ghost_proximity_damage(
+pub(crate) fn apply_ghost_proximity_damage(
     mut q_local_player: Query<
         (&Position, &mut PlayerVitals),
         (
@@ -364,15 +330,9 @@ fn apply_ghost_proximity_damage(
         return;
     };
 
-    // Check if ANY ghost is hunting before entering the per-ghost loop.
-    // This must be computed outside the loop to avoid the following bug:
-    // if ghost A is hunting and ghost B is not, ghost B's iteration would
-    // reset *hunt_start = 0.0 on every frame, preventing ghost_strength
-    // from ever ramping up and making ghost A deal zero damage.
     let any_hunting = q_ghost.iter().any(|(_, g)| g.hunt_target);
 
     if !any_hunting {
-        // No ghost is currently hunting: reset the ramp-up timer.
         *hunt_start = 0.0;
     }
 
@@ -381,29 +341,12 @@ fn apply_ghost_proximity_damage(
             continue;
         }
 
-        // Record the client-local time at which we first observed any hunt_target==true.
-        // We deliberately avoid time.elapsed_secs() - ghost.hunt_time_secs here
-        // because hunt_time_secs is a server-side absolute timestamp that cannot
-        // be compared meaningfully to the client's elapsed time.
         if *hunt_start == 0.0 {
             *hunt_start = time.elapsed_secs();
         }
         let ghost_strength = (time.elapsed_secs() - *hunt_start).clamp(0.0, 2.0);
 
-        // Inline of calculate_weighted_distance_squared from unghost-plugin/enrage.rs.
-        // That function is pub(crate) within unghost-plugin and not accessible here.
-        // Logic is identical: Z distance is multiplied by 10 when on different floors
-        // to make the ghost less effective at damaging players across floors.
-        let dx = player_pos.x - ghost_pos.x;
-        let dy = player_pos.y - ghost_pos.y;
-        let ghost_floor = ghost_pos.z.round();
-        let player_floor = player_pos.z.round();
-        let dz = if ghost_floor != player_floor {
-            (player_pos.z - ghost_pos.z) * 10.0
-        } else {
-            player_pos.z - ghost_pos.z
-        };
-        let dist2 = dx * dx + dy * dy + dz * dz + 2.0;
+        let dist2 = player_pos.weighted_distance_squared(ghost_pos) + 2.0;
 
         let dmg = dist2.recip() * difficulty.0.health_drain_rate();
         let damage_to_apply = dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
@@ -414,6 +357,7 @@ fn apply_ghost_proximity_damage(
 pub(crate) fn app_setup(app: &mut App) {
     use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
     use untypes_core::states::SimulationState;
+    use unreplicon_core::messages::PlayerDiedEvent;
 
     app.add_message::<PlayerDiedEvent>().add_systems(
         Update,

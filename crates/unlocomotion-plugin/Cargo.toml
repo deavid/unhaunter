@@ -1,0 +1,30 @@
+[package]
+name = "unlocomotion-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+unplayer-core = { path = "../unplayer-core" }
+untypes-core = { path = "../untypes-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unspatial-core = { path = "../unspatial-core" }
+unbehavior = { path = "../unbehavior" }
+unnavigation-core = { path = "../unnavigation-core" }
+unrender-std = { path = "../unrender-std" }
+unreplicon-core = { workspace = true }
+unaudiospatial-core = { path = "../unaudiospatial-core" }
+undifficulty-core = { path = "../undifficulty-core" }
+unfog-core = { path = "../unfog-core" }
+ungear-core = { path = "../ungear-core" }
+uninteraction-core = { path = "../uninteraction-core" }
+unnpc-core = { path = "../unnpc-core" }
+unui-core = { path = "../unui-core" }
+untruck-core = { path = "../untruck-core" }

@@ -1,0 +1,34 @@
+[package]
+name = "unvitals-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+unplayer-core = { path = "../unplayer-core" }
+untypes-core = { path = "../untypes-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unsoundfield-core = { path = "../unsoundfield-core" }
+unsummary-core = { path = "../unsummary-core" }
+undifficulty-core = { path = "../undifficulty-core" }
+unbehavior = { path = "../unbehavior" }
+unspatial-core = { path = "../unspatial-core" }
+unreplicon-core = { workspace = true }
+ungear-core = { path = "../ungear-core" }
+unghost-core = { path = "../unghost-core" }
+untags-core = { path = "../untags-core" }
+unlight-core = { path = "../unlight-core" }
+unui-core = { path = "../unui-core" }
+unrender-std = { path = "../unrender-std" }
+unboard-core = { path = "../unboard-core" }
+unthermal-core = { path = "../unthermal-core" }
+untruck-core = { path = "../untruck-core" }
+unprofile-core = { path = "../unprofile-core" }
+bevy-persistent = { workspace = true }

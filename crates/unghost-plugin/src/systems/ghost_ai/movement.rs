@@ -13,7 +13,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{
-    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite,
+    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerVitals,
 };
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
@@ -46,7 +46,7 @@ pub(crate) fn ghost_movement(
         ),
     >,
     qp: Query<
-        (&Position, &PlayerSprite, Option<&Hiding>),
+        (&Position, &PlayerVitals, Option<&Hiding>),
         (
             With<PlayerTag>,
             Without<PlayerSpectating>,
@@ -170,9 +170,9 @@ pub(crate) fn ghost_movement(
             {
                 let player_pos_l: Vec<(&Position, bool)> = qp
                     .iter()
-                    .filter(|(_, p, _)| p.health > 0.0)
+                    .filter(|(_, v, _)| v.health > 0.0)
                     .map(
-                        |(pos, _, hiding): (&Position, &PlayerSprite, Option<&Hiding>)| {
+                        |(pos, _, hiding): (&Position, &PlayerVitals, Option<&Hiding>)| {
                             (pos, hiding.is_some())
                         },
                     )

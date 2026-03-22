@@ -12,7 +12,7 @@ use unreplicon_core::messages::{RequestDrop, RequestGrab};
 use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::position::Position;
 
-fn sync_inventory_position_to_holder(
+pub(crate) fn sync_inventory_position_to_holder(
     q_player: Query<(&Position, &PlayerGear), With<PlayerSprite>>,
     mut q_gear: Query<&mut Position, (With<GearMarker>, Without<PlayerSprite>)>,
 ) {
@@ -31,7 +31,7 @@ fn sync_inventory_position_to_holder(
     }
 }
 
-fn sync_held_object_position_to_holder(
+pub(crate) fn sync_held_object_position_to_holder(
     q_player: Query<(&Position, &PlayerGear), With<PlayerSprite>>,
     mut q_held: Query<&mut Position, (Without<PlayerSprite>, Without<GearMarker>)>,
 ) {
@@ -47,7 +47,7 @@ fn sync_held_object_position_to_holder(
     }
 }
 
-fn queue_pickup_request(
+pub(crate) fn queue_pickup_request(
     players: Query<(&PlayerGear, &Position, &PlayerInput)>,
     pickables: Query<
         (Entity, &Position, Option<&GearKind>, Option<&Behavior>),
@@ -86,7 +86,7 @@ fn queue_pickup_request(
     }
 }
 
-fn queue_drop_request(
+pub(crate) fn queue_drop_request(
     mut players: Query<(
         &mut PlayerGear,
         &Position,
@@ -157,7 +157,7 @@ fn queue_drop_request(
     }
 }
 
-fn assign_received_item_to_slot(
+pub(crate) fn assign_received_item_to_slot(
     mut commands: Commands,
     q_new_items: Query<(Entity, Has<GearKind>, Has<Behavior>), Added<LocallyOwned>>,
     mut q_player_gear: Query<(&mut PlayerGear, &Position), With<MainPlayer>>,
@@ -224,7 +224,7 @@ fn assign_received_item_to_slot(
     }
 }
 
-fn strip_visuals_from_grabbed_gear(
+pub(crate) fn strip_visuals_from_grabbed_gear(
     mut commands: Commands,
     mut removed: RemovedComponents<ungear_core::components::deployedgear::DeployedGear>,
     q_gear: Query<(), With<GearMarker>>,
@@ -243,7 +243,10 @@ fn strip_visuals_from_grabbed_gear(
     }
 }
 
-fn cycle_inventory(mut players: Query<(&mut PlayerGear, &PlayerInput)>, mut commands: Commands) {
+pub(crate) fn cycle_inventory(
+    mut players: Query<(&mut PlayerGear, &PlayerInput)>,
+    mut commands: Commands,
+) {
     for (mut player_gear, player_input) in players.iter_mut() {
         if player_input.inventory_cycle {
             if let Some(entity) = player_gear.right_hand.take() {
@@ -261,7 +264,7 @@ fn cycle_inventory(mut players: Query<(&mut PlayerGear, &PlayerInput)>, mut comm
     }
 }
 
-fn swap_hand_equipment(
+pub(crate) fn swap_hand_equipment(
     mut players: Query<(&mut PlayerGear, &PlayerInput)>,
     mut commands: Commands,
 ) {
@@ -284,6 +287,37 @@ fn swap_hand_equipment(
     }
 }
 
+/// When a player dies (PlayerDiedEvent fires), despawn all their gear (Authoritative only).
+/// This moves the gear cleanup responsibility from the Vitals domain to the Inventory domain.
+pub(crate) fn despawn_gear_on_player_death(
+    mut reader: MessageReader<unreplicon_core::messages::PlayerDiedEvent>,
+    mut q_players: Query<&mut PlayerGear, With<PlayerSprite>>,
+    mut commands: Commands,
+    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+) {
+    for _msg in reader.read() {
+        // When a player dies, despawn all their gear (Authoritative only)
+        if authority.is_some() {
+            for mut gear in q_players.iter_mut() {
+                if let Some(e) = gear.left_hand {
+                    commands.entity(e).despawn();
+                }
+                if let Some(e) = gear.right_hand {
+                    commands.entity(e).despawn();
+                }
+                for e in gear.inventory.iter() {
+                    commands.entity(*e).despawn();
+                }
+                if let Some(h) = &gear.held_item {
+                    commands.entity(h.entity).despawn();
+                }
+                // Empty the inventory
+                *gear = PlayerGear::default();
+            }
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     use untypes_core::states::AppState;
     app.add_systems(
@@ -301,6 +335,7 @@ pub(crate) fn app_setup(app: &mut App) {
             queue_drop_request,
             assign_received_item_to_slot,
             strip_visuals_from_grabbed_gear,
+            despawn_gear_on_player_death,
         )
             .run_if(in_state(AppState::InGame)),
     );

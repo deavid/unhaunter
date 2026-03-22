@@ -69,6 +69,34 @@ The codebase follows a strict modular structure to minimize compile times and se
 Avoid running commands where possible. Usage of commands to read, write or edit files is forbidden; for example `cat`,
 `sed`, `awk` are not allowed.
 
+## File Reading Guidelines
+
+When using the `read_file` tool, always read in chunks of **1000 lines or more**. Never read less than 1000 lines in a
+single call. This minimizes repetitive tool calls and gets you full context faster. If a file is smaller than 1000
+lines, read the entire file. For files larger than 1000 lines, read multiple 1000+ line chunks in parallel where
+possible.
+
+## Work Planning & Tool Execution
+
+**BEFORE STARTING ANY SIGNIFICANT WORK PHASE:**
+
+1. **Plan file I/O upfront**: List ALL files you need to read and write for the work phase. Do not discover files as you
+   go.
+2. **Batch reads in parallel**: Execute all file reads at once using parallel tool calls in a single `<function_calls>`
+   block. Do not read files sequentially.
+3. **Think about dependencies**: Before executing ANY tool call, ask yourself:
+   - Do I really need this tool right now?
+   - What other tool calls would I make in the next step?
+   - Can I batch them together to minimize interruptions?
+4. **Always parallelize first**: Combine independent reads/writes/searches into one batch before triggering execution.
+
+**AFTER COMPLETING WORK:**
+
+- **ALWAYS check for errors and warnings**: Use `get_errors` to verify the workspace compiles cleanly. Do NOT claim work
+  is complete if the workspace has errors, lint failures, or warnings. This is critical.
+- **Do not ask the user for progress updates**: Continue working autonomously until the requested task is fully
+  complete. Only report completion when the workspace is clean.
+
 ## Project Conventions
 
 - **Naming**: Crates use `un` prefix (e.g., `unplayer-plugin`).

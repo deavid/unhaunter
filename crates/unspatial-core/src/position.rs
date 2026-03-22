@@ -106,6 +106,31 @@ impl Position {
         dx * dx + dy * dy + dz * dz
     }
 
+    /// Calculate squared distance with Z component multiplied by 10 if on different floors.
+    /// This is used for game physics where vertical separation significantly reduces interaction.
+    pub fn weighted_distance_squared(&self, other: &Self) -> f32 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+
+        // Check if they're on different floors by comparing rounded Z values
+        let self_floor = self.z.round();
+        let other_floor = other.z.round();
+
+        let dz = if self_floor != other_floor {
+            // Multiply Z component by 10 when on different floors
+            (self.z - other.z) * 10.0
+        } else {
+            self.z - other.z
+        };
+
+        dx * dx + dy * dy + dz * dz
+    }
+
+    /// Calculate weighted distance (non-squared).
+    pub fn weighted_distance(&self, other: &Self) -> f32 {
+        self.weighted_distance_squared(other).sqrt()
+    }
+
     pub fn distance_taxicab(&self, other: &Self) -> f32 {
         self.distance_taxicab_zf(other, 6.0)
     }

@@ -6,7 +6,7 @@ use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::Flashlight;
 use unplayer_core::components::{
-    MainPlayer, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite,
+    MainPlayer, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite, PlayerVitals,
 };
 use unrender_std::components::light::LightEmitter;
 use unreplicon_core::ownership::{LocallyOwned, Owner};
@@ -170,6 +170,7 @@ fn debug_player_components(
             Has<PlayerSpectating>,
             Has<PlayerDisconnected>,
             Has<PlayerInactive>,
+            Option<&PlayerVitals>,
         ),
         With<PlayerSprite>,
     >,
@@ -186,22 +187,23 @@ fn debug_player_components(
         total
     );
 
-    for (
-        entity,
-        sprite,
-        transform,
-        pos,
-        dir,
-        local,
-        owner,
-        replicated,
-        remote,
-        is_main_player,
-        is_spectating,
-        is_disconnected,
-        is_inactive,
-    ) in q_players.iter()
-    {
+    for item in q_players.iter() {
+        let (
+            entity,
+            sprite,
+            transform,
+            pos,
+            dir,
+            local,
+            owner,
+            replicated,
+            remote,
+            is_main_player,
+            is_spectating,
+            is_disconnected,
+            is_inactive,
+            vitals,
+        ) = item;
         let ownership = if local.is_some() {
             "LOCALLY_OWNED"
         } else {
@@ -263,8 +265,12 @@ fn debug_player_components(
             flags
         };
 
+        let vitals_data = vitals
+            .map(|v| format!("sanity={:.1} | health={:.1}", v.sanity, v.health))
+            .unwrap_or_else(|| "sanity=N/A | health=N/A".to_string());
+
         info!(
-            "Player[{:?}] UUID={:?} NetId={:?} | {} | {} | {} | Owner={} | Flags={}\n  -> Pos={}  |  Transform={}  |  Dir={}  |  sanity={:.1}  |  health={:.1}",
+            "Player[{:?}] UUID={:?} NetId={:?} | {} | {} | {} | Owner={} | Flags={}\n  -> Pos={}  |  Transform={}  |  Dir={}  |  {}",
             entity,
             sprite.id,
             sprite.network_id,
@@ -276,8 +282,7 @@ fn debug_player_components(
             pos_data,
             transform_data,
             dir_data,
-            sprite.sanity,
-            sprite.health,
+            vitals_data,
         );
     }
 }

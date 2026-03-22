@@ -31,11 +31,14 @@ members = [
     "crates/ungearitems-plugin",
     "crates/unghost-plugin",
     "crates/unghost-core",
+    "crates/uninput-plugin",
+    "crates/uninventory-plugin",
     "crates/uninteraction-core",
     "crates/uninteraction-plugin",
     "crates/unlight-plugin",
     "crates/unlobby-plugin",
     "crates/unlight-core",
+    "crates/unlocomotion-plugin",
     "crates/unmanual-core",
     "crates/unmanual-plugin",
     "crates/unmapload-plugin",
@@ -79,6 +82,7 @@ members = [
     "crates/untmxmap-plugin",
     "crates/unui-core",
     "crates/unui-plugin",
+    "crates/unvitals-plugin",
     "crates/unwalkie-plugin",
     "crates/unwalkie-core",
     "crates/unreplicon-core",
@@ -204,11 +208,14 @@ ungearitems-core = { path = "crates/ungearitems-core" }
 ungearitems-plugin = { path = "crates/ungearitems-plugin" }
 unghost-plugin = { path = "crates/unghost-plugin" }
 unghost-core = { path = "crates/unghost-core" }
+uninput-plugin = { path = "crates/uninput-plugin" }
+uninventory-plugin = { path = "crates/uninventory-plugin" }
 uninteraction-core = { path = "crates/uninteraction-core" }
 uninteraction-plugin = { path = "crates/uninteraction-plugin" }
 unlight-plugin = { path = "crates/unlight-plugin" }
 unlobby-plugin = { path = "crates/unlobby-plugin" }
 unlight-core = { path = "crates/unlight-core" }
+unlocomotion-plugin = { path = "crates/unlocomotion-plugin" }
 unmanual-core = { path = "crates/unmanual-core" }
 unmanual-plugin = { path = "crates/unmanual-plugin" }
 unmapload-plugin = { path = "crates/unmapload-plugin" }
@@ -252,6 +259,7 @@ untmxmap-core = { path = "crates/untmxmap-core" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unui-core = { path = "crates/unui-core" }
 unui-plugin = { path = "crates/unui-plugin" }
+unvitals-plugin = { path = "crates/unvitals-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 unwalkie-core = { path = "crates/unwalkie-core" }
 unreplicon-core = { path = "crates/unreplicon-core" }
@@ -279,6 +287,10 @@ wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
 
 untypes-core = { workspace = true }
+unvitals-plugin = { workspace = true }
+uninventory-plugin = { workspace = true }
+unlocomotion-plugin = { workspace = true }
+uninput-plugin = { workspace = true }
 untmxmap-core = { workspace = true }
 uncampaign-plugin = { workspace = true }
 unboard-plugin = { workspace = true }

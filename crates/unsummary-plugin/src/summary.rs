@@ -7,7 +7,7 @@ use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::utils::time::format_time;
 use unsummary_core::grade::Grade;
 use unghost_core::types::ghost::types::GhostType;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{PlayerSprite, PlayerVitals};
 use unprofile_core::profile::PlayerProfileData;
 use unsummary_core::summary::{ActiveMissionEvaluator, SummaryData};
 use untmxmap_core::resources::maps::Maps;
@@ -48,7 +48,7 @@ pub(crate) fn update_time(
     _game_state: Res<State<GameState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
-    qp: Query<&PlayerSprite>,
+    qp: Query<(&PlayerSprite, &PlayerVitals)>,
     difficulty: Res<CurrentDifficulty>,
     mut death_timer: Local<Option<f32>>,
 ) {
@@ -58,9 +58,9 @@ pub(crate) fn update_time(
     // the end-of-mission evaluation, and unsummary-plugin would receive the snapshot via SummaryData.
     sd.difficulty = *difficulty;
     sd.time_taken_secs += time.delta_secs();
-    let total_sanity: f32 = qp.iter().map(|x| x.sanity).sum();
+    let total_sanity: f32 = qp.iter().map(|(_, v)| v.sanity).sum();
     let player_count = qp.iter().count();
-    let alive_count = qp.iter().filter(|x| x.health > 0.0).count();
+    let alive_count = qp.iter().filter(|(_, v)| v.health > 0.0).count();
     sd.player_count = player_count;
     sd.alive_count = alive_count;
     if player_count > 0 {

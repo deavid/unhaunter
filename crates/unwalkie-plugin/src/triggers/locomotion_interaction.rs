@@ -9,7 +9,9 @@ use unbehavior::state::TileState;
 use unboard_core::resources::roomdb::RoomTopology;
 use ungear_core::components::playergear::PlayerGear;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{Hiding, MainPlayer, PlayerInputMapping, PlayerSprite};
+use unplayer_core::components::{
+    Hiding, MainPlayer, PlayerInputMapping, PlayerLocomotionState, PlayerSprite,
+};
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
@@ -32,7 +34,7 @@ fn check_player_stuck_at_start(
     _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     room_topology: Res<RoomTopology>,
-    player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
+    player_query: Query<(&Position, &PlayerLocomotionState), With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut stuck_timer: Local<Stopwatch>,
     player_profile: Res<Persistent<PlayerProfileData>>,
@@ -41,7 +43,7 @@ fn check_player_stuck_at_start(
         stuck_timer.reset();
         return;
     }
-    for (player_position, player_sprite) in player_query.iter() {
+    for (player_position, player_loco) in player_query.iter() {
         let mut min_time_secs: f32 = 7.0;
 
         if player_profile.statistics.total_missions_completed > 1 {
@@ -67,7 +69,7 @@ fn check_player_stuck_at_start(
             continue;
         }
 
-        let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
+        let distance_from_spawn = player_position.distance(&player_loco.spawn_position);
 
         if distance_from_spawn < PLAYER_STUCK_MAX_DISTANCE {
             stuck_timer.tick(time.delta());
@@ -92,7 +94,7 @@ fn check_erratic_movement_early(
     _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     room_topology: Res<RoomTopology>,
-    player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
+    player_query: Query<(&Position, &PlayerLocomotionState), With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut not_entered_timer: Local<Stopwatch>,
     mut avg_position: Local<Option<Position>>,
@@ -109,7 +111,7 @@ fn check_erratic_movement_early(
         return;
     }
 
-    for (player_position, player_sprite) in player_query.iter() {
+    for (player_position, player_loco) in player_query.iter() {
         let m_avg = avg_position.get_or_insert_with(|| *player_position);
         *m_avg = m_avg.lerp(player_position, 0.5 * time.delta_secs());
 
@@ -125,7 +127,7 @@ fn check_erratic_movement_early(
         }
 
         // If player is not in a room and in GameState::None, increment timer
-        let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
+        let distance_from_spawn = player_position.distance(&player_loco.spawn_position);
         let distance_from_avg = player_position.distance(m_avg);
 
         if distance_from_avg > 3.0 {
@@ -134,7 +136,7 @@ fn check_erratic_movement_early(
         }
         if distance_from_spawn > PLAYER_STUCK_MAX_DISTANCE
             && distance_from_spawn < PLAYER_ERRATIC_MAX_DISTANCE
-            && player_sprite.movement.distance() > 60.0
+            && player_loco.movement.distance() > 60.0
         {
             // Ignore when the player is stuck or stopped.
             not_entered_timer.tick(time.delta());

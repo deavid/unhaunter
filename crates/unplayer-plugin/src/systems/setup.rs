@@ -1,14 +1,9 @@
 use bevy::prelude::*;
 use untypes_core::states::{AppState, GameState, SimulationState};
 
-use crate::systems::grabdrop;
 use crate::systems::hide;
 use crate::systems::hydration;
 use crate::systems::input;
-use crate::systems::keyboard;
-use crate::systems::mouse;
-use crate::systems::movement;
-use crate::systems::sanityhealth;
 use crate::systems::styling;
 use crate::systems::viewer_sync;
 use crate::systems::walk_target_indicator;
@@ -16,7 +11,6 @@ use crate::systems::waypoint;
 
 pub(crate) fn app_setup_core(app: &mut App) {
     hydration::app_setup(app);
-    grabdrop::app_setup(app);
 
     // Configure the authoritative logic set
     app.configure_sets(
@@ -26,25 +20,9 @@ pub(crate) fn app_setup_core(app: &mut App) {
             .after(unplayer_core::PlayerInputSet),
     );
 
-    // Interaction request handling (Authoritative on Host)
-    app.add_systems(
-        Update,
-        (
-            // Interaction system runs before movement (Runs on all instances)
-            movement::dispatch_interact_intent,
-            // Movement system runs after input and waypoints
-            // On the client, it only runs for the MainPlayer. On the host, it runs for all players.
-            movement::player_movement_system,
-        )
-            .chain()
-            .after(unplayer_core::PlayerInputSet)
-            .after(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
-            .run_if(in_state(SimulationState::Ready)),
-    );
-
     app.add_systems(
         PostUpdate,
-        input::keyboard::clear_transient_input_flags.run_if(in_state(SimulationState::Ready)),
+        clear_transient_input_flags.run_if(in_state(SimulationState::Ready)),
     );
 
     // Gear toggle system must run on all instances (including dedicated server)
@@ -52,11 +30,17 @@ pub(crate) fn app_setup_core(app: &mut App) {
     app.add_systems(
         Update,
         input::mouse_interaction::toggle_gear_from_use_intent
-            .in_set(unplayer_core::PlayerInputSet)
+            .in_set(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
             .run_if(in_state(AppState::InGame)),
     );
+}
 
-    sanityhealth::app_setup(app);
+pub(crate) fn clear_transient_input_flags(
+    mut q_input: Query<&mut unplayer_core::components::PlayerInput>,
+) {
+    for mut input in q_input.iter_mut() {
+        input.clear();
+    }
 }
 
 pub(crate) fn app_setup_client(app: &mut App) {
@@ -67,25 +51,12 @@ pub(crate) fn app_setup_client(app: &mut App) {
         styling::apply_player_tint_color.run_if(in_state(AppState::InGame)),
     );
 
-    app.add_systems(
-        Update,
-        movement::drive_character_animation
-            .after(movement::player_movement_system)
-            .run_if(in_state(AppState::InGame)),
-    );
-
     // Set up input and movement systems with proper ordering
     app.add_systems(
         Update,
         (
-            // Input systems run first (Always run on all instances to gather input)
-            input::keyboard::keyboard_input_system,
             // Walk target indicator system (kept for compatibility)
             walk_target_indicator::update_move_target_indicator,
-            // Mouse interaction systems (gear only, clicks handled by waypoint system)
-            input::mouse_interaction::mouse_scroll_gear_system,
-            input::mouse_interaction::mouse_over_interactive_system,
-            input::mouse_interaction::mouse_out_interactive_system,
             // Waypoint systems handle all click-to-move and click-to-interact
             waypoint::create_waypoints_from_click,
             waypoint::rebuild_remote_waypoint_queue,
@@ -100,8 +71,8 @@ pub(crate) fn app_setup_client(app: &mut App) {
     app.add_systems(
         Update,
         // Stairs system runs last. Also gated similarly.
-        keyboard::adjust_elevation_on_stairs
-            .after(unplayer_core::PlayerInputSet)
+        crate::systems::keyboard::adjust_elevation_on_stairs
+            .after(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
             .run_if(in_state(AppState::InGame)),
     );
 
@@ -117,6 +88,4 @@ pub(crate) fn app_setup_client(app: &mut App) {
             ),
         ),
     );
-
-    mouse::app_setup(app);
 }
