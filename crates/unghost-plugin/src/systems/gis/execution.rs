@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use rand::prelude::*;
 use unaudiospatial_core::events::SoundEvent;
-use unbehavior::behavior::Behavior;
-use unbehavior::behavior::Interactive;
-use unbehavior::components::{InteractableByGhost, RoomStateDelta};
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::behavior::Interactive;
+use unbehavior_core::components::{InteractableByGhost, RoomStateDelta};
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unfoundation_core::random_seed;

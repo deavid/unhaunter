@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unbehavior::behavior::Behavior;
-use unbehavior::state::TileState;
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::state::TileState;
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::materials::CustomMaterial1;

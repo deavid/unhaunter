@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unbehavior::behavior::{Behavior, Interactive};
-use unbehavior::components;
+use unbehavior_core::behavior::{Behavior, Interactive};
+use unbehavior_core::components;
 use untypes_core::hydration::HydrationStage;
 
 fn hydration_van_entry_system(

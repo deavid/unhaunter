@@ -53,7 +53,7 @@ pub(crate) struct LoadLevelSystemParam<'w, 's> {
     pub cli: Res<'w, untypes_core::cli::CliOptions>,
     pub authority: Option<Res<'w, untypes_core::roles::AuthorityRole>>,
     pub existing_tmx_entities:
-        Query<'w, 's, (Entity, &'static unbehavior::components::TmxEntityId)>,
+        Query<'w, 's, (Entity, &'static unbehavior_core::components::TmxEntityId)>,
 }
 
 /// Loads a new level based on the `LevelLoadedEvent`.

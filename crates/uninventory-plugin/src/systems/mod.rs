@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unaudiospatial_core::events::SoundEvent;
-use unbehavior::behavior::Behavior;
-use unbehavior::components::FloorItemCollidable;
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::components::FloorItemCollidable;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use ungear_core::components::playergear::{HeldObject, PlayerGear};
 use ungear_core::resources::spawner::GearMarker;

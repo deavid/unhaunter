@@ -8,7 +8,7 @@
 
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::roomdb::RoomTopology;
 use uninteraction_core::events::{RoomChangedEvent, RoomStateSyncEvent};

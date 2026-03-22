@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unaudiospatial_core::emitter::AudioEmitter;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::components::PlayerInput;
 use unplayer_core::components::Hiding;

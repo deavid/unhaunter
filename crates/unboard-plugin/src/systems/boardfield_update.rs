@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 use unboard_core::BoardUpdateSet;
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};

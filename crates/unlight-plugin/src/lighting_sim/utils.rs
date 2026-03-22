@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightFieldData;
@@ -155,7 +155,7 @@ pub fn identify_active_light_sources(
     } else {
         lg.prebaked_metadata.breakers.iter().any(|&entity| {
             qt.get(entity)
-                .map(|(_, behavior)| behavior.state() == unbehavior::state::TileState::On)
+                .map(|(_, behavior)| behavior.state() == unbehavior_core::state::TileState::On)
                 .unwrap_or(false)
         })
     };

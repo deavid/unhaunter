@@ -2,7 +2,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::prelude::IndexedRandom;
-use unbehavior::components::Movable;
+use unbehavior_core::components::Movable;
 use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
 use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
 use unboard_core::resources::board_topology::BoardTopology;

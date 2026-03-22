@@ -135,7 +135,7 @@ pub(crate) fn hydrate_players_system(
                 bias: 0.01,
             })
             .insert(unspatial_core::direction::Direction::new_right())
-            .insert(unbehavior::components::Movable)
+            .insert(unbehavior_core::components::Movable)
             .insert(unnavigation_core::components::waypoint::WaypointQueue::default())
             .insert(unspatial_core::boardposition::MapEntityFieldBPos(
                 pos.to_board_position(),

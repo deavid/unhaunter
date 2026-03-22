@@ -8,9 +8,9 @@ use bevy_replicon::shared::replication::deferred_entity::DeferredEntity;
 use bevy_replicon::shared::replication::registry::ctx::{RemoveCtx, WriteCtx};
 use bevy_replicon::shared::replication::registry::rule_fns::RuleFns;
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
-use unbehavior::behavior::Behavior;
-use unbehavior::behavior::Interactive;
-use unbehavior::components::{FloorItemCollidable, TmxEntityId};
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::behavior::Interactive;
+use unbehavior_core::components::{FloorItemCollidable, TmxEntityId};
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::deployedgear::DeployedGear;
@@ -389,7 +389,7 @@ fn setup_mission_players(
             ),
             (
                 unspatial_core::direction::Direction::new_right(),
-                unbehavior::components::Movable,
+                unbehavior_core::components::Movable,
                 unnavigation_core::components::waypoint::WaypointQueue::default(),
                 unspatial_core::boardposition::MapEntityFieldBPos(spawn_pos.to_board_position()),
                 untags_core::tags::PlayerTag,
@@ -570,7 +570,7 @@ fn spawn_late_joining_players(
             ),
             (
                 unspatial_core::direction::Direction::new_right(),
-                unbehavior::components::Movable,
+                unbehavior_core::components::Movable,
                 unnavigation_core::components::waypoint::WaypointQueue::default(),
                 unspatial_core::boardposition::MapEntityFieldBPos(spawn_pos.to_board_position()),
                 untags_core::tags::PlayerTag,

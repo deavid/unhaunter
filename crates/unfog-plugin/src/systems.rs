@@ -5,7 +5,7 @@ use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
 use ndarray::{Array3, s};
 use rand::prelude::*;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 use unboard_core::components::chunk::{CellIterator, ChunkIterator};
 use unboard_core::components::physics::FluidEmitter;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};

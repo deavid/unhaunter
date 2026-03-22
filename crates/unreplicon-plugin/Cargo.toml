@@ -19,11 +19,12 @@ serde_json = { workspace = true }
 crossbeam-channel = { workspace = true }
 unhub-client = { workspace = true }
 untypes-core = { workspace = true }
-unreplicon-core = { workspace = true }
-unprofile-core = { workspace = true }
 uuid = { workspace = true }
 base64 = { workspace = true }
 
+unreplicon-core = { workspace = true }
+unprofile-core = { workspace = true }
+unbehavior-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unmapload-core = { workspace = true }
 unmission-core = { workspace = true }
@@ -41,4 +42,3 @@ ungearitems-core = { workspace = true }
 ungear-core = { workspace = true }
 unsummary-core = { workspace = true }
 unfoundation-core = { workspace = true }
-unbehavior = { workspace = true }

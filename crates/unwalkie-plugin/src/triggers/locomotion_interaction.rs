@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy_persistent::Persistent;
 
-use unbehavior::behavior::Behavior;
-use unbehavior::components::Door;
-use unbehavior::components::HidingSpot;
-use unbehavior::state::TileState;
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::components::Door;
+use unbehavior_core::components::HidingSpot;
+use unbehavior_core::state::TileState;
 use unboard_core::resources::roomdb::RoomTopology;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::components::PlayerInputMapping;

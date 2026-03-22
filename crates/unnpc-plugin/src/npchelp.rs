@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unbehavior::behavior::Behavior;
-use unbehavior::behavior::{Interactive, NpcHelpDialog};
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::behavior::{Interactive, NpcHelpDialog};
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unnpc_core::events::NpcHelpEvent;

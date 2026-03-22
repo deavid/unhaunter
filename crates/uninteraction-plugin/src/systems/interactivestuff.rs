@@ -1,7 +1,7 @@
 use unaudiospatial_core::emitter::AudioEmitter;
-use unbehavior::behavior::Behavior;
-use unbehavior::behavior::Interactive;
-use unbehavior::components::RoomStateDelta;
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::behavior::Interactive;
+use unbehavior_core::components::RoomStateDelta;
 use unboard_core::resources::roomdb::RoomState;
 use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use uninteraction_core::events::InteractionExecutionType;

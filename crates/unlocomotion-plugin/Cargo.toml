@@ -17,7 +17,7 @@ unplayer-core = { workspace = true }
 unvitals-core = { workspace = true }
 untypes-core = { workspace = true }
 unspatial-core = { workspace = true }
-unbehavior = { workspace = true }
+unbehavior-core = { workspace = true }
 unnavigation-core = { workspace = true }
 unrender-std = { workspace = true }
 unreplicon-core = { workspace = true }

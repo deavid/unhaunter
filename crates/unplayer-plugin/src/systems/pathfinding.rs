@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unbehavior::behavior::Behavior;
-use unbehavior::components::Stairs;
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::components::Stairs;
 use unspatial_core::orientation::Orientation;
 use unspatial_core::position::Position;
 

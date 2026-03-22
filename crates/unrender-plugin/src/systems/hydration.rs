@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unbehavior::behavior::{Behavior, Util};
-use unbehavior::components;
+use unbehavior_core::behavior::{Behavior, Util};
+use unbehavior_core::components;
 use unboard_core::resources::roomdb::{RoomState, RoomStateMap, RoomTopology};
 use unmetrics_core::metrics::SendMetric;
 use untypes_core::hydration::HydrationStage;

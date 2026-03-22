@@ -5,8 +5,7 @@
 
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unbehavior::behavior::Behavior;
-use unbehavior::behavior::SpriteConfig;
+use unbehavior_core::behavior::Behavior;
 use unrender_std::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 use unrender_std::components::visuals::ResolutionFactor;
 use unrender_std::utils::quadcc::QuadCC;
@@ -31,7 +30,7 @@ pub(crate) fn populate_sprite_db(
         for (tileuid, tiled_tile) in tileset.tileset.tiles() {
             // Create sprite configuration from the tile data
             let sprite_config =
-                SpriteConfig::from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
+                unbehavior::behavior::sprite_config_from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
             let behavior = Behavior::from_config(sprite_config);
 
             // Set initial visibility based on behavior

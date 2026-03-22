@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unbehavior::behavior::{Behavior, Util};
-use unbehavior::components::InteractableByGhost;
+use unbehavior_core::behavior::{Behavior, Util};
+use unbehavior_core::components::InteractableByGhost;
 use unboard_core::components::spawning::HostileSpawnPoint;
 use unmetrics_core::metrics::SendMetric;
 use untypes_core::hydration::HydrationStage;

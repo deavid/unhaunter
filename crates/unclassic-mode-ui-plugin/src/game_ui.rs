@@ -3,7 +3,7 @@ use bevy::ui::BackgroundColor;
 use bevy::ui::widget::ImageNode;
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::components::playergear::PlayerGear;

@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
 use rand::RngExt;
 
-use unbehavior::behavior::{Behavior, Interactive};
+use unbehavior_core::behavior::{Behavior, Interactive};
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::visibility_data::VisibilityData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;

@@ -11,7 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unbehavior = { workspace = true }
+unbehavior-core = { workspace = true }
 unboard-core = { workspace = true }
 unghost-core = { workspace = true }
 uninput-core = { workspace = true }

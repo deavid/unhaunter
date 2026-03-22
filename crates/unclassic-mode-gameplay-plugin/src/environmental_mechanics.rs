@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use unbehavior::behavior::Behavior;
-use unbehavior::components::Light;
-use unbehavior::state::TileState;
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::components::Light;
+use unbehavior_core::state::TileState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};

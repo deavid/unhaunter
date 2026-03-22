@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use unaudiospatial_core::events::SoundEvent;
-use unbehavior::behavior::Behavior;
-use unbehavior::behavior::Interactive;
-use unbehavior::components::RoomStateDelta;
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::behavior::Interactive;
+use unbehavior_core::components::RoomStateDelta;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfog_core::miasma::MiasmaGrid;

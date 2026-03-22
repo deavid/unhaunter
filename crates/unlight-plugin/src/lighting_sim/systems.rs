@@ -4,7 +4,7 @@ use bevy_platform::collections::{HashMap, HashSet};
 use bevy_platform::time::Instant;
 use ndarray::Array3;
 use std::collections::VecDeque;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unlight_core::resources::light_grid::LightGrid;

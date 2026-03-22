@@ -39,6 +39,7 @@ members = [
     # The persistent physical world that all actors inhabit.
     "crates/unboard-core",        # World topology: rooms, walls, collision fields
     "crates/unboard-plugin",
+    "crates/unbehavior-core",     # Tile ontology: Behavior, Class, Properties, marker components
     "crates/unthermal-core",      # Heat convection simulation
     "crates/unthermal-plugin",
     "crates/unsoundfield-core",   # Sound propagation simulation
@@ -104,7 +105,7 @@ members = [
     "crates/untmxmap-plugin",
     "crates/unmapload-core",   # Map file metadata definitions
     "crates/unmapload-plugin",
-    "crates/unbehavior",       # ACL: Tiled object properties → domain components
+    "crates/unbehavior",       # ACL: Tiled format → unbehavior-core types (T3 shell)
 
     # ── 3b: Persistence ──────────────────────────────────────────────────
     "crates/unsettings-plugin",
@@ -278,6 +279,7 @@ unsettings-core = { path = "crates/unsettings-core" }     # Persistent configura
 # The Board, the space definition:
 unboard-core = { path = "crates/unboard-core" }     # World topology: rooms, walls, collision (defines the space itself)
 unboard-plugin = { path = "crates/unboard-plugin" }
+unbehavior-core = { path = "crates/unbehavior-core" }  # Tile ontology types
 
 # Board fields - values per-tile that have simulations:
 unthermal-core = { path = "crates/unthermal-core" }           # Heat convection simulation

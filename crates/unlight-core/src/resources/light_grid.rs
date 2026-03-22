@@ -3,7 +3,7 @@ use crate::types::light::LightFieldData;
 use crate::types::prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData};
 use bevy::prelude::*;
 use ndarray::Array3;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 
 #[derive(Resource, Debug, Clone)]
 pub struct LightGrid {
@@ -31,7 +31,7 @@ impl LightGrid {
         } else {
             self.prebaked_metadata.breakers.iter().any(|&entity| {
                 qt.get(entity)
-                    .map(|behavior| behavior.state() == unbehavior::state::TileState::On)
+                    .map(|behavior| behavior.state() == unbehavior_core::state::TileState::On)
                     .unwrap_or(false)
             })
         }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unbehavior::behavior::{Behavior, Interactive, NpcHelpDialog};
-use unbehavior::components;
+use unbehavior_core::behavior::{Behavior, Interactive};
+use unbehavior_core::components;
 use unmapload_core::components::PendingTiledLayerProperties;
 use untypes_core::hydration::HydrationStage;
 
@@ -15,7 +15,7 @@ fn hydration_npc_system(
             commands
                 .entity(entity)
                 .insert(Pickable::default())
-                .insert(NpcHelpDialog::new("NPC", &cfg.variant, &pending_props.0))
+                .insert(unbehavior::behavior::npc_help_dialog_from_tiled("NPC", &cfg.variant, &pending_props.0))
                 .insert(Interactive::new(
                     "sounds/effects-dongdongdong.ogg",
                     "sounds/effects-dongdongdong.ogg",

@@ -1,5 +1,5 @@
 [package]
-name = "unbehavior"
+name = "unbehavior-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -11,8 +11,10 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unbehavior-core = { workspace = true }
+unspatial-core = { workspace = true }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
-tiled = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 anyhow = { workspace = true }
+fastapprox = { workspace = true }

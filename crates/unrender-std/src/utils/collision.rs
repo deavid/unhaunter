@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::types::fielddata::CollisionFieldData;
 use unspatial_core::orientation::Orientation;

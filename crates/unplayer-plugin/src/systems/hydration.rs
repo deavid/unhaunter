@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unbehavior::behavior::{Behavior, Util};
+use unbehavior_core::behavior::{Behavior, Util};
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use untypes_core::hydration::HydrationStage;
 

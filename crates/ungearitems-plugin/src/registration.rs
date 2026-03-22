@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unbehavior::components::{Collision, InteractableByGhost};
+use unbehavior_core::components::{Collision, InteractableByGhost};
 use ungear_core::components::core::{
     Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
     PerceivedClarity, StatusText,

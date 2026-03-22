@@ -15,7 +15,7 @@ uninteraction-core = { workspace = true }
 unspatial-core = { workspace = true }
 untypes-core = { workspace = true }
 unboard-core = { workspace = true }
-unbehavior = { workspace = true }
+unbehavior-core = { workspace = true }
 unrender-std = { workspace = true }
 unaudiospatial-core = { workspace = true }
 unplayer-core = { workspace = true }

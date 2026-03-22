@@ -8,7 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-unbehavior = { workspace = true }
+unbehavior-core = { workspace = true }
 unboard-core = { workspace = true }
 undifficulty-core = { workspace = true }
 ungear-core = { workspace = true }

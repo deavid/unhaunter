@@ -15,6 +15,7 @@ workspace = true
 bevy_replicon = { workspace = true }
 unspatial-core = { workspace = true }
 unbehavior = { workspace = true }
+unbehavior-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unboard-core = { workspace = true }
 untypes-core = { workspace = true }

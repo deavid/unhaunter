@@ -14,6 +14,7 @@ workspace = true
 
 unspatial-core = { workspace = true }
 unbehavior = { workspace = true }
+unbehavior-core = { workspace = true }
 unnpc-core = { workspace = true }
 unui-core = { workspace = true }
 unfoundation-core = { workspace = true }

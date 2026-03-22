@@ -1,7 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use unbehavior::behavior::Behavior;
-use unbehavior::behavior::Interactive;
-use unbehavior::components::Stairs;
+use unbehavior_core::behavior::Behavior;
+use unbehavior_core::behavior::Interactive;
+use unbehavior_core::components::Stairs;
 use unboard_core::resources::visibility_data::VisibilityData;
 use uninput_core::components::PlayerInput;
 use unnavigation_core::components::waypoint::{
@@ -39,7 +39,7 @@ pub(crate) fn create_waypoints_from_click(
         &Position,
         &Interactive,
         &Behavior,
-        Option<&unbehavior::components::RoomStateDelta>,
+        Option<&unbehavior_core::components::RoomStateDelta>,
     )>,
     q_stairs: Query<(Entity, &Position, &Stairs, &Behavior)>,
     mut click_events: MessageReader<bevy::picking::events::Pointer<bevy::picking::events::Click>>,
@@ -227,7 +227,7 @@ pub(crate) fn resolve_movement_from_waypoints(
         &Position,
         &Interactive,
         &Behavior,
-        Option<&unbehavior::components::RoomStateDelta>,
+        Option<&unbehavior_core::components::RoomStateDelta>,
     )>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
     q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,

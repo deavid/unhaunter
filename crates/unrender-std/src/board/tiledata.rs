@@ -1,7 +1,7 @@
 use crate::components::visuals::ResolutionFactor;
 use crate::materials::CustomMaterial1;
 use bevy::prelude::*;
-use unbehavior::behavior::Behavior;
+use unbehavior_core::behavior::Behavior;
 
 #[derive(Component, Clone)]
 pub enum PreMesh {

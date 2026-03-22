@@ -16,7 +16,7 @@ bevy_asset_loader = { workspace = true }
 serde = { workspace = true }
 unspatial-core = { workspace = true }
 unrender-core = { workspace = true }
-unbehavior = { workspace = true }
+unbehavior-core = { workspace = true }
 unboard-core = { workspace = true }
 ungear-core = { workspace = true }
 unlight-core = { workspace = true }

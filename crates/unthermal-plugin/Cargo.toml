@@ -18,8 +18,8 @@ unfoundation-core = { workspace = true }
 unmission-core = { workspace = true }
 unmetrics-core = { workspace = true }
 untypes-core = { workspace = true }
+unbehavior-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unbehavior = { workspace = true }
 unsettings-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

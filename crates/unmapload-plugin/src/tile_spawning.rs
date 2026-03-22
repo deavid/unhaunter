@@ -5,8 +5,8 @@
 
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
-use unbehavior::behavior::Util;
-use unbehavior::components::TmxEntityId;
+use unbehavior_core::behavior::Util;
+use unbehavior_core::components::TmxEntityId;
 use unboard_core::components::spawning::VanEntryPoint;
 use unmapload_core::components::PendingTiledLayerProperties;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
