@@ -3,11 +3,12 @@ use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unlight_core::resources::light_grid::LightGrid;
-use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerVitals};
+use unplayer_core::components::{MainPlayer, PlayerSpectating};
 use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
 use untruck_core::components::in_truck::InTruck;
+use unvitals_core::components::PlayerVitals;
 
 pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
     const LINEAR: f32 = 30.0;

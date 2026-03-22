@@ -25,3 +25,5 @@ unui-core = { workspace = true }
 unprofile-core = { workspace = true }
 unplayer-core = { workspace = true }
 unghost-core = { workspace = true }
+unvitals-core = { workspace = true }
+unreplicon-core = { workspace = true }

@@ -18,6 +18,7 @@ unmission-core = { workspace = true }
 untypes-core = { workspace = true }
 unui-core = { workspace = true }
 unplayer-core = { workspace = true }
+unvitals-core = { workspace = true }
 unrender-std = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }

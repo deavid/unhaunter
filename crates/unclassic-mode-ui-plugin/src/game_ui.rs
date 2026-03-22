@@ -1,11 +1,13 @@
 use super::gear_ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
+use bevy::ui::BackgroundColor;
+use bevy::ui::widget::ImageNode;
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 use unbehavior::behavior::Behavior;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::components::playergear::PlayerGear;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
 use unrender_std::assets::GearAssets;
 use unsettings_core::game::GameplaySettings;
 use untypes_core::states::{AppState, GameState};
@@ -14,6 +16,66 @@ use unui_core::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
     WalkieTextUIRoot,
 };
+use unvitals_core::components::PlayerVitals;
+
+fn update_damage_vignette_color(
+    qp: Query<(&PlayerVitals, Has<PlayerSpectating>), With<MainPlayer>>,
+    mut qb: Query<(
+        Option<&mut ImageNode>,
+        &mut BackgroundColor,
+        &DamageBackground,
+    )>,
+) {
+    for (player_vitals, is_spectating) in &qp {
+        if is_spectating {
+            // Spectator visual effect (desaturated/blue tint)
+            for (mut o_uiimage, mut bgcolor, _dmg) in &mut qb {
+                // Ignore dmg.exp for spectator, use fixed visual
+                let dst_color = Color::srgba(0.0, 0.0, 0.2, 0.4);
+                let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
+                let new_color = lerp_color(old_color, dst_color, 0.1);
+                if old_color != new_color {
+                    if let Some(uiimage) = o_uiimage.as_mut() {
+                        uiimage.color = new_color;
+                    } else {
+                        bgcolor.0 = new_color;
+                    }
+                }
+            }
+        } else {
+            let health = (player_vitals.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
+            let crazyness = (1.0 - player_vitals.sanity / 100.0).clamp(0.0, 1.0);
+            for (mut o_uiimage, mut bgcolor, dmg) in &mut qb {
+                let rhealth = (1.0 - health).powf(dmg.exp);
+                let crazyness = crazyness.powf(dmg.exp);
+                let alpha = ((rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7 + crazyness)
+                    .clamp(0.0, 1.0);
+                let rhealth2 = (1.0 - alpha * 0.9).clamp(0.0001, 1.0);
+                let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
+                let dst_color = Color::srgba(red, 0.0, 0.0, alpha);
+                let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
+                let new_color = lerp_color(old_color, dst_color, 0.2);
+                if old_color != new_color {
+                    if let Some(uiimage) = o_uiimage.as_mut() {
+                        uiimage.color = new_color;
+                    } else {
+                        bgcolor.0 = new_color;
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn lerp_color(a: Color, b: Color, t: f32) -> Color {
+    let t = t.clamp(0.0, 1.0);
+    Color::srgba(
+        a.to_srgba().red * (1.0 - t) + b.to_srgba().red * t,
+        a.to_srgba().green * (1.0 - t) + b.to_srgba().green * t,
+        a.to_srgba().blue * (1.0 - t) + b.to_srgba().blue * t,
+        a.to_srgba().alpha * (1.0 - t) + b.to_srgba().alpha * t,
+    )
+}
 
 fn cleanup(
     mut commands: Commands,
@@ -379,6 +441,10 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_systems(OnExit(GameState::Running), pause)
         .add_systems(
             Update,
-            toggle_held_object_ui.run_if(in_state(GameState::Running)),
+            (
+                toggle_held_object_ui.run_if(in_state(GameState::Running)),
+                update_damage_vignette_color,
+            )
+                .run_if(in_state(GameState::Running)),
         );
 }

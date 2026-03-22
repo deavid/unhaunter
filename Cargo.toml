@@ -67,6 +67,7 @@ members = [
     "crates/uninteraction-core",   # Entity toggling and triggering
     "crates/uninteraction-plugin",
     "crates/uninventory-plugin",   # Hand / pocket item management
+    "crates/unvitals-core",        # Player health and sanity state
     "crates/unvitals-plugin",      # Health and sanity simulation
     "crates/undifficulty-core",    # Difficulty enum and math traits
     "crates/undifficulty-plugin",
@@ -310,6 +311,7 @@ ungearitems-plugin = { path = "crates/ungearitems-plugin" }
 uninteraction-core = { path = "crates/uninteraction-core" }     # Entity toggling and triggering
 uninteraction-plugin = { path = "crates/uninteraction-plugin" }
 uninventory-plugin = { path = "crates/uninventory-plugin" }     # Hand / pocket item management
+unvitals-core = { path = "crates/unvitals-core" }               # Player health and sanity state
 unvitals-plugin = { path = "crates/unvitals-plugin" }           # Health and sanity simulation
 undifficulty-core = { path = "crates/undifficulty-core" }       # Difficulty enum and math traits
 undifficulty-plugin = { path = "crates/undifficulty-plugin" }

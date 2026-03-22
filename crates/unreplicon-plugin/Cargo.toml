@@ -31,6 +31,7 @@ unnavigation-core = { workspace = true }
 unrender-std = { workspace = true }
 unspatial-core = { workspace = true }
 unplayer-core = { workspace = true }
+unvitals-core = { workspace = true }
 untruck-core = { workspace = true }
 unboard-core = { workspace = true }
 uninteraction-core = { workspace = true }

@@ -14,6 +14,7 @@ workspace = true
 unaudiobg-core = { workspace = true }
 unsettings-core = { workspace = true }
 unplayer-core = { workspace = true }
+unvitals-core = { workspace = true }
 unboard-core = { workspace = true }
 unspatial-core = { workspace = true }
 untypes-core = { workspace = true }

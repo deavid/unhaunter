@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unplayer_core::components::{MainPlayer, PlayerVitals};
+use unplayer_core::components::MainPlayer;
+use unvitals_core::components::PlayerVitals;
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
 

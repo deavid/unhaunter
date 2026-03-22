@@ -4,7 +4,6 @@ use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
 use uninteraction_core::events::InteractionExecutionType;
 
-use crate::network_id::NetworkId;
 use ungear_core::components::playergear::HeldObject;
 use ungear_core::types::gear::equipment::Hand;
 use ungear_core::types::gear::kind::GearKind;
@@ -435,15 +434,6 @@ pub struct RequestJournalEvidenceToggle {
 pub struct RequestJournalGhostToggle {
     pub discard: bool,
     pub ghost_type: Option<GhostType>,
-}
-
-/// Local event fired when a player dies (server-authoritative).
-///
-/// Written by the health / sanity system when a player's HP reaches zero.
-/// Read by death-handling systems (e.g. spectator mode activation).
-#[derive(Debug, Clone, Serialize, Deserialize, Message)]
-pub struct PlayerDiedEvent {
-    pub id: NetworkId,
 }
 
 /// Sent by the Authority when the ghost-talk RNG fires in `sound_update`

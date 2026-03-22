@@ -13,8 +13,9 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{
-    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerVitals,
+    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating,
 };
+use unvitals_core::components::PlayerVitals;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::boardposition::BoardPosition;

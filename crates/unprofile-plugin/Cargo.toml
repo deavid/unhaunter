@@ -19,3 +19,8 @@ unprofile-core = { workspace = true }
 untypes-core = { workspace = true }
 uuid = { workspace = true }
 ron = { workspace = true }
+unvitals-core = { workspace = true }
+unreplicon-core = { workspace = true }
+unboard-core = { workspace = true }
+undifficulty-core = { workspace = true }
+unplayer-core = { workspace = true }

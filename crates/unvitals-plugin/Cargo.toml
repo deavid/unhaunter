@@ -12,6 +12,8 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+bevy_replicon = { workspace = true }
+unvitals-core = { workspace = true }
 unplayer-core = { workspace = true }
 untypes-core = { workspace = true }
 unsoundfield-core = { workspace = true }

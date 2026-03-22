@@ -15,8 +15,9 @@ use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{
-    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerVitals,
+    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating,
 };
+use unvitals_core::components::PlayerVitals;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 

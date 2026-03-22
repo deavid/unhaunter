@@ -6,8 +6,9 @@ use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::Flashlight;
 use unplayer_core::components::{
-    MainPlayer, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite, PlayerVitals,
+    MainPlayer, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite,
 };
+use unvitals_core::components::PlayerVitals;
 use unrender_std::components::light::LightEmitter;
 use unreplicon_core::ownership::{LocallyOwned, Owner};
 use unspatial_core::direction::Direction;

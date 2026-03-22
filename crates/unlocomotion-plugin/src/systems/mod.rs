@@ -12,8 +12,9 @@ use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unnpc_core::events::NpcHelpEvent;
 use unplayer_core::components::{
-    Hiding, MainPlayer, PlayerInput, PlayerLocomotionState, PlayerSpectating, PlayerSprite, Stamina,
+    Hiding, MainPlayer, PlayerInput, PlayerLocomotionState, PlayerSpectating, PlayerSprite,
 };
+use unvitals_core::components::Stamina;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unreplicon_core::messages::InteractionRequestMessage;
 use unspatial_core::direction::Direction;

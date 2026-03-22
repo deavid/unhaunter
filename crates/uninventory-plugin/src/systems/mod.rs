@@ -290,7 +290,7 @@ pub(crate) fn swap_hand_equipment(
 /// When a player dies (PlayerDiedEvent fires), despawn all their gear (Authoritative only).
 /// This moves the gear cleanup responsibility from the Vitals domain to the Inventory domain.
 pub(crate) fn despawn_gear_on_player_death(
-    mut reader: MessageReader<unreplicon_core::messages::PlayerDiedEvent>,
+    mut reader: MessageReader<unvitals_core::events::PlayerDiedEvent>,
     mut q_players: Query<&mut PlayerGear, With<PlayerSprite>>,
     mut commands: Commands,
     authority: Option<Res<untypes_core::roles::AuthorityRole>>,

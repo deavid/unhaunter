@@ -7069,6 +7069,7 @@ dependencies = [
  "unsettings-core",
  "unspatial-core",
  "untypes-core",
+ "unvitals-core",
 ]
 
 [[package]]
@@ -7230,6 +7231,7 @@ dependencies = [
  "unsettings-core",
  "untypes-core",
  "unui-core",
+ "unvitals-core",
 ]
 
 [[package]]
@@ -7434,6 +7436,7 @@ dependencies = [
  "untags-core",
  "untruck-core",
  "untypes-core",
+ "unvitals-core",
 ]
 
 [[package]]
@@ -7642,6 +7645,7 @@ dependencies = [
  "unreplicon-core",
  "unspatial-core",
  "untypes-core",
+ "unvitals-core",
 ]
 
 [[package]]
@@ -7734,6 +7738,7 @@ dependencies = [
  "untruck-core",
  "untypes-core",
  "unui-core",
+ "unvitals-core",
 ]
 
 [[package]]
@@ -8043,8 +8048,13 @@ dependencies = [
  "bevy-persistent",
  "dirs",
  "ron 0.12.0",
+ "unboard-core",
+ "undifficulty-core",
+ "unplayer-core",
  "unprofile-core",
+ "unreplicon-core",
  "untypes-core",
+ "unvitals-core",
  "uuid",
 ]
 
@@ -8133,6 +8143,7 @@ dependencies = [
  "untags-core",
  "untruck-core",
  "untypes-core",
+ "unvitals-core",
  "uuid",
 ]
 
@@ -8218,10 +8229,12 @@ dependencies = [
  "unghost-core",
  "unplayer-core",
  "unprofile-core",
+ "unreplicon-core",
  "unsummary-core",
  "untmxmap-core",
  "untypes-core",
  "unui-core",
+ "unvitals-core",
 ]
 
 [[package]]
@@ -8339,6 +8352,7 @@ dependencies = [
  "untruck-core",
  "untypes-core",
  "unui-core",
+ "unvitals-core",
  "unwalkie-core",
 ]
 
@@ -8380,11 +8394,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "unvitals-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
+ "unreplicon-core",
+ "uuid",
+]
+
+[[package]]
 name = "unvitals-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_replicon",
  "unboard-core",
  "undifficulty-core",
  "unghost-core",
@@ -8400,6 +8425,7 @@ dependencies = [
  "untruck-core",
  "untypes-core",
  "unui-core",
+ "unvitals-core",
 ]
 
 [[package]]
@@ -8445,6 +8471,7 @@ dependencies = [
  "untruck-core",
  "untypes-core",
  "unui-core",
+ "unvitals-core",
  "unwalkie-core",
  "unwalkie-types",
 ]

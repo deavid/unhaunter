@@ -1,12 +1,14 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
+use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::utils::time::format_time;
 use unghost_core::types::ghost::types::GhostType;
-use unplayer_core::components::{PlayerSprite, PlayerVitals};
+use unplayer_core::components::PlayerSprite;
+use unvitals_core::components::PlayerVitals;
 use unprofile_core::profile::PlayerProfileData;
 use unsummary_core::grade::Grade;
 use unsummary_core::summary::{ActiveMissionEvaluator, SummaryData};
@@ -14,6 +16,8 @@ use untmxmap_core::resources::maps::Maps;
 use untypes_core::roles::LobbyPresenceRole;
 use untypes_core::states::AppState;
 use untypes_core::states::GameState;
+use unvitals_core::events::PlayerDiedEvent;
+use unreplicon_core::resources::LocalPlayer;
 use unui_core::assets::UiAssets;
 use unui_core::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 
@@ -824,5 +828,32 @@ pub(crate) fn store_mission_id(
         }
     } else {
         info!("Using existing mission ID: {}", sd.map_path);
+    }
+}
+
+pub(crate) fn record_death_to_summary(
+    mut ev_death: MessageReader<PlayerDiedEvent>,
+    mut summary_data: ResMut<SummaryData>,
+    local_player: Res<LocalPlayer>,
+    q_players: Query<&PlayerSprite>,
+    board_topology: Res<BoardTopology>,
+) {
+    for ev in ev_death.read() {
+        let player_uuid = q_players
+            .iter()
+            .find(|p| p.network_id == ev.id)
+            .map(|p| p.id);
+
+        if local_player.0 == player_uuid && player_uuid.is_some() {
+            // It's us! Update summary with death-related information
+            let map_path_str = board_topology.map_path.clone();
+
+            summary_data.map_path = map_path_str;
+            summary_data.deposit_originally_held = 0;
+            summary_data.deposit_returned_to_bank = 0;
+            summary_data.costs_deducted_from_deposit = 0;
+            summary_data.money_earned = 0;
+            summary_data.grade_achieved = Grade::NA;
+        }
     }
 }

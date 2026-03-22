@@ -23,8 +23,9 @@ use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::FlashlightStatus;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unplayer_core::components::{
-    Hiding, PlayerLocomotionState, PlayerSpectating, PlayerSprite, PlayerVitals, Stamina,
+    Hiding, PlayerLocomotionState, PlayerSpectating, PlayerSprite,
 };
+use unvitals_core::components::{PlayerVitals, Stamina};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportPlayerGearMessage, ExportStateMessage, FloorGearDespawnBroadcast,
@@ -73,8 +74,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<Direction>();
     app.replicate::<PlayerSprite>();
     app.replicate::<PlayerLocomotionState>();
-    app.replicate::<PlayerVitals>();
-    app.replicate::<Stamina>();
     app.replicate::<PlayerGear>();
     app.replicate::<HeldObject>();
     app.replicate::<Hiding>();

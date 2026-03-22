@@ -29,6 +29,7 @@ unwalkie-core = { workspace = true }
 unprofile-core = { workspace = true }
 untruck-core = { workspace = true }
 unplayer-core = { workspace = true }
+unvitals-core = { workspace = true }
 unrender-std = { workspace = true }
 unghost-core = { workspace = true }
 unmetrics-core = { workspace = true }
