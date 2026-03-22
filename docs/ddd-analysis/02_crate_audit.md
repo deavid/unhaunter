@@ -154,14 +154,14 @@ Dependency direction is **downward only**. A crate may depend on its own tier or
 | -------------------------------- | ------------------------------ | ------------------- |
 | [02_portable.md](02_portable.md) | PL · Portable Libraries        | 1 entry — CURRENT   |
 | [02_t0.md](02_t0.md)             | T0 · Domain Kernel             | 7 entries — CURRENT |
-| [02_t1a.md](02_t1a.md)           | T1·1a · The Stage              | 7 entries — CURRENT |
+| [02_t1a.md](02_t1a.md)           | T1·1a · The Stage              | 8 entries — CURRENT |
 | [02_t1b.md](02_t1b.md)           | T1·1b · The Actors             | 4 entries — CURRENT |
 | [02_t1c.md](02_t1c.md)           | T1·1c · The Mechanics          | 8 entries — CURRENT |
-| [02_t2.md](02_t2.md)             | T2 · Application Layer         | 6 entries — CURRENT |
+| [02_t2.md](02_t2.md)             | T2 · Application Layer         | 7 entries — CURRENT |
 | [02_t3a.md](02_t3a.md)           | T3·3a · Map Pipeline           | PENDING             |
 | [02_t3b.md](02_t3b.md)           | T3·3b · Persistence            | 4 entries — CURRENT |
 | [02_t3c.md](02_t3c.md)           | T3·3c · Net Clients            | PENDING             |
-| [02_t4a.md](02_t4a.md)           | T4·4a · Rendering              | PENDING             |
+| [02_t4a.md](02_t4a.md)           | T4·4a · Rendering              | 5 entries — CURRENT |
 | [02_t4b.md](02_t4b.md)           | T4·4b · Audio                  | PENDING             |
 | [02_t4c.md](02_t4c.md)           | T4·4c · UI                     | PENDING             |
 | [02_stale.md](02_stale.md)       | Stale Entries (pre-2026-03-20) | STALE               |

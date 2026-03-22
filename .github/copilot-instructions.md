@@ -199,6 +199,29 @@ When asked to **audit domain X** (e.g., `unvitals`, `unghost`, `ungear`):
 Tier rules catch _import_ violations. The four checks above catch _responsibility_ violations. Both are reported, but
 responsibility violations take priority in diagnosis and fix recommendations.
 
+### Anti-Pattern: The Horizontal-Cut (Shared Bag) Trap
+
+When a crate holds types from multiple feature domains because they were convenient to share, the instinctive "fix" is
+to extract them into a new shared crate at a lower tier (e.g., "extract UI markers to `unhud-core` at T0/T1", or
+"extract rendering types to `unrender-types` at T0"). **This is wrong.** It creates a smaller bag with a different
+label, solving the tier check without solving the structural problem.
+
+**The correct question is always: what feature-silo does this component belong to?** Every component has a natural owner
+— the domain that writes it and is responsible for its semantics. Move it there.
+
+A new shared crate is only justified when types meet ALL of the following:
+
+- They have no feature affiliation (they describe no single concern)
+- They would exist even if every current consumer were deleted
+- They are genuinely primitive (math, markers, asset handle bags, GPU material types)
+
+If a component fails any of those tests, it belongs in a feature domain, not a shared crate.
+
+**Known stale audit recommendations:** The `02_t4a.md` audit recommends "extract to `unrender-types`" for `SpriteLayer`,
+`GameSprite`, etc. That recommendation is superseded by the design analysis in `docs/ddd-analysis/03_concept_design.md`
+(Appendix: The Horizontal-Cut Problem). Those components are simulation state that belongs in their owning domain crates
+— not in a new shared rendering-types bag.
+
 ---
 
 ## Crate Tier Reference
