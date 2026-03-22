@@ -7241,7 +7241,6 @@ name = "undifficulty-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_platform",
  "enum-iterator",
  "serde",
  "strum",
@@ -7780,11 +7779,8 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
- "undifficulty-core",
  "unfoundation-core",
  "unmanual-core",
- "unmapload-core",
- "untmxmap-core",
  "untypes-core",
  "unui-core",
 ]

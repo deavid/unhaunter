@@ -12,11 +12,8 @@ workspace = true
 
 [dependencies]
 
-untmxmap-core = { workspace = true }
 untypes-core = { workspace = true }
 unfoundation-core = { workspace = true }
-unmapload-core = { workspace = true }
-undifficulty-core = { workspace = true }
 unmanual-core = { workspace = true }
 unui-core = { workspace = true }
 
