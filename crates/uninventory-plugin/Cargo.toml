@@ -13,6 +13,7 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 uninput-core = { workspace = true }
+unlocomotion-core = { workspace = true }
 unplayer-core = { workspace = true }
 unvitals-core = { workspace = true }
 untypes-core = { workspace = true }

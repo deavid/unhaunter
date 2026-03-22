@@ -3,8 +3,6 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use ungear_core::types::gear::equipment::Hand;
 use unreplicon_core::network_id::NetworkId;
-use unspatial_core::direction::Direction;
-use unspatial_core::position::Position;
 use uuid::Uuid;
 
 #[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
@@ -103,47 +101,10 @@ impl Default for PlayerSprite {
     }
 }
 
-/// Component for managing player locomotion state.
-#[derive(Component, Debug, Clone, Serialize, Deserialize, Reflect)]
-#[reflect(Component, Default)]
-pub struct PlayerLocomotionState {
-    /// The player's initial spawn position when the level started.
-    pub spawn_position: Position,
-    /// The player's movement direction based on WASD controls.
-    pub movement: Direction,
-    /// The current normalized input direction (raw velocity), used for animation.
-    /// Zero when the player is not moving, unit vector when moving.
-    #[serde(default)]
-    pub velocity: Vec2,
-}
-
-impl MapEntities for PlayerLocomotionState {
-    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
-}
-
-impl Default for PlayerLocomotionState {
-    fn default() -> Self {
-        Self {
-            spawn_position: Position::default(),
-            movement: Direction::zero(),
-            velocity: Vec2::ZERO,
-        }
-    }
-}
-
 impl PlayerSprite {
     /// Creates a new `PlayerSprite` with the specified identity.
     pub fn new(id: Uuid, network_id: NetworkId) -> Self {
         Self { id, network_id }
-    }
-}
-
-impl PlayerLocomotionState {
-    pub fn new(spawn_position: Position) -> Self {
-        Self {
-            spawn_position,
-            ..default()
-        }
     }
 }
 

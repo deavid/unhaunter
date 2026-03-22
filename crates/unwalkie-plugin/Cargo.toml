@@ -28,6 +28,7 @@ unsettings-core = { workspace = true }
 unwalkie-types = { workspace = true }
 unwalkie-core = { workspace = true }
 unprofile-core = { workspace = true }
+unlocomotion-core = { workspace = true }
 untruck-core = { workspace = true }
 unplayer-core = { workspace = true }
 unvitals-core = { workspace = true }

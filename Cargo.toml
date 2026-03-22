@@ -58,6 +58,7 @@ members = [
     "crates/unplayer-plugin",
     "crates/uninput-core",        # Input bus (TIER EXCEPTION: T1b despite T2 plugin; domain state, not app logic)
     "crates/unnpc-plugin",        # Helper NPCs
+    "crates/unlocomotion-core",   # Locomotion state component
     "crates/unlocomotion-plugin", # Kinematics and movement integration
     "crates/unnavigation-plugin", # Waypoint creation and pathfinding integration
 
@@ -297,6 +298,7 @@ unnavigation-core = { path = "crates/unnavigation-core" } # Pathfinding graph (d
 
 # ── 1b: The Actors (Entities & AI) ───────────────────────────────────────
 # Everything that inhabits and acts within the stage.
+unlocomotion-core = { path = "crates/unlocomotion-core" }     # Locomotion state component
 unlocomotion-plugin = { path = "crates/unlocomotion-plugin" } # Kinematics and movement
 unnavigation-plugin = { path = "crates/unnavigation-plugin" } # Waypoint creation and integration
 unghost-core = { path = "crates/unghost-core" }               # Ghost: evidence, enrage state, AI data

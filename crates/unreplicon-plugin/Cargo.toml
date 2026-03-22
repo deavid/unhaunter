@@ -24,6 +24,7 @@ base64 = { workspace = true }
 
 unreplicon-core = { workspace = true }
 unprofile-core = { workspace = true }
+unlocomotion-core = { workspace = true }
 unbehavior-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unmapload-core = { workspace = true }

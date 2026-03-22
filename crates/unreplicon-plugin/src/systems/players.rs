@@ -22,7 +22,8 @@ use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::FlashlightStatus;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
-use unplayer_core::components::{Hiding, PlayerLocomotionState, PlayerSpectating, PlayerSprite};
+use unlocomotion_core::components::PlayerLocomotionState;
+use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportPlayerGearMessage, ExportStateMessage, FloorGearDespawnBroadcast,
@@ -381,7 +382,7 @@ fn setup_mission_players(
                 spawn_pos,
                 unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
                 PlayerSprite::new(player.player_uuid, net_id),
-                PlayerLocomotionState::new(spawn_pos),
+                PlayerLocomotionState::default(),
                 PlayerVitals::default(),
                 net_id,
                 Stamina::default(),
@@ -562,7 +563,7 @@ fn spawn_late_joining_players(
                 spawn_pos,
                 unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
                 PlayerSprite::new(player.player_uuid, net_id),
-                PlayerLocomotionState::new(spawn_pos),
+                PlayerLocomotionState::default(),
                 PlayerVitals::default(),
                 net_id,
                 Stamina::default(),

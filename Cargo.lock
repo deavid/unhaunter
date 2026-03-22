@@ -7213,6 +7213,7 @@ dependencies = [
  "unboard-core",
  "unghost-core",
  "uninput-core",
+ "unlocomotion-core",
  "unmapload-core",
  "unnavigation-core",
  "unpicking-core",
@@ -7660,6 +7661,7 @@ dependencies = [
  "unboard-core",
  "ungear-core",
  "uninput-core",
+ "unlocomotion-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
@@ -7739,6 +7741,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "unlocomotion-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
+ "unspatial-core",
+]
+
+[[package]]
 name = "unlocomotion-plugin"
 version = "0.3.2-dev"
 dependencies = [
@@ -7750,6 +7761,7 @@ dependencies = [
  "ungear-core",
  "uninput-core",
  "uninteraction-core",
+ "unlocomotion-core",
  "unnavigation-core",
  "unnpc-core",
  "unplayer-core",
@@ -8008,7 +8020,6 @@ dependencies = [
  "serde",
  "ungear-core",
  "unreplicon-core",
- "unspatial-core",
  "uuid",
 ]
 
@@ -8156,6 +8167,7 @@ dependencies = [
  "unghost-core",
  "unhub-client",
  "uninteraction-core",
+ "unlocomotion-core",
  "unmapload-core",
  "unmission-core",
  "unnavigation-core",
@@ -8483,6 +8495,7 @@ dependencies = [
  "uninput-core",
  "uninteraction-core",
  "unlight-core",
+ "unlocomotion-core",
  "unmetrics-core",
  "unmission-core",
  "unplayer-core",

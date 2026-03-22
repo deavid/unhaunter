@@ -13,6 +13,7 @@ workspace = true
 [dependencies]
 unbehavior-core = { workspace = true }
 unboard-core = { workspace = true }
+unlocomotion-core = { workspace = true }
 unghost-core = { workspace = true }
 uninput-core = { workspace = true }
 unnavigation-core = { workspace = true }

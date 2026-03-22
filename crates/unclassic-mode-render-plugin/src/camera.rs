@@ -1,7 +1,8 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
+use unlocomotion_core::components::PlayerLocomotionState;
 use unpicking_core::picking::CustomSpritePickingCamera;
-use unplayer_core::components::{MainPlayer, PlayerLocomotionState};
+use unplayer_core::components::MainPlayer;
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::direction::Direction;
