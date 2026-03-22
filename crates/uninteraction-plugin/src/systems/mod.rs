@@ -1,6 +1,7 @@
 pub mod interactivestuff;
 
 use bevy::prelude::*;
+use bevy::picking::events::{Out, Over, Pointer};
 use interactivestuff::InteractiveStuff;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
@@ -8,6 +9,7 @@ use unbehavior::components::RoomStateDelta;
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use uninteraction_core::events::RoomStateSyncEvent;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
+use unplayer_core::components::{MainPlayer, PlayerSpectating};
 use unspatial_core::position::Position;
 
 pub(crate) fn app_setup(app: &mut App) {
@@ -25,6 +27,44 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         trigger_grid_rebuild_on_sync.run_if(in_state(untypes_core::states::SimulationState::Ready)),
     );
+    // Mouse hover feedback: mark interactive objects as hovered/unhovered
+    app.add_systems(
+        Update,
+        (mouse_over_interactive_system, mouse_out_interactive_system)
+            .run_if(in_state(untypes_core::states::AppState::InGame)),
+    );
+}
+
+fn mouse_over_interactive_system(
+    mut events: MessageReader<Pointer<Over>>,
+    mut q_interactive: Query<&mut Interactive>,
+    q_spectator: Query<(), (With<MainPlayer>, With<PlayerSpectating>)>,
+) {
+    let is_spectator = !q_spectator.is_empty();
+    for event in events.read() {
+        if is_spectator {
+            continue;
+        }
+        if let Ok(mut interactive) = q_interactive.get_mut(event.entity) {
+            interactive.hovered = true;
+        }
+    }
+}
+
+fn mouse_out_interactive_system(
+    mut events: MessageReader<Pointer<Out>>,
+    mut q_interactive: Query<&mut Interactive>,
+    q_spectator: Query<(), (With<MainPlayer>, With<PlayerSpectating>)>,
+) {
+    let is_spectator = !q_spectator.is_empty();
+    for event in events.read() {
+        if is_spectator {
+            continue;
+        }
+        if let Ok(mut interactive) = q_interactive.get_mut(event.entity) {
+            interactive.hovered = false;
+        }
+    }
 }
 
 fn room_state_sync_system(

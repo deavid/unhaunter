@@ -14,6 +14,7 @@ workspace = true
 unbehavior = { workspace = true }
 unboard-core = { workspace = true }
 unghost-core = { workspace = true }
+uninput-core = { workspace = true }
 unnavigation-core = { workspace = true }
 unplayer-core = { workspace = true }
 unmapload-core = { workspace = true }

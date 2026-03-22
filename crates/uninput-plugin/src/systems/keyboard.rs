@@ -1,10 +1,11 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use uninput_core::components::{PlayerInput, PlayerInputMapping};
 use unnavigation_core::components::{
     move_to::MoveToTarget,
     waypoint::{Waypoint, WaypointOwner, WaypointQueue},
 };
-use unplayer_core::components::{MainPlayer, PlayerInput, PlayerInputMapping, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::game::{GameplaySettings, MovementStyle};
 
 use untruck_core::components::in_truck::InTruck;

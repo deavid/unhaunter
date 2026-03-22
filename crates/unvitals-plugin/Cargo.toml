@@ -17,16 +17,12 @@ unvitals-core = { workspace = true }
 unplayer-core = { workspace = true }
 untypes-core = { workspace = true }
 unsoundfield-core = { workspace = true }
-unsummary-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unspatial-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unghost-core = { workspace = true }
 untags-core = { workspace = true }
 unlight-core = { workspace = true }
-unui-core = { workspace = true }
 unboard-core = { workspace = true }
-unthermal-core = { workspace = true }
 untruck-core = { workspace = true }
-unprofile-core = { workspace = true }
-bevy-persistent = { workspace = true }
+unthermal-core = { workspace = true }

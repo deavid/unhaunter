@@ -9,8 +9,9 @@ use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
+use uninput_core::components::PlayerInputMapping;
 use uninteraction_core::interaction::Toggleable;
-use unplayer_core::components::{MainPlayer, PlayerInputMapping, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};

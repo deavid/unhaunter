@@ -22,10 +22,7 @@ use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::FlashlightStatus;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
-use unplayer_core::components::{
-    Hiding, PlayerLocomotionState, PlayerSpectating, PlayerSprite,
-};
-use unvitals_core::components::{PlayerVitals, Stamina};
+use unplayer_core::components::{Hiding, PlayerLocomotionState, PlayerSpectating, PlayerSprite};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
     ExportGearStateMessage, ExportPlayerGearMessage, ExportStateMessage, FloorGearDespawnBroadcast,
@@ -42,6 +39,7 @@ use unspatial_core::position::Position;
 use untypes_core::roles::is_pure_client;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::{AppState, SimulationState};
+use unvitals_core::components::{PlayerVitals, Stamina};
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
@@ -396,8 +394,6 @@ fn setup_mission_players(
                 unspatial_core::boardposition::MapEntityFieldBPos(spawn_pos.to_board_position()),
                 untags_core::tags::PlayerTag,
                 unboard_core::resources::visibility_data::VisibilityData::default(),
-                unplayer_core::components::PlayerInput::default(),
-                Replicated,
             ),
         ));
         let entity = entity_commands.id();
@@ -579,7 +575,6 @@ fn spawn_late_joining_players(
                 unspatial_core::boardposition::MapEntityFieldBPos(spawn_pos.to_board_position()),
                 untags_core::tags::PlayerTag,
                 unboard_core::resources::visibility_data::VisibilityData::default(),
-                unplayer_core::components::PlayerInput::default(),
                 Owner(socket_owner_id),
                 Replicated,
             ),

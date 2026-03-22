@@ -1,7 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use unplayer_core::components::MainPlayer;
-use unplayer_core::components::PlayerInput;
-use unplayer_core::components::PlayerSprite;
+use uninput_core::components::PlayerInput;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
@@ -51,6 +50,9 @@ pub fn mouse_aim_system(
         let clamped_aim_vec = aim_vec.with_max_dist(AIM_MAX_DISTANCE) * 30.0;
 
         // This is now the correct aiming direction.
+        // NOTE: Intentional dual-write. Direction is the authoritative spatial state that consumers
+        // (locomotion, AI) depend on. aim_direction on PlayerInput acts as the replication-safe bus
+        // copy for networking. Both writes must be kept in sync.
         *player_dir = clamped_aim_vec;
         player_input.aim_direction = Vec2::new(clamped_aim_vec.dx, clamped_aim_vec.dy);
     }

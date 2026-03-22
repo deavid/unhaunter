@@ -11,10 +11,8 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unsettings-core = { workspace = true }
 unspatial-core = { workspace = true }
 ungear-core = { workspace = true }
-ungearitems-core = { workspace = true }
 unreplicon-core = { workspace = true }
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

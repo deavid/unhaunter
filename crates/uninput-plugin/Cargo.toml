@@ -12,6 +12,7 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+uninput-core = { workspace = true }
 unplayer-core = { workspace = true }
 unsettings-core = { workspace = true }
 unspatial-core = { workspace = true }
@@ -20,5 +21,4 @@ untruck-core = { workspace = true }
 untypes-core = { workspace = true }
 unui-core = { workspace = true }
 untags-core = { workspace = true }
-unbehavior = { workspace = true }
 bevy-persistent = { workspace = true }

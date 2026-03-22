@@ -55,6 +55,7 @@ members = [
     "crates/unghost-plugin",
     "crates/unplayer-core",       # Player: state, stats, asset handles
     "crates/unplayer-plugin",
+    "crates/uninput-core",        # Input bus (TIER EXCEPTION: T1b despite T2 plugin; domain state, not app logic)
     "crates/unnpc-plugin",        # Helper NPCs
     "crates/unlocomotion-plugin", # Kinematics and movement integration
 
@@ -275,7 +276,7 @@ unsettings-core = { path = "crates/unsettings-core" }     # Persistent configura
 # The persistent physical world that all actors inhabit.
 
 # The Board, the space definition:
-unboard-core = { path = "crates/unboard-core" }               # World topology: rooms, walls, collision (defines the space itself)
+unboard-core = { path = "crates/unboard-core" }     # World topology: rooms, walls, collision (defines the space itself)
 unboard-plugin = { path = "crates/unboard-plugin" }
 
 # Board fields - values per-tile that have simulations:
@@ -289,7 +290,7 @@ unlight-core = { path = "crates/unlight-core" }               # Illumination mod
 unlight-plugin = { path = "crates/unlight-plugin" }
 
 # Other:
-unnavigation-core = { path = "crates/unnavigation-core" }     # Pathfinding graph (data only)
+unnavigation-core = { path = "crates/unnavigation-core" } # Pathfinding graph (data only)
 
 # ── 1b: The Actors (Entities & AI) ───────────────────────────────────────
 # Everything that inhabits and acts within the stage.
@@ -298,6 +299,7 @@ unghost-core = { path = "crates/unghost-core" }               # Ghost: evidence,
 unghost-plugin = { path = "crates/unghost-plugin" }
 unplayer-core = { path = "crates/unplayer-core" }             # Player: state, stats, asset handles
 unplayer-plugin = { path = "crates/unplayer-plugin" }
+uninput-core = { path = "crates/uninput-core" }               # Input bus (TIER EXCEPTION: T1b despite T2 plugin)
 unnpc-core = { path = "crates/unnpc-core" }                   # Helper NPC data (not in workspace members)
 unnpc-plugin = { path = "crates/unnpc-plugin" }
 

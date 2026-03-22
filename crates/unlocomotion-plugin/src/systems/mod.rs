@@ -7,14 +7,14 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
+use uninput_core::components::PlayerInput;
 use uninteraction_core::events::InteractionExecutionType;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unnpc_core::events::NpcHelpEvent;
 use unplayer_core::components::{
-    Hiding, MainPlayer, PlayerInput, PlayerLocomotionState, PlayerSpectating, PlayerSprite,
+    Hiding, MainPlayer, PlayerLocomotionState, PlayerSpectating, PlayerSprite,
 };
-use unvitals_core::components::Stamina;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unreplicon_core::messages::InteractionRequestMessage;
 use unspatial_core::direction::Direction;
@@ -23,6 +23,7 @@ use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::GameState;
 use unui_core::resources::MouseVisibility;
+use unvitals_core::components::Stamina;
 
 const PLAYER_SPEED: f32 = 0.04;
 const RUN_ADD_MULTIPLIER: f32 = 1.3;

@@ -8,10 +8,9 @@ use unbehavior::components::HidingSpot;
 use unbehavior::state::TileState;
 use unboard_core::resources::roomdb::RoomTopology;
 use ungear_core::components::playergear::PlayerGear;
+use uninput_core::components::PlayerInputMapping;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{
-    Hiding, MainPlayer, PlayerInputMapping, PlayerLocomotionState, PlayerSprite,
-};
+use unplayer_core::components::{Hiding, MainPlayer, PlayerLocomotionState, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;

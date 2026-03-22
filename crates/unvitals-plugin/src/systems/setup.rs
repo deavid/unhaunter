@@ -17,7 +17,6 @@ pub(crate) fn app_setup(app: &mut App) {
                 sanity::drain_sanity_from_environment.run_if(resource_exists::<LocalPlayerRole>),
                 other::recover_sanity_in_truck,
                 other::regenerate_health_over_time.run_if(resource_exists::<AuthorityRole>),
-                other::sync_client_reported_sanity.run_if(resource_exists::<AuthorityRole>),
                 other::scale_stamina_rates_by_health,
                 other::apply_ghost_proximity_damage.run_if(resource_exists::<LocalPlayerRole>),
                 other::transition_to_spectator_on_death,

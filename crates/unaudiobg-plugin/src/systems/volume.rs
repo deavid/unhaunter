@@ -4,10 +4,10 @@ use ndarray::s;
 use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::resources::visibility_data::VisibilityData;
 use unplayer_core::components::{MainPlayer, PlayerSpectating};
-use unvitals_core::components::PlayerVitals;
 use unsettings_core::audio::AudioSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
+use unvitals_core::components::PlayerVitals;
 
 use unaudiobg_core::components::{GameSound, SoundType};
 use unaudiobg_core::mute::AmbientMuteController;

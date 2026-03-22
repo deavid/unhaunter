@@ -4,8 +4,8 @@ use untypes_core::states::{AppState, SimulationState};
 
 use crate::summary::{
     afk_timeout, calculate_rewards_and_grades, cleanup, finalize_profile_update, insert_afk_timer,
-    keyboard, record_death_to_summary, remove_afk_timer, setup, setup_ui, store_mission_id, update_score, update_time,
-    update_ui,
+    keyboard, record_death_to_summary, remove_afk_timer, setup, setup_ui, store_mission_id,
+    update_score, update_time, update_ui,
 };
 
 pub struct UnhaunterSummaryCorePlugin;
@@ -42,7 +42,14 @@ impl Plugin for UnhaunterSummaryPlugin {
         .add_systems(OnExit(AppState::Summary), (cleanup, remove_afk_timer))
         .add_systems(
             Update,
-            (keyboard, afk_timeout, update_ui, update_score, record_death_to_summary).run_if(in_state(AppState::Summary)),
+            (
+                keyboard,
+                afk_timeout,
+                update_ui,
+                update_score,
+                record_death_to_summary,
+            )
+                .run_if(in_state(AppState::Summary)),
         );
     }
 }

@@ -14,12 +14,10 @@ use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{
-    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating,
-};
-use unvitals_core::components::PlayerVitals;
+use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating};
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
+use unvitals_core::components::PlayerVitals;
 
 /// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = true;

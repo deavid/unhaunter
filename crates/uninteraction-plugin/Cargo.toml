@@ -18,6 +18,7 @@ unboard-core = { workspace = true }
 unbehavior = { workspace = true }
 unrender-std = { workspace = true }
 unaudiospatial-core = { workspace = true }
+unplayer-core = { workspace = true }
 
 
 bevy = { workspace = true }

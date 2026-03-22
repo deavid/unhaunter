@@ -7203,6 +7203,7 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "unghost-core",
+ "uninput-core",
  "unmapload-core",
  "unnavigation-core",
  "unpicking-core",
@@ -7226,6 +7227,7 @@ dependencies = [
  "unbehavior",
  "unfoundation-core",
  "ungear-core",
+ "uninput-core",
  "unplayer-core",
  "unrender-std",
  "unsettings-core",
@@ -7380,7 +7382,6 @@ dependencies = [
  "uninteraction-core",
  "unlight-core",
  "unmetrics-core",
- "unplayer-core",
  "unprofile-core",
  "unrender-std",
  "unreplicon-core",
@@ -7592,12 +7593,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
+name = "uninput-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "unsettings-core",
+]
+
+[[package]]
 name = "uninput-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "unbehavior",
+ "uninput-core",
  "unnavigation-core",
  "unplayer-core",
  "unsettings-core",
@@ -7626,6 +7635,7 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "uninteraction-core",
+ "unplayer-core",
  "unrender-std",
  "unspatial-core",
  "untypes-core",
@@ -7640,6 +7650,7 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "ungear-core",
+ "uninput-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
@@ -7728,6 +7739,7 @@ dependencies = [
  "undifficulty-core",
  "unfog-core",
  "ungear-core",
+ "uninput-core",
  "uninteraction-core",
  "unnavigation-core",
  "unnpc-core",
@@ -7968,9 +7980,7 @@ dependencies = [
  "bevy_asset_loader",
  "serde",
  "ungear-core",
- "ungearitems-core",
  "unreplicon-core",
- "unsettings-core",
  "unspatial-core",
  "uuid",
 ]
@@ -7980,7 +7990,6 @@ name = "unplayer-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy-persistent",
  "bevy_asset_loader",
  "bevy_platform",
  "unaudiospatial-core",
@@ -7990,20 +7999,15 @@ dependencies = [
  "unfog-core",
  "unfoundation-core",
  "ungear-core",
- "unghost-core",
+ "uninput-core",
  "uninteraction-core",
- "unlight-core",
  "unnavigation-core",
  "unnpc-core",
  "unplayer-core",
- "unprofile-core",
  "unrender-std",
  "unreplicon-core",
- "unsoundfield-core",
  "unspatial-core",
- "unsummary-core",
  "untags-core",
- "unthermal-core",
  "untruck-core",
  "untypes-core",
  "unui-core",
@@ -8342,6 +8346,7 @@ dependencies = [
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
+ "uninput-core",
  "unmapload-core",
  "unmission-core",
  "unplayer-core",
@@ -8400,7 +8405,6 @@ dependencies = [
  "bevy",
  "serde",
  "unreplicon-core",
- "uuid",
 ]
 
 [[package]]
@@ -8408,23 +8412,19 @@ name = "unvitals-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy-persistent",
  "bevy_replicon",
  "unboard-core",
  "undifficulty-core",
  "unghost-core",
  "unlight-core",
  "unplayer-core",
- "unprofile-core",
  "unreplicon-core",
  "unsoundfield-core",
  "unspatial-core",
- "unsummary-core",
  "untags-core",
  "unthermal-core",
  "untruck-core",
  "untypes-core",
- "unui-core",
  "unvitals-core",
 ]
 
@@ -8459,6 +8459,7 @@ dependencies = [
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
+ "uninput-core",
  "uninteraction-core",
  "unlight-core",
  "unmetrics-core",

@@ -16,10 +16,10 @@ undifficulty-core = { workspace = true }
 unbehavior = { workspace = true }
 unfoundation-core = { workspace = true }
 unboard-core = { workspace = true }
-unlight-core = { workspace = true }
 unplayer-core = { workspace = true }
+uninput-core = { workspace = true }
 untypes-core = { workspace = true }
-unsummary-core = { workspace = true }
+
 unnavigation-core = { workspace = true }
 unui-core = { workspace = true }
 unfog-core = { workspace = true }
@@ -29,16 +29,11 @@ untruck-core = { workspace = true }
 ungear-core = { workspace = true }
 unnpc-core = { workspace = true }
 unaudiospatial-core = { workspace = true }
-unsoundfield-core = { workspace = true }
-unghost-core = { workspace = true }
 untags-core = { workspace = true }
 
 unreplicon-core = { workspace = true }
-unprofile-core = { workspace = true }
 unspatial-core = { workspace = true }
-unthermal-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
-bevy-persistent = { workspace = true }
 bevy_asset_loader = { workspace = true }

@@ -1,10 +1,11 @@
-use crate::components::player::Hiding;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unbehavior::behavior::Behavior;
 use ungear_core::components::playergear::PlayerGear;
-use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
+use uninput_core::components::PlayerInput;
+use unplayer_core::components::Hiding;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::components::animation::AnimationTimer;
 use unrender_std::components::visuals::ResolutionFactor;
 use unspatial_core::position::Position;

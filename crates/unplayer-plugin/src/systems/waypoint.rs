@@ -3,13 +3,13 @@ use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
 use unboard_core::resources::visibility_data::VisibilityData;
+use uninput_core::components::PlayerInput;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
 use unnavigation_core::pathfinding::Pathfinder;
 use unnpc_core::events::NpcHelpEvent;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::components::{MainPlayer, PlayerInput};
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::components::game::GameSprite;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
@@ -562,59 +562,4 @@ fn create_stair_waypoints(
     waypoint_queue.push(end_waypoint_entity);
 
     debug!("Created 2 waypoints for stair traversal");
-}
-
-/// System to update waypoints for remote players based on synced input
-pub(crate) fn rebuild_remote_waypoint_queue(
-    mut commands: Commands,
-    q_remote_players: Query<
-        (Entity, &Position, &PlayerInput),
-        (
-            With<PlayerSprite>,
-            Without<MainPlayer>,
-            Changed<PlayerInput>,
-        ),
-    >,
-    mut q_player_queue: Query<&mut WaypointQueue, With<PlayerSprite>>,
-    q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
-    q_main_player: Query<&VisibilityData, With<MainPlayer>>,
-    pathfinder: Pathfinder,
-) {
-    let visibility_data = VisibilityData::default();
-    let visibility = q_main_player.iter().next().unwrap_or(&visibility_data);
-
-    for (entity, pos, input) in q_remote_players.iter() {
-        // We only care if queue exists (it should)
-        if let Ok(mut queue) = q_player_queue.get_mut(entity) {
-            match input.target_position {
-                Some(target) => {
-                    let target_pos = Position {
-                        x: target.x,
-                        y: target.y,
-                        z: pos.z,
-                        visual_priority: 0.0,
-                    };
-                    // Use MainPlayer visibility to visualize the path from our perspective
-                    create_pathfinding_waypoints(
-                        &mut commands,
-                        &q_existing_waypoints,
-                        entity,
-                        *pos,
-                        target_pos,
-                        &mut queue,
-                        &pathfinder,
-                        visibility,
-                    );
-                }
-                None => {
-                    clear_player_waypoints(
-                        &mut commands,
-                        &q_existing_waypoints,
-                        entity,
-                        &mut queue,
-                    );
-                }
-            }
-        }
-    }
 }

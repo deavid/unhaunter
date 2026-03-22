@@ -8,18 +8,18 @@ use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::utils::time::format_time;
 use unghost_core::types::ghost::types::GhostType;
 use unplayer_core::components::PlayerSprite;
-use unvitals_core::components::PlayerVitals;
 use unprofile_core::profile::PlayerProfileData;
+use unreplicon_core::resources::LocalPlayer;
 use unsummary_core::grade::Grade;
 use unsummary_core::summary::{ActiveMissionEvaluator, SummaryData};
 use untmxmap_core::resources::maps::Maps;
 use untypes_core::roles::LobbyPresenceRole;
 use untypes_core::states::AppState;
 use untypes_core::states::GameState;
-use unvitals_core::events::PlayerDiedEvent;
-use unreplicon_core::resources::LocalPlayer;
 use unui_core::assets::UiAssets;
 use unui_core::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
+use unvitals_core::components::PlayerVitals;
+use unvitals_core::events::PlayerDiedEvent;
 
 pub(crate) fn setup(mut commands: Commands) {
     // ui camera

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSpectating, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
 use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::position::Position;
 use untags_core::tags::GhostTag;
@@ -111,15 +111,6 @@ pub(crate) fn debug_kill_spectator(
         for mut vitals in player_query.iter_mut() {
             vitals.health = -10.0;
         }
-    }
-}
-
-pub(crate) fn sync_client_reported_sanity(
-    mut q_player: Query<(&PlayerInput, &mut PlayerVitals), Without<MainPlayer>>,
-) {
-    for (input, mut vitals) in &mut q_player {
-        vitals.sanity = input.sanity;
-        vitals.mean_sound = input.mean_sound;
     }
 }
 

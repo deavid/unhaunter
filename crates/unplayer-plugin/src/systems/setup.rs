@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use untypes_core::states::{AppState, SimulationState};
+use untypes_core::states::AppState;
 
 use crate::systems::hide;
 use crate::systems::hydration;
@@ -16,12 +16,7 @@ pub(crate) fn app_setup_core(app: &mut App) {
         Update,
         unplayer_core::authoritative::PlayerAuthoritativeLogicSet
             .run_if(resource_exists::<untypes_core::roles::AuthorityRole>)
-            .after(unplayer_core::PlayerInputSet),
-    );
-
-    app.add_systems(
-        PostUpdate,
-        clear_transient_input_flags.run_if(in_state(SimulationState::Ready)),
+            .after(uninput_core::PlayerInputSet),
     );
 
     // Gear toggle system must run on all instances (including dedicated server)
@@ -32,14 +27,6 @@ pub(crate) fn app_setup_core(app: &mut App) {
             .in_set(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
             .run_if(in_state(AppState::InGame)),
     );
-}
-
-pub(crate) fn clear_transient_input_flags(
-    mut q_input: Query<&mut unplayer_core::components::PlayerInput>,
-) {
-    for mut input in q_input.iter_mut() {
-        input.clear();
-    }
 }
 
 pub(crate) fn app_setup_client(app: &mut App) {
@@ -54,16 +41,20 @@ pub(crate) fn app_setup_client(app: &mut App) {
     app.add_systems(
         Update,
         (
-            // Walk target indicator system (kept for compatibility)
-            walk_target_indicator::update_move_target_indicator,
             // Waypoint systems handle all click-to-move and click-to-interact
             waypoint::create_waypoints_from_click,
-            waypoint::rebuild_remote_waypoint_queue,
             waypoint::resolve_movement_from_waypoints,
             waypoint::prune_stale_waypoints,
         )
             .chain()
-            .in_set(unplayer_core::PlayerInputSet)
+            .in_set(uninput_core::PlayerInputSet)
+            .run_if(in_state(AppState::InGame)),
+    );
+
+    // Walk target indicator system: shows visual feedback for click-to-move target
+    app.add_systems(
+        Update,
+        walk_target_indicator::update_move_target_indicator
             .run_if(in_state(AppState::InGame)),
     );
 

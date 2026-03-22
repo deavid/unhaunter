@@ -12,10 +12,7 @@ use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{
-    Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating,
-};
-use unvitals_core::components::PlayerVitals;
+use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::boardposition::BoardPosition;
@@ -24,6 +21,7 @@ use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::PlayerTag;
 use untruck_core::components::in_truck::InTruck;
+use unvitals_core::components::PlayerVitals;
 
 use crate::components::fade_out::FadeOut;
 use crate::metrics::GHOST_MOVEMENT;

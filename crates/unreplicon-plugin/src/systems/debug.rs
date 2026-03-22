@@ -8,12 +8,12 @@ use ungearitems_core::components::flashlight::Flashlight;
 use unplayer_core::components::{
     MainPlayer, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite,
 };
-use unvitals_core::components::PlayerVitals;
 use unrender_std::components::light::LightEmitter;
 use unreplicon_core::ownership::{LocallyOwned, Owner};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
+use unvitals_core::components::PlayerVitals;
 
 #[derive(Resource, Default)]
 struct DebugTimer(Stopwatch);

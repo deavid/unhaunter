@@ -1,5 +1,5 @@
 [package]
-name = "unvitals-core"
+name = "uninput-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -11,6 +11,5 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+unsettings-core = { workspace = true }
 bevy = { workspace = true }
-serde = { workspace = true }
-unreplicon-core = { workspace = true }

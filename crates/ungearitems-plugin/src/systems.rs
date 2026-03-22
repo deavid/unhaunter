@@ -3,16 +3,11 @@ use rand::prelude::*;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic};
-use ungear_core::components::playergear::PlayerGear;
-use ungearitems_core::gear_details::GearDetails;
 use unghost_core::resources::haunt_state::HauntState;
-use uninteraction_core::interaction::{Toggleable, Triggered};
+use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{MainPlayer, PlayerInput};
 use unspatial_core::position::Position;
 
-use crate::components::flashlight::Flashlight;
-use crate::components::repellentflask::RepellentFlask;
 use crate::metrics;
 
 pub(crate) fn system_electronic_interference(
@@ -74,91 +69,4 @@ pub(crate) fn system_battery_drain(
     }
 
     measure.end_ms();
-}
-
-/// Applies gear state from `PlayerInput.target_*_hand` to gear components.
-/// Only runs for non-MainPlayer entities (remote players on the host).
-/// The client sends its gear state every frame; the host copies it here.
-pub(crate) fn system_apply_gear_intent_from_input(
-    mut commands: Commands,
-    q_players: Query<(&PlayerGear, &PlayerInput), Without<MainPlayer>>,
-    mut q_toggleable: Query<&mut Toggleable>,
-    mut q_flashlight: Query<(&mut Flashlight, &Battery)>,
-    mut q_sage: Query<&mut ungearitems_core::components::sage::SageBundleData>,
-    mut q_repellent: Query<&mut RepellentFlask>,
-) {
-    for (pg, pi) in q_players.iter() {
-        // Right hand — apply full state (not just on click)
-        if let Some((on, details)) = &pi.target_right_hand
-            && let Some(entity) = pg.right_hand
-        {
-            if let Ok(mut toggle) = q_toggleable.get_mut(entity) {
-                toggle.is_on = *on;
-            }
-            match details {
-                GearDetails::Flashlight(status) => {
-                    if let Ok((mut flashlight, battery)) = q_flashlight.get_mut(entity) {
-                        if flashlight.can_enable_status(status.clone(), battery.level) {
-                            flashlight.status = status.clone();
-                        } else {
-                            flashlight.status =
-                                ungearitems_core::components::flashlight::FlashlightStatus::Off;
-                        }
-                        commands.entity(entity).remove::<Triggered>();
-                    }
-                }
-                GearDetails::Sage { is_active, .. } => {
-                    if let Ok(mut sage) = q_sage.get_mut(entity) {
-                        if *is_active && !sage.is_active && !sage.consumed {
-                            sage.is_active = true;
-                        }
-                        commands.entity(entity).remove::<Triggered>();
-                    }
-                }
-                GearDetails::RepellentFlask { active, .. } => {
-                    if let Ok(mut repellent) = q_repellent.get_mut(entity) {
-                        repellent.active = *active;
-                        commands.entity(entity).remove::<Triggered>();
-                    }
-                }
-                _ => {}
-            }
-        }
-        // Left hand — apply full state (not just on click)
-        if let Some((on, details)) = &pi.target_left_hand
-            && let Some(entity) = pg.left_hand
-        {
-            if let Ok(mut toggle) = q_toggleable.get_mut(entity) {
-                toggle.is_on = *on;
-            }
-            match details {
-                GearDetails::Flashlight(status) => {
-                    if let Ok((mut flashlight, battery)) = q_flashlight.get_mut(entity) {
-                        if flashlight.can_enable_status(status.clone(), battery.level) {
-                            flashlight.status = status.clone();
-                        } else {
-                            flashlight.status =
-                                ungearitems_core::components::flashlight::FlashlightStatus::Off;
-                        }
-                        commands.entity(entity).remove::<Triggered>();
-                    }
-                }
-                GearDetails::Sage { is_active, .. } => {
-                    if let Ok(mut sage) = q_sage.get_mut(entity) {
-                        if *is_active && !sage.is_active && !sage.consumed {
-                            sage.is_active = true;
-                        }
-                        commands.entity(entity).remove::<Triggered>();
-                    }
-                }
-                GearDetails::RepellentFlask { active, .. } => {
-                    if let Ok(mut repellent) = q_repellent.get_mut(entity) {
-                        repellent.active = *active;
-                        commands.entity(entity).remove::<Triggered>();
-                    }
-                }
-                _ => {}
-            }
-        }
-    }
 }

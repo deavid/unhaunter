@@ -2,9 +2,9 @@ use bevy::prelude::*;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unplayer_core::components::MainPlayer;
-use unvitals_core::components::PlayerVitals;
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
+use unvitals_core::components::PlayerVitals;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);

@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 use unaudiospatial_core::emitter::AudioEmitter;
 use ungear_core::components::playergear::PlayerGear;
+use uninput_core::components::PlayerInput;
 use uninteraction_core::interaction::{Toggleable, Triggered};
-use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSpectating, PlayerSprite};
+use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
 use unspatial_core::position::Position;
 
 pub(crate) fn toggle_gear_from_use_intent(
@@ -30,11 +31,8 @@ pub(crate) fn toggle_gear_from_use_intent(
                 let target_on = if is_main {
                     !toggle.is_on
                 } else {
-                    player_input
-                        .target_right_hand
-                        .as_ref()
-                        .map(|(on, _)| *on)
-                        .unwrap_or(toggle.is_on)
+                    // Remote players: no prediction data available, keep current state
+                    toggle.is_on
                 };
 
                 if toggle.is_on != target_on {
@@ -63,11 +61,8 @@ pub(crate) fn toggle_gear_from_use_intent(
                 let target_on = if is_main {
                     !toggle.is_on
                 } else {
-                    player_input
-                        .target_left_hand
-                        .as_ref()
-                        .map(|(on, _)| *on)
-                        .unwrap_or(toggle.is_on)
+                    // Remote players: no prediction data available, keep current state
+                    toggle.is_on
                 };
 
                 if toggle.is_on != target_on {

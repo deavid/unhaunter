@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use ungear_core::resources::looking_gear::LookingGear;
-use unplayer_core::components::{MainPlayer, PlayerInputMapping};
+use uninput_core::components::PlayerInputMapping;
+use unplayer_core::components::MainPlayer;
 use untypes_core::states::AppState;
 
 fn system_update_looking_gear(
