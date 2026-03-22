@@ -11,7 +11,7 @@ use unaudiospatial_core::emitter::AudioEmitter;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 
-pub(crate) fn player_gear_usage_system(
+pub(crate) fn toggle_gear_from_use_intent(
     mut commands: Commands,
     mut q_players: Query<
         (&PlayerGear, &mut PlayerInput, Option<&MainPlayer>),

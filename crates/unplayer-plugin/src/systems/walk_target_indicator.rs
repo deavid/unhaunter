@@ -7,7 +7,7 @@ use unspatial_core::position::Position;
 /// System that manages the walk target indicator.
 /// Spawns a red dot when a player has a MoveToTarget component,
 /// and despawns it when the MoveToTarget component is removed.
-pub(crate) fn manage_walk_target_indicator(
+pub(crate) fn update_move_target_indicator(
     mut commands: Commands,
     player_query: Query<
         &MoveToTarget,

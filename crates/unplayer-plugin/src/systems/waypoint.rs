@@ -22,7 +22,12 @@ use super::pathfinding::detect_stair_area;
 /// System that creates waypoint entities when the player clicks.
 /// Handles both interactive objects (via picking) and ground clicks (via raw mouse input).
 /// Only allows clicks on interactive entities that are on the same floor as the player.
-pub(crate) fn waypoint_creation_system(
+///
+/// TODO [intent-boundary]: This system reads ButtonInput<MouseButton> and Pointer<Click> picking
+/// events directly. It should instead read a `PlayerInput.target_position: Option<Vec2>` field
+/// that the input adapter sets. The ground click detection (raw mouse input) should be handled
+/// by the input adapter, not this domain system. This violates the intent boundary pattern.
+pub(crate) fn create_waypoints_from_click(
     mut commands: Commands,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<GCameraArena>>,
@@ -210,7 +215,7 @@ pub(crate) fn waypoint_creation_system(
 
 /// System that makes the player follow waypoints.
 /// Replaces the old click-to-move update system.
-pub(crate) fn waypoint_following_system(
+pub(crate) fn resolve_movement_from_waypoints(
     mut commands: Commands,
     mut q_player: Query<
         (Entity, &Position, &WaypointQueue, &mut PlayerInput),
@@ -346,7 +351,7 @@ fn complete_waypoint(commands: &mut Commands, _player_entity: Entity, waypoint_e
 }
 
 /// System that cleans up waypoint queues by removing despawned waypoint entities
-pub(crate) fn waypoint_queue_cleanup_system(
+pub(crate) fn prune_stale_waypoints(
     mut q_player_queue: Query<&mut WaypointQueue, With<PlayerSprite>>,
     q_waypoints: Query<Entity, With<Waypoint>>,
 ) {
@@ -560,7 +565,7 @@ fn create_stair_waypoints(
 }
 
 /// System to update waypoints for remote players based on synced input
-pub(crate) fn remote_player_waypoint_system(
+pub(crate) fn rebuild_remote_waypoint_queue(
     mut commands: Commands,
     q_remote_players: Query<
         (Entity, &Position, &PlayerInput),

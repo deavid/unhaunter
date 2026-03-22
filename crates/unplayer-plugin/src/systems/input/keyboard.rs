@@ -108,7 +108,7 @@ pub(crate) fn keyboard_input_system(
     }
 }
 
-pub(crate) fn player_input_clear_system(mut players: Query<&mut PlayerInput>) {
+pub(crate) fn clear_transient_input_flags(mut players: Query<&mut PlayerInput>) {
     for mut player_input in players.iter_mut() {
         player_input.clear();
     }

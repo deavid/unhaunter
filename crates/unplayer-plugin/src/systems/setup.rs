@@ -31,7 +31,7 @@ pub(crate) fn app_setup_core(app: &mut App) {
         Update,
         (
             // Interaction system runs before movement (Runs on all instances)
-            movement::player_interaction_system,
+            movement::dispatch_interact_intent,
             // Movement system runs after input and waypoints
             // On the client, it only runs for the MainPlayer. On the host, it runs for all players.
             movement::player_movement_system,
@@ -44,14 +44,14 @@ pub(crate) fn app_setup_core(app: &mut App) {
 
     app.add_systems(
         PostUpdate,
-        input::keyboard::player_input_clear_system.run_if(in_state(SimulationState::Ready)),
+        input::keyboard::clear_transient_input_flags.run_if(in_state(SimulationState::Ready)),
     );
 
     // Gear toggle system must run on all instances (including dedicated server)
     // so that the host can process toggle requests from clients.
     app.add_systems(
         Update,
-        input::mouse_interaction::player_gear_usage_system
+        input::mouse_interaction::toggle_gear_from_use_intent
             .in_set(unplayer_core::PlayerInputSet)
             .run_if(in_state(AppState::InGame)),
     );
@@ -64,12 +64,12 @@ pub(crate) fn app_setup_client(app: &mut App) {
 
     app.add_systems(
         Update,
-        styling::update_player_styling.run_if(in_state(AppState::InGame)),
+        styling::apply_player_tint_color.run_if(in_state(AppState::InGame)),
     );
 
     app.add_systems(
         Update,
-        movement::player_animation_system
+        movement::drive_character_animation
             .after(movement::player_movement_system)
             .run_if(in_state(AppState::InGame)),
     );
@@ -81,16 +81,16 @@ pub(crate) fn app_setup_client(app: &mut App) {
             // Input systems run first (Always run on all instances to gather input)
             input::keyboard::keyboard_input_system,
             // Walk target indicator system (kept for compatibility)
-            walk_target_indicator::manage_walk_target_indicator,
+            walk_target_indicator::update_move_target_indicator,
             // Mouse interaction systems (gear only, clicks handled by waypoint system)
             input::mouse_interaction::mouse_scroll_gear_system,
             input::mouse_interaction::mouse_over_interactive_system,
             input::mouse_interaction::mouse_out_interactive_system,
             // Waypoint systems handle all click-to-move and click-to-interact
-            waypoint::waypoint_creation_system,
-            waypoint::remote_player_waypoint_system,
-            waypoint::waypoint_following_system,
-            waypoint::waypoint_queue_cleanup_system,
+            waypoint::create_waypoints_from_click,
+            waypoint::rebuild_remote_waypoint_queue,
+            waypoint::resolve_movement_from_waypoints,
+            waypoint::prune_stale_waypoints,
         )
             .chain()
             .in_set(unplayer_core::PlayerInputSet)
@@ -100,7 +100,7 @@ pub(crate) fn app_setup_client(app: &mut App) {
     app.add_systems(
         Update,
         // Stairs system runs last. Also gated similarly.
-        keyboard::stairs_player
+        keyboard::adjust_elevation_on_stairs
             .after(unplayer_core::PlayerInputSet)
             .run_if(in_state(AppState::InGame)),
     );
@@ -108,7 +108,7 @@ pub(crate) fn app_setup_client(app: &mut App) {
     app.add_systems(
         Update,
         // Sync viewer data for rendering
-        viewer_sync::viewer_visual_sync.run_if(
+        viewer_sync::sync_vitals_to_viewer.run_if(
             in_state(AppState::InGame).and(
                 in_state(GameState::Running)
                     .or(in_state(GameState::Truck))

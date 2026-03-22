@@ -5,7 +5,6 @@ use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unsummary_core::grade::Grade;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unlight_core::resources::light_grid::LightGrid;
@@ -18,6 +17,7 @@ use unrender_std::utils::light::lerp_color;
 use unreplicon_core::ownership::LocallyOwned;
 use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::position::Position;
+use unsummary_core::grade::Grade;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::GhostTag;
 use unthermal_core::resources::ThermalGrid;
@@ -30,7 +30,7 @@ pub(crate) fn calculate_sanity(crazyness: f32) -> f32 {
     (SCALE * LINEAR) / ((crazyness + LINEAR * LINEAR).max(0.01).sqrt())
 }
 
-fn lose_sanity(
+fn drain_sanity_from_environment(
     time: Res<Time>,
     mut qp: Query<
         (&mut PlayerSprite, &Position),
@@ -95,7 +95,7 @@ fn lose_sanity(
     }
 }
 
-fn health_regen(
+fn regenerate_health_over_time(
     time: Res<Time>,
     mut qp: Query<&mut PlayerSprite, (Without<InTruck>, Without<PlayerSpectating>)>,
     difficulty: Res<CurrentDifficulty>,
@@ -112,7 +112,7 @@ fn health_regen(
     }
 }
 
-fn recover_sanity(
+fn recover_sanity_in_truck(
     time: Res<Time>,
     mut qp: Query<&mut PlayerSprite, (With<MainPlayer>, With<InTruck>, Without<PlayerSpectating>)>,
     difficulty: Res<CurrentDifficulty>,
@@ -137,7 +137,7 @@ fn recover_sanity(
     }
 }
 
-fn visual_health(
+fn update_damage_vignette_color(
     qp: Query<(&PlayerSprite, Has<PlayerSpectating>), With<MainPlayer>>,
     mut qb: Query<(
         Option<&mut ImageNode>,
@@ -186,7 +186,7 @@ fn visual_health(
     }
 }
 
-fn update_player_stamina(
+fn scale_stamina_rates_by_health(
     mut players: Query<(&PlayerSprite, &mut Stamina)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -211,7 +211,7 @@ fn update_player_stamina(
 
 use unreplicon_core::messages::PlayerDiedEvent;
 
-fn detect_and_apply_death(
+fn transition_to_spectator_on_death(
     mut commands: Commands,
     mut player_query: Query<
         (Entity, &mut PlayerSprite, Option<&mut PlayerGear>),
@@ -252,7 +252,7 @@ fn detect_and_apply_death(
     }
 }
 
-fn update_profile_death_stats(
+fn record_death_to_profile(
     mut ev_death: MessageReader<PlayerDiedEvent>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     local_player: Res<unreplicon_core::resources::LocalPlayer>,
@@ -315,7 +315,7 @@ pub(crate) fn debug_kill_spectator(
     }
 }
 
-pub(crate) fn server_apply_client_sanity(
+pub(crate) fn sync_client_reported_sanity(
     mut q_player: Query<(&PlayerInput, &mut PlayerSprite), Without<MainPlayer>>,
 ) {
     for (input, mut sprite) in &mut q_player {
@@ -338,7 +338,7 @@ pub(crate) fn server_apply_client_sanity(
 /// The `Local<f32> hunt_start` timer avoids using `ghost.hunt_time_secs`
 /// (a server-absolute timestamp) with the client's local `Time::elapsed_secs()`.
 /// See architecture notes for the reason this subtraction is incorrect.
-fn client_ghost_aura_damage(
+fn apply_ghost_proximity_damage(
     mut q_local_player: Query<
         (&Position, &mut PlayerSprite),
         (
@@ -412,15 +412,15 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_message::<PlayerDiedEvent>().add_systems(
         Update,
         (
-            lose_sanity.run_if(resource_exists::<LocalPlayerRole>),
-            recover_sanity,
-            health_regen.run_if(resource_exists::<AuthorityRole>),
-            server_apply_client_sanity.run_if(resource_exists::<AuthorityRole>),
-            visual_health.run_if(resource_exists::<LocalPlayerRole>),
-            update_player_stamina,
-            client_ghost_aura_damage.run_if(resource_exists::<LocalPlayerRole>),
-            detect_and_apply_death,
-            update_profile_death_stats.run_if(resource_exists::<LocalPlayerRole>),
+            drain_sanity_from_environment.run_if(resource_exists::<LocalPlayerRole>),
+            recover_sanity_in_truck,
+            regenerate_health_over_time.run_if(resource_exists::<AuthorityRole>),
+            sync_client_reported_sanity.run_if(resource_exists::<AuthorityRole>),
+            update_damage_vignette_color.run_if(resource_exists::<LocalPlayerRole>),
+            scale_stamina_rates_by_health,
+            apply_ghost_proximity_damage.run_if(resource_exists::<LocalPlayerRole>),
+            transition_to_spectator_on_death,
+            record_death_to_profile.run_if(resource_exists::<LocalPlayerRole>),
             debug_kill_spectator,
         )
             .run_if(in_state(SimulationState::Ready)),

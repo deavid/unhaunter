@@ -21,7 +21,11 @@ struct HidingOverlay {
 /// valid hiding spot. If so, the player character enters the hiding spot, becoming
 /// partially hidden. A visual overlay is added to the hiding spot to indicate the
 /// player's presence.
-fn hide_player(
+///
+/// TODO [intent-boundary]: This system reads ButtonInput<KeyCode> directly. It should
+/// instead read a `PlayerInput.hide_requested: bool` field. The input adapter should
+/// set this flag, not this domain system. This violates the intent boundary pattern.
+fn enter_hidespot(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
@@ -101,7 +105,11 @@ fn hide_player(
 /// This system checks if the player is pressing the 'activate' key and is
 /// currently hiding. If so, the player character exits the hiding spot, their
 /// visibility is restored, and the visual overlay is removed from the hiding spot.
-fn unhide_player(
+///
+/// TODO [intent-boundary]: This system reads ButtonInput<KeyCode> directly. It should
+/// instead read a `PlayerInput.unhide_requested: bool` field. The input adapter should
+/// set this flag, not this domain system. This violates the intent boundary pattern.
+fn exit_hidespot(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
@@ -128,7 +136,7 @@ fn unhide_player(
 ///
 /// This handles cleaning up visuals regardless of how the player stopped hiding
 /// (input or network sync).
-fn cleanup_hiding_overlays(
+fn despawn_hidespot_overlays(
     mut commands: Commands,
     overlays: Query<(Entity, &HidingOverlay)>,
     players: Query<&Hiding>,
@@ -143,7 +151,7 @@ fn cleanup_hiding_overlays(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (hide_player, unhide_player, cleanup_hiding_overlays)
+        (enter_hidespot, exit_hidespot, despawn_hidespot_overlays)
             .run_if(in_state(untypes_core::states::GameState::Running)),
     );
 }

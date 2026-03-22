@@ -34,7 +34,7 @@ const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
 const DIR_MAG3: f32 = DIR_MAG2 * 40.0;
 const DIR_RED: f32 = 1.001;
 
-pub(crate) fn player_interaction_system(
+pub(crate) fn dispatch_interact_intent(
     players: Query<
         (
             &Position,
@@ -367,7 +367,7 @@ pub(crate) fn player_movement_system(
 /// Runs on all clients (including join clients) for every player with an `AnimationTimer`,
 /// using only replicated components so remote players animate correctly without needing
 /// client-side `PlayerInput`.
-pub(crate) fn player_animation_system(
+pub(crate) fn drive_character_animation(
     mut players: Query<(
         &PlayerSprite,
         &Direction,

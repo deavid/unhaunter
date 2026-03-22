@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use unaudiospatial_core::events::SoundEvent;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::FloorItemCollidable;
 use unboard_core::resources::board_topology::BoardCollisionField;
@@ -9,10 +10,9 @@ use ungear_core::types::gear::{EquipmentPosition, Hand};
 use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unreplicon_core::messages::{RequestDrop, RequestGrab};
 use unreplicon_core::ownership::LocallyOwned;
-use unaudiospatial_core::events::SoundEvent;
 use unspatial_core::position::Position;
 
-fn sync_held_gear_position(
+fn sync_inventory_position_to_holder(
     q_player: Query<(&Position, &PlayerGear), With<PlayerSprite>>,
     mut q_gear: Query<&mut Position, (With<GearMarker>, Without<PlayerSprite>)>,
 ) {
@@ -31,7 +31,7 @@ fn sync_held_gear_position(
     }
 }
 
-fn update_held_object_position(
+fn sync_held_object_position_to_holder(
     q_player: Query<(&Position, &PlayerGear), With<PlayerSprite>>,
     mut q_held: Query<&mut Position, (Without<PlayerSprite>, Without<GearMarker>)>,
 ) {
@@ -47,7 +47,7 @@ fn update_held_object_position(
     }
 }
 
-fn grab_object(
+fn queue_pickup_request(
     players: Query<(&PlayerGear, &Position, &PlayerInput)>,
     pickables: Query<
         (Entity, &Position, Option<&GearKind>, Option<&Behavior>),
@@ -86,7 +86,7 @@ fn grab_object(
     }
 }
 
-fn drop_object(
+fn queue_drop_request(
     mut players: Query<(&mut PlayerGear, &Position, &PlayerInput, &PlayerSprite)>,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
@@ -152,7 +152,7 @@ fn drop_object(
     }
 }
 
-fn auto_equip_replicated_item(
+fn assign_received_item_to_slot(
     mut commands: Commands,
     q_new_items: Query<(Entity, Has<GearKind>, Has<Behavior>), Added<LocallyOwned>>,
     mut q_player_gear: Query<(&mut PlayerGear, &Position), With<MainPlayer>>,
@@ -219,7 +219,7 @@ fn auto_equip_replicated_item(
     }
 }
 
-fn cleanup_grabbed_gear_visuals(
+fn strip_visuals_from_grabbed_gear(
     mut commands: Commands,
     mut removed: RemovedComponents<ungear_core::components::deployedgear::DeployedGear>,
     q_gear: Query<(), With<GearMarker>>,
@@ -256,7 +256,10 @@ fn cycle_inventory(mut players: Query<(&mut PlayerGear, &PlayerInput)>, mut comm
     }
 }
 
-fn swap_hands(mut players: Query<(&mut PlayerGear, &PlayerInput)>, mut commands: Commands) {
+fn swap_hand_equipment(
+    mut players: Query<(&mut PlayerGear, &PlayerInput)>,
+    mut commands: Commands,
+) {
     for (mut player_gear, player_input) in players.iter_mut() {
         if player_input.inventory_swap {
             let tmp = player_gear.left_hand;
@@ -280,15 +283,19 @@ pub(crate) fn app_setup(app: &mut App) {
     use untypes_core::states::AppState;
     app.add_systems(
         Update,
-        (sync_held_gear_position, update_held_object_position).run_if(in_state(AppState::InGame)),
+        (
+            sync_inventory_position_to_holder,
+            sync_held_object_position_to_holder,
+        )
+            .run_if(in_state(AppState::InGame)),
     );
     app.add_systems(
         Update,
         (
-            grab_object,
-            drop_object,
-            auto_equip_replicated_item,
-            cleanup_grabbed_gear_visuals,
+            queue_pickup_request,
+            queue_drop_request,
+            assign_received_item_to_slot,
+            strip_visuals_from_grabbed_gear,
         )
             .run_if(in_state(AppState::InGame)),
     );
@@ -297,6 +304,6 @@ pub(crate) fn app_setup(app: &mut App) {
     // registered outside PlayerAuthoritativeLogicSet.
     app.add_systems(
         Update,
-        (cycle_inventory, swap_hands).run_if(in_state(AppState::InGame)),
+        (cycle_inventory, swap_hand_equipment).run_if(in_state(AppState::InGame)),
     );
 }

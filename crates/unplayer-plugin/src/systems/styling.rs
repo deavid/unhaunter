@@ -7,7 +7,7 @@ use unplayer_core::components::PlayerSpectating;
 use unplayer_core::components::PlayerSprite;
 use unreplicon_core::components::LobbyInfo;
 
-pub(crate) fn update_player_styling(
+pub(crate) fn apply_player_tint_color(
     q_lobby: Query<&LobbyInfo>,
     mut query: Query<(
         &PlayerSprite,

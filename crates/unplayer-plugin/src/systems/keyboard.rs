@@ -5,7 +5,7 @@ use unplayer_core::components::PlayerSprite;
 use unspatial_core::orientation::Orientation;
 use unspatial_core::position::Position;
 
-pub(crate) fn stairs_player(
+pub(crate) fn adjust_elevation_on_stairs(
     authority: Option<Res<untypes_core::roles::AuthorityRole>>,
     mut players: Query<(
         &mut Position,
