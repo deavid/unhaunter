@@ -15,7 +15,11 @@ fn hydration_npc_system(
             commands
                 .entity(entity)
                 .insert(Pickable::default())
-                .insert(unbehavior::behavior::npc_help_dialog_from_tiled("NPC", &cfg.variant, &pending_props.0))
+                .insert(unbehavior::behavior::npc_help_dialog_from_tiled(
+                    "NPC",
+                    &cfg.variant,
+                    &pending_props.0,
+                ))
                 .insert(Interactive::new(
                     "sounds/effects-dongdongdong.ogg",
                     "sounds/effects-dongdongdong.ogg",

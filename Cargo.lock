@@ -7098,7 +7098,6 @@ dependencies = [
 name = "unbehavior"
 version = "0.3.2-dev"
 dependencies = [
- "anyhow",
  "bevy",
  "bevy_platform",
  "tiled",
@@ -7485,6 +7484,7 @@ dependencies = [
  "unmenusettings-plugin",
  "unmetrics-plugin",
  "unmission-plugin",
+ "unnavigation-plugin",
  "unnpc-plugin",
  "unpicking-plugin",
  "unplayer-plugin",
@@ -7932,6 +7932,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "unnavigation-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "unbehavior-core",
+ "unboard-core",
+ "uninput-core",
+ "unnavigation-core",
+ "unnpc-core",
+ "unplayer-core",
+ "unrender-std",
+ "unspatial-core",
+ "untags-core",
+ "untruck-core",
+ "untypes-core",
+ "unui-core",
+]
+
+[[package]]
 name = "unnoise-core"
 version = "0.3.2-dev"
 dependencies = [
@@ -8008,15 +8027,11 @@ dependencies = [
  "uninput-core",
  "uninteraction-core",
  "unnavigation-core",
- "unnpc-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",
- "untags-core",
- "untruck-core",
  "untypes-core",
- "unui-core",
 ]
 
 [[package]]

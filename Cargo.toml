@@ -59,6 +59,7 @@ members = [
     "crates/uninput-core",        # Input bus (TIER EXCEPTION: T1b despite T2 plugin; domain state, not app logic)
     "crates/unnpc-plugin",        # Helper NPCs
     "crates/unlocomotion-plugin", # Kinematics and movement integration
+    "crates/unnavigation-plugin", # Waypoint creation and pathfinding integration
 
     # ── 1c: The Mechanics (Gameplay Verbs) ───────────────────────────────
     # How actors interact with the world and each other.
@@ -277,9 +278,9 @@ unsettings-core = { path = "crates/unsettings-core" }     # Persistent configura
 # The persistent physical world that all actors inhabit.
 
 # The Board, the space definition:
-unboard-core = { path = "crates/unboard-core" }     # World topology: rooms, walls, collision (defines the space itself)
+unboard-core = { path = "crates/unboard-core" }       # World topology: rooms, walls, collision (defines the space itself)
 unboard-plugin = { path = "crates/unboard-plugin" }
-unbehavior-core = { path = "crates/unbehavior-core" }  # Tile ontology types
+unbehavior-core = { path = "crates/unbehavior-core" } # Tile ontology types
 
 # Board fields - values per-tile that have simulations:
 unthermal-core = { path = "crates/unthermal-core" }           # Heat convection simulation
@@ -297,6 +298,7 @@ unnavigation-core = { path = "crates/unnavigation-core" } # Pathfinding graph (d
 # ── 1b: The Actors (Entities & AI) ───────────────────────────────────────
 # Everything that inhabits and acts within the stage.
 unlocomotion-plugin = { path = "crates/unlocomotion-plugin" } # Kinematics and movement
+unnavigation-plugin = { path = "crates/unnavigation-plugin" } # Waypoint creation and integration
 unghost-core = { path = "crates/unghost-core" }               # Ghost: evidence, enrage state, AI data
 unghost-plugin = { path = "crates/unghost-plugin" }
 unplayer-core = { path = "crates/unplayer-core" }             # Player: state, stats, asset handles
@@ -424,6 +426,7 @@ untypes-core = { workspace = true }
 unvitals-plugin = { workspace = true }
 uninventory-plugin = { workspace = true }
 unlocomotion-plugin = { workspace = true }
+unnavigation-plugin = { workspace = true }
 uninput-plugin = { workspace = true }
 untmxmap-core = { workspace = true }
 uncampaign-plugin = { workspace = true }

@@ -29,8 +29,11 @@ pub(crate) fn populate_sprite_db(
     for (tset_name, tileset) in p.tilesetdb.db.iter() {
         for (tileuid, tiled_tile) in tileset.tileset.tiles() {
             // Create sprite configuration from the tile data
-            let sprite_config =
-                unbehavior::behavior::sprite_config_from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
+            let sprite_config = unbehavior::behavior::sprite_config_from_tiled_auto(
+                tset_name.clone(),
+                tileuid,
+                &tiled_tile,
+            );
             let behavior = Behavior::from_config(sprite_config);
 
             // Set initial visibility based on behavior

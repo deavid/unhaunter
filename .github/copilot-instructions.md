@@ -26,6 +26,9 @@ You have been warned:
 
 We have zero BS tolerance.
 
+**Note on Markdown Linting:** Markdown lint/warning errors in the workspace are not expected to be fixed and should be
+ignored. Focus exclusively on Rust workspace errors and warnings.
+
 ## Architecture & Module Structure
 
 The codebase follows a strict modular structure to minimize compile times and separate concerns. See

@@ -1,7 +1,7 @@
 pub mod interactivestuff;
 
-use bevy::prelude::*;
 use bevy::picking::events::{Out, Over, Pointer};
+use bevy::prelude::*;
 use interactivestuff::InteractiveStuff;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;

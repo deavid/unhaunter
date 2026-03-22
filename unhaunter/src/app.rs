@@ -26,6 +26,7 @@ use unghost_plugin::plugin::{UnhaunterGhostCorePlugin, UnhaunterGhostPlugin};
 use uninventory_plugin::plugin::UnhaunterInventoryPlugin;
 use unlight_plugin::plugin::{UnhaunterLightCorePlugin, UnhaunterLightPlugin};
 use unlocomotion_plugin::plugin::UnhaunterLocomotionPlugin;
+use unnavigation_plugin::plugin::UnhaunterNavigationPlugin;
 use unnpc_plugin::plugin::{UnhaunterNPCCorePlugin, UnhaunterNPCPlugin};
 use unplayer_plugin::plugin::{UnhaunterPlayerCorePlugin, UnhaunterPlayerPlugin};
 use untruck_plugin::plugin::{UnhaunterTruckCorePlugin, UnhaunterTruckPlugin};
@@ -186,6 +187,7 @@ pub fn app_run(cli_options: CliOptions) {
     app.add_plugins((
         UnhaunterPlayerCorePlugin,
         UnhaunterLocomotionPlugin,
+        UnhaunterNavigationPlugin,
         UnhaunterVitalsPlugin,
         UnhaunterInventoryPlugin,
         UnhaunterGearCorePlugin,

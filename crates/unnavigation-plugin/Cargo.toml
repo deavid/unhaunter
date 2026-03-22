@@ -1,5 +1,5 @@
 [package]
-name = "unplayer-plugin"
+name = "unnavigation-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -7,25 +7,20 @@ repository.workspace = true
 license.workspace = true
 authors.workspace = true
 
-
 [lints]
 workspace = true
 
 [dependencies]
-unbehavior-core = { workspace = true }
-unfoundation-core = { workspace = true }
-unboard-core = { workspace = true }
-unplayer-core = { workspace = true }
-uninput-core = { workspace = true }
-untypes-core = { workspace = true }
-unnavigation-core = { workspace = true }
-unrender-std = { workspace = true }
-uninteraction-core = { workspace = true }
-ungear-core = { workspace = true }
-unaudiospatial-core = { workspace = true }
-unreplicon-core = { workspace = true }
-unspatial-core = { workspace = true }
-
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
-bevy_asset_loader = { workspace = true }
+unbehavior-core = { workspace = true }
+unboard-core = { workspace = true }
+uninput-core = { workspace = true }
+unnavigation-core = { workspace = true }
+unnpc-core = { workspace = true }
+unplayer-core = { workspace = true }
+unrender-std = { workspace = true }
+unspatial-core = { workspace = true }
+untags-core = { workspace = true }
+untruck-core = { workspace = true }
+untypes-core = { workspace = true }
+unui-core = { workspace = true }
