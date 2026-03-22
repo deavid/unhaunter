@@ -107,6 +107,91 @@ possible.
 - **Coordinate Systems**: We use a custom isometric projection. Logic often happens in "board" coordinates (see
   [crates/unspatial-core](crates/unspatial-core)).
 
+## Signal Direction & Domain Ownership
+
+These principles govern how systems communicate and where code belongs. They take **priority over tier compliance** when
+the two conflict. A crate with perfect tier compliance can still be deeply wrong if it violates these rules.
+
+### 1. Tell, Don't Ask (Signal Direction)
+
+The cause must emit; effects listen. A system must never reach into a foreign domain to derive meaning that the foreign
+domain should be pushing.
+
+**Violation pattern:** System A queries component B from domain B, applies thresholds or curves to compute a signal, and
+uses that signal to update domain A. **Correct pattern:** Domain B computes the signal internally and writes it to a
+component or event. Domain A reads that pre-computed signal.
+
+Examples of this violation in the codebase:
+
+- An audio plugin sampling `PlayerVitals.health` and computing heartbeat intensity. Vitals owns the knowledge of what
+  "critically low health" means. It should emit that. Audio should receive it.
+- A vitals plugin querying `GhostSprite.hunt_target` and `calm_time_secs` to compute damage. Ghost owns its danger
+  level. Vitals should receive a signal from the ghost domain, not derive it.
+
+**The test:** For every system, ask: _who owns the knowledge being consumed, and are they the one pushing it?_ If the
+answer is "someone else owns it, and we're pulling it," that is a TDA violation.
+
+### 2. Information Hiding
+
+A system must not encode decisions that belong to another domain. Rendering curves, AI thresholds, persistence logic —
+if the _decision_ belongs elsewhere, it is a violation even if the imports are all downward.
+
+**Violation pattern:** A vitals system contains RGBA color math and exponent curves to drive a UI vignette. Anyone
+reading the system must hold both the vitals model and the rendering model in their head simultaneously. **Correct
+pattern:** The vignette component reads `PlayerVitals` and decides its own appearance. Vitals computes vitals; vignette
+computes vignette.
+
+### 3. Domain Completeness
+
+**Check this first, before analyzing individual systems.**
+
+A domain that does not own its types cannot enforce its own boundaries. For every plugin under review, ask:
+
+- Is there a corresponding `-core` crate? If not, where do the primary data types actually live?
+- Are the domain's primary components scattered across foreign crates (e.g., `unplayer-core`, `unreplicon-core`)?
+- Does the plugin register its own replication (`app.replicate::<T>()`)? Or does a foreign crate do it?
+- Does the plugin own its own events, or are its events defined in unrelated crates?
+
+If types that conceptually belong to this domain live elsewhere, flag that as the primary structural problem. Do not
+just analyze systems as if the missing types are someone else's problem.
+
+**Evidence from system behavior:** If a plugin writes to a type that lives in a foreign crate, that is evidence the type
+belongs here — not proof of a violation in the writes.
+
+### 4. Systems Belong to One Domain
+
+For every system in a plugin, ask:
+
+- Is it reading AND writing this domain's own types?
+- If it writes nothing in this domain, it does not belong here.
+
+A system that only reads foreign domain types and writes to foreign domain types is misplaced regardless of tier.
+Example: a death-handler that reads a network player ID, writes to a persistence profile, and populates a summary struct
+— while never touching the vitals component — does not belong in the vitals plugin.
+
+### How This Interacts With Tier Rules
+
+Tier rules (dependency direction) catch _import_ violations. The principles above catch _responsibility_ violations.
+Both matter, but a crate can have perfect tier compliance while being deeply architecturally wrong. Always apply the
+signal-direction and domain-completeness checks first.
+
+When a tier violation exists _because_ an upstream domain needs to tell a downstream domain something, the fix is an
+event type at a lower tier — not moving logic around. The goal is to preserve the causal direction while removing the
+upward import.
+
+### Review Behavior for These Principles
+
+When reviewing any crate, always check and report:
+
+1. **Domain completeness:** Are the domain's types actually in this domain? Is there a `-core`?
+2. **TDA:** For each system that reads a foreign domain, is the foreign domain pushing a signal, or is this system
+   pulling and re-deriving meaning?
+3. **Information hiding:** Does any system encode decisions (thresholds, curves, formatting) that belong to another
+   domain?
+4. **System membership:** Does each system read or write this domain's own types? If not, flag it as misplaced.
+
+---
+
 ## Domain-Driven Architecture (DDD / Hexagonal)
 
 This codebase is organized following DDD and Hexagonal Architecture principles. Every crate belongs to a **tier** and a
