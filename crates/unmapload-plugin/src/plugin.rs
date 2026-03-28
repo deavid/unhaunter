@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use unmapload_core::assets::{MapAssets, MissionAssets};
 use unmapload_core::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent, MapEntitiesReadyEvent};
+use unmapload_core::resources::SpriteDB;
 use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unorchestrator_core::UIContextState;
 use untmxmap_core::events::LevelDataEvent;
@@ -14,7 +15,8 @@ pub struct UnhaunterMapLoadCorePlugin;
 
 impl Plugin for UnhaunterMapLoadCorePlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<LoadLevelEvent>()
+        app.init_resource::<SpriteDB>()
+            .add_message::<LoadLevelEvent>()
             .add_message::<LevelDataEvent>()
             .add_message::<LevelLoadedEvent>()
             .add_message::<LevelReadyEvent>()
@@ -40,12 +42,8 @@ impl Plugin for UnhaunterMapLoadPlugin {
 
         // Note: MissionAssets and MapAssets are loaded at EngineBoot above.
         // No bevy_asset_loader loading state is used for MissionLoading — the
-        // transition MissionLoading → InGame is driven exclusively by the map
-        // hydration pipeline (after_level_ready) to prevent a race where the
-        // asset loader would complete instantly and transition to InGame before
-        // board resources are allocated, causing a self-transition that wipes them.
-
-        // Register rendering systems (only for non-headless clients)
-        crate::level_finalization::app_setup_render_only(app);
+        // transition out of MissionLoading is driven by the mission lifecycle
+        // after LevelReadyEvent. Map loading remains responsible only for
+        // hydration and map-finalization side effects.
     }
 }

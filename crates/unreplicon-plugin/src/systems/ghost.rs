@@ -1,10 +1,5 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::{
-    AppRuleExt, Channel, ClientMessageAppExt, FromClient, Replicated, ServerMessageAppExt,
-};
-use unghost_core::components::ghost_breach::GhostBreach;
-use unghost_core::events::{JournalEvidenceToggled, JournalGhostToggled};
-use unghost_core::tags::GhostTag;
+use bevy_replicon::prelude::{AppRuleExt, Channel, ServerMessageAppExt};
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unmission_core::summary::SummaryData;
 use unmission_core::types::SimulationState;
@@ -12,13 +7,8 @@ use unorchestrator_core::UIContextState;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
 };
-use unreplicon_core::messages::{
-    GhostSoundFieldBroadcast, RequestJournalEvidenceToggle, RequestJournalGhostToggle,
-    SpawnParticleNetEvent,
-};
+use unreplicon_core::messages::{GhostSoundFieldBroadcast, SpawnParticleNetEvent};
 use unreplicon_core::resources::{AuthorityRole, is_pure_client};
-use unspatial_core::lerp_position::LerpPosition;
-use unspatial_core::position::Position;
 
 pub(super) fn app_setup(app: &mut App) {
     // Register Phase 2 replicated components.
@@ -30,15 +20,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_server_message::<SpawnParticleNetEvent>(Channel::Ordered);
     app.add_server_message::<GhostSoundFieldBroadcast>(Channel::Ordered);
 
-    // Register client → server messages.
-    app.add_client_message::<RequestJournalEvidenceToggle>(Channel::Ordered);
-    app.add_client_message::<RequestJournalGhostToggle>(Channel::Ordered);
-
-    // Server: setup and teardown ghost replication entities.
-    app.add_systems(
-        OnEnter(SimulationState::Spawning),
-        setup_ghost_entities.run_if(resource_exists::<AuthorityRole>),
-    );
     app.add_systems(
         OnEnter(SimulationState::Spawning),
         setup_goal_entity.run_if(resource_exists::<AuthorityRole>),
@@ -66,14 +47,6 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(is_pure_client),
     );
 
-    // Server: journal request handlers.
-    app.add_systems(
-        Update,
-        (handle_journal_evidence_toggle, handle_journal_ghost_toggle)
-            .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(SimulationState::Ready)),
-    );
-
     // Server: mission lifecycle
     app.add_systems(
         Update,
@@ -92,36 +65,10 @@ pub(super) fn app_setup(app: &mut App) {
     );
 }
 
-fn setup_ghost_entities(
-    q_ghost: Query<(Entity, &Position), With<GhostTag>>,
-    q_breach: Query<Entity, With<GhostBreach>>,
-    mut commands: Commands,
-) {
-    commands.insert_resource(RepliconGhostSpawningActive);
-
-    for (entity, pos) in q_ghost.iter() {
-        commands
-            .entity(entity)
-            .insert((Replicated, LerpPosition::new(*pos)));
-        info!(
-            "setup_ghost_entities: ghost entity {:?} marked Replicated with LerpPosition",
-            entity
-        );
-    }
-
-    for entity in q_breach.iter() {
-        commands.entity(entity).insert(Replicated);
-        info!(
-            "setup_ghost_entities: breach entity {:?} marked Replicated",
-            entity
-        );
-    }
-}
-
 fn setup_goal_entity(mut commands: Commands) {
     // Singleton entity for journal + mission-result replication.
     commands.spawn((
-        Replicated,
+        bevy_replicon::prelude::Replicated,
         MissionGoalEntity,
         GhostGuess::default(),
         SummaryData::default(),
@@ -179,31 +126,6 @@ fn sync_mission_goal_to_summary_data(
 ) {
     for comp in q_goal.iter() {
         *res = comp.clone();
-    }
-}
-
-fn handle_journal_evidence_toggle(
-    mut reader: MessageReader<FromClient<RequestJournalEvidenceToggle>>,
-    mut writer: MessageWriter<JournalEvidenceToggled>,
-) {
-    for msg in reader.read() {
-        writer.write(JournalEvidenceToggled {
-            evidence: msg.message.evidence,
-            discard: msg.message.discard,
-            mark_as_found: msg.message.mark_as_found,
-        });
-    }
-}
-
-fn handle_journal_ghost_toggle(
-    mut reader: MessageReader<FromClient<RequestJournalGhostToggle>>,
-    mut writer: MessageWriter<JournalGhostToggled>,
-) {
-    for msg in reader.read() {
-        writer.write(JournalGhostToggled {
-            ghost_type: msg.message.ghost_type,
-            discard: msg.message.discard,
-        });
     }
 }
 

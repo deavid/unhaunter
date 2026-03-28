@@ -252,7 +252,7 @@ impl<'a> LightingSampler<'a> {
                         rpos_raw,
                         flash.bounce_lpos_unrot,
                         flash.bounce_unrot_axes,
-                        flash.bounce_dir.distance() * 2.0,
+                        flash.bounce_dir.distance() * 5.0,
                         flash.bounce_power_f,
                         flash.beam_focus,
                     );

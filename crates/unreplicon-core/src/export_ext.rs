@@ -37,11 +37,18 @@ use bevy_replicon::prelude::{
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use ungear_core::components::playergear::PlayerGear;
-use unorchestrator_core::UIContextState;
 
 use crate::client_export::ExportClientComponent;
 use crate::noop::{noop_remove, noop_write};
 use crate::ownership::{LocallyOwned, Owner, OwnerId};
+
+/// Generic set for client-export send/import systems registered by this module.
+///
+/// Higher-level composition points (for example, app/orchestrator plugins)
+/// can gate this set to state-specific execution without coupling this crate
+/// to application state enums.
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct RepliconExportSet;
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -174,8 +181,8 @@ pub trait AppClientExportExt {
     /// Registers:
     /// - `add_mapped_client_message::<ExportClientComponent<T>>(Channel::Unreliable)`
     /// - `set_marker_fns::<LocallyOwned, T>(noop_write, noop_remove)` (echo suppression)
-    /// - Send system: runs in `AppState::InGame` on pure join clients only (`is_pure_client`)
-    /// - Import system: runs in `AppState::InGame` when `AuthorityRole` exists
+    /// - Send system: runs on pure join clients only (`is_pure_client`)
+    /// - Import system: runs when `AuthorityRole` exists
     ///
     /// Typical call:
     /// ```rust,ignore
@@ -226,13 +233,13 @@ impl AppClientExportExt for App {
         self.add_systems(
             Update,
             send_component::<T, Anchor>
-                .run_if(in_state(UIContextState::InGame))
+                .in_set(RepliconExportSet)
                 .run_if(is_pure_client),
         );
         self.add_systems(
             Update,
             import_component::<T, Anchor>
-                .run_if(in_state(UIContextState::InGame))
+                .in_set(RepliconExportSet)
                 .run_if(resource_exists::<AuthorityRole>),
         );
         self
@@ -246,13 +253,13 @@ impl AppClientExportExt for App {
         self.add_systems(
             Update,
             send_gear_component::<T>
-                .run_if(in_state(UIContextState::InGame))
+                .in_set(RepliconExportSet)
                 .run_if(is_pure_client),
         );
         self.add_systems(
             Update,
             import_gear_component::<T>
-                .run_if(in_state(UIContextState::InGame))
+                .in_set(RepliconExportSet)
                 .run_if(resource_exists::<AuthorityRole>),
         );
         self
@@ -266,7 +273,7 @@ impl AppClientExportExt for App {
         self.add_systems(
             Update,
             send_gear_component::<T>
-                .run_if(in_state(UIContextState::InGame))
+                .in_set(RepliconExportSet)
                 .run_if(is_pure_client),
         );
         self

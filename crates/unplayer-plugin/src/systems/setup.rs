@@ -1,8 +1,12 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::AppMarkerExt;
 use bevy_replicon::prelude::AppRuleExt;
 use unlocomotion_core::components::PlayerLocomotionState;
 use unorchestrator_core::UIContextState;
 use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite};
+use unreplicon_core::noop::{noop_remove, noop_write};
+use unreplicon_core::ownership::LocallyOwned;
+use unreplicon_core::resources::LocalPlayerRole;
 use unspatial_core::direction::Direction;
 use untruck_core::components::in_truck::InTruck;
 
@@ -20,6 +24,7 @@ pub(crate) fn app_setup_core(app: &mut App) {
 
     app.replicate::<Direction>();
     app.replicate::<PlayerSprite>();
+    app.set_marker_fns::<LocallyOwned, PlayerSprite>(noop_write::<PlayerSprite>, noop_remove);
     app.replicate::<PlayerLocomotionState>();
     app.replicate::<Hiding>();
     app.replicate::<InTruck>();
@@ -33,15 +38,6 @@ pub(crate) fn app_setup_core(app: &mut App) {
         unplayer_core::authoritative::PlayerAuthoritativeLogicSet
             .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>)
             .after(uninput_core::PlayerInputSet),
-    );
-
-    // Gear toggle system must run on all instances (including dedicated server)
-    // so that the host can process toggle requests from clients.
-    app.add_systems(
-        Update,
-        input::mouse_interaction::toggle_gear_from_use_intent
-            .in_set(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
-            .run_if(in_state(UIContextState::InGame)),
     );
 }
 
@@ -58,5 +54,13 @@ pub(crate) fn app_setup_client(app: &mut App) {
         Update,
         walk_target_indicator::update_move_target_indicator
             .run_if(in_state(UIContextState::InGame)),
+    );
+
+    app.add_systems(
+        Update,
+        input::mouse_interaction::toggle_gear_from_use_intent
+            .run_if(in_state(UIContextState::InGame))
+            .run_if(resource_exists::<LocalPlayerRole>)
+            .after(uninput_core::PlayerInputSet),
     );
 }

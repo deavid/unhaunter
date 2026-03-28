@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::AppMarkerExt;
 use bevy_replicon::prelude::AppRuleExt;
 use unbehavior_core::components::{Collision, InteractableByGhost};
 use ungear_core::components::core::{
@@ -19,6 +20,8 @@ use uninteraction_core::interaction::Toggleable;
 use uninvestigation_core::evidence::Evidence;
 use unlight_core::components::LightEmitter;
 use unlight_core::types::light_type::LightType;
+use unreplicon_core::noop::{noop_remove, noop_write};
+use unreplicon_core::ownership::LocallyOwned;
 use unreplicon_core::resources::AuthorityRole;
 
 use crate::components::compass::Compass;
@@ -44,6 +47,13 @@ pub(crate) fn register_all(app: &mut App) {
     app.replicate::<SaltPile>();
     app.replicate::<SageBundleData>();
     app.replicate::<QuartzStoneData>();
+    app.set_marker_fns::<LocallyOwned, Flashlight>(noop_write::<Flashlight>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, UVTorch>(noop_write::<UVTorch>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, RedTorch>(noop_write::<RedTorch>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, RepellentFlask>(noop_write::<RepellentFlask>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, SaltData>(noop_write::<SaltData>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, SageBundleData>(noop_write::<SageBundleData>, noop_remove);
+    app.set_marker_fns::<LocallyOwned, QuartzStoneData>(noop_write::<QuartzStoneData>, noop_remove);
 
     let is_authority = app.world().get_resource::<AuthorityRole>().is_some();
     let mut registry = app.world_mut().resource_mut::<GearSpawnerRegistry>();

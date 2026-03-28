@@ -9,8 +9,9 @@ use unbehavior_core::behavior::Util;
 use unbehavior_core::components::PendingProperties;
 use unbehavior_core::components::TmxEntityId;
 use unboard_core::components::spawning::VanEntryPoint;
+use unboard_core::entity::{GameSprite, MapTileSprite};
+use unmapload_core::components::TileVisualRef;
 use unmapload_core::hydration::HydrationStage;
-use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
 use untiled_core::tiledmap::map::{MapLayer, MapTile};
@@ -69,7 +70,6 @@ pub(crate) fn process_and_spawn_tile(
         existing_tmx_map.get(&tmx_id).copied()
     };
 
-    let mut b = mt.bundle.clone();
     let mut beh = mt.behavior.clone();
 
     // Calculate position on the map
@@ -112,31 +112,18 @@ pub(crate) fn process_and_spawn_tile(
         commands.spawn_empty()
     };
 
-    let rf = b.resolution_factor.ratio();
-    b.transform.scale = Vec3::new(rf, rf, 1.0);
-
-    // Handle sprite flipping
+    // Adjust the light receiving offset for flipped sprites.
     if tile.flip_x {
-        b.transform.scale.x = -rf;
-        // Adjust the light receiving offset for flipped sprites
         let (ox, oy) = beh.p.display.light_recv_offset;
         beh.p.display.light_recv_offset = (ox, -oy);
     }
 
-    // Create transparent material initially (will fade in later)
-    if p.local_player.is_some() {
-        let mut mat = p
-            .materials1
-            .get(&b.material)
-            .expect("Material not found in tile_spawning")
-            .clone();
-        mat.data.color.alpha = 0.0;
-        let mat = p.materials1.add(mat);
-        b.material = MeshMaterial2d(mat);
-    }
-
     entity_commands
-        .insert(b)
+        .insert(TileVisualRef {
+            tileset: tile.tileset.clone(),
+            tileuid: tile.tileuid,
+            flip_x: tile.flip_x,
+        })
         .insert(HydrationStage::<1>)
         .insert(PendingProperties(
             unbehavior::behavior::behavior_properties_from_layer(&layer.user_properties),
@@ -181,12 +168,7 @@ pub(crate) fn process_and_spawn_tile(
     entity_commands.insert_if_new(MapEntityFieldBPos(pos.to_board_position()));
 
     // Add standard components to all tile entities
-    let mut transform = Transform::from_xyz(pos.x, pos.y, pos.visual_priority);
-    let rf = mt.bundle.resolution_factor.ratio();
-    transform.scale = Vec3::new(rf, rf, 1.0);
-    if tile.flip_x {
-        transform.scale.x = -rf;
-    }
+    let transform = Transform::from_xyz(pos.x, pos.y, pos.visual_priority);
 
     // TODO: This is inserting Behavior which eventually we should replicate, when we do, we need to consider that
     // .. this code considers the map-loaded behavior to be authoritative, and that might be wrong.

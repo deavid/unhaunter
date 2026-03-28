@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::entity::MapTileSprite;
 use unboard_core::resources::visibility_data::VisibilityData;
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
@@ -15,7 +16,6 @@ use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::MainPlayer;
-use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ShadowCaster,
 };

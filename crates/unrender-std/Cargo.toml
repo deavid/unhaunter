@@ -12,7 +12,5 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-unbehavior-core = { workspace = true }
 ungear-core = { workspace = true }
 enum-iterator = { workspace = true }
-bevy_platform = { workspace = true }

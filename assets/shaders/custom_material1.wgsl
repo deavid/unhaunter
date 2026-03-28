@@ -205,15 +205,16 @@ fn fragment(
 
     // --- End of Blend ---
 
-    // Black point:
-    let black: f32 = 0.001 * gamma * gamma;
-    let b4: vec4<f32> = vec4(black, black, black, 0.0);
+    // Keep a tiny black floor for stability, but do not let it grow with gamma.
+    // Growing the floor with gamma flattens contrast in dark scenes.
+    let gamma_safe = max(gamma, 0.01);
+    let black: f32 = 0.0002 / (1.0 + gamma_safe);
+    let b3: vec3<f32> = vec3(black, black, black);
 
-    // Apply gamma correction
-    let gamma4a: vec4<f32> = vec4<f32>(gamma, gamma, gamma, 1.0);
-    let gamma4b: vec4<f32> = vec4<f32>(1.0 / gamma, 1.0 / gamma, 1.0 / gamma, 1.0);
-    let gamma4c: vec4<f32> = vec4<f32>(1.0 + gamma, 1.0 + gamma, 1.0 + gamma, 2.0);
-    let corrected_color_rgb = (pow(color + b4, gamma4b) * gamma4a + gamma4a * color) / (gamma4c);
+    // Exposure boost should come from the gamma power curve only.
+    // Avoid mixing in a gamma-scaled linear term, which causes ambient-like washout.
+    let corrected_rgb = pow(color.rgb + b3, vec3<f32>(1.0 / gamma_safe));
+    let corrected_color_rgb = vec4<f32>(corrected_rgb, color.a);
 
     // Apply material color tint (interpolated) to the gamma-corrected color
     let final_color = corrected_color_rgb * interp_color;

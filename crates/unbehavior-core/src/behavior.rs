@@ -650,7 +650,6 @@ impl BehaviorProperties {
 pub struct Interactive {
     pub on_activate_sound_file: String,
     pub on_deactivate_sound_file: String,
-    pub hovered: bool,
 }
 
 impl Interactive {
@@ -660,7 +659,6 @@ impl Interactive {
         Self {
             on_activate_sound_file,
             on_deactivate_sound_file,
-            hovered: false,
         }
     }
 

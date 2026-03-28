@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use unaudiospatial_core::events::SoundEvent;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::components::FloorItemCollidable;
+use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use ungear_core::components::playergear::{HeldObject, PlayerGear};
 use ungear_core::resources::spawner::GearMarker;
@@ -239,7 +240,7 @@ pub(crate) fn strip_visuals_from_grabbed_gear(
                 Sprite,
                 Transform,
                 Visibility,
-                unrender_std::components::game::GameSprite,
+                GameSprite,
                 unrender_std::components::sprite_layer::SpriteLayer,
                 unboard_core::components::mapcolor::MapColor,
             )>();
@@ -339,17 +340,19 @@ pub(crate) fn app_setup(app: &mut App) {
         (
             queue_pickup_request,
             queue_drop_request,
+            cycle_inventory,
+            swap_hand_equipment,
+        )
+            .after(uninput_core::PlayerInputSet)
+            .run_if(in_state(UIContextState::InGame)),
+    );
+    app.add_systems(
+        Update,
+        (
             assign_received_item_to_slot,
             strip_visuals_from_grabbed_gear,
             despawn_gear_on_player_death,
         )
             .run_if(in_state(UIContextState::InGame)),
-    );
-    // cycle_inventory and swap_hands are purely local slot rearrangements.
-    // They must run on the join client too (not just authority), so they are
-    // registered outside PlayerAuthoritativeLogicSet.
-    app.add_systems(
-        Update,
-        (cycle_inventory, swap_hand_equipment).run_if(in_state(UIContextState::InGame)),
     );
 }

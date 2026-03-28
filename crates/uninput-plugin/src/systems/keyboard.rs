@@ -46,9 +46,10 @@ pub fn keyboard_input_system(
             movement.x += 1.0;
         }
 
-        player_input.run |= keyboard_input.pressed(input_mapping.controls.run);
+        player_input.run = keyboard_input.pressed(input_mapping.controls.run);
+        player_input.hide_requested = keyboard_input.pressed(input_mapping.controls.activate);
+
         player_input.interact |= keyboard_input.just_pressed(input_mapping.controls.activate);
-        player_input.hide_requested |= keyboard_input.pressed(input_mapping.controls.activate);
         player_input.unhide_requested |=
             keyboard_input.just_pressed(input_mapping.controls.activate);
         player_input.grab |= keyboard_input.just_pressed(input_mapping.controls.grab);

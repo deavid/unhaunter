@@ -1,8 +1,10 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::Replicated;
 use unbehavior_core::behavior::{Behavior, Util};
 use unbehavior_core::components::{InteractableByGhost, Movable};
 use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
 use unboard_core::components::spawning::HostileSpawnPoint;
+use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::tags::GhostTag;
 use uninvestigation_core::GhostSpawnRequest;
@@ -10,8 +12,10 @@ use unlight_core::components::LightSensitive;
 use unmapload_core::hydration::HydrationStage;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::network_id::NetworkId;
+use unreplicon_core::resources::AuthorityRole;
 use unsensing_core::components::SpectralInfluence;
 use unsoundfield_core::components::SoundFieldSource;
+use unspatial_core::lerp_position::LerpPosition;
 use unspatial_core::position::Position;
 
 use crate::metrics;
@@ -79,7 +83,15 @@ fn ghost_hydration_system(
             })
             .insert(FluidEmitter::default())
             .insert(SoundFieldSource::default())
+            .insert(Replicated)
+            .insert(LerpPosition::new(*pos))
             .remove::<GhostSpawnRequest>();
+    }
+}
+
+fn mark_breach_replicated(q: Query<Entity, Added<GhostBreach>>, mut commands: Commands) {
+    for entity in q.iter() {
+        commands.entity(entity).insert(Replicated);
     }
 }
 
@@ -87,5 +99,9 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (hydration_ghost_logic_system, ghost_hydration_system),
+    );
+    app.add_systems(
+        Update,
+        mark_breach_replicated.run_if(resource_exists::<AuthorityRole>),
     );
 }

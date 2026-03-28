@@ -1,8 +1,3 @@
-mod boundary;
-mod gear;
-mod gearitems;
-mod player;
-
 use bevy::prelude::*;
 use bevy_replicon::prelude::AppMarkerExt;
 use bevy_replicon::prelude::AppRuleExt;
@@ -18,9 +13,4 @@ pub(super) fn app_setup(app: &mut App) {
     // Register LocallyOwned as a receive marker to shield client-driven components.
     app.register_marker::<LocallyOwned>();
     app.set_marker_fns::<LocallyOwned, Owner>(noop_write::<Owner>, noop_remove);
-
-    boundary::register_locally_owned_marker(app);
-    player::register_locally_owned_marker(app);
-    gear::register_locally_owned_marker(app);
-    gearitems::register_locally_owned_marker(app);
 }

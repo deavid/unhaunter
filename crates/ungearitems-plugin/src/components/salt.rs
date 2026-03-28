@@ -3,16 +3,17 @@ use bevy_replicon::prelude::Replicated;
 use rand::RngExt;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::entity::GameSprite;
 use uncommon_app_core::random_seed;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::salt::{
-    SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltyTrace, SaltyTraceTimer, UVReactive,
+    SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltPileArmed, SaltPileArmingTimer,
+    SaltyTrace, SaltyTraceTimer, UVReactive,
 };
 use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
-use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unreplicon_core::messages::SaltDroppedMessage;
 use unreplicon_core::ownership::LocallyOwned;
@@ -21,6 +22,8 @@ use unspatial_core::perspective;
 use unspatial_core::position::Position;
 
 use crate::metrics;
+
+const SALT_PILE_ARMING_DELAY_SECS: f32 = 0.10;
 
 pub(crate) fn update_salt_skeleton(
     mut q_salt: Query<(Entity, &mut SaltData, &Position), With<LocallyOwned>>,
@@ -73,6 +76,43 @@ fn hydrate_salt_pile_visuals(
     }
 }
 
+fn initialize_salt_pile_arming(
+    mut commands: Commands,
+    q_new: Query<
+        Entity,
+        (
+            Added<SaltPile>,
+            Without<SaltPileArmingTimer>,
+            Without<SaltPileArmed>,
+        ),
+    >,
+) {
+    for entity in q_new.iter() {
+        commands
+            .entity(entity)
+            .insert(SaltPileArmingTimer(Timer::from_seconds(
+                SALT_PILE_ARMING_DELAY_SECS,
+                TimerMode::Once,
+            )));
+    }
+}
+
+fn progress_salt_pile_arming(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut q_arming: Query<(Entity, &mut SaltPileArmingTimer), Without<SaltPileArmed>>,
+) {
+    for (entity, mut arming_timer) in q_arming.iter_mut() {
+        arming_timer.0.tick(time.delta());
+        if arming_timer.0.is_finished() {
+            commands
+                .entity(entity)
+                .remove::<SaltPileArmingTimer>()
+                .insert(SaltPileArmed);
+        }
+    }
+}
+
 pub(crate) fn update_salt_skin(mut q_salt: Query<(&SaltData, &mut StatusText, &mut GearSprite)>) {
     for (salt, mut status, mut sprite) in q_salt.iter_mut() {
         status.0 = format!("Charges: {}", salt.charges);
@@ -90,7 +130,7 @@ fn salt_pile_system(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ghosts: Query<(&mut GhostSprite, &Position)>,
-    mut salt_piles: Query<(Entity, &Position), With<SaltPile>>,
+    mut salt_piles: Query<(Entity, &Position), (With<SaltPile>, With<SaltPileArmed>)>,
 ) {
     let measure = metrics::SALT_PILE.time_measure();
 
@@ -195,7 +235,14 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_salt_skeleton);
     app.add_systems(
         Update,
-        salt_pile_system.run_if(resource_exists::<AuthorityRole>),
+        (
+            salt_pile_system,
+            initialize_salt_pile_arming,
+            progress_salt_pile_arming,
+        )
+            .chain()
+            .after(update_salt_skeleton)
+            .run_if(resource_exists::<AuthorityRole>),
     );
     app.add_systems(
         Update,

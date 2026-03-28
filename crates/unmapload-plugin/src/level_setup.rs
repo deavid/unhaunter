@@ -8,6 +8,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use bevy_replicon::prelude::Remote;
 use ndarray::Array3;
+use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
@@ -16,13 +17,11 @@ use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unmapload_core::events::loadlevel::LevelLoadedEvent;
+use unmapload_core::resources::SpriteDB;
 use unmission_core::events::MapGeometryInitializedEvent;
 use unmission_core::types::SimulationState;
 use unorchestrator_core::UIContextState;
-use unrender_std::board::spritedb::SpriteDB;
-use unrender_std::components::game::GameSprite;
-use unrender_std::custom_material1::CustomMaterial1;
-use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
+use unreplicon_core::resources::AuthorityRole;
 use unspatial_core::position::Position;
 use untiled_core::tiled::MapTileSetDb;
 use untiled_core::tiledmap::map::MapLayerType;
@@ -45,15 +44,12 @@ pub(crate) struct LoadLevelSystemParam<'w, 's> {
     pub bf: ResMut<'w, BoardTopology>,
     pub bef: ResMut<'w, BoardEntityField>,
     pub bcf: ResMut<'w, BoardCollisionField>,
-    pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
-    pub meshes: ResMut<'w, Assets<Mesh>>,
     pub tilesetdb: Res<'w, MapTileSetDb>,
     pub sdb: ResMut<'w, SpriteDB>,
     pub roomtopo: ResMut<'w, RoomTopology>,
     pub roomstate: ResMut<'w, RoomStateMap>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub loading_status: ResMut<'w, LevelLoadingStatus>,
-    pub local_player: Option<Res<'w, LocalPlayerRole>>,
     pub authority: Option<Res<'w, AuthorityRole>>,
     pub existing_tmx_entities:
         Query<'w, 's, (Entity, &'static unbehavior_core::components::TmxEntityId)>,
@@ -90,6 +86,7 @@ fn load_level_handler(
     };
 
     info!("Starting level load: {}", loaded_event.map_filepath);
+
     next_sim_state.set(SimulationState::Loading);
     *p.loading_status = LevelLoadingStatus::JustStarted;
 
@@ -166,8 +163,7 @@ fn load_level_handler(
     ev_geometry_init.write(MapGeometryInitializedEvent { map_size, origin });
 
     // --- 4. Asset Preparation ---
-    let mut mesh_tileset = HashMap::new();
-    sprite_db::populate_sprite_db(&mut p, &mut mesh_tileset);
+    sprite_db::populate_sprite_db(&mut p);
 
     // --- 5. Entity Spawning ---
     let existing_tmx_map: HashMap<_, _> = p

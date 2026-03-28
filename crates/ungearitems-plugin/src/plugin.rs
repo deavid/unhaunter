@@ -8,6 +8,7 @@ pub struct UnhaunterGearItemsCorePlugin;
 impl Plugin for UnhaunterGearItemsCorePlugin {
     fn build(&self, app: &mut App) {
         crate::registration::register_all(app);
+        crate::net_state::app_setup(app);
         app.add_message::<RequestCraftRepellent>();
     }
 }
@@ -16,7 +17,6 @@ pub struct UnhaunterGearItemsPlugin;
 
 impl Plugin for UnhaunterGearItemsPlugin {
     fn build(&self, app: &mut App) {
-        crate::net_state::app_setup(app);
         crate::components::quartz::app_setup(app);
         crate::components::salt::app_setup(app);
         crate::components::sage::app_setup(app);

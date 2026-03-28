@@ -22,6 +22,7 @@ unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unboard-core = { workspace = true }
 uninput-core = { workspace = true }
+unmapload-core = { workspace = true }
 unrender-std = { workspace = true }
 unplayer-core = { workspace = true }
 unmetrics-core = { workspace = true }
@@ -31,6 +32,7 @@ unreplicon-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
 unsettings-core = { workspace = true }
+untiled-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

@@ -9,6 +9,7 @@ use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::events::{
     RequestEquipGearFromVan, RequestUnequipHand, RequestUnequipInventorySlot,
 };
+use ungear_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::equipment::{Hand, VisualKey};
 use ungear_core::types::gear::kind::GearKind;
@@ -18,7 +19,6 @@ use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::custom_material2::UIPanelMaterial;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
-use unreplicon_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 

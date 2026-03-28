@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy_renet::{RenetClient, RenetServer};
 use bevy_replicon::prelude::*;
+use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::Flashlight;
@@ -13,6 +14,7 @@ use unreplicon_core::ownership::{LocallyOwned, Owner};
 use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
+use unvitals_core::components::PlayerVitals;
 
 #[derive(Resource, Default)]
 struct DebugTimer(Stopwatch);
@@ -152,27 +154,28 @@ fn debug_gear_components(
     }
 }
 
+type PlayerDebugQuery = (
+    Entity,
+    &'static PlayerSprite,
+    Option<&'static Transform>,
+    Option<&'static Position>,
+    Option<&'static Direction>,
+    Option<&'static LocallyOwned>,
+    Option<&'static Owner>,
+    Option<&'static Replicated>,
+    Option<&'static bevy_replicon::prelude::Remote>,
+    Has<MainPlayer>,
+    Has<PlayerSpectating>,
+    Has<PlayerDisconnected>,
+    Has<PlayerInactive>,
+    Has<PlayerGear>,
+    Has<PlayerVitals>,
+);
+
 fn debug_player_components(
     time: Res<Time>,
     mut timer: ResMut<PlayerDebugTimer>,
-    q_players: Query<
-        (
-            Entity,
-            &PlayerSprite,
-            Option<&Transform>,
-            Option<&Position>,
-            Option<&Direction>,
-            Option<&LocallyOwned>,
-            Option<&Owner>,
-            Option<&Replicated>,
-            Option<&bevy_replicon::prelude::Remote>,
-            Has<MainPlayer>,
-            Has<PlayerSpectating>,
-            Has<PlayerDisconnected>,
-            Has<PlayerInactive>,
-        ),
-        With<PlayerSprite>,
-    >,
+    q_players: Query<PlayerDebugQuery, With<PlayerSprite>>,
 ) {
     timer.0.tick(time.delta());
     if timer.0.elapsed_secs() < 10.0 {
@@ -201,6 +204,8 @@ fn debug_player_components(
             is_spectating,
             is_disconnected,
             is_inactive,
+            has_gear,
+            has_vitals,
         ) = item;
         let ownership = if local.is_some() {
             "LOCALLY_OWNED"
@@ -252,6 +257,8 @@ fn debug_player_components(
                 None
             },
             if is_inactive { Some("INACTIVE") } else { None },
+            if has_gear { Some("HAS_GEAR") } else { None },
+            if has_vitals { Some("HAS_VITALS") } else { None },
         ]
         .into_iter()
         .flatten()

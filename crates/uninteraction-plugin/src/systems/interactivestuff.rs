@@ -5,7 +5,7 @@ use unbehavior_core::components::RoomStateDelta;
 use unboard_core::resources::roomdb::RoomState;
 use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use uninteraction_core::events::InteractionExecutionType;
-use unrender_std::board::spritedb::SpriteDB;
+use unmapload_core::resources::SpriteDB;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 

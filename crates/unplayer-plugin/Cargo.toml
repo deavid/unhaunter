@@ -20,13 +20,13 @@ unlocomotion-core = { workspace = true }
 uninput-core = { workspace = true }
 unorchestrator-core = { workspace = true }
 unnavigation-core = { workspace = true }
-unrender-std = { workspace = true }
 uninteraction-core = { workspace = true }
 ungear-core = { workspace = true }
 unaudiospatial-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unspatial-core = { workspace = true }
 untruck-core = { workspace = true }
+unmission-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }

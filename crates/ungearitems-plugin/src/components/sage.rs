@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use rand::RngExt;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::entity::GameSprite;
 use uncommon_app_core::random_seed;
 use uncommon_app_core::utils::time::format_time;
 use ungear_core::components::core::{GearSprite, StatusText};
@@ -12,7 +13,6 @@ use ungearitems_core::components::sage::{
 use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
-use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unreplicon_core::ownership::LocallyOwned;
 use unreplicon_core::resources::LocalPlayerRole;

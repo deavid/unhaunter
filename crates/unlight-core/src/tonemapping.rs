@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
 pub const DARK_COLOR2: Color = Color::srgba(0.2, 0.6, 1.0, 1.0);
-pub const BRIGHTNESS: f32 = 2.5;
+pub const BRIGHTNESS: f32 = 3.5;
 
 /// Blue tint threshold: perceived brightness below this gets progressively blue-tinted.
-const BLUE_TINT_THRESHOLD: f32 = 0.5;
+const BLUE_TINT_THRESHOLD: f32 = 0.7;
 
 /// Artistic tonemapping: Compression curve modulated by eye adaptation.
 ///
@@ -48,9 +48,14 @@ impl TonemappingParams {
 }
 
 /// Compute the blue tint factor based on absolute lux.
-fn blue_tint_factor(absolute_lux: f32, params: &TonemappingParams) -> f32 {
+fn blue_tint_factor(absolute_lux: f32, params: &TonemappingParams) -> (f32, f32) {
     let base = ((BLUE_TINT_THRESHOLD - absolute_lux) / BLUE_TINT_THRESHOLD).clamp(0.0, 1.0);
-    (base + params.tutorial_light_factor * 0.2).clamp(0.0, 1.0)
+    let base = base + params.tutorial_light_factor * 0.2;
+
+    let b1 = base.clamp(0.0, 1.0);
+    let b2 = (base - b1).clamp(0.0, 1.0);
+
+    (b1, b2)
 }
 
 /// Compute per-vertex gamma (brightness) for the shader.
@@ -67,12 +72,12 @@ pub fn calc_gamma(lux: f32, tc: f32, params: &TonemappingParams) -> f32 {
     let base_gamma = tm_lux * params.brightness;
 
     // Small boost for dark textures so they don't vanish completely
-    let tc_boost = tc * 0.05 / (1.0 + tm_lux * 4.0);
+    let tc_boost = tc * 0.05 / (1.0 + tm_lux * 8.0);
 
     // Compensate gamma for blue tint darkening (blue tint reduces R/G channels)
     let absolute_lux = lux * params.exposure;
-    let blue_t = blue_tint_factor(absolute_lux, params);
-    let blue_comp = 1.0 + blue_t * 0.05;
+    let (_blue_t, extra_t) = blue_tint_factor(absolute_lux, params);
+    let blue_comp = 1.0 + extra_t * 0.15 / params.exposure.powi(2);
 
     ((base_gamma + tc_boost) * blue_comp).max(0.001)
 }
@@ -93,7 +98,7 @@ pub fn calc_rgba(
 ) -> LinearRgba {
     // Blue tint based on absolute lux
     let absolute_lux = lux * params.exposure;
-    let blue_t = blue_tint_factor(absolute_lux, params);
+    let (blue_t, _) = blue_tint_factor(absolute_lux, params);
     let white_v = Vec4::ONE;
     let tint_v = white_v + (params.dark_color2 - white_v) * blue_t;
 

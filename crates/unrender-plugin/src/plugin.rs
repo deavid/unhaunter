@@ -4,7 +4,6 @@
 
 use bevy::prelude::*;
 
-use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::custom_material1::CustomMaterial1;
 use unrender_std::custom_material2::UIPanelMaterial;
 
@@ -21,8 +20,6 @@ impl Plugin for UnhaunterRenderCorePlugin {
         crate::systems::lerp::app_setup(app);
         metrics::register_all(app);
 
-        app.init_resource::<SpriteDB>();
-
         app.init_asset::<CustomMaterial1>();
         app.init_asset::<TextureAtlasLayout>();
     }
@@ -34,6 +31,8 @@ pub struct UnhaunterRenderPlugin;
 impl Plugin for UnhaunterRenderPlugin {
     fn build(&self, app: &mut App) {
         crate::systems::animation::app_setup(app);
+        crate::systems::pre_mesh_hydration::app_setup(app);
+        crate::systems::tile_visual_hydration::app_setup(app);
 
         app.add_systems(
             Startup,

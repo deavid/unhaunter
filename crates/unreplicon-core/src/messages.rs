@@ -1,10 +1,5 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use uninvestigation_core::evidence::Evidence;
-use uninvestigation_core::ghost::GhostType;
-
-use ungear_core::components::playergear::HeldObject;
-use ungear_core::types::gear::equipment::Hand;
 use ungear_core::types::gear::kind::GearKind;
 
 /// Sent by the (room-owner) client to request a map change.
@@ -81,33 +76,6 @@ impl bevy::ecs::entity::MapEntities for OwnershipGranted {
     }
 }
 
-/// Message sent by the client to report hand/inventory entity assignments.
-#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect, Default)]
-#[reflect(Default)]
-pub struct ExportPlayerGearMessage {
-    pub left_hand: Option<Entity>,
-    pub right_hand: Option<Entity>,
-    pub inventory: Vec<Entity>,
-    pub held_item: Option<HeldObject>,
-}
-
-impl bevy::ecs::entity::MapEntities for ExportPlayerGearMessage {
-    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
-        if let Some(left_hand) = self.left_hand.as_mut() {
-            *left_hand = mapper.get_mapped(*left_hand);
-        }
-        if let Some(right_hand) = self.right_hand.as_mut() {
-            *right_hand = mapper.get_mapped(*right_hand);
-        }
-        for gear_entity in &mut self.inventory {
-            *gear_entity = mapper.get_mapped(*gear_entity);
-        }
-        if let Some(held_item) = self.held_item.as_mut() {
-            held_item.entity = mapper.get_mapped(held_item.entity);
-        }
-    }
-}
-
 /// Message sent by a client to request picking up a gear entity.
 #[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]
@@ -152,28 +120,6 @@ impl bevy::ecs::entity::MapEntities for RequestDrop {
     fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
         self.entity = mapper.get_mapped(self.entity);
     }
-}
-
-/// One loadout action a join client can request from the server during the truck phase.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum TruckLoadoutAction {
-    /// Equip a gear item from the van inventory into the first free slot.
-    AddGear(GearKind),
-    /// Unequip the item currently held in the given hand.
-    ClearHand(Hand),
-    /// Unequip the backpack item at the given index.
-    ClearInventorySlot(usize),
-}
-
-/// Sent by a join client to request a loadout change during the truck phase.
-///
-/// The server processes each action and applies the same spawn/despawn logic
-/// as the host-local `button_clicked` handler, ensuring the server's copy of
-/// the player's `PlayerGear` reflects the chosen loadout.
-/// Transmitted on `Channel::Ordered` for reliability.
-#[derive(Debug, Clone, Serialize, Deserialize, Message)]
-pub struct TruckLoadoutMessage {
-    pub action: TruckLoadoutAction,
 }
 
 /// Local-only Bevy event fired by `watch_tween_insertions` on the authority
@@ -305,26 +251,6 @@ pub struct SpawnParticleNetEvent {
     pub particle_type: String,
     /// World-space position `[x, y, z]` at which to spawn the particle.
     pub position: [f32; 3],
-}
-
-/// Sent by a client to toggle evidence in the shared journal.
-///
-/// The server validates this, updates `GhostGuess`, and the change propagates
-/// to all clients via replication.
-#[derive(Debug, Clone, Serialize, Deserialize, Message)]
-pub struct RequestJournalEvidenceToggle {
-    pub evidence: Evidence,
-    pub discard: bool,
-    pub mark_as_found: bool,
-}
-
-/// Sent by a client to update the ghost-type guess in the shared journal.
-///
-/// `ghost_type = None` means "clear the current guess".
-#[derive(Debug, Clone, Serialize, Deserialize, Message)]
-pub struct RequestJournalGhostToggle {
-    pub discard: bool,
-    pub ghost_type: Option<GhostType>,
 }
 
 /// Sent by the Authority when the ghost-talk RNG fires in `sound_update`

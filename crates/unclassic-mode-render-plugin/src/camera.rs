@@ -1,5 +1,6 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
+use unboard_core::entity::MapTileSprite;
 use unclassic_mode_core::components::GCameraArena;
 use uninput_core::states::InGameUiState;
 use unlocomotion_core::components::PlayerLocomotionState;
@@ -109,14 +110,13 @@ fn camera_follow_system(
         }
     }
 }
-
 fn debug_tile_transforms(
     q_tiles: Query<
         (
             &MeshMaterial2d<unrender_std::custom_material1::CustomMaterial1>,
             &Visibility,
         ),
-        With<unrender_std::components::game::MapTileSprite>,
+        With<MapTileSprite>,
     >,
     q_stages: Query<
         (),

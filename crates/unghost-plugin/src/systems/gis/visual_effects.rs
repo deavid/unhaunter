@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::entity::GameSprite;
 use uncommon_app_core::random_seed;
 use unmetrics_core::metrics::SendMetric;
-use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::position::Position;
 

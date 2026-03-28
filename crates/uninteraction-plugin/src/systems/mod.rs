@@ -9,11 +9,12 @@ use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::{FloorItemCollidable, RoomStateDelta, TmxEntityId};
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use uninteraction_core::events::RoomStateSyncEvent;
+use uninteraction_core::hover::HoverState;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unplayer_core::components::{MainPlayer, PlayerSpectating};
 use unspatial_core::position::Position;
 
-pub(crate) fn app_setup(app: &mut App) {
+pub(crate) fn app_setup_core(app: &mut App) {
     app.replicate::<TmxEntityId>();
     app.replicate::<Behavior>();
     app.replicate::<FloorItemCollidable>();
@@ -34,17 +35,34 @@ pub(crate) fn app_setup(app: &mut App) {
         trigger_grid_rebuild_on_sync
             .run_if(in_state(unmission_core::types::SimulationState::Ready)),
     );
+}
+
+pub(crate) fn app_setup_client(app: &mut App) {
     // Mouse hover feedback: mark interactive objects as hovered/unhovered
     app.add_systems(
         Update,
-        (mouse_over_interactive_system, mouse_out_interactive_system)
+        (
+            ensure_hover_state,
+            mouse_over_interactive_system,
+            mouse_out_interactive_system,
+        )
+            .chain()
             .run_if(in_state(unorchestrator_core::UIContextState::InGame)),
     );
 }
 
+fn ensure_hover_state(
+    mut commands: Commands,
+    q_interactive: Query<Entity, (With<Interactive>, Without<HoverState>)>,
+) {
+    for entity in q_interactive.iter() {
+        commands.entity(entity).insert(HoverState::default());
+    }
+}
+
 fn mouse_over_interactive_system(
     mut events: MessageReader<Pointer<Over>>,
-    mut q_interactive: Query<&mut Interactive>,
+    mut q_hover: Query<&mut HoverState>,
     q_spectator: Query<(), (With<MainPlayer>, With<PlayerSpectating>)>,
 ) {
     let is_spectator = !q_spectator.is_empty();
@@ -52,15 +70,15 @@ fn mouse_over_interactive_system(
         if is_spectator {
             continue;
         }
-        if let Ok(mut interactive) = q_interactive.get_mut(event.entity) {
-            interactive.hovered = true;
+        if let Ok(mut hover) = q_hover.get_mut(event.entity) {
+            hover.is_hovered = true;
         }
     }
 }
 
 fn mouse_out_interactive_system(
     mut events: MessageReader<Pointer<Out>>,
-    mut q_interactive: Query<&mut Interactive>,
+    mut q_hover: Query<&mut HoverState>,
     q_spectator: Query<(), (With<MainPlayer>, With<PlayerSpectating>)>,
 ) {
     let is_spectator = !q_spectator.is_empty();
@@ -68,8 +86,8 @@ fn mouse_out_interactive_system(
         if is_spectator {
             continue;
         }
-        if let Ok(mut interactive) = q_interactive.get_mut(event.entity) {
-            interactive.hovered = false;
+        if let Ok(mut hover) = q_hover.get_mut(event.entity) {
+            hover.is_hovered = false;
         }
     }
 }

@@ -11,7 +11,9 @@ use unboard_plugin::plugin::UnhaunterBoardPlugin;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
 use undifficulty_plugin::plugin::UnhaunterDifficultyPlugin;
 use unhub_plugin::plugin::{UnhaunterHubCorePlugin, UnhaunterHubPlugin};
-use uninteraction_plugin::plugin::UnhaunterInteractionCorePlugin;
+use uninteraction_plugin::plugin::{
+    UnhaunterInteractionClientPlugin, UnhaunterInteractionCorePlugin,
+};
 use unmapload_plugin::plugin::{UnhaunterMapLoadCorePlugin, UnhaunterMapLoadPlugin};
 use unmission_plugin::plugin::UnhaunterMissionPlugin;
 use unreplicon_plugin::plugin::UnrepliconPlugin;
@@ -26,7 +28,7 @@ use unghost_plugin::plugin::{UnhaunterGhostCorePlugin, UnhaunterGhostPlugin};
 use uninventory_plugin::plugin::UnhaunterInventoryPlugin;
 use unlight_plugin::plugin::{UnhaunterLightCorePlugin, UnhaunterLightPlugin};
 use unlocomotion_plugin::plugin::UnhaunterLocomotionPlugin;
-use unnavigation_plugin::plugin::UnhaunterNavigationPlugin;
+use unnavigation_plugin::plugin::{UnhaunterNavigationClientPlugin, UnhaunterNavigationPlugin};
 use unnpc_plugin::plugin::{UnhaunterNPCCorePlugin, UnhaunterNPCPlugin};
 use unplayer_plugin::plugin::{UnhaunterPlayerCorePlugin, UnhaunterPlayerPlugin};
 use untruck_plugin::plugin::{UnhaunterTruckCorePlugin, UnhaunterTruckPlugin};
@@ -265,6 +267,8 @@ pub fn app_run(args: AppArgs) {
         // Input & Foundation
         app.add_plugins((
             UnhaunterInputPlugin,
+            UnhaunterInteractionClientPlugin,
+            UnhaunterNavigationClientPlugin,
             UnpausePlugin,
             UnhaunterPlayerPlugin,
             UnhaunterMenuPlugin,

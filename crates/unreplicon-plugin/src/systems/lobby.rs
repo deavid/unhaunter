@@ -11,6 +11,7 @@ use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unmission_core::types::SimulationState;
 use unorchestrator_core::{BootState, UIContextState};
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
+use unreplicon_core::events::{PlayerNetworkDisconnected, PlayerNetworkReconnected};
 use unreplicon_core::messages::{
     RequestAbortMission, RequestSelectDifficulty, RequestSelectMap, RequestStartMission,
 };
@@ -39,6 +40,8 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Register local UI messages
     app.add_message::<DisconnectRequest>();
+    app.add_message::<PlayerNetworkDisconnected>();
+    app.add_message::<PlayerNetworkReconnected>();
 
     // Initialize resources that are referenced by lobby UI systems.
     app.init_resource::<ClientUuidMap>();
@@ -85,7 +88,7 @@ pub(super) fn app_setup(app: &mut App) {
         reset_lobby_entity_on_reenter.run_if(resource_exists::<AuthorityRole>),
     );
 
-    // Server-side: broadcast InGame state to clients when the mission starts.
+    // Server-side: broadcast the in-progress server phase when mission simulation is ready.
     app.add_systems(
         OnEnter(SimulationState::Ready),
         set_server_state_ingame.run_if(resource_exists::<AuthorityRole>),
@@ -101,12 +104,6 @@ pub(super) fn app_setup(app: &mut App) {
             handle_request_abort_mission,
         )
             .run_if(resource_exists::<AuthorityRole>),
-    );
-
-    // Observe SimulationState::Ready to transition MissionLoading → InGame
-    app.add_systems(
-        Update,
-        observe_simulation_ready_to_enter_game.run_if(in_state(UIContextState::MissionLoading)),
     );
 
     app.add_systems(Update, process_auto_join);
@@ -326,31 +323,14 @@ fn reset_lobby_entity_on_reenter(
     }
 }
 
-/// Server: write `ServerGamePhase::InProgress` on the lobby entity when the server
-/// enters `AppState::InGame`.
+/// Server: write `ServerGamePhase::InProgress` on the lobby entity when mission
+/// simulation becomes ready.
 fn set_server_state_ingame(mut q: Query<(&mut ServerGamePhase, &mut LobbyInfo)>) {
     for (mut phase, mut lobby) in q.iter_mut() {
         *phase = ServerGamePhase::InProgress;
         lobby.set_changed();
     }
     info!("ServerGamePhase set to InProgress");
-}
-
-/// Observe `SimulationState::Ready` and transition `AppState::MissionLoading → AppState::InGame`.
-fn observe_simulation_ready_to_enter_game(
-    sim_state: Res<State<SimulationState>>,
-    mut next_app_state: ResMut<NextState<UIContextState>>,
-    mut frame: Local<u32>,
-) {
-    if *sim_state == SimulationState::Ready {
-        info!("Simulation ready; transitioning MissionLoading -> InGame");
-        next_app_state.set(UIContextState::InGame);
-    } else {
-        *frame += 1;
-        if frame.is_multiple_of(120) {
-            debug!("Waiting for simulation to be ready - current state: {sim_state:?}");
-        }
-    }
 }
 
 /// System: triggered every frame on the server to handle clients that have connected
@@ -429,23 +409,22 @@ fn process_newly_connected_clients(
     }
 }
 
-/// Server: while a mission is running, reconcile ownership of already-spawned player and gear
+/// Server: while a mission is running, reconcile ownership of already-spawned player
 /// entities after a reconnect.
 ///
 /// Reconnects can change the underlying socket owner from `Client(...v0)` to `Client(...v1)`.
-/// If avatar/gear entities keep the old `Owner`, state exports from the reconnected client are
-/// rejected as sender mismatches.
+/// If avatar entities keep the old `Owner`, state exports from the reconnected client are
+/// rejected as sender mismatches. Gear ownership is reconciled in ungear-plugin.
 fn reconcile_reconnected_player_ownership(
     q_lobby: Query<&LobbyInfo>,
     q_players: Query<(
         Entity,
         &unplayer_core::components::PlayerSprite,
-        &ungear_core::components::playergear::PlayerGear,
         &Owner,
         Has<unplayer_core::components::PlayerDisconnected>,
     )>,
-    q_owned: Query<&Owner>,
     mut commands: Commands,
+    mut ev_reconnected: MessageWriter<PlayerNetworkReconnected>,
 ) {
     let Ok(lobby) = q_lobby.single() else {
         return;
@@ -460,11 +439,9 @@ fn reconcile_reconnected_player_ownership(
             continue;
         };
 
-        let Some((player_entity, _sprite, player_gear, owner, is_disconnected)) = q_players
+        let Some((player_entity, _sprite, owner, is_disconnected)) = q_players
             .iter()
-            .find(|(_entity, sprite, _gear, _owner, _disconnected)| {
-                sprite.id == lobby_player.player_uuid
-            })
+            .find(|(_entity, sprite, _owner, _disconnected)| sprite.id == lobby_player.player_uuid)
         else {
             continue;
         };
@@ -476,26 +453,11 @@ fn reconcile_reconnected_player_ownership(
             changed = true;
         }
 
-        for gear_entity in player_gear
-            .left_hand
-            .into_iter()
-            .chain(player_gear.right_hand)
-            .chain(player_gear.inventory.iter().copied())
-        {
-            let Ok(gear_owner) = q_owned.get(gear_entity) else {
-                continue;
-            };
-
-            if gear_owner.0 != expected_owner {
-                commands.entity(gear_entity).insert(Owner(expected_owner));
-                changed = true;
-            }
-        }
-
-        if is_disconnected {
-            commands
-                .entity(player_entity)
-                .remove::<unplayer_core::components::PlayerDisconnected>();
+        if is_disconnected || owner.0 != expected_owner {
+            ev_reconnected.write(PlayerNetworkReconnected {
+                player_uuid: lobby_player.player_uuid,
+                new_owner_id: expected_owner,
+            });
             changed = true;
         }
 
@@ -512,11 +474,14 @@ fn on_client_disconnected(
     trigger: On<Remove, ConnectedClient>,
     mut q_lobby: Query<(&mut LobbyInfo, &ServerGamePhase)>,
     uuid_map: Res<ClientUuidMap>,
-    mut commands: Commands,
-    q_sprites: Query<(Entity, &unplayer_core::components::PlayerSprite)>,
+    mut ev_disconnected: MessageWriter<PlayerNetworkDisconnected>,
 ) {
     let client_id = ClientId::Client(trigger.entity);
     let Some(uuid) = client_uuid(client_id, &uuid_map) else {
+        warn!(
+            "on_client_disconnected: missing UUID mapping for disconnected client {:?}",
+            client_id
+        );
         return;
     };
 
@@ -535,15 +500,7 @@ fn on_client_disconnected(
                 player.current_socket = None;
                 info!("Player {} soft-disconnected (phase={:?})", uuid, phase);
             }
-            if let Some((entity, _)) = q_sprites.iter().find(|(_, s)| s.id == uuid) {
-                commands
-                    .entity(entity)
-                    .insert(unplayer_core::components::PlayerDisconnected);
-                info!(
-                    "Inserted PlayerDisconnected on avatar entity for player {}",
-                    uuid
-                );
-            }
+            ev_disconnected.write(PlayerNetworkDisconnected { player_uuid: uuid });
         }
 
         // If the leader left, assign leadership to the next connected player.
@@ -681,9 +638,8 @@ fn handle_request_abort_mission(
             for entity in q_selected_mission.iter() {
                 commands.entity(entity).despawn();
             }
-            // Trigger the same teardown path as MissionEvent::End so that
-            // cleanup_mission_players despawns existing PlayerSprite entities
-            // and server_teardown_grace_period eventually returns to AppState::Lobby.
+            // Trigger the same teardown path as MissionEvent::End so domain-owned
+            // teardown systems can despawn gameplay entities.
             next_sim_state.set(SimulationState::TearingDown);
             for mut phase in q_server_phase.iter_mut() {
                 *phase = ServerGamePhase::Concluding;

@@ -1,7 +1,6 @@
 use bevy::asset::AssetEvent;
 use bevy::audio::AudioSource;
 use bevy::prelude::*;
-use unrender_std::custom_material1::CustomMaterial1;
 use untmxmap_core::assets::index::AssetIdx;
 use untmxmap_core::assets::tmxmap::TmxMap;
 use untmxmap_core::assets::tsxsheet::TsxSheet;
@@ -49,7 +48,6 @@ pub(crate) fn app_setup(app: &mut App) {
             log_asset_events::<Font>,
             log_asset_events::<TextureAtlasLayout>,
             log_asset_events::<Mesh>,
-            log_asset_events::<CustomMaterial1>,
             log_asset_events::<AssetIdx>,
             log_asset_events::<TmxMap>,
             log_asset_events::<TsxSheet>,

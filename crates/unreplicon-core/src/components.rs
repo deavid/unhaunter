@@ -20,6 +20,18 @@ pub struct LobbyInfo {
     pub leader_uuid: Option<Uuid>,
 }
 
+/// Marker stamped on an entity by domain plugins to signal that they have finished
+/// attaching all initial components. The network layer watches for this to safely
+/// transfer ownership to the client without causing component-trickling bugs.
+#[derive(Component, Debug, Default, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
+pub struct NetworkEntityReady;
+
+/// Local marker used by the server to track that an ownership grant message
+/// has already been emitted for this entity.
+#[derive(Component, Debug, Default, Clone)]
+pub struct OwnershipSentMarker;
+
 /// Per-player data stored inside `LobbyInfo`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LobbyPlayerInfo {

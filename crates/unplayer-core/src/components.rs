@@ -105,6 +105,24 @@ impl PlayerSprite {
     }
 }
 
+/// Thin spawn request marker consumed by `unplayer-plugin` to materialize
+/// player entities owned by the player domain.
+#[derive(Component, Debug, Clone, Copy, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
+pub struct PlayerSpawnRequest {
+    pub player_uuid: Uuid,
+    pub network_id: NetworkId,
+}
+
+impl Default for PlayerSpawnRequest {
+    fn default() -> Self {
+        Self {
+            player_uuid: Uuid::nil(),
+            network_id: NetworkId(0),
+        }
+    }
+}
+
 /// Marks a player entity that is currently hiding.
 #[derive(Component, Serialize, Deserialize, Reflect)]
 #[reflect(Component, Default)]

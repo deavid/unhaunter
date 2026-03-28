@@ -83,9 +83,7 @@ pub(crate) fn dispatch_interact_intent(
                     z: item_pos.z + cp_delta.z,
                     visual_priority: item_pos.visual_priority,
                 };
-                let new_dist = pos.delta(item_pos);
-                let dref = new_dist;
-                let dist = dref.distance();
+                let dist = pos.distance_zf(&item_pos, 6.0);
                 if dist < max_dist {
                     max_dist = dist + 0.00001;
                     selected_entity = Some(entity);

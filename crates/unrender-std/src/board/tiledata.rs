@@ -1,7 +1,4 @@
-use crate::components::visuals::ResolutionFactor;
-use crate::custom_material1::CustomMaterial1;
 use bevy::prelude::*;
-use unbehavior_core::behavior::Behavior;
 
 #[derive(Component, Clone)]
 pub enum PreMesh {
@@ -10,19 +7,4 @@ pub enum PreMesh {
         sprite_anchor: Vec2,
         image_handle: Handle<Image>,
     },
-}
-
-#[derive(Bundle, Clone)]
-pub struct TileSpriteBundle {
-    pub mesh: PreMesh,
-    pub material: MeshMaterial2d<CustomMaterial1>,
-    pub transform: Transform,
-    pub visibility: Visibility,
-    pub resolution_factor: ResolutionFactor,
-}
-
-#[derive(Clone)]
-pub struct MapTileComponents {
-    pub bundle: TileSpriteBundle,
-    pub behavior: Behavior,
 }

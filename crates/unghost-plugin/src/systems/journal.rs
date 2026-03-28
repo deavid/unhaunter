@@ -1,16 +1,51 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::{Channel, ClientMessageAppExt, FromClient};
 use unghost_core::events::{JournalEvidenceToggled, JournalGhostToggled};
+use uninvestigation_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhostToggle};
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unmission_core::types::SimulationState;
 use unreplicon_core::resources::AuthorityRole;
 
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_client_message::<RequestJournalEvidenceToggle>(Channel::Ordered);
+    app.add_client_message::<RequestJournalGhostToggle>(Channel::Ordered);
+    app.add_systems(
+        Update,
+        (handle_journal_evidence_toggle, handle_journal_ghost_toggle)
+            .run_if(resource_exists::<AuthorityRole>)
+            .run_if(in_state(SimulationState::Ready)),
+    );
     app.add_systems(
         Update,
         (apply_journal_evidence_toggle, apply_journal_ghost_toggle)
             .run_if(resource_exists::<AuthorityRole>)
             .run_if(in_state(SimulationState::Ready)),
     );
+}
+
+fn handle_journal_evidence_toggle(
+    mut reader: MessageReader<FromClient<RequestJournalEvidenceToggle>>,
+    mut writer: MessageWriter<JournalEvidenceToggled>,
+) {
+    for msg in reader.read() {
+        writer.write(JournalEvidenceToggled {
+            evidence: msg.message.evidence,
+            discard: msg.message.discard,
+            mark_as_found: msg.message.mark_as_found,
+        });
+    }
+}
+
+fn handle_journal_ghost_toggle(
+    mut reader: MessageReader<FromClient<RequestJournalGhostToggle>>,
+    mut writer: MessageWriter<JournalGhostToggled>,
+) {
+    for msg in reader.read() {
+        writer.write(JournalGhostToggled {
+            ghost_type: msg.message.ghost_type,
+            discard: msg.message.discard,
+        });
+    }
 }
 
 pub(crate) fn apply_journal_evidence_toggle(

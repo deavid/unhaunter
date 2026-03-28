@@ -22,7 +22,10 @@ pub fn spatial_audio_playback(
     let now = time.elapsed_secs();
     let mut can_log = now - *last_error_log > 1.0;
     let Ok(player_position) = qp.single() else {
-        warn!("player not found!");
+        if can_log {
+            warn!("player not found!");
+            *last_error_log = now;
+        }
         measure.end_ms();
         return;
     };

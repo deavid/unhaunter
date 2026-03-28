@@ -5,10 +5,10 @@ use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::prelude::*;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::entity::ResolutionFactor;
 use uncommon_app_core::random_seed;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
-use unrender_std::components::visuals::ResolutionFactor;
 use unreplicon_core::messages::SpawnParticleNetEvent;
 use unspatial_core::position::Position;
 

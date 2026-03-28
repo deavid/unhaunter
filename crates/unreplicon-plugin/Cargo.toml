@@ -30,7 +30,7 @@ unspatial-core = { workspace = true }
 unplayer-core = { workspace = true }
 unboard-core = { workspace = true }
 uninteraction-core = { workspace = true }
-unghost-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 ungearitems-core = { workspace = true }
 ungear-core = { workspace = true }
+unvitals-core = { workspace = true }

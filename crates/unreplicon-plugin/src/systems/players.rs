@@ -6,34 +6,92 @@ use bevy_replicon::prelude::{
     ToClients,
 };
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
+use std::collections::HashMap;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::FloorItemCollidable;
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
+use ungear_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
+use ungear_core::resources::spawner::{GearMarker, GearSpawnerRegistry};
 use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
 use uninteraction_core::events::InteractionRequestMessage;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unmission_core::types::SimulationState;
 use unorchestrator_core::UIContextState;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
+use unplayer_core::components::{PlayerSpawnRequest, PlayerSprite};
+use unreplicon_core::components::{
+    LobbyInfo, NetworkEntityReady, OwnershipSentMarker, RepliconPlayerSpawningActive,
+};
 use unreplicon_core::messages::{
     FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, HostMovableMotionEvent,
     MovableMotionBroadcast, OwnershipGranted, RequestDrop, RequestGrab, SaltDroppedMessage,
-    TruckLoadoutAction, TruckLoadoutMessage,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
-use unreplicon_core::resources::LocalPlayer;
-use unreplicon_core::resources::is_pure_client;
-use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
+use unreplicon_core::resources::AuthorityRole;
+use unreplicon_core::resources::{LocalPlayerRole, is_pure_client};
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
+
+#[derive(Debug, Clone, Copy)]
+struct PendingOwnershipGrant {
+    server_entity: Entity,
+    frames_waited: u16,
+}
+
+#[derive(Resource, Default)]
+struct PendingOwnershipGrantQueue(Vec<PendingOwnershipGrant>);
+
+// SRE SRE SRE SRE SRE
+#[allow(clippy::manual_is_multiple_of)]
+fn sre_telemetry(
+    q: Query<(
+        Entity,
+        Option<&PlayerSpawnRequest>,
+        Option<&PlayerSprite>,
+        Option<&Owner>,
+        Option<&NetworkEntityReady>,
+        Option<&OwnershipSentMarker>,
+        Option<&LocallyOwned>,
+    )>,
+    authority: Option<Res<AuthorityRole>>,
+    local_player: Option<Res<LocalPlayerRole>>,
+    spawning_active: Option<Res<RepliconPlayerSpawningActive>>,
+    state: Option<Res<State<SimulationState>>>,
+    mut frames: Local<u32>,
+) {
+    *frames += 1;
+    if *frames % 60 != 0 {
+        return;
+    }
+
+    info!(
+        "SRE TELEMETRY TICK ({}): auth={} local={} spawning={} state={:?}",
+        *frames,
+        authority.is_some(),
+        local_player.is_some(),
+        spawning_active.is_some(),
+        state.map(|s| *s.get())
+    );
+    for (e, req, spr, own, rdy, sent, locown) in q.iter() {
+        if req.is_some() || spr.is_some() {
+            info!(
+                "SRE ENTITY {:?}: req={} spr={} owner={:?} ready={} sent={} locally_owned={}",
+                e,
+                req.is_some(),
+                spr.is_some(),
+                own.map(|o| o.0),
+                rdy.is_some(),
+                sent.is_some(),
+                locown.is_some()
+            );
+        }
+    }
+}
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
@@ -55,8 +113,12 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Register local messages
     app.add_message::<HostMovableMotionEvent>();
+    app.init_resource::<PendingOwnershipGrantQueue>();
 
     replication::app_setup(app);
+
+    // SRE Telemetry
+    app.add_systems(Update, sre_telemetry);
 
     // Host/offline: spawn and tag player entities when InGame starts.
     // Gated by AuthorityRole so it runs on Host and Dedicated Server.
@@ -81,7 +143,11 @@ pub(super) fn app_setup(app: &mut App) {
     // Server-side: spawn player entities for clients that joined after mission start.
     app.add_systems(
         Update,
-        spawn_late_joining_players
+        (
+            spawn_late_joining_players,
+            grant_ownership_when_ready,
+            warn_on_stuck_pending_handover,
+        )
             .run_if(resource_exists::<AuthorityRole>)
             .run_if(in_state(SimulationState::Ready))
             .run_if(resource_exists::<RepliconPlayerSpawningActive>),
@@ -95,82 +161,31 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(in_state(SimulationState::Ready)),
     );
 
-    // Client-side: apply replicated player state to local components
+    // Client-side: receive ownership, either resolving it immediately or deferring
     app.add_systems(
         Update,
-        (
-            handle_ownership_granted,
-            fallback_player_ownership_from_uuid,
-            propagate_gear_ownership,
-            cleanup_gear_ownership,
-        )
+        (handle_ownership_granted, process_pending_ownership_grants).run_if(is_pure_client),
+    );
+
+    // Client-side: gear propagation (needs UIContextState::InGame to avoid spam/early execution)
+    app.add_systems(
+        Update,
+        (propagate_gear_ownership, cleanup_gear_ownership)
             .run_if(in_state(UIContextState::InGame))
             .run_if(is_pure_client),
     );
 
-    // All nodes with a local player: mark the UUID-matched entity as MainPlayer when it
-    // acquires LocallyOwned (covers host-spawn, OwnershipGranted, and fallback paths).
-    app.add_systems(
-        Update,
-        insert_main_player_on_ownership
-            .run_if(in_state(UIContextState::InGame))
-            .run_if(resource_exists::<LocalPlayerRole>),
-    );
-
-    // Cleanup the spawning-active marker when leaving InGame
+    // Cleanup the spawning-active marker when leaving InGame.
     app.add_systems(
         OnEnter(SimulationState::TearingDown),
-        cleanup_mission_players,
-    );
-
-    // Client: hydrate gear entities that arrive via replication.
-    app.add_systems(
-        Update,
-        hydrate_gear_system
-            .run_if(is_pure_client)
-            .run_if(in_state(UIContextState::InGame)),
+        cleanup_player_spawning_flag,
     );
 }
 
-/// Client: fires when a GearKind component appears on an entity without GearHydrated.
-/// Applies all type-specific components via the gear builder registry.
-/// Gated to pure clients — authority nodes already have all components from gear_registry.spawn().
-///
-/// FIXME WARNING: The gear builder inserts components at their DEFAULT values
-/// (e.g. Flashlight { status: Off }, Battery { level: 1.0 }, etc.).
-/// The server-side gear may already be in a different state (battery drained, flashlight on, etc.).
-/// Late-joining clients will see remote players' gear in its initial state, not the current state.
-/// Gear state synchronisation is a separate follow-up task.
-fn hydrate_gear_system(
-    mut commands: Commands,
-    gear_registry: Res<GearSpawnerRegistry>,
-    q_added: Query<(Entity, &GearKind), (With<GearMarker>, Without<GearHydrated>)>,
-) {
-    for (entity, kind) in q_added.iter() {
-        gear_registry.hydrate(&mut commands, entity, *kind);
-        commands.entity(entity).insert(GearHydrated);
-
-        // Add skin components that are not in the registry hydrate path
-        match kind {
-            GearKind::SageBundle => {
-                commands
-                    .entity(entity)
-                    .insert(ungearitems_core::components::sage::SageBundleSkin::new());
-            }
-            GearKind::QuartzStone => {
-                commands
-                    .entity(entity)
-                    .insert(ungearitems_core::components::quartz::QuartzStoneSkin::default());
-            }
-            _ => {}
-        }
-
-        info!(
-            "hydrate_gear_system: hydrated gear entity {:?} kind={:?}",
-            entity, kind
-        );
-    }
+fn player_ready_for_handover(has_ready_marker: bool) -> bool {
+    has_ready_marker
 }
+
 fn to_owner_id(client_id: ClientId) -> OwnerId {
     match client_id {
         ClientId::Server => OwnerId::Server,
@@ -192,7 +207,7 @@ fn from_owner_id(owner_id: OwnerId) -> ClientId {
 /// domain's own hydration system reacting to `Added<PlayerSprite>`.
 fn setup_mission_players(
     q_lobby: Query<&LobbyInfo>,
-    q_spawn_points: Query<&Position, (With<PlayerSpawnPoint>, Without<PlayerSprite>)>,
+    q_spawn_points: Query<&Position, With<PlayerSpawnPoint>>,
     mut commands: Commands,
 ) {
     // Signal that replicon-based player spawning is now active.
@@ -219,14 +234,20 @@ fn setup_mission_players(
             .unwrap_or(default_pos);
 
         let net_id = NetworkId::from(player.player_uuid);
+        info!(
+            "SRE: setup_mission_players is processing lobby player uuid={} idx={}",
+            player.player_uuid, idx
+        );
 
-        // Spawn the player skeleton. Domain plugins react to Added<PlayerSprite> to
-        // insert their own components (vitals, locomotion, gear, navigation, etc.).
+        // Spawn a thin request entity. unplayer-plugin materializes PlayerSprite
+        // and the canonical player baseline components.
         let entity_commands = commands.spawn((
             spawn_pos,
-            unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
-            PlayerSprite::new(player.player_uuid, net_id),
-            unboard_core::resources::visibility_data::VisibilityData::default(),
+            PlayerSpawnRequest {
+                player_uuid: player.player_uuid,
+                network_id: net_id,
+            },
+            Replicated,
         ));
         let entity = entity_commands.id();
 
@@ -246,21 +267,9 @@ fn setup_mission_players(
             let socket_owner_id = player.current_socket.unwrap();
             commands.entity(entity).insert(Owner(socket_owner_id));
 
-            // NOTE: We intentionally do NOT call visibility.set(..., false) here.
-            // Hiding the entity from the owning client would prevent it from ever
-            // arriving via replication, which makes OwnershipGranted impossible to
-            // process on the client side (the entity would not be in ServerEntityMap).
-            let client_id = from_owner_id(socket_owner_id);
-            if client_id == bevy_replicon::prelude::ClientId::Server {
-                commands
-                    .entity(entity)
-                    .insert(unreplicon_core::ownership::LocallyOwned);
-            } else {
-                commands.write_message(ToClients {
-                    mode: SendMode::Direct(client_id),
-                    message: OwnershipGranted { entity },
-                });
-            }
+            // NOTE: We no longer send OwnershipGranted immediately.
+            // The grant_ownership_when_ready system will send it once the entity
+            // is fully hydrated (e.g. has PlayerGear).
             info!(
                 "setup_mission_players: spawned remote skeleton {:?} for player {} (owner={:?})",
                 entity, player.player_uuid, socket_owner_id
@@ -270,24 +279,9 @@ fn setup_mission_players(
 }
 
 /// Server: on entering TearingDown, remove the spawning-active marker and despawn
-/// all player skeletons (and their gear) so they cannot carry over into the next mission.
-fn cleanup_mission_players(
-    mut commands: Commands,
-    q_players: Query<(Entity, &PlayerGear), With<PlayerSprite>>,
-) {
+/// no gameplay entities. Domain plugins own their own teardown.
+fn cleanup_player_spawning_flag(mut commands: Commands) {
     commands.remove_resource::<RepliconPlayerSpawningActive>();
-    for (entity, gear) in q_players.iter() {
-        for maybe_gear_entity in [gear.left_hand, gear.right_hand]
-            .into_iter()
-            .chain(gear.inventory.iter().copied().map(Some))
-            .flatten()
-        {
-            if let Ok(mut ec) = commands.get_entity(maybe_gear_entity) {
-                ec.despawn();
-            }
-        }
-        commands.entity(entity).despawn();
-    }
 }
 
 /// Server: runs every frame during InGame to spawn player entities for clients that
@@ -296,6 +290,7 @@ fn cleanup_mission_players(
 fn spawn_late_joining_players(
     q_lobby: Query<&LobbyInfo>,
     q_existing_sprites: Query<&PlayerSprite>,
+    q_pending_spawn: Query<&PlayerSpawnRequest>,
     q_spawn_points: Query<&Position, With<unboard_core::components::spawning::PlayerSpawnPoint>>,
     mut commands: Commands,
 ) {
@@ -325,6 +320,14 @@ fn spawn_late_joining_players(
             continue;
         }
 
+        // Skip if a request entity is already pending materialization.
+        if q_pending_spawn
+            .iter()
+            .any(|r| r.player_uuid == player.player_uuid)
+        {
+            continue;
+        }
+
         let spawn_pos = spawn_points
             .get(idx % spawn_points.len().max(1))
             .copied()
@@ -335,19 +338,18 @@ fn spawn_late_joining_players(
 
         let entity_commands = commands.spawn((
             spawn_pos,
-            unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
-            PlayerSprite::new(player.player_uuid, net_id),
-            unboard_core::resources::visibility_data::VisibilityData::default(),
+            PlayerSpawnRequest {
+                player_uuid: player.player_uuid,
+                network_id: net_id,
+            },
             Owner(socket_owner_id),
             Replicated,
         ));
         let entity = entity_commands.id();
 
-        let client_id = from_owner_id(socket_owner_id);
-        commands.write_message(ToClients {
-            mode: SendMode::Direct(client_id),
-            message: OwnershipGranted { entity },
-        });
+        // NOTE: We no longer send OwnershipGranted immediately.
+        // The grant_ownership_when_ready system will send it once the entity
+        // is fully hydrated (e.g. has PlayerGear).
         info!(
             "spawn_late_joining_players: spawned skeleton {:?} for late-joining player {} (owner={:?})",
             entity, player.player_uuid, socket_owner_id
@@ -633,100 +635,111 @@ fn handle_truck_loadout_message(
     }
 }
 
-/// Inserts `MainPlayer` on the player entity whose UUID matches the local player, whenever
-/// that entity first acquires `LocallyOwned`. Covers the host-spawn path (set in
-/// `setup_mission_players`), the `OwnershipGranted` message path, and the fallback polling path.
-fn insert_main_player_on_ownership(
-    q: Query<(Entity, &PlayerSprite), Added<LocallyOwned>>,
-    local_player: Res<LocalPlayer>,
+/// Server: Watches for entities that have been stamped as fully hydrated by the domains.
+/// Once ready, it sends the OwnershipGranted packet so the client can safely take control
+/// without activating its `noop_write` shields too early.
+///
+/// Matches both `PlayerSprite` (host/offline, fully materialized) and `PlayerSpawnRequest`
+/// (dedicated server, where no player-plugin hydration runs).
+fn grant_ownership_when_ready(
+    q_ready: Query<
+        (Entity, &Owner, Has<NetworkEntityReady>),
+        (
+            Or<(With<PlayerSprite>, With<PlayerSpawnRequest>)>,
+            Without<OwnershipSentMarker>,
+        ),
+    >,
     mut commands: Commands,
 ) {
-    let Some(local_uuid) = local_player.0 else {
-        return;
-    };
-    for (entity, sprite) in q.iter() {
-        if sprite.id == local_uuid {
+    for (entity, owner, has_ready_marker) in q_ready.iter() {
+        if !player_ready_for_handover(has_ready_marker) {
+            continue;
+        }
+
+        // Mark that we've sent it so we don't spam the network
+        commands.entity(entity).insert(OwnershipSentMarker);
+
+        let client_id = from_owner_id(owner.0);
+        info!(
+            "SRE: grant_ownership_when_ready checked entity {:?} with owner={:?} (client_id={:?})",
+            entity, owner.0, client_id
+        );
+
+        if client_id != bevy_replicon::prelude::ClientId::Server {
+            commands.write_message(ToClients {
+                mode: SendMode::Direct(client_id),
+                message: OwnershipGranted { entity },
+            });
             info!(
-                "insert_main_player_on_ownership: inserting MainPlayer on {:?} (UUID={})",
-                entity, local_uuid
+                "grant_ownership_when_ready: Entity {:?} is fully hydrated. Ownership handed to {:?}",
+                entity, owner.0
             );
-            commands.entity(entity).insert(MainPlayer);
+        } else {
+            info!(
+                "SRE: grant_ownership_when_ready skipping host-owned entity {:?}",
+                entity
+            );
         }
     }
 }
 
-/// Client: Fallback system that grants `LocallyOwned` on the player entity identified by UUID.
-/// This handles any residual timing edge-case where `OwnershipGranted` arrives before the entity
-/// appears in `ServerEntityMap`. Runs once per frame in InGame on pure clients until the entity
-/// acquires `LocallyOwned`, at which point it falls out of the query and becomes a no-op.
-fn fallback_player_ownership_from_uuid(
-    q: Query<(Entity, &PlayerSprite), Without<LocallyOwned>>,
-    q_player_gear: Query<&PlayerGear>,
-    local_player: Res<LocalPlayer>,
-    mut commands: Commands,
-    time: Res<Time>,
-    mut log_timer: Local<f32>,
+/// Server: diagnostic watchdog for player entities that remain pending handover.
+/// Matches both `PlayerSprite` (host) and `PlayerSpawnRequest` (dedicated server).
+fn warn_on_stuck_pending_handover(
+    q_pending: Query<
+        (Entity, &Owner),
+        (
+            Or<(With<PlayerSprite>, With<PlayerSpawnRequest>)>,
+            Without<NetworkEntityReady>,
+            Without<OwnershipSentMarker>,
+        ),
+    >,
+    mut wait_frames_by_entity: Local<HashMap<Entity, u16>>,
 ) {
-    let Some(local_uuid) = local_player.0 else {
-        // LocalPlayer not set yet — this is expected before identity is established.
-        return;
-    };
+    wait_frames_by_entity.retain(|entity, _| q_pending.get(*entity).is_ok());
 
-    // Periodic diagnostic log so we can tell what entities exist on this client.
-    *log_timer -= time.delta_secs();
-    if *log_timer <= 0.0 {
-        *log_timer = 3.0;
-        let candidates: Vec<_> = q.iter().map(|(e, s)| (e, s.id)).collect();
-        if candidates.is_empty() {
-            debug!(
-                "fallback_player_ownership_from_uuid: looking for UUID={}, no PlayerSprite entities without LocallyOwned exist yet",
-                local_uuid
-            );
-        } else {
-            debug!(
-                "fallback_player_ownership_from_uuid: looking for UUID={}, candidates={:?}",
-                local_uuid, candidates
+    for (entity, owner) in q_pending.iter() {
+        let entry = wait_frames_by_entity.entry(entity).or_insert(0);
+        *entry = entry.saturating_add(1);
+
+        if *entry == 120 || *entry == 600 {
+            warn!(
+                "warn_on_stuck_pending_handover: player {:?} still pending handover after {} frames (owner={:?})",
+                entity, *entry, owner.0
             );
         }
     }
+}
 
-    for (entity, sprite) in q.iter() {
-        if sprite.id == local_uuid {
-            info!(
-                "fallback_player_ownership_from_uuid: granting LocallyOwned to {:?} via UUID match (UUID={})",
-                entity, local_uuid
-            );
+fn apply_local_ownership_and_propagate_gear(
+    client_entity: Entity,
+    commands: &mut Commands,
+    q_player_gear: &Query<&PlayerGear>,
+) {
+    commands.entity(client_entity).insert(LocallyOwned);
+
+    // Also grant LocallyOwned to all gear entities this player holds.
+    if let Ok(gear) = q_player_gear.get(client_entity) {
+        if let Some(entity) = gear.left_hand {
             commands.entity(entity).insert(LocallyOwned);
-
-            // Also grant LocallyOwned to all gear entities this player holds
-            if let Ok(gear) = q_player_gear.get(entity) {
-                if let Some(left_hand) = gear.left_hand {
-                    commands.entity(left_hand).insert(LocallyOwned);
-                }
-                if let Some(right_hand) = gear.right_hand {
-                    commands.entity(right_hand).insert(LocallyOwned);
-                }
-                for &gear_entity in &gear.inventory {
-                    commands.entity(gear_entity).insert(LocallyOwned);
-                }
-            }
-            // NOTE: We intentionally do NOT remove ConfirmHistory here.
-            //
-            // ConfirmHistory is bevy_replicon's per-entity history buffer used to decode
-            // "mutate" (delta) messages: the server sends diffs relative to a confirmed
-            // baseline, and ConfirmHistory holds that baseline on the client.
-            //
-            // When we remove Replicated and take local ownership, the server doesn't know
-            // yet — it keeps sending mutate messages for ~1 RTT until our OwnershipReleased
-            // message arrives. Those in-flight mutate packets still need ConfirmHistory to
-            // decode. If we remove it here, every one of them errors with
-            // "missing history component inserted on the first update message".
-            //
-            // ConfirmHistory should ideally be removed only after the server acknowledges
-            // the transfer and stops sending updates — but bevy_replicon 0.39 has no
-            // callback for that. Leaving it in place is the safe approach: it's a small
-            // allocation and becomes unreachable once Replicated is gone.
-            // .remove::<bevy_replicon::client::confirm_history::ConfirmHistory>();
+            debug!(
+                "handle_ownership_granted: propagating LocallyOwned to left_hand {:?}",
+                entity
+            );
+        }
+        if let Some(entity) = gear.right_hand {
+            commands.entity(entity).insert(LocallyOwned);
+            debug!(
+                "handle_ownership_granted: propagating LocallyOwned to right_hand {:?}",
+                entity
+            );
+        }
+        for &entity in &gear.inventory {
+            commands.entity(entity).insert(LocallyOwned);
+            debug!(
+                "handle_ownership_granted: propagating LocallyOwned to inventory item {:?}",
+                entity
+            );
         }
     }
 }
@@ -737,42 +750,80 @@ fn handle_ownership_granted(
     entity_map: Res<ServerEntityMap>,
     mut commands: Commands,
     q_player_gear: Query<&PlayerGear>,
+    mut pending_grants: ResMut<PendingOwnershipGrantQueue>,
 ) {
     for msg in reader.read() {
         let server_entity = msg.entity;
-        let client_entity = entity_map
-            .to_client()
-            .get(&server_entity)
-            .copied()
-            .unwrap_or(server_entity);
-        info!("handle_ownership_granted: entity {:?}", client_entity);
-        commands.entity(client_entity).insert(LocallyOwned);
+        info!(
+            "SRE: handle_ownership_granted received OwnershipGranted for server entity {:?}",
+            server_entity
+        );
 
-        // Also grant LocallyOwned to all gear entities this player holds
-        if let Ok(gear) = q_player_gear.get(client_entity) {
-            if let Some(entity) = gear.left_hand {
-                commands.entity(entity).insert(LocallyOwned);
-                debug!(
-                    "handle_ownership_granted: propagating LocallyOwned to left_hand {:?}",
-                    entity
-                );
-            }
-            if let Some(entity) = gear.right_hand {
-                commands.entity(entity).insert(LocallyOwned);
-                debug!(
-                    "handle_ownership_granted: propagating LocallyOwned to right_hand {:?}",
-                    entity
-                );
-            }
-            for &entity in &gear.inventory {
-                commands.entity(entity).insert(LocallyOwned);
-                debug!(
-                    "handle_ownership_granted: propagating LocallyOwned to inventory item {:?}",
-                    entity
-                );
-            }
+        if let Some(client_entity) = entity_map.to_client().get(&server_entity).copied() {
+            info!(
+                "handle_ownership_granted: mapped server {:?} to client {:?}",
+                server_entity, client_entity
+            );
+            apply_local_ownership_and_propagate_gear(client_entity, &mut commands, &q_player_gear);
+            continue;
         }
+
+        let already_queued = pending_grants
+            .0
+            .iter()
+            .any(|pending| pending.server_entity == server_entity);
+        if already_queued {
+            debug!(
+                "handle_ownership_granted: server entity {:?} already queued for deferred mapping",
+                server_entity
+            );
+            continue;
+        }
+
+        warn!(
+            "handle_ownership_granted: no client mapping yet for server entity {:?}; deferring ownership",
+            server_entity
+        );
+        pending_grants.0.push(PendingOwnershipGrant {
+            server_entity,
+            frames_waited: 0,
+        });
     }
+}
+
+/// Client: retries ownership grants that arrived before ServerEntityMap contained the entity.
+fn process_pending_ownership_grants(
+    entity_map: Res<ServerEntityMap>,
+    mut pending_grants: ResMut<PendingOwnershipGrantQueue>,
+    mut commands: Commands,
+    q_player_gear: Query<&PlayerGear>,
+) {
+    if pending_grants.0.is_empty() {
+        return;
+    }
+
+    let mut still_pending = Vec::new();
+    for mut pending in pending_grants.0.drain(..) {
+        if let Some(client_entity) = entity_map.to_client().get(&pending.server_entity).copied() {
+            info!(
+                "process_pending_ownership_grants: resolved server {:?} -> client {:?} after {} frames",
+                pending.server_entity, client_entity, pending.frames_waited
+            );
+            apply_local_ownership_and_propagate_gear(client_entity, &mut commands, &q_player_gear);
+            continue;
+        }
+
+        pending.frames_waited = pending.frames_waited.saturating_add(1);
+        if pending.frames_waited == 120 || pending.frames_waited == 600 {
+            warn!(
+                "process_pending_ownership_grants: still waiting for mapping of server entity {:?} ({} frames)",
+                pending.server_entity, pending.frames_waited
+            );
+        }
+        still_pending.push(pending);
+    }
+
+    pending_grants.0 = still_pending;
 }
 
 /// Client-side: propagate the `LocallyOwned` marker to all gear entities in local player slots.

@@ -48,6 +48,8 @@ members = [
     "crates/unlight-plugin",
     "crates/unsensing-core",      # Spectral/sensing component types (UV, IR, spectral clarity)
     "crates/unnavigation-core",   # Pathfinding graph (data only, no systems)
+    "crates/unreplicon-core",     # Networking / replication
+    "crates/unreplicon-plugin",
 
     # ── 1b: The Actors (Entities & AI) ───────────────────────────────────
     # Everything that inhabits and acts within the stage.
@@ -94,8 +96,6 @@ members = [
     "crates/unclassic-mode-gameplay-plugin",     # Phasmo-style ruleset
     "crates/unclassic-mode-orchestrator-plugin", # Ghost selection and level setup
     "crates/uninput-plugin",                     # Physical key → game action binding
-    "crates/unreplicon-core",                    # Networking / replication (God Crate — being drained)
-    "crates/unreplicon-plugin",
     "crates/unorchestrator-core",
 
     # ════════════════════════════════════════════════════════════════════════
@@ -185,11 +185,11 @@ serde_json = "1.0"
 ron = "0.12"
 image = "0.25"
 regex = "1.12"
-clap = { version = "4.5", features = ["derive"] }
+clap = { version = "4.6", features = ["derive"] }
 fastapprox = "0.3"
 anyhow = "1.0"
 thiserror = "2.0"
-ordered-float = { version = "5.1", features = ["serde"] }
+ordered-float = { version = "5.2", features = ["serde"] }
 hierarchical_pathfinding = "0.5"
 walkdir = "2.5"
 glob = "0.3"
@@ -226,7 +226,7 @@ ndarray = "0.17"
 sha2 = "0.10"
 rayon = "1.11"
 crossbeam-channel = "0.5"
-uuid = { version = "1.21", features = ["v4", "serde"] }
+uuid = { version = "1.23", features = ["v4", "serde"] }
 bevy_replicon = "0.39"
 bevy_replicon_renet = "0.15"
 bevy_renet = { version = "4.0", features = ["netcode"] }
@@ -300,6 +300,8 @@ unsensing-core = { path = "crates/unsensing-core" }           # Spectral/sensing
 
 # Other:
 unnavigation-core = { path = "crates/unnavigation-core" } # Pathfinding graph (data only)
+unreplicon-core = { path = "crates/unreplicon-core" }     # Networking / replication
+unreplicon-plugin = { path = "crates/unreplicon-plugin" }
 
 # ── 1b: The Actors (Entities & AI) ───────────────────────────────────────
 # Everything that inhabits and acts within the stage.
@@ -349,8 +351,6 @@ uncareer-plugin = { path = "crates/uncareer-plugin" }                           
 unclassic-mode-gameplay-plugin = { path = "crates/unclassic-mode-gameplay-plugin" }         # Phasmo-style ruleset
 unclassic-mode-orchestrator-plugin = { path = "crates/unclassic-mode-orchestrator-plugin" } # Ghost selection and level setup
 uninput-plugin = { path = "crates/uninput-plugin" }                                         # Physical key → game action binding
-unreplicon-core = { path = "crates/unreplicon-core" }                                       # Networking / replication (God Crate — being drained)
-unreplicon-plugin = { path = "crates/unreplicon-plugin" }
 unorchestrator-core = { path = "crates/unorchestrator-core" }
 
 # ════════════════════════════════════════════════════════════════════════════

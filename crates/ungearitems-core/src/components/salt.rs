@@ -19,6 +19,14 @@ impl Default for SaltData {
 #[reflect(Component, Default)]
 pub struct SaltPile;
 
+/// Marker inserted once a salt pile is eligible to affect ghosts.
+#[derive(Component, Debug, Default)]
+pub struct SaltPileArmed;
+
+/// Short grace-period timer that prevents immediate same-frame salt pile consumption.
+#[derive(Component, Debug)]
+pub struct SaltPileArmingTimer(pub Timer);
+
 /// Marker component for salt particle entities.
 #[derive(Component)]
 pub struct SaltParticle;

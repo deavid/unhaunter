@@ -11,6 +11,7 @@ impl Plugin for UnhaunterInputPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MissionInputFocus>();
         app.init_state::<InGameUiState>();
+        app.add_systems(OnEnter(UIContextState::InGame), enter_running_mode);
 
         app.add_systems(
             Update,
@@ -36,4 +37,8 @@ fn clear_transient_input_flags(mut q_input: Query<&mut uninput_core::components:
     for mut input in q_input.iter_mut() {
         input.clear();
     }
+}
+
+fn enter_running_mode(mut next_game_state: ResMut<NextState<InGameUiState>>) {
+    next_game_state.set(InGameUiState::Running);
 }

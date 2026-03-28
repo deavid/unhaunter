@@ -2,12 +2,12 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unbehavior_core::behavior::Behavior;
+use unboard_core::entity::ResolutionFactor;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::components::PlayerInput;
 use unlocomotion_core::animation::AnimationTimer;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unrender_std::components::visuals::ResolutionFactor;
 use unspatial_core::position::Position;
 
 /// Component to tag the hiding overlay visual, linking it to the player.
@@ -40,6 +40,7 @@ fn enter_hidespot(
         let timer = hold_timers
             .entry(player_entity)
             .or_insert_with(|| Timer::from_seconds(0.3, TimerMode::Once));
+
         if player_input.hide_requested {
             if player_gear.held_item.is_some() {
                 // Player cannot hide while carrying furniture.
@@ -57,7 +58,7 @@ fn enter_hidespot(
                         &Position,
                         &Behavior,
                         Option<&ResolutionFactor>,
-                    )| player_pos.distance(hiding_spot_pos) < 1.3,
+                    )| player_pos.distance_zf(hiding_spot_pos, 6.0) < 1.5,
                 )
             {
                 // Key is held down, tick the timer
@@ -148,6 +149,7 @@ fn despawn_hidespot_overlays(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (enter_hidespot, exit_hidespot, despawn_hidespot_overlays),
+        (enter_hidespot, exit_hidespot, despawn_hidespot_overlays)
+            .after(uninput_core::PlayerInputSet),
     );
 }

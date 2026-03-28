@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::Remote;
+use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
 use unclassic_mode_core::components::GCameraArena;
 use unmission_core::types::SimulationState;
 use unorchestrator_core::UIContextState;
-use unrender_std::components::game::GameSprite;
 
 fn cleanup_game(
     mut commands: Commands,

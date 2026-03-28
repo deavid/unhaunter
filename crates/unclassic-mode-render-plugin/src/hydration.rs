@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
+use unboard_core::entity::{GameSprite, MapTileSprite, ResolutionFactor};
 use unboard_core::resources::visibility_data::VisibilityData;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
@@ -13,10 +14,9 @@ use unlight_core::components::LightSensitive;
 use unlocomotion_core::animation::{AnimationTimer, CharacterAnimation};
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::focus_ring::FocusRing;
-use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ResolutionFactor, ShadowCaster,
+    AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ShadowCaster,
 };
 use unrender_std::custom_material1::CustomMaterial1;
 use unrender_std::utils::quadcc::QuadCC;

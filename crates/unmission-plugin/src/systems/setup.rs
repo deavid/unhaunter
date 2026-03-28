@@ -11,6 +11,7 @@ use crate::systems::concluding_cinematic;
 use crate::systems::evaluate_mission_end;
 use crate::systems::handle_mission_events;
 use crate::systems::handle_quit_mission;
+use crate::systems::startup;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.replicate::<SummaryData>();
@@ -18,6 +19,30 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_message::<MissionCompletedEvent>()
         .add_message::<QuitMissionEvent>()
         .init_resource::<MissionEndRequested>()
+        .init_resource::<startup::PendingMissionStartup>()
+        .add_systems(
+            Update,
+            startup::stage_level_ready
+                .run_if(on_message::<unmission_core::events::LevelReadyEvent>),
+        )
+        .add_systems(
+            Update,
+            startup::enter_in_game_when_ready
+                .run_if(in_state(UIContextState::MissionLoading))
+                .run_if(in_state(SimulationState::Ready)),
+        )
+        .add_systems(
+            OnEnter(UIContextState::InGame),
+            startup::sync_initial_room_state_on_enter,
+        )
+        .add_systems(
+            OnEnter(UIContextState::Lobby),
+            startup::reset_pending_mission_startup,
+        )
+        .add_systems(
+            OnEnter(SimulationState::TearingDown),
+            startup::reset_pending_mission_startup,
+        )
         .add_systems(
             Update,
             handle_mission_events::handle_mission_events.run_if(in_state(UIContextState::InGame)),

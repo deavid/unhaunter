@@ -4,20 +4,21 @@ use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
 use rand::RngExt;
 
-use unbehavior_core::behavior::{Behavior, Interactive};
+use unbehavior_core::behavior::Behavior;
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::entity::MapTileSprite;
 use unboard_core::resources::visibility_data::VisibilityData;
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::resources::MouseVisibility;
+use uninteraction_core::hover::HoverState;
 use unlight_core::color_utils::lerp_color;
 use unlight_core::components::LightSensitive;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
 use unplayer_core::components::MainPlayer;
-use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{AlphaModulator, EctoplasmVisuals, Emissive, Ethereal};
 use unrender_std::custom_material1::CustomMaterial1;
 use unreplicon_core::ownership::LocallyOwned;
@@ -49,7 +50,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
             &mut Visibility,
             Option<&Behavior>,
             Option<&mut SpectralInfluence>,
-            Option<&Interactive>,
+            Option<&HoverState>,
             Option<&Ethereal>,
             Option<&EctoplasmVisuals>,
             Option<&SpectralClarity>,
@@ -74,7 +75,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 With<Ethereal>,
                 With<EctoplasmVisuals>,
                 With<AlphaModulator>,
-                With<Interactive>,
+                With<HoverState>,
                 With<LightSensitive>,
             )>,
         ),
@@ -244,7 +245,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
             mut vis,
             o_behavior,
             mut o_spectral_influence,
-            o_interactive,
+            o_hover,
             o_ethereal,
             o_ecto_vis,
             o_spectral_clarity,
@@ -260,8 +261,8 @@ pub(crate) fn apply_lighting_to_tiles_system(
             // This is the core 'flavor' of the investigation mechanics.
             // Objects react differently to UV, Red, and IR light, sometimes 'charging'
             // or glowing based on their paranormal properties.
-            let on_hover = o_interactive
-                .map(|x| x.hovered && mouse_visibility.is_visible)
+            let on_hover = o_hover
+                .map(|x| x.is_hovered && mouse_visibility.is_visible)
                 .unwrap_or_default();
             let mut opacity: f32 = 1.0;
 

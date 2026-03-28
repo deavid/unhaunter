@@ -7,6 +7,8 @@ pub mod roles;
 use bevy::prelude::*;
 use bevy_replicon::prelude::RepliconPlugins;
 use bevy_replicon_renet::RepliconRenetPlugins;
+use unorchestrator_core::UIContextState;
+use unreplicon_core::export_ext::RepliconExportSet;
 
 pub(crate) fn app_setup(app: &mut App) {
     let transport_config = app
@@ -26,6 +28,10 @@ pub(crate) fn app_setup(app: &mut App) {
             procman_config,
         },
     ));
+    app.configure_sets(
+        Update,
+        RepliconExportSet.run_if(in_state(UIContextState::InGame)),
+    );
     lobby::app_setup(app);
     players::app_setup(app);
     ghost::app_setup(app);

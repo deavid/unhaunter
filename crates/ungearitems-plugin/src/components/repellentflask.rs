@@ -1,6 +1,7 @@
 use ndarray::Array3;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
@@ -13,7 +14,6 @@ use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::summary::SummaryData;
 use unorchestrator_core::UIContextState;
-use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::Emissive;
 use unreplicon_core::ownership::LocallyOwned;

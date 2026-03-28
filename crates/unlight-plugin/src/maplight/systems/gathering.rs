@@ -95,7 +95,15 @@ pub(crate) fn gather_flashlights_system(
                            commands: &mut Commands|
      -> FlashlightData {
         let mut flash = FlashlightData::new(pos, dir, power, color, light_type, board_dim);
-        compute_visibility(&mut flash.vis_field, &bcf.0, &flash.pos, None, None, None, false);
+        compute_visibility(
+            &mut flash.vis_field,
+            &bcf.0,
+            &flash.pos,
+            None,
+            None,
+            None,
+            false,
+        );
 
         // Simple raymarch down the barrel of the flashlight beam
         let fdir = flash.dir.normalized();
@@ -213,7 +221,15 @@ pub(crate) fn gather_flashlights_system(
             LightType::Red,
             board_dim,
         );
-        compute_visibility(&mut flash.vis_field, &bcf.0, &flash.pos, None, None, None, false);
+        compute_visibility(
+            &mut flash.vis_field,
+            &bcf.0,
+            &flash.pos,
+            None,
+            None,
+            None,
+            false,
+        );
         flashlights.push(flash);
     }
 
@@ -243,7 +259,8 @@ pub(crate) fn update_exposure_system(
     let mut exp_count: f32 = 0.0001;
 
     // Weight highlights more when calculating exposure (Power Average)
-    const HIGHLIGHT_PRIORITY_POWER: f32 = 1.0;
+    const HIGHLIGHT_PRIORITY_POWER: f32 = 0.5;
+    const CORRECTION_FACTOR: f32 = 0.7;
 
     let cursor_pos = pos.to_board_position();
     for npos in cursor_pos.iter_xy_neighbors(10, board_dim) {
@@ -274,6 +291,6 @@ pub(crate) fn update_exposure_system(
     cursor_exp += fl_total_power.sqrt();
 
     // FIR Filter with Hann Window (240 frames)
-    lg.exposure.add_sample(cursor_exp);
+    lg.exposure.add_sample(cursor_exp * CORRECTION_FACTOR);
     lg.exposure.update(time.delta_secs());
 }

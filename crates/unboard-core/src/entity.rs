@@ -1,5 +1,9 @@
 use bevy::prelude::*;
 
+/// Marker component for game-world entities that participate in mission lifecycle cleanup.
+#[derive(Component, Debug)]
+pub struct GameSprite;
+
 /// Marker component for map tile sprites (static tileset elements)
 #[derive(Component, Debug)]
 pub struct MapTileSprite;

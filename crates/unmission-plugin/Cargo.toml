@@ -12,6 +12,7 @@ workspace = true
 
 [dependencies]
 unboard-core = { workspace = true }
+uninteraction-core = { workspace = true }
 unmission-core = { workspace = true }
 unorchestrator-core = { workspace = true }
 unplayer-core = { workspace = true }
