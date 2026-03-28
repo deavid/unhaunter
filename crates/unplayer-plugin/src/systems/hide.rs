@@ -25,7 +25,7 @@ struct HidingOverlay {
 fn enter_hidespot(
     mut commands: Commands,
     mut players: Query<
-        (Entity, &PlayerInput, &mut Position, &PlayerGear),
+        (Entity, &mut PlayerInput, &mut Position, &PlayerGear),
         (With<MainPlayer>, Without<Hiding>, Without<Behavior>),
     >,
     hiding_spots: Query<
@@ -35,7 +35,7 @@ fn enter_hidespot(
     mut ga: AudioEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
-    for (player_entity, player_input, mut player_pos, player_gear) in players.iter_mut() {
+    for (player_entity, mut player_input, mut player_pos, player_gear) in players.iter_mut() {
         // Get the player's hold timer or create a new one
         let timer = hold_timers
             .entry(player_entity)
@@ -65,6 +65,7 @@ fn enter_hidespot(
                 if !timer.is_finished() {
                     continue;
                 }
+                player_input.hide_requested = false;
                 timer.reset();
 
                 // Add the Hiding component to the player
@@ -110,10 +111,11 @@ fn enter_hidespot(
 /// visibility is restored, and the visual overlay is removed from the hiding spot.
 fn exit_hidespot(
     mut commands: Commands,
-    mut players: Query<(Entity, &PlayerInput, &Hiding), (With<MainPlayer>, With<PlayerSprite>)>,
+    mut players: Query<(Entity, &mut PlayerInput, &Hiding), (With<MainPlayer>, With<PlayerSprite>)>,
 ) {
-    for (player_entity, player_input, _) in players.iter_mut() {
+    for (player_entity, mut player_input, _) in players.iter_mut() {
         if player_input.unhide_requested {
+            player_input.unhide_requested = false;
             // Using 'activate' for unhiding Remove the Hiding component
             commands.entity(player_entity).remove::<Hiding>();
 

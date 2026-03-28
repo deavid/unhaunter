@@ -8,9 +8,9 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
-use uninvestigation_core::evidence::Evidence;
 use uninput_core::components::PlayerInputMapping;
 use uninteraction_core::interaction::Toggleable;
+use uninvestigation_core::evidence::Evidence;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 
 use unorchestrator_core::UIContextState;

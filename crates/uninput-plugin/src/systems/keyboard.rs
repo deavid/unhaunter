@@ -46,20 +46,20 @@ pub fn keyboard_input_system(
             movement.x += 1.0;
         }
 
-        player_input.run = keyboard_input.pressed(input_mapping.controls.run);
-        player_input.interact = keyboard_input.just_pressed(input_mapping.controls.activate);
-        player_input.hide_requested = keyboard_input.pressed(input_mapping.controls.activate);
-        player_input.unhide_requested =
+        player_input.run |= keyboard_input.pressed(input_mapping.controls.run);
+        player_input.interact |= keyboard_input.just_pressed(input_mapping.controls.activate);
+        player_input.hide_requested |= keyboard_input.pressed(input_mapping.controls.activate);
+        player_input.unhide_requested |=
             keyboard_input.just_pressed(input_mapping.controls.activate);
-        player_input.grab = keyboard_input.just_pressed(input_mapping.controls.grab);
-        player_input.drop = keyboard_input.just_pressed(input_mapping.controls.drop);
-        player_input.use_right_hand = keyboard_input
+        player_input.grab |= keyboard_input.just_pressed(input_mapping.controls.grab);
+        player_input.drop |= keyboard_input.just_pressed(input_mapping.controls.drop);
+        player_input.use_right_hand |= keyboard_input
             .just_pressed(input_mapping.controls.right_hand_trigger)
             || mouse_input.just_pressed(MouseButton::Right);
-        player_input.use_left_hand =
+        player_input.use_left_hand |=
             keyboard_input.just_pressed(input_mapping.controls.left_hand_trigger);
-        player_input.inventory_cycle = keyboard_input.just_pressed(input_mapping.controls.cycle);
-        player_input.inventory_swap = keyboard_input.just_pressed(input_mapping.controls.swap);
+        player_input.inventory_cycle |= keyboard_input.just_pressed(input_mapping.controls.cycle);
+        player_input.inventory_swap |= keyboard_input.just_pressed(input_mapping.controls.swap);
 
         // Apply MovementStyle transformation (from original keyboard_player)
         if matches!(

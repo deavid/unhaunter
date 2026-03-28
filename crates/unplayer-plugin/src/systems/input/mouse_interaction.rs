@@ -18,67 +18,69 @@ pub(crate) fn toggle_gear_from_use_intent(
 ) {
     let is_authority = authority.is_some();
 
-    for (player_gear, player_input, main_player) in q_players.iter_mut() {
+    for (player_gear, mut player_input, main_player) in q_players.iter_mut() {
         let is_main = main_player.is_some();
-        if player_input.use_right_hand
-            && let Some(entity) = player_gear.right_hand
-        {
-            debug!(
-                "player_gear_usage_system: Processing right-hand item {:?} (is_main={:?}, host={:?})",
-                entity, is_main, is_authority
-            );
-            if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
-                let target_on = if is_main {
-                    !toggle.is_on
-                } else {
-                    // Remote players: no prediction data available, keep current state
-                    toggle.is_on
-                };
+        if player_input.use_right_hand {
+            player_input.use_right_hand = false;
+            if let Some(entity) = player_gear.right_hand {
+                debug!(
+                    "player_gear_usage_system: Processing right-hand item {:?} (is_main={:?}, host={:?})",
+                    entity, is_main, is_authority
+                );
+                if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
+                    let target_on = if is_main {
+                        !toggle.is_on
+                    } else {
+                        // Remote players: no prediction data available, keep current state
+                        toggle.is_on
+                    };
 
-                if toggle.is_on != target_on {
-                    toggle.is_on = target_on;
-                    if let Some(pos) = pos {
-                        if is_main || is_authority {
-                            // Host plays sound locally for remote player click
-                            // and broadcasts it to other clients
-                            ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                    if toggle.is_on != target_on {
+                        toggle.is_on = target_on;
+                        if let Some(pos) = pos {
+                            if is_main || is_authority {
+                                // Host plays sound locally for remote player click
+                                // and broadcasts it to other clients
+                                ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                            }
+                        } else if is_main || is_authority {
+                            ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                         }
-                    } else if is_main || is_authority {
-                        ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }
+                commands.entity(entity).insert(Triggered);
             }
-            commands.entity(entity).insert(Triggered);
         }
-        if player_input.use_left_hand
-            && let Some(entity) = player_gear.left_hand
-        {
-            debug!(
-                "player_gear_usage_system: Processing left-hand item {:?} (is_main={:?}, host={:?})",
-                entity, is_main, is_authority
-            );
-            if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
-                let target_on = if is_main {
-                    !toggle.is_on
-                } else {
-                    // Remote players: no prediction data available, keep current state
-                    toggle.is_on
-                };
+        if player_input.use_left_hand {
+            player_input.use_left_hand = false;
+            if let Some(entity) = player_gear.left_hand {
+                debug!(
+                    "player_gear_usage_system: Processing left-hand item {:?} (is_main={:?}, host={:?})",
+                    entity, is_main, is_authority
+                );
+                if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
+                    let target_on = if is_main {
+                        !toggle.is_on
+                    } else {
+                        // Remote players: no prediction data available, keep current state
+                        toggle.is_on
+                    };
 
-                if toggle.is_on != target_on {
-                    toggle.is_on = target_on;
-                    if let Some(pos) = pos {
-                        if is_main || is_authority {
-                            // Host plays sound locally for remote player click
-                            // and broadcasts it to other clients
-                            ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                    if toggle.is_on != target_on {
+                        toggle.is_on = target_on;
+                        if let Some(pos) = pos {
+                            if is_main || is_authority {
+                                // Host plays sound locally for remote player click
+                                // and broadcasts it to other clients
+                                ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                            }
+                        } else if is_main || is_authority {
+                            ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                         }
-                    } else if is_main || is_authority {
-                        ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                     }
                 }
+                commands.entity(entity).insert(Triggered);
             }
-            commands.entity(entity).insert(Triggered);
         }
     }
 }

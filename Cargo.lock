@@ -3388,7 +3388,6 @@ dependencies = [
  "itertools 0.14.0",
  "serde",
  "serde_json",
- "unghost-core",
  "uninvestigation-core",
 ]
 
@@ -7472,7 +7471,6 @@ dependencies = [
  "strum",
  "uncommon-app-core",
  "ungear-core",
- "unghost-core",
  "uninvestigation-core",
 ]
 
@@ -8284,7 +8282,6 @@ name = "unrender-std"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_asset_loader",
  "bevy_platform",
  "enum-iterator",
  "unbehavior-core",
@@ -8436,7 +8433,6 @@ dependencies = [
  "uncareer-core",
  "uncommon-app-core",
  "undifficulty-core",
- "unghost-core",
  "uninvestigation-core",
  "unmission-core",
  "unorchestrator-core",
@@ -8540,7 +8536,6 @@ dependencies = [
  "undifficulty-core",
  "ungear-core",
  "ungearitems-core",
- "unghost-core",
  "uninput-core",
  "uninvestigation-core",
  "unmapload-core",
@@ -8627,7 +8622,6 @@ dependencies = [
  "uncommon-app-core",
  "undifficulty-core",
  "ungear-core",
- "unghost-core",
  "uninvestigation-core",
  "unwalkie-types",
 ]

@@ -11,10 +11,6 @@ impl Plugin for UnhaunterInputPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MissionInputFocus>();
         app.init_state::<InGameUiState>();
-        app.add_systems(
-            PreUpdate,
-            systems::keyboard::keyboard_input_system.run_if(in_state(UIContextState::InGame)),
-        );
 
         app.add_systems(
             Update,
@@ -23,6 +19,7 @@ impl Plugin for UnhaunterInputPlugin {
                 systems::mouse::mouse_aim_system,
                 systems::mouse_interaction::mouse_scroll_gear_system,
             )
+                .in_set(uninput_core::PlayerInputSet)
                 .run_if(in_state(UIContextState::InGame)),
         );
 

@@ -24,6 +24,5 @@ unboard-core = { workspace = true }
 uncareer-core = { workspace = true }
 unmission-core = { workspace = true }
 unplayer-core = { workspace = true }
-unghost-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 unvitals-core = { workspace = true }

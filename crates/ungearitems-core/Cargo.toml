@@ -16,6 +16,5 @@ serde = { workspace = true }
 enum-iterator = { workspace = true }
 strum = { workspace = true }
 uncommon-app-core = { workspace = true }
-unghost-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 ungear-core = { workspace = true }

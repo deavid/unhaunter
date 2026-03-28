@@ -8,7 +8,6 @@ workspace = true
 
 [dependencies]
 
-unghost-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 enum-iterator = { workspace = true }
 clap = { workspace = true }

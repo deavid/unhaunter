@@ -37,11 +37,11 @@ const DIR_RED: f32 = 1.001;
 
 pub(crate) fn dispatch_interact_intent(
     mut commands: Commands,
-    players: Query<
+    mut players: Query<
         (
             Entity,
             &Position,
-            &PlayerInput,
+            &mut PlayerInput,
             Option<&Hiding>,
             Option<&InTruck>,
             Option<&PlayerSpectating>,
@@ -64,12 +64,13 @@ pub(crate) fn dispatch_interact_intent(
     mut ev_npc: Option<MessageWriter<NpcHelpEvent>>,
     authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
 ) {
-    for (player_entity, pos, player_input, hiding, in_truck, spectating) in players.iter() {
+    for (player_entity, pos, mut player_input, hiding, in_truck, spectating) in players.iter_mut() {
         if in_truck.is_some() || hiding.is_some() || spectating.is_some() {
             continue;
         }
         if player_input.interact {
-            let mut max_dist = 1.4;
+            player_input.interact = false;
+            let mut max_dist = 1.5; // Slightly larger than INTERACTION_DISTANCE in waypoints (1.4) to avoid float precision drops
             let mut selected_entity = None;
             for (entity, item_pos, interactive, behavior, _) in interactables.iter() {
                 let Some(interactive) = interactive else {
@@ -385,6 +386,7 @@ pub(crate) fn app_setup(app: &mut App) {
             dispatch_interact_intent,
             apply_movement_intent,
             drive_character_animation,
-        ),
+        )
+            .after(uninput_core::PlayerInputSet),
     );
 }

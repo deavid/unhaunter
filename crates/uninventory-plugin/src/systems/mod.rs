@@ -50,15 +50,16 @@ pub(crate) fn sync_held_object_position_to_holder(
 }
 
 pub(crate) fn queue_pickup_request(
-    players: Query<(&PlayerGear, &Position, &PlayerInput)>,
+    mut players: Query<(&PlayerGear, &Position, &mut PlayerInput)>,
     pickables: Query<
         (Entity, &Position, Option<&GearKind>, Option<&Behavior>),
         (Without<PlayerSprite>, With<FloorItemCollidable>),
     >,
     mut writer_grab: MessageWriter<RequestGrab>,
 ) {
-    for (player_gear, player_pos, player_input) in players.iter() {
+    for (player_gear, player_pos, mut player_input) in players.iter_mut() {
         if player_input.grab {
+            player_input.grab = false;
             let mut closest = None;
             let mut min_dist = 1.0;
 
@@ -92,7 +93,7 @@ pub(crate) fn queue_drop_request(
     mut players: Query<(
         &mut PlayerGear,
         &Position,
-        &PlayerInput,
+        &mut PlayerInput,
         &PlayerLocomotionState,
     )>,
     mut commands: Commands,
@@ -101,8 +102,9 @@ pub(crate) fn queue_drop_request(
     mut writer_drop: MessageWriter<RequestDrop>,
     mut ev_sound: MessageWriter<SoundEvent>,
 ) {
-    for (mut player_gear, player_pos, player_input, player_loco) in players.iter_mut() {
+    for (mut player_gear, player_pos, mut player_input, player_loco) in players.iter_mut() {
         if player_input.drop {
+            player_input.drop = false;
             // Check if the tile is free
             let bpos = player_pos.to_board_position();
             let is_free = board_collision
@@ -246,11 +248,12 @@ pub(crate) fn strip_visuals_from_grabbed_gear(
 }
 
 pub(crate) fn cycle_inventory(
-    mut players: Query<(&mut PlayerGear, &PlayerInput)>,
+    mut players: Query<(&mut PlayerGear, &mut PlayerInput)>,
     mut commands: Commands,
 ) {
-    for (mut player_gear, player_input) in players.iter_mut() {
+    for (mut player_gear, mut player_input) in players.iter_mut() {
         if player_input.inventory_cycle {
+            player_input.inventory_cycle = false;
             if let Some(entity) = player_gear.right_hand.take() {
                 player_gear.inventory.push(entity);
                 commands.entity(entity).insert(EquipmentPosition::Stowed);
@@ -267,11 +270,12 @@ pub(crate) fn cycle_inventory(
 }
 
 pub(crate) fn swap_hand_equipment(
-    mut players: Query<(&mut PlayerGear, &PlayerInput)>,
+    mut players: Query<(&mut PlayerGear, &mut PlayerInput)>,
     mut commands: Commands,
 ) {
-    for (mut player_gear, player_input) in players.iter_mut() {
+    for (mut player_gear, mut player_input) in players.iter_mut() {
         if player_input.inventory_swap {
+            player_input.inventory_swap = false;
             let tmp = player_gear.left_hand;
             player_gear.left_hand = player_gear.right_hand;
             player_gear.right_hand = tmp;

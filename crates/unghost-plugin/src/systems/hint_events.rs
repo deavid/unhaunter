@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 
+use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::events::{EvidenceClarityThresholdCrossed, GhostActualTypeChanged};
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::resources::current_evidence_readings::{
     CurrentEvidenceReadings, HIGH_CLARITY_THRESHOLD,
 };
-use unghost_core::components::ghost_sprite::GhostSprite;
-use unghost_core::events::{EvidenceClarityThresholdCrossed, GhostActualTypeChanged};
 
 /// Monitors `CurrentEvidenceReadings` for threshold crossings and emits events on rising/falling edges.
 ///

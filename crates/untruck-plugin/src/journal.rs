@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use uninput_core::states::InGameUiState;
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::components::truck_ui_markers::TruckUIGhostGuess;
 use untruck_core::journal::ForceDiscardEvidenceEvent;

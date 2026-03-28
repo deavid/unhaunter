@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::types::fielddata::CollisionFieldData;
 use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
 pub(crate) fn compute_visibility(
@@ -10,6 +11,8 @@ pub(crate) fn compute_visibility(
     collision_field: &Array3<CollisionFieldData>,
     pos_start: &Position,
     room_topology: Option<&mut RoomTopology>,
+    facing_direction: Option<&Direction>,
+    visibility_exposure: Option<f32>,
     pre_fill: bool,
 ) {
     if pre_fill {
@@ -18,6 +21,8 @@ pub(crate) fn compute_visibility(
     let mut queue = VecDeque::with_capacity(256);
     let start = pos_start.to_board_position();
     let map_size = collision_field.dim();
+    let dir_vec = facing_direction.map(|d| d.to_vec3().truncate());
+
     if map_size.0 == 0 || map_size.1 == 0 || map_size.2 == 0 {
         return;
     }
@@ -50,7 +55,48 @@ pub(crate) fn compute_visibility(
             } else {
                 ((npds - pds) / npref).clamp(0.0, 1.0).powf(1.0)
             };
-            let mut dst_f = src_f * f;
+            let mut cone_factor = 1.0;
+            if let (Some(dir_vec), true) = (dir_vec, npds > threshold) {
+                let displacement = (npos.to_position().to_vec3().truncate()
+                    - pos_start.to_vec3().truncate())
+                .normalize_or_zero();
+                let dot = displacement.dot(dir_vec.normalize_or_zero());
+
+                // Blend the cone effect based on distance.
+                let cone_threshold = 0.0;
+                let cone_intensity = ((npds - cone_threshold) * 2.0).clamp(0.0, 1.0);
+
+                // Apply exposure (vision width) logic dynamically.
+                let exp_mult = visibility_exposure.unwrap_or(1.0).max(0.0);
+
+                // Map exposure to a "cone power":
+                // exposure = 0.0 -> power = 16.0 (very narrow, ~30 degrees)
+                // exposure = 1.0 -> power = 3.0 (normal, ~90-120 degrees)
+                // We clamp the minimum power at 1.0 (which mathematically creates a 180 degree max cone).
+                let power = if exp_mult <= 1.0 {
+                    // interpolate from 16 to 3
+                    16.0 - (exp_mult * 13.0)
+                } else {
+                    // interpolate from 3 to 1
+                    (3.0 - (exp_mult - 1.0) * 2.0).max(1.0)
+                };
+
+                // As exposure increases beyond 1.0, we want to expand beyond the 180-degree limit
+                // by reducing the absolute penalty applied to the back of the player.
+                // At exp = 1.0, penalty min is 0.05.
+                // At exp >= 2.0, penalty min approaches 1.0 (no penalty anywhere).
+                let penalty_floor = if exp_mult <= 1.0 {
+                    0.2
+                } else {
+                    (0.2 + (exp_mult - 1.0) * 0.8).min(1.0)
+                };
+
+                let raw_cone = dot.max(0.0).powf(power).max(penalty_floor);
+
+                cone_factor = 1.0 * (1.0 - cone_intensity) + raw_cone * cone_intensity;
+            }
+
+            let mut dst_f = src_f * f * cone_factor;
             if dst_f < 0.00001 {
                 continue;
             }

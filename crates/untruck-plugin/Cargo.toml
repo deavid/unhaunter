@@ -22,7 +22,6 @@ unbehavior-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
 unsettings-core = { workspace = true }
-unghost-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 unmapload-core = { workspace = true }
 

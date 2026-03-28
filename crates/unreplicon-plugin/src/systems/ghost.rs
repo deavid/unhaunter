@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::{
     AppRuleExt, Channel, ClientMessageAppExt, FromClient, Replicated, ServerMessageAppExt,
 };
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::events::{JournalEvidenceToggled, JournalGhostToggled};
 use unghost_core::tags::GhostTag;
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unmission_core::summary::SummaryData;
 use unmission_core::types::SimulationState;
 use unorchestrator_core::UIContextState;

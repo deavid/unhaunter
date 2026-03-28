@@ -37,3 +37,10 @@ impl Default for LightSensitive {
         }
     }
 }
+
+/// Stores the state of the flashlight bounce for temporal smoothing
+#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[reflect(Component)]
+pub struct FlashlightBounceState {
+    pub smoothed_dist: f32,
+}

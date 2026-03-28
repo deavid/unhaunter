@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unghost_core::events::{JournalEvidenceToggled, JournalGhostToggled};
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unmission_core::types::SimulationState;
 use unreplicon_core::resources::AuthorityRole;
 

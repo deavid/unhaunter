@@ -24,10 +24,17 @@ pub fn mouse_aim_system(
     if !q_in_truck.is_empty() {
         return;
     }
-    // Only aim when mouse is visible
+
+    let Ok((mut player_dir, player_pos, mut player_input)) = q_player.single_mut() else {
+        return;
+    };
+
+    // Only aim when mouse is visible. When not visible, clear aim_direction so it falls back to locomotion.
     if !mouse_visibility.is_visible {
+        player_input.aim_direction = Vec2::ZERO;
         return;
     }
+
     let Ok(window) = q_window.single() else {
         return;
     };
@@ -35,9 +42,6 @@ pub fn mouse_aim_system(
         return;
     };
     let Ok((camera, cam_transform)) = q_camera.single() else {
-        return;
-    };
-    let Ok((mut player_dir, player_pos, mut player_input)) = q_player.single_mut() else {
         return;
     };
 

@@ -10,7 +10,7 @@ use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use uninteraction_core::interaction::Toggleable;
-use unlight_core::components::LightEmitter;
+use unlight_core::components::{FlashlightBounceState, LightEmitter};
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light_type::LightType;
 use unmetrics_core::metrics::SendMetric;
@@ -19,16 +19,19 @@ use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
 pub(crate) fn player_visibility_system(
-    mut q_vf: Query<(&Position, &mut VisibilityData), With<MainPlayer>>,
+    mut q_vf: Query<(&Position, &Direction, &mut VisibilityData), With<MainPlayer>>,
     bcf: Res<BoardCollisionField>,
     mut room_topology: ResMut<RoomTopology>,
+    lg: Option<Res<LightGrid>>,
 ) {
     if bcf.0.dim().0 == 0 || bcf.0.dim().1 == 0 || bcf.0.dim().2 == 0 {
         return;
     }
     let measure = PLAYER_VISIBILITY.clone().time_measure();
 
-    for (pos, mut vf) in q_vf.iter_mut() {
+    let exposure = lg.map(|x| x.exposure.current).unwrap_or(1.0);
+
+    for (pos, dir, mut vf) in q_vf.iter_mut() {
         if vf.visibility_field.dim() != bcf.0.dim() {
             vf.visibility_field = Array3::from_elem(bcf.0.dim(), -0.001_f32);
         } else {
@@ -40,6 +43,8 @@ pub(crate) fn player_visibility_system(
             &bcf.0,
             pos,
             Some(&mut room_topology),
+            Some(dir),
+            Some(exposure),
             false,
         );
     }
@@ -47,10 +52,26 @@ pub(crate) fn player_visibility_system(
 }
 
 pub(crate) fn gather_flashlights_system(
-    q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
+    mut commands: Commands,
+    mut q_deployed: Query<(
+        Entity,
+        &Position,
+        &DeployedGear,
+        &LightEmitter,
+        &Toggleable,
+        Option<&mut FlashlightBounceState>,
+    )>,
     qp: Query<(&Position, &Direction, &PlayerGear)>,
     q_spectator: Query<&Position, (With<MainPlayer>, With<PlayerSpectating>)>,
-    q_flashlight: Query<(&LightEmitter, &Toggleable)>,
+    mut q_flashlight: Query<
+        (
+            Entity,
+            &LightEmitter,
+            &Toggleable,
+            Option<&mut FlashlightBounceState>,
+        ),
+        Without<DeployedGear>,
+    >,
     grids: GridResources,
     mut active_flashlights: ResMut<ActiveFlashlights>,
 ) {
@@ -64,8 +85,60 @@ pub(crate) fn gather_flashlights_system(
     let mut flashlights = vec![];
     const FLASHLIGHT_POWER_FACTOR: f32 = 0.1;
 
+    let raymarch_bounce = |entity: Entity,
+                           pos: Position,
+                           dir: Direction,
+                           power: f32,
+                           color: Color,
+                           light_type: LightType,
+                           bounce_state: Option<Mut<FlashlightBounceState>>,
+                           commands: &mut Commands|
+     -> FlashlightData {
+        let mut flash = FlashlightData::new(pos, dir, power, color, light_type, board_dim);
+        compute_visibility(&mut flash.vis_field, &bcf.0, &flash.pos, None, None, None, false);
+
+        // Simple raymarch down the barrel of the flashlight beam
+        let fdir = flash.dir.normalized();
+        let mut raw_wall_dist = 60.0; // max plausible range without wall
+
+        let mut t = 0.0;
+        let step = 0.5;
+        while t < 60.0 {
+            let sample_pos = flash.pos + fdir * t;
+            let sample_bpos = sample_pos.to_board_position();
+            if let Some(idx) = sample_bpos.ndidx_checked(bf.map_size) {
+                let collision = &bcf.0[idx];
+                if !collision.see_through {
+                    raw_wall_dist = t;
+                    break;
+                }
+            } else {
+                raw_wall_dist = t;
+                break;
+            }
+            t += step;
+        }
+
+        let smoothed_dist = if let Some(mut state) = bounce_state {
+            let prev_dist = state.smoothed_dist;
+            let smooth = 0.15;
+            let new_dist = prev_dist * (1.0 - smooth) + raw_wall_dist * smooth;
+            state.smoothed_dist = new_dist;
+            new_dist
+        } else {
+            commands.entity(entity).insert(FlashlightBounceState {
+                smoothed_dist: raw_wall_dist,
+            });
+            raw_wall_dist
+        };
+
+        // E.g. Albedo 0.1 means bounce reflects 10% of light
+        flash.set_bounce(smoothed_dist, 0.10);
+        flash
+    };
+
     // Deployed gear
-    for (pos, deployed_gear, fl, toggle) in q_deployed.iter() {
+    for (entity, pos, deployed_gear, fl, toggle, bounce_state) in q_deployed.iter_mut() {
         if !toggle.is_on {
             continue;
         }
@@ -74,29 +147,41 @@ pub(crate) fn gather_flashlights_system(
         let light_type = fl.light_type;
 
         if power > 0.0 {
-            flashlights.push(FlashlightData::new(
+            flashlights.push(raymarch_bounce(
+                entity,
                 *pos,
                 deployed_gear.direction,
                 power * FLASHLIGHT_POWER_FACTOR,
                 color,
                 light_type,
-                board_dim,
+                bounce_state,
+                &mut commands,
             ));
         }
     }
 
     for (pos, direction, gear) in qp.iter() {
-        let mut player_flashlight: Vec<(f32, Color, EquipmentPosition, LightType)> = vec![];
-
         let mut check_gear = |entity: Entity, p: EquipmentPosition| {
-            if let Ok((fl, toggle)) = q_flashlight.get(entity)
+            if let Ok((_, fl, toggle, bounce_state)) = q_flashlight.get_mut(entity)
                 && toggle.is_on
             {
-                player_flashlight.push((
+                let mut fldir = *direction;
+                if p == EquipmentPosition::Stowed {
+                    fldir = Direction {
+                        dx: fldir.dx / 1000.0,
+                        dy: fldir.dy / 1000.0,
+                        dz: fldir.dz / 1000.0,
+                    };
+                }
+                flashlights.push(raymarch_bounce(
+                    entity,
+                    *pos,
+                    fldir,
                     fl.power * FLASHLIGHT_POWER_FACTOR,
                     fl.color,
-                    p,
                     fl.light_type,
+                    bounce_state,
+                    &mut commands,
                 ));
             }
         };
@@ -110,22 +195,6 @@ pub(crate) fn gather_flashlights_system(
         for e in &gear.inventory {
             check_gear(*e, EquipmentPosition::Stowed);
         }
-
-        for (power, color, p, light_type) in player_flashlight {
-            if power > 0.0 {
-                let mut fldir = *direction;
-                if p == EquipmentPosition::Stowed {
-                    fldir = Direction {
-                        dx: fldir.dx / 1000.0,
-                        dy: fldir.dy / 1000.0,
-                        dz: fldir.dz / 1000.0,
-                    };
-                }
-                flashlights.push(FlashlightData::new(
-                    *pos, fldir, power, color, light_type, board_dim,
-                ));
-            }
-        }
     }
 
     if let Ok(pos) = q_spectator.single() {
@@ -136,18 +205,16 @@ pub(crate) fn gather_flashlights_system(
             dy: 0.0001,
             dz: -0.0001,
         };
-        flashlights.push(FlashlightData::new(
+        let mut flash = FlashlightData::new(
             *pos,
             dir,
             32.0,
             Color::srgb(1.0, 0.04, 0.001),
             LightType::Red,
             board_dim,
-        ));
-    }
-
-    for flash in flashlights.iter_mut() {
-        compute_visibility(&mut flash.vis_field, &bcf.0, &flash.pos, None, false);
+        );
+        compute_visibility(&mut flash.vis_field, &bcf.0, &flash.pos, None, None, None, false);
+        flashlights.push(flash);
     }
 
     active_flashlights.list = flashlights;
