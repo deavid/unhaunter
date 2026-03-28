@@ -8,7 +8,7 @@ use unsensing_core::components::SpectralClarity;
 use untags_core::tags::GhostTag;
 use untypes_core::states::AppState;
 
-use unghost_core::events::GhostInteractionEvent;
+use unghost_core::events::{GhostInteractionEvent, JournalEvidenceToggled, JournalGhostToggled};
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
@@ -27,6 +27,8 @@ impl Plugin for UnhaunterGhostCorePlugin {
             .unwrap_or(false);
 
         app.add_message::<GhostInteractionEvent>();
+        app.add_message::<JournalEvidenceToggled>();
+        app.add_message::<JournalGhostToggled>();
         app.replicate::<GhostTag>();
         app.replicate::<GhostBreach>();
         app.replicate::<GhostSprite>();
@@ -36,6 +38,7 @@ impl Plugin for UnhaunterGhostCorePlugin {
         crate::systems::hydration::app_setup(app);
         crate::systems::evidence_decay::app_setup(app);
         crate::systems::ghost_ai::app_setup(app);
+        crate::systems::journal::app_setup(app);
         ghost_events::app_setup(app);
         metrics::register_all(app);
         app.init_resource::<ObjectInteractionConfig>()

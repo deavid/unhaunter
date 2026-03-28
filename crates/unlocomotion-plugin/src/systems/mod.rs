@@ -1,3 +1,5 @@
+pub(crate) mod spawn;
+
 use bevy::prelude::*;
 use unaudiospatial_core::events::SoundEvent;
 use unbehavior_core::behavior::Behavior;
@@ -9,13 +11,13 @@ use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::components::PlayerInput;
 use uninteraction_core::events::InteractionExecutionType;
+use uninteraction_core::events::InteractionRequestMessage;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unlocomotion_core::animation::{AnimationTimer, CharacterAnimation};
 use unlocomotion_core::components::PlayerLocomotionState;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unnpc_core::events::NpcHelpEvent;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSpectating, PlayerSprite};
-use unreplicon_core::messages::InteractionRequestMessage;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
@@ -373,6 +375,8 @@ pub(crate) fn drive_character_animation(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
+    spawn::app_setup(app);
+
     app.add_systems(
         Update,
         (

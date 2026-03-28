@@ -1,3 +1,5 @@
+use crate::types::evidence::Evidence;
+use crate::types::ghost::types::GhostType;
 use bevy::prelude::*;
 use unspatial_core::position::Position;
 
@@ -20,6 +22,23 @@ pub enum GhostInteractionType {
     Lock,
     /// Trip the main circuit breaker
     TripBreaker,
+}
+
+/// Emitted by the networking layer when a client requests a journal evidence toggle.
+/// `unghost-plugin` reacts and applies the change to `GhostGuess`.
+#[derive(Message, Debug, Clone)]
+pub struct JournalEvidenceToggled {
+    pub evidence: Evidence,
+    pub discard: bool,
+    pub mark_as_found: bool,
+}
+
+/// Emitted by the networking layer when a client requests a journal ghost-type toggle.
+/// `unghost-plugin` reacts and applies the change to `GhostGuess`.
+#[derive(Message, Debug, Clone)]
+pub struct JournalGhostToggled {
+    pub ghost_type: Option<GhostType>,
+    pub discard: bool,
 }
 
 /// Event dispatched when a ghost performs an interaction with an environmental object

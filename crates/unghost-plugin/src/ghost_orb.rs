@@ -8,9 +8,9 @@ use unfoundation_core::random_seed;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_orb_particle::GhostOrbParticle;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
-use unsensing_core::components::SpectralInfluence;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
+use unsensing_core::components::SpectralInfluence;
 use unspatial_core::position::Position;
 
 // Timer resource for controlling orb spawn rate (~1 per second)

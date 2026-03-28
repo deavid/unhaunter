@@ -15,6 +15,6 @@ bevy = { workspace = true }
 bevy_platform = { workspace = true }
 serde = { workspace = true }
 uuid = { workspace = true }
+uncareer-core = { workspace = true }
 unghost-core = { workspace = true }
-unmission-core = { workspace = true }
 undifficulty-core = { workspace = true }

@@ -7,6 +7,7 @@ use unbehavior_core::behavior::Behavior;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::components::playergear::PlayerGear;
+use unmission_core::resources::MissionConcludingCinematic;
 use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
 use unrender_std::assets::GearAssets;
 use unsettings_core::game::GameplaySettings;
@@ -17,6 +18,10 @@ use unui_core::components::game_ui::{
     WalkieTextUIRoot,
 };
 use unvitals_core::components::PlayerVitals;
+
+/// Marker for the fade-to-black overlay that plays during the mission concluding cinematic.
+#[derive(Component)]
+struct MissionFadeOverlay;
 
 fn update_damage_vignette_color(
     qp: Query<(&PlayerVitals, Has<PlayerSpectating>), With<MainPlayer>>,
@@ -154,6 +159,19 @@ fn setup_ui(
         .insert(BackgroundColor(css::BLACK.with_alpha(0.0).into()))
         .insert(GameUI)
         .insert(DamageBackground::new(4.0));
+    // Full-screen fade-to-black overlay, driven by MissionConcludingCinematic.
+    commands
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            position_type: PositionType::Absolute,
+            ..default()
+        })
+        .insert(Pickable::IGNORE)
+        .insert(ZIndex(500))
+        .insert(BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.0)))
+        .insert(GameUI)
+        .insert(MissionFadeOverlay);
     commands
         .spawn(ImageNode {
             image: ui_assets.vignette.clone(),
@@ -396,6 +414,20 @@ fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
         });
 }
 
+fn tick_mission_fade(
+    cinematic: Option<Res<MissionConcludingCinematic>>,
+    mut q_overlay: Query<&mut BackgroundColor, With<MissionFadeOverlay>>,
+) {
+    let alpha = cinematic
+        .map(|c| c.timer.elapsed_secs())
+        .unwrap_or(0.0)
+        .tanh()
+        .max(0.0);
+    for mut color in q_overlay.iter_mut() {
+        color.0 = Color::srgba(0.0, 0.0, 0.0, alpha.sqrt());
+    }
+}
+
 fn toggle_held_object_ui(
     mut text_query: Query<(&mut Text, &mut TextColor, &ElementObjectUI)>,
     players: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
@@ -446,5 +478,6 @@ pub(crate) fn app_setup(app: &mut App) {
                 update_damage_vignette_color,
             )
                 .run_if(in_state(GameState::Running)),
-        );
+        )
+        .add_systems(Update, tick_mission_fade.run_if(in_state(AppState::InGame)));
 }

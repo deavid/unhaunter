@@ -17,7 +17,6 @@ impl ResolutionFactor {
     }
 }
 
-
 /// Component for entities that should oscillate or flicker their alpha/brightness.
 #[derive(Component, Debug, Clone, Copy)]
 pub struct AlphaModulator {

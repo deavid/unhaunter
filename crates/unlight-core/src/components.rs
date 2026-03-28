@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::types::light_type::LightType;
+use bevy::prelude::*;
 
 /// Light source component for entities that emit light
 #[derive(Component, Debug, Clone, Copy, Reflect)]

@@ -27,6 +27,7 @@ unaudiospatial-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unspatial-core = { workspace = true }
 untruck-core = { workspace = true }
+untags-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }

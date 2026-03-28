@@ -204,10 +204,7 @@ fn startup_transport_system(
     }
 }
 
-fn monitor_renet_client_status(
-    client: Option<Res<RenetClient>>,
-    mut last_state: Local<u8>,
-) {
+fn monitor_renet_client_status(client: Option<Res<RenetClient>>, mut last_state: Local<u8>) {
     let state: u8 = match client.as_ref() {
         None => 0,
         Some(client) => {
@@ -226,7 +223,9 @@ fn monitor_renet_client_status(
             1 => info!("RenetClient: connecting to server..."),
             2 => info!("RenetClient: CONNECTED to server"),
             3 => {
-                let reason = client.as_ref().and_then(|client| client.disconnect_reason());
+                let reason = client
+                    .as_ref()
+                    .and_then(|client| client.disconnect_reason());
                 warn!(
                     "RenetClient: DISCONNECTED from server (reason: {:?})",
                     reason

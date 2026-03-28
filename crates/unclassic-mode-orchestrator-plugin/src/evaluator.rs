@@ -1,4 +1,4 @@
-use unmission_core::grade::Grade;
+use uncareer_core::grade::Grade;
 use unmission_core::summary::{MissionEvaluator, SummaryData};
 
 pub(crate) struct ClassicEvaluator;

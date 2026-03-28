@@ -4,7 +4,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::types::ghost::types::GhostType;
 
-use crate::grade::Grade;
+use uncareer_core::grade::Grade;
 
 #[derive(
     Debug, Clone, Resource, Component, Default, Serialize, Deserialize, Reflect, PartialEq,
@@ -33,6 +33,7 @@ pub struct SummaryData {
     pub deposit_originally_held: i64,
     pub deposit_returned_to_bank: i64,
     pub costs_deducted_from_deposit: i64,
+    pub final_bank_total: i64,
 }
 
 pub trait MissionEvaluator: Send + Sync {

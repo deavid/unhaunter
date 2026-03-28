@@ -9,18 +9,18 @@ use unfog_core::components::MiasmaSprite;
 use unfoundation_core::random_seed;
 use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::salt::UVReactive;
+use unlight_core::components::LightSensitive;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
-use unlight_core::components::LightSensitive;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::MainPlayer;
-use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ShadowCaster,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::utils::light::lerp_color;
+use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unsettings_core::video::VideoSettings;
 use unspatial_core::position::Position;
 
@@ -28,8 +28,8 @@ use crate::maplight::definitions::{ActiveFlashlights, GridResources};
 use crate::maplight::sampler::{LightingSampler, SpectralParams};
 use crate::maplight::visuals::{
     apply_alpha_modulator_visuals, apply_ecto_visuals, apply_emissive_visuals,
-    apply_ethereal_visuals, apply_ir_visuals, apply_miasma_cloud_visuals,
-    apply_uv_visuals, update_spectral_influence,
+    apply_ethereal_visuals, apply_ir_visuals, apply_miasma_cloud_visuals, apply_uv_visuals,
+    update_spectral_influence,
 };
 use crate::metrics;
 
@@ -120,15 +120,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
         o_ethereal,
         o_ecto_vis,
         o_spectral_clarity,
-        (
-            o_light_sens,
-            o_shadow_caster,
-            o_color,
-            uv_reactive,
-            o_miasma,
-            o_alpha_mod,
-            o_emissive,
-        ),
+        (o_light_sens, o_shadow_caster, o_color, uv_reactive, o_miasma, o_alpha_mod, o_emissive),
     ) in qt.iter_mut()
     {
         let sprite_color = if let Some(sprite) = o_sprite.as_ref() {

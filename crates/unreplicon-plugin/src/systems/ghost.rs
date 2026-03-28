@@ -3,8 +3,9 @@ use bevy_replicon::prelude::{
     AppRuleExt, Channel, ClientMessageAppExt, FromClient, Replicated, ServerMessageAppExt,
 };
 use unghost_core::components::ghost_breach::GhostBreach;
+use unghost_core::events::{JournalEvidenceToggled, JournalGhostToggled};
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unmission_core::resources::MissionConcludingCinematic;
+use unmission_core::summary::SummaryData;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
 };
@@ -14,7 +15,6 @@ use unreplicon_core::messages::{
 };
 use unspatial_core::lerp_position::LerpPosition;
 use unspatial_core::position::Position;
-use unmission_core::summary::SummaryData;
 use untags_core::tags::GhostTag;
 use untypes_core::roles::{AuthorityRole, is_pure_client};
 use untypes_core::states::AppState;
@@ -80,14 +80,6 @@ pub(super) fn app_setup(app: &mut App) {
         (sync_mission_result_phase, server_teardown_grace_period)
             .run_if(resource_exists::<AuthorityRole>)
             .run_if(in_state(SimulationState::TearingDown)),
-    );
-
-    // Client: observe ServerGamePhase::Concluding to start cinematic
-    app.add_systems(
-        Update,
-        (on_mission_concluding, tick_mission_concluding)
-            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>)
-            .run_if(in_state(AppState::InGame)),
     );
 
     // Client: if the server returns to Lobby (e.g. after an abort) while we are
@@ -192,55 +184,26 @@ fn sync_mission_goal_to_summary_data(
 
 fn handle_journal_evidence_toggle(
     mut reader: MessageReader<FromClient<RequestJournalEvidenceToggle>>,
-    mut ghost_guess: Option<ResMut<GhostGuess>>,
+    mut writer: MessageWriter<JournalEvidenceToggled>,
 ) {
-    let Some(ref mut ghost_guess) = ghost_guess else {
-        return;
-    };
     for msg in reader.read() {
-        if msg.message.discard {
-            if ghost_guess
-                .evidences_missing
-                .contains(&msg.message.evidence)
-            {
-                ghost_guess.evidences_missing.remove(&msg.message.evidence);
-            } else {
-                ghost_guess.evidences_missing.insert(msg.message.evidence);
-                ghost_guess.evidences_found.remove(&msg.message.evidence);
-            }
-        } else if msg.message.mark_as_found {
-            ghost_guess.evidences_found.insert(msg.message.evidence);
-            ghost_guess.evidences_missing.remove(&msg.message.evidence);
-        } else {
-            ghost_guess.evidences_found.remove(&msg.message.evidence);
-            // Non-discard clear maps to "unset".
-            ghost_guess.evidences_missing.remove(&msg.message.evidence);
-        }
+        writer.write(JournalEvidenceToggled {
+            evidence: msg.message.evidence,
+            discard: msg.message.discard,
+            mark_as_found: msg.message.mark_as_found,
+        });
     }
 }
 
 fn handle_journal_ghost_toggle(
     mut reader: MessageReader<FromClient<RequestJournalGhostToggle>>,
-    mut ghost_guess: Option<ResMut<GhostGuess>>,
+    mut writer: MessageWriter<JournalGhostToggled>,
 ) {
-    let Some(ref mut ghost_guess) = ghost_guess else {
-        return;
-    };
     for msg in reader.read() {
-        if msg.message.discard {
-            if let Some(ghost_type) = msg.message.ghost_type {
-                if ghost_guess.ghosts_discarded.contains(&ghost_type) {
-                    ghost_guess.ghosts_discarded.remove(&ghost_type);
-                } else {
-                    ghost_guess.ghosts_discarded.insert(ghost_type);
-                    if ghost_guess.ghost_type == Some(ghost_type) {
-                        ghost_guess.ghost_type = None;
-                    }
-                }
-            }
-        } else {
-            ghost_guess.ghost_type = msg.message.ghost_type;
-        }
+        writer.write(JournalGhostToggled {
+            ghost_type: msg.message.ghost_type,
+            discard: msg.message.discard,
+        });
     }
 }
 
@@ -293,50 +256,5 @@ fn on_server_phase_lobby(
             info!("ServerGamePhase::Lobby observed while InGame — returning to lobby");
             next_app_state.set(AppState::Lobby);
         }
-    }
-}
-
-fn on_mission_concluding(
-    q_phase: Query<&ServerGamePhase, Changed<ServerGamePhase>>,
-    mut commands: Commands,
-) {
-    for phase in q_phase.iter() {
-        if *phase == ServerGamePhase::Concluding {
-            info!("ServerGamePhase::Concluding observed — starting cinematic");
-            commands.insert_resource(MissionConcludingCinematic {
-                timer: Timer::from_seconds(2.5, TimerMode::Once),
-                inputs_blocked: true,
-            });
-        }
-    }
-}
-
-fn tick_mission_concluding(
-    mut commands: Commands,
-    cinematic: Option<ResMut<MissionConcludingCinematic>>,
-    summary_data: Option<Res<SummaryData>>,
-    authority: Option<Res<AuthorityRole>>,
-    q_goal: Query<&SummaryData, With<MissionGoalEntity>>,
-    mut next_app_state: ResMut<NextState<AppState>>,
-    time: Res<Time>,
-) {
-    let Some(mut cinematic) = cinematic else {
-        return;
-    };
-
-    cinematic.timer.tick(time.delta());
-    if !cinematic.timer.just_finished() {
-        return;
-    }
-
-    // summary_data on authority or summary_data replicated component on client
-    let ready = if authority.is_some() {
-        summary_data.is_some()
-    } else {
-        q_goal.iter().next().is_some()
-    };
-    if ready {
-        next_app_state.set(AppState::Summary);
-        commands.remove_resource::<MissionConcludingCinematic>();
     }
 }

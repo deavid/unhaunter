@@ -59,7 +59,6 @@ const UNHAUNTER_CRATES: &[&str] = &[
     "unsound_core",
     "unsound_plugin",
     "unspatial_core",
-    "unsummary_core",
     "unsummary_plugin",
     "untags_core",
     "unthermal_core",

@@ -21,5 +21,6 @@ unui-core = { workspace = true }
 unsettings-core = { workspace = true }
 untypes-core = { workspace = true }
 unvitals-core = { workspace = true }
+unmission-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

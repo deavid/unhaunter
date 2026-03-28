@@ -15,14 +15,13 @@ workspace = true
 
 undifficulty-core = { workspace = true }
 unfoundation-core = { workspace = true }
-unsummary-core = { workspace = true }
 unui-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unmapload-core = { workspace = true }
 untypes-core = { workspace = true }
 unmenu-core = { workspace = true }
 unprofile-core = { workspace = true }
-unmission-core = { workspace = true }
+uncareer-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

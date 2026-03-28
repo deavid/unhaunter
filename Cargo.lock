@@ -7145,13 +7145,12 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "uncareer-core",
  "undifficulty-core",
  "unfoundation-core",
  "unmapload-core",
  "unmenu-core",
- "unmission-core",
  "unprofile-core",
- "unsummary-core",
  "untmxmap-core",
  "untypes-core",
  "unui-core",
@@ -7163,6 +7162,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
+ "undifficulty-core",
 ]
 
 [[package]]
@@ -7170,8 +7170,14 @@ name = "uncareer-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "unboard-core",
  "uncareer-core",
+ "undifficulty-core",
  "unmission-core",
+ "unplayer-core",
+ "unreplicon-core",
+ "untypes-core",
+ "unvitals-core",
 ]
 
 [[package]]
@@ -7205,6 +7211,7 @@ dependencies = [
  "rand 0.10.0",
  "unbehavior-core",
  "unboard-core",
+ "uncareer-core",
  "undifficulty-core",
  "unfoundation-core",
  "unghost-core",
@@ -7212,12 +7219,10 @@ dependencies = [
  "unmapload-core",
  "unmission-core",
  "unplayer-core",
- "unrender-std",
  "unreplicon-core",
  "unsensing-core",
  "unsoundfield-core",
  "unspatial-core",
- "unsummary-core",
  "untags-core",
  "untypes-core",
 ]
@@ -7260,6 +7265,7 @@ dependencies = [
  "unfoundation-core",
  "ungear-core",
  "uninput-core",
+ "unmission-core",
  "unplayer-core",
  "unrender-std",
  "unsettings-core",
@@ -7318,7 +7324,6 @@ dependencies = [
  "unnoise-core",
  "unplayer-core",
  "unrender-std",
- "unsensing-core",
  "unsettings-core",
  "unspatial-core",
  "untypes-core",
@@ -7371,10 +7376,12 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_replicon",
  "unboard-core",
+ "undifficulty-core",
  "ungear-core",
  "unmetrics-core",
  "unplayer-core",
  "unrender-std",
+ "unreplicon-core",
  "unspatial-core",
  "untags-core",
  "untruck-core",
@@ -7422,7 +7429,6 @@ dependencies = [
  "unreplicon-core",
  "unsoundfield-core",
  "unspatial-core",
- "unsummary-core",
  "untags-core",
  "unthermal-core",
  "untypes-core",
@@ -7470,7 +7476,6 @@ dependencies = [
  "unsensing-core",
  "unsoundfield-core",
  "unspatial-core",
- "unsummary-core",
  "untags-core",
  "untruck-core",
  "untypes-core",
@@ -7786,7 +7791,6 @@ dependencies = [
  "bevy",
  "unaudiospatial-core",
  "unbehavior-core",
- "unboard-core",
  "undifficulty-core",
  "unfog-core",
  "ungear-core",
@@ -7796,8 +7800,6 @@ dependencies = [
  "unnavigation-core",
  "unnpc-core",
  "unplayer-core",
- "unrender-std",
- "unreplicon-core",
  "unspatial-core",
  "untruck-core",
  "untypes-core",
@@ -7947,11 +7949,9 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
- "unboard-core",
+ "uncareer-core",
  "undifficulty-core",
  "unghost-core",
- "untruck-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -8079,6 +8079,7 @@ dependencies = [
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",
+ "untags-core",
  "untruck-core",
  "untypes-core",
 ]
@@ -8108,9 +8109,9 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "serde",
+ "uncareer-core",
  "undifficulty-core",
  "unghost-core",
- "unmission-core",
  "uuid",
 ]
 
@@ -8122,14 +8123,11 @@ dependencies = [
  "bevy-persistent",
  "dirs",
  "ron 0.12.0",
- "unboard-core",
- "undifficulty-core",
+ "uncareer-core",
  "unmission-core",
- "unplayer-core",
  "unprofile-core",
  "unreplicon-core",
  "untypes-core",
- "unvitals-core",
  "uuid",
 ]
 
@@ -8165,7 +8163,6 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_platform",
  "enum-iterator",
- "serde",
  "unbehavior-core",
  "unboard-core",
  "ungear-core",
@@ -8183,7 +8180,6 @@ dependencies = [
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
- "uninteraction-core",
  "uuid",
 ]
 
@@ -8191,13 +8187,10 @@ dependencies = [
 name = "unreplicon-plugin"
 version = "0.3.2-dev"
 dependencies = [
- "base64",
  "bevy",
  "bevy_renet",
  "bevy_replicon",
  "bevy_replicon_renet",
- "crossbeam-channel",
- "serde_json",
  "unbehavior-core",
  "unboard-core",
  "undifficulty-core",
@@ -8205,17 +8198,14 @@ dependencies = [
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
- "unhub-client",
  "uninteraction-core",
  "unlocomotion-core",
  "unmapload-core",
  "unmission-core",
- "unnavigation-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
  "unreplicon-transport",
- "unsensing-core",
  "unspatial-core",
  "untags-core",
  "untruck-core",
@@ -8310,31 +8300,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "unsummary-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "serde",
- "undifficulty-core",
- "unghost-core",
- "unmission-core",
-]
-
-[[package]]
 name = "unsummary-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy-persistent",
  "unboard-core",
+ "uncareer-core",
  "undifficulty-core",
  "unfoundation-core",
  "unghost-core",
  "unmission-core",
  "unplayer-core",
- "unprofile-core",
  "unreplicon-core",
- "unsummary-core",
  "untmxmap-core",
  "untypes-core",
  "unui-core",

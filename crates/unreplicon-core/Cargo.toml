@@ -14,7 +14,6 @@ workspace = true
 bevy = { workspace = true }
 serde = { workspace = true }
 uuid = { workspace = true }
-uninteraction-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
 unghost-core = { workspace = true }

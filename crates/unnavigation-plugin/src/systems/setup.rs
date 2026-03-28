@@ -5,6 +5,8 @@ use crate::systems::keyboard;
 use crate::systems::waypoint;
 
 pub(crate) fn app_setup(app: &mut App) {
+    super::spawn::app_setup(app);
+
     // Set up waypoint and navigation systems with proper ordering
     app.add_systems(
         Update,

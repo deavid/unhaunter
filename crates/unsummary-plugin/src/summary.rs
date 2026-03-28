@@ -1,17 +1,14 @@
 use bevy::{color::palettes::css, prelude::*};
-use bevy_persistent::Persistent;
-
 use unboard_core::resources::board_topology::BoardTopology;
+use uncareer_core::grade::Grade;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::utils::time::format_time;
 use unghost_core::types::ghost::types::GhostType;
-use unplayer_core::components::PlayerSprite;
-use unprofile_core::profile::PlayerProfileData;
-use unreplicon_core::resources::LocalPlayer;
-use unmission_core::grade::Grade;
 use unmission_core::summary::{ActiveMissionEvaluator, SummaryData};
+use unplayer_core::components::PlayerSprite;
+use unreplicon_core::resources::LocalPlayer;
 use untmxmap_core::resources::maps::Maps;
 use untypes_core::roles::LobbyPresenceRole;
 use untypes_core::states::AppState;
@@ -140,7 +137,6 @@ pub(crate) fn setup_ui(
     mut commands: Commands,
     ui_assets: Res<UiAssets>,
     rsd: Res<SummaryData>,
-    player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
@@ -152,8 +148,7 @@ pub(crate) fn setup_ui(
     // Calculate net change to bank
     let net_change = rsd.money_earned + rsd.deposit_returned_to_bank - rsd.deposit_originally_held;
 
-    // Calculate projected final bank total
-    let final_bank = player_profile.progression.bank + net_change;
+    let final_bank = rsd.final_bank_total;
 
     commands
         .spawn(Node {
@@ -512,7 +507,6 @@ pub(crate) fn setup_ui(
 pub(crate) fn update_ui(
     mut qui: Query<(&SummaryUIType, &mut Text)>,
     rsd: Res<SummaryData>,
-    player_profile: Res<Persistent<PlayerProfileData>>,
     maps: Res<Maps>,
 ) {
     for (sui, mut text) in &mut qui {
@@ -598,10 +592,7 @@ pub(crate) fn update_ui(
                 text.0 = format!("Net Change to Bank: ${}", net_change);
             }
             SummaryUIType::FinalBankTotal => {
-                let net_change =
-                    rsd.money_earned + rsd.deposit_returned_to_bank - rsd.deposit_originally_held;
-                let final_bank = player_profile.progression.bank + net_change;
-                text.0 = format!("Final Bank Total: ${}", final_bank);
+                text.0 = format!("Final Money in Bank: ${}", rsd.final_bank_total);
             }
         }
     }
@@ -624,174 +615,7 @@ pub(crate) fn update_score(
     sd.animated_final_score += delta;
 }
 
-pub(crate) fn calculate_rewards_and_grades(
-    mut sd: ResMut<SummaryData>,
-    maps: Res<Maps>,
-    evaluator: Option<Res<ActiveMissionEvaluator>>,
-) {
-    let Some(evaluator) = evaluator else {
-        return;
-    };
-
-    // Debug: Log current state of SummaryData
-    info!(
-        "Calculating rewards and grades. Initial SummaryData: {:?}",
-        *sd
-    );
-
-    // Ensure we have calculated the base score before proceeding
-    if sd.base_score == 0 && sd.mission_successful {
-        // Only calculate if not already done and mission was potentially successful
-        sd.calculate_score(evaluator.0.as_ref());
-        info!(
-            "Calculated score before grading. New base_score: {}",
-            sd.base_score
-        );
-    }
-
-    // Initialize grade and base reward assuming failure or N/A case first
-    // sd.mission_reward_base is defaulted to 0 from SummaryData, which is fine for these cases.
-    sd.grade_achieved = Grade::NA;
-
-    if sd.mission_successful {
-        if let Some(map) = maps.maps.iter().find(|map| map.path == sd.map_path) {
-            // Use mission_data from the map instead of TmxMap properties directly
-            let mission_data = &map.mission_data;
-            let base_score = sd.base_score;
-
-            // Determine grade for successful mission using mission data
-            // NOTE: We are still using map-based thresholds here for now,
-            // but we could also use evaluator.0.evaluate_grade(base_score)
-            // if we want to bypass map-based thresholds.
-            sd.grade_achieved = Grade::from_score(
-                base_score,
-                mission_data.grade_a_score_threshold,
-                mission_data.grade_b_score_threshold,
-                mission_data.grade_c_score_threshold,
-                mission_data.grade_d_score_threshold,
-            );
-
-            // Set base reward only if mission was successful and mission data found
-            sd.mission_reward_base = mission_data.mission_reward_base;
-
-            info!(
-                "Mission successful path: Base score {}, Determined grade {}. Base reward ${}",
-                sd.base_score, sd.grade_achieved, sd.mission_reward_base
-            );
-        } else {
-            warn!(
-                "Map not found for mission ID: {}. Grade remains NA.",
-                sd.map_path
-            );
-        }
-    } else {
-        info!(
-            "Mission not successful. Grade remains NA. Base score: {}",
-            sd.base_score
-        );
-    }
-
-    // Consistently set grade_multiplier from the determined grade_achieved
-    sd.grade_multiplier = sd.grade_achieved.multiplier();
-
-    // Calculate money_earned based on the final grade, mission success, and base reward
-    if sd.mission_successful && sd.grade_achieved != Grade::NA {
-        // Only earn money if mission was successful AND a valid grade (not NA) was achieved
-        // (which implies map data and mission data were found, and mission_reward_base was set)
-        sd.money_earned = (sd.mission_reward_base as f64 * sd.grade_multiplier)
-            .round()
-            .max(0.0) as i64;
-    } else {
-        sd.money_earned = 0; // No earnings if mission failed or grade is NA (multiplier would be 0)
-    }
-
-    info!(
-        "Finalized grade: {}, multiplier: {:.1}, money_earned: ${}, base_reward_used: ${}",
-        sd.grade_achieved, sd.grade_multiplier, sd.money_earned, sd.mission_reward_base
-    );
-}
-
-pub(crate) fn finalize_profile_update(
-    sd: Res<SummaryData>,
-    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
-    app_state: Res<State<AppState>>,
-    maps: Res<Maps>,
-) {
-    if *app_state != AppState::Summary {
-        return;
-    }
-
-    if sd.money_earned > 0 {
-        player_profile.progression.bank += sd.money_earned;
-    }
-
-    // Always use the actual played difficulty from SummaryData (which is sourced from CurrentDifficulty)
-    // as the key for map statistics. This ensures custom difficulty settings are respected.
-    let difficulty_to_save_stats_under = sd.difficulty.0;
-
-    // Log if the map definition wasn't found in the Maps resource,
-    // but this doesn't prevent saving stats under the played difficulty.
-    if !maps.maps.iter().any(|map_def| map_def.path == sd.map_path) {
-        warn!(
-            "Map definition not found in Maps resource for mission path: '{}'. \\
-            Statistics will still be saved under the played difficulty ({:?}).",
-            sd.map_path, difficulty_to_save_stats_under
-        );
-    }
-
-    // Update map statistics for this particular map and difficulty
-    let map_path_key = sd.map_path.clone();
-    let map_stats = player_profile
-        .map_statistics
-        .entry(map_path_key)
-        .or_default()
-        .entry(difficulty_to_save_stats_under) // Use the actual played difficulty as the second key
-        .or_default();
-
-    // Update mission completion stats
-    map_stats.total_play_time_seconds += sd.time_taken_secs as f64;
-
-    // If mission was successful, update completion time
-    if sd.mission_successful {
-        map_stats.total_missions_completed += 1;
-        map_stats.total_mission_completed_time_seconds += sd.time_taken_secs as f64;
-    }
-
-    // Update best score and grade
-    map_stats.best_score = map_stats.best_score.max(sd.full_score);
-    map_stats.best_grade = map_stats.best_grade.max(sd.grade_achieved);
-
-    if sd.mission_successful {
-        // Update global statistics
-        player_profile.statistics.total_missions_completed += 1;
-
-        // If mission was successful AND ghost was expelled, increment evidence acknowledgment
-        if sd.ghosts_unhaunted > 0 {
-            for ghost in &sd.ghost_types {
-                for evidence in ghost.evidences() {
-                    let count_entry = player_profile
-                        .times_evidence_acknowledged_on_gear
-                        .entry(evidence)
-                        .or_insert(0);
-
-                    *count_entry += 1;
-                }
-            }
-        }
-    }
-
-    player_profile.statistics.total_play_time_seconds += sd.time_taken_secs as f64;
-
-    // Add final score to player XP
-    player_profile.progression.player_xp += sd.full_score;
-
-    // Update player level
-    player_profile.progression.update_level();
-
-    if let Err(e) = player_profile.persist() {
-        error!("Failed to persist player profile: {:?}", e);
-    }
-}
+// calculate_rewards_and_grades and finalize_profile_update have been moved to uncareer-plugin.
 
 // Add a new system to ensure the mission ID is preserved and correctly set
 pub(crate) fn store_mission_id(

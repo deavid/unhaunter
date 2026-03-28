@@ -28,6 +28,22 @@ pub struct RoomChangedEvent {
 #[derive(Clone, Debug, Default, Message)]
 pub struct RoomStateSyncEvent;
 
+/// Message sent by a client to request an interactive-object state change.
+///
+/// Uses board-space integer coordinates to identify the target entity in a
+/// map-stable way (all clients load the same map from the same seed).
+/// The server finds the entity at `position`, validates the request, and fires
+/// `ExecuteInteractionEvent` locally.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct InteractionRequestMessage {
+    /// Board-space position (`[x, y, z]`) of the interactive entity.
+    pub position: [i32; 3],
+    /// Whether to change state or only read the current room state.
+    pub ietype: InteractionExecutionType,
+    /// If `Some`, force the interaction to transition to this specific tile UID.
+    pub force_tuid: Option<u32>,
+}
+
 impl RoomChangedEvent {
     /// Creates a new `RoomChangedEvent` specifically for level initialization.
     ///

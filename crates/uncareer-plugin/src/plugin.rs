@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::systems;
+use bevy::prelude::*;
 
 pub struct UnhaunterCareerPlugin;
 

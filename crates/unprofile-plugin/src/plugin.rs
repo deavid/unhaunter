@@ -6,6 +6,9 @@ use unreplicon_core::resources::LocalPlayer;
 use untypes_core::cli::CliOptions;
 use uuid::Uuid;
 
+use uncareer_core::events::DepositStakedEvent;
+use untypes_core::states::AppState;
+
 pub struct UnhaunterProfilePlugin;
 
 impl Plugin for UnhaunterProfilePlugin {
@@ -56,12 +59,25 @@ pub(crate) fn app_setup(app: &mut App) {
             .chain(),
     )
     .add_systems(
+        OnEnter(AppState::InGame),
+        emit_deposit_stake,
+    )
+    .add_systems(
         Update,
         (
-            crate::systems::apply_mission_completion_to_profile,
-            crate::systems::record_death_to_profile,
+            crate::systems::apply_career_reward_to_profile,
+            crate::systems::apply_career_death_to_profile,
         ),
     );
+}
+
+fn emit_deposit_stake(
+    player_profile: Res<Persistent<PlayerProfileData>>,
+    mut ev_stake: MessageWriter<DepositStakedEvent>,
+) {
+    let amount = player_profile.progression.insurance_deposit;
+    ev_stake.write(DepositStakedEvent { amount });
+    info!("Profile: Emitted deposit stake of ${}", amount);
 }
 
 fn initialize_installation_id(

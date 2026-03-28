@@ -13,17 +13,16 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-bevy-persistent = { workspace = true }
 
 undifficulty-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unfoundation-core = { workspace = true }
 unboard-core = { workspace = true }
 untypes-core = { workspace = true }
+uncareer-core = { workspace = true }
 unmission-core = { workspace = true }
-unsummary-core = { workspace = true }
+
 unui-core = { workspace = true }
-unprofile-core = { workspace = true }
 unplayer-core = { workspace = true }
 unghost-core = { workspace = true }
 unvitals-core = { workspace = true }

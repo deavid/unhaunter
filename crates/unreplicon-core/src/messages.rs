@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
-use uninteraction_core::events::InteractionExecutionType;
 
 use ungear_core::components::playergear::HeldObject;
 use ungear_core::types::gear::equipment::Hand;
@@ -245,22 +244,6 @@ pub struct PlayerMoveMessage {
     pub stamina: f32,
     pub health: f32,
     pub sanity: f32,
-}
-
-/// Sent by a client to request an interactive-object state change.
-///
-/// Uses board-space integer coordinates to identify the target entity in a
-/// map-stable way (all clients load the same map from the same seed).
-/// The server finds the entity at `position`, validates the request, and fires
-/// `ExecuteInteractionEvent` locally.
-#[derive(Debug, Clone, Serialize, Deserialize, Message)]
-pub struct InteractionRequestMessage {
-    /// Board-space position (`[x, y, z]`) of the interactive entity.
-    pub position: [i32; 3],
-    /// Whether to change state or only read the current room state.
-    pub ietype: InteractionExecutionType,
-    /// If `Some`, force the interaction to transition to this specific tile UID.
-    pub force_tuid: Option<u32>,
 }
 
 /// One loadout action a join client can request from the server during the truck phase.

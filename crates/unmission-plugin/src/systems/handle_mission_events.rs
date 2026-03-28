@@ -48,8 +48,10 @@ pub(crate) fn handle_mission_events(
                 next_sim_state.set(SimulationState::TearingDown);
 
                 for (mut phase, mut lobby) in q_server_phase.iter_mut() {
-                    *phase = ServerGamePhase::Concluding;
-                    lobby.set_changed();
+                    if *phase != ServerGamePhase::Concluding {
+                        *phase = ServerGamePhase::Concluding;
+                        lobby.set_changed();
+                    }
                 }
             }
         }

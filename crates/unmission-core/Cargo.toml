@@ -11,11 +11,9 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unboard-core = { workspace = true }
-untypes-core = { workspace = true }
+uncareer-core = { workspace = true }
 unghost-core = { workspace = true }
 undifficulty-core = { workspace = true }
-untruck-core = { workspace = true }
 
 bevy = { workspace = true }
 serde = { workspace = true }

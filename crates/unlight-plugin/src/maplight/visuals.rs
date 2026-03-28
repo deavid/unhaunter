@@ -8,9 +8,9 @@ use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
 use unlight_core::types::light::LightData;
-use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unrender_std::components::visuals::{AlphaModulator, Emissive, Ethereal};
 use unrender_std::utils::light::lerp_color;
+use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
@@ -65,8 +65,8 @@ pub(crate) fn apply_ir_visuals(
         let total_light = ld_abs.visible + ld_abs.red + ld_abs.ultraviolet + infrared + 0.1;
         let ir_ratio = infrared / total_light;
         if ir_ratio > threshold && infrared > 0.1 && ld_abs.visible < 0.5 {
-            let threshold_ratio = ((ir_ratio - threshold) / (1.0 - threshold).max(0.001))
-                .clamp(0.0, 1.0);
+            let threshold_ratio =
+                ((ir_ratio - threshold) / (1.0 - threshold).max(0.001)).clamp(0.0, 1.0);
             *opacity = ((threshold_ratio * 2.0 - 1.0).max(0.0)).powi(2)
                 * infrared.sqrt()
                 * visibility_at_pos;

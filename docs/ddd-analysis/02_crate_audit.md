@@ -160,7 +160,7 @@ Dependency direction is **downward only**. A crate may depend on its own tier or
 | [02_t2.md](02_t2.md)             | T2 · Application Layer         | 7 entries — CURRENT |
 | [02_t3a.md](02_t3a.md)           | T3·3a · Map Pipeline           | PENDING             |
 | [02_t3b.md](02_t3b.md)           | T3·3b · Persistence            | 4 entries — CURRENT |
-| [02_t3c.md](02_t3c.md)           | T3·3c · Net Clients            | PENDING             |
+| [02_t3c.md](02_t3c.md)           | T3·3c · Net Clients            | 3 entries — CURRENT |
 | [02_t4a.md](02_t4a.md)           | T4·4a · Rendering              | 5 entries — CURRENT |
 | [02_t4b.md](02_t4b.md)           | T4·4b · Audio                  | PENDING             |
 | [02_t4c.md](02_t4c.md)           | T4·4c · UI                     | PENDING             |

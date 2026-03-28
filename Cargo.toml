@@ -151,7 +151,6 @@ members = [
     "crates/unmenusettings-plugin",        # Settings UI
     "crates/unmanual-core",                # Tutorial / field manual data
     "crates/unmanual-plugin",
-    "crates/unsummary-core",               # Post-mission report data
     "crates/unsummary-plugin",
     "crates/unclassic-mode-render-plugin", # Game-mode-specific visual overrides
     "crates/unclassic-mode-ui-plugin",     # HUD and in-game UI
@@ -405,7 +404,6 @@ unlobby-plugin = { path = "crates/unlobby-plugin" }                             
 unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }               # Settings UI
 unmanual-core = { path = "crates/unmanual-core" }                               # Tutorial / field manual data
 unmanual-plugin = { path = "crates/unmanual-plugin" }
-unsummary-core = { path = "crates/unsummary-core" }                             # Post-mission report data
 unsummary-plugin = { path = "crates/unsummary-plugin" }
 unclassic-mode-render-plugin = { path = "crates/unclassic-mode-render-plugin" } # Game-mode-specific visual overrides
 unclassic-mode-ui-plugin = { path = "crates/unclassic-mode-ui-plugin" }         # HUD and in-game UI

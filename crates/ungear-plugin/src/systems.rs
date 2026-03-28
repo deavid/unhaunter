@@ -1,23 +1,31 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::Replicated;
 use unboard_core::components::mapcolor::MapColor;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::core::GearSprite;
 use ungear_core::components::core::StatusText;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::equipment::{Hand, VisualKey};
 use ungear_core::types::gear::kind::GearKind;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::{Inventory, InventoryNext, InventoryStats, MainPlayer};
+use unplayer_core::components::{
+    Inventory, InventoryNext, InventoryStats, MainPlayer, PlayerSprite,
+};
 use unrender_std::assets::GearAssets;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
+use unreplicon_core::network_id::NetworkId;
+use unreplicon_core::ownership::{LocallyOwned, Owner};
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
 use untruck_core::components::in_truck::InTruck;
+use untypes_core::roles::AuthorityRole;
 use untypes_core::states::AppState;
 
 use crate::metrics;
@@ -175,7 +183,88 @@ fn update_gear_ui(
     measure.end_ms();
 }
 
+/// Authority: spawns gear entities and inserts PlayerGear for any player entity that is
+/// missing it. Reacts to PlayerSprite entities added by the network layer (setup_mission_players
+/// and spawn_late_joining_players). Uses NetworkId and Owner already on the player entity
+/// so no LobbyInfo lookup is required.
+fn hydrate_player_gear(
+    mut commands: Commands,
+    q_new: Query<
+        (Entity, &NetworkId, Option<&LocallyOwned>, &Owner),
+        (With<PlayerSprite>, Without<PlayerGear>),
+    >,
+    difficulty: Res<CurrentDifficulty>,
+    gear_registry: Res<GearSpawnerRegistry>,
+) {
+    for (entity, net_id, locally_owned, owner) in q_new.iter() {
+        let gear_owner_id = owner.0;
+        let mut gear_id_counter = (net_id.0 % 1_000_000) * 1000;
+
+        let player_gear_loadout = difficulty.0.player_gear();
+        let mut player_gear = PlayerGear::default();
+        let mut gear_entities = Vec::new();
+
+        if player_gear_loadout.left_hand.is_some() {
+            let gear_entity = gear_registry.spawn(&mut commands, player_gear_loadout.left_hand);
+            player_gear.left_hand = Some(gear_entity);
+            gear_entities.push(gear_entity);
+            commands.entity(gear_entity).insert((
+                NetworkId(gear_id_counter),
+                Replicated,
+                Owner(gear_owner_id),
+            ));
+            gear_id_counter += 1;
+        }
+        if player_gear_loadout.right_hand.is_some() {
+            let gear_entity = gear_registry.spawn(&mut commands, player_gear_loadout.right_hand);
+            player_gear.right_hand = Some(gear_entity);
+            gear_entities.push(gear_entity);
+            commands.entity(gear_entity).insert((
+                NetworkId(gear_id_counter),
+                Replicated,
+                Owner(gear_owner_id),
+            ));
+            gear_id_counter += 1;
+        }
+        for kind in &player_gear_loadout.inventory {
+            if kind.is_some() {
+                let gear_entity = gear_registry.spawn(&mut commands, *kind);
+                player_gear.inventory.push(gear_entity);
+                gear_entities.push(gear_entity);
+                commands.entity(gear_entity).insert((
+                    NetworkId(gear_id_counter),
+                    Replicated,
+                    Owner(gear_owner_id),
+                ));
+                gear_id_counter += 1;
+            }
+        }
+
+        commands.entity(entity).insert(player_gear);
+
+        // Propagate LocallyOwned to gear if the player entity is locally owned.
+        if locally_owned.is_some() {
+            for &gear_entity in &gear_entities {
+                commands.entity(gear_entity).insert(LocallyOwned);
+            }
+        }
+
+        info!(
+            "hydrate_player_gear: spawned {} gear entities for player {:?} (owner={:?})",
+            gear_entities.len(),
+            entity,
+            gear_owner_id
+        );
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        hydrate_player_gear
+            .run_if(resource_exists::<AuthorityRole>)
+            .run_if(in_state(AppState::InGame)),
+    );
     app.add_systems(FixedUpdate, update_gear_ui)
         .add_systems(
             Update,

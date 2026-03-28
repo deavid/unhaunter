@@ -52,12 +52,8 @@ impl From<Option<&SpectralInfluence>> for SpectralParams {
         si.map(|x| {
             let (att, rep) = if x.has_visual_charge() {
                 match x.influence_type {
-                    SpectralInfluenceType::Attractive => {
-                        (x.charge_value.abs().sqrt() + 0.01, 0.0)
-                    }
-                    SpectralInfluenceType::Repulsive => {
-                        (0.0, x.charge_value.abs().sqrt() + 0.01)
-                    }
+                    SpectralInfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
+                    SpectralInfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
                 }
             } else {
                 (0.0, 0.0)
