@@ -13,7 +13,7 @@ workspace = true
 [dependencies]
 unboard-core = { workspace = true }
 unbehavior-core = { workspace = true }
-unrender-std = { workspace = true }
+unmetrics-core = { workspace = true }
 unspatial-core = { workspace = true }
 untypes-core = { workspace = true }
 bevy = { workspace = true }

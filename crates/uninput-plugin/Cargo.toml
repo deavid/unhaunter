@@ -19,6 +19,5 @@ unspatial-core = { workspace = true }
 unnavigation-core = { workspace = true }
 untruck-core = { workspace = true }
 untypes-core = { workspace = true }
-unui-core = { workspace = true }
 untags-core = { workspace = true }
 bevy-persistent = { workspace = true }

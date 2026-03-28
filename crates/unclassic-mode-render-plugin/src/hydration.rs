@@ -10,7 +10,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use uninput_core::components::{PlayerInput, PlayerInputMapping};
 use unlight_core::components::LightSensitive;
 use unlocomotion_core::animation::{AnimationTimer, CharacterAnimation};
-use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unplayer_core::components::PlayerSprite;
 use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
@@ -190,7 +190,7 @@ pub(crate) fn hydrate_players_system(
                     controls: ***control_settings,
                 });
             }
-            ec.insert(MainPlayer).insert(VisibilityData::default());
+            ec.insert(VisibilityData::default());
             if let Some(audio_settings) = &p.audio_settings {
                 ec.insert(SpatialListener::new(
                     -audio_settings.sound_output.to_ear_offset(),

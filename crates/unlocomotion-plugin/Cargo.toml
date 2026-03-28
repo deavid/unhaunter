@@ -12,6 +12,8 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+bevy_replicon = { workspace = true }
+unreplicon-core = { workspace = true }
 uninput-core = { workspace = true }
 unlocomotion-core = { workspace = true }
 unplayer-core = { workspace = true }
@@ -26,5 +28,4 @@ unfog-core = { workspace = true }
 ungear-core = { workspace = true }
 uninteraction-core = { workspace = true }
 unnpc-core = { workspace = true }
-unui-core = { workspace = true }
 untruck-core = { workspace = true }

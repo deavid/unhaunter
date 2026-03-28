@@ -6,15 +6,15 @@ use unreplicon_core::ownership::LocallyOwned;
 
 pub(super) fn register_locally_owned_marker(app: &mut App) {
     app.set_marker_fns::<LocallyOwned, TmxEntityId>(
-        super::super::noop_write::<TmxEntityId>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<TmxEntityId>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, FloorItemCollidable>(
-        super::super::noop_write::<FloorItemCollidable>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<FloorItemCollidable>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, Toggleable>(
-        super::super::noop_write::<Toggleable>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<Toggleable>,
+        unreplicon_core::noop::noop_remove,
     );
 }

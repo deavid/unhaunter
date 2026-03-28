@@ -25,6 +25,8 @@ pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<crate::resources::LevelLoadingStatus>();
     crate::assets_debug::app_setup(app);
     crate::conveyor::app_setup(app);
+    crate::hydration_behavior::register_diagnostics(app);
+    crate::hydration_behavior::app_setup(app);
     crate::hydration_generic::app_setup(app);
     level_finalization::app_setup(app);
     level_setup::app_setup(app);

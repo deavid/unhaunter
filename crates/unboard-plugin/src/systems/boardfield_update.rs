@@ -3,7 +3,7 @@ use unbehavior_core::behavior::Behavior;
 use unboard_core::BoardUpdateSet;
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unrender_std::utils::collision::rebuild_collision_data;
+use unboard_core::utils::rebuild_collision_data;
 use unspatial_core::position::Position;
 
 /// Updates the board field based on incoming events and rebuilds collision and lighting data if needed.

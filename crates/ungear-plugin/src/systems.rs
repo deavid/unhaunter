@@ -2,11 +2,15 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
 use unboard_core::components::mapcolor::MapColor;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unfoundation_core::random_seed;
 use ungear_core::components::core::GearSprite;
 use ungear_core::components::core::StatusText;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::difficulty_ext::DifficultyGearExt;
+use ungear_core::events::{
+    RequestEquipGearFromVan, RequestUnequipHand, RequestUnequipInventorySlot,
+};
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::equipment::{Hand, VisualKey};
@@ -20,7 +24,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
 use unreplicon_core::network_id::NetworkId;
-use unreplicon_core::ownership::{LocallyOwned, Owner};
+use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
@@ -185,20 +189,17 @@ fn update_gear_ui(
 
 /// Authority: spawns gear entities and inserts PlayerGear for any player entity that is
 /// missing it. Reacts to PlayerSprite entities added by the network layer (setup_mission_players
-/// and spawn_late_joining_players). Uses NetworkId and Owner already on the player entity
-/// so no LobbyInfo lookup is required.
+/// and spawn_late_joining_players). Uses PlayerSprite.network_id and Owner already on the
+/// player entity so no LobbyInfo lookup is required.
 fn hydrate_player_gear(
     mut commands: Commands,
-    q_new: Query<
-        (Entity, &NetworkId, Option<&LocallyOwned>, &Owner),
-        (With<PlayerSprite>, Without<PlayerGear>),
-    >,
+    q_new: Query<(Entity, &PlayerSprite, Option<&LocallyOwned>, &Owner), Without<PlayerGear>>,
     difficulty: Res<CurrentDifficulty>,
     gear_registry: Res<GearSpawnerRegistry>,
 ) {
-    for (entity, net_id, locally_owned, owner) in q_new.iter() {
+    for (entity, player_sprite, locally_owned, owner) in q_new.iter() {
         let gear_owner_id = owner.0;
-        let mut gear_id_counter = (net_id.0 % 1_000_000) * 1000;
+        let mut gear_id_counter = (player_sprite.network_id.0 % 1_000_000) * 1000;
 
         let player_gear_loadout = difficulty.0.player_gear();
         let mut player_gear = PlayerGear::default();
@@ -258,10 +259,92 @@ fn hydrate_player_gear(
     }
 }
 
+/// Authority-side handler for truck loadout intent messages emitted by `untruck-plugin`.
+///
+/// Handles `RequestEquipGearFromVan`, `RequestUnequipHand`, and `RequestUnequipInventorySlot`
+/// for the local (authority) player. Join-client loadout requests are handled separately by
+/// `unreplicon-plugin::handle_truck_loadout_message`.
+fn handle_truck_loadout_request(
+    mut ev_equip_van: MessageReader<RequestEquipGearFromVan>,
+    mut ev_unequip_hand: MessageReader<RequestUnequipHand>,
+    mut ev_unequip_slot: MessageReader<RequestUnequipInventorySlot>,
+    mut q_gear: Query<&mut PlayerGear, With<MainPlayer>>,
+    gear_registry: Res<GearSpawnerRegistry>,
+    mut commands: Commands,
+) {
+    let Ok(mut p_gear) = q_gear.single_mut() else {
+        // No local MainPlayer: dedicated server mode or pre-spawn. Consume and discard events.
+        for _ in ev_equip_van.read() {}
+        for _ in ev_unequip_hand.read() {}
+        for _ in ev_unequip_slot.read() {}
+        return;
+    };
+
+    for ev in ev_equip_van.read() {
+        let has_space =
+            p_gear.left_hand.is_none() || p_gear.right_hand.is_none() || p_gear.inventory.len() < 2;
+        if !has_space {
+            warn!(
+                "handle_truck_loadout_request: RequestEquipGearFromVan({:?}) but inventory is full",
+                ev.kind
+            );
+            continue;
+        }
+        let entity = gear_registry.spawn(&mut commands, ev.kind);
+        let rng_val = random_seed::heavy_rng_seed();
+        let net_id = NetworkId(rng_val.max(1000));
+        commands
+            .entity(entity)
+            .insert((net_id, Replicated, Owner(OwnerId::Server), LocallyOwned));
+
+        if p_gear.left_hand.is_none() {
+            p_gear.left_hand = Some(entity);
+        } else if p_gear.right_hand.is_none() {
+            p_gear.right_hand = Some(entity);
+        } else {
+            p_gear.inventory.push(entity);
+        }
+    }
+
+    for ev in ev_unequip_hand.read() {
+        let entity = match ev.hand {
+            Hand::Left => p_gear.left_hand.take(),
+            Hand::Right => p_gear.right_hand.take(),
+        };
+        if let Some(e) = entity {
+            commands.entity(e).despawn();
+        } else {
+            warn!(
+                "handle_truck_loadout_request: RequestUnequipHand({:?}) but slot is already empty",
+                ev.hand
+            );
+        }
+    }
+
+    for ev in ev_unequip_slot.read() {
+        if ev.idx >= p_gear.inventory.len() {
+            warn!(
+                "handle_truck_loadout_request: RequestUnequipInventorySlot({}) out of bounds (len={})",
+                ev.idx,
+                p_gear.inventory.len()
+            );
+            continue;
+        }
+        let e = p_gear.inventory.remove(ev.idx);
+        commands.entity(e).despawn();
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         hydrate_player_gear
+            .run_if(resource_exists::<AuthorityRole>)
+            .run_if(in_state(AppState::InGame)),
+    );
+    app.add_systems(
+        Update,
+        handle_truck_loadout_request
             .run_if(resource_exists::<AuthorityRole>)
             .run_if(in_state(AppState::InGame)),
     );

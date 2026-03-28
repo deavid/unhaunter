@@ -9,12 +9,14 @@ use untypes_core::states::AppState;
 use crate::systems::hide;
 use crate::systems::hydration;
 use crate::systems::input;
+use crate::systems::net_state;
 use crate::systems::spawn;
 use crate::systems::styling;
 use crate::systems::walk_target_indicator;
 
 pub(crate) fn app_setup_core(app: &mut App) {
     spawn::app_setup(app);
+    net_state::app_setup(app);
 
     app.replicate::<Direction>();
     app.replicate::<PlayerSprite>();

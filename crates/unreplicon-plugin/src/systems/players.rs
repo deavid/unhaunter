@@ -1,14 +1,10 @@
 mod replication;
 
 use bevy::prelude::*;
-use bevy_replicon::bytes::Bytes;
 use bevy_replicon::prelude::{
     Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode, ServerMessageAppExt,
     ToClients,
 };
-use bevy_replicon::shared::replication::deferred_entity::DeferredEntity;
-use bevy_replicon::shared::replication::registry::ctx::{RemoveCtx, WriteCtx};
-use bevy_replicon::shared::replication::registry::rule_fns::RuleFns;
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
@@ -19,17 +15,14 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
 use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
-use ungearitems_core::components::flashlight::FlashlightStatus;
 use uninteraction_core::events::InteractionRequestMessage;
-use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
-use unlocomotion_core::components::PlayerLocomotionState;
-use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite};
+use uninteraction_core::interaction::ExecuteInteractionEvent;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
-    ExportGearStateMessage, ExportPlayerGearMessage, ExportStateMessage, FloorGearDespawnBroadcast,
-    FloorGearSpawnBroadcast, GearSkeletonState, HostMovableMotionEvent, MovableMotionBroadcast,
-    OwnershipGranted, RequestDrop, RequestGrab, SaltDroppedMessage, TruckLoadoutAction,
-    TruckLoadoutMessage,
+    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, HostMovableMotionEvent,
+    MovableMotionBroadcast, OwnershipGranted, RequestDrop, RequestGrab, SaltDroppedMessage,
+    TruckLoadoutAction, TruckLoadoutMessage,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -40,18 +33,14 @@ use unspatial_core::position::Position;
 use untypes_core::roles::is_pure_client;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 use untypes_core::states::{AppState, SimulationState};
-use unvitals_core::components::{PlayerVitals, Stamina};
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
-    app.add_client_message::<ExportStateMessage>(Channel::Unreliable);
     app.add_client_message::<InteractionRequestMessage>(Channel::Ordered);
     app.add_client_message::<TruckLoadoutMessage>(Channel::Ordered);
     app.add_client_message::<SaltDroppedMessage>(Channel::Ordered);
     app.add_mapped_client_message::<RequestGrab>(Channel::Ordered);
     app.add_mapped_client_message::<RequestDrop>(Channel::Ordered);
-    app.add_mapped_client_message::<ExportGearStateMessage>(Channel::Unreliable);
-    app.add_mapped_client_message::<ExportPlayerGearMessage>(Channel::Unreliable);
     // Register server → client messages
     app.add_mapped_server_message::<MovableMotionBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearSpawnBroadcast>(Channel::Ordered);
@@ -81,11 +70,8 @@ pub(super) fn app_setup(app: &mut App) {
         (
             handle_interaction_request,
             broadcast_movable_motion,
-            handle_export_state,
-            handle_export_player_gear_state,
             handle_request_grab,
             handle_request_drop,
-            handle_export_gear_state,
             handle_salt_drop,
         )
             .run_if(resource_exists::<AuthorityRole>),
@@ -108,25 +94,6 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(in_state(SimulationState::Ready)),
     );
 
-    // All local players (offline, host, join): send own state to the authority every frame.
-    app.add_systems(
-        Update,
-        send_export_state
-            .run_if(in_state(AppState::InGame))
-            .run_if(resource_exists::<LocalPlayerRole>),
-    );
-    // Gear state export only runs on pure join clients — the authority already has the
-    // ground truth locally. Running it on host/offline would create a feedback loop where
-    // send_export_gear_state sends the current state and handle_export_gear_state
-    // re-applies a one-frame-stale copy, causing the flashlight to flicker.
-    app.add_systems(
-        Update,
-        send_export_gear_state
-            .in_set(ungearitems_core::GearStateExportSet)
-            .run_if(in_state(AppState::InGame))
-            .run_if(is_pure_client),
-    );
-
     // Client-side: apply replicated player state to local components
     app.add_systems(
         Update,
@@ -138,6 +105,15 @@ pub(super) fn app_setup(app: &mut App) {
         )
             .run_if(in_state(AppState::InGame))
             .run_if(is_pure_client),
+    );
+
+    // All nodes with a local player: mark the UUID-matched entity as MainPlayer when it
+    // acquires LocallyOwned (covers host-spawn, OwnershipGranted, and fallback paths).
+    app.add_systems(
+        Update,
+        insert_main_player_on_ownership
+            .run_if(in_state(AppState::InGame))
+            .run_if(resource_exists::<LocalPlayerRole>),
     );
 
     // Cleanup the spawning-active marker when leaving InGame
@@ -249,7 +225,6 @@ fn setup_mission_players(
             spawn_pos,
             unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
             PlayerSprite::new(player.player_uuid, net_id),
-            net_id,
             unboard_core::resources::visibility_data::VisibilityData::default(),
         ));
         let entity = entity_commands.id();
@@ -361,7 +336,6 @@ fn spawn_late_joining_players(
             spawn_pos,
             unspatial_core::lerp_position::LerpPosition::new(spawn_pos),
             PlayerSprite::new(player.player_uuid, net_id),
-            net_id,
             unboard_core::resources::visibility_data::VisibilityData::default(),
             Owner(socket_owner_id),
             Replicated,
@@ -377,196 +351,6 @@ fn spawn_late_joining_players(
             "spawn_late_joining_players: spawned skeleton {:?} for late-joining player {} (owner={:?})",
             entity, player.player_uuid, socket_owner_id
         );
-    }
-}
-
-pub fn send_export_gear_state(
-    q_local_player: Query<&PlayerGear, With<LocallyOwned>>,
-    q_flashlight: Query<&ungearitems_core::components::flashlight::Flashlight>,
-    q_uvtorch: Query<&ungearitems_core::components::uvtorch::UVTorch>,
-    q_redtorch: Query<&ungearitems_core::components::redtorch::RedTorch>,
-    q_repellent: Query<&ungearitems_core::components::repellentflask::RepellentFlask>,
-    q_salt: Query<&ungearitems_core::components::salt::SaltData>,
-    q_sage: Query<&ungearitems_core::components::sage::SageBundleData>,
-    q_quartz: Query<&ungearitems_core::components::quartz::QuartzStoneData>,
-    q_toggleable: Query<&Toggleable>,
-    mut writer: MessageWriter<ExportGearStateMessage>,
-) {
-    for gear in q_local_player.iter() {
-        for &entity in gear
-            .left_hand
-            .iter()
-            .chain(gear.right_hand.iter())
-            .chain(&gear.inventory)
-        {
-            let state = if let Ok(flashlight) = q_flashlight.get(entity) {
-                GearSkeletonState::Flashlight(flashlight.status.clone())
-            } else if let Ok(uvtorch) = q_uvtorch.get(entity) {
-                GearSkeletonState::UVTorch(uvtorch.enabled)
-            } else if let Ok(redtorch) = q_redtorch.get(entity) {
-                GearSkeletonState::RedTorch(redtorch.enabled)
-            } else if let Ok(repellent) = q_repellent.get(entity) {
-                GearSkeletonState::RepellentFlask {
-                    qty: repellent.qty,
-                    liquid_content: repellent.liquid_content,
-                }
-            } else if let Ok(salt) = q_salt.get(entity) {
-                GearSkeletonState::Salt(salt.charges)
-            } else if let Ok(sage) = q_sage.get(entity) {
-                GearSkeletonState::Sage {
-                    is_active: sage.is_active,
-                    consumed: sage.consumed,
-                }
-            } else if let Ok(quartz) = q_quartz.get(entity) {
-                GearSkeletonState::Quartz(quartz.cracks)
-            } else if let Ok(toggleable) = q_toggleable.get(entity) {
-                GearSkeletonState::Toggleable(toggleable.is_on)
-            } else {
-                continue;
-            };
-
-            writer.write(ExportGearStateMessage { entity, state });
-        }
-    }
-}
-
-/// Server: handle `ExportGearStateMessage` from connected clients.
-fn handle_export_gear_state(
-    mut reader: MessageReader<FromClient<ExportGearStateMessage>>,
-    mut q_gear: Query<
-        (
-            &Owner,
-            &GearKind,
-            Option<&mut ungearitems_core::components::flashlight::Flashlight>,
-            Option<&mut ungearitems_core::components::uvtorch::UVTorch>,
-            Option<&mut ungearitems_core::components::redtorch::RedTorch>,
-            Option<&mut ungearitems_core::components::repellentflask::RepellentFlask>,
-            Option<&mut ungearitems_core::components::salt::SaltData>,
-            Option<&mut ungearitems_core::components::sage::SageBundleData>,
-            Option<&mut ungearitems_core::components::quartz::QuartzStoneData>,
-            Option<&mut Toggleable>,
-        ),
-        (Without<LocallyOwned>, With<Replicated>),
-    >,
-) {
-    for msg in reader.read() {
-        let entity = msg.message.entity;
-        let state = msg.message.state.clone();
-
-        trace!(
-            "RECV: ExportGearStateMessage for entity {:?} from {:?}",
-            entity, msg.client_id
-        );
-
-        let Ok((
-            owner,
-            gear_kind,
-            flashlight,
-            uvtorch,
-            redtorch,
-            repellent,
-            salt,
-            sage,
-            quartz,
-            toggleable,
-        )) = q_gear.get_mut(entity)
-        else {
-            warn!(
-                "RECV: ExportGearStateMessage: Entity {:?} not found or missing required components in q_gear query",
-                entity
-            );
-            continue;
-        };
-        if from_owner_id(owner.0) != msg.client_id {
-            warn!(
-                "RECV: ExportGearStateMessage: Client ID mismatch. Expected {:?}, got {:?}",
-                from_owner_id(owner.0),
-                msg.client_id
-            );
-            continue;
-        }
-
-        // Handle different gear types based on GearKind
-        match gear_kind {
-            GearKind::Flashlight => {
-                if let (Some(mut f), GearSkeletonState::Flashlight(status)) = (flashlight, state) {
-                    if f.status != status {
-                        info!(
-                            "RECV: UPDATING FLASHLIGHT: Entity: {:?}, New Status: {:?}",
-                            entity, status
-                        );
-                    }
-                    let is_on = status != FlashlightStatus::Off;
-                    f.status = status;
-                    if let Some(mut t) = toggleable {
-                        t.is_on = is_on;
-                    }
-                } else {
-                    warn!(
-                        "RECV: Failed to apply Flashlight state. Check components for entity {:?}",
-                        entity
-                    );
-                }
-            }
-            GearKind::UVTorch => {
-                if let (Some(mut uv), GearSkeletonState::UVTorch(enabled)) = (uvtorch, state) {
-                    uv.enabled = enabled;
-                    if let Some(mut t) = toggleable {
-                        t.is_on = enabled;
-                    }
-                }
-            }
-            GearKind::RedTorch => {
-                if let (Some(mut red), GearSkeletonState::RedTorch(enabled)) = (redtorch, state) {
-                    red.enabled = enabled;
-                    if let Some(mut t) = toggleable {
-                        t.is_on = enabled;
-                    }
-                }
-            }
-            GearKind::RepellentFlask => {
-                if let (
-                    Some(mut r),
-                    GearSkeletonState::RepellentFlask {
-                        qty,
-                        liquid_content,
-                    },
-                ) = (repellent, state)
-                {
-                    r.qty = qty;
-                    r.liquid_content = liquid_content;
-                    r.active = qty > 0 && liquid_content.is_some();
-                }
-            }
-            GearKind::Salt => {
-                if let (Some(mut s), GearSkeletonState::Salt(charges)) = (salt, state) {
-                    s.charges = charges;
-                }
-            }
-            GearKind::SageBundle => {
-                if let (
-                    Some(mut s),
-                    GearSkeletonState::Sage {
-                        is_active,
-                        consumed,
-                    },
-                ) = (sage, state)
-                {
-                    s.is_active = is_active;
-                    s.consumed = consumed;
-                }
-            }
-            GearKind::QuartzStone => {
-                if let (Some(mut q), GearSkeletonState::Quartz(cracks)) = (quartz, state) {
-                    q.cracks = cracks;
-                }
-            }
-            _ => {
-                if let (Some(mut t), GearSkeletonState::Toggleable(is_on)) = (toggleable, state) {
-                    t.is_on = is_on;
-                }
-            }
-        }
     }
 }
 
@@ -591,103 +375,6 @@ fn handle_salt_drop(
             pos,
             Replicated,
         ));
-    }
-}
-
-/// Server: handle `ExportStateMessage` from connected clients.
-fn handle_export_state(
-    mut reader: MessageReader<FromClient<ExportStateMessage>>,
-    mut q_players: Query<
-        (
-            Entity,
-            &Owner,
-            &mut Position,
-            &mut Direction,
-            &mut Stamina,
-            &mut PlayerVitals,
-            &mut PlayerLocomotionState,
-            Option<&mut PlayerSpectating>,
-        ),
-        Without<LocallyOwned>,
-    >,
-    mut commands: Commands,
-) {
-    for msg in reader.read() {
-        for (
-            entity,
-            owner,
-            mut pos,
-            mut dir,
-            mut stamina,
-            mut vitals,
-            mut locomotion,
-            spectating,
-        ) in q_players.iter_mut()
-        {
-            if from_owner_id(owner.0) != msg.client_id {
-                continue;
-            }
-
-            pos.x = msg.message.x;
-            pos.y = msg.message.y;
-            pos.z = msg.message.z;
-
-            dir.dx = msg.message.direction_dx;
-            dir.dy = msg.message.direction_dy;
-            dir.dz = msg.message.direction_dz;
-
-            stamina.running = msg.message.is_running;
-            stamina.current = msg.message.stamina * stamina.max;
-
-            if msg.message.is_hiding {
-                commands.entity(entity).insert(Hiding { hiding_spot: None });
-            } else {
-                commands.entity(entity).remove::<Hiding>();
-            }
-
-            if msg.message.in_truck {
-                commands
-                    .entity(entity)
-                    .insert(untruck_core::components::in_truck::InTruck);
-            } else {
-                commands
-                    .entity(entity)
-                    .remove::<untruck_core::components::in_truck::InTruck>();
-            }
-
-            vitals.health = msg.message.health;
-            vitals.sanity = msg.message.sanity;
-            locomotion.velocity.x = msg.message.movement_dx;
-            locomotion.velocity.y = msg.message.movement_dy;
-
-            if msg.message.is_spectating
-                && spectating.is_none()
-                && let OwnerId::Client(e) = owner.0
-            {
-                commands.entity(e).insert(PlayerSpectating);
-            }
-
-            break;
-        }
-    }
-}
-
-/// Server: handle `ExportPlayerGearMessage` from connected clients.
-fn handle_export_player_gear_state(
-    mut reader: MessageReader<FromClient<ExportPlayerGearMessage>>,
-    mut q_players: Query<(&Owner, &mut PlayerGear), Without<LocallyOwned>>,
-) {
-    // TODO: Theoretical race condition: if an unreliable ExportPlayerGearMessage arrives out-of-order AFTER a RequestDrop has been processed, the server might briefly put the dropped item back into the player's inventory.
-    for msg in reader.read() {
-        for (owner, mut gear) in q_players.iter_mut() {
-            if from_owner_id(owner.0) == msg.client_id {
-                gear.left_hand = msg.message.left_hand;
-                gear.right_hand = msg.message.right_hand;
-                gear.inventory = msg.message.inventory.clone();
-                gear.held_item = msg.message.held_item.clone();
-                break;
-            }
-        }
     }
 }
 
@@ -945,53 +632,25 @@ fn handle_truck_loadout_message(
     }
 }
 
-/// Client: Send own state to server.
-fn send_export_state(
-    q_local: Query<
-        (
-            &Position,
-            &Direction,
-            &PlayerVitals,
-            &PlayerLocomotionState,
-            &Stamina,
-            &PlayerGear,
-            Has<Hiding>,
-            Has<untruck_core::components::in_truck::InTruck>,
-            Has<PlayerSpectating>,
-        ),
-        With<LocallyOwned>,
-    >,
-    mut writer: MessageWriter<ExportStateMessage>,
-    mut gear_writer: MessageWriter<ExportPlayerGearMessage>,
+/// Inserts `MainPlayer` on the player entity whose UUID matches the local player, whenever
+/// that entity first acquires `LocallyOwned`. Covers the host-spawn path (set in
+/// `setup_mission_players`), the `OwnershipGranted` message path, and the fallback polling path.
+fn insert_main_player_on_ownership(
+    q: Query<(Entity, &PlayerSprite), Added<LocallyOwned>>,
+    local_player: Res<LocalPlayer>,
+    mut commands: Commands,
 ) {
-    for (pos, dir, vitals, locomotion, stamina, gear, is_hiding, in_truck, is_spectating) in
-        q_local.iter()
-    {
-        writer.write(ExportStateMessage {
-            x: pos.x,
-            y: pos.y,
-            z: pos.z,
-            direction_dx: dir.dx,
-            direction_dy: dir.dy,
-            direction_dz: dir.dz,
-            is_running: stamina.running,
-            frame: 0,
-            is_hiding,
-            in_truck,
-            stamina: stamina.percentage(),
-            health: vitals.health,
-            sanity: vitals.sanity,
-            movement_dx: locomotion.velocity.x,
-            movement_dy: locomotion.velocity.y,
-            is_spectating,
-        });
-
-        gear_writer.write(ExportPlayerGearMessage {
-            left_hand: gear.left_hand,
-            right_hand: gear.right_hand,
-            inventory: gear.inventory.clone(),
-            held_item: gear.held_item.clone(),
-        });
+    let Some(local_uuid) = local_player.0 else {
+        return;
+    };
+    for (entity, sprite) in q.iter() {
+        if sprite.id == local_uuid {
+            info!(
+                "insert_main_player_on_ownership: inserting MainPlayer on {:?} (UUID={})",
+                entity, local_uuid
+            );
+            commands.entity(entity).insert(MainPlayer);
+        }
     }
 }
 
@@ -1169,22 +828,4 @@ fn cleanup_gear_ownership(
             }
         }
     }
-}
-
-/// Discards the server's value without writing it to the component.
-fn noop_write<C: Component>(
-    ctx: &mut WriteCtx,
-    rule_fns: &RuleFns<C>,
-    _entity: &mut DeferredEntity,
-    message: &mut Bytes,
-) -> Result<(), bevy::prelude::BevyError> {
-    // We use the public deserialize and discard the result.
-    // This advances the message cursor correctly.
-    let _ = rule_fns.deserialize(ctx, message)?;
-    Ok(())
-}
-
-/// Suppresses the server's component removal completely.
-fn noop_remove(_ctx: &mut RemoveCtx, _entity: &mut DeferredEntity) {
-    // Intentionally empty.
 }

@@ -20,6 +20,7 @@ impl Plugin for UnhaunterInputPlugin {
             PostUpdate,
             clear_transient_input_flags.run_if(in_state(SimulationState::Ready)),
         );
+        systems::cursor::app_setup(app);
     }
 }
 

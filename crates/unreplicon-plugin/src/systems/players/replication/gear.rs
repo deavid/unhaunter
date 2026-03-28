@@ -8,23 +8,23 @@ use unreplicon_core::ownership::LocallyOwned;
 
 pub(super) fn register_locally_owned_marker(app: &mut App) {
     app.set_marker_fns::<LocallyOwned, PlayerGear>(
-        super::super::noop_write::<PlayerGear>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<PlayerGear>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, HeldObject>(
-        super::super::noop_write::<HeldObject>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<HeldObject>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, GearMarker>(
-        super::super::noop_write::<GearMarker>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<GearMarker>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, GearKind>(
-        super::super::noop_write::<GearKind>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<GearKind>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, DeployedGear>(
-        super::super::noop_write::<DeployedGear>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<DeployedGear>,
+        unreplicon_core::noop::noop_remove,
     );
 }

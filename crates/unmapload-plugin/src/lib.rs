@@ -1,5 +1,6 @@
 pub(crate) mod assets_debug;
 pub(crate) mod conveyor;
+pub(crate) mod hydration_behavior;
 pub(crate) mod hydration_generic;
 pub(crate) mod level_finalization;
 pub(crate) mod level_setup;

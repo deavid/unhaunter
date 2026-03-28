@@ -12,31 +12,31 @@ type QuartzStoneData = ungearitems_core::components::quartz::QuartzStoneData;
 
 pub(super) fn register_locally_owned_marker(app: &mut App) {
     app.set_marker_fns::<LocallyOwned, Flashlight>(
-        super::super::noop_write::<Flashlight>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<Flashlight>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, UVTorch>(
-        super::super::noop_write::<UVTorch>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<UVTorch>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, RedTorch>(
-        super::super::noop_write::<RedTorch>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<RedTorch>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, RepellentFlask>(
-        super::super::noop_write::<RepellentFlask>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<RepellentFlask>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, SaltData>(
-        super::super::noop_write::<SaltData>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<SaltData>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, SageBundleData>(
-        super::super::noop_write::<SageBundleData>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<SageBundleData>,
+        unreplicon_core::noop::noop_remove,
     );
     app.set_marker_fns::<LocallyOwned, QuartzStoneData>(
-        super::super::noop_write::<QuartzStoneData>,
-        super::super::noop_remove,
+        unreplicon_core::noop::noop_write::<QuartzStoneData>,
+        unreplicon_core::noop::noop_remove,
     );
 }

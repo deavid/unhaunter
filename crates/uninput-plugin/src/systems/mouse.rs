@@ -1,12 +1,12 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use uninput_core::components::PlayerInput;
+use uninput_core::resources::MouseVisibility;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untags_core::game::GCameraArena;
 use untruck_core::components::in_truck::InTruck;
-use unui_core::resources::MouseVisibility;
 
 const AIM_MAX_DISTANCE: f32 = 12.0;
 

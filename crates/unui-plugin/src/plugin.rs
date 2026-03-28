@@ -12,7 +12,5 @@ impl Plugin for UnhaunterUiPlugin {
             LoadingState::new(AppState::EngineBoot).load_collection::<UiAssets>(),
         );
         app.add_message::<OnScreenHintEvent>();
-        crate::hide_mouse::app_setup(app);
-        crate::pause_ui::app_setup(app);
     }
 }

@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 
-use crate::events::truck::TruckUIEvent;
 use crate::types::truck_button::{TruckButtonState, TruckButtonType};
-use unfoundation_core::colors;
 use unghost_core::types::evidence::Evidence;
 
 /// Represents a button in the truck UI, handling its state, type, and visual
@@ -30,122 +28,6 @@ pub struct TruckUIButton {
 }
 
 impl TruckUIButton {
-    pub fn pressed(&mut self) -> Option<TruckUIEvent> {
-        // If this button requires holding, don't trigger immediately
-        if self.hold_duration.is_some() {
-            return None;
-        }
-
-        match self.class {
-            TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => {
-                self.status = match self.status {
-                    TruckButtonState::Off => TruckButtonState::Pressed,
-                    TruckButtonState::Pressed | TruckButtonState::Discard => TruckButtonState::Off,
-                };
-                None
-            }
-            TruckButtonType::CraftRepellent => Some(TruckUIEvent::CraftRepellent),
-            TruckButtonType::ExitTruck => Some(TruckUIEvent::ExitTruck),
-            TruckButtonType::EndMission => Some(TruckUIEvent::EndMission),
-        }
-    }
-
-    /// Explicitly toggle the Discard state (Shift+Click)
-    pub fn toggle_discard(&mut self) -> Option<TruckUIEvent> {
-        match self.class {
-            TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => {
-                self.status = match self.status {
-                    TruckButtonState::Discard => TruckButtonState::Off,
-                    _ => TruckButtonState::Discard,
-                };
-            }
-            _ => {}
-        }
-        None
-    }
-
-    pub fn border_color(&self, interaction: Interaction) -> Color {
-        let color = match self.class {
-            TruckButtonType::Evidence(_) => {
-                // Border color for evidence buttons (blinking handled by journal system)
-                match interaction {
-                    Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
-                    Interaction::Hovered => colors::TRUCKUI_TEXT_COLOR,
-                    Interaction::None => colors::TRUCKUI_ACCENT2_COLOR,
-                }
-            }
-            TruckButtonType::Ghost(_) => match interaction {
-                Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
-                Interaction::Hovered => colors::TRUCKUI_ACCENT_COLOR,
-                Interaction::None => Color::NONE,
-            },
-            TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
-                Interaction::Pressed => colors::BUTTON_EXIT_TRUCK_TXTCOLOR,
-                Interaction::Hovered => colors::BUTTON_EXIT_TRUCK_TXTCOLOR,
-                Interaction::None => colors::BUTTON_EXIT_TRUCK_FGCOLOR,
-            },
-            TruckButtonType::EndMission => match interaction {
-                Interaction::Pressed => colors::BUTTON_END_MISSION_TXTCOLOR,
-                Interaction::Hovered => colors::BUTTON_END_MISSION_TXTCOLOR,
-                Interaction::None => colors::BUTTON_END_MISSION_FGCOLOR,
-            },
-        };
-        let alpha_disabled = if self.disabled { 0.05 } else { 1.0 };
-        color.with_alpha(color.alpha() * alpha_disabled)
-    }
-
-    pub fn background_color(&self, interaction: Interaction) -> Color {
-        let color = match self.class {
-            TruckButtonType::Evidence(_) => match self.status {
-                TruckButtonState::Off => colors::TRUCKUI_BGCOLOR,
-                TruckButtonState::Pressed => Color::srgb(0.2, 0.8, 0.3), // Green color for confirmed evidence
-                TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
-            },
-            TruckButtonType::Ghost(_) => {
-                match self.status {
-                    TruckButtonState::Off => colors::TRUCKUI_BGCOLOR,
-                    TruckButtonState::Pressed => Color::srgb(0.2, 0.8, 0.3), // Green color for confirmed ghost, same as evidence
-                    TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR, // Should not happen for ghosts, but for completeness.
-                }
-            }
-            TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
-                Interaction::Pressed => colors::BUTTON_EXIT_TRUCK_FGCOLOR,
-                Interaction::Hovered => colors::BUTTON_EXIT_TRUCK_BGCOLOR,
-                Interaction::None => colors::BUTTON_EXIT_TRUCK_BGCOLOR,
-            },
-            TruckButtonType::EndMission => match interaction {
-                Interaction::Pressed => colors::BUTTON_END_MISSION_FGCOLOR,
-                Interaction::Hovered => colors::BUTTON_END_MISSION_BGCOLOR,
-                Interaction::None => colors::BUTTON_END_MISSION_BGCOLOR,
-            },
-        };
-        if self.disabled {
-            let color = color.with_alpha(color.alpha() * 0.5);
-            color.with_luminance(color.luminance() * 0.5)
-        } else {
-            color
-        }
-    }
-
-    pub fn text_color(&self, _interaction: Interaction) -> Color {
-        let color = match self.class {
-            TruckButtonType::Evidence(_) => match self.status {
-                TruckButtonState::Pressed => Color::BLACK,
-                _ => colors::TRUCKUI_TEXT_COLOR,
-            },
-            TruckButtonType::Ghost(_) => match self.status {
-                TruckButtonState::Pressed => Color::BLACK,
-                _ => colors::TRUCKUI_TEXT_COLOR.with_alpha(0.5),
-            },
-            TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => {
-                colors::BUTTON_EXIT_TRUCK_TXTCOLOR
-            }
-            TruckButtonType::EndMission => colors::BUTTON_END_MISSION_TXTCOLOR,
-        };
-        let alpha_disabled = if self.disabled { 0.1 } else { 1.0 };
-        color.with_alpha(color.alpha() * alpha_disabled)
-    }
-
     /// Set blinking hint state for evidence buttons
     pub fn set_blinking_hint(&mut self, active: bool) {
         self.blinking_hint_active = active;

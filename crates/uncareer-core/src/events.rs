@@ -1,6 +1,6 @@
+use crate::grade::Grade;
 use bevy::prelude::*;
 use undifficulty_core::difficulty::Difficulty;
-use crate::grade::Grade;
 
 /// Emitted by `uncareer-plugin` after grade and reward computation.
 /// This is the canonical signal for the economy domain.
@@ -22,11 +22,4 @@ pub struct CareerRewardCalculatedEvent {
 pub struct CareerDeathRecordedEvent {
     pub map_path: String,
     pub difficulty: Difficulty,
-}
-
-/// Emitted by `unprofile-plugin` at mission start.
-/// Bridges the T3b persistence state to T2 career logic.
-#[derive(Debug, Clone, Message)]
-pub struct DepositStakedEvent {
-    pub amount: i64,
 }

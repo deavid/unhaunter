@@ -2,8 +2,8 @@ use unaudiospatial_core::emitter::AudioEmitter;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use uninteraction_core::interaction::{Toggleable, Triggered};
+use unlight_core::components::LightEmitter;
 use unmetrics_core::metrics::SendMetric;
-use unrender_std::components::light::LightEmitter;
 use unspatial_core::position::Position;
 
 use crate::metrics;

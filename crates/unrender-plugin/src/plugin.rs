@@ -2,59 +2,15 @@
 //! It includes systems for applying isometric perspective, rebuilding collision data, and updating
 //! the lighting field based on the current state of the board and behaviors.
 
-use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
-use unmetrics_core::metrics::SendMetric;
-use unspatial_core::lerp_position::LerpPosition;
-use unspatial_core::perspective;
-use unspatial_core::position::Position;
 
 use unrender_std::board::spritedb::SpriteDB;
-use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::materials::{CustomMaterial1, UIPanelMaterial};
 
 use crate::metrics;
 
 #[cfg(not(target_arch = "wasm32"))]
 use bevy::ecs::system::NonSendMarker;
-
-pub const APPLY_PERSPECTIVE: DiagnosticPath =
-    DiagnosticPath::const_new("unboard/systems/apply_perspective");
-
-/// Main system of board that moves the tiles to their correct place on the screen
-/// following the isometric perspective.
-///
-/// # Arguments
-///
-/// * `q` - A query for entities with `Position` and `Transform` components that have changed.
-pub fn apply_perspective(
-    mut q: Query<
-        (
-            &Position,
-            Option<&LerpPosition>,
-            &mut Transform,
-            Option<&SpriteLayer>,
-        ),
-        Or<(
-            Changed<Position>,
-            Changed<LerpPosition>,
-            Changed<SpriteLayer>,
-        )>,
-    >,
-) {
-    let measure = APPLY_PERSPECTIVE.time_measure();
-
-    for (pos, lerp, mut transform, layer) in q.iter_mut() {
-        let effective_pos = if let Some(l) = lerp { &l.current } else { pos };
-        let mut translation = perspective::to_screen_coord(*effective_pos);
-        if let Some(layer) = layer {
-            translation.z += layer.0;
-        }
-        transform.translation = translation;
-    }
-
-    measure.end_ms();
-}
 
 /// Core plugin for initializing board-related resources and simulation systems.
 pub struct UnhaunterRenderCorePlugin;
@@ -64,9 +20,7 @@ impl Plugin for UnhaunterRenderCorePlugin {
         let cli = app.world().get_resource::<untypes_core::cli::CliOptions>();
         let headless = cli.map(|c| c.dedicated).unwrap_or(false);
 
-        crate::systems::board_sync::app_setup(app);
         crate::systems::lerp::app_setup(app);
-        crate::systems::hydration::app_setup(app);
         metrics::register_all(app);
 
         app.init_resource::<SpriteDB>();
@@ -100,8 +54,6 @@ impl Plugin for UnhaunterRenderPlugin {
             Startup,
             unrender_std::resources::sprite_registry::setup_sprite_registry,
         );
-        app.add_systems(Update, apply_perspective);
-        app.register_diagnostic(Diagnostic::new(APPLY_PERSPECTIVE).with_suffix("ms"));
 
         app.add_plugins(bevy::sprite_render::Material2dPlugin::<CustomMaterial1>::default())
             .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());

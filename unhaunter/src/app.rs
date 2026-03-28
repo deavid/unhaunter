@@ -30,12 +30,14 @@ use unnavigation_plugin::plugin::UnhaunterNavigationPlugin;
 use unnpc_plugin::plugin::{UnhaunterNPCCorePlugin, UnhaunterNPCPlugin};
 use unplayer_plugin::plugin::{UnhaunterPlayerCorePlugin, UnhaunterPlayerPlugin};
 use untruck_plugin::plugin::{UnhaunterTruckCorePlugin, UnhaunterTruckPlugin};
+use untruckui_plugin::plugin::UnhaunterTruckUIPlugin;
 use unvitals_plugin::plugin::UnhaunterVitalsPlugin;
 
 // Rendering & Graphics
 use unfog_plugin::plugin::{UnhaunterFogCorePlugin, UnhaunterFogPlugin};
 use unpicking_plugin::plugin::CustomSpritePickingPlugin;
 use unrender_plugin::plugin::{UnhaunterRenderCorePlugin, UnhaunterRenderPlugin};
+use unspatial_plugin::plugin::UnhaunterSpatialPlugin;
 use unthermal_plugin::plugin::UnhaunterThermalPlugin;
 
 // Audio & Spatial
@@ -49,6 +51,7 @@ use unmainmenu_plugin::plugin::UnhaunterMenuPlugin;
 use unmanual_plugin::plugin::UnhaunterManualPlugin;
 use unmenu_plugin::plugin::UnhaunterCoreMenuPlugin;
 use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
+use unpause_plugin::plugin::UnpausePlugin;
 use unsummary_plugin::plugin::{UnhaunterSummaryCorePlugin, UnhaunterSummaryPlugin};
 use unui_plugin::plugin::UnhaunterUiPlugin;
 
@@ -62,6 +65,7 @@ use unclassic_mode_render_plugin::plugin::ClassicModeRenderPlugin;
 use unclassic_mode_ui_plugin::plugin::ClassicModeUiPlugin;
 
 // Utilities & Diagnostics
+use uncareer_plugin::plugin::UnhaunterCareerPlugin;
 use unfps_plugin::plugin::UnhaunterFpsPlugin;
 use unmaphub_plugin::plugin::UnhaunterMapHubPlugin;
 use unmetrics_plugin::plugin::UnhaunterMetricsPlugin;
@@ -200,6 +204,9 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterRenderCorePlugin,
     ));
 
+    // == CAREER & ECONOMY ==
+    app.add_plugins(UnhaunterCareerPlugin);
+
     // == DOMAIN LOGIC (Part 2: Gameplay Modes) ==
     app.add_plugins((ClassicModeOrchestratorPlugin, ClassicModeGameplayPlugin));
 
@@ -209,6 +216,7 @@ pub fn app_run(cli_options: CliOptions) {
         app.add_plugins((
             UnhaunterInputPlugin,
             UnhaunterUiPlugin,
+            UnpausePlugin,
             UnhaunterPlayerPlugin,
             UnhaunterMenuPlugin,
             UnhaunterCoreMenuPlugin,
@@ -216,6 +224,7 @@ pub fn app_run(cli_options: CliOptions) {
             UnhaunterManualPlugin,
             UnhaunterSummaryPlugin,
             UnhaunterTruckPlugin,
+            UnhaunterTruckUIPlugin,
             UnhaunterNPCPlugin,
             UnhaunterWalkiePlugin,
         ));
@@ -227,6 +236,7 @@ pub fn app_run(cli_options: CliOptions) {
             UnhaunterLightPlugin,
             UnhaunterFogPlugin,
             UnhaunterFogCorePlugin,
+            UnhaunterSpatialPlugin,
             UnhaunterRenderPlugin,
             UnhaunterGearPlugin,
             UnhaunterGearItemsPlugin,

@@ -13,11 +13,8 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
-unspatial-core = { workspace = true }
 unrender-core = { workspace = true }
 unbehavior-core = { workspace = true }
-unboard-core = { workspace = true }
 ungear-core = { workspace = true }
-unlight-core = { workspace = true }
 enum-iterator = { workspace = true }
 bevy_platform = { workspace = true }

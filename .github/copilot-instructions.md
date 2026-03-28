@@ -110,6 +110,46 @@ possible.
 - **Coordinate Systems**: We use a custom isometric projection. Logic often happens in "board" coordinates (see
   [crates/unspatial-core](crates/unspatial-core)).
 
+## Defensive Logging (No Silent Failures)
+
+ECS queries, message handlers, and entity lookups can silently return nothing — no compile error, no runtime panic, just
+skipped logic. This is the single most dangerous bug pattern in the codebase. An item disappears, a component is never
+added, a message is never processed — and nothing is logged. Days of debugging follow.
+
+### The Rule
+
+**Every code path that "should not happen" must log.** Silent fallthrough — where a query returns nothing, a message
+finds no matching entity, or `.get()` / `.ok()` silently discards a failure — is forbidden unless the empty case is a
+legitimate, expected, normal-operation scenario.
+
+### Log Level Guide
+
+- **`error!`** — State is **known inconsistent or irrecoverable.** Example: A multi-step operation partially completed
+  and the remaining steps cannot proceed. Example: a drop request where the client already removed the item from
+  inventory (step 1), but the server handler cannot find the entity to place it on the ground (step 2). The item is now
+  gone from both inventory and the world. Use `error!` because we _know_ the game state is broken.
+
+- **`warn!`** — Code path **should not be reachable** in normal play, but we cannot prove the game state is already
+  corrupted. Something unexpected happened. Example: a message handler receives a request for an entity that exists but
+  has an unexpected component configuration. The handler skips it. The game _might_ be fine, but this is a sign of a
+  bug.
+
+- **`debug!`** — A failure case that **can legitimately happen** in edge cases and is benign. Example: a query during
+  the first few frames after spawn finds nothing because the entity hasn't been fully constructed yet. Or a periodic
+  system that checks for an optional condition.
+
+### What to Audit
+
+When reviewing or auditing code, flag these patterns as violations:
+
+- `if let Ok(...) = query.get(entity) { ... }` with **no `else` branch** and no logging.
+- `let Some(...) = ... else { return; }` or `else { continue; }` with no logging.
+- Message handlers (`MessageReader` loops) where the inner query silently skips non-matching entities.
+- `.ok()`, `.unwrap_or_default()`, or `.and_then(...)` chains that silently swallow lookup failures on entities that
+  should exist.
+
+Not every `.ok()` is a violation — but every `.ok()` on an entity lookup that was _expected to succeed_ is.
+
 ## Signal Direction & Domain Ownership
 
 These principles govern how systems communicate and where code belongs. They take **priority over tier compliance** when
@@ -183,6 +223,40 @@ audio or rendering, it is a violation regardless of how the computation is frame
 A healthy domain: deleting its crates leaves holes in the simulation but not cascading failures in unrelated domains. If
 unrelated domains break when you remove X, responsibilities have leaked out of X.
 
+### 7. Marker-Gated Write Rule (Entity Class Boundaries)
+
+Some marker components define **entity class identity** — they are the OOP "type tag" in an ECS world. Examples:
+`GhostMarker`, `PlayerMarker`, `MapTileMarker`, etc. These markers denote _what kind of thing_ an entity is.
+
+**Rule:** When a system filters by a foreign entity-class marker (via `With<M>`, `Has<M>`, or similar), it is operating
+on that entity _as a typed thing_. At that point, the system belongs to the marker's owning domain. A system that
+filters by a foreign entity-class marker may only **read** components on matching entities. Any **writes** (`&mut`
+queries, `insert`, `remove`, `despawn`) to entities filtered by a foreign entity-class marker are a violation — the
+logic belongs in the marker's owning domain.
+
+**Spawning is not exempt.** Only the owning domain may spawn an entity carrying its entity-class marker. No exceptions.
+If a system in crate X calls `commands.spawn((..., GhostMarker, ...))` and X is not the ghost domain, that is a
+violation. Infrastructure like replication or map loading that needs to materialize foreign entities must do so by
+triggering the owning domain (e.g., via an observer on marker insertion), not by assembling the full entity itself.
+
+This includes rendering and audio: ghost rendering logic belongs in the ghost domain, not in a generic render plugin.
+Domains should be feature-complete — adding a ghost crate pair should give you a working ghost, including how it looks
+and sounds.
+
+**Violation pattern:** `unrender-plugin` contains `Query<&mut Sprite, With<GhostMarker>>`. This system encodes
+ghost-specific rendering decisions outside the ghost domain. **Correct pattern:** `unghost-plugin` contains the system
+that updates sprites for ghost entities. The ghost domain knows how ghosts render themselves.
+
+**Generic operations are exempt:** `Query<&mut Transform>` with no entity-class marker filter is a generic
+transformation. It operates on a _component_, not an entity class. This is fine regardless of which domain runs it.
+
+**Infrastructure markers are exempt:** Markers like `Replicated`, `LocallyOwned`, or state-management markers are not
+entity-class markers. This rule applies only to markers that define _what kind of entity_ something is.
+
+**The test:** For every `With<Marker>` or `Has<Marker>` filter in a system signature, ask: _is this marker an
+entity-class marker, and does it belong to my domain?_ If the marker is a foreign entity-class marker and the system
+writes to matching entities, it is a violation.
+
 ### Domain Audit Protocol
 
 When asked to **audit domain X** (e.g., `unvitals`, `unghost`, `ungear`):
@@ -193,11 +267,39 @@ When asked to **audit domain X** (e.g., `unvitals`, `unghost`, `ungear`):
    - **TDA:** For each foreign `un*` read, is that domain pushing this signal, or is this system pulling it?
    - **Information hiding:** Does any system encode decisions (thresholds, curves, colors) that belong elsewhere?
    - **System membership:** Does each system write _this_ domain's own types? If not, it is misplaced.
+   - **Marker-gated writes:** Does any system filter by a foreign entity-class marker and write to matching entities?
    - **Tier violations:** Does the crate import anything higher-tier? (flag, but weight less when recommending fixes)
 3. **Output**: A written report. Flag violations. Do not modify code unless separately instructed.
 
 Tier rules catch _import_ violations. The four checks above catch _responsibility_ violations. Both are reported, but
 responsibility violations take priority in diagnosis and fix recommendations.
+
+### 8. Vertical Slice Supremacy (VSA vs Layers)
+
+**UI, Rendering, and Networking are NOT domains. They are output layers.**
+
+Copilot / LLMs inherently trend toward placing any code related to drawing shapes into `unrender` or `unui`. **This
+instinct is strictly forbidden here.** Domains must be full vertical slices.
+
+- If the Pause Menu has a UI, the `unpause` domain crates spawn and govern that UI.
+- If the Truck has a clipboard HUD, the `untruck` domain crates spawn it.
+- If a network ping drops, the Network / T2 app layers catch it and emit a state change event; the UI just blindly
+  redraws what the game state says.
+
+**Never extract feature-specific variables into generic bags.** Do not create "God Enums" to satisfy a UI or Render
+crate. If you ever feel tempted to create an enum in a Tier 4 crate that lists things like `SpriteType::Ghost` or
+`SummaryUIType::SanityLevel`, **STOP.** That is a profound violation of "Tell, Don't Ask" and Domain Completeness. The
+domain (e.g., `unghost` or `unvitals`) defines its own specific ECS marker and generic drawing constraints. Tier 4
+components must only describe universally generic pixel properties (e.g., `AlphaModulator`, `ResolutionFactor`).
+
+**When Tiers and VSA Conflict:** Tier constraints exist to prevent the Game rules (T1) from importing `bevy_winit` or
+specific client rendering engines (T4). **However**, if strictly following a Tier constraint requires you to take a
+gameplay identifier (like "is this thing a Wall") and store it inside a Presentation crate just to render it without
+circular dependencies, **you are failing the architecture**.
+
+Do not create `unrender-std` or `-shared` dumpsters to bridge tiers. Fix it by keeping the domain physics completely
+owned by T1, and having the Presentation layer passively query the resulting component data universally, _without ever
+needing to know the semantic identity of the entity_.
 
 ### Anti-Pattern: The Horizontal-Cut (Shared Bag) Trap
 
@@ -278,9 +380,11 @@ These rules apply to every task. Existing drift is tolerated; new drift is not.
    into domain types. Domain crates (T1) must never import T3 crates. The translation is one-way: external data enters
    through T3 and is converted; domain types never flow back out as external format structs.
 
-7. **Presentation never leaks inward.** T4 crates (rendering, audio, UI) must not be imported by T0–T3 crates for any
-   reason. If a domain concept needs to _trigger_ a visual or audio effect, it does so through an **event** (a T0/T1
-   data type), not by calling into T4 directly.
+7. **Presentation is a warning, not a hard boundary.** Domains should be feature-complete: a ghost crate pair should own
+   ghost rendering logic, even if that means importing Bevy's `Sprite` or similar presentation types into T1. Using
+   Bevy-provided presentation types in domain crates is a **warning** worth noting, not a hard violation. Importing
+   _project_ T4 crates (e.g., `unrender-plugin`) from T0–T3 remains a hard violation.
 
 When reviewing code, always flag: any upward tier dependency, any `-core`/`-plugin` pair in different tiers, any T3 type
-in T0–T2, any T4 import in T0–T3. These are violations even if not asked to fix them.
+in T0–T2, any project T4 import in T0–T3, any write through a foreign entity-class marker filter. These are violations
+even if not asked to fix them.

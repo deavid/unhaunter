@@ -23,4 +23,3 @@ unspatial-core = { workspace = true }
 untags-core = { workspace = true }
 untruck-core = { workspace = true }
 untypes-core = { workspace = true }
-unui-core = { workspace = true }

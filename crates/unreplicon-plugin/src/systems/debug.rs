@@ -5,15 +5,14 @@ use bevy_replicon::prelude::*;
 use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::Flashlight;
+use unlight_core::components::LightEmitter;
 use unplayer_core::components::{
     MainPlayer, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite,
 };
-use unrender_std::components::light::LightEmitter;
 use unreplicon_core::ownership::{LocallyOwned, Owner};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use unvitals_core::components::PlayerVitals;
 
 #[derive(Resource, Default)]
 struct DebugTimer(Stopwatch);
@@ -171,7 +170,6 @@ fn debug_player_components(
             Has<PlayerSpectating>,
             Has<PlayerDisconnected>,
             Has<PlayerInactive>,
-            Option<&PlayerVitals>,
         ),
         With<PlayerSprite>,
     >,
@@ -203,7 +201,6 @@ fn debug_player_components(
             is_spectating,
             is_disconnected,
             is_inactive,
-            vitals,
         ) = item;
         let ownership = if local.is_some() {
             "LOCALLY_OWNED"
@@ -266,9 +263,7 @@ fn debug_player_components(
             flags
         };
 
-        let vitals_data = vitals
-            .map(|v| format!("sanity={:.1} | health={:.1}", v.sanity, v.health))
-            .unwrap_or_else(|| "sanity=N/A | health=N/A".to_string());
+        let vitals_data = "sanity=N/A | health=N/A".to_string();
 
         info!(
             "Player[{:?}] UUID={:?} NetId={:?} | {} | {} | {} | Owner={} | Flags={}\n  -> Pos={}  |  Transform={}  |  Dir={}  |  {}",

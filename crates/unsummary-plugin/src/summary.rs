@@ -1,3 +1,4 @@
+use crate::components::{SCamera, SummaryUI, SummaryUIType};
 use bevy::{color::palettes::css, prelude::*};
 use unboard_core::resources::board_topology::BoardTopology;
 use uncareer_core::grade::Grade;
@@ -14,7 +15,6 @@ use untypes_core::roles::LobbyPresenceRole;
 use untypes_core::states::AppState;
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
-use unui_core::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 use unvitals_core::components::PlayerVitals;
 use unvitals_core::events::PlayerDiedEvent;
 
@@ -133,11 +133,7 @@ pub(crate) fn afk_timeout(
         game_next_state.set(GameState::Running);
     }
 }
-pub(crate) fn setup_ui(
-    mut commands: Commands,
-    ui_assets: Res<UiAssets>,
-    rsd: Res<SummaryData>,
-) {
+pub(crate) fn setup_ui(mut commands: Commands, ui_assets: Res<UiAssets>, rsd: Res<SummaryData>) {
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
@@ -289,6 +285,36 @@ pub(crate) fn setup_ui(
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::PlayersAlive);
 
+                    parent
+                        .spawn(Text::new("Ghosts unhaunted: 0/0"))
+                        .insert(TextFont {
+                            font: ui_assets.font_londrina_light.clone(),
+                            font_size: 24.0 * FONT_SCALE,
+                            ..default()
+                        })
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::GhostUnhaunted);
+
+                    parent
+                        .spawn(Text::new("Average Sanity: 0.0%"))
+                        .insert(TextFont {
+                            font: ui_assets.font_londrina_light.clone(),
+                            font_size: 24.0 * FONT_SCALE,
+                            ..default()
+                        })
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::AvgSanity);
+
+                    parent
+                        .spawn(Text::new("Repellent charges used: 0"))
+                        .insert(TextFont {
+                            font: ui_assets.font_londrina_light.clone(),
+                            font_size: 24.0 * FONT_SCALE,
+                            ..default()
+                        })
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::RepellentUsed);
+
                     // Separator
                     parent
                         .spawn(Node {
@@ -318,7 +344,8 @@ pub(crate) fn setup_ui(
                             grid_column: GridPlacement::span(2),
                             ..default()
                         })
-                        .insert(TextColor(Color::WHITE));
+                        .insert(TextColor(Color::WHITE))
+                        .insert(SummaryUIType::GradeAchieved);
 
                     parent
                         .spawn(Text::new(format!(
@@ -417,7 +444,8 @@ pub(crate) fn setup_ui(
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })
-                        .insert(TextColor(css::GRAY.into()));
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::InsuranceDepositHeld);
 
                     parent
                         .spawn(Text::new(format!(
@@ -429,7 +457,8 @@ pub(crate) fn setup_ui(
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })
-                        .insert(TextColor(css::GRAY.into()));
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::CostsDeducted);
 
                     parent
                         .spawn(Text::new(format!(
@@ -441,7 +470,8 @@ pub(crate) fn setup_ui(
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })
-                        .insert(TextColor(css::GRAY.into()));
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::DepositReturned);
 
                     // Separator
                     parent
@@ -471,7 +501,8 @@ pub(crate) fn setup_ui(
                             grid_column: GridPlacement::span(2),
                             ..default()
                         })
-                        .insert(TextColor(Color::WHITE));
+                        .insert(TextColor(Color::WHITE))
+                        .insert(SummaryUIType::NetChange);
 
                     parent
                         .spawn(Text::new(format!("Final Money in Bank: ${}", final_bank)))
@@ -480,7 +511,8 @@ pub(crate) fn setup_ui(
                             font_size: 26.0 * FONT_SCALE,
                             ..default()
                         })
-                        .insert(TextColor(Color::WHITE));
+                        .insert(TextColor(Color::WHITE))
+                        .insert(SummaryUIType::FinalBankTotal);
 
                     // Press enter prompt
                     parent.spawn(Node {

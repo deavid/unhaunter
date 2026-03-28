@@ -15,5 +15,4 @@ workspace = true
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
 serde = { workspace = true }
-unfoundation-core = { workspace = true }
 unghost-core = { workspace = true }

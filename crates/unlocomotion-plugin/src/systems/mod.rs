@@ -1,3 +1,4 @@
+pub(crate) mod net_state;
 pub(crate) mod spawn;
 
 use bevy::prelude::*;
@@ -10,6 +11,7 @@ use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::components::PlayerInput;
+use uninput_core::resources::MouseVisibility;
 use uninteraction_core::events::InteractionExecutionType;
 use uninteraction_core::events::InteractionRequestMessage;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
@@ -23,7 +25,6 @@ use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 use untypes_core::states::GameState;
-use unui_core::resources::MouseVisibility;
 use unvitals_core::components::Stamina;
 
 const PLAYER_SPEED: f32 = 0.04;
@@ -376,6 +377,7 @@ pub(crate) fn drive_character_animation(
 
 pub(crate) fn app_setup(app: &mut App) {
     spawn::app_setup(app);
+    net_state::app_setup(app);
 
     app.add_systems(
         Update,

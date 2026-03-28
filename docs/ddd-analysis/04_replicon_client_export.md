@@ -136,22 +136,25 @@ assignments, not component state. It may remain as a dedicated message or be con
 
 ## Execution Order
 
-1. **Define `ExportClientComponent<T>`** in `unreplicon-core` (it is a networking primitive — generic, no domain
+1. ✅ **Define `ExportClientComponent<T>`** in `unreplicon-core` (it is a networking primitive — generic, no domain
    knowledge).
 
-2. **Player-state components first** (unblocked today):
-   - `Position`, `Direction` → registered in `unspatial-core`'s owning plugin or `unlocomotion-plugin`
-   - `PlayerVitals`, `Stamina` → registered in `unvitals-plugin`
-   - `PlayerLocomotionState` → registered in `unlocomotion-plugin`
-   - Boolean markers (`Hiding`, `InTruck`, `PlayerSpectating`) → evaluate: are these insert/remove markers or
-     component-value exports? Different pattern may apply.
+2. ✅ **Player-state components** (DONE 2026-03-22):
+   - `Position`, `Direction`, `PlayerLocomotionState` → registered in `unlocomotion-plugin/src/systems/net_state.rs`
+   - `PlayerVitals`, `Stamina` → registered in `unvitals-plugin/src/systems/net_state.rs`
+   - Boolean markers (`Hiding`, `InTruck`, `PlayerSpectating`) → handled via `ExportPlayerMarkersMessage` in
+     `unplayer-plugin/src/systems/net_state.rs`
+   - `ExportPlayerGearMessage` (slot assignments) → send/import systems moved to `ungear-plugin/src/net_state.rs`
 
-3. **Gear-state components** (unblocked — see audit above):
-   - Register `ExportClientComponent<T>` per gear type in `ungearitems-plugin`.
+3. ✅ **Gear-state components** (DONE 2026-03-22, via `ungearitems-plugin/src/net_state.rs`):
    - Eight types: `Flashlight`, `UVTorch`, `RedTorch`, `RepellentFlask`, `SaltData`, `SageBundleData`,
      `QuartzStoneData`, `Toggleable`.
 
-4. **Remove old types** from `unreplicon-core` once all consumers are migrated.
+4. ✅ **Remove old types** from `unreplicon-core` (DONE — `ExportStateMessage`, `GearSkeletonState`,
+   `ExportGearStateMessage`, `PlayerMoveMessage` all removed).
+   - `noop_write`/`noop_remove` moved to `unreplicon-core/src/noop.rs` (canonical, shared across domain plugins).
+   - All `replication/*.rs` files updated to use `unreplicon_core::noop::*` instead of local functions.
+   - `unreplicon-plugin` deps cleaned up: `unvitals-core` and `unlocomotion-core` removed.
 
 5. **Phase 2 (future):** Extract boilerplate into a trait or generic helper so each domain's export/import is a one-line
    registration.
@@ -160,13 +163,14 @@ assignments, not component state. It may remain as a dedicated message or be con
 
 ## Open Questions
 
-- **`ExportPlayerGearMessage`** — carries entity slot assignments (`left_hand`, `right_hand`, `inventory`), not
-  component data. Does it convert to `ExportClientComponent<PlayerGear>` or stay as a dedicated message?
+- ✅ **`ExportPlayerGearMessage`** — RESOLVED 2026-03-22. Stays as a dedicated message (slot assignments are not
+  component state). Send/import systems moved to `ungear-plugin/src/net_state.rs`; the type itself remains in
+  `unreplicon-core/src/messages.rs` as it carries entity references shared across crates.
 
-- **Boolean marker components** (`Hiding`, `InTruck`, `PlayerSpectating`) — these are inserted/removed as tag
-  components, not mutated in place. `ExportClientComponent<T>` assumes a component that is always present with changing
-  data. Tag insert/remove may need a different message shape (e.g., `ExportClientMarker<T>` with a bool for
-  present/absent) or can be handled by making the component always-present with an `active: bool` field.
+- ✅ **Boolean marker components** (`Hiding`, `InTruck`, `PlayerSpectating`) — RESOLVED 2026-03-22. A dedicated
+  `ExportPlayerMarkersMessage { is_hiding: bool, in_truck: bool, is_spectating: bool }` is used instead of
+  `ExportClientComponent<T>` (which requires the component to always be present). Send/import systems live in
+  `unplayer-plugin/src/systems/net_state.rs`.
 
-- **Gear component audit results** — ✅ COMPLETE 2026-03-22. All 8 gear types have existing serializable components. See
-  audit table above. Step 3 is unblocked.
+- ✅ **Gear component audit results** — COMPLETE 2026-03-22. All 8 gear types have existing serializable components. See
+  audit table above. Step 3 is complete.

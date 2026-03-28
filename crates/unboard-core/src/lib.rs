@@ -9,6 +9,7 @@ pub mod entity;
 pub mod events;
 pub mod resources;
 pub mod types;
+pub mod utils;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum BoardUpdateSet {

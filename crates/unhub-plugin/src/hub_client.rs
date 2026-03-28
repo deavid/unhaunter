@@ -1,13 +1,9 @@
 use bevy::prelude::*;
-use bevy_persistent::Persistent;
 use crossbeam_channel::{Receiver, Sender};
-use rand::Rng;
-use unhub_client::generate_codename;
 use unhub_client::protocol::{
     ChallengeRequest, ChallengeResponse, CreateRoomRequest, CreateRoomResponse, JoinRoomRequest,
     JoinRoomResponse,
 };
-use unprofile_core::profile::PlayerProfileData;
 use untypes_core::cli::CliOptions;
 
 #[derive(Resource)]
@@ -176,16 +172,5 @@ pub fn update_hub_status(mut status: ResMut<HubStatus>, client: Res<HubClient>) 
     while let Ok(resp) = client.rx.try_recv() {
         status.last_response = Some(resp);
         status.is_pending = false;
-    }
-}
-
-pub fn initialize_nickname(mut profile: ResMut<Persistent<PlayerProfileData>>) {
-    if profile.nickname_letter.is_none() {
-        let mut rng = rand::rng();
-        let letter = (b'A' + (rng.next_u32() % 26) as u8) as char;
-        profile.nickname_letter = Some(letter);
-        profile.nickname_attempt = 0;
-        let _ = profile.persist();
-        info!("Initialized nickname to {}", generate_codename(letter, 0));
     }
 }

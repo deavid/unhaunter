@@ -21,11 +21,11 @@ unfoundation-core = { workspace = true }
 unboard-core = { workspace = true }
 unmission-core = { workspace = true }
 untypes-core = { workspace = true }
+uninput-core = { workspace = true }
 unrender-std = { workspace = true }
 unplayer-core = { workspace = true }
 unmetrics-core = { workspace = true }
 uninteraction-core = { workspace = true }
-unui-core = { workspace = true }
 unfog-core = { workspace = true }
 unreplicon-core = { workspace = true }
 ungear-core = { workspace = true }

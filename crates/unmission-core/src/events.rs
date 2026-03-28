@@ -17,3 +17,6 @@ pub struct MapGeometryInitializedEvent {
 pub struct MissionCompletedEvent {
     pub summary: SummaryData,
 }
+
+#[derive(Debug, Clone, Message, Default)]
+pub struct QuitMissionEvent;

@@ -20,5 +20,3 @@ untypes-core = { workspace = true }
 uuid = { workspace = true }
 ron = { workspace = true }
 unreplicon-core = { workspace = true }
-uncareer-core = { workspace = true }
-unmission-core = { workspace = true }

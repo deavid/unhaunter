@@ -14,5 +14,3 @@ workspace = true
 
 bevy = { workspace = true }
 serde = { workspace = true }
-strum = { workspace = true, features = ["derive"] }
-enum-iterator = { workspace = true }

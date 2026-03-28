@@ -1,8 +1,4 @@
-use bevy::prelude::*;
-use bevy_persistent::Persistent;
-use uncareer_core::events::{CareerRewardCalculatedEvent, CareerDeathRecordedEvent};
-use unmission_core::summary::SummaryData;
-use unprofile_core::profile::PlayerProfileData;
+// Systems migrated to crates/uncareer-plugin/src/systems/profile_update.rs
 
 pub(crate) fn apply_career_reward_to_profile(
     mut ev_reward: MessageReader<CareerRewardCalculatedEvent>,
@@ -81,7 +77,10 @@ pub(crate) fn apply_career_death_to_profile(
         }
 
         if let Err(e) = player_profile.persist() {
-            error!("Failed to persist PlayerProfileData after career death: {:?}", e);
+            error!(
+                "Failed to persist PlayerProfileData after career death: {:?}",
+                e
+            );
         }
         info!("Profile: Recorded death for map {}", ev.map_path);
     }

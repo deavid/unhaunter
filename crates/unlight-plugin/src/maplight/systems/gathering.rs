@@ -10,11 +10,11 @@ use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use uninteraction_core::interaction::Toggleable;
+use unlight_core::components::LightEmitter;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light_type::LightType;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{MainPlayer, PlayerSpectating};
-use unrender_std::components::light::LightEmitter;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 

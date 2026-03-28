@@ -143,7 +143,7 @@ pub fn prebake_lighting_on_level_ready(
 ) {
     for _ in ev.read() {
         let lg = olg.as_mut().expect("Prebake: LightGrid is mandatory on receiving the LevelReady event - otherwise we can't prebake lights");
-        unrender_std::utils::collision::rebuild_collision_data(&bf, &mut bcf, &qt);
+        unboard_core::utils::rebuild_collision_data(&bf, &mut bcf, &qt);
         prebake_lighting_field(&bf, &bcf, lg, &qt);
     }
 }

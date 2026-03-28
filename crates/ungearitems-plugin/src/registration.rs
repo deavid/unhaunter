@@ -17,8 +17,8 @@ use ungearitems_core::components::salt::{SaltData, SaltPile};
 use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
+use unlight_core::components::LightEmitter;
 use unlight_core::types::light_type::LightType;
-use unrender_std::components::light::LightEmitter;
 use untypes_core::roles::AuthorityRole;
 
 use crate::components::compass::Compass;

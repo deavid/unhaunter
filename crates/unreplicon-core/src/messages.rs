@@ -47,49 +47,17 @@ pub struct RequestAbortMission;
 // Phase 3: Players, Movement, and Interactions
 // ---------------------------------------------------------------------------
 
-/// Message sent by a client to report its owned entity state.
-#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
-#[reflect(Default)]
-pub struct ExportStateMessage {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub direction_dx: f32,
-    pub direction_dy: f32,
-    pub direction_dz: f32,
-    pub is_running: bool,
-    pub frame: u16,
+/// Sent by a client each frame to report its boolean player-state markers.
+///
+/// Replaces the boolean fields from the former `ExportStateMessage`.
+/// Markers are insert/remove components rather than always-present value
+/// components, so a dedicated message is used instead of
+/// `ExportClientComponent<T>`.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct ExportPlayerMarkersMessage {
     pub is_hiding: bool,
     pub in_truck: bool,
-    pub stamina: f32,
-    pub health: f32,
-    pub sanity: f32,
-    pub movement_dx: f32,
-    pub movement_dy: f32,
     pub is_spectating: bool,
-}
-
-impl Default for ExportStateMessage {
-    fn default() -> Self {
-        Self {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-            direction_dx: 0.0,
-            direction_dy: 0.0,
-            direction_dz: 0.0,
-            is_running: false,
-            frame: 0,
-            is_hiding: false,
-            in_truck: false,
-            stamina: 0.0,
-            health: 0.0,
-            sanity: 0.0,
-            movement_dx: 0.0,
-            movement_dy: 0.0,
-            is_spectating: false,
-        }
-    }
 }
 
 /// Message sent by the server to grant ownership of an entity to a client.
@@ -161,49 +129,6 @@ impl bevy::ecs::entity::MapEntities for RequestGrab {
     }
 }
 
-use ungearitems_core::components::flashlight::FlashlightStatus;
-
-#[derive(Debug, Clone, Serialize, Deserialize, Reflect)]
-pub enum GearSkeletonState {
-    Flashlight(FlashlightStatus),
-    UVTorch(bool),
-    RedTorch(bool),
-    RepellentFlask {
-        qty: i32,
-        liquid_content: Option<GhostType>,
-    },
-    Salt(u8),
-    Sage {
-        is_active: bool,
-        consumed: bool,
-    },
-    Quartz(u8),
-    Toggleable(bool),
-}
-
-/// Message sent by the client to the server to report its owned gear state.
-#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
-#[reflect(Default)]
-pub struct ExportGearStateMessage {
-    pub entity: Entity,
-    pub state: GearSkeletonState,
-}
-
-impl Default for ExportGearStateMessage {
-    fn default() -> Self {
-        Self {
-            entity: Entity::PLACEHOLDER,
-            state: GearSkeletonState::Toggleable(false),
-        }
-    }
-}
-
-impl bevy::ecs::entity::MapEntities for ExportGearStateMessage {
-    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
-        self.entity = mapper.get_mapped(self.entity);
-    }
-}
-
 /// Message sent by the client to the server to release ownership.
 #[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]
@@ -227,23 +152,6 @@ impl bevy::ecs::entity::MapEntities for RequestDrop {
     fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
         self.entity = mapper.get_mapped(self.entity);
     }
-}
-
-/// Sent each frame by a non-host client to report its current position and state.
-///
-/// Sent over `Channel::Unreliable` (best-effort, unordered).
-#[derive(Debug, Clone, Serialize, Deserialize, Message)]
-pub struct PlayerMoveMessage {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub is_running: bool,
-    /// Current animation frame index (for remote character animation sync).
-    pub frame: u16,
-    pub is_hiding: bool,
-    pub stamina: f32,
-    pub health: f32,
-    pub sanity: f32,
 }
 
 /// One loadout action a join client can request from the server during the truck phase.

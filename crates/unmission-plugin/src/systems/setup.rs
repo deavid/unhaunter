@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::AppRuleExt;
-use unmission_core::events::MissionCompletedEvent;
+use unmission_core::events::{MissionCompletedEvent, QuitMissionEvent};
 use unmission_core::resources::MissionEndRequested;
 use unmission_core::summary::SummaryData;
 use unmission_core::types::MissionEvent;
@@ -9,11 +9,13 @@ use untypes_core::states::{AppState, SimulationState};
 use crate::systems::concluding_cinematic;
 use crate::systems::evaluate_mission_end;
 use crate::systems::handle_mission_events;
+use crate::systems::handle_quit_mission;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.replicate::<SummaryData>();
     app.add_message::<MissionEvent>()
         .add_message::<MissionCompletedEvent>()
+        .add_message::<QuitMissionEvent>()
         .init_resource::<MissionEndRequested>()
         .add_systems(
             Update,
@@ -33,5 +35,9 @@ pub(crate) fn app_setup(app: &mut App) {
         )
             .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>)
             .run_if(in_state(AppState::InGame)),
+    );
+    app.add_systems(
+        Update,
+        handle_quit_mission::handle_quit_mission.run_if(in_state(AppState::InGame)),
     );
 }

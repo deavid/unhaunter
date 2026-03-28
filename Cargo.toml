@@ -80,6 +80,8 @@ members = [
     "crates/untruck-plugin",
     "crates/unwalkie-core",        # Walkie-talkie communication mechanics
     "crates/unwalkie-plugin",
+    "crates/uncareer-core",        # Career progression state and events
+    "crates/unprofile-core",       # Player save-file data structures (gameplay progression)
 
     # ════════════════════════════════════════════════════════════════════════
     # Tier 2 · Application Layer
@@ -88,7 +90,6 @@ members = [
     # ════════════════════════════════════════════════════════════════════════
     "crates/unmission-core",                     # Mission lifecycle data (start/end events)
     "crates/unmission-plugin",
-    "crates/uncareer-core",                      # Career progression state (persists between missions)
     "crates/uncareer-plugin",                    # Career and economy systems
     "crates/unclassic-mode-gameplay-plugin",     # Phasmo-style ruleset
     "crates/unclassic-mode-orchestrator-plugin", # Ghost selection and level setup
@@ -114,7 +115,6 @@ members = [
 
     # ── 3b: Persistence ──────────────────────────────────────────────────
     "crates/unsettings-plugin",
-    "crates/unprofile-core",    # Player save-file data structures
     "crates/unprofile-plugin",
 
     # ── 3c: External Network Clients ─────────────────────────────────────
@@ -129,6 +129,7 @@ members = [
 
     # ── 4a: Rendering ────────────────────────────────────────────────────
     "crates/unrender-std",     # Standalone mesh / material helpers
+    "crates/unspatial-plugin", # Position→Transform isometric projection (PostUpdate)
     "crates/unrender-plugin",  # Main 2D isometric render pipeline and shaders
     "crates/unpicking-core",   # Mouse-to-world picking data
     "crates/unpicking-plugin", # Visual feedback for interaction picking
@@ -142,7 +143,8 @@ members = [
     # ── 4c: UI ───────────────────────────────────────────────────────────
     "crates/unui-core",                    # Shared UI widgets and styling primitives
     "crates/unui-plugin",
-    "crates/unmenu-core",                  # Pause / pop-up menu
+    "crates/unpause-plugin",               # Pause screen VSA — owns pause UI, keyboard routing, and quit-mission dispatch
+    "crates/unmenu-core",                  # Meta-game main-menus common tooling
     "crates/unmenu-plugin",
     "crates/unmainmenu-plugin",            # Title screen
     "crates/uncampaign-plugin",            # Mission selection screen
@@ -154,6 +156,7 @@ members = [
     "crates/unsummary-plugin",
     "crates/unclassic-mode-render-plugin", # Game-mode-specific visual overrides
     "crates/unclassic-mode-ui-plugin",     # HUD and in-game UI
+    "crates/untruckui-plugin",
 ]
 resolver = "3"
 
@@ -332,6 +335,8 @@ untruck-plugin = { path = "crates/untruck-plugin" }
 unwalkie-types = { path = "crates/unwalkie-types" }             # Walkie shared message types (not in workspace members)
 unwalkie-core = { path = "crates/unwalkie-core" }               # Walkie-talkie communication mechanics
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
+uncareer-core = { path = "crates/uncareer-core" }               # Career progression state and events
+unprofile-core = { path = "crates/unprofile-core" }             # Player save-file data structures (gameplay progression)
 
 # ════════════════════════════════════════════════════════════════════════════
 # Tier 2 · Application Layer
@@ -340,7 +345,6 @@ unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 # ════════════════════════════════════════════════════════════════════════════
 unmission-core = { path = "crates/unmission-core" }                                         # Mission lifecycle data (start/end events)
 unmission-plugin = { path = "crates/unmission-plugin" }
-uncareer-core = { path = "crates/uncareer-core" }                                           # Career progression state (persists between missions)
 uncareer-plugin = { path = "crates/uncareer-plugin" }                                       # Career and economy systems
 unclassic-mode-gameplay-plugin = { path = "crates/unclassic-mode-gameplay-plugin" }         # Phasmo-style ruleset
 unclassic-mode-orchestrator-plugin = { path = "crates/unclassic-mode-orchestrator-plugin" } # Ghost selection and level setup
@@ -366,7 +370,6 @@ unbehavior = { path = "crates/unbehavior" }             # ACL: Tiled object prop
 
 # ── 3b: Persistence ──────────────────────────────────────────────────────
 unsettings-plugin = { path = "crates/unsettings-plugin" }
-unprofile-core = { path = "crates/unprofile-core" }       # Player save-file data structures
 unprofile-plugin = { path = "crates/unprofile-plugin" }
 
 # ── 3c: External Network Clients ─────────────────────────────────────────
@@ -382,6 +385,7 @@ unhub-plugin = { path = "crates/unhub-plugin" }
 # ── 4a: Rendering ────────────────────────────────────────────────────────
 unrender-core = { path = "crates/unrender-core" }       # Low-level mesh/material foundations (not in workspace members)
 unrender-std = { path = "crates/unrender-std" }         # Standalone mesh / material helpers
+unspatial-plugin = { path = "crates/unspatial-plugin" } # Position→Transform isometric projection (PostUpdate)
 unrender-plugin = { path = "crates/unrender-plugin" }   # Main 2D isometric render pipeline and shaders
 unpicking-core = { path = "crates/unpicking-core" }     # Mouse-to-world picking data
 unpicking-plugin = { path = "crates/unpicking-plugin" } # Visual feedback for interaction picking
@@ -395,7 +399,8 @@ unaudiospatial-plugin = { path = "crates/unaudiospatial-plugin" }
 # ── 4c: UI ───────────────────────────────────────────────────────────────
 unui-core = { path = "crates/unui-core" }                                       # Shared UI widgets and styling primitives
 unui-plugin = { path = "crates/unui-plugin" }
-unmenu-core = { path = "crates/unmenu-core" }                                   # Pause / pop-up menu
+unpause-plugin = { path = "crates/unpause-plugin" }                             # Pause screen VSA — owns pause UI, keyboard routing, and quit-mission dispatch
+unmenu-core = { path = "crates/unmenu-core" }                                   # Meta-game main-menus common tooling
 unmenu-plugin = { path = "crates/unmenu-plugin" }
 unmainmenu-plugin = { path = "crates/unmainmenu-plugin" }                       # Title screen
 uncampaign-plugin = { path = "crates/uncampaign-plugin" }                       # Mission selection screen
@@ -405,6 +410,7 @@ unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }               
 unmanual-core = { path = "crates/unmanual-core" }                               # Tutorial / field manual data
 unmanual-plugin = { path = "crates/unmanual-plugin" }
 unsummary-plugin = { path = "crates/unsummary-plugin" }
+untruckui-plugin = { path = "crates/untruckui-plugin" }
 unclassic-mode-render-plugin = { path = "crates/unclassic-mode-render-plugin" } # Game-mode-specific visual overrides
 unclassic-mode-ui-plugin = { path = "crates/unclassic-mode-ui-plugin" }         # HUD and in-game UI
 
@@ -460,6 +466,7 @@ unmetrics-plugin = { workspace = true }
 unmission-plugin = { workspace = true }
 unnpc-plugin = { workspace = true }
 unplayer-plugin = { workspace = true }
+uncareer-plugin = { workspace = true }
 unprofile-plugin = { workspace = true }
 unsettings-plugin = { workspace = true }
 unsummary-plugin = { workspace = true }
@@ -467,12 +474,15 @@ unthermal-plugin = { workspace = true }
 unsoundfield-plugin = { workspace = true }
 unaudiospatial-plugin = { workspace = true }
 unrender-plugin = { workspace = true }
+unspatial-plugin = { workspace = true }
 unmanual-plugin = { workspace = true }
 unpicking-plugin = { workspace = true }
 untruck-plugin = { workspace = true }
+untruckui-plugin = { workspace = true }
 unwalkie-plugin = { workspace = true }
 untmxmap-plugin = { workspace = true }
 unui-plugin = { workspace = true }
+unpause-plugin = { workspace = true }
 undifficulty-plugin = { workspace = true }
 uninteraction-plugin = { workspace = true }
 unhub-plugin = { workspace = true }

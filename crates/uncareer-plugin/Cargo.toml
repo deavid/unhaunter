@@ -13,8 +13,10 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
 uncareer-core = { workspace = true }
 unmission-core = { workspace = true }
+unprofile-core = { workspace = true }
 unvitals-core = { workspace = true }
 unplayer-core = { workspace = true }
 unboard-core = { workspace = true }

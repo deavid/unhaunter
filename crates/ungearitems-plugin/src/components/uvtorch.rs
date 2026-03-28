@@ -7,8 +7,8 @@ use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::uvtorch::{UVTorch, UVTorchSkin};
 use uninteraction_core::interaction::Toggleable;
+use unlight_core::components::LightEmitter;
 use unmetrics_core::metrics::SendMetric;
-use unrender_std::components::light::LightEmitter;
 use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::position::Position;
 

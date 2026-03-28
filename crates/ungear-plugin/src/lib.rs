@@ -13,5 +13,6 @@
 //! The gear system allows players to equip and use various tools to investigate
 //! paranormal activity, gather evidence, and ultimately banish ghosts.
 pub(crate) mod metrics;
+pub(crate) mod net_state;
 pub mod plugin;
 pub(crate) mod systems;

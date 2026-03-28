@@ -1,0 +1,34 @@
+[package]
+name = "untruckui-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+untruck-core = { workspace = true }
+undifficulty-core = { workspace = true }
+unfoundation-core = { workspace = true }
+unmission-core = { workspace = true }
+untypes-core = { workspace = true }
+unui-core = { workspace = true }
+unplayer-core = { workspace = true }
+unvitals-core = { workspace = true }
+unrender-std = { workspace = true }
+ungear-core = { workspace = true }
+uninput-core = { workspace = true }
+unsettings-core = { workspace = true }
+unprofile-core = { workspace = true }
+unreplicon-core = { workspace = true }
+unwalkie-core = { workspace = true }
+unghost-core = { workspace = true }
+unmapload-core = { workspace = true }
+
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+bevy-persistent = { workspace = true }

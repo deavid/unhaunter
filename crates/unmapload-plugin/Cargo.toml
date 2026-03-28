@@ -21,6 +21,7 @@ unboard-core = { workspace = true }
 untypes-core = { workspace = true }
 untiled-core = { workspace = true }
 unrender-std = { workspace = true }
+unmetrics-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unmapload-core = { workspace = true }
 unmission-core = { workspace = true }

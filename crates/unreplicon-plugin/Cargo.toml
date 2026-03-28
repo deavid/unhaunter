@@ -20,16 +20,13 @@ uuid = { workspace = true }
 
 unreplicon-core = { workspace = true }
 unreplicon-transport = { workspace = true }
-unlocomotion-core = { workspace = true }
 unbehavior-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unmapload-core = { workspace = true }
 unmission-core = { workspace = true }
-unrender-std = { workspace = true }
+unlight-core = { workspace = true }
 unspatial-core = { workspace = true }
 unplayer-core = { workspace = true }
-unvitals-core = { workspace = true }
-untruck-core = { workspace = true }
 unboard-core = { workspace = true }
 uninteraction-core = { workspace = true }
 unghost-core = { workspace = true }

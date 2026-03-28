@@ -4,6 +4,7 @@ use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::Stairs;
 use unboard_core::resources::visibility_data::VisibilityData;
 use uninput_core::components::PlayerInput;
+use uninput_core::resources::MouseVisibility;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
@@ -15,7 +16,6 @@ use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untags_core::game::GCameraArena;
 use untruck_core::components::in_truck::InTruck;
-use unui_core::resources::MouseVisibility;
 
 use super::pathfinding::detect_stair_area;
 

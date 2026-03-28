@@ -41,6 +41,23 @@ pub struct JournalGhostToggled {
     pub discard: bool,
 }
 
+/// Emitted by `unghost-plugin` when evidence clarity crosses the high-clarity threshold.
+/// `untruck-plugin` consumes this to update its local blinking state without polling
+/// `CurrentEvidenceReadings` directly.
+#[derive(Message, Debug, Clone)]
+pub struct EvidenceClarityThresholdCrossed {
+    pub evidence: Evidence,
+    /// `true` when clarity crossed *above* the threshold, `false` when crossing below.
+    pub above_threshold: bool,
+}
+
+/// Emitted by `unghost-plugin` when the ghost's actual `GhostType` becomes known or changes.
+/// `untruck-plugin` caches this to avoid querying `GhostSprite` directly.
+#[derive(Message, Debug, Clone)]
+pub struct GhostActualTypeChanged {
+    pub ghost_type: GhostType,
+}
+
 /// Event dispatched when a ghost performs an interaction with an environmental object
 #[derive(Message, Debug, Clone)]
 pub struct GhostInteractionEvent {

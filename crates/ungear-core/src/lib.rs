@@ -14,5 +14,6 @@
 //! paranormal activity, gather evidence, and ultimately banish ghosts.
 pub mod components;
 pub mod difficulty_ext;
+pub mod events;
 pub mod resources;
 pub mod types;

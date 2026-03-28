@@ -9,9 +9,9 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
+use unlight_core::components::LightEmitter;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light_type::LightType;
-use unrender_std::components::light::LightEmitter;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
 

@@ -9,6 +9,7 @@ use unfog_core::components::MiasmaSprite;
 use unfoundation_core::random_seed;
 use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::salt::UVReactive;
+use unlight_core::color_utils::lerp_color;
 use unlight_core::components::LightSensitive;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightData;
@@ -19,7 +20,6 @@ use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ShadowCaster,
 };
 use unrender_std::materials::CustomMaterial1;
-use unrender_std::utils::light::lerp_color;
 use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unsettings_core::video::VideoSettings;
 use unspatial_core::position::Position;

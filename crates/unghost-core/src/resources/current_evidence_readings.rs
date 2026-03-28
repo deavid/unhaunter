@@ -2,6 +2,9 @@ use crate::types::evidence::Evidence;
 use bevy::prelude::*;
 use enum_iterator::all;
 
+/// Evidence clarity at or above this value is considered high enough to trigger a journal hint.
+pub const HIGH_CLARITY_THRESHOLD: f32 = 0.75;
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct EvidenceReading {
     pub clarity: f32,
