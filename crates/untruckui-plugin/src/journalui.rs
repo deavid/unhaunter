@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 use untruck_core::components::truck_ui_button::TruckButtonTypeExt;
 use untruck_core::components::truck_ui_markers::TruckUIGhostGuess;
 use untruck_core::types::truck_button::TruckButtonType;

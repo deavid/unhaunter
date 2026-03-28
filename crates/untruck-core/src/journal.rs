@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 
 /// Event to force discard an evidence type in the journal UI.
 #[derive(Message, Debug, Clone, Copy)]

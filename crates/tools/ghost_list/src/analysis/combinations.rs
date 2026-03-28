@@ -1,8 +1,8 @@
 use enum_iterator::all;
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
-use unghost_core::types::evidence::Evidence;
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::ghost::GhostType;
 
 // This command will find unique evidence combinations that identify specific ghosts,
 // or list all unique N-evidence combinations present in the game.

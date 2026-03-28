@@ -4,7 +4,7 @@ use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::resources::haunt_state::HauntState;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
 use unsoundfield_core::resources::SoundGrid;
@@ -14,7 +14,6 @@ use crate::metrics;
 
 use bevy::prelude::*;
 use rand::RngExt;
-use uncommon_app_core::roles::LocalPlayerRole;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, PerceivedClarity, StatusText,
 };
@@ -23,6 +22,7 @@ use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::geigercounter::GeigerCounter;
 use uninteraction_core::interaction::Toggleable;
+use unreplicon_core::resources::LocalPlayerRole;
 
 pub(crate) trait GeigerCounterExt {
     fn calculate_output_sound(&self, haunt_state: &HauntState) -> f32;

@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
 use unlobby_core::states::LobbyScreen;
 use unmenu_core::assets::MenuAssets;
 use unmenu_core::components::MenuUI;
@@ -9,6 +8,7 @@ use unmenu_core::scrollbar::{self, ScrollableListContainer};
 use unmenu_core::templates;
 use unreplicon_core::components::LobbyInfo;
 use unreplicon_core::messages::RequestSelectMap;
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use untmxmap_core::resources::maps::Maps;
 
 #[derive(Component)]

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncommon_app_core::states::AppState;
+use unorchestrator_core::UIContextState;
 
 use unaudiobg_core::events::AmbientSoundMuteEvent;
 use unaudiobg_core::mute::AmbientMuteController;
@@ -25,14 +25,14 @@ impl Plugin for UnhaunterAudioBgPlugin {
         app.add_systems(Startup, spawn_background_tracks);
 
         // Silence tracks when exiting game
-        app.add_systems(OnExit(AppState::InGame), silence_background_tracks);
+        app.add_systems(OnExit(UIContextState::InGame), silence_background_tracks);
 
         // Update systems
         app.add_systems(
             Update,
             (
-                process_ambient_mute_events.run_if(in_state(AppState::InGame)),
-                update_ambient_sound_volumes.run_if(in_state(AppState::InGame)),
+                process_ambient_mute_events.run_if(in_state(UIContextState::InGame)),
+                update_ambient_sound_volumes.run_if(in_state(UIContextState::InGame)),
             ),
         );
 

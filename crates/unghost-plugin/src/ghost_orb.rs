@@ -56,7 +56,7 @@ pub(crate) fn spawn_ghost_orb_particles(
         if !ghost
             .class
             .evidences()
-            .contains(&unghost_core::types::evidence::Evidence::FloatingOrbs)
+            .contains(&uninvestigation_core::evidence::Evidence::FloatingOrbs)
         {
             continue;
         }

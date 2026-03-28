@@ -14,6 +14,7 @@ workspace = true
 unclassic-mode-core = { workspace = true }
 untruck-core = { workspace = true }
 undifficulty-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unmission-core = { workspace = true }
 unplayer-core = { workspace = true }
@@ -26,6 +27,7 @@ unprofile-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unwalkie-core = { workspace = true }
 unghost-core = { workspace = true }
+uninvestigation-core = { workspace = true }
 unmapload-core = { workspace = true }
 
 bevy = { workspace = true }

@@ -1,18 +1,18 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_replicon::prelude::AppRuleExt;
-use uncommon_app_core::states::AppState;
+use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
-use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::tags::GhostTag;
+use unorchestrator_core::UIContextState;
 use unsensing_core::components::SpectralClarity;
 
 use unghost_core::events::{
     EvidenceClarityThresholdCrossed, GhostActualTypeChanged, GhostInteractionEvent,
     JournalEvidenceToggled, JournalGhostToggled,
 };
-use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 
@@ -23,12 +23,6 @@ pub struct UnhaunterGhostCorePlugin;
 
 impl Plugin for UnhaunterGhostCorePlugin {
     fn build(&self, app: &mut App) {
-        let is_headless = app
-            .world()
-            .get_resource::<uncommon_app_core::cli::CliOptions>()
-            .map(|cli| cli.dedicated)
-            .unwrap_or(false);
-
         app.add_message::<GhostInteractionEvent>();
         app.add_message::<JournalEvidenceToggled>();
         app.add_message::<JournalGhostToggled>();
@@ -51,11 +45,7 @@ impl Plugin for UnhaunterGhostCorePlugin {
             .init_resource::<HauntState>()
             .init_resource::<CurrentEvidenceReadings>();
 
-        if is_headless {
-            app.insert_resource(unnoise_core::perlin::PerlinNoise::new_low_mem(1));
-        } else {
-            app.init_resource::<unnoise_core::perlin::PerlinNoise>();
-        }
+        app.add_systems(Startup, setup_noise);
     }
 }
 
@@ -64,8 +54,19 @@ pub struct UnhaunterGhostPlugin;
 impl Plugin for UnhaunterGhostPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::EngineBoot).load_collection::<GhostAssets>(),
+            LoadingState::new(UIContextState::EngineBoot).load_collection::<GhostAssets>(),
         );
         ghost_orb::app_setup(app);
+    }
+}
+
+fn setup_noise(
+    local: Option<Res<unreplicon_core::resources::LocalPlayerRole>>,
+    mut commands: Commands,
+) {
+    if local.is_none() {
+        commands.insert_resource(unnoise_core::perlin::PerlinNoise::new_low_mem(1));
+    } else {
+        commands.init_resource::<unnoise_core::perlin::PerlinNoise>();
     }
 }

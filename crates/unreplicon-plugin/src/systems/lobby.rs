@@ -5,16 +5,17 @@ use bevy_replicon::prelude::{
 };
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
-use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
-use uncommon_app_core::states::{AppState, BootState, SimulationState};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
+use unmission_core::types::SimulationState;
+use unorchestrator_core::{BootState, UIContextState};
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
 use unreplicon_core::messages::{
     RequestAbortMission, RequestSelectDifficulty, RequestSelectMap, RequestStartMission,
 };
 use unreplicon_core::ownership::{Owner, OwnerId};
+use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LocalPlayerRole};
 use unreplicon_core::resources::{
     ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer, MissionAutoJoinArmed,
 };
@@ -37,7 +38,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<SelectedMission>();
 
     // Register local UI messages
-    app.add_message::<uncommon_app_core::roles::DisconnectRequest>();
+    app.add_message::<DisconnectRequest>();
 
     // Initialize resources that are referenced by lobby UI systems.
     app.init_resource::<ClientUuidMap>();
@@ -70,7 +71,7 @@ pub(super) fn app_setup(app: &mut App) {
         auto_start_headless_lobby.run_if(
             (in_state(ServerState::Running).or(resource_exists::<AuthorityRole>))
                 .and(in_state(BootState::Ready))
-                .and(in_state(AppState::MainMenu)),
+                .and(in_state(UIContextState::MainMenu)),
         ),
     );
 
@@ -80,13 +81,13 @@ pub(super) fn app_setup(app: &mut App) {
         spawn_lobby_entity_if_missing.run_if(resource_exists::<AuthorityRole>),
     );
     app.add_systems(
-        OnEnter(AppState::Lobby),
+        OnEnter(UIContextState::Lobby),
         reset_lobby_entity_on_reenter.run_if(resource_exists::<AuthorityRole>),
     );
 
     // Server-side: broadcast InGame state to clients when the mission starts.
     app.add_systems(
-        OnEnter(uncommon_app_core::states::SimulationState::Ready),
+        OnEnter(SimulationState::Ready),
         set_server_state_ingame.run_if(resource_exists::<AuthorityRole>),
     );
 
@@ -105,7 +106,7 @@ pub(super) fn app_setup(app: &mut App) {
     // Observe SimulationState::Ready to transition MissionLoading → InGame
     app.add_systems(
         Update,
-        observe_simulation_ready_to_enter_game.run_if(in_state(AppState::MissionLoading)),
+        observe_simulation_ready_to_enter_game.run_if(in_state(UIContextState::MissionLoading)),
     );
 
     app.add_systems(Update, process_auto_join);
@@ -116,12 +117,12 @@ fn process_auto_join(
     q_server_phase: Query<&ServerGamePhase>,
     local_player: Option<Res<LocalPlayerRole>>,
     authority: Option<Res<AuthorityRole>>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     sim_state: Res<State<SimulationState>>,
     mut current_map_seed: ResMut<CurrentMapSeed>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
     mut ev_load: MessageWriter<LoadLevelEvent>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     mut auto_join_armed: ResMut<MissionAutoJoinArmed>,
     time: Res<Time>,
     mut sync_timer: Local<Option<f32>>,
@@ -133,7 +134,7 @@ fn process_auto_join(
         auto_join_armed.0 = false;
         return;
     }
-    if *app_state.get() != AppState::Lobby {
+    if *app_state.get() != UIContextState::Lobby {
         auto_join_armed.0 = false;
         *sync_timer = None;
         *lobby_wait_started_at = None;
@@ -207,7 +208,7 @@ fn process_auto_join(
     ev_load.write(LoadLevelEvent {
         map_filepath: mission.map_path.clone(),
     });
-    next_app_state.set(AppState::MissionLoading);
+    next_app_state.set(UIContextState::MissionLoading);
     auto_join_armed.0 = false;
     *sync_timer = None;
 }
@@ -239,12 +240,11 @@ fn to_owner_id(client_id: ClientId) -> OwnerId {
 /// Server: In hub-less dedicated mode, transition to Lobby immediately.
 fn auto_start_headless_lobby(
     procman: Option<Res<unreplicon_transport::resources::ProcManChannel>>,
-    mut next_state: ResMut<NextState<AppState>>,
+    mut next_state: ResMut<NextState<UIContextState>>,
     authority: Option<Res<AuthorityRole>>,
     local_player: Option<Res<LocalPlayerRole>>,
-    cli: Res<uncommon_app_core::cli::CliOptions>,
 ) {
-    let is_dedicated = cli.dedicated;
+    let is_dedicated = local_player.is_none();
     let is_authority = authority.is_some();
     let is_local_player = local_player.is_some();
     let has_procman = procman.is_some();
@@ -256,7 +256,7 @@ fn auto_start_headless_lobby(
         );
         // We set both states for better compatibility, although dedicated servers
         // usually only care about AppState.
-        next_state.set(AppState::Lobby);
+        next_state.set(UIContextState::Lobby);
     }
 }
 
@@ -338,13 +338,13 @@ fn set_server_state_ingame(mut q: Query<(&mut ServerGamePhase, &mut LobbyInfo)>)
 
 /// Observe `SimulationState::Ready` and transition `AppState::MissionLoading → AppState::InGame`.
 fn observe_simulation_ready_to_enter_game(
-    sim_state: Res<State<uncommon_app_core::states::SimulationState>>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    sim_state: Res<State<SimulationState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     mut frame: Local<u32>,
 ) {
-    if *sim_state == uncommon_app_core::states::SimulationState::Ready {
+    if *sim_state == SimulationState::Ready {
         info!("Simulation ready; transitioning MissionLoading -> InGame");
-        next_app_state.set(AppState::InGame);
+        next_app_state.set(UIContextState::InGame);
     } else {
         *frame += 1;
         if frame.is_multiple_of(120) {
@@ -619,7 +619,7 @@ fn handle_request_start_mission(
     uuid_map: Res<ClientUuidMap>,
     mut ev_load: MessageWriter<LoadLevelEvent>,
     mut commands: Commands,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
 ) {
     for msg in reader.read() {
         let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
@@ -641,7 +641,7 @@ fn handle_request_start_mission(
             ev_load.write(LoadLevelEvent {
                 map_filepath: map_filepath.clone(),
             });
-            next_app_state.set(AppState::MissionLoading);
+            next_app_state.set(UIContextState::MissionLoading);
             // Replicate mission info to connected clients so they can join.
             commands.spawn((
                 Replicated,

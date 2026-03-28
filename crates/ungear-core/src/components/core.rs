@@ -1,6 +1,6 @@
 use crate::types::gear::equipment::VisualKey;
 use bevy::prelude::*;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 
 /// The display name of an item.
 #[derive(Component, Debug, Clone, Reflect, Default)]

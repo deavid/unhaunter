@@ -19,12 +19,13 @@ members = [
     # Pure primitives: types, math, and markers.
     # Zero internal game dependencies. Dependency arrow points here.
     # ════════════════════════════════════════════════════════════════════════
-    "crates/uncommon-app-core", # Base platform utilities and basic types
-    "crates/unspatial-core",    # Coordinate math (isometric, Position, Direction)
-    "crates/unnoise-core",      # Procedural noise math (Perlin)
-    "crates/unmetrics-core",    # Performance diagnostic data structures
-    "crates/unmetrics-plugin",  # Diagnostic systems
-    "crates/unsettings-core",   # Persistent configuration data (pure data, no game deps)
+    "crates/uncommon-app-core",    # Base platform utilities and basic types
+    "crates/unspatial-core",       # Coordinate math (isometric, Position, Direction)
+    "crates/unnoise-core",         # Procedural noise math (Perlin)
+    "crates/unmetrics-core",       # Performance diagnostic data structures
+    "crates/unmetrics-plugin",     # Diagnostic systems
+    "crates/unsettings-core",      # Persistent configuration data (pure data, no game deps)
+    "crates/uninvestigation-core", # Investigation primitives: evidence and ghost identity enums
 
     # ════════════════════════════════════════════════════════════════════════
     # Tier 1 · Domain Core
@@ -95,6 +96,7 @@ members = [
     "crates/uninput-plugin",                     # Physical key → game action binding
     "crates/unreplicon-core",                    # Networking / replication (God Crate — being drained)
     "crates/unreplicon-plugin",
+    "crates/unorchestrator-core",
 
     # ════════════════════════════════════════════════════════════════════════
     # Tier 3 · Infrastructure & Adapters
@@ -263,12 +265,13 @@ unfps-plugin = { path = "crates/unfps-plugin" } # Frame-rate limiter via std::th
 # Pure primitives: types, math, and markers.
 # Zero internal game dependencies. Dependency arrow points here.
 # ════════════════════════════════════════════════════════════════════════════
-uncommon-app-core = { path = "crates/uncommon-app-core" } # Binary-level base tools
-unspatial-core = { path = "crates/unspatial-core" }       # Coordinate math (isometric)
-unnoise-core = { path = "crates/unnoise-core" }           # Procedural noise math (Perlin)
-unmetrics-core = { path = "crates/unmetrics-core" }       # Performance diagnostic data
-unmetrics-plugin = { path = "crates/unmetrics-plugin" }   # Diagnostic systems
-unsettings-core = { path = "crates/unsettings-core" }     # Persistent configuration data (pure data, no game deps)
+uncommon-app-core = { path = "crates/uncommon-app-core" }       # Binary-level base tools
+unspatial-core = { path = "crates/unspatial-core" }             # Coordinate math (isometric)
+unnoise-core = { path = "crates/unnoise-core" }                 # Procedural noise math (Perlin)
+unmetrics-core = { path = "crates/unmetrics-core" }             # Performance diagnostic data
+unmetrics-plugin = { path = "crates/unmetrics-plugin" }         # Diagnostic systems
+unsettings-core = { path = "crates/unsettings-core" }           # Persistent configuration data (pure data, no game deps)
+uninvestigation-core = { path = "crates/uninvestigation-core" } # Investigation primitives: evidence and ghost identity enums
 
 # ════════════════════════════════════════════════════════════════════════════
 # Tier 1 · Domain Core
@@ -348,6 +351,7 @@ unclassic-mode-orchestrator-plugin = { path = "crates/unclassic-mode-orchestrato
 uninput-plugin = { path = "crates/uninput-plugin" }                                         # Physical key → game action binding
 unreplicon-core = { path = "crates/unreplicon-core" }                                       # Networking / replication (God Crate — being drained)
 unreplicon-plugin = { path = "crates/unreplicon-plugin" }
+unorchestrator-core = { path = "crates/unorchestrator-core" }
 
 # ════════════════════════════════════════════════════════════════════════════
 # Tier 3 · Infrastructure & Adapters
@@ -432,6 +436,8 @@ bevy = { workspace = true }
 
 undifficulty-core = { workspace = true }
 uncommon-app-core = { workspace = true }
+unmission-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 unvitals-plugin = { workspace = true }
 uninventory-plugin = { workspace = true }
 unlocomotion-plugin = { workspace = true }
@@ -481,6 +487,7 @@ undifficulty-plugin = { workspace = true }
 uninteraction-plugin = { workspace = true }
 unhub-plugin = { workspace = true }
 unreplicon-plugin = { workspace = true }
+unreplicon-transport = { workspace = true }
 
 [[bin]]
 name = "unhaunter_game"

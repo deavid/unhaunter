@@ -12,6 +12,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};
+use unghost_core::types::ghost::personality::GhostTypePersonalityExt;
 use unmetrics_core::metrics::SendMetric;
 use unspatial_core::position::Position;
 
@@ -25,7 +26,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         bevy::prelude::Update,
         ghost_interaction_selection_system
-            .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
+            .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
     );
 }
 

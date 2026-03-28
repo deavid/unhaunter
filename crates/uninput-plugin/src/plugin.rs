@@ -1,13 +1,20 @@
 use crate::systems;
 use bevy::prelude::*;
-use uncommon_app_core::states::{AppState, SimulationState};
 use uninput_core::resources::MissionInputFocus;
+use uninput_core::states::InGameUiState;
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 
 pub struct UnhaunterInputPlugin;
 
 impl Plugin for UnhaunterInputPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MissionInputFocus>();
+        app.init_state::<InGameUiState>();
+        app.add_systems(
+            PreUpdate,
+            systems::keyboard::keyboard_input_system.run_if(in_state(UIContextState::InGame)),
+        );
 
         app.add_systems(
             Update,
@@ -16,7 +23,7 @@ impl Plugin for UnhaunterInputPlugin {
                 systems::mouse::mouse_aim_system,
                 systems::mouse_interaction::mouse_scroll_gear_system,
             )
-                .run_if(in_state(AppState::InGame)),
+                .run_if(in_state(UIContextState::InGame)),
         );
 
         app.add_systems(

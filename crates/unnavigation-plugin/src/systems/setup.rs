@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncommon_app_core::states::AppState;
+use unorchestrator_core::UIContextState;
 
 use crate::systems::keyboard;
 use crate::systems::waypoint;
@@ -18,7 +18,7 @@ pub(crate) fn app_setup(app: &mut App) {
         )
             .chain()
             .in_set(uninput_core::PlayerInputSet)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 
     app.add_systems(
@@ -26,6 +26,6 @@ pub(crate) fn app_setup(app: &mut App) {
         // Stairs system runs last.
         keyboard::adjust_elevation_on_stairs
             .after(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 }

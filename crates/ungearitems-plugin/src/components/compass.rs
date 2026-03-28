@@ -1,11 +1,11 @@
 use bevy::prelude::*;
-use uncommon_app_core::roles::LocalPlayerRole;
 use ungear_core::components::core::{GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::compass::Compass;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
+use unreplicon_core::resources::LocalPlayerRole;
 
 use crate::metrics;
 

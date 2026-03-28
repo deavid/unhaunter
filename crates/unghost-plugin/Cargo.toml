@@ -30,8 +30,11 @@ uninteraction-core = { workspace = true }
 ungearitems-core = { workspace = true }
 unspatial-core = { workspace = true }
 unghost-core = { workspace = true }
+uninvestigation-core = { workspace = true }
+unlight-core = { workspace = true }
 untruck-core = { workspace = true }
 unreplicon-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

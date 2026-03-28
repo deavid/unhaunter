@@ -1,14 +1,14 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use enum_iterator::all;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
-use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
-use unghost_core::types::evidence::Evidence;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use untruck_core::components::in_truck::InTruck;
 use untruck_core::components::truck_ui_button::TruckUIButton;
@@ -27,7 +27,7 @@ struct IncorrectEvidenceMarkedState {
 
 fn trigger_emf_non_emf5_fixation_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     truck_button_query: Query<&TruckUIButton>,
     haunt_state: Res<HauntState>,
@@ -40,7 +40,7 @@ fn trigger_emf_non_emf5_fixation_system(
     }
 
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         // If not in the right state, reset the timer state
         *incorrect_marker_state = IncorrectEvidenceMarkedState::default();
         return;
@@ -98,7 +98,7 @@ struct ConflictingEvidenceTracker {
 
 fn trigger_journal_conflicting_evidence_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     truck_button_query: Query<&TruckUIButton>,
     haunt_state: Res<HauntState>,
@@ -106,7 +106,7 @@ fn trigger_journal_conflicting_evidence_system(
     current_difficulty_res: Res<CurrentDifficulty>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         // If not in the right state, reset the tracker
         *tracker = ConflictingEvidenceTracker::default();
         return;
@@ -189,14 +189,14 @@ const TIME_VISIBLE_FOR_CKEY_HINT_SECONDS: f64 = 10.0;
 
 fn trigger_clear_evidence_no_action_ckey_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     player_query: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
     mut tracked_state: ResMut<ClearEvidenceTrackedState>,
     q_evidence_sensor: Query<&EvidenceSensor>,
 ) {
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         tracked_state.tracked_clear_evidence.clear();
         return;
     }
@@ -272,13 +272,13 @@ const TIME_UNLOGGED_FOR_TRUCK_HINT_SECONDS: f64 = 45.0;
 
 fn trigger_clear_evidence_no_action_truck_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     truck_button_query: Query<&TruckUIButton>,
     mut tracked_state: ResMut<NoActionTruckTrackedState>,
 ) {
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         // Only trigger this hint when player is NOT in the truck
         tracked_state.tracked_for_no_action_truck.clear();
         return;
@@ -341,14 +341,14 @@ struct InTruckNoJournalActionState {
 
 fn trigger_in_truck_with_evidence_no_journal_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     truck_button_query: Query<&TruckUIButton>,
     mut system_state: ResMut<InTruckNoJournalActionState>,
     qp_in_truck: Query<&InTruck, With<MainPlayer>>,
 ) {
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         system_state.time_entered_truck_with_unlogged_evidence = None;
         system_state.hinted_this_truck_session = false;
         return;
@@ -439,7 +439,7 @@ const CLEAR_EVIDENCE_CONFIRMATION_THRESHOLD: f32 = 0.5;
 /// Generic system to trigger "Evidence Confirmed" walkie events.
 fn trigger_evidence_confirmed_feedback_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     truck_button_query: Query<&TruckUIButton>,
@@ -451,7 +451,7 @@ fn trigger_evidence_confirmed_feedback_system(
     }
 
     // System Run Condition
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         return;
     }
     use enum_iterator::all;

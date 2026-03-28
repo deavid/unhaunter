@@ -3,8 +3,8 @@ use crate::filtering::evidence_parser::parse_evidence_list;
 use enum_iterator::all;
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
-use unghost_core::types::evidence::Evidence;
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::ghost::GhostType;
 
 const MAX_COMBO_LIMIT_PER_PROFILE: usize = 10_000; // Max combinations to check per unwanted_evidence_profile
 const MAX_UNWANTED_PROFILES_TO_EXPLORE: usize = 64; // Limit iterations on unwanted_evidence_bitset

@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 use uncareer_core::events::{CareerDeathRecordedEvent, CareerRewardCalculatedEvent};
-use uncommon_app_core::roles::AuthorityRole;
-use uncommon_app_core::states::{AppState, SimulationState};
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 use unprofile_core::events::DepositStakedEvent;
+use unreplicon_core::resources::AuthorityRole;
 
 mod profile_update;
 mod reward;
@@ -20,7 +21,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (reward::store_deposit_stake, reward::record_career_death)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 
     // Persist career outcomes to PlayerProfileData (no-op on server: profile is None)
@@ -41,7 +42,7 @@ pub(crate) fn app_setup(app: &mut App) {
     // Clients (non-authority) compute rewards when entering summary screen
     // to populate their local SummaryData for display.
     app.add_systems(
-        OnEnter(AppState::Summary),
+        OnEnter(UIContextState::Summary),
         reward::calculate_and_emit_rewards.run_if(not(resource_exists::<AuthorityRole>)),
     );
 }

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use unghost_core::types::evidence::Evidence;
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::ghost::GhostType;
 
 use ungear_core::components::playergear::HeldObject;
 use ungear_core::types::gear::equipment::Hand;
@@ -340,4 +340,17 @@ pub struct RequestJournalGhostToggle {
 pub struct GhostSoundFieldBroadcast {
     /// World-space position of the emitter entity (breach or ghost).
     pub position: [f32; 3],
+}
+
+/// Local-only Bevy event emitted by the Hub UI layer when a room connection
+/// is requested from the server. This event is listened to by the transport layer
+/// (unreplicon-plugin) to handle the actual connection setup and mutation of
+/// network state, rather than having the UI layer mutate global config directly.
+///
+/// This maintains the "Tell, Don't Ask" pattern: the UI layer (domain) emits
+/// a signal; the transport layer (infrastructure) receives and acts on it.
+#[derive(Debug, Clone, Message)]
+pub struct HubConnectionRequested {
+    pub address: String,
+    pub ticket: Option<String>,
 }

@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncommon_app_core::states::AppState;
 use uninput_core::states::InGameUiState;
 use unmission_core::events::QuitMissionEvent;
+use unorchestrator_core::UIContextState;
 use unrender_std::custom_material2::UIPanelMaterial;
 use unreplicon_core::resources::HostGone;
 
@@ -42,12 +42,12 @@ fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
 }
 
 fn keyboard_pause(
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     game_state: Res<State<InGameUiState>>,
     mut game_next_state: ResMut<NextState<InGameUiState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         return;
     }
 
@@ -146,5 +146,8 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(InGameUiState::Pause), setup_ui);
     app.add_systems(OnExit(InGameUiState::Pause), cleanup);
     app.add_systems(Update, keyboard.run_if(in_state(InGameUiState::Pause)));
-    app.add_systems(Update, keyboard_pause.run_if(in_state(AppState::InGame)));
+    app.add_systems(
+        Update,
+        keyboard_pause.run_if(in_state(UIContextState::InGame)),
+    );
 }

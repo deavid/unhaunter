@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use uncommon_app_core::roles::AuthorityRole;
-use uncommon_app_core::states::AppState;
 use unnavigation_core::components::waypoint::WaypointQueue;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::PlayerSprite;
+use unreplicon_core::resources::AuthorityRole;
 
 /// Authority: inserts WaypointQueue on any player entity that is missing it.
 /// Fires on the first Update frame after a PlayerSprite entity is spawned by the network layer.
@@ -20,6 +20,6 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         hydrate_player_navigation
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 }

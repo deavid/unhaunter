@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use uncommon_app_core::cli::CliOptions;
 use undifficulty_core::difficulty::Difficulty;
 use untmxmap_core::assets::index::AssetIdx;
 use untmxmap_core::assets::tmxmap::TmxMap;
@@ -43,7 +42,7 @@ fn map_index_preload(
     idx_assets: Res<Assets<AssetIdx>>,
     mut mapsidx: ResMut<MapAssetIndexHandle>,
     mut upscale_idx: ResMut<UpscaleIndex>,
-    cli: Res<CliOptions>,
+    local_player: Option<Res<unreplicon_core::resources::LocalPlayerRole>>,
 ) {
     if mapsidx.idxprocessed {
         return;
@@ -58,7 +57,7 @@ fn map_index_preload(
         return;
     };
 
-    if !cli.dedicated {
+    if local_player.is_some() {
         for path in &upscale_list.assets {
             // Expected format: "upscaled/zoom0Nx_{original_path}"
             if !path.starts_with("upscaled/zoom0") {
@@ -115,7 +114,7 @@ fn tmxmap_preload(
     mut maps: ResMut<Maps>,
     tmx_assets: Res<Assets<TmxMap>>,
     mut mapsidx: ResMut<MapAssetIndexHandle>,
-    cli_options: Res<CliOptions>,
+    tmx_config: Res<untmxmap_core::resources::config::TmxMapConfig>,
 ) {
     let mut cleanup_needed = false;
     if !mapsidx.idxprocessed {
@@ -131,7 +130,7 @@ fn tmxmap_preload(
             cleanup_needed = true;
 
             // If the map is a draft, skip loading it unless --draft-maps is passed.
-            if tmx.props.draft && !cli_options.include_draft_maps {
+            if tmx.props.draft && !tmx_config.include_draft_maps {
                 debug!(
                     "Skipping draft map {:?} at path {:?} (use --draft-maps to include)",
                     tmx.props.display_name, mapload.path

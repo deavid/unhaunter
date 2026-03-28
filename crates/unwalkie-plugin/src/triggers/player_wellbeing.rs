@@ -2,10 +2,10 @@ use bevy::app::App;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use unboard_core::resources::roomdb::RoomTopology;
-use uncommon_app_core::states::AppState;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unlight_core::components::LightLevel;
 use unlight_core::resources::light_grid::LightGrid;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{Hiding, MainPlayer};
 use unspatial_core::position::Position;
 use unvitals_core::components::PlayerVitals;
@@ -29,11 +29,11 @@ fn very_low_sanity_no_truck_return(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerVitals, &Position)>,
     room_topology: Res<RoomTopology>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         stopwatch.reset();
         return;
     }
@@ -66,11 +66,11 @@ fn low_health_general_warning(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerVitals, &Position)>,
     room_topology: Res<RoomTopology>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         stopwatch.reset();
         return;
     }
@@ -109,12 +109,12 @@ fn trigger_sanity_dropped_due_to_darkness_system(
     >,
     room_topology: Res<RoomTopology>,
     lg: If<Res<LightGrid>>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut darkness_sanity_tracker: Local<Option<(f32, Stopwatch)>>, // (sanity_at_darkness_start, timer)
     mut hint_triggered_this_episode: Local<bool>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         *darkness_sanity_tracker = None;
         *hint_triggered_this_episode = false;
         return;
@@ -182,12 +182,12 @@ fn trigger_sanity_dropped_due_to_ghost_system(
     player_query: Query<(&PlayerVitals, &Position, Option<&Hiding>), With<MainPlayer>>,
     ghost_query: Query<(Entity, &GhostSprite, &Position)>, // Query Entity to track specific ghost
     room_topology: Res<RoomTopology>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut interaction_sanity_tracker: Local<Option<(f32, Stopwatch, Entity)>>, // (sanity_at_interaction_start, timer, ghost_entity)
     mut hint_triggered_this_episode: Local<bool>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         *interaction_sanity_tracker = None;
         *hint_triggered_this_episode = false;
         return;

@@ -13,7 +13,7 @@ workspace = true
 [dependencies]
 unboard-core = { workspace = true }
 unmission-core = { workspace = true }
-uncommon-app-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 unplayer-core = { workspace = true }
 unreplicon-core = { workspace = true }
 untruck-core = { workspace = true }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncommon_app_core::states::AppState;
 use unmaphub_core::states::MapHubState;
+use unorchestrator_core::UIContextState;
 
 use crate::difficulty_selection;
 
@@ -18,8 +18,8 @@ impl Plugin for UnhaunterMapHubPlugin {
 struct MapHubCamera;
 
 pub(crate) fn app_setup_local(app: &mut App) {
-    app.add_systems(OnEnter(AppState::MapHub), setup_systems)
-        .add_systems(OnExit(AppState::MapHub), cleanup_systems);
+    app.add_systems(OnEnter(UIContextState::MapHub), setup_systems)
+        .add_systems(OnExit(UIContextState::MapHub), cleanup_systems);
 }
 
 fn setup_systems(mut commands: Commands, mut next_state: ResMut<NextState<MapHubState>>) {

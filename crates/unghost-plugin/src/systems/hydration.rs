@@ -1,9 +1,18 @@
 use bevy::prelude::*;
 use unbehavior_core::behavior::{Behavior, Util};
-use unbehavior_core::components::InteractableByGhost;
+use unbehavior_core::components::{InteractableByGhost, Movable};
+use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
 use unboard_core::components::spawning::HostileSpawnPoint;
+use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::tags::GhostTag;
+use uninvestigation_core::GhostSpawnRequest;
+use unlight_core::components::LightSensitive;
 use unmapload_core::hydration::HydrationStage;
 use unmetrics_core::metrics::SendMetric;
+use unreplicon_core::network_id::NetworkId;
+use unsensing_core::components::SpectralInfluence;
+use unsoundfield_core::components::SoundFieldSource;
+use unspatial_core::position::Position;
 
 use crate::metrics;
 
@@ -40,6 +49,43 @@ fn hydration_ghost_logic_system(
     measure.end_ms();
 }
 
+fn ghost_hydration_system(
+    mut commands: Commands,
+    q: Query<(Entity, &GhostSpawnRequest, &Position, Option<&GhostSprite>), Without<GhostTag>>,
+) {
+    for (entity, request, pos, maybe_sprite) in q.iter() {
+        let mut ghost_sprite = GhostSprite::new(pos.to_board_position(), &request.ghost_types);
+        if let Some(existing_sprite) = maybe_sprite {
+            ghost_sprite.breach_id = existing_sprite.breach_id;
+        }
+
+        commands
+            .entity(entity)
+            .insert(ghost_sprite)
+            .insert(GhostTag)
+            .insert(NetworkId(0)) // Ghost is always 0 in MVP
+            .insert(unspatial_core::boardposition::MapEntityFieldBPos(
+                pos.to_board_position(),
+            ))
+            .insert(Movable)
+            .insert(LightSensitive {
+                exposure_factor: 0.5,
+                bias: 0.01,
+            })
+            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 0.0))
+            .insert(ThermalEmitter {
+                room_restricted: true,
+                ..default()
+            })
+            .insert(FluidEmitter::default())
+            .insert(SoundFieldSource::default())
+            .remove::<GhostSpawnRequest>();
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, hydration_ghost_logic_system);
+    app.add_systems(
+        Update,
+        (hydration_ghost_logic_system, ghost_hydration_system),
+    );
 }

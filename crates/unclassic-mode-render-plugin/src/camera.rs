@@ -1,9 +1,9 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
 use unclassic_mode_core::components::GCameraArena;
-use uncommon_app_core::states::AppState;
 use uninput_core::states::InGameUiState;
 use unlocomotion_core::components::PlayerLocomotionState;
+use unorchestrator_core::UIContextState;
 use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::MainPlayer;
 use unsettings_core::controls::ControlKeys;
@@ -171,12 +171,12 @@ fn debug_tile_transforms(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::InGame), setup);
+    app.add_systems(OnEnter(UIContextState::InGame), setup);
     app.add_systems(
         Update,
         (
-            camera_follow_system.run_if(in_state(AppState::InGame)),
-            debug_tile_transforms.run_if(in_state(AppState::InGame)),
+            camera_follow_system.run_if(in_state(UIContextState::InGame)),
+            debug_tile_transforms.run_if(in_state(UIContextState::InGame)),
         ),
     );
 }

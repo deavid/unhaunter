@@ -146,11 +146,11 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         update_redtorch_skeleton
             .before(ungearitems_core::GearStateExportSet)
-            .run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
+            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
     );
     app.add_systems(
         Update,
         (hydrate_redtorch_skin, update_redtorch_skin)
-            .run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
+            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
     );
 }

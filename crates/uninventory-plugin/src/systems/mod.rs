@@ -295,7 +295,7 @@ pub(crate) fn despawn_gear_on_player_death(
     mut reader: MessageReader<unvitals_core::events::PlayerDiedEvent>,
     mut q_players: Query<&mut PlayerGear, With<PlayerSprite>>,
     mut commands: Commands,
-    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
+    authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
 ) {
     for _msg in reader.read() {
         // When a player dies, despawn all their gear (Authoritative only)
@@ -321,14 +321,14 @@ pub(crate) fn despawn_gear_on_player_death(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use uncommon_app_core::states::AppState;
+    use unorchestrator_core::UIContextState;
     app.add_systems(
         Update,
         (
             sync_inventory_position_to_holder,
             sync_held_object_position_to_holder,
         )
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
     app.add_systems(
         Update,
@@ -339,13 +339,13 @@ pub(crate) fn app_setup(app: &mut App) {
             strip_visuals_from_grabbed_gear,
             despawn_gear_on_player_death,
         )
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
     // cycle_inventory and swap_hands are purely local slot rearrangements.
     // They must run on the join client too (not just authority), so they are
     // registered outside PlayerAuthoritativeLogicSet.
     app.add_systems(
         Update,
-        (cycle_inventory, swap_hand_equipment).run_if(in_state(AppState::InGame)),
+        (cycle_inventory, swap_hand_equipment).run_if(in_state(UIContextState::InGame)),
     );
 }

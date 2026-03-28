@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use unaudiospatial_core::listener::SpatialListener;
-use uncommon_app_core::roles::AuthorityRole;
-use uncommon_app_core::states::AppState;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::PlayerTag;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unreplicon_core::resources::AuthorityRole;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
 
@@ -47,6 +47,6 @@ pub(crate) fn app_setup(app: &mut App) {
             hydrate_player_spatial_tags.run_if(resource_exists::<AuthorityRole>),
             sync_spatial_listener,
         )
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 }

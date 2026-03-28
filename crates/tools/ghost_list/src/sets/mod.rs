@@ -4,7 +4,7 @@ pub mod optimization;
 pub mod validation;
 
 use crate::utils::parse_ghost_list;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 
 pub fn test_set(ghost_names: &str) {
     let ghosts = parse_ghost_list(ghost_names);

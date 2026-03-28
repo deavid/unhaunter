@@ -23,6 +23,7 @@ uninteraction-core = { workspace = true }
 unmetrics-core = { workspace = true }
 ungear-core = { workspace = true }
 unghost-core = { workspace = true }
+uninvestigation-core = { workspace = true }
 unfog-core = { workspace = true }
 unaudiospatial-core = { workspace = true }
 unsoundfield-core = { workspace = true }
@@ -32,6 +33,7 @@ unprofile-core = { workspace = true }
 unplayer-core = { workspace = true }
 
 unreplicon-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

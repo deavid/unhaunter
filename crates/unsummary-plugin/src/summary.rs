@@ -4,14 +4,14 @@ use bevy::{color::palettes::css, prelude::*};
 use unboard_core::resources::board_topology::BoardTopology;
 use uncareer_core::grade::Grade;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncommon_app_core::roles::LobbyPresenceRole;
-use uncommon_app_core::states::AppState;
 use uncommon_app_core::utils::time::format_time;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::ghost::GhostType;
 use unmission_core::summary::{ActiveMissionEvaluator, SummaryData};
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::PlayerSprite;
+use unreplicon_core::resources::LobbyPresenceRole;
 use unreplicon_core::resources::LocalPlayer;
 use untmxmap_core::resources::maps::Maps;
 use unvitals_core::components::PlayerVitals;
@@ -45,7 +45,7 @@ pub(crate) fn cleanup(
 pub(crate) fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
-    mut app_next_state: ResMut<NextState<AppState>>,
+    mut app_next_state: ResMut<NextState<UIContextState>>,
     qp: Query<(&PlayerSprite, &PlayerVitals)>,
     difficulty: Res<CurrentDifficulty>,
     mut death_timer: Local<Option<f32>>,
@@ -69,7 +69,7 @@ pub(crate) fn update_time(
         let now = time.elapsed_secs();
         let start = death_timer.get_or_insert(now);
         if now - *start > 1.0 {
-            app_next_state.set(AppState::Summary);
+            app_next_state.set(UIContextState::Summary);
         }
     } else {
         *death_timer = None;
@@ -77,12 +77,12 @@ pub(crate) fn update_time(
 }
 
 pub(crate) fn keyboard(
-    app_state: Res<State<AppState>>,
-    mut app_next_state: ResMut<NextState<AppState>>,
+    app_state: Res<State<UIContextState>>,
+    mut app_next_state: ResMut<NextState<UIContextState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     lobby_presence: Option<Res<LobbyPresenceRole>>,
 ) {
-    if *app_state.get() != AppState::Summary {
+    if *app_state.get() != UIContextState::Summary {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape)
@@ -90,9 +90,9 @@ pub(crate) fn keyboard(
         | keyboard_input.just_pressed(KeyCode::Enter)
     {
         if lobby_presence.is_some() {
-            app_next_state.set(AppState::Lobby);
+            app_next_state.set(UIContextState::Lobby);
         } else {
-            app_next_state.set(AppState::MissionSelect);
+            app_next_state.set(UIContextState::MissionSelect);
         }
     }
 }
@@ -109,7 +109,7 @@ pub(crate) fn afk_timeout(
     mut timer: ResMut<SummaryAfkTimer>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     lobby_presence: Option<Res<LobbyPresenceRole>>,
-    mut app_next_state: ResMut<NextState<AppState>>,
+    mut app_next_state: ResMut<NextState<UIContextState>>,
     time: Res<Time>,
 ) {
     if keyboard_input.get_just_pressed().next().is_some() {
@@ -119,9 +119,9 @@ pub(crate) fn afk_timeout(
     timer.0.tick(time.delta());
     if timer.0.is_finished() {
         if lobby_presence.is_some() {
-            app_next_state.set(AppState::Lobby);
+            app_next_state.set(UIContextState::Lobby);
         } else {
-            app_next_state.set(AppState::MissionSelect);
+            app_next_state.set(UIContextState::MissionSelect);
         }
     }
 }
@@ -628,10 +628,10 @@ pub(crate) fn update_ui(
 
 pub(crate) fn update_score(
     mut sd: ResMut<SummaryData>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     evaluator: Option<Res<ActiveMissionEvaluator>>,
 ) {
-    if *app_state != AppState::Summary {
+    if *app_state != UIContextState::Summary {
         return;
     }
     let Some(evaluator) = evaluator else {

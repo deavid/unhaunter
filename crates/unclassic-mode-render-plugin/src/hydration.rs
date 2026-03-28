@@ -43,7 +43,7 @@ pub(crate) struct BreachHydrated;
 
 #[derive(SystemParam)]
 pub(crate) struct HydrationParam<'w> {
-    pub local_player_role: Option<Res<'w, uncommon_app_core::roles::LocalPlayerRole>>,
+    pub local_player_role: Option<Res<'w, unreplicon_core::resources::LocalPlayerRole>>,
     pub asset_server: Res<'w, AssetServer>,
     pub player_assets: Option<Res<'w, unplayer_core::assets::PlayerAssets>>,
     pub ghost_assets: Option<Res<'w, unghost_core::assets::GhostAssets>>,
@@ -487,9 +487,9 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            hydrate_players_system.run_if(in_state(uncommon_app_core::states::AppState::InGame)),
-            hydrate_ghosts_system.run_if(in_state(uncommon_app_core::states::AppState::InGame)),
-            hydrate_breach_system.run_if(in_state(uncommon_app_core::states::AppState::InGame)),
+            hydrate_players_system.run_if(in_state(unorchestrator_core::UIContextState::InGame)),
+            hydrate_ghosts_system.run_if(in_state(unorchestrator_core::UIContextState::InGame)),
+            hydrate_breach_system.run_if(in_state(unorchestrator_core::UIContextState::InGame)),
         ),
     );
 }

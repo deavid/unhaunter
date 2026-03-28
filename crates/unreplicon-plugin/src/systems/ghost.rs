@@ -2,14 +2,13 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::{
     AppRuleExt, Channel, ClientMessageAppExt, FromClient, Replicated, ServerMessageAppExt,
 };
-use uncommon_app_core::roles::{AuthorityRole, is_pure_client};
-use uncommon_app_core::states::AppState;
-use uncommon_app_core::states::SimulationState;
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::events::{JournalEvidenceToggled, JournalGhostToggled};
-use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::tags::GhostTag;
 use unmission_core::summary::SummaryData;
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
 };
@@ -17,6 +16,7 @@ use unreplicon_core::messages::{
     GhostSoundFieldBroadcast, RequestJournalEvidenceToggle, RequestJournalGhostToggle,
     SpawnParticleNetEvent,
 };
+use unreplicon_core::resources::{AuthorityRole, is_pure_client};
 use unspatial_core::lerp_position::LerpPosition;
 use unspatial_core::position::Position;
 
@@ -88,7 +88,7 @@ pub(super) fn app_setup(app: &mut App) {
         Update,
         on_server_phase_lobby
             .run_if(is_pure_client)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 }
 
@@ -223,7 +223,7 @@ fn sync_mission_result_phase(
 fn server_teardown_grace_period(
     mut timer: Local<Option<Timer>>,
     time: Res<Time>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
     mut q_server_phase: Query<&mut ServerGamePhase>,
 ) {
@@ -243,18 +243,18 @@ fn server_teardown_grace_period(
         *phase = ServerGamePhase::Lobby;
     }
     next_sim_state.set(SimulationState::Unloaded);
-    next_app_state.set(AppState::Lobby);
+    next_app_state.set(UIContextState::Lobby);
     *timer = None;
 }
 
 fn on_server_phase_lobby(
     q_phase: Query<&ServerGamePhase, Changed<ServerGamePhase>>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
 ) {
     for phase in q_phase.iter() {
         if *phase == ServerGamePhase::Lobby {
             info!("ServerGamePhase::Lobby observed while InGame — returning to lobby");
-            next_app_state.set(AppState::Lobby);
+            next_app_state.set(UIContextState::Lobby);
         }
     }
 }

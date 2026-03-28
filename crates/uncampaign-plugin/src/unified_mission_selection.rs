@@ -22,7 +22,6 @@ use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
 use uncommon_app_core::platform::plt::FONT_SCALE;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unmaphub_core::states::MapHubState;
@@ -40,6 +39,7 @@ use unmenu_core::{
     events::{MenuEscapeEvent, MenuItemClicked},
     scrollbar, templates,
 };
+use unorchestrator_core::UIContextState;
 use untmxmap_core::resources::maps::Maps;
 
 /// Marker component for the unified Mission Select UI root node
@@ -74,8 +74,8 @@ pub(crate) struct InitialScrollTarget(Option<usize>);
 pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<UIMissionMapping>()
         .init_resource::<InitialScrollTarget>()
-        .add_systems(OnEnter(AppState::MissionSelect), setup_ui)
-        .add_systems(OnExit(AppState::MissionSelect), cleanup_ui)
+        .add_systems(OnEnter(UIContextState::MissionSelect), setup_ui)
+        .add_systems(OnExit(UIContextState::MissionSelect), cleanup_ui)
         .add_systems(
             Update,
             (
@@ -84,7 +84,7 @@ pub(crate) fn app_setup(app: &mut App) {
                 trigger_initial_scroll_if_needed,
             )
                 .chain()
-                .run_if(in_state(AppState::MissionSelect)),
+                .run_if(in_state(UIContextState::MissionSelect)),
         );
 }
 
@@ -114,7 +114,7 @@ fn handle_selection_input(
     mission_select_mode: Res<CurrentMissionSelectMode>,
     mut difficulty_resource: ResMut<CurrentDifficulty>,
     mut ev_load_level: MessageWriter<LoadLevelEvent>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     mut next_map_hub_state: ResMut<NextState<MapHubState>>,
     mut player_profile: ResMut<Persistent<unprofile_core::profile::PlayerProfileData>>,
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>,
@@ -122,7 +122,7 @@ fn handle_selection_input(
     let mut selected_identifier: Option<usize> = None;
 
     if let Some(click_ev) = ev_menu_clicks.read().last() {
-        if click_ev.state != AppState::MissionSelect {
+        if click_ev.state != UIContextState::MissionSelect {
             warn!(
                 "MenuItemClicked event received in state: {:?}",
                 click_ev.state
@@ -192,7 +192,7 @@ fn handle_selection_input(
                     map_filepath: mission_data.map_filepath.clone(),
                 });
                 // SP-5: exit to InGame is handled by SimulationState observer in unreplicon-plugin.
-                next_app_state.set(AppState::MissionLoading);
+                next_app_state.set(UIContextState::MissionLoading);
                 return;
             }
             _ => {}
@@ -202,11 +202,11 @@ fn handle_selection_input(
     if go_back {
         match mission_select_mode.0 {
             MissionSelectMode::Campaign => {
-                next_app_state.set(AppState::MainMenu);
+                next_app_state.set(UIContextState::MainMenu);
                 info!("Returning to MainMenu from mission selection.");
             }
             MissionSelectMode::Custom => {
-                next_app_state.set(AppState::MapHub);
+                next_app_state.set(UIContextState::MapHub);
                 next_map_hub_state.set(MapHubState::DifficultySelection);
                 info!("Returning to DifficultySelection from mission selection.");
             }

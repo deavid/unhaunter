@@ -13,10 +13,12 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 enum-iterator = { workspace = true }
+unreplicon-core = { workspace = true }
+unmission-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unmenu-core = { workspace = true }
-unreplicon-core = { workspace = true }
 unmapload-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unprofile-core = { workspace = true }

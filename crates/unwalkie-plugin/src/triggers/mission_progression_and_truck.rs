@@ -1,12 +1,12 @@
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_platform::collections::HashSet;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSprite;
 use untruck_core::components::in_truck::InTruck;
@@ -18,14 +18,14 @@ const LINGER_DURATION_SECONDS: f32 = 45.0;
 fn trigger_all_objectives_met_reminder_system(
     mut walkie_play: ResMut<WalkiePlay>,
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     q_ghost: Query<Entity, With<GhostSprite>>,
     q_breach: Query<Entity, With<GhostBreach>>,
     mut linger_timer: Local<Option<Stopwatch>>,
     qp_in_truck: Query<&InTruck, With<MainPlayer>>,
 ) {
     // System Run Condition Checks
-    if *app_state.get() != AppState::InGame || qp_in_truck.is_empty() {
+    if *app_state.get() != UIContextState::InGame || qp_in_truck.is_empty() {
         if linger_timer.is_some() {
             *linger_timer = None;
         }
@@ -62,7 +62,7 @@ fn trigger_all_objectives_met_reminder_system(
 
 fn trigger_player_leaves_truck_without_changing_loadout_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
     mut was_in_truck: Local<bool>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -75,7 +75,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     mut last_gear_evidences_change_time: Local<Option<f64>>,
     q_gear: Query<&GearKind>,
 ) {
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         *exited_truck_time = None;
         return;
     }

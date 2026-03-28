@@ -1,7 +1,7 @@
 use enum_iterator::all;
 use std::collections::HashMap;
-use unghost_core::types::evidence::Evidence;
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::ghost::GhostType;
 
 // This command will analyze how often two evidences appear together.
 // DESIGN.md mentions:

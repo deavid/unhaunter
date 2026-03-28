@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{evidence::Evidence, ghost::types::GhostType};
+use crate::{evidence::Evidence, ghost::GhostType};
 
 #[derive(
     Debug, Resource, Component, Default, Clone, Serialize, Deserialize, Reflect, PartialEq,

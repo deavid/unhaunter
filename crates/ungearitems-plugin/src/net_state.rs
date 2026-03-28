@@ -15,8 +15,6 @@
 
 use bevy::prelude::*;
 use bevy_replicon::prelude::{Channel, ClientId, ClientMessageAppExt, FromClient, Replicated};
-use uncommon_app_core::roles::{AuthorityRole, is_pure_client};
-use uncommon_app_core::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 use ungearitems_core::components::quartz::QuartzStoneData;
@@ -26,8 +24,10 @@ use ungearitems_core::components::sage::SageBundleData;
 use ungearitems_core::components::salt::SaltData;
 use ungearitems_core::components::uvtorch::UVTorch;
 use uninteraction_core::interaction::Toggleable;
+use unorchestrator_core::UIContextState;
 use unreplicon_core::client_export::ExportClientComponent;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
+use unreplicon_core::resources::{AuthorityRole, is_pure_client};
 
 pub(crate) fn app_setup(app: &mut App) {
     // Register one ExportClientComponent<T> per gear component type.
@@ -56,7 +56,7 @@ pub(crate) fn app_setup(app: &mut App) {
             send_export_toggleable,
         )
             .in_set(ungearitems_core::GearStateExportSet)
-            .run_if(in_state(AppState::InGame))
+            .run_if(in_state(UIContextState::InGame))
             .run_if(is_pure_client),
     );
 
@@ -74,7 +74,7 @@ pub(crate) fn app_setup(app: &mut App) {
             handle_import_toggleable,
         )
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 }
 

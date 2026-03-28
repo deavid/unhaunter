@@ -2,7 +2,7 @@ use bevy::prelude::Message;
 use enum_iterator::Sequence;
 use undifficulty_core::difficulty::Difficulty;
 use ungear_core::types::gear::kind::GearKind;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 
 /// Event that is fired when a walkie-talkie message starts talking (transitions from Intro to Talking state).
 /// This allows other systems to react when a specific walkie message starts playing.

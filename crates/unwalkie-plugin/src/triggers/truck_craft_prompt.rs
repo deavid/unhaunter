@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
-use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
-use unghost_core::resources::ghost_guess::GhostGuess;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::MainPlayer;
 use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 
@@ -15,7 +15,7 @@ fn trigger_almost_ready_to_craft_repellent_system(
     player_query: Query<&PlayerGear, With<MainPlayer>>,
     current_evidence_readings: Res<CurrentEvidenceReadings>,
     ghost_guess: Res<GhostGuess>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     difficulty: Res<CurrentDifficulty>,
     mut walkie_play: ResMut<WalkiePlay>,
     time: Res<Time>,
@@ -24,7 +24,7 @@ fn trigger_almost_ready_to_craft_repellent_system(
     mut first_ready_time: Local<Option<f64>>,
     q_gear: Query<&GearKind>,
 ) {
-    if *app_state != AppState::InGame {
+    if *app_state != UIContextState::InGame {
         clear_evidences.clear();
         *repellent_crafted = false;
         *first_ready_time = None;

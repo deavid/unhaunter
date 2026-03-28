@@ -10,9 +10,6 @@ use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::FloorItemCollidable;
 use unboard_core::components::spawning::PlayerSpawnPoint;
-use uncommon_app_core::roles::is_pure_client;
-use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
-use uncommon_app_core::states::{AppState, SimulationState};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
@@ -20,6 +17,8 @@ use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
 use uninteraction_core::events::InteractionRequestMessage;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unreplicon_core::components::{LobbyInfo, RepliconPlayerSpawningActive};
 use unreplicon_core::messages::{
@@ -30,6 +29,8 @@ use unreplicon_core::messages::{
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unreplicon_core::resources::LocalPlayer;
+use unreplicon_core::resources::is_pure_client;
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -103,7 +104,7 @@ pub(super) fn app_setup(app: &mut App) {
             propagate_gear_ownership,
             cleanup_gear_ownership,
         )
-            .run_if(in_state(AppState::InGame))
+            .run_if(in_state(UIContextState::InGame))
             .run_if(is_pure_client),
     );
 
@@ -112,7 +113,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         insert_main_player_on_ownership
-            .run_if(in_state(AppState::InGame))
+            .run_if(in_state(UIContextState::InGame))
             .run_if(resource_exists::<LocalPlayerRole>),
     );
 
@@ -127,7 +128,7 @@ pub(super) fn app_setup(app: &mut App) {
         Update,
         hydrate_gear_system
             .run_if(is_pure_client)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 }
 

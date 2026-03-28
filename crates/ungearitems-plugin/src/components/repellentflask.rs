@@ -3,8 +3,6 @@ use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use uncommon_app_core::random_seed;
-use uncommon_app_core::roles::LocalPlayerRole;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::core::{GearSprite, StatusText};
@@ -14,10 +12,12 @@ use unghost_core::components::repellent_particle::RepellentParticle;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::summary::SummaryData;
+use unorchestrator_core::UIContextState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::Emissive;
 use unreplicon_core::ownership::LocallyOwned;
+use unreplicon_core::resources::LocalPlayerRole;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
@@ -358,7 +358,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (update_repellentflask_skin, repellent_update)
-            .run_if(in_state(AppState::InGame))
+            .run_if(in_state(UIContextState::InGame))
             .run_if(resource_exists::<LocalPlayerRole>),
     );
 }

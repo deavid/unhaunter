@@ -1,6 +1,6 @@
-use crate::types::evidence::Evidence;
-use crate::types::ghost::types::GhostType;
 use bevy::prelude::*;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::ghost::GhostType;
 use unspatial_core::position::Position;
 
 /// Represents the type of interaction a ghost can perform with the environment

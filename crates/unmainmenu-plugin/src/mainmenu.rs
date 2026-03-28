@@ -3,7 +3,6 @@ use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncommon_app_core::platform::plt::VERSION;
-use uncommon_app_core::states::AppState;
 use unmaphub_core::states::MapHubState;
 use unmenu_core::assets::MenuAssets;
 use unmenu_core::components::MenuItemInteractive;
@@ -11,7 +10,9 @@ use unmenu_core::components::MenuUI;
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use unmenu_core::templates;
+use unorchestrator_core::UIContextState;
 use unprofile_core::profile::PlayerProfileData;
+use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LobbyPresenceRole};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
 pub(crate) enum MenuID {
@@ -47,7 +48,7 @@ impl std::fmt::Display for MenuID {
 pub(crate) struct MenuUILayout;
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::MainMenu), (setup, setup_ui))
+    app.add_systems(OnEnter(UIContextState::MainMenu), (setup, setup_ui))
         .add_systems(Update, menu_event);
 }
 
@@ -67,8 +68,8 @@ pub(crate) fn setup_ui(
     mut commands: Commands,
     menu_assets: Res<MenuAssets>,
     player_profile: Res<Persistent<PlayerProfileData>>,
-    lobby_presence: Option<Res<uncommon_app_core::roles::LobbyPresenceRole>>,
-    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
+    lobby_presence: Option<Res<LobbyPresenceRole>>,
+    authority: Option<Res<AuthorityRole>>,
 ) {
     let is_pure_client = lobby_presence.is_some() && authority.is_none();
 
@@ -143,14 +144,14 @@ pub(crate) fn setup_ui(
 pub(crate) fn menu_event(
     mut click_events: MessageReader<MenuItemClicked>,
     #[cfg(not(target_arch = "wasm32"))] mut exit: MessageWriter<AppExit>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     mut next_map_hub_state: ResMut<NextState<MapHubState>>,
     mut current_mission_select_mode: ResMut<CurrentMissionSelectMode>,
     menu_items: Query<(&MenuID, &MenuItemInteractive)>,
-    mut ev_disconnect: MessageWriter<uncommon_app_core::roles::DisconnectRequest>,
+    mut ev_disconnect: MessageWriter<DisconnectRequest>,
 ) {
     for ev in click_events.read() {
-        if ev.state != AppState::MainMenu {
+        if ev.state != UIContextState::MainMenu {
             warn!("MenuItemClicked event received in state: {:?}", ev.state);
             continue;
         }
@@ -164,36 +165,36 @@ pub(crate) fn menu_event(
                     // Set the mission select mode to Campaign
                     current_mission_select_mode.0 = MissionSelectMode::Campaign;
                     // Transition to the unified mission selection state
-                    next_app_state.set(AppState::MissionSelect);
+                    next_app_state.set(UIContextState::MissionSelect);
                     info!("Transitioning to MissionSelect state (for Campaign)");
                 }
                 MenuID::CustomMission => {
                     // For custom missions, we go to difficulty selection first
-                    next_app_state.set(AppState::MapHub);
+                    next_app_state.set(UIContextState::MapHub);
                     next_map_hub_state.set(MapHubState::DifficultySelection);
                     info!("Transitioning to MapHub/DifficultySelection state (for Custom Mission)");
                 }
                 MenuID::MultiplayerLobby => {
-                    next_app_state.set(AppState::Lobby);
+                    next_app_state.set(UIContextState::Lobby);
                     info!("Transitioning to Lobby state");
                 }
                 MenuID::Hub => {
-                    next_app_state.set(AppState::Hub);
+                    next_app_state.set(UIContextState::Hub);
                     info!("Transitioning to Hub state");
                 }
                 MenuID::Manual => {
-                    next_app_state.set(AppState::UserManual);
+                    next_app_state.set(UIContextState::UserManual);
                     info!("Transitioning to UserManual state");
                 }
                 MenuID::Settings => {
-                    next_app_state.set(AppState::SettingsMenu);
+                    next_app_state.set(UIContextState::SettingsMenu);
                     info!("Transitioning to SettingsMenu state");
                 }
                 MenuID::Disconnect => {
-                    ev_disconnect.write(uncommon_app_core::roles::DisconnectRequest);
+                    ev_disconnect.write(DisconnectRequest);
                     // The actual teardown happens in unreplicon-plugin/connection.rs.
                     // Transition back to MainMenu so setup_ui re-runs and shows the offline menu.
-                    next_app_state.set(AppState::MainMenu);
+                    next_app_state.set(UIContextState::MainMenu);
                     info!("DisconnectRequest sent; transitioning to MainMenu");
                 }
                 #[cfg(not(target_arch = "wasm32"))]

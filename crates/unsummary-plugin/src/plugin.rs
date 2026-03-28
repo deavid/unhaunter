@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use uncommon_app_core::states::AppState;
 use unmission_core::summary::SummaryData;
+use unorchestrator_core::UIContextState;
 
 use crate::assets::SummaryAssets;
 use crate::summary::{
@@ -13,8 +13,10 @@ pub struct UnhaunterSummaryCorePlugin;
 
 impl Plugin for UnhaunterSummaryCorePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<SummaryData>()
-            .add_systems(FixedUpdate, update_time.run_if(in_state(AppState::InGame)));
+        app.init_resource::<SummaryData>().add_systems(
+            FixedUpdate,
+            update_time.run_if(in_state(UIContextState::InGame)),
+        );
     }
 }
 
@@ -23,13 +25,13 @@ pub struct UnhaunterSummaryPlugin;
 impl Plugin for UnhaunterSummaryPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::EngineBoot).load_collection::<SummaryAssets>(),
+            LoadingState::new(UIContextState::EngineBoot).load_collection::<SummaryAssets>(),
         );
         app.add_systems(
-            OnEnter(AppState::Summary),
+            OnEnter(UIContextState::Summary),
             (setup, store_mission_id, setup_ui, insert_afk_timer).chain(),
         )
-        .add_systems(OnExit(AppState::Summary), (cleanup, remove_afk_timer))
+        .add_systems(OnExit(UIContextState::Summary), (cleanup, remove_afk_timer))
         .add_systems(
             Update,
             (
@@ -39,7 +41,7 @@ impl Plugin for UnhaunterSummaryPlugin {
                 update_score,
                 record_death_to_summary,
             )
-                .run_if(in_state(AppState::Summary)),
+                .run_if(in_state(UIContextState::Summary)),
         );
     }
 }

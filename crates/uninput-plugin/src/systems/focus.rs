@@ -1,20 +1,20 @@
 use bevy::prelude::*;
-use uncommon_app_core::states::AppState;
 use uninput_core::components::PlayerInput;
 use uninput_core::resources::MissionInputFocus;
 use uninput_core::states::InGameUiState;
+use unorchestrator_core::UIContextState;
 
 /// Derives MissionInputFocus from AppState + InGameUiState.
 /// A single canonical answer to "should the mission window receive input?":
 /// - Must be in AppState::InGame (not in main menu, lobby, summary, etc.)
 /// - AND InGameUiState must be Running (no modal: not Paused, not in Truck, not in NPC dialog)
 fn derive_mission_input_focus(
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     game_state: Res<State<InGameUiState>>,
     mut focus: ResMut<MissionInputFocus>,
 ) {
     focus.has_focus =
-        *app_state.get() == AppState::InGame && *game_state.get() == InGameUiState::Running;
+        *app_state.get() == UIContextState::InGame && *game_state.get() == InGameUiState::Running;
 }
 
 /// Resets stale input the frame focus is lost, preventing drift/walking-in-place during modals.

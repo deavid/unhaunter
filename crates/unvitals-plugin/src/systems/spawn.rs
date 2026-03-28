@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use uncommon_app_core::roles::AuthorityRole;
-use uncommon_app_core::states::AppState;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::PlayerSprite;
+use unreplicon_core::resources::AuthorityRole;
 use unvitals_core::components::{PlayerVitals, Stamina};
 
 /// Authority: inserts PlayerVitals and Stamina on any player entity that is missing them.
@@ -23,6 +23,6 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         hydrate_player_vitals
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 }

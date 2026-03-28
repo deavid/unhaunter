@@ -40,15 +40,6 @@ pub(crate) fn app_setup(app: &mut App) {
     if !cfg!(debug_assertions) {
         return;
     }
-    let is_headless = app
-        .world()
-        .get_resource::<uncommon_app_core::cli::CliOptions>()
-        .map(|cli| cli.dedicated)
-        .unwrap_or(false);
-
-    if is_headless {
-        return;
-    }
 
     app.add_systems(
         Update,
@@ -62,6 +53,7 @@ pub(crate) fn app_setup(app: &mut App) {
             log_asset_events::<AssetIdx>,
             log_asset_events::<TmxMap>,
             log_asset_events::<TsxSheet>,
-        ),
+        )
+            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
     );
 }

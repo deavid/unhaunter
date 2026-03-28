@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use uncommon_app_core::roles::AuthorityRole;
-use uncommon_app_core::states::AppState;
 use unmission_core::resources::MissionConcludingCinematic;
 use unmission_core::summary::SummaryData;
+use unorchestrator_core::UIContextState;
 use unreplicon_core::components::{MissionGoalEntity, ServerGamePhase};
+use unreplicon_core::resources::AuthorityRole;
 
 pub(crate) fn on_mission_concluding(
     q_phase: Query<&ServerGamePhase, Changed<ServerGamePhase>>,
@@ -26,7 +26,7 @@ pub(crate) fn tick_mission_concluding(
     summary_data: Option<Res<SummaryData>>,
     authority: Option<Res<AuthorityRole>>,
     q_goal: Query<&SummaryData, With<MissionGoalEntity>>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     time: Res<Time>,
 ) {
     let Some(mut cinematic) = cinematic else {
@@ -45,7 +45,7 @@ pub(crate) fn tick_mission_concluding(
         q_goal.iter().next().is_some()
     };
     if ready {
-        next_app_state.set(AppState::Summary);
+        next_app_state.set(UIContextState::Summary);
         commands.remove_resource::<MissionConcludingCinematic>();
     }
 }

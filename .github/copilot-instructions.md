@@ -319,11 +319,6 @@ A new shared crate is only justified when types meet ALL of the following:
 
 If a component fails any of those tests, it belongs in a feature domain, not a shared crate.
 
-**Known stale audit recommendations:** The `02_t4a.md` audit recommends "extract to `unrender-types`" for `SpriteLayer`,
-`GameSprite`, etc. That recommendation is superseded by the design analysis in `docs/ddd-analysis/03_concept_design.md`
-(Appendix: The Horizontal-Cut Problem). Those components are simulation state that belongs in their owning domain crates
-— not in a new shared rendering-types bag.
-
 ---
 
 ## Crate Tier Reference

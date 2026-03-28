@@ -1,6 +1,6 @@
 use crate::components::flashlight::FlashlightStatus;
 use serde::{Deserialize, Serialize};
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::ghost::GhostType;
 
 /// A compact summary of a gear item's current state, suitable for network serialization.
 ///

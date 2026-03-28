@@ -1,12 +1,12 @@
 use crate::app;
-use uncommon_app_core::cli::CliOptions;
+use crate::app_args::AppArgs;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen(start)]
 pub(crate) fn wasm_load() {
-    app_run(CliOptions::default()); // Use default for WASM
+    app_run(AppArgs::default_wasm()); // Use default for WASM
 }
 
-pub fn app_run(cli_options: CliOptions) {
-    app::app_run(cli_options);
+pub fn app_run(args: AppArgs) {
+    app::app_run(args);
 }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unorchestrator_core::UIContextState;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -10,7 +10,7 @@ impl Plugin for TutorialIntroductionsTriggerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            trigger_chapter_intros.run_if(in_state(AppState::InGame)),
+            trigger_chapter_intros.run_if(in_state(UIContextState::InGame)),
         );
     }
 }
@@ -21,11 +21,11 @@ pub(crate) fn app_setup(app: &mut App) {
 
 fn trigger_chapter_intros(
     mut walkie_play: ResMut<WalkiePlay>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     current_difficulty_res: Res<CurrentDifficulty>,
     time: Res<Time>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         // We want to play this only when the player is in the game.
         return;
     }

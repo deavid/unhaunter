@@ -15,13 +15,15 @@ untruck-core = { workspace = true }
 uninput-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unmission-core = { workspace = true }
-uncommon-app-core = { workspace = true }
+unreplicon-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 unplayer-core = { workspace = true }
 unbehavior-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
 unsettings-core = { workspace = true }
 unghost-core = { workspace = true }
+uninvestigation-core = { workspace = true }
 unmapload-core = { workspace = true }
 
 bevy = { workspace = true }

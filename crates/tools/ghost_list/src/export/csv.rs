@@ -1,7 +1,7 @@
 use csv::Writer;
 use serde::Serialize;
-use unghost_core::types::evidence::Evidence;
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::ghost::GhostType;
 
 #[derive(Serialize)]
 struct GhostCsvRow<'a> {

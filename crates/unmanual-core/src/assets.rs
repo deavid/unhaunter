@@ -99,10 +99,10 @@ pub struct ManualAssets {
     pub manual_sage: Handle<Image>,
 
     // Fonts
-    #[asset(path = "fonts/LondrinaSolid-Regular.ttf")]
+    #[asset(path = "fonts/londrina_solid/LondrinaSolid-Regular.ttf")]
     pub font_londrina_light: Handle<Font>,
-    #[asset(path = "fonts/ChakraPetch-Regular.ttf")]
+    #[asset(path = "fonts/chakra_petch/ChakraPetch-Regular.ttf")]
     pub font_chakra_regular: Handle<Font>,
-    #[asset(path = "fonts/ChakraPetch-SemiBold.ttf")]
+    #[asset(path = "fonts/chakra_petch/ChakraPetch-SemiBold.ttf")]
     pub font_chakra_semibold: Handle<Font>,
 }

@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{Channel, ClientId, ClientMessageAppExt, FromClient};
-use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
-use uncommon_app_core::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::PlayerSprite;
 use unreplicon_core::messages::ExportPlayerGearMessage;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 
 fn from_owner_id(owner_id: OwnerId) -> ClientId {
     match owner_id {
@@ -53,13 +53,13 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         send_export_player_gear
-            .run_if(in_state(AppState::InGame))
+            .run_if(in_state(UIContextState::InGame))
             .run_if(resource_exists::<LocalPlayerRole>),
     );
     app.add_systems(
         Update,
         handle_export_player_gear_state
-            .run_if(in_state(AppState::InGame))
+            .run_if(in_state(UIContextState::InGame))
             .run_if(resource_exists::<AuthorityRole>),
     );
 }

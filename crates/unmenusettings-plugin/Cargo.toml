@@ -17,6 +17,6 @@ bevy-persistent = { workspace = true }
 strum = { workspace = true }
 
 
-uncommon-app-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 unsettings-core = { workspace = true }
 unmenu-core = { workspace = true }

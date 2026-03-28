@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy_renet::{RenetClient, RenetServer};
 use bevy_replicon::prelude::*;
-use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
 use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::flashlight::Flashlight;
@@ -11,6 +10,7 @@ use unplayer_core::components::{
     MainPlayer, PlayerDisconnected, PlayerInactive, PlayerSpectating, PlayerSprite,
 };
 use unreplicon_core::ownership::{LocallyOwned, Owner};
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 

@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_replicon::prelude::AppRuleExt;
-use uncommon_app_core::states::AppState;
 use ungear_core::assets::GearAssets;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::{HeldObject, PlayerGear};
@@ -10,6 +9,7 @@ use ungear_core::events::{
 };
 use ungear_core::resources::spawner::{GearMarker, GearSpawnerRegistry};
 use ungear_core::types::gear::kind::GearKind;
+use unorchestrator_core::UIContextState;
 
 use super::systems;
 use crate::metrics;
@@ -39,7 +39,7 @@ pub struct UnhaunterGearPlugin;
 impl Plugin for UnhaunterGearPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::EngineBoot).load_collection::<GearAssets>(),
+            LoadingState::new(UIContextState::EngineBoot).load_collection::<GearAssets>(),
         );
         systems::app_setup(app);
         crate::net_state::app_setup(app);

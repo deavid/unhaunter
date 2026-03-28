@@ -3,6 +3,7 @@ use crate::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use ungear_core::assets::GearAssets;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::events::{
@@ -11,11 +12,10 @@ use ungear_core::events::{
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::equipment::{Hand, VisualKey};
 use ungear_core::types::gear::kind::GearKind;
-use unghost_core::types::evidence::Evidence;
 use uninput_core::states::InGameUiState;
+use uninvestigation_core::evidence::Evidence;
 use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unrender_std::assets::GearAssets;
 use unrender_std::custom_material2::UIPanelMaterial;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
 use unreplicon_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
@@ -467,7 +467,7 @@ fn update_loadout_icons(
 fn button_clicked(
     mut ev_clk: MessageReader<EventButtonClicked>,
     q_gear: Query<(&PlayerSprite, &PlayerGear, Has<MainPlayer>)>,
-    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
+    authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
     mut ev_equip_van: MessageWriter<RequestEquipGearFromVan>,
     mut ev_unequip_hand: MessageWriter<RequestUnequipHand>,

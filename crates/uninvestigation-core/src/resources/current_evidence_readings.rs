@@ -1,4 +1,4 @@
-use crate::types::evidence::Evidence;
+use crate::evidence::Evidence;
 use bevy::prelude::*;
 use enum_iterator::all;
 

@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use unboard_core::resources::roomdb::RoomTopology;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::quartz::QuartzStoneData;
 use ungearitems_core::components::sage::SageBundleData;
 use unghost_core::components::ghost_sprite::GhostSprite;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untruck_core::truckgear::TruckGear;
@@ -19,11 +19,11 @@ fn quartz_cracked_feedback(
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
     q_quartz: Query<&QuartzStoneData>,
     room_topology: Res<RoomTopology>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     time: Res<Time>,
     mut last_cracks: Local<Option<u8>>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         *last_cracks = None;
         return;
     }
@@ -61,11 +61,11 @@ fn quartz_shattered_feedback(
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
     q_quartz: Query<&QuartzStoneData>,
     room_topology: Res<RoomTopology>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     time: Res<Time>,
     mut shattered: Local<bool>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         *shattered = false;
         return;
     }
@@ -100,7 +100,7 @@ fn quartz_shattered_feedback(
 
 fn trigger_quartz_unused_in_relevant_situation_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -110,7 +110,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     q_gear: Query<&GearKind>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         return;
     }
 
@@ -183,7 +183,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
 
 fn trigger_sage_unused_in_relevant_situation_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -194,7 +194,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
     q_sage: Query<&SageBundleData>,
 ) {
     // 1. System Run Condition Checks
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         return;
     }
 
@@ -315,7 +315,7 @@ struct SageEffectivenessTracker {
 
 fn trigger_sage_activated_ineffectively_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(Entity, &PlayerGear), (With<PlayerSprite>, With<MainPlayer>)>, // Added Entity to ID player
     ghost_query: Query<&GhostSprite>,
@@ -325,7 +325,7 @@ fn trigger_sage_activated_ineffectively_system(
     q_sage: Query<&SageBundleData>,
 ) {
     // 1. System Run Condition & Chapter Check & Reset conditions
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         if tracker.is_tracking_this_sage_burn {
             *tracker = SageEffectivenessTracker::default();
         }
@@ -444,16 +444,16 @@ struct HuntSageUsageTracker {
 // System to reset the tracker when a new mission starts or player leaves InGame
 fn reset_hunt_sage_tracker_on_mission_change(
     mut tracker: ResMut<HuntSageUsageTracker>,
-    app_state: Res<State<AppState>>,
-    mut last_app_state: Local<Option<AppState>>, // Track previous app state
+    app_state: Res<State<UIContextState>>,
+    mut last_app_state: Local<Option<UIContextState>>, // Track previous app state
 ) {
     let current_app_state = *app_state.get();
     if *last_app_state != Some(current_app_state) {
         // If app state changed or it's the first run
-        if current_app_state != AppState::InGame
+        if current_app_state != UIContextState::InGame
             || (last_app_state.is_some()
-                && last_app_state.unwrap() != AppState::InGame
-                && current_app_state == AppState::InGame)
+                && last_app_state.unwrap() != UIContextState::InGame
+                && current_app_state == UIContextState::InGame)
         {
             // If we are NOT in game, OR if we JUST entered InGame (new mission)
             if !matches!(tracker.phase, HuntPhaseForSageCheck::NotInHunt) {
@@ -467,7 +467,7 @@ fn reset_hunt_sage_tracker_on_mission_change(
 
 fn trigger_sage_unused_defensively_during_hunt_system(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -477,7 +477,7 @@ fn trigger_sage_unused_defensively_during_hunt_system(
     q_sage: Query<&SageBundleData>,
 ) {
     // 1. System Run Condition & Chapter Check
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         // Tracker reset is handled by `reset_hunt_sage_tracker_on_mission_change`
         return;
     }

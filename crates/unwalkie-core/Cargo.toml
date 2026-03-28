@@ -16,6 +16,7 @@ unwalkie-types = { workspace = true }
 
 uncommon-app-core = { workspace = true }
 unghost-core = { workspace = true }
+uninvestigation-core = { workspace = true }
 undifficulty-core = { workspace = true }
 ungear-core = { workspace = true }
 

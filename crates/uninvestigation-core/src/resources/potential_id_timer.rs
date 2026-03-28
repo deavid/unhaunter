@@ -1,5 +1,5 @@
-use crate::types::evidence::Evidence;
-use crate::types::ghost::types::GhostType;
+use crate::evidence::Evidence;
+use crate::ghost::GhostType;
 use bevy::prelude::Resource;
 
 #[derive(Resource, Default, Debug)]

@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use enum_iterator::all;
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::ghost::GhostType;
 
 use crate::analysis::show_stats;
 use crate::analysis::{

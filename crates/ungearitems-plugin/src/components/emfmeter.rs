@@ -16,16 +16,16 @@ use unthermal_core::resources::ThermalGrid;
 
 use crate::metrics;
 
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 use unspatial_core::position::Position;
 
 use bevy::prelude::*;
 use rand::RngExt;
-use uncommon_app_core::roles::LocalPlayerRole;
 use ungear_core::types::gear::equipment::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::emfmeter::{EMFLevel, EMFMeter};
+use unreplicon_core::resources::LocalPlayerRole;
 
 pub(crate) fn update_emfmeter(
     mut q_emf: Query<(
@@ -47,7 +47,7 @@ pub(crate) fn update_emfmeter(
     difficulty: Res<CurrentDifficulty>,
     haunt_state: Res<HauntState>,
     player_profile: If<Res<Persistent<PlayerProfileData>>>,
-    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
+    authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
 ) {
     let measure = metrics::EMF_UPDATE.time_measure();
     let is_authority = authority.is_some();

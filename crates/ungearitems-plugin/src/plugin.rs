@@ -1,7 +1,7 @@
 use crate::metrics;
 use bevy::prelude::*;
-use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
 use ungearitems_core::events::RequestCraftRepellent;
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 
 pub struct UnhaunterGearItemsCorePlugin;
 
@@ -41,7 +41,7 @@ impl Plugin for UnhaunterGearItemsPlugin {
             Update,
             crate::systems::handle_craft_repellent_request
                 .run_if(resource_exists::<AuthorityRole>)
-                .run_if(in_state(uncommon_app_core::states::AppState::InGame)),
+                .run_if(in_state(unorchestrator_core::UIContextState::InGame)),
         );
 
         app.add_systems(
@@ -50,7 +50,7 @@ impl Plugin for UnhaunterGearItemsPlugin {
                 crate::systems::system_electronic_interference,
                 crate::systems::system_battery_drain,
             )
-                .run_if(in_state(uncommon_app_core::states::AppState::InGame))
+                .run_if(in_state(unorchestrator_core::UIContextState::InGame))
                 .run_if(resource_exists::<LocalPlayerRole>),
         );
 

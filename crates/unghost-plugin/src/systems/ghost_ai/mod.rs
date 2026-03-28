@@ -192,18 +192,18 @@ pub(crate) fn ghost_scale_glitch_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use uncommon_app_core::states::SimulationState;
+    use unmission_core::types::SimulationState;
 
     app.add_systems(
         Update,
         (
-            ghost_movement.run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
-            ghost_enrage.run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
+            ghost_movement.run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
+            ghost_enrage.run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
             ghost_fade_out_system
-                .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
+                .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
             update_ghost_warning_field,
             ghost_scale_glitch_system
-                .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
+                .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
         )
             .run_if(in_state(SimulationState::Ready)),
     );

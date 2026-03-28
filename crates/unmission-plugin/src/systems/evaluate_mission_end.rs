@@ -21,7 +21,7 @@ pub(crate) fn evaluate_mission_end(
     >,
     mut ev_mission: MessageWriter<MissionEvent>,
     mut mission_end_requested: ResMut<MissionEndRequested>,
-    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
+    authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
     time: Res<Time>,
     mut empty_timer: Local<Option<f32>>,
 ) {

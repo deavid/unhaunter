@@ -5,7 +5,7 @@ use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 use unmetrics_core::metrics::SendMetric;
 use unnoise_core::perlin::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
 use unsoundfield_core::components::SoundFieldSource;
@@ -165,7 +165,7 @@ pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
         bevy::prelude::Update,
         (
             update_ghost_behavior_dynamics_system
-                .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
+                .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
             sync_ghost_field_sources,
         )
             .chain(),

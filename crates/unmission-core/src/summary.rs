@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::ghost::GhostType;
 
 use uncareer_core::grade::Grade;
 

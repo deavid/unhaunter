@@ -16,5 +16,5 @@ bevy_replicon = { workspace = true }
 serde = { workspace = true }
 uuid = { workspace = true }
 ungear-core = { workspace = true }
-unghost-core = { workspace = true }
-uncommon-app-core = { workspace = true }
+uninvestigation-core = { workspace = true }
+unorchestrator-core = { workspace = true }

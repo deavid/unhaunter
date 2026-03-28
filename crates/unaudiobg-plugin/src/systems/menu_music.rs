@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncommon_app_core::states::AppState;
+use unorchestrator_core::UIContextState;
 use unsettings_core::audio::AudioSettings;
 
 use unaudiobg_core::smooth::smooth_volume_db;
@@ -20,11 +20,11 @@ pub(crate) fn manage_title_song(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut q_sound: Query<&mut MenuSound>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     audio_settings: Res<Persistent<AudioSettings>>,
     global_volume: Res<bevy::audio::GlobalVolume>,
 ) {
-    let should_play_song = !matches!(app_state.get(), AppState::InGame);
+    let should_play_song = !matches!(app_state.get(), UIContextState::InGame);
 
     if let Ok(mut menusound) = q_sound.single_mut() {
         if !should_play_song && !menusound.despawn {

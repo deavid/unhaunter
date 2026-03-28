@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use uncommon_app_core::states::AppState;
 use uninput_core::states::InGameUiState;
+use unorchestrator_core::UIContextState;
 
 use super::loadoutui::EventButtonClicked;
 use crate::assets::TruckUiAssets;
@@ -11,7 +11,7 @@ pub struct UnhaunterTruckUIPlugin;
 impl Plugin for UnhaunterTruckUIPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::EngineBoot).load_collection::<TruckUiAssets>(),
+            LoadingState::new(UIContextState::EngineBoot).load_collection::<TruckUiAssets>(),
         );
         app.add_message::<EventButtonClicked>();
 

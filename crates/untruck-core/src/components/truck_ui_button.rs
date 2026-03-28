@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::types::truck_button::{TruckButtonState, TruckButtonType};
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 
 /// Represents a button in the truck UI, handling its state, type, and visual
 /// appearance.

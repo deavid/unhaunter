@@ -1,5 +1,5 @@
 use enum_iterator::all;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 
 pub fn parse_evidence_list(evidence_str: &str) -> Vec<Evidence> {
     evidence_str

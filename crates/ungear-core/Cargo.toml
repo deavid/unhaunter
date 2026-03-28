@@ -14,7 +14,7 @@ workspace = true
 
 unspatial-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unghost-core = { workspace = true }
+uninvestigation-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

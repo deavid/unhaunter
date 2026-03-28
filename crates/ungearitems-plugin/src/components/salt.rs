@@ -4,7 +4,6 @@ use rand::RngExt;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
 use uncommon_app_core::random_seed;
-use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::salt::{
@@ -17,6 +16,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unreplicon_core::messages::SaltDroppedMessage;
 use unreplicon_core::ownership::LocallyOwned;
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 

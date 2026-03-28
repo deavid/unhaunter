@@ -17,9 +17,10 @@ unlight-core = { workspace = true }
 unsensing-core = { workspace = true }
 unbehavior-core = { workspace = true }
 undifficulty-core = { workspace = true }
+unmission-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unboard-core = { workspace = true }
-unmission-core = { workspace = true }
 uninput-core = { workspace = true }
 unrender-std = { workspace = true }
 unplayer-core = { workspace = true }

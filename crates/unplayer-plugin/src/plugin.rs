@@ -1,7 +1,7 @@
 use super::systems;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use uncommon_app_core::states::AppState;
+use unorchestrator_core::UIContextState;
 use unplayer_core::assets::PlayerAssets;
 
 pub struct UnhaunterPlayerCorePlugin;
@@ -17,7 +17,7 @@ pub struct UnhaunterPlayerPlugin;
 impl Plugin for UnhaunterPlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::EngineBoot).load_collection::<PlayerAssets>(),
+            LoadingState::new(UIContextState::EngineBoot).load_collection::<PlayerAssets>(),
         );
         systems::setup::app_setup_client(app);
     }

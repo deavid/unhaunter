@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
-use uncommon_app_core::states::AppState;
 use unlocomotion_core::animation::AnimationTimer;
 use unmetrics_core::metrics::SendMetric;
+use unorchestrator_core::UIContextState;
 use unrender_std::custom_material1::CustomMaterial1;
 use untruck_core::components::in_truck::InTruck;
 
@@ -40,5 +40,8 @@ fn animate_sprite(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, animate_sprite.run_if(in_state(AppState::InGame)));
+    app.add_systems(
+        Update,
+        animate_sprite.run_if(in_state(UIContextState::InGame)),
+    );
 }

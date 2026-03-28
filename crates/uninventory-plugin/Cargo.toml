@@ -16,11 +16,11 @@ uninput-core = { workspace = true }
 unlocomotion-core = { workspace = true }
 unplayer-core = { workspace = true }
 unvitals-core = { workspace = true }
-uncommon-app-core = { workspace = true }
 ungear-core = { workspace = true }
 unbehavior-core = { workspace = true }
 unspatial-core = { workspace = true }
 unboard-core = { workspace = true }
 unreplicon-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 unaudiospatial-core = { workspace = true }
 unrender-std = { workspace = true }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::ghost::GhostType;
 
 /// Emitted by `untruck-plugin` when the authority player holds the craft repellent button.
 /// Handled by `ungearitems-plugin` on the authority node.

@@ -1,6 +1,6 @@
 use bevy::{color::palettes::css, prelude::*};
 use unclassic_mode_core::colors;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 
 use untruck_core::types::truck_button::TruckButtonState;
 

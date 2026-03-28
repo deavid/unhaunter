@@ -15,5 +15,6 @@ unboard-core = { workspace = true }
 unbehavior-core = { workspace = true }
 unmetrics-core = { workspace = true }
 unspatial-core = { workspace = true }
-uncommon-app-core = { workspace = true }
+unmission-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 bevy = { workspace = true }

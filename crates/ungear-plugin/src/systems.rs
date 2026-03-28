@@ -2,8 +2,6 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
 use unboard_core::components::mapcolor::MapColor;
 use uncommon_app_core::random_seed;
-use uncommon_app_core::roles::AuthorityRole;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::assets::GearAssets;
 use ungear_core::components::core::GearSprite;
@@ -19,6 +17,7 @@ use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::equipment::{Hand, VisualKey};
 use ungear_core::types::gear::kind::GearKind;
 use unmetrics_core::metrics::SendMetric;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::PlayerTag;
 use unplayer_core::components::{
     Inventory, InventoryNext, InventoryStats, MainPlayer, PlayerSprite,
@@ -28,6 +27,7 @@ use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
+use unreplicon_core::resources::AuthorityRole;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
@@ -340,18 +340,24 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         hydrate_player_gear
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
     app.add_systems(
         Update,
         handle_truck_loadout_request
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
-    app.add_systems(FixedUpdate, update_gear_ui)
-        .add_systems(
-            Update,
-            update_deployed_gear_sprites.run_if(in_state(AppState::InGame)),
-        )
-        .add_systems(Update, keyboard_gear.run_if(in_state(AppState::InGame)));
+    app.add_systems(
+        FixedUpdate,
+        update_gear_ui.run_if(in_state(UIContextState::InGame)),
+    )
+    .add_systems(
+        Update,
+        update_deployed_gear_sprites.run_if(in_state(UIContextState::InGame)),
+    )
+    .add_systems(
+        Update,
+        keyboard_gear.run_if(in_state(UIContextState::InGame)),
+    );
 }

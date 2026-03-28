@@ -2,16 +2,17 @@ use std::time::Duration;
 
 use bevy::diagnostic::DiagnosticsStore;
 use bevy::prelude::*;
-use uncommon_app_core::roles::{AuthorityRole, LobbyPresenceRole, LocalPlayerRole};
-use uncommon_app_core::states::{AppState, SimulationState};
 use uninput_core::states::InGameUiState;
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
+use unreplicon_core::resources::{AuthorityRole, LobbyPresenceRole, LocalPlayerRole};
 
 pub fn report_performance(
     time: Res<Time>,
     diagnostics: Res<DiagnosticsStore>,
     mut timer: Local<ReportTimer>,
-    app_state: Res<State<AppState>>,
-    game_state: Res<State<InGameUiState>>,
+    app_state: Option<Res<State<UIContextState>>>,
+    game_state: Option<Res<State<InGameUiState>>>,
     simulation_state: Res<State<SimulationState>>,
     authority: Option<Res<AuthorityRole>>,
     local_player: Option<Res<LocalPlayerRole>>,
@@ -47,8 +48,8 @@ pub fn report_performance(
         debug!("systems: {:.2}%", total_systems_time / MAX_TIME * 100.0);
         debug!(
             "App State: {:?} - Game State: {:?} - Simulation: {:?} - AuthorityRole={} LocalPlayerRole={} LobbyPresenceRole={}",
-            app_state.get(),
-            game_state.get(),
+            app_state,
+            game_state,
             simulation_state.get(),
             authority.is_some(),
             local_player.is_some(),

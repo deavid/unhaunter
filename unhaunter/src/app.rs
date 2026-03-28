@@ -1,18 +1,18 @@
+use crate::app_args::AppArgs;
 use bevy::ecs::schedule::ExecutorKind;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
 use std::time::Duration;
-use uncommon_app_core::cli::CliOptions;
 use uncommon_app_core::platform::plt;
 
 // Core & Logic Plugins
 use unboard_plugin::plugin::UnhaunterBoardPlugin;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
 use undifficulty_plugin::plugin::UnhaunterDifficultyPlugin;
-use unhub_plugin::plugin::UnhaunterHubPlugin;
+use unhub_plugin::plugin::{UnhaunterHubCorePlugin, UnhaunterHubPlugin};
 use uninteraction_plugin::plugin::UnhaunterInteractionCorePlugin;
-use unmapload_plugin::plugin::UnhaunterMapLoadPlugin;
+use unmapload_plugin::plugin::{UnhaunterMapLoadCorePlugin, UnhaunterMapLoadPlugin};
 use unmission_plugin::plugin::UnhaunterMissionPlugin;
 use unreplicon_plugin::plugin::UnrepliconPlugin;
 use unsettings_plugin::plugin::UnhaunterSettingsPlugin;
@@ -70,14 +70,25 @@ use unmaphub_plugin::plugin::UnhaunterMapHubPlugin;
 use unmetrics_plugin::plugin::UnhaunterMetricsPlugin;
 use unprofile_plugin::plugin::UnhaunterProfilePlugin;
 
-pub fn app_run(cli_options: CliOptions) {
+use unmission_core::types::SimulationState;
+use unorchestrator_core::{BootState, UIContextState};
+
+pub fn app_run(args: AppArgs) {
+    let AppArgs {
+        verbose,
+        mute,
+        include_draft_maps,
+        net_mode,
+        installation_id_file,
+        dedicated,
+        procman_channel,
+        hub_url,
+    } = args;
     let mut app = App::new();
 
-    let filter = crate::log_filter::build_log_filter(cli_options.verbose);
+    let filter = crate::log_filter::build_log_filter(verbose);
 
-    app.insert_resource(cli_options.clone());
-
-    if cli_options.dedicated {
+    if dedicated {
         app.add_plugins((
             MinimalPlugins
                 .set(ScheduleRunnerPlugin::run_loop(Duration::from_micros(
@@ -143,7 +154,7 @@ pub fn app_run(cli_options: CliOptions) {
             ..default()
         });
 
-        if cli_options.mute {
+        if mute {
             info!("Audio muted via command line flag.");
             default_plugins = default_plugins.set(bevy::audio::AudioPlugin {
                 global_volume: bevy::audio::GlobalVolume {
@@ -166,6 +177,9 @@ pub fn app_run(cli_options: CliOptions) {
     }
 
     app.insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
+        .init_state::<UIContextState>()
+        .init_state::<BootState>()
+        .init_state::<SimulationState>()
         .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
             1.0 / 15.0,
         )));
@@ -175,12 +189,49 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterSettingsPlugin,
         UnhaunterDifficultyPlugin,
         UnhaunterBoardPlugin,
-        UnrepliconPlugin,
+        UnrepliconPlugin {
+            role_config: unreplicon_plugin::systems::roles::RoleConfig {
+                dedicated,
+                intent: match &net_mode {
+                    crate::app_args::CliNetMode::Offline => {
+                        unreplicon_plugin::systems::roles::NetworkRoleIntent::Standalone
+                    }
+                    crate::app_args::CliNetMode::PeerHost { .. } => {
+                        unreplicon_plugin::systems::roles::NetworkRoleIntent::Host
+                    }
+                    crate::app_args::CliNetMode::Join { .. } => {
+                        unreplicon_plugin::systems::roles::NetworkRoleIntent::Client
+                    }
+                },
+            },
+            transport_config: match net_mode.clone() {
+                crate::app_args::CliNetMode::Offline => {
+                    unreplicon_transport::resources::TransportConfig::Offline
+                }
+                crate::app_args::CliNetMode::PeerHost {
+                    port,
+                    bind_addresses,
+                } => unreplicon_transport::resources::TransportConfig::PeerHost {
+                    port,
+                    bind_addresses,
+                },
+                crate::app_args::CliNetMode::Join { address, ticket } => {
+                    unreplicon_transport::resources::TransportConfig::Join { address, ticket }
+                }
+            },
+            procman_config: unreplicon_transport::resources::ProcManConfig {
+                procman_channel: procman_channel.clone(),
+                port: match &net_mode {
+                    crate::app_args::CliNetMode::PeerHost { port, .. } => *port,
+                    _ => 0,
+                },
+            },
+        },
         UnhaunterLobbyPlugin,
-        UnhaunterTmxMapPlugin,
-        UnhaunterMapLoadPlugin,
+        UnhaunterTmxMapPlugin { include_draft_maps },
+        UnhaunterMapLoadCorePlugin,
         UnhaunterMissionPlugin,
-        UnhaunterHubPlugin,
+        UnhaunterHubCorePlugin,
         UnhaunterSoundFieldPlugin,
         UnhaunterMetricsPlugin,
         UnhaunterSummaryCorePlugin,
@@ -208,9 +259,9 @@ pub fn app_run(cli_options: CliOptions) {
 
     // == DOMAIN LOGIC (Part 2: Gameplay Modes) ==
     app.add_plugins((ClassicModeOrchestratorPlugin, ClassicModeGameplayPlugin));
-
+    app.add_plugins(UnhaunterSpatialAudioPlugin { enable: !dedicated });
     // == CLIENT-ONLY PLUGINS ==
-    if !cli_options.dedicated {
+    if !dedicated {
         // Input & Foundation
         app.add_plugins((
             UnhaunterInputPlugin,
@@ -223,6 +274,9 @@ pub fn app_run(cli_options: CliOptions) {
             UnhaunterSummaryPlugin,
             UnhaunterTruckPlugin,
             UnhaunterTruckUIPlugin,
+            UnhaunterHubPlugin {
+                hub_url: hub_url.clone(),
+            },
             UnhaunterNPCPlugin,
             UnhaunterWalkiePlugin,
         ));
@@ -241,20 +295,25 @@ pub fn app_run(cli_options: CliOptions) {
         ));
 
         // Audio
-        app.add_plugins((
-            UnhaunterSpatialAudioPlugin,
-            UnhaunterAudioBgPlugin,
-            UnhaunterWalkieCorePlugin,
-        ));
+        app.add_plugins((UnhaunterAudioBgPlugin, UnhaunterWalkieCorePlugin));
 
         // Map & Campaign
-        app.add_plugins((UnhaunterMapHubPlugin, UnhaunterCampaignPlugin));
+        app.add_plugins((
+            UnhaunterMapHubPlugin,
+            UnhaunterCampaignPlugin,
+            UnhaunterMapLoadPlugin,
+        ));
 
         // UI for Gameplay Modes
         app.add_plugins((ClassicModeRenderPlugin, ClassicModeUiPlugin));
 
         // Diagnostics
-        app.add_plugins((UnhaunterFpsPlugin, UnhaunterProfilePlugin));
+        app.add_plugins((
+            UnhaunterFpsPlugin,
+            UnhaunterProfilePlugin {
+                installation_id_file: installation_id_file.clone(),
+            },
+        ));
     }
 
     app.run();

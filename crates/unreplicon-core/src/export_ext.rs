@@ -28,6 +28,7 @@
 //! `unreplicon-plugin/replication/gearitems.rs`. Calling `set_marker_fns`
 //! for the same type twice would panic bevy_replicon at startup.
 
+use crate::resources::{AuthorityRole, is_pure_client};
 use bevy::ecs::component::Mutable;
 use bevy::prelude::*;
 use bevy_replicon::prelude::{
@@ -35,9 +36,8 @@ use bevy_replicon::prelude::{
 };
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use uncommon_app_core::roles::{AuthorityRole, is_pure_client};
-use uncommon_app_core::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
+use unorchestrator_core::UIContextState;
 
 use crate::client_export::ExportClientComponent;
 use crate::noop::{noop_remove, noop_write};
@@ -226,13 +226,13 @@ impl AppClientExportExt for App {
         self.add_systems(
             Update,
             send_component::<T, Anchor>
-                .run_if(in_state(AppState::InGame))
+                .run_if(in_state(UIContextState::InGame))
                 .run_if(is_pure_client),
         );
         self.add_systems(
             Update,
             import_component::<T, Anchor>
-                .run_if(in_state(AppState::InGame))
+                .run_if(in_state(UIContextState::InGame))
                 .run_if(resource_exists::<AuthorityRole>),
         );
         self
@@ -246,13 +246,13 @@ impl AppClientExportExt for App {
         self.add_systems(
             Update,
             send_gear_component::<T>
-                .run_if(in_state(AppState::InGame))
+                .run_if(in_state(UIContextState::InGame))
                 .run_if(is_pure_client),
         );
         self.add_systems(
             Update,
             import_gear_component::<T>
-                .run_if(in_state(AppState::InGame))
+                .run_if(in_state(UIContextState::InGame))
                 .run_if(resource_exists::<AuthorityRole>),
         );
         self
@@ -266,7 +266,7 @@ impl AppClientExportExt for App {
         self.add_systems(
             Update,
             send_gear_component::<T>
-                .run_if(in_state(AppState::InGame))
+                .run_if(in_state(UIContextState::InGame))
                 .run_if(is_pure_client),
         );
         self

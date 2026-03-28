@@ -1,10 +1,11 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::AppRuleExt;
-use uncommon_app_core::states::{AppState, SimulationState};
 use unmission_core::events::{MissionCompletedEvent, QuitMissionEvent};
 use unmission_core::resources::MissionEndRequested;
 use unmission_core::summary::SummaryData;
 use unmission_core::types::MissionEvent;
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 
 use crate::systems::concluding_cinematic;
 use crate::systems::evaluate_mission_end;
@@ -19,12 +20,12 @@ pub(crate) fn app_setup(app: &mut App) {
         .init_resource::<MissionEndRequested>()
         .add_systems(
             Update,
-            handle_mission_events::handle_mission_events.run_if(in_state(AppState::InGame)),
+            handle_mission_events::handle_mission_events.run_if(in_state(UIContextState::InGame)),
         )
         .add_systems(
             Update,
             evaluate_mission_end::evaluate_mission_end
-                .run_if(in_state(AppState::InGame))
+                .run_if(in_state(UIContextState::InGame))
                 .run_if(not(in_state(SimulationState::TearingDown))),
         );
     app.add_systems(
@@ -33,11 +34,11 @@ pub(crate) fn app_setup(app: &mut App) {
             concluding_cinematic::on_mission_concluding,
             concluding_cinematic::tick_mission_concluding,
         )
-            .run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>)
+            .run_if(in_state(UIContextState::InGame)),
     );
     app.add_systems(
         Update,
-        handle_quit_mission::handle_quit_mission.run_if(in_state(AppState::InGame)),
+        handle_quit_mission::handle_quit_mission.run_if(in_state(UIContextState::InGame)),
     );
 }

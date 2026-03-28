@@ -1,5 +1,4 @@
 use bevy::{input::mouse::MouseMotion, prelude::*};
-use uncommon_app_core::states::AppState;
 use unmenu_core::colors;
 use unmenu_core::components::{
     MCamera, MenuItemInteractive, MenuMouseTracker, MenuRoot, MenuUI, PrincipalMenuText,
@@ -8,6 +7,7 @@ use unmenu_core::events::KeyboardNavigate;
 use unmenu_core::events::MenuEscapeEvent;
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::events::MenuItemSelected;
+use unorchestrator_core::UIContextState;
 
 /// Detects mouse movement to enable hover selection. Mouse movement is tracked to prevent
 /// unwanted initial hover states when opening menus.
@@ -33,7 +33,7 @@ fn menu_interaction_system(
     mouse_tracker: Query<&MenuMouseTracker>,
     mut click_events: MessageWriter<MenuItemClicked>,
     mut selection_events: MessageWriter<MenuItemSelected>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
 ) {
     let mouse_moved = mouse_tracker
         .iter()
@@ -73,7 +73,7 @@ fn menu_keyboard_system(
     mut keyboard_nav_events: MessageWriter<KeyboardNavigate>,
     mut click_events: MessageWriter<MenuItemClicked>,
     mut escape_events: MessageWriter<MenuEscapeEvent>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
 ) {
     let Ok(mut menu) = menu_query.single_mut() else {
         return;
@@ -216,8 +216,8 @@ pub(crate) fn cleanup_menu(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::MainMenu), setup_menu_camera);
-    app.add_systems(OnExit(AppState::MainMenu), cleanup_menu);
+    app.add_systems(OnEnter(UIContextState::MainMenu), setup_menu_camera);
+    app.add_systems(OnExit(UIContextState::MainMenu), cleanup_menu);
     app.add_systems(
         Update,
         (

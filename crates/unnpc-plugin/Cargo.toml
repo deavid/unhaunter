@@ -18,6 +18,7 @@ unbehavior-core = { workspace = true }
 unclassic-mode-core = { workspace = true }
 unnpc-core = { workspace = true }
 uncommon-app-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 uninput-core = { workspace = true }
 unmapload-core = { workspace = true }
 unrender-std = { workspace = true }

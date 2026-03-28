@@ -7,12 +7,12 @@ use unbehavior_core::components::Door;
 use unbehavior_core::components::HidingSpot;
 use unbehavior_core::state::TileState;
 use unboard_core::resources::roomdb::RoomTopology;
-use uncommon_app_core::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::components::PlayerInputMapping;
 use uninput_core::states::InGameUiState;
 use unlocomotion_core::components::PlayerLocomotionState;
 use unmetrics_core::metrics::SendMetric;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
@@ -32,7 +32,7 @@ const PLAYER_ERRATIC_MAX_DISTANCE: f32 = 6.0;
 /// triggers a walkie-talkie warning. The threshold is higher for experienced players.
 fn check_player_stuck_at_start(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     room_topology: Res<RoomTopology>,
     player_query: Query<&Position, With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -40,7 +40,7 @@ fn check_player_stuck_at_start(
     player_profile: Res<Persistent<PlayerProfileData>>,
     mut initial_position: Local<Option<Position>>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         stuck_timer.reset();
         *initial_position = None;
         return;
@@ -94,7 +94,7 @@ fn check_player_stuck_at_start(
 /// triggers a walkie-talkie warning. Only applies to players with few completed missions.
 fn check_erratic_movement_early(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     room_topology: Res<RoomTopology>,
     player_query: Query<(&Position, &PlayerLocomotionState), With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -103,7 +103,7 @@ fn check_erratic_movement_early(
     player_profile: Res<Persistent<PlayerProfileData>>,
     mut initial_position: Local<Option<Position>>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         not_entered_timer.reset();
         *avg_position = None;
         *initial_position = None;
@@ -159,14 +159,14 @@ fn check_erratic_movement_early(
 /// triggers a walkie-talkie hint about door interaction.
 fn check_door_interaction_hesitation(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     room_topology: Res<RoomTopology>,
     player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     door_query: Query<(&Position, &Behavior), With<Door>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut hesitation_timer: Local<Stopwatch>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         hesitation_timer.reset();
         return;
     }
@@ -218,14 +218,14 @@ fn check_door_interaction_hesitation(
 /// and this state of attempting to grab while full persists.
 fn trigger_struggling_with_grab_drop(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<(&PlayerGear, &PlayerInputMapping), With<MainPlayer>>,
     mut full_and_failed_grab_timer: Local<Option<Stopwatch>>,
 ) {
     // 1. System Run Condition
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         *full_and_failed_grab_timer = None;
         return;
     }
@@ -285,13 +285,13 @@ fn trigger_struggling_with_grab_drop(
 /// without successfully hiding, indicating they're struggling because they're carrying a house item.
 fn trigger_struggling_with_hide_unhide(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<&PlayerInputMapping, (With<MainPlayer>, Without<Hiding>)>,
     mut hide_key_timer: Local<Option<Stopwatch>>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         *hide_key_timer = None;
         return;
     }
@@ -336,14 +336,14 @@ fn trigger_struggling_with_hide_unhide(
 /// This event will not fire if any ghost's rage is above 20% of its rage limit.
 fn trigger_player_stays_hidden_too_long(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     game_state: Res<State<InGameUiState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     hiding_query: Query<Entity, (With<Hiding>, Without<InTruck>)>,
     ghost_query: Query<&unghost_core::components::ghost_sprite::GhostSprite>,
     mut post_hunt_hidden_timer: Local<Option<f32>>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         *post_hunt_hidden_timer = None;
         return;
     }
@@ -389,14 +389,14 @@ fn trigger_player_stays_hidden_too_long(
 
 fn trigger_hunt_active_near_hiding_spot_no_hide(
     time: Res<Time>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&Position, Entity), Without<Hiding>>,
     hiding_spots: Query<&Position, With<HidingSpot>>,
     ghost_query: Query<&unghost_core::components::ghost_sprite::GhostSprite>,
     mut near_hiding_timer: Local<Option<f32>>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         *near_hiding_timer = None;
         return;
     }

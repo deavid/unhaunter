@@ -4,7 +4,8 @@ use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
 use unclassic_mode_core::components::GCameraArena;
-use uncommon_app_core::states::{AppState, SimulationState};
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 use unrender_std::components::game::GameSprite;
 
 fn cleanup_game(
@@ -33,5 +34,5 @@ fn cleanup_game(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnExit(AppState::InGame), cleanup_game);
+    app.add_systems(OnExit(UIContextState::InGame), cleanup_game);
 }

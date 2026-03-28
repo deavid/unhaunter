@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use uncommon_app_core::states::{AppState, SimulationState};
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 
 use crate::metrics;
 use unfog_core::resources::MiasmaConfig;
@@ -21,7 +22,10 @@ impl Plugin for UnhaunterFogCorePlugin {
             Update,
             crate::systems::update_miasma.run_if(in_state(SimulationState::Ready)),
         );
-        app.add_systems(OnExit(AppState::InGame), crate::systems::reset_miasma_grid);
+        app.add_systems(
+            OnExit(UIContextState::InGame),
+            crate::systems::reset_miasma_grid,
+        );
 
         metrics::register_all(app);
     }
@@ -37,7 +41,7 @@ impl Plugin for UnhaunterFogPlugin {
                 crate::systems::spawn_miasma,
                 crate::systems::animate_miasma_sprites,
             )
-                .run_if(in_state(AppState::InGame)),
+                .run_if(in_state(UIContextState::InGame)),
         );
     }
 }

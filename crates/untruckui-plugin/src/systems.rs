@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncommon_app_core::states::AppState;
 use uninput_core::states::InGameUiState;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::MainPlayer;
 use unsettings_core::audio::AudioSettings;
 use untruck_core::components::in_truck::InTruck;
@@ -283,7 +283,7 @@ fn update_end_mission_button_status(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnExit(AppState::InGame), cleanup);
+    app.add_systems(OnExit(UIContextState::InGame), cleanup);
     app.add_systems(OnEnter(InGameUiState::Truck), show_ui);
     app.add_systems(OnExit(InGameUiState::Truck), hide_ui);
     app.add_systems(Update, keyboard);

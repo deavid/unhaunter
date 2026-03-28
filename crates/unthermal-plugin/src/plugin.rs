@@ -1,7 +1,8 @@
 use crate::metrics;
 use crate::systems::*;
 use bevy::prelude::*;
-use uncommon_app_core::states::{AppState, SimulationState};
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 
 pub struct UnhaunterThermalPlugin;
 
@@ -18,7 +19,7 @@ impl Plugin for UnhaunterThermalPlugin {
                 init_thermal_grid_content.after(init_thermal_grid_allocation),
             ),
         )
-        .add_systems(OnExit(AppState::InGame), reset_thermal_grid);
+        .add_systems(OnExit(UIContextState::InGame), reset_thermal_grid);
 
         metrics::register_all(app);
     }

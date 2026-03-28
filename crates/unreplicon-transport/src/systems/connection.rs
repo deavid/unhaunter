@@ -1,6 +1,7 @@
 use std::net::{SocketAddr, UdpSocket};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::resources::TransportConfig;
 use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 use bevy::prelude::*;
 use bevy_renet::netcode::{
@@ -11,10 +12,9 @@ use bevy_renet::renet::ConnectionConfig;
 use bevy_renet::{RenetClient, RenetServer};
 use bevy_replicon::prelude::RepliconChannels;
 use bevy_replicon_renet::RenetChannelsExt;
-use uncommon_app_core::cli::{CliNetMode, CliOptions};
-use uncommon_app_core::roles::AuthorityRole;
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unprofile_core::profile::RuntimeInstallationId;
+use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LobbyPresenceRole};
 
 /// Unique identifier for this game's protocol version.
 /// Clients and servers with different values cannot connect to each other.
@@ -29,20 +29,21 @@ pub(super) fn app_setup(app: &mut App) {
         startup_transport_system.run_if(
             (resource_exists::<RuntimeInstallationId>.or(resource_exists::<AuthorityRole>))
                 .and(not(resource_exists::<NetcodeClientTransport>))
-                .and(not(resource_exists::<NetcodeServerTransport>)),
+                .and(not(resource_exists::<NetcodeServerTransport>))
+                .and(|config: Res<TransportConfig>| !matches!(*config, TransportConfig::Offline)),
         ),
     );
     app.add_systems(Update, monitor_renet_client_status);
     app.add_systems(Update, monitor_renet_server_clients);
     app.add_systems(
         Update,
-        handle_disconnect_request
-            .run_if(resource_exists::<uncommon_app_core::roles::LobbyPresenceRole>),
+        handle_disconnect_request.run_if(resource_exists::<LobbyPresenceRole>),
     );
+    app.add_systems(Update, handle_hub_connection_request);
 }
 
 fn handle_disconnect_request(
-    mut ev: MessageReader<uncommon_app_core::roles::DisconnectRequest>,
+    mut ev: MessageReader<DisconnectRequest>,
     mut commands: Commands,
     q_replicated: Query<Entity, With<bevy_replicon::prelude::Replicated>>,
 ) {
@@ -62,19 +63,107 @@ fn handle_disconnect_request(
         commands.entity(entity).despawn();
     }
 
-    commands.remove_resource::<uncommon_app_core::roles::LobbyPresenceRole>();
-    commands.insert_resource(uncommon_app_core::roles::AuthorityRole);
+    commands.remove_resource::<LobbyPresenceRole>();
+    commands.insert_resource(AuthorityRole);
+}
+
+fn handle_hub_connection_request(
+    mut ev: MessageReader<unreplicon_core::messages::HubConnectionRequested>,
+    mut commands: Commands,
+    channels: Res<RepliconChannels>,
+    installation_id: Option<Res<RuntimeInstallationId>>,
+) {
+    let Some(req) = ev.read().next() else {
+        return;
+    };
+
+    info!(
+        "handle_hub_connection_request: attempting to connect to Hub room at {}",
+        req.address
+    );
+
+    let Ok(current_time) = SystemTime::now().duration_since(UNIX_EPOCH) else {
+        error!("System clock is before UNIX epoch; cannot initialize network transport.");
+        return;
+    };
+
+    let connection_config = ConnectionConfig {
+        server_channels_config: channels.server_configs(),
+        client_channels_config: channels.client_configs(),
+        ..Default::default()
+    };
+
+    let server_addr: SocketAddr = match req.address.parse() {
+        Ok(a) => a,
+        Err(e) => {
+            error!("Invalid server address '{}': {e}", req.address);
+            return;
+        }
+    };
+
+    let installation_id =
+        installation_id.expect("RuntimeInstallationId must exist for clients joining via Hub");
+    let client_id = installation_id.0.as_u128() as u64;
+
+    let user_data = if let Some(t_str) = req.ticket.as_ref() {
+        let mut data = [0u8; bevy_renet::netcode::NETCODE_USER_DATA_BYTES];
+        if let Ok(decoded) = B64.decode(t_str.as_bytes()) {
+            if decoded.len() == data.len() {
+                data.copy_from_slice(&decoded);
+                Some(data)
+            } else {
+                error!("Received ticket of invalid length");
+                None
+            }
+        } else {
+            error!("Failed to parse Base64 ticket");
+            None
+        }
+    } else {
+        let id = installation_id.0;
+        let ticket = ConnectionTicket {
+            room_code: ":DIRECT".to_string(),
+            installation_id: id,
+            player_uuid: id,
+            exp: u64::MAX,
+        };
+        Some(encode_ticket(&ticket, "").unwrap_or([0u8; 256]))
+    };
+
+    let authentication = ClientAuthentication::Unsecure {
+        protocol_id: PROTOCOL_ID,
+        client_id,
+        server_addr,
+        user_data,
+    };
+    let socket = match UdpSocket::bind("0.0.0.0:0") {
+        Ok(s) => s,
+        Err(e) => {
+            error!("Failed to bind UDP socket for client: {e}");
+            return;
+        }
+    };
+    let transport = match NetcodeClientTransport::new(current_time, authentication, socket) {
+        Ok(t) => t,
+        Err(e) => {
+            error!("Failed to create netcode client transport: {e}");
+            return;
+        }
+    };
+
+    commands.insert_resource(RenetClient::new(connection_config));
+    commands.insert_resource(transport);
 }
 
 fn startup_transport_system(
-    cli: Res<CliOptions>,
+    transport_config: Res<TransportConfig>,
     channels: Res<RepliconChannels>,
     installation_id: Option<Res<RuntimeInstallationId>>,
     mut commands: Commands,
 ) {
     info!(
-        "startup_transport_system: initializing transport (net_mode={:?})",
-        cli.net_mode
+        "startup_transport_system: initializing transport (config={:?})",
+        transport_config
     );
     let Ok(current_time) = SystemTime::now().duration_since(UNIX_EPOCH) else {
         error!("System clock is before UNIX epoch; cannot initialize network transport.");
@@ -87,9 +176,9 @@ fn startup_transport_system(
         ..Default::default()
     };
 
-    match &cli.net_mode {
-        CliNetMode::Offline => {}
-        CliNetMode::PeerHost {
+    match &*transport_config {
+        TransportConfig::Offline => {}
+        TransportConfig::PeerHost {
             port,
             bind_addresses,
         } => {
@@ -133,13 +222,9 @@ fn startup_transport_system(
             };
             commands.insert_resource(RenetServer::new(connection_config));
             commands.insert_resource(transport);
-            if cli.dedicated {
-                info!("Replicon transport (Dedicated): listening on UDP port {port}");
-            } else {
-                info!("Replicon transport: listening on UDP port {port}");
-            }
+            info!("Replicon transport: listening on UDP port {port}");
         }
-        CliNetMode::Join { address, ticket } => {
+        TransportConfig::Join { address, ticket } => {
             let server_addr: SocketAddr = match address.parse() {
                 Ok(a) => a,
                 Err(e) => {

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use uninvestigation_core::ghost::GhostType;
 
 /// Defines the behavioral personality of a ghost type, including interaction rates
 /// for different actions at calm and angry states.
@@ -103,6 +104,39 @@ impl GhostPersonality {
             haunted_move_rate: (15.0, 35.0),
             lock_rate: (1.0, 5.0),
             trip_breaker_rate: (0.2, 1.5),
+        }
+    }
+}
+
+pub trait GhostTypePersonalityExt {
+    fn personality(&self) -> GhostPersonality;
+}
+
+impl GhostTypePersonalityExt for GhostType {
+    fn personality(&self) -> GhostPersonality {
+        use GhostType::*;
+
+        match self {
+            // Aggressive ghosts - high interaction rates, especially violent actions
+            BeanSidhe | Dullahan | Barghest | Ghoul | Afrit => GhostPersonality::aggressive(),
+
+            // Poltergeist-style ghosts - focused on object manipulation
+            Leprechaun | WillOWisp | Phooka | Dybbuk | Tengu | Kappa => {
+                GhostPersonality::poltergeist()
+            }
+
+            // Subtle, atmospheric ghosts - more creaks and atmosphere, less violence
+            Widow | BaobhanSith | Ghostlight | LaLlorona | GrayMan | LadyInWhite | GreyLady
+            | BrownLady | Fionnuala | Ailill | Cairbre | Oonagh | Mider | Orla | Finvarra
+            | Caoilte | Ceara | Muirgheas => GhostPersonality::subtle(),
+
+            // Calm ghosts - very low interaction rates overall
+            HobsTally | Curupira | Aswang | Maresca | OldNan | Morag | Domovoy => {
+                GhostPersonality::calm()
+            }
+
+            // Default to standard personality for any remaining ghosts
+            _ => GhostPersonality::default(),
         }
     }
 }

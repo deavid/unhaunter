@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use uncommon_app_core::states::AppState;
 use ungear_core::resources::looking_gear::LookingGear;
 use uninput_core::components::PlayerInputMapping;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::MainPlayer;
 
 fn system_update_looking_gear(
@@ -22,6 +22,6 @@ fn system_update_looking_gear(
 pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<LookingGear>().add_systems(
         Update,
-        system_update_looking_gear.run_if(in_state(AppState::InGame)),
+        system_update_looking_gear.run_if(in_state(UIContextState::InGame)),
     );
 }

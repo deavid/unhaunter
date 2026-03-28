@@ -108,10 +108,10 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         update_videocam_skeleton
-            .run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
+            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
     );
     app.add_systems(
         Update,
-        update_videocam_skin.run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
+        update_videocam_skin.run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
     );
 }

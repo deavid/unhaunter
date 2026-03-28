@@ -16,6 +16,7 @@ bevy_replicon = { workspace = true }
 bevy_replicon_renet = { workspace = true }
 bevy_renet = { workspace = true }
 uncommon-app-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 uuid = { workspace = true }
 
 unreplicon-core = { workspace = true }
@@ -30,5 +31,6 @@ unplayer-core = { workspace = true }
 unboard-core = { workspace = true }
 uninteraction-core = { workspace = true }
 unghost-core = { workspace = true }
+uninvestigation-core = { workspace = true }
 ungearitems-core = { workspace = true }
 ungear-core = { workspace = true }

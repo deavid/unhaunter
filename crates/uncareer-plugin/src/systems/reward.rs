@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use unboard_core::resources::board_topology::BoardTopology;
 use uncareer_core::events::{CareerDeathRecordedEvent, CareerRewardCalculatedEvent};
-use uncommon_app_core::roles::AuthorityRole;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unmission_core::events::MissionCompletedEvent;
 use unmission_core::summary::{ActiveMissionEvaluator, SummaryData};
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::events::DepositStakedEvent;
+use unreplicon_core::resources::AuthorityRole;
 use unreplicon_core::resources::LocalPlayer;
 use unvitals_core::events::PlayerDiedEvent;
 
@@ -35,7 +35,7 @@ pub(crate) fn calculate_and_emit_rewards(
     mut ev_reward: MessageWriter<CareerRewardCalculatedEvent>,
     mut sd: ResMut<SummaryData>,
     authority: Option<Res<AuthorityRole>>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
 ) {
     // If we are on the summary screen and NOT authority, we still want to run this
     // to populate SummaryData for the local UI, even if the server already did it.
@@ -78,7 +78,7 @@ pub(crate) fn calculate_and_emit_rewards(
 
         // 5. Emit the career event (only if we are the authority or if it's a local game)
         // In a networked game, the server (authority) computes the "truth".
-        if authority.is_some() || *app_state.get() == AppState::Summary {
+        if authority.is_some() || *app_state.get() == UIContextState::Summary {
             ev_reward.write(CareerRewardCalculatedEvent {
                 money_earned,
                 xp_awarded: sd.full_score,

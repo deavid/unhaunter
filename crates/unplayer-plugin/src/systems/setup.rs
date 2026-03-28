@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::AppRuleExt;
-use uncommon_app_core::states::AppState;
 use unlocomotion_core::components::PlayerLocomotionState;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite};
 use unspatial_core::direction::Direction;
 use untruck_core::components::in_truck::InTruck;
@@ -31,7 +31,7 @@ pub(crate) fn app_setup_core(app: &mut App) {
     app.configure_sets(
         Update,
         unplayer_core::authoritative::PlayerAuthoritativeLogicSet
-            .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>)
+            .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>)
             .after(uninput_core::PlayerInputSet),
     );
 
@@ -41,7 +41,7 @@ pub(crate) fn app_setup_core(app: &mut App) {
         Update,
         input::mouse_interaction::toggle_gear_from_use_intent
             .in_set(unplayer_core::authoritative::PlayerAuthoritativeLogicSet)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 }
 
@@ -50,12 +50,13 @@ pub(crate) fn app_setup_client(app: &mut App) {
 
     app.add_systems(
         Update,
-        styling::apply_player_tint_color.run_if(in_state(AppState::InGame)),
+        styling::apply_player_tint_color.run_if(in_state(UIContextState::InGame)),
     );
 
     // Walk target indicator system: shows visual feedback for click-to-move target
     app.add_systems(
         Update,
-        walk_target_indicator::update_move_target_indicator.run_if(in_state(AppState::InGame)),
+        walk_target_indicator::update_move_target_indicator
+            .run_if(in_state(UIContextState::InGame)),
     );
 }

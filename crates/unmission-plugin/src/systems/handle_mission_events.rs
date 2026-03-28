@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use unboard_core::resources::board_topology::BoardTopology;
-use uncommon_app_core::states::SimulationState;
 use unmission_core::events::MissionCompletedEvent;
 use unmission_core::summary::SummaryData;
 use unmission_core::types::MissionEvent;
+use unmission_core::types::SimulationState;
 use unreplicon_core::components::{LobbyInfo, ServerGamePhase};
 
 pub(crate) fn handle_mission_events(

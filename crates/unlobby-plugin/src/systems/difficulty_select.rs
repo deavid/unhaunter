@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
 use undifficulty_core::difficulty::Difficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unlobby_core::states::LobbyScreen;
@@ -10,6 +9,7 @@ use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::templates;
 use unreplicon_core::components::LobbyInfo;
 use unreplicon_core::messages::RequestSelectDifficulty;
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 
 #[derive(Component)]
 pub(crate) struct DifficultySelectUI;

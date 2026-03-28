@@ -14,7 +14,7 @@ pub(crate) fn toggle_gear_from_use_intent(
     >,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
     mut ga: AudioEmitter,
-    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
+    authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
 ) {
     let is_authority = authority.is_some();
 

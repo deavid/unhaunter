@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use uncommon_app_core::states::AppState;
-use unghost_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use unorchestrator_core::UIContextState;
 use untruck_core::assets::TruckAssets;
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
@@ -15,11 +15,11 @@ impl Plugin for UnhaunterTruckCorePlugin {
             .init_resource::<RepellentCraftTracker>();
 
         app.add_systems(
-            OnEnter(AppState::InGame),
+            OnEnter(UIContextState::InGame),
             super::systems::truck_ui_systems::init_repellent_tracker,
         );
         app.add_systems(
-            OnExit(AppState::InGame),
+            OnExit(UIContextState::InGame),
             super::systems::truck_ui_systems::reset_repellent_tracker,
         );
 
@@ -33,7 +33,7 @@ pub struct UnhaunterTruckPlugin;
 impl Plugin for UnhaunterTruckPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::EngineBoot).load_collection::<TruckAssets>(),
+            LoadingState::new(UIContextState::EngineBoot).load_collection::<TruckAssets>(),
         );
 
         super::hydration::app_setup(app);

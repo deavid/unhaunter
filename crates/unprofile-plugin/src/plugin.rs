@@ -1,18 +1,22 @@
 use bevy::prelude::*;
 use bevy_persistent::prelude::*;
 use std::path::Path;
-use uncommon_app_core::cli::CliOptions;
 use unprofile_core::profile::{PlayerProfileData, RuntimeInstallationId};
 use unreplicon_core::resources::LocalPlayer;
 use uuid::Uuid;
 
-use uncommon_app_core::states::AppState;
+use unorchestrator_core::UIContextState;
 use unprofile_core::events::DepositStakedEvent;
 
-pub struct UnhaunterProfilePlugin;
+pub struct UnhaunterProfilePlugin {
+    pub installation_id_file: Option<String>,
+}
 
 impl Plugin for UnhaunterProfilePlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(unprofile_core::config::ProfileConfig {
+            installation_id_file: self.installation_id_file.clone(),
+        });
         let config_dir_path = dirs::config_dir()
             .map(|native_config_dir| native_config_dir.join("unhaunter-game").join("config"))
             .unwrap_or_else(|| {
@@ -60,7 +64,7 @@ pub(crate) fn app_setup(app: &mut App) {
         )
             .chain(),
     )
-    .add_systems(OnEnter(AppState::InGame), emit_deposit_stake);
+    .add_systems(OnEnter(UIContextState::InGame), emit_deposit_stake);
 }
 
 fn emit_deposit_stake(
@@ -75,12 +79,12 @@ fn emit_deposit_stake(
 fn initialize_installation_id(
     mut commands: Commands,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
-    cli: Res<CliOptions>,
+    profile_config: Res<unprofile_core::config::ProfileConfig>,
 ) {
     let mut installation_id = None;
 
     #[cfg(not(target_arch = "wasm32"))]
-    if let Some(path_str) = &cli.installation_id_file {
+    if let Some(path_str) = &profile_config.installation_id_file {
         let path = Path::new(path_str);
         match std::fs::read_to_string(path) {
             Ok(content) => {
@@ -136,11 +140,6 @@ fn initialize_installation_id(
         } else {
             installation_id = Some(player_profile.installation_id);
         }
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    if cli.installation_id_file.is_some() {
-        warn!("installation-id-file is not supported on WASM");
     }
 
     commands.insert_resource(RuntimeInstallationId(installation_id.unwrap()));

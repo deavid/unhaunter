@@ -16,7 +16,7 @@ use crate::components::interaction::{
 
 /// Registers visual effects systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
-    use uncommon_app_core::roles::LocalPlayerRole;
+    use unreplicon_core::resources::LocalPlayerRole;
     app.add_systems(
         bevy::prelude::Update,
         (

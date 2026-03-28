@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use uncommon_app_core::states::AppState;
 use unnpc_core::events::NpcHelpEvent;
+use unorchestrator_core::UIContextState;
 
 use crate::assets::NpcAssets;
 use crate::npchelp;
@@ -19,7 +19,7 @@ pub struct UnhaunterNPCPlugin;
 impl Plugin for UnhaunterNPCPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::EngineBoot).load_collection::<NpcAssets>(),
+            LoadingState::new(UIContextState::EngineBoot).load_collection::<NpcAssets>(),
         );
         app.add_message::<NpcHelpEvent>();
         npchelp::app_setup(app);

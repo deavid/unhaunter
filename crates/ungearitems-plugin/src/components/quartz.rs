@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use unaudiospatial_core::emitter::AudioEmitter;
-use uncommon_app_core::roles::LocalPlayerRole;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::core::{GearSprite, StatusText};
@@ -11,6 +10,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::tags::GhostTag;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::ownership::LocallyOwned;
+use unreplicon_core::resources::LocalPlayerRole;
 use unspatial_core::position::Position;
 
 use crate::metrics;

@@ -4,9 +4,9 @@ use bevy::{
     prelude::*,
     window::{CursorOptions, PrimaryWindow},
 };
-use uncommon_app_core::states::AppState;
 use uninput_core::resources::MissionInputFocus;
 use uninput_core::resources::MouseVisibility;
+use unorchestrator_core::UIContextState;
 
 fn system_hide_mouse(
     mut cursor_options_query: Query<&mut CursorOptions, With<PrimaryWindow>>,
@@ -60,5 +60,5 @@ fn show_mouse_cursor_on_exit(
 pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<MouseVisibility>()
         .add_systems(Update, system_hide_mouse)
-        .add_systems(OnExit(AppState::InGame), show_mouse_cursor_on_exit);
+        .add_systems(OnExit(UIContextState::InGame), show_mouse_cursor_on_exit);
 }

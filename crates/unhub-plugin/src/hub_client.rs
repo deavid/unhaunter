@@ -1,10 +1,14 @@
 use bevy::prelude::*;
 use crossbeam_channel::{Receiver, Sender};
-use uncommon_app_core::cli::CliOptions;
 use unhub_client::protocol::{
     ChallengeRequest, ChallengeResponse, CreateRoomRequest, CreateRoomResponse, JoinRoomRequest,
     JoinRoomResponse,
 };
+
+#[derive(Resource, Debug, Clone, Default)]
+pub struct HubConfig {
+    pub hub_url: Option<String>,
+}
 
 #[derive(Resource)]
 pub struct HubClient {
@@ -35,11 +39,11 @@ pub struct HubStatus {
     pub is_pending: bool,
 }
 
-pub fn setup_hub_client(mut commands: Commands, cli: Res<CliOptions>) {
+pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
     let (tx_to_worker, rx_from_bevy) = crossbeam_channel::unbounded::<HubRequest>();
     let (tx_to_bevy, rx_from_worker) = crossbeam_channel::unbounded::<HubResponse>();
 
-    let hub_url = if let Some(url) = &cli.hub_url {
+    let hub_url = if let Some(url) = &hub_config.hub_url {
         url.clone()
     } else {
         warn!("Hub URL not configured, using default localhost:3000");

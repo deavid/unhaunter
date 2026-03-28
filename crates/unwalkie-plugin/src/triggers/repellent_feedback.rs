@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
-use uncommon_app_core::states::AppState;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
-use unghost_core::resources::ghost_guess::GhostGuess;
-use unghost_core::types::evidence::Evidence;
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::ghost::GhostType;
+use unorchestrator_core::UIContextState;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 
@@ -29,10 +29,10 @@ fn repellent_feedback_trigger_system(
     mut walkie_play: ResMut<WalkiePlay>,
     mut ev_force_discard: MessageWriter<ForceDiscardEvidenceEvent>,
     mut hints_given: ResMut<RepellentHintsGiven>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
 ) {
     // Reset hints when not in game
-    if *app_state.get() != AppState::InGame {
+    if *app_state.get() != UIContextState::InGame {
         if !hints_given.hints_given.is_empty() || !hints_given.ready_to_play.is_empty() {
             debug!("RepellentFeedback: Resetting hints given due to leaving game");
             hints_given.hints_given.clear();

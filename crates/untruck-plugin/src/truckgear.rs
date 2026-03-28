@@ -8,7 +8,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<TruckGear>();
     app.add_systems(
         Update,
-        initialize_truck_gear.run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
+        initialize_truck_gear.run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
     );
 }
 

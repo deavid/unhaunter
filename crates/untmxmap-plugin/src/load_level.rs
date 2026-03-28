@@ -20,7 +20,7 @@ fn load_level_handler(
     tsx_assets: Res<Assets<TsxSheet>>,
     upscale_idx: Res<UpscaleIndex>,
     video_settings: Res<Persistent<VideoSettings>>,
-    cli: Res<uncommon_app_core::cli::CliOptions>,
+    local_player: Option<Res<unreplicon_core::resources::LocalPlayerRole>>,
 ) {
     let mut ev_iter = ev.read();
     let Some(load_event) = ev_iter.next() else {
@@ -49,7 +49,7 @@ fn load_level_handler(
         &mut tilesetdb,
         &upscale_idx,
         &video_settings,
-        cli.is_headless(),
+        local_player.is_none(),
     );
 
     evw.write(LevelDataEvent {

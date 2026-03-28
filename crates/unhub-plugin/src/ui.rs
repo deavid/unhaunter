@@ -1,13 +1,13 @@
 use crate::hub_client::{HubClient, HubRequest, HubResponse, HubStatus};
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
-use uncommon_app_core::cli::{CliNetMode, CliOptions};
 use uncommon_app_core::platform::plt;
-use uncommon_app_core::states::AppState;
 use unmenu_core::assets::MenuAssets;
 use unmenu_core::components::{MCamera, MenuItemInteractive, MenuUI};
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
+use unorchestrator_core::UIContextState;
+use unreplicon_core::messages::HubConnectionRequested;
 use unreplicon_core::resources::RoomIdentification;
 
 #[derive(Resource, Default)]
@@ -96,7 +96,7 @@ pub fn setup_hub_ui(mut commands: Commands, ui_assets: Res<MenuAssets>) {
 pub fn hub_menu_event(
     mut click_events: MessageReader<MenuItemClicked>,
     mut escape_events: MessageReader<MenuEscapeEvent>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     menu_items: Query<(&HubMenuID, &MenuItemInteractive)>,
     hub_client: Res<HubClient>,
     mut hub_status: ResMut<HubStatus>,
@@ -104,12 +104,12 @@ pub fn hub_menu_event(
     room_code_input: Res<RoomCodeInput>,
 ) {
     if escape_events.read().next().is_some() {
-        next_app_state.set(AppState::MainMenu);
+        next_app_state.set(UIContextState::MainMenu);
         return;
     }
 
     for ev in click_events.read() {
-        if ev.state != AppState::Hub {
+        if ev.state != UIContextState::Hub {
             continue;
         }
 
@@ -148,7 +148,7 @@ pub fn hub_menu_event(
                     }
                 }
                 HubMenuID::Back => {
-                    next_app_state.set(AppState::MainMenu);
+                    next_app_state.set(UIContextState::MainMenu);
                 }
             }
         }
@@ -243,9 +243,9 @@ pub fn update_code_input(
 
 pub fn handle_hub_responses(
     mut hub_status: ResMut<HubStatus>,
-    mut next_app_state: ResMut<NextState<AppState>>,
-    mut cli: ResMut<CliOptions>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     mut room_ident: ResMut<RoomIdentification>,
+    mut hub_conn_events: MessageWriter<HubConnectionRequested>,
 ) {
     if let Some(resp) = hub_status.last_response.take() {
         match resp {
@@ -253,21 +253,23 @@ pub fn handle_hub_responses(
                 info!("Hub: Room created: {} at {}", data.code, data.addr);
                 room_ident.code = Some(data.code);
                 room_ident.secret = Some(data.secret);
-                cli.net_mode = CliNetMode::Join {
-                    address: data.addr.clone(),
-                    ticket: Some(data.ticket.clone()),
-                };
-                next_app_state.set(AppState::Lobby);
+                // Transport layer will listen to this event and handle connection setup instead.
+                hub_conn_events.write(HubConnectionRequested {
+                    address: data.addr,
+                    ticket: Some(data.ticket),
+                });
+                next_app_state.set(UIContextState::Lobby);
             }
             HubResponse::RoomJoined(data) => {
                 info!("Hub: Room joined: {} at {}", data.code, data.addr);
                 room_ident.code = Some(data.code);
                 room_ident.secret = Some(data.secret);
-                cli.net_mode = CliNetMode::Join {
-                    address: data.addr.clone(),
-                    ticket: Some(data.ticket.clone()),
-                };
-                next_app_state.set(AppState::Lobby);
+                // Transport layer will listen to this event and handle connection setup instead.
+                hub_conn_events.write(HubConnectionRequested {
+                    address: data.addr,
+                    ticket: Some(data.ticket),
+                });
+                next_app_state.set(UIContextState::Lobby);
             }
             HubResponse::Error(e) => {
                 error!("Hub error: {}", e);

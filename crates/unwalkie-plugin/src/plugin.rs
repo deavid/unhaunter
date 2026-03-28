@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unghost_core::resources::potential_id_timer::PotentialIDTimer;
+use uninvestigation_core::resources::potential_id_timer::PotentialIDTimer;
 use unwalkie_core::events::hint::OnScreenHintEvent;
 use unwalkie_core::events::walkie_types::WalkieTalkingEvent;
 use unwalkie_core::resources::WalkiePlay;

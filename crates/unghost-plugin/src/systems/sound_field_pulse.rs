@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::prelude::*;
 use uncommon_app_core::random_seed;
-use uncommon_app_core::roles::AuthorityRole;
 use unreplicon_core::messages::GhostSoundFieldBroadcast;
+use unreplicon_core::resources::AuthorityRole;
 use unsoundfield_core::components::SoundFieldSource;
 use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::position::Position;
@@ -101,7 +101,7 @@ pub(crate) fn handle_ghost_sound_field_broadcast(
 }
 
 pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
-    use uncommon_app_core::roles::is_pure_client;
+    use unreplicon_core::resources::is_pure_client;
     app.add_systems(bevy::prelude::Update, ghost_sound_field_pulse);
     app.add_systems(
         bevy::prelude::Update,

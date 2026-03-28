@@ -29,7 +29,8 @@ unreplicon-core = { workspace = true }
 unsettings-core = { workspace = true }
 unspatial-core = { workspace = true }
 untmxmap-core = { workspace = true }
-uncommon-app-core = { workspace = true }
+unmission-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 bevy_replicon = { workspace = true }

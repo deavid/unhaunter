@@ -1,11 +1,11 @@
-use crate::types::evidence::Evidence;
-use crate::types::ghost::types::GhostType;
 use bevy::prelude::*;
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::time::Duration;
 use uncommon_app_core::random_seed;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::ghost::GhostType;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 

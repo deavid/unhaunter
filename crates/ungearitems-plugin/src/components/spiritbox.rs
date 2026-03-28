@@ -17,16 +17,16 @@ use uninteraction_core::interaction::Toggleable;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::RngExt;
-use uncommon_app_core::roles::LocalPlayerRole;
 use uncommon_app_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 use unlight_core::resources::light_grid::LightGrid;
 use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
+use unreplicon_core::resources::LocalPlayerRole;
 use unspatial_core::position::Position;
 
 use crate::metrics;

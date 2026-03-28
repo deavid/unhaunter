@@ -18,24 +18,13 @@ pub struct UnhaunterRenderCorePlugin;
 
 impl Plugin for UnhaunterRenderCorePlugin {
     fn build(&self, app: &mut App) {
-        let cli = app
-            .world()
-            .get_resource::<uncommon_app_core::cli::CliOptions>();
-        let headless = cli.map(|c| c.dedicated).unwrap_or(false);
-
         crate::systems::lerp::app_setup(app);
         metrics::register_all(app);
 
         app.init_resource::<SpriteDB>();
 
-        if headless {
-            // In headless mode, register stub Assets<T> for the resources LoadLevelSystemParam requires
-            app.init_asset::<CustomMaterial1>();
-            app.init_asset::<Mesh>();
-            app.init_asset::<Image>();
-            app.init_asset::<TextureAtlasLayout>();
-            app.init_asset::<bevy::audio::AudioSource>();
-        }
+        app.init_asset::<CustomMaterial1>();
+        app.init_asset::<TextureAtlasLayout>();
     }
 }
 
@@ -44,15 +33,6 @@ pub struct UnhaunterRenderPlugin;
 
 impl Plugin for UnhaunterRenderPlugin {
     fn build(&self, app: &mut App) {
-        let cli = app
-            .world()
-            .get_resource::<uncommon_app_core::cli::CliOptions>();
-        let headless = cli.map(|c| c.dedicated).unwrap_or(false);
-
-        if headless {
-            return;
-        }
-
         crate::systems::animation::app_setup(app);
 
         app.add_systems(

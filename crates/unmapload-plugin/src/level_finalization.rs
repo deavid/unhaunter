@@ -12,10 +12,11 @@ use unbehavior_core::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::utils::rebuild_collision_data;
-use uncommon_app_core::states::{AppState, SimulationState};
 use uninput_core::states::InGameUiState;
 use uninteraction_core::events::{RoomChangedEvent, RoomStateSyncEvent};
 use unmission_core::events::LevelReadyEvent;
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::components::visuals::ResolutionFactor;
 use unspatial_core::boardposition::BoardPosition;
@@ -42,7 +43,7 @@ fn after_level_ready(
     mut ev_room: MessageWriter<RoomChangedEvent>,
     mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
     room_topology: Res<RoomTopology>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     mut next_game_state: ResMut<NextState<InGameUiState>>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
 ) {
@@ -56,7 +57,7 @@ fn after_level_ready(
     let open_van = ev.read().next().unwrap().open_van;
 
     // Switch to in-game state
-    next_app_state.set(AppState::InGame);
+    next_app_state.set(UIContextState::InGame);
     next_game_state.set(InGameUiState::Running);
 
     // Send synchronization events
@@ -200,10 +201,18 @@ fn rebuild_collision_on_level_ready(
 pub(crate) fn app_setup(app: &mut App) {
     use unmission_core::events::LevelReadyEvent;
 
-    app.add_systems(Update, process_pre_meshes).add_systems(
+    // Note: process_pre_meshes is registered in app_setup_render_only()
+    // which is only called for non-headless clients
+    app.add_systems(
         Update,
         (rebuild_collision_on_level_ready, after_level_ready)
             .chain()
             .run_if(bevy::prelude::on_message::<LevelReadyEvent>),
     );
+}
+
+/// Register rendering-only systems for level finalization.
+/// This should only be called on clients (not headless dedicated server).
+pub(crate) fn app_setup_render_only(app: &mut App) {
+    app.add_systems(Update, process_pre_meshes);
 }

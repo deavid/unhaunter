@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::assets::GameUiAssets;
 use crate::resources::hint_ui_state::{HintAnimationPhase, HintUiState};
 use uncommon_app_core::platform::plt;
-use uncommon_app_core::states::AppState;
+use unorchestrator_core::UIContextState;
 use unwalkie_core::events::hint::OnScreenHintEvent;
 
 #[derive(Component, Debug, Default)]
@@ -38,12 +38,12 @@ fn ease_in_quad(t: f32) -> f32 {
 
 pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<HintUiState>()
-        .add_systems(OnEnter(AppState::InGame), setup_hint_ui_system)
+        .add_systems(OnEnter(UIContextState::InGame), setup_hint_ui_system)
         .add_systems(
             Update,
-            hint_ui_event_and_animation_system.run_if(in_state(AppState::InGame)),
+            hint_ui_event_and_animation_system.run_if(in_state(UIContextState::InGame)),
         )
-        .add_systems(OnExit(AppState::InGame), cleanup_hint_ui_system);
+        .add_systems(OnExit(UIContextState::InGame), cleanup_hint_ui_system);
 }
 
 fn setup_hint_ui_system(mut commands: Commands, ui_assets: Res<GameUiAssets>) {

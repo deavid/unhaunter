@@ -124,7 +124,7 @@ pub(crate) fn process_and_spawn_tile(
     }
 
     // Create transparent material initially (will fade in later)
-    if !p.cli.is_headless() {
+    if p.local_player.is_some() {
         let mut mat = p
             .materials1
             .get(&b.material)

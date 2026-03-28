@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
-use uncommon_app_core::states::AppState;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unlight_core::resources::light_grid::LightGrid;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 
@@ -25,11 +25,11 @@ fn trigger_darkness_level_system(
     light_grid: If<Res<LightGrid>>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     mut stopwatch: Local<Stopwatch>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         stopwatch.reset();
         return;
     }
@@ -59,12 +59,12 @@ fn trigger_breach_showcase(
     time: Res<Time>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_breach: Query<&Position, With<GhostBreach>>,
     truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         return;
     }
 
@@ -101,12 +101,12 @@ fn trigger_ghost_showcase(
     time: Res<Time>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_ghost: Query<&Position, With<unghost_core::components::ghost_sprite::GhostSprite>>,
     truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         return;
     }
 
@@ -142,11 +142,11 @@ fn trigger_room_lights_on_gear_needs_dark(
     light_grid: If<Res<LightGrid>>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     qp: Query<(&Position, &PlayerSprite, &PlayerGear), With<MainPlayer>>,
     q_gear: Query<(&Toggleable, &GearKind)>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         return;
     }
     for (player_pos, _player, player_gear) in qp.iter() {
@@ -182,7 +182,7 @@ fn trigger_room_lights_on_gear_needs_dark(
 fn trigger_thermometer_non_freezing_fixation(
     time: Res<Time>,
     mut walkie_play: ResMut<WalkiePlay>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     mut stopwatch: Local<Stopwatch>,
     mut trigger_count: Local<u32>,
     qp: Query<(&PlayerGear, &PlayerSprite)>,
@@ -194,7 +194,7 @@ fn trigger_thermometer_non_freezing_fixation(
     if *trigger_count >= MAX_TRIGGERS {
         return;
     }
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         stopwatch.reset();
         return;
     }
@@ -233,11 +233,11 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            trigger_darkness_level_system.run_if(in_state(AppState::InGame)),
-            trigger_breach_showcase.run_if(in_state(AppState::InGame)),
-            trigger_ghost_showcase.run_if(in_state(AppState::InGame)),
-            trigger_room_lights_on_gear_needs_dark.run_if(in_state(AppState::InGame)),
-            trigger_thermometer_non_freezing_fixation.run_if(in_state(AppState::InGame)),
+            trigger_darkness_level_system.run_if(in_state(UIContextState::InGame)),
+            trigger_breach_showcase.run_if(in_state(UIContextState::InGame)),
+            trigger_ghost_showcase.run_if(in_state(UIContextState::InGame)),
+            trigger_room_lights_on_gear_needs_dark.run_if(in_state(UIContextState::InGame)),
+            trigger_thermometer_non_freezing_fixation.run_if(in_state(UIContextState::InGame)),
         ),
     );
 }

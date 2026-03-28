@@ -9,12 +9,12 @@ use crate::menus::{
 };
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncommon_app_core::states::AppState;
 use unmenu_core::assets::MenuAssets;
 use unmenu_core::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
 use unmenu_core::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::templates;
+use unorchestrator_core::UIContextState;
 use unsettings_core::audio::AudioSettings;
 use unsettings_core::game::GameplaySettings;
 use unsettings_core::video::VideoSettings;
@@ -36,7 +36,7 @@ pub(crate) fn app_setup(app: &mut App) {
             menu_integration_system,
             handle_escape,
         )
-            .run_if(in_state(AppState::SettingsMenu)),
+            .run_if(in_state(UIContextState::SettingsMenu)),
     )
     .add_message::<MenuEvent>()
     .add_message::<MenuEvBack>()
@@ -126,7 +126,7 @@ fn menu_routing_system(
 fn menu_back_event(
     mut events: MessageReader<MenuEvBack>,
     mut next_state: ResMut<NextState<SettingsState>>,
-    mut app_next_state: ResMut<NextState<AppState>>,
+    mut app_next_state: ResMut<NextState<UIContextState>>,
     settings_state: Res<State<SettingsState>>,
     mut ev_menu: MessageWriter<MenuSettingClassSelected>,
     mut commands: Commands,
@@ -136,7 +136,7 @@ fn menu_back_event(
     for _ev in events.read() {
         match settings_state.get() {
             SettingsState::Lv1ClassSelection => {
-                app_next_state.set(AppState::MainMenu);
+                app_next_state.set(UIContextState::MainMenu);
                 next_state.set(SettingsState::default());
             }
             SettingsState::Lv2List => {
@@ -627,7 +627,7 @@ fn menu_integration_system(
         }
 
         for click_event in menu_clicks.read() {
-            if click_event.state != AppState::SettingsMenu {
+            if click_event.state != UIContextState::SettingsMenu {
                 warn!(
                     "MenuItemClicked event received in state: {:?}",
                     click_event.state

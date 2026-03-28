@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 use std::io::{BufRead, Write};
-use uncommon_app_core::cli::{CliNetMode, CliOptions};
 use unhub_client::protocol::{DedicatedToProcMan, ProcManToDedicated};
 
-use crate::resources::{ProcManChannel, RoomAuth};
+use crate::resources::{ProcManChannel, ProcManConfig, RoomAuth};
 
 pub(super) fn app_setup(app: &mut App) {
     app.init_resource::<RoomAuth>();
@@ -11,8 +10,8 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_procman_system);
 }
 
-fn setup_procman_system(mut commands: Commands, cli: Res<CliOptions>) {
-    if cli.procman_channel.as_deref() != Some("stdin") {
+fn setup_procman_system(mut commands: Commands, procman_config: Res<ProcManConfig>) {
+    if procman_config.procman_channel.as_deref() != Some("stdin") {
         return;
     }
 
@@ -38,9 +37,9 @@ fn setup_procman_system(mut commands: Commands, cli: Res<CliOptions>) {
         }
     });
 
-    if let CliNetMode::PeerHost { port, .. } = cli.net_mode {
-        let _ = tx_to_procman.send(DedicatedToProcMan::Ready { port });
-    }
+    let _ = tx_to_procman.send(DedicatedToProcMan::Ready {
+        port: procman_config.port,
+    });
 
     commands.insert_resource(ProcManChannel {
         tx: tx_to_procman,

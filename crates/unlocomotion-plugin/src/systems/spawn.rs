@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use unbehavior_core::components::Movable;
-use uncommon_app_core::roles::AuthorityRole;
-use uncommon_app_core::states::AppState;
 use unlocomotion_core::components::PlayerLocomotionState;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::PlayerSprite;
+use unreplicon_core::resources::AuthorityRole;
 use unspatial_core::direction::Direction;
 
 /// Authority: inserts PlayerLocomotionState, Direction, and Movable on any player entity
@@ -27,6 +27,6 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         hydrate_player_locomotion
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(AppState::InGame)),
+            .run_if(in_state(UIContextState::InGame)),
     );
 }

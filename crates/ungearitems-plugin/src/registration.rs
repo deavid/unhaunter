@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::AppRuleExt;
 use unbehavior_core::components::{Collision, InteractableByGhost};
-use uncommon_app_core::roles::AuthorityRole;
 use ungear_core::components::core::{
     Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
     PerceivedClarity, StatusText,
@@ -16,10 +15,11 @@ use ungearitems_core::components::recorder::Recorder;
 use ungearitems_core::components::sage::{SageBundleData, SageBundleSkin};
 use ungearitems_core::components::salt::{SaltData, SaltPile};
 use ungearitems_core::components::thermometer::Thermometer;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::components::LightEmitter;
 use unlight_core::types::light_type::LightType;
+use unreplicon_core::resources::AuthorityRole;
 
 use crate::components::compass::Compass;
 use crate::components::emfmeter::EMFMeter;

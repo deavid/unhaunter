@@ -1,16 +1,16 @@
 use crate::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
-use uncommon_app_core::roles::AuthorityRole;
-use uncommon_app_core::states::AppState;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::types::gear::equipment::Hand;
 use ungear_core::ui::EvidenceUI;
-use unghost_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use uninput_core::components::PlayerInputMapping;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unreplicon_core::messages::RequestJournalEvidenceToggle;
+use unreplicon_core::resources::AuthorityRole;
 use untruck_core::types::truck_button::TruckButtonState;
 
 pub(crate) fn update_evidence_ui(
@@ -110,7 +110,10 @@ pub(crate) fn keyboard_evidence(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         FixedUpdate,
-        update_evidence_ui.run_if(in_state(AppState::InGame)),
+        update_evidence_ui.run_if(in_state(UIContextState::InGame)),
     )
-    .add_systems(Update, keyboard_evidence.run_if(in_state(AppState::InGame)));
+    .add_systems(
+        Update,
+        keyboard_evidence.run_if(in_state(UIContextState::InGame)),
+    );
 }

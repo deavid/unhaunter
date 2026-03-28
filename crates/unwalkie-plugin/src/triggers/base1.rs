@@ -1,10 +1,10 @@
 use bevy::{prelude::*, time::Stopwatch};
 use unboard_core::resources::roomdb::RoomTopology;
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::MainPlayer;
 use unspatial_core::position::Position;
 use unwalkie_core::events::walkie_types::WalkieEvent;
@@ -18,10 +18,10 @@ fn player_forgot_equipment(
     qp: Query<(&Position, &PlayerGear), With<MainPlayer>>,
     room_topology: Res<RoomTopology>,
     mut stopwatch: Local<Stopwatch>,
-    app_state: Res<State<AppState>>,
+    app_state: Res<State<UIContextState>>,
     time: Res<Time>,
 ) {
-    if app_state.get() != &AppState::InGame {
+    if app_state.get() != &UIContextState::InGame {
         // We want to play this only when the player is in the game.
         stopwatch.reset();
         return;

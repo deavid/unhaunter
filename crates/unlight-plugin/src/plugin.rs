@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use unboard_core::BoardUpdateSet;
-use uncommon_app_core::states::{AppState, SimulationState};
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 
 use unlight_core::resources::light_grid::LightGrid;
 
@@ -29,7 +30,7 @@ impl Plugin for UnhaunterLightCorePlugin {
                 ),
             )
             .add_systems(
-                OnExit(AppState::InGame),
+                OnExit(UIContextState::InGame),
                 lighting_sim::systems::reset_light_grid,
             );
         metrics::register_all(app);
@@ -52,7 +53,7 @@ impl Plugin for UnhaunterLightPlugin {
             )
                 .chain()
                 .after(BoardUpdateSet::Lighting)
-                .run_if(in_state(AppState::InGame).and(in_state(SimulationState::Ready))),
+                .run_if(in_state(UIContextState::InGame).and(in_state(SimulationState::Ready))),
         );
         maplight::systems::app_setup(app);
     }

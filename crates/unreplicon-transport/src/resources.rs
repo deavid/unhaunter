@@ -2,9 +2,26 @@ use bevy::prelude::*;
 use crossbeam_channel::{Receiver, Sender};
 use unhub_client::protocol::{DedicatedToProcMan, ProcManToDedicated};
 
+#[derive(Resource, Debug, Clone)]
+pub enum TransportConfig {
+    Offline,
+    PeerHost {
+        port: u16,
+        bind_addresses: Vec<String>,
+    },
+    Join {
+        address: String,
+        ticket: Option<String>,
+    },
+}
+
+#[derive(Resource, Debug, Clone, Default)]
+pub struct ProcManConfig {
+    pub procman_channel: Option<String>,
+    pub port: u16,
+}
+
 /// Bidirectional channel to the process manager over stdin/stdout.
-///
-/// Only present when `CliOptions::procman_channel == Some("stdin")`.
 #[derive(Resource)]
 pub struct ProcManChannel {
     /// Sender for outgoing messages to procman (player events, state sync).

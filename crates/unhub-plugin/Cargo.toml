@@ -11,6 +11,7 @@ authors.workspace = true
 bevy = { workspace = true }
 unhub-client = { workspace = true }
 uncommon-app-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unmenu-core = { workspace = true }
 

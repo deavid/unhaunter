@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
+use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unmetrics_core::metrics::SendMetric;
 
 use crate::metrics;
@@ -61,7 +61,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         decay_evidence_clarity_system.run_if(bevy::prelude::in_state(
-            uncommon_app_core::states::AppState::InGame,
+            unorchestrator_core::UIContextState::InGame,
         )),
     );
 }

@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungearitems_core::events::RequestCraftRepellent;
-use unghost_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use uninput_core::states::InGameUiState;
 use unmission_core::resources::MissionEndRequested;
 use unmission_core::types::MissionEvent;

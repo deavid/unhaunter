@@ -5,7 +5,7 @@ use uncareer_core::grade::Grade;
 use uncareer_core::progression::ProgressionData;
 use uncareer_core::statistics::{MapStatisticsData, StatisticsData};
 use undifficulty_core::difficulty::Difficulty;
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]

@@ -21,6 +21,7 @@ unplayer-core = { workspace = true }
 unsettings-core = { workspace = true }
 unvitals-core = { workspace = true }
 unmission-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
 bevy-persistent = { workspace = true }

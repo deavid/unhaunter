@@ -62,7 +62,7 @@ pub(crate) fn dispatch_interact_intent(
     mut ev_interaction_req: MessageWriter<InteractionRequestMessage>,
     mut ev_sound: MessageWriter<SoundEvent>,
     mut ev_npc: Option<MessageWriter<NpcHelpEvent>>,
-    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
+    authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
 ) {
     for (player_entity, pos, player_input, hiding, in_truck, spectating) in players.iter() {
         if in_truck.is_some() || hiding.is_some() || spectating.is_some() {
@@ -134,7 +134,7 @@ pub(crate) fn dispatch_interact_intent(
 
 pub(crate) fn apply_movement_intent(
     time: Res<Time>,
-    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
+    authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
     mut players: Query<(
         &mut Position,
         &mut Direction,

@@ -13,6 +13,7 @@ workspace = true
 [dependencies]
 
 undifficulty-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unmenu-core = { workspace = true }
 unmaphub-core = { workspace = true }

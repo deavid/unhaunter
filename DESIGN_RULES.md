@@ -104,3 +104,50 @@ When these laws are followed:
 When a proposed change requires you to think "but this only works because X runs first" or "this is fine because the
 caller guarantees Y" — stop. That thought is the signal of a contract violation. Find the architectural boundary that
 makes the assumption explicit instead.
+
+---
+
+## CliOptions Access Pattern
+
+Configuration decisions made at startup (command-line flags, config files) must be **applied once** at initialization
+and **never queried repeatedly** during gameplay. This is an extension of **LAW 5: Separation of Meanings** and the
+**Tell, Don't Ask** principle.
+
+### Allowed Read Locations
+
+`CliOptions` should **ONLY** be read in these narrow contexts:
+
+1. **Startup role insertion** ([unreplicon-plugin/src/systems/roles.rs](crates/unreplicon-plugin/src/systems/roles.rs))
+   — Insert stackable role resources (`AuthorityRole`, `LocalPlayerRole`, etc.) based on launch mode.
+2. **Transport layer setup** ([unreplicon-transport](crates/unreplicon-transport)) — Configure network transports,
+   socket binding, and connection parameters.
+3. **Plugin build phases** ([uncommon-app-core](crates/uncommon-app-core) resource registration, plugin initialization)
+   — Register app resources and configure headless vs. windowed renderer initialization.
+4. **Entry points** (`app.rs`, binaries) — High-level orchestration at application startup.
+
+### Forbidden
+
+- **NEVER** read `CliOptions` in domain systems, UI handlers, or during frame updates.
+- **NEVER** query it conditionally in message handlers or observers.
+- **NEVER** use `if let Some(cli) = ...` inside gameplay or UI logic.
+
+### Derived Signals: Use the Canonical Resources
+
+If a system needs to know something derived from configuration, use the canonical signal resources:
+
+- **"Is the game headless?"** → Query `Option<Res<LocalPlayerRole>>` (it being absent).
+- **"What is the current role?"** → Query `AuthorityRole`, `LocalPlayerRole` resources (set during startup role
+  insertion).
+- **"Is network enabled?"** → Query `AuthorityRole` or `LocalPlayerRole` to determine if authority/client are distinct.
+
+These resources are **computed once** from `CliOptions` and then live as the source of truth for the rest of the frame.
+
+### Rationale
+
+This enforces **Tell, Don't Ask** at the boundaries: `CliOptions` tells the startup systems what to do; systems ask the
+derived resources what capabilities exist right now. It prevents:
+
+- Silent mismatches between runtime flags and transient state
+- Repeated re-interpretation of configuration in unrelated domains
+- Implicit contracts where "config was read earlier, so this system assumes X"
+- Headless/client mode checks scattered throughout unrelated systems, making refactoring brittle

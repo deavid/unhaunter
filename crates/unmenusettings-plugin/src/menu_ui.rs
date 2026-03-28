@@ -1,10 +1,10 @@
 use crate::components::*;
 use crate::menus::MenuSettingsLevel1;
 use bevy::prelude::*;
-use uncommon_app_core::states::AppState;
 use unmenu_core::assets::MenuAssets;
 use unmenu_core::components::{MenuMouseTracker, MenuRoot};
 use unmenu_core::templates;
+use unorchestrator_core::UIContextState;
 
 fn setup_ui_cam(mut commands: Commands) {
     commands.spawn(Camera2d).insert(SCamera);
@@ -156,7 +156,7 @@ fn cleanup(
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
-        OnEnter(AppState::SettingsMenu),
+        OnEnter(UIContextState::SettingsMenu),
         (
             setup_ui_cam,
             setup_ui_main_cat_system,
@@ -168,5 +168,5 @@ pub(crate) fn app_setup(app: &mut App) {
         )
             .chain(),
     )
-    .add_systems(OnExit(AppState::SettingsMenu), cleanup);
+    .add_systems(OnExit(UIContextState::SettingsMenu), cleanup);
 }

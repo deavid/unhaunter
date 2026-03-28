@@ -1,5 +1,5 @@
-use crate::types::ghost::types::GhostType;
 use bevy::prelude::*;
+use uninvestigation_core::ghost::GhostType;
 use unspatial_core::direction::Direction;
 
 #[derive(Component, Debug, Clone, PartialEq)]

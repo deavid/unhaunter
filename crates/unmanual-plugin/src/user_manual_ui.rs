@@ -2,9 +2,9 @@ use crate::manual_logic::draw_manual_page;
 use crate::resources::manual::{CurrentManualPage, Manual};
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt::FONT_SCALE;
-use uncommon_app_core::states::AppState;
 use unmanual_core::assets::ManualAssets;
 use unmenu_core::assets::MenuAssets;
+use unorchestrator_core::UIContextState;
 
 #[derive(Component)]
 pub(crate) struct ManualCamera;
@@ -234,7 +234,7 @@ fn handle_manual_navigation(
     mut ev_navigation: MessageReader<ManualNavigationEvent>,
     mut current_manual_page: ResMut<CurrentManualPage>,
     manuals: Res<Manual>,
-    mut next_state: ResMut<NextState<AppState>>,
+    mut next_state: ResMut<NextState<UIContextState>>,
 ) {
     for ev in ev_navigation.read() {
         match ev {
@@ -261,7 +261,7 @@ fn handle_manual_navigation(
                 }
             }
 
-            ManualNavigationEvent::Close => next_state.set(AppState::MainMenu),
+            ManualNavigationEvent::Close => next_state.set(UIContextState::MainMenu),
         }
     }
 }
@@ -311,8 +311,8 @@ pub(crate) fn cleanup(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::UserManual), setup)
-        .add_systems(OnExit(AppState::UserManual), cleanup)
+    app.add_systems(OnEnter(UIContextState::UserManual), setup)
+        .add_systems(OnExit(UIContextState::UserManual), cleanup)
         .add_systems(
             Update,
             (
@@ -322,7 +322,7 @@ pub(crate) fn app_setup(app: &mut App) {
                 redraw_manual_ui_system,
             )
                 .chain()
-                .run_if(in_state(AppState::UserManual)),
+                .run_if(in_state(UIContextState::UserManual)),
         ) // Add event handler system
         .add_message::<ManualNavigationEvent>() // Register the event
         .insert_resource(CurrentManualPage::default());

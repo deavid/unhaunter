@@ -3,8 +3,6 @@ use std::str::FromStr;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
-use uncommon_app_core::states::{AppState, SimulationState};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
@@ -16,11 +14,14 @@ use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::components::MenuUI;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 use unplayer_core::colors::player_color;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::components::visuals::AlphaModulator;
 use unreplicon_core::components::{LobbyInfo, SelectedMission};
 use unreplicon_core::messages::{RequestAbortMission, RequestStartMission};
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unreplicon_core::resources::{CurrentMapSeed, LocalPlayer, MissionAutoJoinArmed};
 use untmxmap_core::resources::maps::Maps;
 
@@ -291,7 +292,7 @@ pub(crate) fn cleanup_ui(mut commands: Commands, q: Query<Entity, With<LobbyMain
 pub(crate) fn handle_clicks(
     mut ev_clicks: If<MessageReader<MenuItemClicked>>,
     mut ev_escape: If<MessageReader<MenuEscapeEvent>>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     mut next_lobby_state: ResMut<NextState<LobbyScreen>>,
     q_actions: Query<(
         &unmenu_core::components::MenuItemInteractive,
@@ -322,11 +323,11 @@ pub(crate) fn handle_clicks(
     }
 
     if ev_escape.read().next().is_some() {
-        next_app_state.set(AppState::MainMenu);
+        next_app_state.set(UIContextState::MainMenu);
     }
 
     for ev in ev_clicks.read() {
-        if ev.state != AppState::Lobby {
+        if ev.state != UIContextState::Lobby {
             continue;
         }
 
@@ -366,7 +367,7 @@ pub(crate) fn handle_clicks(
                         ev_load.write(LoadLevelEvent {
                             map_filepath: mission.map_path.clone(),
                         });
-                        next_app_state.set(AppState::MissionLoading);
+                        next_app_state.set(UIContextState::MissionLoading);
                     }
                 } else if is_room_owner {
                     // Owner: request the server to start a new mission.
@@ -391,7 +392,7 @@ pub(crate) fn handle_clicks(
                 }
             }
             Some(LobbyMenuAction::ExitLobby) => {
-                next_app_state.set(AppState::MainMenu);
+                next_app_state.set(UIContextState::MainMenu);
             }
             None => {}
         }

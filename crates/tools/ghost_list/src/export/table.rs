@@ -1,4 +1,4 @@
-use unghost_core::types::ghost::types::GhostType;
+use uninvestigation_core::ghost::GhostType;
 
 pub fn show_ghost_table(ghosts: &[GhostType]) {
     println!("| Ghost Type | Evidences |");

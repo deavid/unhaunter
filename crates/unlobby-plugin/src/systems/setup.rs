@@ -1,8 +1,8 @@
 use crate::systems::{difficulty_select, lobby_main, map_select};
 use bevy::prelude::*;
-use uncommon_app_core::states::AppState;
 use unlobby_core::states::LobbyScreen;
 use unmenu_core::components::MenuUI;
+use unorchestrator_core::UIContextState;
 
 #[derive(Component)]
 struct LobbyCamera;
@@ -13,8 +13,8 @@ pub(crate) fn app_setup(app: &mut App) {
         .init_resource::<map_select::StateEntryTimer>()
         .init_resource::<difficulty_select::StateEntryTimer>()
         .init_resource::<lobby_main::StateEntryTimer>()
-        .add_systems(OnEnter(AppState::Lobby), enter_lobby)
-        .add_systems(OnExit(AppState::Lobby), exit_lobby)
+        .add_systems(OnEnter(UIContextState::Lobby), enter_lobby)
+        .add_systems(OnExit(UIContextState::Lobby), exit_lobby)
         // LobbyMain
         .add_systems(OnEnter(LobbyScreen::Main), lobby_main::setup_ui)
         .add_systems(OnExit(LobbyScreen::Main), lobby_main::cleanup_ui)
@@ -25,7 +25,7 @@ pub(crate) fn app_setup(app: &mut App) {
                 lobby_main::update_display,
                 lobby_main::update_deployment_status_ui,
             )
-                .run_if(in_state(AppState::Lobby).and(in_state(LobbyScreen::Main))),
+                .run_if(in_state(UIContextState::Lobby).and(in_state(LobbyScreen::Main))),
         )
         // Map Selection
         .add_systems(OnEnter(LobbyScreen::MapSelection), map_select::setup_ui)
@@ -33,7 +33,7 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_systems(
             Update,
             (map_select::handle_input, map_select::update_preview)
-                .run_if(in_state(AppState::Lobby).and(in_state(LobbyScreen::MapSelection))),
+                .run_if(in_state(UIContextState::Lobby).and(in_state(LobbyScreen::MapSelection))),
         )
         // Difficulty Selection
         .add_systems(
@@ -50,7 +50,9 @@ pub(crate) fn app_setup(app: &mut App) {
                 difficulty_select::handle_input,
                 difficulty_select::update_description,
             )
-                .run_if(in_state(AppState::Lobby).and(in_state(LobbyScreen::DifficultySelection))),
+                .run_if(
+                    in_state(UIContextState::Lobby).and(in_state(LobbyScreen::DifficultySelection)),
+                ),
         );
 }
 

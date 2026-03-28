@@ -6,12 +6,12 @@ use bevy_persistent::Persistent;
 use unbehavior_core::behavior::Behavior;
 use unclassic_mode_core::colors;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncommon_app_core::states::AppState;
 use ungear_core::assets::GearAssets;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::ui::EvidenceUI;
 use uninput_core::states::InGameUiState;
 use unmission_core::resources::MissionConcludingCinematic;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
 use unsettings_core::game::GameplaySettings;
 use unvitals_core::components::PlayerVitals;
@@ -498,8 +498,8 @@ fn toggle_held_object_ui(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::InGame), setup_ui)
-        .add_systems(OnExit(AppState::InGame), cleanup)
+    app.add_systems(OnEnter(UIContextState::InGame), setup_ui)
+        .add_systems(OnExit(UIContextState::InGame), cleanup)
         .add_systems(OnEnter(InGameUiState::Running), resume)
         .add_systems(OnExit(InGameUiState::Running), pause)
         .add_systems(
@@ -510,5 +510,8 @@ pub(crate) fn app_setup(app: &mut App) {
             )
                 .run_if(in_state(InGameUiState::Running)),
         )
-        .add_systems(Update, tick_mission_fade.run_if(in_state(AppState::InGame)));
+        .add_systems(
+            Update,
+            tick_mission_fade.run_if(in_state(UIContextState::InGame)),
+        );
 }

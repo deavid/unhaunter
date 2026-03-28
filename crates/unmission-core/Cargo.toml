@@ -12,7 +12,7 @@ workspace = true
 
 [dependencies]
 uncareer-core = { workspace = true }
-unghost-core = { workspace = true }
+uninvestigation-core = { workspace = true }
 undifficulty-core = { workspace = true }
 
 bevy = { workspace = true }

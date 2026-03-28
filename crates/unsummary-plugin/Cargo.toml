@@ -17,12 +17,13 @@ bevy_asset_loader = { workspace = true }
 
 undifficulty-core = { workspace = true }
 untmxmap-core = { workspace = true }
+unreplicon-core = { workspace = true }
+unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unboard-core = { workspace = true }
 uncareer-core = { workspace = true }
 unmission-core = { workspace = true }
-
 unplayer-core = { workspace = true }
 unghost-core = { workspace = true }
+uninvestigation-core = { workspace = true }
 unvitals-core = { workspace = true }
-unreplicon-core = { workspace = true }

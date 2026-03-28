@@ -1,7 +1,7 @@
 use bevy::prelude::{Component, Reflect, ReflectComponent};
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
-use unghost_core::types::evidence::Evidence;
+use uninvestigation_core::evidence::Evidence;
 
 /// Represents the different types of gear available in the game.
 ///

@@ -1,6 +1,6 @@
-use crate::types::ghost::types::GhostType;
 use bevy::prelude::Reflect;
 use serde::{Deserialize, Serialize};
+use uninvestigation_core::ghost::GhostType;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Reflect)]
 pub enum GhostSet {
@@ -53,10 +53,10 @@ impl GhostSet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::evidence::Evidence;
     use bevy_platform::collections::HashMap;
     use bevy_platform::collections::HashSet;
     use enum_iterator::all;
+    use uninvestigation_core::evidence::Evidence;
 
     #[test]
     fn test_generate_evidence_combinations() {

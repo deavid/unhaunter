@@ -12,6 +12,8 @@ workspace = true
 
 [dependencies]
 
+unorchestrator-core = { workspace = true }
+unreplicon-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unmenu-core = { workspace = true }
 unprofile-core = { workspace = true }

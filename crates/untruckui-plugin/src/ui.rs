@@ -3,11 +3,11 @@ use crate::assets::TruckUiAssets;
 use crate::colors;
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use ungear_core::assets::GearAssets;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use uninput_core::states::InGameUiState;
-use unrender_std::assets::GearAssets;
+use unorchestrator_core::UIContextState;
 use unrender_std::custom_material2::UIPanelMaterial;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
 use untruck_core::components::truck_tab::TruckTab;
@@ -496,7 +496,7 @@ fn update_tab_interactions(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::InGame), setup_ui)
+    app.add_systems(OnEnter(UIContextState::InGame), setup_ui)
         .add_systems(
             Update,
             update_tab_interactions.run_if(in_state(InGameUiState::Truck)),

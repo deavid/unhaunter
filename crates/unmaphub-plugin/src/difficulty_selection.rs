@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
@@ -13,6 +12,7 @@ use unmenu_core::{
     events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
+use unorchestrator_core::UIContextState;
 
 /// UI component marker for the difficulty selection screen
 #[derive(Component, Debug)]
@@ -77,7 +77,7 @@ pub(crate) fn handle_difficulty_click(
     mut ev_menu_clicks: MessageReader<MenuItemClicked>,
     mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut difficulty_resource: ResMut<CurrentDifficulty>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
     q_items: Query<(&DifficultySelectionItem, &MenuItemInteractive)>,
     mut mission_select_mode: ResMut<CurrentMissionSelectMode>,
 ) {
@@ -88,7 +88,7 @@ pub(crate) fn handle_difficulty_click(
 
     for ev in ev_menu_clicks.read() {
         let total_displayed_difficulties = displayed_difficulties.len();
-        if ev.state != AppState::MapHub {
+        if ev.state != UIContextState::MapHub {
             warn!("MenuItemClicked event received in state: {:?}", ev.state);
             continue;
         }
@@ -105,7 +105,7 @@ pub(crate) fn handle_difficulty_click(
                 mission_select_mode.0 = MissionSelectMode::Custom;
 
                 // Instead of loading directly, transition to the unified mission selection screen
-                next_app_state.set(AppState::MissionSelect);
+                next_app_state.set(UIContextState::MissionSelect);
                 next_hub_state.set(MapHubState::None);
 
                 info!(
@@ -120,7 +120,7 @@ pub(crate) fn handle_difficulty_click(
             break;
         } else if ev.pos == total_displayed_difficulties {
             // This is the "Go Back" item
-            next_app_state.set(AppState::MainMenu);
+            next_app_state.set(UIContextState::MainMenu);
             next_hub_state.set(MapHubState::None);
             break;
         }
@@ -175,11 +175,11 @@ pub(crate) fn update_difficulty_description(
 pub(crate) fn handle_difficulty_escape(
     mut ev_escape: MessageReader<MenuEscapeEvent>,
     mut next_hub_state: ResMut<NextState<MapHubState>>,
-    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
 ) {
     if ev_escape.read().next().is_some() {
         // Go back to main menu since map selection no longer exists
-        next_app_state.set(AppState::MainMenu);
+        next_app_state.set(UIContextState::MainMenu);
         next_hub_state.set(MapHubState::None);
     }
 }

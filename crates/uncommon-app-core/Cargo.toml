@@ -12,6 +12,4 @@ workspace = true
 
 [dependencies]
 rand = { workspace = true }
-bevy = { workspace = true }
 bevy_platform = { workspace = true }
-serde = { workspace = true }

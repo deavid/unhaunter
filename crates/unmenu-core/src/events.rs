@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncommon_app_core::states::AppState;
+use unorchestrator_core::UIContextState;
 
 /// Event sent when keyboard navigation (up/down arrows) changes the selected menu item.
 /// This event is distinct from hover-based selection to enable specific behaviors like
@@ -11,7 +11,7 @@ pub struct KeyboardNavigate(pub usize);
 /// Event sent when a menu item is clicked
 #[derive(Message, Debug, Clone, Copy)]
 pub struct MenuItemClicked {
-    pub state: AppState,
+    pub state: UIContextState,
     pub pos: usize,
 }
 

@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
-use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use uninteraction_core::interaction::Toggleable;
+use unorchestrator_core::UIContextState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
@@ -19,7 +19,7 @@ impl Plugin for TutorialGearExplanationsTriggerPlugin {
                 trigger_evidence_gear_explanations,
                 trigger_support_item_explanations,
             )
-                .run_if(in_state(AppState::InGame)),
+                .run_if(in_state(UIContextState::InGame)),
         );
     }
 }

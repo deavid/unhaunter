@@ -22,4 +22,5 @@ unplayer-core = { workspace = true }
 unrender-std = { workspace = true }
 unspatial-core = { workspace = true }
 untruck-core = { workspace = true }
-uncommon-app-core = { workspace = true }
+unorchestrator-core = { workspace = true }
+unreplicon-core = { workspace = true }

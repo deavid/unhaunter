@@ -1,4 +1,4 @@
-use unghost_core::types::{evidence::Evidence, ghost::types::GhostType};
+use uninvestigation_core::{evidence::Evidence, ghost::GhostType};
 
 /// Represents the type of a button in the truck UI.
 #[derive(Debug, Clone, PartialEq, Eq)]

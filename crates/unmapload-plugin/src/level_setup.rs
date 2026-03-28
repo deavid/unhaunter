@@ -13,14 +13,16 @@ use unboard_core::resources::board_topology::{
 };
 use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::types::fielddata::CollisionFieldData;
-use uncommon_app_core::states::{AppState, SimulationState};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unmapload_core::events::loadlevel::LevelLoadedEvent;
 use unmission_core::events::MapGeometryInitializedEvent;
+use unmission_core::types::SimulationState;
+use unorchestrator_core::UIContextState;
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::GameSprite;
 use unrender_std::custom_material1::CustomMaterial1;
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unspatial_core::position::Position;
 use untiled_core::tiled::MapTileSetDb;
 use untiled_core::tiledmap::map::MapLayerType;
@@ -51,8 +53,8 @@ pub(crate) struct LoadLevelSystemParam<'w, 's> {
     pub roomstate: ResMut<'w, RoomStateMap>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub loading_status: ResMut<'w, LevelLoadingStatus>,
-    pub cli: Res<'w, uncommon_app_core::cli::CliOptions>,
-    pub authority: Option<Res<'w, uncommon_app_core::roles::AuthorityRole>>,
+    pub local_player: Option<Res<'w, LocalPlayerRole>>,
+    pub authority: Option<Res<'w, AuthorityRole>>,
     pub existing_tmx_entities:
         Query<'w, 's, (Entity, &'static unbehavior_core::components::TmxEntityId)>,
 }
@@ -216,7 +218,7 @@ pub(crate) fn reset_level_resources(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnExit(AppState::InGame), reset_level_resources);
+    app.add_systems(OnExit(UIContextState::InGame), reset_level_resources);
     app.add_systems(
         PostUpdate,
         load_level_handler.run_if(bevy::prelude::on_message::<LevelDataEvent>),

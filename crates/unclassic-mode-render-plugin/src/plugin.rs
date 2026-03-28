@@ -7,7 +7,7 @@ impl Plugin for ClassicModeRenderPlugin {
         app.add_systems(
             Update,
             crate::hydration::sync_ghost_visuals
-                .run_if(in_state(uncommon_app_core::states::AppState::InGame)),
+                .run_if(in_state(unorchestrator_core::UIContextState::InGame)),
         );
 
         crate::cleanup::app_setup(app);

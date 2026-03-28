@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::str::FromStr;
-use uncommon_app_core::cli::CliOptions;
 use undifficulty_core::difficulty::Difficulty;
+use unhaunter::app_args::AppArgs;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -49,49 +49,18 @@ fn main() {
 
     let net_mode = if let Some(port) = args.peer_host {
         let bind_addresses = args.bind.clone();
-        uncommon_app_core::cli::CliNetMode::PeerHost {
+        unhaunter::app_args::CliNetMode::PeerHost {
             port,
             bind_addresses,
         }
     } else if let Some(address) = args.join {
-        uncommon_app_core::cli::CliNetMode::Join {
+        unhaunter::app_args::CliNetMode::Join {
             address,
             ticket: None,
         }
     } else {
-        uncommon_app_core::cli::CliNetMode::Offline
+        unhaunter::app_args::CliNetMode::Offline
     };
-
-    // --- Validation ---
-    let mut final_map_path = args.map.clone();
-
-    if let Some(map_path) = &args.map {
-        let path = std::path::Path::new(map_path);
-        if path.exists() {
-            if let Some(stripped) = map_path.strip_prefix("assets/") {
-                final_map_path = Some(stripped.to_string());
-            }
-        } else {
-            let alt_path_str = if map_path.starts_with("assets/") {
-                map_path.clone()
-            } else {
-                format!("assets/{}", map_path)
-            };
-
-            let alt_path = std::path::Path::new(&alt_path_str);
-            if alt_path.exists() {
-                if let Some(stripped) = map_path.strip_prefix("assets/") {
-                    final_map_path = Some(stripped.to_string());
-                } else {
-                    final_map_path = Some(map_path.clone());
-                }
-            } else {
-                eprintln!("ERROR: Map file not found: {}", map_path);
-                eprintln!("Checked both '{}' and '{}'", map_path, alt_path_str);
-                std::process::exit(1);
-            }
-        }
-    }
 
     if let Some(diff_str) = args
         .difficulty
@@ -105,14 +74,12 @@ fn main() {
     }
     // ------------------
 
-    unhaunter::wasm::app_run(CliOptions {
-        include_draft_maps: args.draft_maps,
-        net_mode,
-        map_path: final_map_path,
-        difficulty_id: args.difficulty,
-        installation_id_file: args.installation_id_file,
+    unhaunter::wasm::app_run(AppArgs {
         verbose: args.verbose,
         mute: args.mute,
+        include_draft_maps: args.draft_maps,
+        net_mode,
+        installation_id_file: args.installation_id_file,
         dedicated: false,
         procman_channel: None,
         hub_url: args.hub_url,

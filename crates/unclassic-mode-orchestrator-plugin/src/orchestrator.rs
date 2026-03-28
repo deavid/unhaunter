@@ -11,23 +11,21 @@ use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::components::ghost_breach::GhostBreach;
-use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::resources::haunt_state::HauntState;
-use unghost_core::tags::GhostTag;
+use uninvestigation_core::GhostSpawnRequest;
 use unlight_core::components::LightSensitive;
 use unmapload_core::events::loadlevel::MapEntitiesReadyEvent;
 use unmission_core::events::LevelReadyEvent;
 use unmission_core::summary::SummaryData;
 use unplayer_core::components::PlayerSprite;
-use unreplicon_core::network_id::NetworkId;
 use unsensing_core::components::SpectralInfluence;
 use unsoundfield_core::components::SoundFieldSource;
 use unspatial_core::position::Position;
 
 #[derive(SystemParam)]
 pub(crate) struct OrchestratorParam<'w> {
-    pub authority_role: Option<Res<'w, uncommon_app_core::roles::AuthorityRole>>,
+    pub authority_role: Option<Res<'w, unreplicon_core::resources::AuthorityRole>>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub board_topology: Res<'w, BoardTopology>,
@@ -85,11 +83,11 @@ pub(crate) fn classic_mode_orchestrator(
                 .unwrap_or(Position::new_i64(0, 0, 0));
 
             let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set().as_vec();
-            let ghost_sprite =
-                GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
-            let ghost_types = vec![ghost_sprite.class];
 
-            commands.insert_resource(SummaryData::new(ghost_types, *p.difficulty));
+            commands.insert_resource(SummaryData::new(
+                possible_ghost_types.clone(),
+                *p.difficulty,
+            ));
 
             let breach_id = {
                 let mut ec = commands.spawn(ghost_spawn);
@@ -113,29 +111,18 @@ pub(crate) fn classic_mode_orchestrator(
                 ec.id()
             };
 
-            let ghost_id_net = NetworkId(0); // Ghost is always 0 in MVP
-            let mut ec = commands.spawn(ghost_spawn);
-
-            ec.insert(ghost_sprite.with_breachid(breach_id))
-                .insert(p.haunt_state.ghost_dynamics)
-                .insert(GhostTag)
-                .insert(ghost_id_net)
-                .insert(unspatial_core::boardposition::MapEntityFieldBPos(
-                    ghost_spawn.to_board_position(),
+            commands
+                .spawn((
+                    ghost_spawn,
+                    GhostSpawnRequest {
+                        ghost_types: possible_ghost_types,
+                    },
+                    p.haunt_state.ghost_dynamics,
                 ))
-                .insert(Movable)
-                .insert(LightSensitive {
-                    exposure_factor: 0.5,
-                    bias: 0.01,
-                })
-                .insert(SpectralInfluence::default().with_ultraviolet(1.0, 0.0))
-                .insert(ThermalEmitter {
-                    room_restricted: true,
+                .insert(unghost_core::components::ghost_sprite::GhostSprite {
+                    breach_id: Some(breach_id),
                     ..default()
-                })
-                .insert(FluidEmitter::default())
-                .insert(SoundFieldSource::default());
-            let _ghost_id = ec.id();
+                });
 
             crate::influence_system::assign_ghost_influence(
                 &mut commands,
