@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
+use unlobby_core::states::LobbyScreen;
+use unmenu_core::assets::MenuAssets;
 use unmenu_core::components::MenuUI;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::scrollbar::{self, ScrollableListContainer};
@@ -7,9 +10,6 @@ use unmenu_core::templates;
 use unreplicon_core::components::LobbyInfo;
 use unreplicon_core::messages::RequestSelectMap;
 use untmxmap_core::resources::maps::Maps;
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::LobbyScreen;
-use unui_core::assets::UiAssets;
 
 #[derive(Component)]
 pub(crate) struct MapSelectUI;
@@ -30,7 +30,7 @@ pub(crate) struct StateEntryTimer(pub f32);
 
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
     maps: Res<Maps>,
     mut mapping: ResMut<MapSelectMapping>,
     time: Res<Time>,
@@ -54,11 +54,11 @@ pub(crate) fn setup_ui(
         .id();
 
     commands.entity(root).with_children(|p| {
-        templates::create_background(p, &ui_assets);
-        templates::create_logo(p, &ui_assets);
-        templates::create_breadcrumb_navigation(p, &ui_assets, "Multiplayer Lobby", "Select Map");
+        templates::create_background(p, &menu_assets);
+        templates::create_logo(p, &menu_assets);
+        templates::create_breadcrumb_navigation(p, &menu_assets, "Multiplayer Lobby", "Select Map");
 
-        let mut content = templates::create_selectable_content_area(p, &ui_assets, 0);
+        let mut content = templates::create_selectable_content_area(p, &menu_assets, 0);
         content.with_children(|c| {
             // Left: Scrollable List
             c.spawn(Node {
@@ -87,7 +87,7 @@ pub(crate) fn setup_ui(
                             map.mission_data.display_name.clone(),
                             ui_idx,
                             false,
-                            &ui_assets,
+                            &menu_assets,
                         );
                     }
                 });
@@ -100,7 +100,7 @@ pub(crate) fn setup_ui(
                         ..default()
                     })
                     .with_children(|scrollbar_node| {
-                        scrollbar::build_scrollbar_ui(scrollbar_node, &ui_assets);
+                        scrollbar::build_scrollbar_ui(scrollbar_node, &menu_assets);
                     });
             });
 
@@ -127,7 +127,7 @@ pub(crate) fn setup_ui(
                 preview_pane.spawn((
                     Text::new(""),
                     TextFont {
-                        font: ui_assets.font_titillium_regular.clone(),
+                        font: menu_assets.font_titillium_regular.clone(),
                         font_size: 20.0 * FONT_SCALE,
                         ..default()
                     },
@@ -139,7 +139,7 @@ pub(crate) fn setup_ui(
 
         templates::create_help_text(
             p,
-            &ui_assets,
+            &menu_assets,
             Some("[ESC]: Cancel | [Enter/Click]: Confirm Selection".to_string()),
         );
     });

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 
-use unrender_core::materials::CustomMaterial1;
+use unrender_std::custom_material1::CustomMaterial1;
 
 #[derive(Debug, Clone)]
 pub enum AtlasData {

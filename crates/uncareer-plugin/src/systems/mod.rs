@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use uncareer_core::events::{CareerDeathRecordedEvent, CareerRewardCalculatedEvent};
+use uncommon_app_core::roles::AuthorityRole;
+use uncommon_app_core::states::{AppState, SimulationState};
 use unprofile_core::events::DepositStakedEvent;
-use untypes_core::roles::AuthorityRole;
-use untypes_core::states::{AppState, SimulationState};
 
 mod profile_update;
 mod reward;

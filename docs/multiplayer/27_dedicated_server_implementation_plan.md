@@ -165,7 +165,7 @@ Avoid spaghetti code with if/else role-based branching. Split into two systems w
 
 **Files:**
 
-- `crates/untypes-core/src/cli.rs`
+- `crates/uncommon-app-core/src/cli.rs`
 - ~16 usage sites across `unplayer-plugin`, `unghost-plugin`, `untruck-plugin`, `uninteraction-plugin`, `unlobby-plugin`
 
 **Changes (Part A — `dedicated` flag):**
@@ -475,9 +475,9 @@ fn main() {
         bind_addresses.push("0.0.0.0".to_string());
     }
 
-    let cli_options = untypes_core::cli::CliOptions {
+    let cli_options = uncommon-app_core::cli::CliOptions {
         dedicated: true,
-        net_mode: untypes_core::cli::NetMode::Host {
+        net_mode: uncommon-app_core::cli::NetMode::Host {
             port: args.host,
             bind_addresses,
         },
@@ -743,16 +743,16 @@ This is correct — on the dedicated server, every player is remote.
 
 ```rust
 let player_ids_to_spawn: Vec<usize> = match p.cli.net_mode {
-    untypes_core::cli::NetMode::Offline => vec![1],
-    untypes_core::cli::NetMode::Host { .. } => vec![1],
-    untypes_core::cli::NetMode::Join { .. } => vec![],
+    uncommon-app_core::cli::NetMode::Offline => vec![1],
+    uncommon-app_core::cli::NetMode::Host { .. } => vec![1],
+    uncommon-app_core::cli::NetMode::Join { .. } => vec![],
 };
 ```
 
 On a dedicated server (`NetMode::Host` + `dedicated: true`), this incorrectly spawns Player 1 as `MainPlayer`. Change:
 
 ```rust
-untypes_core::cli::NetMode::Host { .. } => {
+uncommon-app_core::cli::NetMode::Host { .. } => {
     if p.cli.dedicated {
         vec![] // Dedicated server spawns NO local players
     } else {

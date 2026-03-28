@@ -1,15 +1,15 @@
 use bevy::prelude::*;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
 use undifficulty_core::difficulty::Difficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unlobby_core::states::LobbyScreen;
+use unmenu_core::assets::MenuAssets;
 use unmenu_core::components::MenuUI;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected};
 use unmenu_core::templates;
 use unreplicon_core::components::LobbyInfo;
 use unreplicon_core::messages::RequestSelectDifficulty;
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::LobbyScreen;
-use unui_core::assets::UiAssets;
 
 #[derive(Component)]
 pub(crate) struct DifficultySelectUI;
@@ -27,7 +27,7 @@ pub(crate) struct StateEntryTimer(pub f32);
 
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
     mut mapping: ResMut<DifficultyMapping>,
     time: Res<Time>,
     mut entry_timer: ResMut<StateEntryTimer>,
@@ -49,16 +49,16 @@ pub(crate) fn setup_ui(
         .id();
 
     commands.entity(root).with_children(|p| {
-        templates::create_background(p, &ui_assets);
-        templates::create_logo(p, &ui_assets);
+        templates::create_background(p, &menu_assets);
+        templates::create_logo(p, &menu_assets);
         templates::create_breadcrumb_navigation(
             p,
-            &ui_assets,
+            &menu_assets,
             "Multiplayer Lobby",
             "Select Difficulty",
         );
 
-        let mut content = templates::create_selectable_content_area(p, &ui_assets, 0);
+        let mut content = templates::create_selectable_content_area(p, &menu_assets, 0);
         content.with_children(|c| {
             // Left: List
             c.spawn(Node {
@@ -74,7 +74,7 @@ pub(crate) fn setup_ui(
                         diff.difficulty_name(),
                         idx,
                         false,
-                        &ui_assets,
+                        &menu_assets,
                     );
                 }
             });
@@ -90,7 +90,7 @@ pub(crate) fn setup_ui(
                 info_pane.spawn((
                     Text::new(""),
                     TextFont {
-                        font: ui_assets.font_titillium_regular.clone(),
+                        font: menu_assets.font_titillium_regular.clone(),
                         font_size: 24.0 * FONT_SCALE,
                         ..default()
                     },
@@ -102,7 +102,7 @@ pub(crate) fn setup_ui(
 
         templates::create_help_text(
             p,
-            &ui_assets,
+            &menu_assets,
             Some("[ESC]: Cancel | [Enter/Click]: Confirm".to_string()),
         );
     });

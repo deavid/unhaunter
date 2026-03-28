@@ -12,7 +12,6 @@ members = [
     # Game-agnostic Bevy plugins. Zero Unhaunter-specific knowledge.
     # Strong candidates for extraction to crates.io. No -core/-plugin split.
     # These are the foundation the tier stack rests on — outside the hexagon.
-    "crates/unfps-core",   # Frame-rate limiter data (game-agnostic)
     "crates/unfps-plugin", # Frame-rate limiter via std::thread::sleep
 
     # ════════════════════════════════════════════════════════════════════════
@@ -20,11 +19,9 @@ members = [
     # Pure primitives: types, math, and markers.
     # Zero internal game dependencies. Dependency arrow points here.
     # ════════════════════════════════════════════════════════════════════════
-    "crates/untypes-core",      # Global enums: AppState, NetMode
-    "crates/unfoundation-core", # Base platform utilities and basic types
+    "crates/uncommon-app-core", # Base platform utilities and basic types
     "crates/unspatial-core",    # Coordinate math (isometric, Position, Direction)
     "crates/unnoise-core",      # Procedural noise math (Perlin)
-    "crates/untags-core",       # Global ECS marker components
     "crates/unmetrics-core",    # Performance diagnostic data structures
     "crates/unmetrics-plugin",  # Diagnostic systems
     "crates/unsettings-core",   # Persistent configuration data (pure data, no game deps)
@@ -62,6 +59,7 @@ members = [
     "crates/unlocomotion-core",   # Locomotion state component
     "crates/unlocomotion-plugin", # Kinematics and movement integration
     "crates/unnavigation-plugin", # Waypoint creation and pathfinding integration
+    "crates/unclassic-mode-core", # Classic (phasmo-style) mode shared types: camera marker, game colors
 
     # ── 1c: The Mechanics (Gameplay Verbs) ───────────────────────────────
     # How actors interact with the world and each other.
@@ -82,6 +80,7 @@ members = [
     "crates/unwalkie-plugin",
     "crates/uncareer-core",        # Career progression state and events
     "crates/unprofile-core",       # Player save-file data structures (gameplay progression)
+    "crates/unmapload-core",       # Map load protocol events (LoadLevelEvent, LevelLoadedEvent, MapEntitiesReadyEvent)
 
     # ════════════════════════════════════════════════════════════════════════
     # Tier 2 · Application Layer
@@ -109,7 +108,6 @@ members = [
     "crates/untiled-core",     # Raw Tiled data structures (external format)
     "crates/untmxmap-core",    # High-level map loader and asset indexer
     "crates/untmxmap-plugin",
-    "crates/unmapload-core",   # Map file metadata definitions
     "crates/unmapload-plugin",
     "crates/unbehavior",       # ACL: Tiled format → unbehavior-core types (T3 shell)
 
@@ -141,13 +139,13 @@ members = [
     "crates/unaudiospatial-plugin",
 
     # ── 4c: UI ───────────────────────────────────────────────────────────
-    "crates/unui-core",                    # Shared UI widgets and styling primitives
-    "crates/unui-plugin",
     "crates/unpause-plugin",               # Pause screen VSA — owns pause UI, keyboard routing, and quit-mission dispatch
     "crates/unmenu-core",                  # Meta-game main-menus common tooling
     "crates/unmenu-plugin",
     "crates/unmainmenu-plugin",            # Title screen
     "crates/uncampaign-plugin",            # Mission selection screen
+    "crates/unlobby-core",                 # Multiplayer lobby screen state types
+    "crates/unmaphub-core",                # Map hub difficulty selection state types
     "crates/unmaphub-plugin",              # Difficulty selection UI screen (map hub)
     "crates/unlobby-plugin",               # Multiplayer lobby screen
     "crates/unmenusettings-plugin",        # Settings UI
@@ -258,7 +256,6 @@ walkie_voice_generator = { path = "crates/tools/text_to_speech/walkie_voice_gene
 # Game-agnostic Bevy plugins. Zero Unhaunter-specific knowledge.
 # Strong candidates for extraction to crates.io. No -core/-plugin split.
 # These are the foundation the tier stack rests on — outside the hexagon.
-unfps-core = { path = "crates/unfps-core" }     # Frame-rate limiter data (game-agnostic)
 unfps-plugin = { path = "crates/unfps-plugin" } # Frame-rate limiter via std::thread::sleep
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -266,11 +263,9 @@ unfps-plugin = { path = "crates/unfps-plugin" } # Frame-rate limiter via std::th
 # Pure primitives: types, math, and markers.
 # Zero internal game dependencies. Dependency arrow points here.
 # ════════════════════════════════════════════════════════════════════════════
-untypes-core = { path = "crates/untypes-core" }           # Global enums: AppState, NetMode
-unfoundation-core = { path = "crates/unfoundation-core" } # Base platform utilities
+uncommon-app-core = { path = "crates/uncommon-app-core" } # Binary-level base tools
 unspatial-core = { path = "crates/unspatial-core" }       # Coordinate math (isometric)
 unnoise-core = { path = "crates/unnoise-core" }           # Procedural noise math (Perlin)
-untags-core = { path = "crates/untags-core" }             # Global ECS marker components
 unmetrics-core = { path = "crates/unmetrics-core" }       # Performance diagnostic data
 unmetrics-plugin = { path = "crates/unmetrics-plugin" }   # Diagnostic systems
 unsettings-core = { path = "crates/unsettings-core" }     # Persistent configuration data (pure data, no game deps)
@@ -315,6 +310,7 @@ unplayer-plugin = { path = "crates/unplayer-plugin" }
 uninput-core = { path = "crates/uninput-core" }               # Input bus (TIER EXCEPTION: T1b despite T2 plugin)
 unnpc-core = { path = "crates/unnpc-core" }                   # Helper NPC data (not in workspace members)
 unnpc-plugin = { path = "crates/unnpc-plugin" }
+unclassic-mode-core = { path = "crates/unclassic-mode-core" } # Classic mode shared types: camera marker, game colors
 
 
 # ── 1c: The Mechanics (Gameplay Verbs) ───────────────────────────────────
@@ -337,6 +333,7 @@ unwalkie-core = { path = "crates/unwalkie-core" }               # Walkie-talkie 
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 uncareer-core = { path = "crates/uncareer-core" }               # Career progression state and events
 unprofile-core = { path = "crates/unprofile-core" }             # Player save-file data structures (gameplay progression)
+unmapload-core = { path = "crates/unmapload-core" }             # Map load protocol: LoadLevelEvent, LevelLoadedEvent, MapEntitiesReadyEvent
 
 # ════════════════════════════════════════════════════════════════════════════
 # Tier 2 · Application Layer
@@ -364,7 +361,6 @@ unreplicon-plugin = { path = "crates/unreplicon-plugin" }
 untiled-core = { path = "crates/untiled-core" }         # Raw Tiled data structures (external format)
 untmxmap-core = { path = "crates/untmxmap-core" }       # High-level map loader and asset indexer
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
-unmapload-core = { path = "crates/unmapload-core" }     # Map file metadata definitions
 unmapload-plugin = { path = "crates/unmapload-plugin" }
 unbehavior = { path = "crates/unbehavior" }             # ACL: Tiled object properties → domain components
 
@@ -383,7 +379,6 @@ unhub-plugin = { path = "crates/unhub-plugin" }
 # ════════════════════════════════════════════════════════════════════════════
 
 # ── 4a: Rendering ────────────────────────────────────────────────────────
-unrender-core = { path = "crates/unrender-core" }       # Low-level mesh/material foundations (not in workspace members)
 unrender-std = { path = "crates/unrender-std" }         # Standalone mesh / material helpers
 unspatial-plugin = { path = "crates/unspatial-plugin" } # Position→Transform isometric projection (PostUpdate)
 unrender-plugin = { path = "crates/unrender-plugin" }   # Main 2D isometric render pipeline and shaders
@@ -397,13 +392,13 @@ unaudiospatial-core = { path = "crates/unaudiospatial-core" }     # Positional S
 unaudiospatial-plugin = { path = "crates/unaudiospatial-plugin" }
 
 # ── 4c: UI ───────────────────────────────────────────────────────────────
-unui-core = { path = "crates/unui-core" }                                       # Shared UI widgets and styling primitives
-unui-plugin = { path = "crates/unui-plugin" }
 unpause-plugin = { path = "crates/unpause-plugin" }                             # Pause screen VSA — owns pause UI, keyboard routing, and quit-mission dispatch
 unmenu-core = { path = "crates/unmenu-core" }                                   # Meta-game main-menus common tooling
 unmenu-plugin = { path = "crates/unmenu-plugin" }
 unmainmenu-plugin = { path = "crates/unmainmenu-plugin" }                       # Title screen
 uncampaign-plugin = { path = "crates/uncampaign-plugin" }                       # Mission selection screen
+unlobby-core = { path = "crates/unlobby-core" }                                 # Multiplayer lobby screen state types
+unmaphub-core = { path = "crates/unmaphub-core" }                               # Map hub difficulty selection state types
 unmaphub-plugin = { path = "crates/unmaphub-plugin" }                           # Difficulty selection UI screen (map hub)
 unlobby-plugin = { path = "crates/unlobby-plugin" }                             # Multiplayer lobby screen
 unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }               # Settings UI
@@ -436,7 +431,7 @@ wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
 
 undifficulty-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unvitals-plugin = { workspace = true }
 uninventory-plugin = { workspace = true }
 unlocomotion-plugin = { workspace = true }
@@ -481,7 +476,6 @@ untruck-plugin = { workspace = true }
 untruckui-plugin = { workspace = true }
 unwalkie-plugin = { workspace = true }
 untmxmap-plugin = { workspace = true }
-unui-plugin = { workspace = true }
 unpause-plugin = { workspace = true }
 undifficulty-plugin = { workspace = true }
 uninteraction-plugin = { workspace = true }

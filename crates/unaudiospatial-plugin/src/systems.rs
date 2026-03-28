@@ -3,16 +3,16 @@ use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unaudiospatial_core::events::SoundEvent;
+use unaudiospatial_core::listener::SpatialListener;
 use unmetrics_core::metrics::SendMetric;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
-use untags_core::tags::PlayerTag;
 
 pub fn spatial_audio_playback(
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
-    qp: Query<&Position, With<PlayerTag>>,
+    qp: Query<&Position, With<SpatialListener>>,
     mut commands: Commands,
     audio_settings: Res<Persistent<AudioSettings>>,
     time: Res<Time>,
@@ -21,11 +21,12 @@ pub fn spatial_audio_playback(
     let measure = metrics::SOUND_PLAYBACK.time_measure();
     let now = time.elapsed_secs();
     let mut can_log = now - *last_error_log > 1.0;
+    let Ok(player_position) = qp.single() else {
+        warn!("player not found!");
+        measure.end_ms();
+        return;
+    };
     for sound_event in sound_events.read() {
-        let Some(player_position) = qp.iter().next() else {
-            measure.end_ms();
-            return;
-        };
         if !player_position.is_finite() && can_log {
             error!("Player position is not finite: {player_position:?}");
             *last_error_log = now;

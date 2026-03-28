@@ -3,7 +3,7 @@ use unbehavior_core::behavior::Behavior;
 use unbehavior_core::state::TileState;
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::MapTileSprite;
-use unrender_std::materials::CustomMaterial1;
+use unrender_std::custom_material1::CustomMaterial1;
 
 use unlight_core::resources::light_grid::LightGrid;
 

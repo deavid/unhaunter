@@ -4,5 +4,6 @@
 //! including naive property parsing for efficient metadata extraction.
 
 pub mod assets;
+pub mod events;
 pub mod resources;
 pub mod types;

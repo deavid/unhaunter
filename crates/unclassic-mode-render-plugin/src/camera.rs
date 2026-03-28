@@ -1,5 +1,8 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
+use unclassic_mode_core::components::GCameraArena;
+use uncommon_app_core::states::AppState;
+use uninput_core::states::InGameUiState;
 use unlocomotion_core::components::PlayerLocomotionState;
 use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::MainPlayer;
@@ -7,8 +10,6 @@ use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
-use untags_core::game::GCameraArena;
-use untypes_core::states::{AppState, GameState};
 
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists
@@ -30,7 +31,7 @@ fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
 }
 
 fn camera_follow_system(
-    game_state: Res<State<GameState>>,
+    game_state: Res<State<InGameUiState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut camera: Query<(&mut Transform, &mut Direction), With<GCameraArena>>,
     pc: Query<(&PlayerLocomotionState, &Transform), (Without<GCameraArena>, With<MainPlayer>)>,
@@ -39,7 +40,7 @@ fn camera_follow_system(
     control_settings: Res<Persistent<ControlKeys>>,
     mut warn_count: Local<u32>,
 ) {
-    let in_game = *game_state.get() == GameState::Running;
+    let in_game = *game_state.get() == InGameUiState::Running;
     let Ok((player_loco, p_transform)) = pc.single() else {
         *warn_count += 1;
         if *warn_count > 60 {
@@ -112,7 +113,7 @@ fn camera_follow_system(
 fn debug_tile_transforms(
     q_tiles: Query<
         (
-            &MeshMaterial2d<unrender_std::materials::CustomMaterial1>,
+            &MeshMaterial2d<unrender_std::custom_material1::CustomMaterial1>,
             &Visibility,
         ),
         With<unrender_std::components::game::MapTileSprite>,
@@ -120,13 +121,13 @@ fn debug_tile_transforms(
     q_stages: Query<
         (),
         Or<(
-            With<untypes_core::hydration::HydrationStage<1>>,
-            With<untypes_core::hydration::HydrationStage<2>>,
-            With<untypes_core::hydration::HydrationStage<3>>,
-            With<untypes_core::hydration::HydrationStage<4>>,
+            With<unmapload_core::hydration::HydrationStage<1>>,
+            With<unmapload_core::hydration::HydrationStage<2>>,
+            With<unmapload_core::hydration::HydrationStage<3>>,
+            With<unmapload_core::hydration::HydrationStage<4>>,
         )>,
     >,
-    materials: Res<Assets<unrender_std::materials::CustomMaterial1>>,
+    materials: Res<Assets<unrender_std::custom_material1::CustomMaterial1>>,
     time: Res<Time>,
     mut timer: Local<f32>,
 ) {

@@ -18,10 +18,8 @@ unbehavior-core = { workspace = true }
 uninput-core = { workspace = true }
 uninteraction-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unfoundation-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unlight-core = { workspace = true }
-untypes-core = { workspace = true }
-unui-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
 unsettings-core = { workspace = true }

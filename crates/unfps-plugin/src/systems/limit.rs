@@ -1,7 +1,7 @@
 use crate::metrics::{LIMIT_REMAINING, LIMIT_USAGE};
+use crate::resources::{FpsLimit, FpsLimitRemaining, FpsLimitUsage};
 use bevy::prelude::*;
 use std::time::Instant;
-use unfps_core::resources::{FpsLimit, FpsLimitRemaining, FpsLimitUsage};
 use unmetrics_core::metrics::SendMetric;
 
 #[cfg(not(target_arch = "wasm32"))]

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use unmapload_core::components::PendingTiledLayerProperties;
+use unbehavior_core::components::PendingProperties;
 use unmapload_core::events::loadlevel::MapEntitiesReadyEvent;
-use untypes_core::hydration::HydrationStage;
+use unmapload_core::hydration::HydrationStage;
 
 use crate::resources::LevelLoadingStatus;
 
@@ -28,7 +28,7 @@ fn hydration_conveyor_system(
         commands
             .entity(entity)
             .remove::<HydrationStage<4>>()
-            .remove::<PendingTiledLayerProperties>();
+            .remove::<PendingProperties>();
     }
 
     // Advance Stage 3 to 4

@@ -56,7 +56,7 @@ positions.
 
 Read this section fully before modifying any file.
 
-### 3.1 Role resources (verified — `crates/untypes-core/src/roles.rs`)
+### 3.1 Role resources (verified — `crates/uncommon-app-core/src/roles.rs`)
 
 ```rust
 pub struct AuthorityRole;    // Resource — present on server/host instances only
@@ -71,7 +71,7 @@ Roles are inserted once at startup (see `crates/unengine-plugin/src/systems.rs`)
 - **Dedicated server:** `AuthorityRole` + `LobbyPresenceRole` (no `LocalPlayerRole`)
 
 ```rust
-// Also defined in untypes-core/src/roles.rs — use this instead of manual not() logic:
+// Also defined in uncommon-app-core/src/roles.rs — use this instead of manual not() logic:
 pub fn is_pure_client(
     local: Option<Res<LocalPlayerRole>>,
     authority: Option<Res<AuthorityRole>>,
@@ -309,7 +309,7 @@ unghost-core = { path = "../unghost-core" }
 untags-core  = { path = "../untags-core" }
 ```
 
-Circular-dependency check: `unghost-core/Cargo.toml` depends only on `unspatial-core` and `unfoundation-core` — neither
+Circular-dependency check: `unghost-core/Cargo.toml` depends only on `unspatial-core` and `uncommon-app-core` — neither
 of which depends on `unplayer-core` or `unplayer-plugin`. There is no cycle.
 
 `unreplicon-core` (which provides `LocallyOwned`) is already listed:
@@ -560,7 +560,7 @@ Add these imports at the top of the file alongside the existing imports:
 ```rust
 use bevy_replicon::prelude::{MessageWriter, SendMode, ToClients};
 use unreplicon_core::messages::GhostSoundFieldBroadcast;
-use untypes_core::roles::AuthorityRole;
+use uncommon-app_core::roles::AuthorityRole;
 ```
 
 Expand the signature of `sound_update` to add two new parameters:
@@ -712,7 +712,7 @@ into the prelude in this project's setup). The `GhostSoundFieldBroadcast` import
 Add the import:
 
 ```rust
-use untypes_core::roles::is_pure_client;
+use uncommon-app_core::roles::is_pure_client;
 ```
 
 Register the new system:
@@ -746,7 +746,7 @@ impl Plugin for UnhaunterSoundPlugin {
 }
 ```
 
-`is_pure_client` (defined in `untypes_core::roles`) returns `true` only when `LocalPlayerRole` exists AND
+`is_pure_client` (defined in `uncommon-app_core::roles`) returns `true` only when `LocalPlayerRole` exists AND
 `AuthorityRole` does not. This correctly targets pure Join clients only:
 
 | Mode             | `LocalPlayerRole` | `AuthorityRole` | `is_pure_client` | listener runs?                         |

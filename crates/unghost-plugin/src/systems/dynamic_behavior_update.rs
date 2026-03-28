@@ -133,7 +133,7 @@ fn sync_ghost_field_sources(
     let measure = metrics::GHOST_EMITTER_SYNC.time_measure();
     let freezing = haunt_state.ghost_dynamics.freezing_temp_clarity;
     let ghost_target_temp =
-        unfoundation_core::utils::temperature::celsius_to_kelvin(1.0 - 4.0 * freezing);
+        uncommon_app_core::utils::temperature::celsius_to_kelvin(1.0 - 4.0 * freezing);
     let power = freezing * 0.5 + 0.5;
 
     const GHOST_MAX_POWER: f32 = 0.01;
@@ -165,7 +165,7 @@ pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
         bevy::prelude::Update,
         (
             update_ghost_behavior_dynamics_system
-                .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+                .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
             sync_ghost_field_sources,
         )
             .chain(),

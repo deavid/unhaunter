@@ -1,18 +1,18 @@
 use bevy::prelude::*;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unmaphub_core::states::MapHubState;
+use unmenu_core::assets::MenuAssets;
+use unmenu_core::colors;
 use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use unmenu_core::{
     components::*,
     events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
-use untypes_core::states::AppState;
-use untypes_core::states::MapHubState;
-use unui_core::assets::UiAssets;
 
 /// UI component marker for the difficulty selection screen
 #[derive(Component, Debug)]
@@ -46,7 +46,7 @@ pub(crate) fn app_setup(app: &mut App) {
 /// Sets up the difficulty selection screen UI
 pub(crate) fn setup_systems(
     mut commands: Commands,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
     mut ev_menu_clicks: MessageReader<MenuItemClicked>,
     mut ev_menu_selection: MessageReader<MenuItemSelected>,
 ) {
@@ -59,7 +59,7 @@ pub(crate) fn setup_systems(
         .filter(|d| !d.is_tutorial_difficulty())
         .collect();
 
-    setup_ui(&mut commands, &ui_assets, &available_difficulties);
+    setup_ui(&mut commands, &menu_assets, &available_difficulties);
 }
 
 /// Cleans up the difficulty selection screen UI
@@ -188,7 +188,7 @@ pub(crate) fn handle_difficulty_escape(
 /// This now takes a Vec<Difficulty> containing only non-tutorial difficulties.
 pub(crate) fn setup_ui(
     commands: &mut Commands,
-    ui_assets: &UiAssets,
+    menu_assets: &MenuAssets,
     available_difficulties: &[Difficulty],
 ) {
     // Use the first available non-tutorial difficulty for initial description
@@ -214,16 +214,17 @@ pub(crate) fn setup_ui(
         })
         .insert(DifficultySelectionUI)
         .with_children(|parent| {
-            templates::create_background(parent, ui_assets);
-            templates::create_logo(parent, ui_assets);
+            templates::create_background(parent, menu_assets);
+            templates::create_logo(parent, menu_assets);
             templates::create_breadcrumb_navigation(
                 parent,
-                ui_assets,
+                menu_assets,
                 "Custom Mission", // Changed from "New Game"
                 "Select Difficulty",
             );
 
-            let mut content_area = templates::create_selectable_content_area(parent, ui_assets, 0);
+            let mut content_area =
+                templates::create_selectable_content_area(parent, menu_assets, 0);
             content_area.insert(MenuMouseTracker::default());
 
             content_area.with_children(|content| {
@@ -246,7 +247,7 @@ pub(crate) fn setup_ui(
                                 difficulty.difficulty_name(),
                                 idx,
                                 idx == 0,
-                                ui_assets,
+                                menu_assets,
                             )
                             .insert(DifficultySelectionItem {
                                 difficulty: *difficulty,
@@ -263,7 +264,7 @@ pub(crate) fn setup_ui(
                             "Go Back",
                             available_difficulties.len(), // Index for "Go Back" is after all difficulties
                             false,
-                            ui_assets,
+                            menu_assets,
                         )
                         .insert(MenuItemInteractive {
                             // Ensure MenuItemInteractive uses the correct index
@@ -284,7 +285,7 @@ pub(crate) fn setup_ui(
                         desc_column.spawn((
                             Text::new(initial_desc),
                             TextFont {
-                                font: ui_assets.font_titillium_light.clone(),
+                                font: menu_assets.font_titillium_light.clone(),
                                 font_size: 19.0 * FONT_SCALE,
                                 ..default()
                             },
@@ -300,7 +301,7 @@ pub(crate) fn setup_ui(
 
             templates::create_help_text(
                 parent,
-                ui_assets,
+                menu_assets,
                 Some(
                     "[Up]/[Down]: Change Difficulty    |    [Enter]: Select    |    [ESC]: Go Back"
                         .to_string(),

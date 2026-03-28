@@ -5,7 +5,8 @@
 use bevy::prelude::*;
 
 use unrender_std::board::spritedb::SpriteDB;
-use unrender_std::materials::{CustomMaterial1, UIPanelMaterial};
+use unrender_std::custom_material1::CustomMaterial1;
+use unrender_std::custom_material2::UIPanelMaterial;
 
 use crate::metrics;
 
@@ -17,7 +18,9 @@ pub struct UnhaunterRenderCorePlugin;
 
 impl Plugin for UnhaunterRenderCorePlugin {
     fn build(&self, app: &mut App) {
-        let cli = app.world().get_resource::<untypes_core::cli::CliOptions>();
+        let cli = app
+            .world()
+            .get_resource::<uncommon_app_core::cli::CliOptions>();
         let headless = cli.map(|c| c.dedicated).unwrap_or(false);
 
         crate::systems::lerp::app_setup(app);
@@ -41,7 +44,9 @@ pub struct UnhaunterRenderPlugin;
 
 impl Plugin for UnhaunterRenderPlugin {
     fn build(&self, app: &mut App) {
-        let cli = app.world().get_resource::<untypes_core::cli::CliOptions>();
+        let cli = app
+            .world()
+            .get_resource::<uncommon_app_core::cli::CliOptions>();
         let headless = cli.map(|c| c.dedicated).unwrap_or(false);
 
         if headless {
@@ -71,7 +76,7 @@ fn set_window_icon(_marker: NonSendMarker, // Forces system to run on main threa
     use bevy::winit::WINIT_WINDOWS;
     // This only works on native. WASM uses the HTML icon.
     use winit::window::Icon;
-    let Some(assets_path) = untypes_core::utils::find_assets_directory() else {
+    let Some(assets_path) = uncommon_app_core::utils::find_assets::find_assets_directory() else {
         warn!("Assets directory not found.");
         return;
     };

@@ -12,10 +12,9 @@ workspace = true
 
 [dependencies]
 
-untypes-core = { workspace = true }
-unfoundation-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unmanual-core = { workspace = true }
-unui-core = { workspace = true }
+unmenu-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

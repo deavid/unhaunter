@@ -1,7 +1,7 @@
 use bevy::asset::AssetEvent;
 use bevy::audio::AudioSource;
 use bevy::prelude::*;
-use unrender_std::materials::CustomMaterial1;
+use unrender_std::custom_material1::CustomMaterial1;
 use untmxmap_core::assets::index::AssetIdx;
 use untmxmap_core::assets::tmxmap::TmxMap;
 use untmxmap_core::assets::tsxsheet::TsxSheet;
@@ -42,7 +42,7 @@ pub(crate) fn app_setup(app: &mut App) {
     }
     let is_headless = app
         .world()
-        .get_resource::<untypes_core::cli::CliOptions>()
+        .get_resource::<uncommon_app_core::cli::CliOptions>()
         .map(|cli| cli.dedicated)
         .unwrap_or(false);
 

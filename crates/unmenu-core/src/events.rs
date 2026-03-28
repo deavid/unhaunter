@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use untypes_core::states::AppState;
+use uncommon_app_core::states::AppState;
 
 /// Event sent when keyboard navigation (up/down arrows) changes the selected menu item.
 /// This event is distinct from hover-based selection to enable specific behaviors like

@@ -14,14 +14,14 @@ workspace = true
 [dependencies]
 
 undifficulty-core = { workspace = true }
-unfoundation-core = { workspace = true }
-unui-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unmapload-core = { workspace = true }
-untypes-core = { workspace = true }
 unmenu-core = { workspace = true }
 unprofile-core = { workspace = true }
 uncareer-core = { workspace = true }
+unmaphub-core = { workspace = true }
 
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
 bevy-persistent = { workspace = true }

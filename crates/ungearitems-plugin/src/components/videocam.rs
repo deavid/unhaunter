@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use rand::RngExt;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, StatusText};
 use ungear_core::types::gear::equipment::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
@@ -107,10 +107,11 @@ pub(crate) fn update_videocam_skin(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        update_videocam_skeleton.run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+        update_videocam_skeleton
+            .run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
     );
     app.add_systems(
         Update,
-        update_videocam_skin.run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+        update_videocam_skin.run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
     );
 }

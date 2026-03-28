@@ -18,7 +18,8 @@ unbehavior = { workspace = true }
 unbehavior-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unboard-core = { workspace = true }
-untypes-core = { workspace = true }
+uninput-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 untiled-core = { workspace = true }
 unrender-std = { workspace = true }
 unmetrics-core = { workspace = true }

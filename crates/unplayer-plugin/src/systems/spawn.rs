@@ -1,10 +1,11 @@
 use bevy::prelude::*;
-use unplayer_core::components::PlayerSprite;
+use unaudiospatial_core::listener::SpatialListener;
+use uncommon_app_core::roles::AuthorityRole;
+use uncommon_app_core::states::AppState;
+use unplayer_core::components::PlayerTag;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
-use untags_core::tags::PlayerTag;
-use untypes_core::roles::AuthorityRole;
-use untypes_core::states::AppState;
 
 /// Authority: inserts PlayerTag and MapEntityFieldBPos on any player entity that is
 /// missing them. Fires on the first Update frame after a PlayerSprite entity is spawned
@@ -21,11 +22,31 @@ fn hydrate_player_spatial_tags(
     }
 }
 
+/// Inserts `SpatialListener` when `MainPlayer` is added to an entity, and removes it
+/// when `MainPlayer` is removed. Ensures at most one `SpatialListener` exists.
+/// `MainPlayer` is the player domain's signal for "this is the local player" — it is
+/// the right place to push the audio listener marker rather than having the audio
+/// domain pull from player state.
+fn sync_spatial_listener(
+    mut commands: Commands,
+    added: Query<Entity, Added<MainPlayer>>,
+    mut removed: RemovedComponents<MainPlayer>,
+) {
+    for entity in removed.read() {
+        commands.entity(entity).remove::<SpatialListener>();
+    }
+    for entity in added.iter() {
+        commands.entity(entity).insert(SpatialListener);
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        hydrate_player_spatial_tags
-            .run_if(resource_exists::<AuthorityRole>)
+        (
+            hydrate_player_spatial_tags.run_if(resource_exists::<AuthorityRole>),
+            sync_spatial_listener,
+        )
             .run_if(in_state(AppState::InGame)),
     );
 }

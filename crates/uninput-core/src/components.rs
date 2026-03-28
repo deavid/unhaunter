@@ -88,6 +88,13 @@ impl PlayerInput {
         self.inventory_cycle = false;
         self.inventory_swap = false;
     }
+
+    /// Completely zero all input state, including persistent fields like movement and run.
+    /// Use this when input focus is lost (modal opens) to prevent stale drift/walking-in-place.
+    /// Unlike `clear()`, this also resets `movement`, `run`, and `aim_direction`.
+    pub fn zero(&mut self) {
+        *self = Self::default();
+    }
 }
 
 /// The keyboard control scheme for the player (WASD, IJKL, etc.).

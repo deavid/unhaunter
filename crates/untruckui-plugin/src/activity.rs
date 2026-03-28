@@ -1,12 +1,12 @@
+use crate::assets::TruckUiAssets;
+use crate::colors;
 use bevy::prelude::*;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unui_core::assets::UiAssets;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
 
-pub(crate) fn setup_activity_ui(p: &mut ChildSpawnerCommands, handles: &UiAssets) {
+pub(crate) fn setup_activity_ui(p: &mut ChildSpawnerCommands, handles: &TruckUiAssets) {
     p.spawn(Text::new("Activity"))
         .insert(TextFont {
             font: handles.font_londrina_light.clone(),

@@ -11,7 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unfoundation-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 bevy = { workspace = true }
 serde = { workspace = true }
 strum = { workspace = true, features = ["derive"] }

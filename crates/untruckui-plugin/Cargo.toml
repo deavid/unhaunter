@@ -11,12 +11,11 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+unclassic-mode-core = { workspace = true }
 untruck-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unfoundation-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unmission-core = { workspace = true }
-untypes-core = { workspace = true }
-unui-core = { workspace = true }
 unplayer-core = { workspace = true }
 unvitals-core = { workspace = true }
 unrender-std = { workspace = true }
@@ -30,5 +29,6 @@ unghost-core = { workspace = true }
 unmapload-core = { workspace = true }
 
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
 bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }

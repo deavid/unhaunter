@@ -12,10 +12,10 @@ use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology
 use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::resources::visibility_data::VisibilityData;
 use unboard_core::utils::rebuild_collision_data;
+use uncommon_app_core::random_seed;
 use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
-use unfoundation_core::random_seed;
 use unlight_core::components::LightSensitive;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
@@ -26,6 +26,10 @@ use unrender_std::components::sprite_layer::SpriteLayer;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
+
+// FIXME: Copied from unmapload-core::assets::GRID_1X1_ANCHOR to remove upward T3 dependency.
+// Fog sprite spawning via HydrationStage is being phased out; verify and remove when complete.
+const MIASMA_SPRITE_ANCHOR: Vec2 = Vec2::new(0.0, -0.2045455); // calc(18, 31, 36, 44)
 
 pub(crate) fn init_miasma_grid(
     mut commands: Commands,
@@ -218,7 +222,7 @@ pub(crate) fn spawn_miasma(
                     color: Color::linear_rgba(1.0, 1.0, 1.0, 0.0),
                     ..default()
                 })
-                .insert(Anchor(unmapload_core::assets::GRID_1X1_ANCHOR))
+                .insert(Anchor(MIASMA_SPRITE_ANCHOR))
                 .insert(MiasmaSprite {
                     base_position: pos,
                     radius: rng.random_range(0.15..0.45), // Small radius

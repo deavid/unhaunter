@@ -1,7 +1,9 @@
 use bevy::prelude::*;
+use bevy_asset_loader::prelude::*;
+use uncommon_app_core::states::AppState;
 use unmission_core::summary::SummaryData;
-use untypes_core::states::AppState;
 
+use crate::assets::SummaryAssets;
 use crate::summary::{
     afk_timeout, cleanup, insert_afk_timer, keyboard, record_death_to_summary, remove_afk_timer,
     setup, setup_ui, store_mission_id, update_score, update_time, update_ui,
@@ -20,6 +22,9 @@ pub struct UnhaunterSummaryPlugin;
 
 impl Plugin for UnhaunterSummaryPlugin {
     fn build(&self, app: &mut App) {
+        app.add_loading_state(
+            LoadingState::new(AppState::EngineBoot).load_collection::<SummaryAssets>(),
+        );
         app.add_systems(
             OnEnter(AppState::Summary),
             (setup, store_mission_id, setup_ui, insert_afk_timer).chain(),

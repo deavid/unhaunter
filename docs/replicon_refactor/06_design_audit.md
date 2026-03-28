@@ -3,7 +3,7 @@
 **Date:** 2026-02-27 **Scope:** All network-related code identified as relevant to the multiplayer initialization chain
 and state management. **Method:** Manual review against the laws in `DESIGN_RULES.md`. **Audited crates:**
 `unreplicon-plugin`, `unreplicon-core`, `unlobby-plugin`, `unmapload-plugin`, `untmxmap-plugin`,
-`unclassic-mode-plugin`, `uncampaign-plugin`, `unsummary-plugin`, `unengine-plugin`, `untypes-core`.
+`unclassic-mode-plugin`, `uncampaign-plugin`, `unsummary-plugin`, `unengine-plugin`, `uncommon-app-core`.
 
 ---
 
@@ -89,7 +89,7 @@ be revisited. No single place declares the contract "LocalPlayer is set once at 
 
 ```rust
 fn load_level_handler(
-    cli: Res<untypes_core::cli::CliOptions>,
+    cli: Res<uncommon-app_core::cli::CliOptions>,
     ...
 ) {
     let (layers, floor_mapping) = bevy_load_map(
@@ -136,7 +136,7 @@ lobby to return to?" Those are different questions that happen to have the same 
 ### F-06 · `unengine-plugin::pause_ui::keyboard` · MAJOR
 
 ```rust
-fn keyboard(cli: Res<untypes_core::cli::CliOptions>, ...) {
+fn keyboard(cli: Res<uncommon-app_core::cli::CliOptions>, ...) {
     if matches!(cli.net_mode, NetMode::Offline) {
         next_state.set(AppState::MissionSelect);
     } else {

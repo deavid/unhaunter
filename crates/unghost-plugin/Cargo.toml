@@ -11,11 +11,11 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
+unmapload-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unaudiobg-core = { workspace = true }
 unbehavior-core = { workspace = true }
-unfoundation-core = { workspace = true }
 unboard-core = { workspace = true }
 unmission-core = { workspace = true }
 unsensing-core = { workspace = true }
@@ -28,7 +28,6 @@ unmetrics-core = { workspace = true }
 unnoise-core = { workspace = true }
 uninteraction-core = { workspace = true }
 ungearitems-core = { workspace = true }
-untags-core = { workspace = true }
 unspatial-core = { workspace = true }
 unghost-core = { workspace = true }
 untruck-core = { workspace = true }

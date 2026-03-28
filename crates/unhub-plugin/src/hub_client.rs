@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use crossbeam_channel::{Receiver, Sender};
+use uncommon_app_core::cli::CliOptions;
 use unhub_client::protocol::{
     ChallengeRequest, ChallengeResponse, CreateRoomRequest, CreateRoomResponse, JoinRoomRequest,
     JoinRoomResponse,
 };
-use untypes_core::cli::CliOptions;
 
 #[derive(Resource)]
 pub struct HubClient {

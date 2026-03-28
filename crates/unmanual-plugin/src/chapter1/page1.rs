@@ -2,12 +2,11 @@ use crate::types::ManualPageData;
 use crate::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use unmanual_core::assets::ManualAssets;
-use unui_core::assets::UiAssets;
 
 pub(crate) fn draw(
     parent: &mut ChildSpawnerCommands,
     manual_assets: &ManualAssets,
-    ui_assets: &UiAssets,
+    _second_manual_assets: &ManualAssets,
 ) {
     let title = "Paranormal Investigator Needed!";
     let subtitle = "
@@ -42,17 +41,17 @@ What will you find? How to do a good job as a P.I.? Here are the main clues!
     ];
     let summary = "Your goal is to identify and banish the ghost. By exploring, locating the breach, gathering evidence, and using the truck's equipment, you'll craft the right tool for the job. More details on each step are provided in the following pages.";
 
-    header(parent, ui_assets, title, subtitle);
+    header(parent, manual_assets, title, subtitle);
 
     grid_img_text2(
         parent,
-        &ui_assets.font_chakra_regular,
-        &ui_assets.font_chakra_semibold,
+        &manual_assets.font_chakra_regular,
+        &manual_assets.font_chakra_semibold,
         (3, 2),
         grid,
     );
 
-    summary_text(parent, ui_assets, summary);
+    summary_text(parent, manual_assets, summary);
 }
 
 pub(crate) fn create_manual_page() -> ManualPageData {

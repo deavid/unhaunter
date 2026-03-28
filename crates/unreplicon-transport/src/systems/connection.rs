@@ -11,10 +11,10 @@ use bevy_renet::renet::ConnectionConfig;
 use bevy_renet::{RenetClient, RenetServer};
 use bevy_replicon::prelude::RepliconChannels;
 use bevy_replicon_renet::RenetChannelsExt;
+use uncommon_app_core::cli::{CliNetMode, CliOptions};
+use uncommon_app_core::roles::AuthorityRole;
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unprofile_core::profile::RuntimeInstallationId;
-use untypes_core::cli::{CliNetMode, CliOptions};
-use untypes_core::roles::AuthorityRole;
 
 /// Unique identifier for this game's protocol version.
 /// Clients and servers with different values cannot connect to each other.
@@ -36,12 +36,13 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_systems(Update, monitor_renet_server_clients);
     app.add_systems(
         Update,
-        handle_disconnect_request.run_if(resource_exists::<untypes_core::roles::LobbyPresenceRole>),
+        handle_disconnect_request
+            .run_if(resource_exists::<uncommon_app_core::roles::LobbyPresenceRole>),
     );
 }
 
 fn handle_disconnect_request(
-    mut ev: MessageReader<untypes_core::roles::DisconnectRequest>,
+    mut ev: MessageReader<uncommon_app_core::roles::DisconnectRequest>,
     mut commands: Commands,
     q_replicated: Query<Entity, With<bevy_replicon::prelude::Replicated>>,
 ) {
@@ -61,8 +62,8 @@ fn handle_disconnect_request(
         commands.entity(entity).despawn();
     }
 
-    commands.remove_resource::<untypes_core::roles::LobbyPresenceRole>();
-    commands.insert_resource(untypes_core::roles::AuthorityRole);
+    commands.remove_resource::<uncommon_app_core::roles::LobbyPresenceRole>();
+    commands.insert_resource(uncommon_app_core::roles::AuthorityRole);
 }
 
 fn startup_transport_system(

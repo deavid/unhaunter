@@ -4,5 +4,6 @@ pub mod difficulty_ext;
 pub mod ethereal;
 pub mod events;
 pub mod resources;
+pub mod tags;
 pub mod types;
 pub mod utils;

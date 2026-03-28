@@ -14,17 +14,22 @@
 //!   * Custom: Main Menu -> Difficulty Selection -> Mission Selection -> Game
 //! - Proper UI mapping between list items and the original maps collection
 
+use crate::assets::CampaignAssets;
 use crate::badge_utils::BadgeUtils;
 use bevy::picking::Pickable;
 use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
+use uncommon_app_core::platform::plt::FONT_SCALE;
+use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::FONT_SCALE;
+use unmaphub_core::states::MapHubState;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
+use unmenu_core::assets::MenuAssets;
+use unmenu_core::colors as foundation_colors;
+use unmenu_core::colors;
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::KeyboardNavigate;
 use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
@@ -36,8 +41,6 @@ use unmenu_core::{
     scrollbar, templates,
 };
 use untmxmap_core::resources::maps::Maps;
-use untypes_core::states::{AppState, MapHubState};
-use unui_core::assets::UiAssets;
 
 /// Marker component for the unified Mission Select UI root node
 #[derive(Component)]
@@ -318,7 +321,8 @@ fn get_most_advanced_affordable_mission_idx(
 /// System to set up the unified mission selection UI
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
+    campaign_assets: Res<CampaignAssets>,
     asset_server: Res<AssetServer>,
     player_profile_resource: Res<Persistent<unprofile_core::profile::PlayerProfileData>>,
     maps_resource: Res<Maps>,
@@ -383,13 +387,13 @@ pub(crate) fn setup_ui(
                 )))
                 .insert((
                     TextFont {
-                        font: ui_assets.font_londrina_light.clone(),
+                        font: menu_assets.font_londrina_light.clone(),
                         font_size: 24.0 * FONT_SCALE,
                         ..default()
                     },
                     TextColor(colors::MENU_ITEM_COLOR_OFF),
                 ));
-                templates::create_content_item(p, "Go Back", 0, true, &ui_assets).insert((
+                templates::create_content_item(p, "Go Back", 0, true, &menu_assets).insert((
                     MenuItemInteractive {
                         identifier: 0,
                         selected: true,
@@ -441,11 +445,11 @@ pub(crate) fn setup_ui(
     };
 
     commands.entity(root_entity).with_children(|p| {
-        templates::create_background(p, &ui_assets);
-        templates::create_logo(p, &ui_assets);
-        templates::create_breadcrumb_navigation(p, &ui_assets, title, &subtitle);
+        templates::create_background(p, &menu_assets);
+        templates::create_logo(p, &menu_assets);
+        templates::create_breadcrumb_navigation(p, &menu_assets, title, &subtitle);
 
-        let mut content_area = templates::create_selectable_content_area(p, &ui_assets, default_sel);
+        let mut content_area = templates::create_selectable_content_area(p, &menu_assets, default_sel);
         content_area.insert(MenuMouseTracker::default()).with_children(|c| {
             // Mission List Pane
             c.spawn(Node { width: Val::Percent(50.0), height: Val::Percent(100.0), flex_direction: FlexDirection::Row, ..default() })
@@ -465,7 +469,7 @@ pub(crate) fn setup_ui(
                         let mut curr_ui_idx = 0;
                         for (idx, (orig_idx, map)) in available_maps.iter().enumerate() {
                             ui_mapping.ui_to_map_index.push(*orig_idx);
-                            create_mission_list_item(list, &ui_assets, map, &player_profile_resource, curr_ui_idx, idx == default_sel, &mission_select_mode, &difficulty_resource);
+                            create_mission_list_item(list, &menu_assets, &campaign_assets, map, &player_profile_resource, curr_ui_idx, idx == default_sel, &mission_select_mode, &difficulty_resource);
                             curr_ui_idx += 1;
                         }
                         if !available_maps.is_empty() && !locked_maps.is_empty() {
@@ -477,27 +481,27 @@ pub(crate) fn setup_ui(
                                 .with_children(|li| {
                                     li.spawn(Node { width: Val::Percent(100.0), flex_direction: FlexDirection::Row, justify_content: JustifyContent::SpaceBetween, ..default() })
                                         .with_children(|row| {
-                                            row.spawn((Text::new(format!("Unlock Level {} for more", map.mission_data.min_player_level)), TextFont { font: ui_assets.font_titillium_regular.clone(), font_size: 24.0 * FONT_SCALE, ..default() }, TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5)), unmenu_core::components::PrincipalMenuText));
-                                            row.spawn((Text::new("🔒"), TextFont { font: ui_assets.font_titillium_regular.clone(), font_size: 24.0 * FONT_SCALE, ..default() }, TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5))));
+                                            row.spawn((Text::new(format!("Unlock Level {} for more", map.mission_data.min_player_level)), TextFont { font: menu_assets.font_titillium_regular.clone(), font_size: 24.0 * FONT_SCALE, ..default() }, TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5)), unmenu_core::components::PrincipalMenuText));
+                                            row.spawn((Text::new("🔒"), TextFont { font: menu_assets.font_titillium_regular.clone(), font_size: 24.0 * FONT_SCALE, ..default() }, TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5))));
                                         });
                                 });
                         }
                         if !locked_maps.is_empty() {
                             list.spawn(Node { min_height: Val::Px(16.0), ..default() }).insert(Pickable::default());
                         }
-                        templates::create_content_item(list, "Go Back", curr_ui_idx, false, &ui_assets).insert(MenuItemInteractive { identifier: curr_ui_idx, selected: false });
+                        templates::create_content_item(list, "Go Back", curr_ui_idx, false, &menu_assets).insert(MenuItemInteractive { identifier: curr_ui_idx, selected: false });
                         list.spawn(Node { width: Val::Percent(100.0), min_height: Val::Px(64.0), ..default() }).insert(Pickable::default());
                     });
-                    scrollbar::build_scrollbar_ui(lp, &ui_assets);
+                    scrollbar::build_scrollbar_ui(lp, &menu_assets);
                 });
 
             // Mission Detail Pane
             c.spawn(Node { width: Val::Percent(50.0), height: Val::Percent(100.0), flex_direction: FlexDirection::Column, padding: UiRect::left(Val::Px(15.0)), justify_content: JustifyContent::Center, ..default() })
                 .with_children(|dp| {
-                    dp.spawn((Node { width: Val::Percent(80.0), aspect_ratio: Some(16.0/9.0), margin: UiRect::bottom(Val::Px(10.0)), border: UiRect::all(Val::Px(1.0)), ..default() }, ImageNode { image: asset_server.load(initial_img), ..default() }, BorderColor::all(colors::TRUCKUI_ACCENT2_COLOR), MissionPreviewImage));
-                    dp.spawn((Node { width: Val::Percent(100.0), padding: UiRect::all(Val::Px(10.0)), ..default() }, BackgroundColor(colors::PANEL_BGCOLOR.with_alpha(0.95))))
+                    dp.spawn((Node { width: Val::Percent(80.0), aspect_ratio: Some(16.0/9.0), margin: UiRect::bottom(Val::Px(10.0)), border: UiRect::all(Val::Px(1.0)), ..default() }, ImageNode { image: asset_server.load(initial_img), ..default() }, BorderColor::all(Color::srgba(0.290, 0.596, 0.706, 0.2)), MissionPreviewImage));
+                    dp.spawn((Node { width: Val::Percent(100.0), padding: UiRect::all(Val::Px(10.0)), ..default() }, BackgroundColor(foundation_colors::PANEL_BGCOLOR.with_alpha(0.95))))
                         .with_children(|tc| {
-                            tc.spawn((Text::new(initial_desc), TextFont { font: ui_assets.font_titillium_light.clone(), font_size: 19.0 * FONT_SCALE, ..default() }, TextColor(colors::MENU_DESC_TEXT_COLOR), MissionDescriptionText));
+                            tc.spawn((Text::new(initial_desc), TextFont { font: menu_assets.font_titillium_light.clone(), font_size: 19.0 * FONT_SCALE, ..default() }, TextColor(colors::MENU_DESC_TEXT_COLOR), MissionDescriptionText));
                         });
                 });
         });
@@ -506,8 +510,8 @@ pub(crate) fn setup_ui(
             MissionSelectMode::Campaign => "Select a mission    |    [Up]/[Down]: Change    |    [Enter]: Start Mission    |    [ESC]: Go Back",
             MissionSelectMode::Custom => "Select a map    |    [Up]/[Down]: Change    |    [Enter]: Start Mission    |    [ESC]: Back to Difficulty Selection",
         };
-        templates::create_help_text(p, &ui_assets, Some(help.to_string()));
-        templates::create_player_status_bar(p, &ui_assets, &player_profile_resource);
+        templates::create_help_text(p, &menu_assets, Some(help.to_string()));
+        templates::create_player_status_bar(p, &menu_assets, &player_profile_resource);
     });
 
     initial_scroll_target.0 = (!available_maps.is_empty()).then_some(default_sel);
@@ -516,7 +520,8 @@ pub(crate) fn setup_ui(
 /// Helper function to create a mission list item in the UI
 fn create_mission_list_item(
     mission_list: &mut ChildSpawnerCommands,
-    ui_assets: &UiAssets,
+    menu_assets: &MenuAssets,
+    campaign_assets: &CampaignAssets,
     map: &untmxmap_core::types::root::map::Map,
     player_profile: &unprofile_core::profile::PlayerProfileData,
     ui_index: usize,
@@ -561,7 +566,7 @@ fn create_mission_list_item(
                 row.spawn((
                     Text::new(m.display_name.clone()),
                     TextFont {
-                        font: ui_assets.font_titillium_regular.clone(),
+                        font: menu_assets.font_titillium_regular.clone(),
                         font_size: 24.0 * FONT_SCALE,
                         ..default()
                     },
@@ -579,7 +584,7 @@ fn create_mission_list_item(
                 };
                 BadgeUtils::create_badge(
                     row,
-                    ui_assets,
+                    campaign_assets,
                     player_profile.get_map_grade(&map.path, &tdif),
                     32.0,
                     false,

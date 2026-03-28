@@ -8,6 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+unclassic-mode-core = { workspace = true }
 unbehavior-core = { workspace = true }
 unboard-core = { workspace = true }
 undifficulty-core = { workspace = true }
@@ -17,8 +18,8 @@ uninteraction-core = { workspace = true }
 unlight-core = { workspace = true }
 unplayer-core = { workspace = true }
 unspatial-core = { workspace = true }
-untags-core = { workspace = true }
 untmxmap-core = { workspace = true }
-untypes-core = { workspace = true }
+untruck-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

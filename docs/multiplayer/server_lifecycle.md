@@ -8,11 +8,11 @@ This document describes the full lifecycle of an Unhaunter **dedicated server** 
 
 ## Role Resources Present on a Dedicated Server
 
-| Resource            | Present? | Notes                                       |
-| ------------------- | :------: | ------------------------------------------- |
-| `AuthorityRole`     |    ✓     | Server runs authoritative simulation logic. |
-| `LocalPlayerRole`   |          | No human screen; all UX systems are skipped.|
-| `LobbyPresenceRole` |    ✓     | Server participates in a networked lobby.   |
+| Resource            | Present? | Notes                                        |
+| ------------------- | :------: | -------------------------------------------- |
+| `AuthorityRole`     |    ✓     | Server runs authoritative simulation logic.  |
+| `LocalPlayerRole`   |          | No human screen; all UX systems are skipped. |
+| `LobbyPresenceRole` |    ✓     | Server participates in a networked lobby.    |
 
 ---
 
@@ -90,17 +90,17 @@ The dedicated server has **no `LocalPlayerRole`**, so all UX-facing states are u
 these states are either gated by `resource_exists::<LocalPlayerRole>` or are registered only in crates the dedicated
 server binary does not include.
 
-| `AppState` Variant | Why the server never enters it                                            |
-| ------------------ | ------------------------------------------------------------------------- |
-| `MainMenu`         | Driven by `bevy_asset_loader`; headless server skips visual asset loading.|
-| `MissionLoading`   | Client-only UX wait screen; server drives loading via `SimulationState`.  |
-| `Summary`          | UX screen for the local player; server goes directly back to lobby.       |
-| `SettingsMenu`     | UI-only; requires `LocalPlayerRole`.                                      |
-| `MapHub`           | UI-only; requires `LocalPlayerRole`.                                      |
-| `UserManual`       | UI-only; requires `LocalPlayerRole`.                                      |
-| `PreplayManual`    | UI-only; requires `LocalPlayerRole`.                                      |
-| `MissionSelect`    | UI-only selection screen; requires `LocalPlayerRole`.                     |
-| `Hub`              | UI-only; requires `LocalPlayerRole`.                                      |
+| `AppState` Variant | Why the server never enters it                                             |
+| ------------------ | -------------------------------------------------------------------------- |
+| `MainMenu`         | Driven by `bevy_asset_loader`; headless server skips visual asset loading. |
+| `MissionLoading`   | Client-only UX wait screen; server drives loading via `SimulationState`.   |
+| `Summary`          | UX screen for the local player; server goes directly back to lobby.        |
+| `SettingsMenu`     | UI-only; requires `LocalPlayerRole`.                                       |
+| `MapHub`           | UI-only; requires `LocalPlayerRole`.                                       |
+| `UserManual`       | UI-only; requires `LocalPlayerRole`.                                       |
+| `PreplayManual`    | UI-only; requires `LocalPlayerRole`.                                       |
+| `MissionSelect`    | UI-only selection screen; requires `LocalPlayerRole`.                      |
+| `Hub`              | UI-only; requires `LocalPlayerRole`.                                       |
 
 The only `AppState` variants that are meaningful on the dedicated server are:
 
@@ -125,20 +125,20 @@ The only `AppState` variants that are meaningful on the dedicated server are:
 4. **No `LocalPlayerRole` = no UX systems.** All systems gated by `resource_exists::<LocalPlayerRole>` are entirely
    absent from the dedicated server's system graph. This is enforced at registration time, not at runtime.
 
-5. **`load_level_handler` guards against missing asset handles.** If a requested map path is not present in
-   `Res<Maps>` (common on headless servers that skip visual asset loading), the handler emits `warn!()` and returns
-   without panicking (F-04 guard).
+5. **`load_level_handler` guards against missing asset handles.** If a requested map path is not present in `Res<Maps>`
+   (common on headless servers that skip visual asset loading), the handler emits `warn!()` and returns without
+   panicking (F-04 guard).
 
 ---
 
 ## Related Files
 
-| File | Role |
-| ---- | ---- |
-| `crates/untypes-core/src/states.rs` | All state enum definitions (`AppState`, `SimulationState`, `BootState`, `GameState`) |
-| `crates/untypes-core/src/roles.rs` | `AuthorityRole`, `LocalPlayerRole`, `LobbyPresenceRole` marker resources |
-| `crates/unengine-plugin/src/plugin.rs` | Role insertion at startup; `BootState` registration and transition |
-| `crates/unreplicon-plugin/src/systems/ghost.rs` | `SimulationState::TearingDown` entry, score calculation, grace-period teardown |
-| `crates/unreplicon-plugin/src/systems/lobby.rs` | Lobby entity spawn, mission start handler, `SimulationState` transitions |
-| `crates/unmission-plugin/src/systems/handle_mission_events.rs` | `MissionEvent::End` → `TearingDown` + `ServerGamePhase::Concluding` |
-| `crates/untmxmap-plugin/src/load_level.rs` | Map load handler with F-04 missing-asset guard |
+| File                                                           | Role                                                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `crates/uncommon-app-core/src/states.rs`                       | All state enum definitions (`AppState`, `SimulationState`, `BootState`, `GameState`) |
+| `crates/uncommon-app-core/src/roles.rs`                        | `AuthorityRole`, `LocalPlayerRole`, `LobbyPresenceRole` marker resources             |
+| `crates/unengine-plugin/src/plugin.rs`                         | Role insertion at startup; `BootState` registration and transition                   |
+| `crates/unreplicon-plugin/src/systems/ghost.rs`                | `SimulationState::TearingDown` entry, score calculation, grace-period teardown       |
+| `crates/unreplicon-plugin/src/systems/lobby.rs`                | Lobby entity spawn, mission start handler, `SimulationState` transitions             |
+| `crates/unmission-plugin/src/systems/handle_mission_events.rs` | `MissionEvent::End` → `TearingDown` + `ServerGamePhase::Concluding`                  |
+| `crates/untmxmap-plugin/src/load_level.rs`                     | Map load handler with F-04 missing-asset guard                                       |

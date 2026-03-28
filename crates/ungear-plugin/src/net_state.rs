@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{Channel, ClientId, ClientMessageAppExt, FromClient};
+use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
+use uncommon_app_core::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 use unreplicon_core::messages::ExportPlayerGearMessage;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::AppState;
 
 fn from_owner_id(owner_id: OwnerId) -> ClientId {
     match owner_id {

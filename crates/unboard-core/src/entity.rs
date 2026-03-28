@@ -1,9 +1,5 @@
 use bevy::prelude::*;
 
-/// Marker component for game sprites (generic game objects)
-#[derive(Component, Debug)]
-pub struct GameSprite;
-
 /// Marker component for map tile sprites (static tileset elements)
 #[derive(Component, Debug)]
 pub struct MapTileSprite;

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unbehavior_core::behavior::{Behavior, Util};
 use unboard_core::components::spawning::PlayerSpawnPoint;
-use untypes_core::hydration::HydrationStage;
+use unmapload_core::hydration::HydrationStage;
 
 fn tag_player_spawn_points(
     mut q: Query<(Entity, &Behavior), With<HydrationStage<3>>>,

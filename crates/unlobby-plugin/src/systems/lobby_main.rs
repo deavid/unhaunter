@@ -2,25 +2,27 @@ use std::str::FromStr;
 
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
+use uncommon_app_core::states::{AppState, SimulationState};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unlobby_core::states::LobbyScreen;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
+use unmenu_core::assets::MenuAssets;
+use unmenu_core::colors;
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::components::MenuUI;
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
+use unplayer_core::colors::player_color;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::components::visuals::AlphaModulator;
 use unreplicon_core::components::{LobbyInfo, SelectedMission};
 use unreplicon_core::messages::{RequestAbortMission, RequestStartMission};
 use unreplicon_core::resources::{CurrentMapSeed, LocalPlayer, MissionAutoJoinArmed};
 use untmxmap_core::resources::maps::Maps;
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::{AppState, LobbyScreen, SimulationState};
-use unui_core::assets::UiAssets;
 
 #[derive(Component)]
 pub(crate) struct LobbyMainUI;
@@ -60,7 +62,7 @@ pub(crate) struct StateEntryTimer(pub f32);
 
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    ui_assets: Option<Res<UiAssets>>,
+    menu_assets: Option<Res<MenuAssets>>,
     authority_role: Option<Res<AuthorityRole>>,
     local_player_role: Option<Res<LocalPlayerRole>>,
     player_profile: Option<Res<Persistent<PlayerProfileData>>>,
@@ -71,7 +73,7 @@ pub(crate) fn setup_ui(
     q_lobby: Query<&LobbyInfo>,
     room_ident: Option<Res<unreplicon_core::resources::RoomIdentification>>,
 ) {
-    let Some(ui_assets) = ui_assets else {
+    let Some(menu_assets) = menu_assets else {
         return;
     };
     *entry_timer = StateEntryTimer(time.elapsed_secs());
@@ -99,21 +101,21 @@ pub(crate) fn setup_ui(
         .id();
 
     commands.entity(root).with_children(|p| {
-        templates::create_background(p, &ui_assets);
-        templates::create_logo(p, &ui_assets);
+        templates::create_background(p, &menu_assets);
+        templates::create_logo(p, &menu_assets);
         if let Some(profile) = player_profile {
-            templates::create_player_status_bar(p, &ui_assets, &profile);
+            templates::create_player_status_bar(p, &menu_assets, &profile);
         }
 
         // Sidebar strip for primary navigation
-        let mut strip = templates::create_menu_strip::<LobbyMenuAction>(p, &ui_assets, &[], 0);
+        let mut strip = templates::create_menu_strip::<LobbyMenuAction>(p, &menu_assets, &[], 0);
         strip.insert(MenuMouseTracker::default());
 
         strip.with_children(|s| {
             // Re-introducing Title without a subtitle breadcrumb
             s.spawn(Text::new("Multiplayer Lobby"))
                 .insert(TextFont {
-                    font: ui_assets.font_londrina_light.clone(),
+                    font: menu_assets.font_londrina_light.clone(),
                     font_size: 48.0 * FONT_SCALE,
                     ..default()
                 })
@@ -140,7 +142,7 @@ pub(crate) fn setup_ui(
                     || action == LobbyMenuAction::AbortMission
                 {
                     let mut menu_item =
-                        templates::create_menu_item(s, label, menu_idx, false, &ui_assets);
+                        templates::create_menu_item(s, label, menu_idx, false, &menu_assets);
                     menu_item.insert(action);
                     if action == LobbyMenuAction::StartMission {
                         menu_item.insert(MissionLaunchControl);
@@ -152,7 +154,7 @@ pub(crate) fn setup_ui(
             s.spawn((
                 Text::new("INITIALIZING DEPLOYMENT..."),
                 TextFont {
-                    font: ui_assets.font_londrina_light.clone(),
+                    font: menu_assets.font_londrina_light.clone(),
                     font_size: 38.0 * FONT_SCALE,
                     ..default()
                 },
@@ -172,7 +174,7 @@ pub(crate) fn setup_ui(
         });
 
         // Right content area - Informational only (no MenuRoot here)
-        let mut content = templates::create_informational_content_area(p, &ui_assets);
+        let mut content = templates::create_informational_content_area(p, &menu_assets);
         content.with_children(|c| {
             // Left column: Map Preview + Details
             c.spawn(Node {
@@ -195,7 +197,7 @@ pub(crate) fn setup_ui(
                 left.spawn((
                     Text::new(""),
                     TextFont {
-                        font: ui_assets.font_titillium_regular.clone(),
+                        font: menu_assets.font_titillium_regular.clone(),
                         font_size: 18.0 * FONT_SCALE,
                         ..default()
                     },
@@ -206,7 +208,7 @@ pub(crate) fn setup_ui(
                 left.spawn((
                     Text::new(""),
                     TextFont {
-                        font: ui_assets.font_titillium_light.clone(),
+                        font: menu_assets.font_titillium_light.clone(),
                         font_size: 16.0 * FONT_SCALE,
                         ..default()
                     },
@@ -227,7 +229,7 @@ pub(crate) fn setup_ui(
                 right.spawn((
                     Text::new("Players"),
                     TextFont {
-                        font: ui_assets.font_londrina_light.clone(),
+                        font: menu_assets.font_londrina_light.clone(),
                         font_size: 32.0 * FONT_SCALE,
                         ..default()
                     },
@@ -262,7 +264,7 @@ pub(crate) fn setup_ui(
                 parent.spawn((
                     Text::new(format!("Room Code: {}", code)),
                     TextFont {
-                        font: ui_assets.font_kode_bold.clone(),
+                        font: menu_assets.font_kode_bold.clone(),
                         font_size: 32.0 * FONT_SCALE,
                         ..default()
                     },
@@ -276,7 +278,7 @@ pub(crate) fn setup_ui(
         } else {
             "[ESC]: Back to Menu".to_string()
         };
-        templates::create_help_text(p, &ui_assets, Some(help_text));
+        templates::create_help_text(p, &menu_assets, Some(help_text));
     });
 }
 
@@ -372,7 +374,7 @@ pub(crate) fn handle_clicks(
                     let selected_map = lobby_info.and_then(|li| li.selected_map.clone());
                     match selected_map {
                         Some(map_filepath) if !map_filepath.is_empty() => {
-                            let map_seed = unfoundation_core::random_seed::heavy_rng_seed();
+                            let map_seed = uncommon_app_core::random_seed::heavy_rng_seed();
                             info!("Room owner requesting mission start: map={}", map_filepath);
                             ev_start.write(RequestStartMission { map_seed });
                         }
@@ -399,7 +401,7 @@ pub(crate) fn handle_clicks(
 pub(crate) fn update_display(
     q_lobby: Query<Ref<LobbyInfo>>,
     maps: Res<Maps>,
-    ui_assets: Option<Res<UiAssets>>,
+    menu_assets: Option<Res<MenuAssets>>,
     asset_server: Res<AssetServer>,
     local_player: Res<LocalPlayer>,
     authority_role: Option<Res<AuthorityRole>>,
@@ -414,7 +416,7 @@ pub(crate) fn update_display(
     mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
     q_selected_mission: Query<Entity, With<SelectedMission>>,
 ) {
-    let Some(ui_assets) = ui_assets else {
+    let Some(ui_assets) = menu_assets else {
         return;
     };
     // Guard: if LocalPlayer identity is not yet resolved, skip rendering this frame to
@@ -601,7 +603,7 @@ pub(crate) fn update_display(
                 })
                 .with_children(|row| {
                     // Colored box
-                    let color = colors::player_color(player.tint_color_index as usize);
+                    let color = player_color(player.tint_color_index as usize);
                     row.spawn((
                         Node {
                             width: Val::Px(16.0 * UI_SCALE),

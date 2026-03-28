@@ -5,7 +5,7 @@ use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::time::Duration;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 

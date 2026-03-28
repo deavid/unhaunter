@@ -1,15 +1,13 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uninput_core::components::{PlayerInput, PlayerInputMapping};
+use uninput_core::resources::MissionInputFocus;
 use unnavigation_core::components::{
     move_to::MoveToTarget,
     waypoint::{Waypoint, WaypointOwner, WaypointQueue},
 };
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::game::{GameplaySettings, MovementStyle};
-
-use untruck_core::components::in_truck::InTruck;
-use untypes_core::states::GameState;
 
 /// System that handles keyboard input for player movement.
 ///
@@ -27,10 +25,9 @@ pub fn keyboard_input_system(
     mut waypoint_queues: Query<&mut WaypointQueue>,
     q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
     game_settings: Res<Persistent<GameplaySettings>>,
-    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
-    game_state: Res<State<GameState>>,
+    focus: Res<MissionInputFocus>,
 ) {
-    if !q_in_truck.is_empty() || *game_state == GameState::Pause {
+    if !focus.has_focus {
         return;
     }
     for (entity, _player, input_mapping, mut player_input) in players.iter_mut() {

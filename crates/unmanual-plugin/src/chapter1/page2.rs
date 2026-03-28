@@ -2,12 +2,11 @@ use crate::types::ManualPageData;
 use crate::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use unmanual_core::assets::ManualAssets;
-use unui_core::assets::UiAssets;
 
 pub(crate) fn draw(
     parent: &mut ChildSpawnerCommands,
     manual_assets: &ManualAssets,
-    ui_assets: &UiAssets,
+    _second_manual_assets: &ManualAssets,
 ) {
     let title = "Essential Controls";
     let subtitle = "
@@ -43,17 +42,17 @@ pub(crate) fn draw(
     ];
     let summary = "These controls are essential for navigating the haunted locations, gathering evidence, and ultimately expelling the ghost. Experiment with your equipment and learn how to use your environment for a successful investigation.";
 
-    header(parent, ui_assets, title, subtitle);
+    header(parent, manual_assets, title, subtitle);
 
     grid_img_text2(
         parent,
-        &ui_assets.font_chakra_regular,
-        &ui_assets.font_chakra_semibold,
+        &manual_assets.font_chakra_regular,
+        &manual_assets.font_chakra_semibold,
         (3, 2),
         grid,
     );
 
-    summary_text(parent, ui_assets, summary);
+    summary_text(parent, manual_assets, summary);
 }
 
 pub(crate) fn create_manual_page() -> ManualPageData {

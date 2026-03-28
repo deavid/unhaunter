@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::prelude::*;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
+use uncommon_app_core::roles::AuthorityRole;
 use unreplicon_core::messages::GhostSoundFieldBroadcast;
 use unsoundfield_core::components::SoundFieldSource;
 use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::position::Position;
-use untypes_core::roles::AuthorityRole;
 
 /// Authority-side system: once in a while (~1/30 frames), each ghost/breach entity
 /// with a `SoundFieldSource` pulses its position into the local `SoundGrid` and
@@ -101,7 +101,7 @@ pub(crate) fn handle_ghost_sound_field_broadcast(
 }
 
 pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
-    use untypes_core::roles::is_pure_client;
+    use uncommon_app_core::roles::is_pure_client;
     app.add_systems(bevy::prelude::Update, ghost_sound_field_pulse);
     app.add_systems(
         bevy::prelude::Update,

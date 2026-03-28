@@ -2,12 +2,11 @@ use crate::types::ManualPageData;
 use crate::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use unmanual_core::assets::ManualAssets;
-use unui_core::assets::UiAssets;
 
 pub(crate) fn draw(
     parent: &mut ChildSpawnerCommands,
     manual_assets: &ManualAssets,
-    ui_assets: &UiAssets,
+    _second_manual_assets: &ManualAssets,
 ) {
     let title = "Expanding Your Arsenal";
     let subtitle = "
@@ -40,19 +39,19 @@ pub(crate) fn draw(
         ),
     ];
 
-    header(parent, ui_assets, title, subtitle);
+    header(parent, manual_assets, title, subtitle);
 
     grid_img_text2(
         parent,
-        &ui_assets.font_chakra_regular,
-        &ui_assets.font_chakra_semibold,
+        &manual_assets.font_chakra_regular,
+        &manual_assets.font_chakra_semibold,
         (3, 2),
         grid,
     );
 
     summary_text(
         parent,
-        ui_assets,
+        manual_assets,
         "Experiment with the new gear, observe the ghost's reactions, and use your environment to your advantage.",
     );
 }

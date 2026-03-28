@@ -16,7 +16,7 @@ bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 dirs = { workspace = true }
 unprofile-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 uuid = { workspace = true }
 ron = { workspace = true }
 unreplicon-core = { workspace = true }

@@ -14,4 +14,4 @@ workspace = true
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 tiled = { workspace = true }
-unrender-core = { workspace = true }
+unrender-std = { workspace = true }

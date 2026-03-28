@@ -1,6 +1,6 @@
 use bevy::prelude::*;
+use uncommon_app_core::states::BootState;
 use untmxmap_core::resources::maps::Maps;
-use untypes_core::states::BootState;
 
 pub(crate) fn set_boot_ready_when_maps_loaded(
     maps: Option<Res<Maps>>,

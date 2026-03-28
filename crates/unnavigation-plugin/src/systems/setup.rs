@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use untypes_core::states::AppState;
+use uncommon_app_core::states::AppState;
 
 use crate::systems::keyboard;
 use crate::systems::waypoint;

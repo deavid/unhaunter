@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use untypes_core::states::LobbyScreen;
+use unlobby_core::states::LobbyScreen;
 
 pub struct UnhaunterLobbyPlugin;
 

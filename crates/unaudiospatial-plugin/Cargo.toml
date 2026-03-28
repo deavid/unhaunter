@@ -14,9 +14,8 @@ workspace = true
 unaudiospatial-core = { workspace = true }
 unspatial-core = { workspace = true }
 unsettings-core = { workspace = true }
-untags-core = { workspace = true }
 unmetrics-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

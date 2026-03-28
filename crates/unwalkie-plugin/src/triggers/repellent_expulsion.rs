@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use unboard_core::resources::roomdb::RoomTopology;
+use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
@@ -10,7 +11,6 @@ use unghost_core::components::repellent_particle::RepellentParticle;
 use unghost_core::types::ghost::types::GhostType;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
-use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -20,7 +20,6 @@ const LINGER_THRESHOLD_SECONDS: f64 = 10.0;
 fn trigger_ghost_expelled_player_lingers_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     ghost_query: Query<Entity, With<GhostSprite>>,
     player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>, // Assuming only one player for now
@@ -77,7 +76,6 @@ fn trigger_ghost_expelled_player_lingers_system(
 fn trigger_has_repellent_enters_location_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     room_topology: Res<RoomTopology>,
@@ -135,7 +133,6 @@ struct PrevRepellentState {
 fn trigger_repellent_used_too_far_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<(&Position, &GhostSprite), Without<PlayerSprite>>,
@@ -220,7 +217,6 @@ struct PrevRepellentActiveState {
 fn trigger_repellent_provokes_strong_reaction_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     mut ghost_query: Query<(&GhostSprite, &Position)>,
@@ -326,7 +322,6 @@ const MAX_PARTICLE_CLEAR_WAIT_SECONDS: f32 = 10.0; // Max time to wait for parti
 fn trigger_repellent_exhausted_correct_type_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -450,9 +445,6 @@ fn reset_processed_missed_expulsion_ghosts_on_new_mission(
 fn trigger_ghost_expelled_player_missed_simplified_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    // GameState isn't strictly needed if we trigger even if player is in truck,
-    // as long as they were outside when the ghost was despawned.
-    // mut game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut removed_ghost_query: RemovedComponents<GhostSprite>, // Reacts to GhostSprite removal
     player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>,

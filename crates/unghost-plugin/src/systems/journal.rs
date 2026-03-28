@@ -1,8 +1,8 @@
 use bevy::prelude::*;
+use uncommon_app_core::roles::AuthorityRole;
+use uncommon_app_core::states::SimulationState;
 use unghost_core::events::{JournalEvidenceToggled, JournalGhostToggled};
 use unghost_core::resources::ghost_guess::GhostGuess;
-use untypes_core::roles::AuthorityRole;
-use untypes_core::states::SimulationState;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(

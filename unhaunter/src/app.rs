@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
 use std::time::Duration;
-use untypes_core::cli::CliOptions;
-use untypes_core::platform::plt;
+use uncommon_app_core::cli::CliOptions;
+use uncommon_app_core::platform::plt;
 
 // Core & Logic Plugins
 use unboard_plugin::plugin::UnhaunterBoardPlugin;
@@ -53,7 +53,6 @@ use unmenu_plugin::plugin::UnhaunterCoreMenuPlugin;
 use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
 use unpause_plugin::plugin::UnpausePlugin;
 use unsummary_plugin::plugin::{UnhaunterSummaryCorePlugin, UnhaunterSummaryPlugin};
-use unui_plugin::plugin::UnhaunterUiPlugin;
 
 // Input & Interaction
 use uninput_plugin::plugin::UnhaunterInputPlugin;
@@ -215,7 +214,6 @@ pub fn app_run(cli_options: CliOptions) {
         // Input & Foundation
         app.add_plugins((
             UnhaunterInputPlugin,
-            UnhaunterUiPlugin,
             UnpausePlugin,
             UnhaunterPlayerPlugin,
             UnhaunterMenuPlugin,

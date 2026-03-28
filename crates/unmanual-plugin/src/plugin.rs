@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use untypes_core::states::AppState;
+use uncommon_app_core::states::AppState;
 
 use crate::{manual_logic, user_manual_ui};
 use unmanual_core::assets::ManualAssets;

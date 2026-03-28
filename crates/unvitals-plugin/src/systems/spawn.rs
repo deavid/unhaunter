@@ -1,7 +1,7 @@
 use bevy::prelude::*;
+use uncommon_app_core::roles::AuthorityRole;
+use uncommon_app_core::states::AppState;
 use unplayer_core::components::PlayerSprite;
-use untypes_core::roles::AuthorityRole;
-use untypes_core::states::AppState;
 use unvitals_core::components::{PlayerVitals, Stamina};
 
 /// Authority: inserts PlayerVitals and Stamina on any player entity that is missing them.

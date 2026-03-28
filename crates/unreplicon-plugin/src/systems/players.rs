@@ -10,6 +10,9 @@ use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::FloorItemCollidable;
 use unboard_core::components::spawning::PlayerSpawnPoint;
+use uncommon_app_core::roles::is_pure_client;
+use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
+use uncommon_app_core::states::{AppState, SimulationState};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
@@ -30,9 +33,6 @@ use unreplicon_core::resources::LocalPlayer;
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
-use untypes_core::roles::is_pure_client;
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::{AppState, SimulationState};
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
@@ -563,7 +563,7 @@ fn handle_truck_loadout_message(
                     continue;
                 }
                 let entity = gear_registry.spawn(&mut commands, kind);
-                let rng_val = unfoundation_core::random_seed::heavy_rng_seed();
+                let rng_val = uncommon_app_core::random_seed::heavy_rng_seed();
                 let net_id = unreplicon_core::network_id::NetworkId(rng_val.max(1000));
 
                 commands.entity(entity).insert((

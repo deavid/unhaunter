@@ -2,10 +2,11 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::RngExt;
 use unaudiospatial_core::emitter::AudioEmitter;
+use uncommon_app_core::random_seed;
+use uncommon_app_core::roles::LocalPlayerRole;
+use uncommon_app_core::utils::temperature::kelvin_to_celsius;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::random_seed;
-use unfoundation_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
@@ -18,7 +19,6 @@ use unmetrics_core::metrics::SendMetric;
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
-use untypes_core::roles::LocalPlayerRole;
 
 use crate::metrics;
 
@@ -38,7 +38,7 @@ pub(crate) fn update_thermometer(
     tg: If<Res<ThermalGrid>>,
     difficulty: Res<CurrentDifficulty>,
     player_profile: Res<Persistent<PlayerProfileData>>,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
 ) {
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
     let is_authority = authority.is_some();

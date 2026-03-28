@@ -12,6 +12,7 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+unclassic-mode-core = { workspace = true }
 unbehavior-core = { workspace = true }
 unboard-core = { workspace = true }
 uninput-core = { workspace = true }
@@ -20,6 +21,5 @@ unnpc-core = { workspace = true }
 unplayer-core = { workspace = true }
 unrender-std = { workspace = true }
 unspatial-core = { workspace = true }
-untags-core = { workspace = true }
 untruck-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }

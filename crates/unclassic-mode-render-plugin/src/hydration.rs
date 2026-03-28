@@ -7,6 +7,7 @@ use unboard_core::resources::visibility_data::VisibilityData;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::tags::GhostTag;
 use uninput_core::components::{PlayerInput, PlayerInputMapping};
 use unlight_core::components::LightSensitive;
 use unlocomotion_core::animation::{AnimationTimer, CharacterAnimation};
@@ -17,7 +18,7 @@ use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ResolutionFactor, ShadowCaster,
 };
-use unrender_std::materials::CustomMaterial1;
+use unrender_std::custom_material1::CustomMaterial1;
 use unrender_std::utils::quadcc::QuadCC;
 use unreplicon_core::resources::LocalPlayer;
 use unsensing_core::components::{SpectralClarity, SpectralInfluence};
@@ -26,7 +27,6 @@ use unsoundfield_core::components::SoundFieldSource;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
-use untags_core::tags::GhostTag;
 use untmxmap_core::resources::upscale::UpscaleIndex;
 
 /// Marker inserted once a player entity has been fully hydrated with visuals and input.
@@ -43,13 +43,13 @@ pub(crate) struct BreachHydrated;
 
 #[derive(SystemParam)]
 pub(crate) struct HydrationParam<'w> {
-    pub local_player_role: Option<Res<'w, untypes_core::roles::LocalPlayerRole>>,
+    pub local_player_role: Option<Res<'w, uncommon_app_core::roles::LocalPlayerRole>>,
     pub asset_server: Res<'w, AssetServer>,
     pub player_assets: Option<Res<'w, unplayer_core::assets::PlayerAssets>>,
     pub ghost_assets: Option<Res<'w, unghost_core::assets::GhostAssets>>,
     pub upscale_idx: Res<'w, UpscaleIndex>,
     pub video_settings: Option<Res<'w, Persistent<VideoSettings>>>,
-    pub materials1: Option<ResMut<'w, Assets<unrender_std::materials::CustomMaterial1>>>,
+    pub materials1: Option<ResMut<'w, Assets<unrender_std::custom_material1::CustomMaterial1>>>,
     pub meshes: Option<ResMut<'w, Assets<Mesh>>>,
     pub images: Option<Res<'w, Assets<Image>>>,
     pub audio_settings: Option<Res<'w, Persistent<unsettings_core::audio::AudioSettings>>>,
@@ -141,7 +141,7 @@ pub(crate) fn hydrate_players_system(
             .insert(unspatial_core::boardposition::MapEntityFieldBPos(
                 pos.to_board_position(),
             ))
-            .insert(untags_core::tags::PlayerTag)
+            .insert(unplayer_core::components::PlayerTag)
             .insert(unspatial_core::lerp_position::LerpPosition::new(*pos))
             .insert(PlayerInput::default())
             .insert(AnimationTimer::from_range(
@@ -487,9 +487,9 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            hydrate_players_system.run_if(in_state(untypes_core::states::AppState::InGame)),
-            hydrate_ghosts_system.run_if(in_state(untypes_core::states::AppState::InGame)),
-            hydrate_breach_system.run_if(in_state(untypes_core::states::AppState::InGame)),
+            hydrate_players_system.run_if(in_state(uncommon_app_core::states::AppState::InGame)),
+            hydrate_ghosts_system.run_if(in_state(uncommon_app_core::states::AppState::InGame)),
+            hydrate_breach_system.run_if(in_state(uncommon_app_core::states::AppState::InGame)),
         ),
     );
 }

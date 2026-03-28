@@ -1,15 +1,15 @@
+use crate::colors;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
-use unfoundation_core::colors;
 use unghost_core::events::{EvidenceClarityThresholdCrossed, GhostActualTypeChanged};
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
+use uninput_core::states::InGameUiState;
 use unmapload_core::events::loadlevel::LevelLoadedEvent;
 use unprofile_core::profile::PlayerProfileData;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
-use untypes_core::states::GameState;
 use unwalkie_core::resources::WalkiePlay;
 
 pub(crate) const JOURNAL_HINT_THRESHOLD: u32 = 3;
@@ -253,7 +253,7 @@ pub(crate) fn app_setup(app: &mut App) {
             update_journal_button_blinking_system,
             update_journal_ghost_blinking_system,
         )
-            .run_if(in_state(GameState::Truck)),
+            .run_if(in_state(InGameUiState::Truck)),
     );
 
     app.add_systems(Update, clear_seen_evidence_hints_on_mission_change);

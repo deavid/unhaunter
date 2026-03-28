@@ -24,20 +24,21 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         (interaction_event_handler, room_state_sync_system)
             .chain()
-            .run_if(in_state(untypes_core::states::SimulationState::Ready))
-            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+            .run_if(in_state(uncommon_app_core::states::SimulationState::Ready))
+            .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
     );
     // All nodes: rebuild board topology grids when any Behavior changes (including
     // changes arriving via bevy_replicon replication on pure clients).
     app.add_systems(
         Update,
-        trigger_grid_rebuild_on_sync.run_if(in_state(untypes_core::states::SimulationState::Ready)),
+        trigger_grid_rebuild_on_sync
+            .run_if(in_state(uncommon_app_core::states::SimulationState::Ready)),
     );
     // Mouse hover feedback: mark interactive objects as hovered/unhovered
     app.add_systems(
         Update,
         (mouse_over_interactive_system, mouse_out_interactive_system)
-            .run_if(in_state(untypes_core::states::AppState::InGame)),
+            .run_if(in_state(uncommon_app_core::states::AppState::InGame)),
     );
 }
 

@@ -13,17 +13,18 @@ use unboard_core::resources::board_topology::{
 };
 use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use unboard_core::types::fielddata::CollisionFieldData;
+use uncommon_app_core::states::{AppState, SimulationState};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unmapload_core::events::loadlevel::LevelLoadedEvent;
 use unmission_core::events::MapGeometryInitializedEvent;
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::GameSprite;
-use unrender_std::materials::CustomMaterial1;
+use unrender_std::custom_material1::CustomMaterial1;
 use unspatial_core::position::Position;
 use untiled_core::tiled::MapTileSetDb;
 use untiled_core::tiledmap::map::MapLayerType;
-use untypes_core::states::{AppState, SimulationState};
+use untmxmap_core::events::LevelDataEvent;
 
 use crate::resources::LevelLoadingStatus;
 use crate::sprite_db;
@@ -50,8 +51,8 @@ pub(crate) struct LoadLevelSystemParam<'w, 's> {
     pub roomstate: ResMut<'w, RoomStateMap>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub loading_status: ResMut<'w, LevelLoadingStatus>,
-    pub cli: Res<'w, untypes_core::cli::CliOptions>,
-    pub authority: Option<Res<'w, untypes_core::roles::AuthorityRole>>,
+    pub cli: Res<'w, uncommon_app_core::cli::CliOptions>,
+    pub authority: Option<Res<'w, uncommon_app_core::roles::AuthorityRole>>,
     pub existing_tmx_entities:
         Query<'w, 's, (Entity, &'static unbehavior_core::components::TmxEntityId)>,
 }
@@ -71,12 +72,13 @@ pub(crate) struct LoadLevelSystemParam<'w, 's> {
 /// * `p` - Level system parameters containing all needed resources
 /// * `ev_geometry_init` - Event writer to signal when level geometry is ready
 fn load_level_handler(
-    mut ev: MessageReader<LevelLoadedEvent>,
+    mut ev: MessageReader<LevelDataEvent>,
     mut commands: Commands,
     qgs: Query<Entity, (With<GameSprite>, Without<Remote>)>,
     q_positions: Query<&Position>,
     mut p: LoadLevelSystemParam,
     mut ev_geometry_init: MessageWriter<MapGeometryInitializedEvent>,
+    mut ev_level_loaded: MessageWriter<LevelLoadedEvent>,
     time: Res<Time>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
 ) {
@@ -200,6 +202,7 @@ fn load_level_handler(
     }
 
     debug!("Map spawning complete: {}", loaded_event.map_filepath);
+    ev_level_loaded.write(LevelLoadedEvent);
 }
 
 pub(crate) fn reset_level_resources(
@@ -216,6 +219,6 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnExit(AppState::InGame), reset_level_resources);
     app.add_systems(
         PostUpdate,
-        load_level_handler.run_if(bevy::prelude::on_message::<LevelLoadedEvent>),
+        load_level_handler.run_if(bevy::prelude::on_message::<LevelDataEvent>),
     );
 }

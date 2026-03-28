@@ -1,16 +1,17 @@
 use crate::{bevy::bevy_load_map, map_loader::UnhaunterMapLoader};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unmapload_core::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
+use unmapload_core::events::loadlevel::LoadLevelEvent;
 use unsettings_core::video::VideoSettings;
 use untiled_core::tiled::MapTileSetDb;
 use untmxmap_core::assets::{tmxmap::TmxMap, tsxsheet::TsxSheet};
+use untmxmap_core::events::LevelDataEvent;
 use untmxmap_core::resources::maps::Maps;
 use untmxmap_core::resources::upscale::UpscaleIndex;
 
 fn load_level_handler(
     mut ev: MessageReader<LoadLevelEvent>,
-    mut evw: MessageWriter<LevelLoadedEvent>,
+    mut evw: MessageWriter<LevelDataEvent>,
     asset_server: Res<AssetServer>,
     mut tilesetdb: ResMut<MapTileSetDb>,
     mut texture_atlases: Option<ResMut<Assets<TextureAtlasLayout>>>,
@@ -19,7 +20,7 @@ fn load_level_handler(
     tsx_assets: Res<Assets<TsxSheet>>,
     upscale_idx: Res<UpscaleIndex>,
     video_settings: Res<Persistent<VideoSettings>>,
-    cli: Res<untypes_core::cli::CliOptions>,
+    cli: Res<uncommon_app_core::cli::CliOptions>,
 ) {
     let mut ev_iter = ev.read();
     let Some(load_event) = ev_iter.next() else {
@@ -51,7 +52,7 @@ fn load_level_handler(
         cli.is_headless(),
     );
 
-    evw.write(LevelLoadedEvent {
+    evw.write(LevelDataEvent {
         map_filepath,
         layers,
         floor_mapping,

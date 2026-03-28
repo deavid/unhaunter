@@ -1,5 +1,5 @@
 use crate::components::visuals::ResolutionFactor;
-use crate::materials::CustomMaterial1;
+use crate::custom_material1::CustomMaterial1;
 use bevy::prelude::*;
 use unbehavior_core::behavior::Behavior;
 

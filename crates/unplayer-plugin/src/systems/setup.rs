@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::AppRuleExt;
+use uncommon_app_core::states::AppState;
 use unlocomotion_core::components::PlayerLocomotionState;
 use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite};
 use unspatial_core::direction::Direction;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::states::AppState;
 
 use crate::systems::hide;
 use crate::systems::hydration;
@@ -31,7 +31,7 @@ pub(crate) fn app_setup_core(app: &mut App) {
     app.configure_sets(
         Update,
         unplayer_core::authoritative::PlayerAuthoritativeLogicSet
-            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>)
+            .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>)
             .after(uninput_core::PlayerInputSet),
     );
 

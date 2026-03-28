@@ -1,10 +1,12 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use uncommon_app_core::cli::CliOptions;
+use uncommon_app_core::states::{AppState, BootState, SimulationState};
+use uninput_core::states::InGameUiState;
 use unmapload_core::assets::{MapAssets, MissionAssets};
 use unmapload_core::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent, MapEntitiesReadyEvent};
 use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
-use untypes_core::cli::CliOptions;
-use untypes_core::states::{AppState, BootState, GameState, SimulationState};
+use untmxmap_core::events::LevelDataEvent;
 
 /// Plugin for map loading functionality
 ///
@@ -22,7 +24,7 @@ impl Plugin for UnhaunterMapLoadPlugin {
 
         app.init_state::<AppState>()
             .init_state::<BootState>()
-            .init_state::<GameState>()
+            .init_state::<InGameUiState>()
             .init_state::<SimulationState>()
             .add_loading_state(
                 LoadingState::new(AppState::EngineBoot).continue_to_state(AppState::MainMenu),
@@ -36,6 +38,7 @@ impl Plugin for UnhaunterMapLoadPlugin {
             );
         }
         app.add_message::<LoadLevelEvent>()
+            .add_message::<LevelDataEvent>()
             .add_message::<LevelLoadedEvent>()
             .add_message::<LevelReadyEvent>()
             .add_message::<MapGeometryInitializedEvent>()

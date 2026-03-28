@@ -1,14 +1,15 @@
 use bevy::prelude::*;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unclassic_mode_core::colors;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use ungear_core::assets::GearAssets;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
-use unrender_std::assets::GearAssets;
-use unui_core::assets::UiAssets;
+
+use crate::assets::GameUiAssets;
 
 pub(crate) fn setup_ui_gear_inv_left(
     p: &mut ChildSpawnerCommands,
-    ui_assets: &UiAssets,
+    ui_assets: &GameUiAssets,
     gear_assets: &GearAssets,
 ) {
     p.spawn(Node {
@@ -80,7 +81,7 @@ pub(crate) fn setup_ui_gear_inv_left(
 
 pub(crate) fn setup_ui_gear_inv_right(
     p: &mut ChildSpawnerCommands,
-    ui_assets: &UiAssets,
+    ui_assets: &GameUiAssets,
     gear_assets: &GearAssets,
 ) {
     p.spawn(Node {

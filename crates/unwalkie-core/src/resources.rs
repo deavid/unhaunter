@@ -2,7 +2,7 @@ use crate::events::walkie_types::WalkieEvent;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use rand::prelude::*;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use unghost_core::types::evidence::Evidence;
 use unwalkie_types::types::VoiceLineData;
 

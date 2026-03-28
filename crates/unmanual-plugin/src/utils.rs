@@ -6,9 +6,9 @@
 //! manual's interface.  The functions utilize Bevy's UI system to create the
 //! visual elements of the manual efficiently.
 use bevy::prelude::*;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unui_core::assets::UiAssets;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unmanual_core::assets::ManualAssets;
+use unmenu_core::colors;
 
 pub(crate) fn grid_img_text2(
     parent: &mut ChildSpawnerCommands<'_>,
@@ -99,7 +99,7 @@ pub(crate) fn grid_img_text2(
 
 pub(crate) fn header(
     parent: &mut ChildSpawnerCommands,
-    ui_assets: &UiAssets,
+    manual_assets: &ManualAssets,
     title: impl Into<String>,
     subtitle: impl Into<String>,
 ) {
@@ -121,7 +121,7 @@ pub(crate) fn header(
             parent
                 .spawn(Text::new(title))
                 .insert(TextFont {
-                    font: ui_assets.font_londrina_light.clone(),
+                    font: manual_assets.font_londrina_light.clone(),
                     font_size: 32.0 * FONT_SCALE,
                     ..default()
                 })
@@ -131,7 +131,7 @@ pub(crate) fn header(
             parent
                 .spawn(Text::new(subtitle))
                 .insert(TextFont {
-                    font: ui_assets.font_chakra_regular.clone(),
+                    font: manual_assets.font_chakra_regular.clone(),
                     font_size: 18.0 * FONT_SCALE,
                     ..default()
                 })
@@ -146,7 +146,7 @@ pub(crate) fn header(
 
 pub(crate) fn summary_text(
     parent: &mut ChildSpawnerCommands,
-    ui_assets: &UiAssets,
+    manual_assets: &ManualAssets,
     summary: impl Into<String>,
 ) {
     parent
@@ -173,7 +173,7 @@ pub(crate) fn summary_text(
             parent
                 .spawn(Text::new(summary))
                 .insert(TextFont {
-                    font: ui_assets.font_chakra_regular.clone(),
+                    font: manual_assets.font_chakra_regular.clone(),
                     font_size: 18.0 * FONT_SCALE,
                     ..default()
                 })

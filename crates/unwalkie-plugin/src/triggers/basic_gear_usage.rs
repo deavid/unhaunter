@@ -13,8 +13,8 @@ use uninput_core::components::PlayerInputMapping;
 use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 
+use uncommon_app_core::states::AppState;
 use unspatial_core::position::Position;
-use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay; // Core walkie types
 
@@ -28,7 +28,6 @@ struct RightHandGearStateTracker {
 fn trigger_gear_selected_not_activated_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     room_topology: Res<RoomTopology>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -166,7 +165,6 @@ struct IneffectiveToolInHotspotTracker {
 fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
     ghost_query: Query<(&GhostSprite, &Position)>, // GhostSprite for breach_pos, Position for live pos
@@ -367,7 +365,6 @@ struct GearCycleUsageTracker {
 fn trigger_did_not_cycle_to_other_gear_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerInputMapping, &PlayerGear, &Position), With<MainPlayer>>,
     room_topology: Res<RoomTopology>,

@@ -1,10 +1,10 @@
 use crate::manual_logic::draw_manual_page;
 use crate::resources::manual::{CurrentManualPage, Manual};
 use bevy::prelude::*;
-use unfoundation_core::platform::plt::FONT_SCALE;
+use uncommon_app_core::platform::plt::FONT_SCALE;
+use uncommon_app_core::states::AppState;
 use unmanual_core::assets::ManualAssets;
-use untypes_core::states::AppState;
-use unui_core::assets::UiAssets;
+use unmenu_core::assets::MenuAssets;
 
 #[derive(Component)]
 pub(crate) struct ManualCamera;
@@ -21,7 +21,7 @@ pub(crate) enum ManualNavigationEvent {
     PreviousPage,
     Close,
 }
-pub(crate) fn draw_manual_ui(commands: &mut Commands, ui_assets: &UiAssets) {
+pub(crate) fn draw_manual_ui(commands: &mut Commands, ui_assets: &MenuAssets) {
     let button_text_style = TextFont {
         font: ui_assets.font_londrina_light.clone(),
         font_size: 30.0 * FONT_SCALE,
@@ -190,7 +190,7 @@ pub(crate) fn user_manual_system(
     }
 }
 
-pub(crate) fn setup(mut commands: Commands, ui_assets: Res<UiAssets>) {
+pub(crate) fn setup(mut commands: Commands, ui_assets: Res<MenuAssets>) {
     // Spawn the 2D camera for the manual UI
     commands.spawn(Camera2d).insert(ManualCamera);
 
@@ -203,7 +203,6 @@ fn redraw_manual_ui_system(
     current_manual_page: Res<CurrentManualPage>,
     q_manual_ui: Query<Entity, With<UserManualUI>>,
     q_page_content: Query<Entity, With<PageContent>>,
-    ui_assets: Res<UiAssets>,
     manual_assets: Res<ManualAssets>,
     manuals: Res<Manual>,
 ) {
@@ -226,13 +225,7 @@ fn redraw_manual_ui_system(
     commands
         .entity(page_content_entity)
         .with_children(|parent| {
-            draw_manual_page(
-                parent,
-                &manual_assets,
-                &ui_assets,
-                &manuals,
-                &current_manual_page,
-            );
+            draw_manual_page(parent, &manual_assets, &manuals, &current_manual_page);
         });
 }
 

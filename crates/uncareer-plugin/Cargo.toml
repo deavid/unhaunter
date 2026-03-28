@@ -22,4 +22,4 @@ unplayer-core = { workspace = true }
 unboard-core = { workspace = true }
 unreplicon-core = { workspace = true }
 undifficulty-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }

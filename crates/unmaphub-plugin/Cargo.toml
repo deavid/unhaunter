@@ -13,9 +13,8 @@ workspace = true
 [dependencies]
 
 undifficulty-core = { workspace = true }
-unfoundation-core = { workspace = true }
-unui-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unmenu-core = { workspace = true }
+unmaphub-core = { workspace = true }
 
 bevy = { workspace = true }

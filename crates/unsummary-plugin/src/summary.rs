@@ -1,20 +1,19 @@
+use crate::assets::SummaryAssets;
 use crate::components::{SCamera, SummaryUI, SummaryUIType};
 use bevy::{color::palettes::css, prelude::*};
 use unboard_core::resources::board_topology::BoardTopology;
 use uncareer_core::grade::Grade;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::roles::LobbyPresenceRole;
+use uncommon_app_core::states::AppState;
+use uncommon_app_core::utils::time::format_time;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unfoundation_core::utils::time::format_time;
 use unghost_core::types::ghost::types::GhostType;
 use unmission_core::summary::{ActiveMissionEvaluator, SummaryData};
 use unplayer_core::components::PlayerSprite;
 use unreplicon_core::resources::LocalPlayer;
 use untmxmap_core::resources::maps::Maps;
-use untypes_core::roles::LobbyPresenceRole;
-use untypes_core::states::AppState;
-use untypes_core::states::GameState;
-use unui_core::assets::UiAssets;
 use unvitals_core::components::PlayerVitals;
 use unvitals_core::events::PlayerDiedEvent;
 
@@ -46,9 +45,7 @@ pub(crate) fn cleanup(
 pub(crate) fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
-    _game_state: Res<State<GameState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
-    mut game_next_state: ResMut<NextState<GameState>>,
     qp: Query<(&PlayerSprite, &PlayerVitals)>,
     difficulty: Res<CurrentDifficulty>,
     mut death_timer: Local<Option<f32>>,
@@ -73,7 +70,6 @@ pub(crate) fn update_time(
         let start = death_timer.get_or_insert(now);
         if now - *start > 1.0 {
             app_next_state.set(AppState::Summary);
-            game_next_state.set(GameState::Running);
         }
     } else {
         *death_timer = None;
@@ -83,7 +79,6 @@ pub(crate) fn update_time(
 pub(crate) fn keyboard(
     app_state: Res<State<AppState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
-    mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     lobby_presence: Option<Res<LobbyPresenceRole>>,
 ) {
@@ -99,7 +94,6 @@ pub(crate) fn keyboard(
         } else {
             app_next_state.set(AppState::MissionSelect);
         }
-        game_next_state.set(GameState::Running);
     }
 }
 
@@ -116,7 +110,6 @@ pub(crate) fn afk_timeout(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     lobby_presence: Option<Res<LobbyPresenceRole>>,
     mut app_next_state: ResMut<NextState<AppState>>,
-    mut game_next_state: ResMut<NextState<GameState>>,
     time: Res<Time>,
 ) {
     if keyboard_input.get_just_pressed().next().is_some() {
@@ -130,10 +123,13 @@ pub(crate) fn afk_timeout(
         } else {
             app_next_state.set(AppState::MissionSelect);
         }
-        game_next_state.set(GameState::Running);
     }
 }
-pub(crate) fn setup_ui(mut commands: Commands, ui_assets: Res<UiAssets>, rsd: Res<SummaryData>) {
+pub(crate) fn setup_ui(
+    mut commands: Commands,
+    ui_assets: Res<SummaryAssets>,
+    rsd: Res<SummaryData>,
+) {
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,

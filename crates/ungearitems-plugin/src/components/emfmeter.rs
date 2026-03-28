@@ -1,9 +1,9 @@
 use bevy_persistent::Persistent;
 use unaudiospatial_core::emitter::AudioEmitter;
+use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfog_core::miasma::MiasmaGrid;
-use unfoundation_core::random_seed;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
@@ -21,11 +21,11 @@ use unspatial_core::position::Position;
 
 use bevy::prelude::*;
 use rand::RngExt;
+use uncommon_app_core::roles::LocalPlayerRole;
 use ungear_core::types::gear::equipment::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::emfmeter::{EMFLevel, EMFMeter};
-use untypes_core::roles::LocalPlayerRole;
 
 pub(crate) fn update_emfmeter(
     mut q_emf: Query<(
@@ -47,7 +47,7 @@ pub(crate) fn update_emfmeter(
     difficulty: Res<CurrentDifficulty>,
     haunt_state: Res<HauntState>,
     player_profile: If<Res<Persistent<PlayerProfileData>>>,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
 ) {
     let measure = metrics::EMF_UPDATE.time_measure();
     let is_authority = authority.is_some();

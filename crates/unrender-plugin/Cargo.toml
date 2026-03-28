@@ -15,7 +15,7 @@ bevy = { workspace = true }
 
 unrender-std = { workspace = true }
 unlocomotion-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unspatial-core = { workspace = true }
 unmetrics-core = { workspace = true }
 untruck-core = { workspace = true }

@@ -23,7 +23,7 @@ plugin.
 | `crates/unreplicon-plugin/src/systems/lobby.rs`      | Map loading (`untmxmap-plugin`, `unmapload-core`) |
 | `crates/unreplicon-plugin/src/systems/connection.rs` | Ghost AI, damage, combat systems                  |
 | `crates/unreplicon-core/src/messages.rs`             | Any Bevy rendering or asset pipeline code         |
-| `crates/untypes-core/src/roles.rs`                   | The `unengine-plugin` role-insertion logic        |
+| `crates/uncommon-app-core/src/roles.rs`              | The `unengine-plugin` role-insertion logic        |
 | `crates/unmainmenu-plugin/src/mainmenu.rs`           | The `unlobby-plugin` lobby UI screens             |
 | `crates/unmainmenu-plugin/Cargo.toml`                | Any Cargo workspace-level changes                 |
 
@@ -33,7 +33,7 @@ plugin.
 
 The following types are central to every step in this PR. Read these carefully before touching any file.
 
-### 2.1 Role Resources (`crates/untypes-core/src/roles.rs`)
+### 2.1 Role Resources (`crates/uncommon-app-core/src/roles.rs`)
 
 Three zero-sized marker resources describe what _this process_ is doing in a given session. They are inserted once at
 startup by `crates/unengine-plugin/src/systems.rs` → `insert_roles_at_startup`, based on `CliOptions`, and are never
@@ -56,7 +56,7 @@ The insertion matrix (from `insert_roles_at_startup`):
 | Dedicated (headless) | ✔             | —               | ✔                 |
 
 A **pure client** is therefore: `LocalPlayerRole` present AND `AuthorityRole` absent. The helper
-`untypes_core::roles::is_pure_client(local, authority) -> bool` encodes this.
+`uncommon-app_core::roles::is_pure_client(local, authority) -> bool` encodes this.
 
 ### 2.2 Lobby Data Components (`crates/unreplicon-core/src/components.rs`)
 
@@ -79,7 +79,7 @@ A **pure client** is therefore: `LocalPlayerRole` present AND `AuthorityRole` ab
 `InProgress`, `Concluding`, `Ended`. This is **not** an `AppState`. It describes the logical server game phase
 independently of any client's UI state.
 
-### 2.3 The Colour Palette (`crates/unfoundation-core/src/colors.rs`)
+### 2.3 The Colour Palette (`crates/uncommon-app-core/src/colors.rs`)
 
 ```rust
 pub fn player_color(index: usize) -> Color {
@@ -119,8 +119,8 @@ pub(crate) enum MenuID {
 `MenuID::Hub` displays as `"Play Online"` via its `Display` impl.
 
 `setup_ui` — `OnEnter(AppState::MainMenu)` system. Already accepts
-`lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>`. When `lobby_presence.is_some()` it already shows
-only `MultiplayerLobby`; when absent it shows the full menu. This existing branch is the insertion point for the
+`lobby_presence: Option<Res<uncommon-app_core::roles::LobbyPresenceRole>>`. When `lobby_presence.is_some()` it already
+shows only `MultiplayerLobby`; when absent it shows the full menu. This existing branch is the insertion point for the
 Disconnect variant.
 
 `menu_event` — `Update` system handling `MenuItemClicked` messages. Currently has no `commands`, no `authority`, and no
@@ -134,7 +134,7 @@ Disconnect variant.
 
 **Files touched:**
 
-- `crates/unfoundation-core/src/colors.rs`
+- `crates/uncommon-app-core/src/colors.rs`
 - `crates/unreplicon-plugin/src/systems/lobby.rs`
 
 #### 3.1.1 Add a `Color::WHITE` fallback to `player_color`
@@ -401,7 +401,7 @@ fn on_client_disconnected(
 
 **Files touched:**
 
-- `crates/untypes-core/src/roles.rs`
+- `crates/uncommon-app-core/src/roles.rs`
 - `crates/unreplicon-plugin/src/systems/connection.rs`
 - `crates/unreplicon-plugin/src/systems/lobby.rs` (just the `app_setup` registration)
 - `crates/unmainmenu-plugin/src/mainmenu.rs`
@@ -423,13 +423,13 @@ the human sees; it has no business knowing the UDP transport layer. The correct 
 This is identical in pattern to how `HostInteractionOccurred`, `HostMovableMotionEvent`, etc. are used throughout the
 codebase as local cross-plugin signals.
 
-#### 4.2 Define `DisconnectRequest` in `crates/untypes-core/src/roles.rs`
+#### 4.2 Define `DisconnectRequest` in `crates/uncommon-app-core/src/roles.rs`
 
-`untypes-core` is already a dependency of **both** `unmainmenu-plugin` and `unreplicon-plugin`, making it the
+`uncommon-app-core` is already a dependency of **both** `unmainmenu-plugin` and `unreplicon-plugin`, making it the
 zero-new-dep home for this type. It is semantically correct too: `DisconnectRequest` is a role-transition signal
 ("please stop being a client"), which belongs alongside `AuthorityRole`, `LocalPlayerRole`, and `LobbyPresenceRole`.
 
-Add to `crates/untypes-core/src/roles.rs`:
+Add to `crates/uncommon-app-core/src/roles.rs`:
 
 ```rust
 /// Sent by the UI when the local player wants to disconnect from the current
@@ -452,7 +452,7 @@ message registrations:
 
 ```rust
 // In lobby.rs app_setup:
-app.add_message::<untypes_core::roles::DisconnectRequest>();
+app.add_message::<uncommon-app_core::roles::DisconnectRequest>();
 ```
 
 Alternatively it can go in `connection.rs → app_setup` if that is cleaner; the important thing is that it is registered
@@ -464,7 +464,7 @@ Add a new system to `crates/unreplicon-plugin/src/systems/connection.rs`:
 
 ```rust
 fn handle_disconnect_request(
-    mut ev: MessageReader<untypes_core::roles::DisconnectRequest>,
+    mut ev: MessageReader<uncommon-app_core::roles::DisconnectRequest>,
     mut commands: Commands,
     q_replicated: Query<Entity, With<Replicated>>,
 ) {
@@ -486,8 +486,8 @@ fn handle_disconnect_request(
     }
 
     // 3. Retract the network role resources and restore local authority.
-    commands.remove_resource::<untypes_core::roles::LobbyPresenceRole>();
-    commands.insert_resource(untypes_core::roles::AuthorityRole::default());
+    commands.remove_resource::<uncommon-app_core::roles::LobbyPresenceRole>();
+    commands.insert_resource(uncommon-app_core::roles::AuthorityRole::default());
 
     // 4. (Callers are responsible for transitioning AppState back to MainMenu or similar.)
 }
@@ -498,7 +498,7 @@ Register it in `connection.rs → app_setup`:
 ```rust
 app.add_systems(
     Update,
-    handle_disconnect_request.run_if(resource_exists::<untypes_core::roles::LobbyPresenceRole>),
+    handle_disconnect_request.run_if(resource_exists::<uncommon-app_core::roles::LobbyPresenceRole>),
 );
 ```
 
@@ -517,7 +517,7 @@ pub(crate) fn setup_ui(
     mut commands: Commands,
     ui_assets: Res<UiAssets>,
     player_profile: Res<Persistent<PlayerProfileData>>,
-    lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>,
+    lobby_presence: Option<Res<uncommon-app_core::roles::LobbyPresenceRole>>,
 )
 ```
 
@@ -528,8 +528,8 @@ pub(crate) fn setup_ui(
     mut commands: Commands,
     ui_assets: Res<UiAssets>,
     player_profile: Res<Persistent<PlayerProfileData>>,
-    lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,     // <-- new
+    lobby_presence: Option<Res<uncommon-app_core::roles::LobbyPresenceRole>>,
+    authority: Option<Res<uncommon-app_core::roles::AuthorityRole>>,     // <-- new
 )
 ```
 
@@ -551,7 +551,7 @@ Replace with three cases — offline, PeerHost/Dedicated (authority present, lob
 present, no authority):
 
 ```rust
-let is_pure_client = untypes_core::roles::is_pure_client(
+let is_pure_client = uncommon-app_core::roles::is_pure_client(
     local.as_ref().map(|r| r.as_ref()),   // if LocalPlayerRole is needed; see note below
     authority.as_ref().map(|r| r.as_ref()),
 );
@@ -578,8 +578,8 @@ let mut menu_items = if is_pure_client {
 ```
 
 Note: `is_pure_client = lobby_presence.is_some() && authority.is_none()` is the inline equivalent of the
-`untypes_core::roles::is_pure_client()` helper. Use whichever is cleaner; there is no need to add `LocalPlayerRole` as
-an additional system parameter just to call the helper function, because the inline expression is equivalent for this
+`uncommon-app_core::roles::is_pure_client()` helper. Use whichever is cleaner; there is no need to add `LocalPlayerRole`
+as an additional system parameter just to call the helper function, because the inline expression is equivalent for this
 context.
 
 #### 4.6 Add `MenuID::Disconnect` to the enum and its `Display` impl
@@ -632,7 +632,7 @@ pub(crate) fn menu_event(
     mut next_map_hub_state: ResMut<NextState<MapHubState>>,
     mut current_mission_select_mode: ResMut<CurrentMissionSelectMode>,
     menu_items: Query<(&MenuID, &MenuItemInteractive)>,
-    mut ev_disconnect: MessageWriter<untypes_core::roles::DisconnectRequest>,  // <-- new
+    mut ev_disconnect: MessageWriter<uncommon-app_core::roles::DisconnectRequest>,  // <-- new
 )
 ```
 
@@ -640,7 +640,7 @@ Add the match arm in the `match menu_id` block:
 
 ```rust
 MenuID::Disconnect => {
-    ev_disconnect.write(untypes_core::roles::DisconnectRequest);
+    ev_disconnect.write(uncommon-app_core::roles::DisconnectRequest);
     // The actual teardown happens in unreplicon-plugin/connection.rs.
     // Transition back to MainMenu so setup_ui re-runs and shows the offline menu.
     next_app_state.set(AppState::MainMenu);
@@ -665,10 +665,10 @@ before choosing an approach.
 
 | Crate                          | Change                                                                       |
 | ------------------------------ | ---------------------------------------------------------------------------- |
-| `unmainmenu-plugin/Cargo.toml` | **None.** `untypes-core` is already listed.                                  |
-| `unreplicon-plugin/Cargo.toml` | **None.** `untypes-core` and `unplayer-core` are already listed.             |
-| `unreplicon-core/Cargo.toml`   | **None.** `DisconnectRequest` lives in `untypes-core`, not here.             |
-| `untypes-core/Cargo.toml`      | **None.** The `Message` derive is from `bevy::prelude::*`, already imported. |
+| `unmainmenu-plugin/Cargo.toml` | **None.** `uncommon-app-core` is already listed.                             |
+| `unreplicon-plugin/Cargo.toml` | **None.** `uncommon-app-core` and `unplayer-core` are already listed.        |
+| `unreplicon-core/Cargo.toml`   | **None.** `DisconnectRequest` lives in `uncommon-app-core`, not here.        |
+| `uncommon-app-core/Cargo.toml` | **None.** The `Message` derive is from `bevy::prelude::*`, already imported. |
 
 No `Cargo.toml` file needs to be changed as part of this PR.
 

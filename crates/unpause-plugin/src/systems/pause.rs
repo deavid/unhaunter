@@ -1,10 +1,12 @@
 use bevy::prelude::*;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::states::AppState;
+use uninput_core::states::InGameUiState;
 use unmission_core::events::QuitMissionEvent;
-use unrender_std::materials::UIPanelMaterial;
+use unrender_std::custom_material2::UIPanelMaterial;
 use unreplicon_core::resources::HostGone;
-use untypes_core::states::{AppState, GameState};
-use unui_core::assets::UiAssets;
+
+use crate::assets::PauseAssets;
 
 #[derive(Debug, Component)]
 struct PauseUI;
@@ -15,20 +17,20 @@ const PAUSEUI_ACCENT_COLOR: Color = Color::srgba(0.290, 0.596, 0.706, 1.0);
 const PAUSEUI_TEXT_COLOR: Color = Color::srgba(0.7, 0.82, 0.85, 1.0);
 
 fn keyboard(
-    game_state: Res<State<GameState>>,
-    mut game_next_state: ResMut<NextState<GameState>>,
+    game_state: Res<State<InGameUiState>>,
+    mut game_next_state: ResMut<NextState<InGameUiState>>,
     mut ev_quit: MessageWriter<QuitMissionEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     host_gone: Res<HostGone>,
 ) {
-    if *game_state.get() != GameState::Pause {
+    if *game_state.get() != InGameUiState::Pause {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) && !host_gone.0 {
-        game_next_state.set(GameState::Running);
+        game_next_state.set(InGameUiState::Running);
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
-        game_next_state.set(GameState::Running);
+        game_next_state.set(InGameUiState::Running);
         ev_quit.write(QuitMissionEvent);
     }
 }
@@ -41,28 +43,28 @@ fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
 
 fn keyboard_pause(
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
-    mut game_next_state: ResMut<NextState<GameState>>,
+    game_state: Res<State<InGameUiState>>,
+    mut game_next_state: ResMut<NextState<InGameUiState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if *app_state.get() != AppState::InGame {
         return;
     }
 
-    let can_pause = *game_state.get() == GameState::Running;
-    if *game_state.get() == GameState::Pause {
+    let can_pause = *game_state.get() == InGameUiState::Running;
+    if *game_state.get() == InGameUiState::Pause {
         return;
     }
 
     if keyboard_input.just_pressed(KeyCode::Escape) && can_pause {
-        game_next_state.set(GameState::Pause);
+        game_next_state.set(InGameUiState::Pause);
     }
 }
 
 fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<PauseAssets>,
     host_gone: Res<HostGone>,
 ) {
     let (p_text, p_sub_text) = if host_gone.0 {
@@ -141,8 +143,8 @@ fn setup_ui(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(GameState::Pause), setup_ui);
-    app.add_systems(OnExit(GameState::Pause), cleanup);
-    app.add_systems(Update, keyboard.run_if(in_state(GameState::Pause)));
+    app.add_systems(OnEnter(InGameUiState::Pause), setup_ui);
+    app.add_systems(OnExit(InGameUiState::Pause), cleanup);
+    app.add_systems(Update, keyboard.run_if(in_state(InGameUiState::Pause)));
     app.add_systems(Update, keyboard_pause.run_if(in_state(AppState::InGame)));
 }

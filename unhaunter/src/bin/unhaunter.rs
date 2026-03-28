@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::str::FromStr;
+use uncommon_app_core::cli::CliOptions;
 use undifficulty_core::difficulty::Difficulty;
-use untypes_core::cli::CliOptions;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -49,17 +49,17 @@ fn main() {
 
     let net_mode = if let Some(port) = args.peer_host {
         let bind_addresses = args.bind.clone();
-        untypes_core::cli::CliNetMode::PeerHost {
+        uncommon_app_core::cli::CliNetMode::PeerHost {
             port,
             bind_addresses,
         }
     } else if let Some(address) = args.join {
-        untypes_core::cli::CliNetMode::Join {
+        uncommon_app_core::cli::CliNetMode::Join {
             address,
             ticket: None,
         }
     } else {
-        untypes_core::cli::CliNetMode::Offline
+        uncommon_app_core::cli::CliNetMode::Offline
     };
 
     // --- Validation ---

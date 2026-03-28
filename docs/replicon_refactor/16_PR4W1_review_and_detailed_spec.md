@@ -343,7 +343,7 @@ At the top of `tile_spawning.rs`, add the import:
 ```rust
 use unbehavior::components::TmxEntityId;
 use bevy_replicon::prelude::Replicated;
-use untypes_core::roles::AuthorityRole;
+use uncommon-app_core::roles::AuthorityRole;
 ```
 
 #### 3c. Insert `TmxEntityId` (and conditionally `Replicated`) at the end of `process_and_spawn_tile`
@@ -439,7 +439,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::materials::CustomMaterial1;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
-use untypes_core::roles::is_pure_client;
+use uncommon-app_core::roles::is_pure_client;
 
 pub(super) fn app_setup(app: &mut App) {
     app.add_systems(

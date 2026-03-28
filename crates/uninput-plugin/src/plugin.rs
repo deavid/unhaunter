@@ -1,11 +1,14 @@
 use crate::systems;
 use bevy::prelude::*;
-use untypes_core::states::{AppState, SimulationState};
+use uncommon_app_core::states::{AppState, SimulationState};
+use uninput_core::resources::MissionInputFocus;
 
 pub struct UnhaunterInputPlugin;
 
 impl Plugin for UnhaunterInputPlugin {
     fn build(&self, app: &mut App) {
+        app.init_resource::<MissionInputFocus>();
+
         app.add_systems(
             Update,
             (
@@ -21,6 +24,7 @@ impl Plugin for UnhaunterInputPlugin {
             clear_transient_input_flags.run_if(in_state(SimulationState::Ready)),
         );
         systems::cursor::app_setup(app);
+        systems::focus::app_setup(app);
     }
 }
 

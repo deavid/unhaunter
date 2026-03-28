@@ -6,7 +6,7 @@ use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::{InteractableByGhost, RoomStateDelta};
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};
 use uninteraction_core::events::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interaction::ExecuteInteractionEvent;
@@ -166,7 +166,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         bevy::prelude::Update,
         (ghost_interaction_execution_system, watch_tween_insertions)
-            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+            .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
     );
 }
 
@@ -192,7 +192,7 @@ fn ghost_interaction_execution_system(
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_topology: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
-    local_player_role: Option<Res<untypes_core::roles::LocalPlayerRole>>,
+    local_player_role: Option<Res<uncommon_app_core::roles::LocalPlayerRole>>,
 ) {
     let measure = metrics::GIS_EXECUTION.time_measure();
     for event in ev_ghost_interaction.read() {
@@ -671,7 +671,7 @@ fn execute_trip_breaker_interaction(
         Option<&RoomStateDelta>,
     )>,
     target: Entity,
-    local_player_role: Option<&untypes_core::roles::LocalPlayerRole>,
+    local_player_role: Option<&uncommon_app_core::roles::LocalPlayerRole>,
 ) {
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
         ev_interaction_executor.write(ExecuteInteractionEvent {

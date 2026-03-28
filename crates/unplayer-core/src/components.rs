@@ -5,13 +5,14 @@ use ungear_core::types::gear::equipment::Hand;
 use unreplicon_core::network_id::NetworkId;
 use uuid::Uuid;
 
-#[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
-#[reflect(Component, Default)]
+/// Local component to tell which player entities is the current player. Camera follows this.
+#[derive(Component, Debug, Clone, Default)]
 pub struct MainPlayer;
 
-impl MapEntities for MainPlayer {
-    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
-}
+/// Marks a player entity as an instance of the player class.
+#[derive(Component, Serialize, Deserialize, Reflect, Default)]
+#[reflect(Component, Default)]
+pub struct PlayerTag;
 
 /// Component added to players who have disconnected but whose entity is being retained.
 #[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
@@ -27,10 +28,6 @@ pub struct PlayerInactive;
 #[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
 #[reflect(Component, Default)]
 pub struct PlayerSpectating;
-
-impl MapEntities for PlayerSpectating {
-    fn map_entities<M: EntityMapper>(&mut self, _entity_mapper: &mut M) {}
-}
 
 #[derive(Component, Debug, Clone)]
 pub struct InventoryNext {

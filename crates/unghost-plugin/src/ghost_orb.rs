@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use rand::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_orb_particle::GhostOrbParticle;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};

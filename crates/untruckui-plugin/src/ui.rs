@@ -1,19 +1,20 @@
 use super::{activity, journalui, loadoutui, sanity, sensors};
+use crate::assets::TruckUiAssets;
+use crate::colors;
 use bevy::prelude::*;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::resources::spawner::GearSpawnerRegistry;
+use uninput_core::states::InGameUiState;
 use unrender_std::assets::GearAssets;
-use unrender_std::materials::UIPanelMaterial;
+use unrender_std::custom_material2::UIPanelMaterial;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
 use untruck_core::components::truck_tab::TruckTab;
 use untruck_core::components::truck_ui_button::TruckButtonTypeExt;
 use untruck_core::components::truck_ui_markers::TruckUI;
 use untruck_core::types::tab::{TabContents, TabState};
 use untruck_core::types::truck_button::TruckButtonType;
-use untypes_core::states::{AppState, GameState};
-use unui_core::assets::UiAssets;
 
 /// Trait to prevent CurrentDifficulty spilling to uncore
 pub(crate) trait FromTab {
@@ -52,8 +53,8 @@ impl FromTab for TruckTab {
 fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    game_state: Res<State<GameState>>,
-    ui_assets: Res<UiAssets>,
+    game_state: Res<State<InGameUiState>>,
+    truck_ui_assets: Res<TruckUiAssets>,
     gear_assets: Res<GearAssets>,
     difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
     gear_registry: Res<GearSpawnerRegistry>,
@@ -66,7 +67,7 @@ fn setup_ui(
         MARGIN_PERCENT,
         MARGIN_PERCENT,
     );
-    let init_vis = if *game_state == GameState::Truck {
+    let init_vis = if *game_state == InGameUiState::Truck {
         Visibility::Inherited
     } else {
         Visibility::Hidden
@@ -80,7 +81,7 @@ fn setup_ui(
     let panel_material = materials.add(UIPanelMaterial {
         color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
     });
-    let sensors = |p: Cb| sensors::setup_sensors_ui(p, &ui_assets);
+    let sensors = |p: Cb| sensors::setup_sensors_ui(p, &truck_ui_assets);
     let left_column = |p: Cb| {
         p.spawn((
             MaterialNode(panel_material.clone()),
@@ -96,7 +97,7 @@ fn setup_ui(
                 ..default()
             },
         ))
-        .with_children(|p| sanity::setup_sanity_ui(p, &ui_assets));
+        .with_children(|p| sanity::setup_sanity_ui(p, &truck_ui_assets));
 
         p.spawn((
             MaterialNode(panel_material.clone()),
@@ -141,7 +142,7 @@ fn setup_ui(
             let text = (
                 Text::new(&truck_tab.tabname),
                 TextFont {
-                    font: ui_assets.font_londrina_light.clone(),
+                    font: truck_ui_assets.font_londrina_light.clone(),
                     font_size: 35.0 * FONT_SCALE,
                     ..default()
                 },
@@ -214,7 +215,7 @@ fn setup_ui(
             .with_children(|p| {
                 loadoutui::setup_loadout_ui(
                     p,
-                    &ui_assets,
+                    &truck_ui_assets,
                     &gear_assets,
                     &mut materials,
                     &difficulty,
@@ -223,7 +224,7 @@ fn setup_ui(
                 )
             });
         p.spawn((base_node.clone(), TabContents::Journal))
-            .with_children(|p| journalui::setup_journal_ui(p, &ui_assets, &difficulty));
+            .with_children(|p| journalui::setup_journal_ui(p, &truck_ui_assets, &difficulty));
 
         p.spawn(Node {
             justify_content: JustifyContent::FlexStart,
@@ -248,7 +249,7 @@ fn setup_ui(
                 ..default()
             },
         ))
-        .with_children(|p| activity::setup_activity_ui(p, &ui_assets));
+        .with_children(|p| activity::setup_activity_ui(p, &truck_ui_assets));
 
         p.spawn((
             Node {
@@ -289,7 +290,7 @@ fn setup_ui(
                     btn.spawn((
                         Text::new("Exit Truck"),
                         TextFont {
-                            font: ui_assets.font_titillium_semibold.clone(),
+                            font: truck_ui_assets.font_titillium_semibold.clone(),
                             font_size: 25.0 * FONT_SCALE,
                             ..default()
                         },
@@ -318,7 +319,7 @@ fn setup_ui(
                     btn.spawn((
                         Text::new("End Mission"),
                         TextFont {
-                            font: ui_assets.font_titillium_semibold.clone(),
+                            font: truck_ui_assets.font_titillium_semibold.clone(),
                             font_size: 25.0 * FONT_SCALE,
                             ..default()
                         },
@@ -498,6 +499,6 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::InGame), setup_ui)
         .add_systems(
             Update,
-            update_tab_interactions.run_if(in_state(GameState::Truck)),
+            update_tab_interactions.run_if(in_state(InGameUiState::Truck)),
         );
 }

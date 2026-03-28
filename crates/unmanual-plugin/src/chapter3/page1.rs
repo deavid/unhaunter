@@ -2,12 +2,11 @@ use crate::types::ManualPageData;
 use crate::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use unmanual_core::assets::ManualAssets;
-use unui_core::assets::UiAssets;
 
 pub(crate) fn draw(
     parent: &mut ChildSpawnerCommands,
     manual_assets: &ManualAssets,
-    ui_assets: &UiAssets,
+    _second_manual_assets: &ManualAssets,
 ) {
     let title = "Mastering Advanced Investigation";
     let subtitle = "
@@ -42,17 +41,17 @@ pub(crate) fn draw(
     ];
     let summary = "Master these techniques, manage your sanity, and learn to interpret the subtle signs. You're ready to face the challenges ahead. Good luck, Senior Investigator!";
 
-    header(parent, ui_assets, title, subtitle);
+    header(parent, manual_assets, title, subtitle);
 
     grid_img_text2(
         parent,
-        &ui_assets.font_chakra_regular,
-        &ui_assets.font_chakra_semibold,
+        &manual_assets.font_chakra_regular,
+        &manual_assets.font_chakra_semibold,
         (3, 2),
         grid,
     );
 
-    summary_text(parent, ui_assets, summary);
+    summary_text(parent, manual_assets, summary);
 }
 
 pub(crate) fn create_manual_page() -> ManualPageData {

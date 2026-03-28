@@ -1,5 +1,5 @@
+use crate::resources::{FpsLimit, FpsLimitRemaining, FpsLimitUsage};
 use bevy::prelude::*;
-use unfps_core::resources::{FpsLimit, FpsLimitRemaining, FpsLimitUsage};
 
 pub struct UnhaunterFpsPlugin;
 

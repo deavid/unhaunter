@@ -1,5 +1,5 @@
 use unaudiospatial_core::emitter::AudioEmitter;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unlight_core::components::LightEmitter;
@@ -196,11 +196,11 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         update_flashlight_skeleton
             .before(ungearitems_core::GearStateExportSet)
-            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+            .run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
     );
     app.add_systems(
         Update,
         (hydrate_flashlight_skin, update_flashlight_skin)
-            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+            .run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
     );
 }

@@ -146,7 +146,6 @@ fn despawn_hidespot_overlays(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (enter_hidespot, exit_hidespot, despawn_hidespot_overlays)
-            .run_if(in_state(untypes_core::states::GameState::Running)),
+        (enter_hidespot, exit_hidespot, despawn_hidespot_overlays),
     );
 }

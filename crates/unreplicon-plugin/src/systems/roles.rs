@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use untypes_core::cli::CliOptions;
-use untypes_core::roles::{AuthorityRole, LobbyPresenceRole, LocalPlayerRole};
+use uncommon_app_core::cli::CliOptions;
+use uncommon_app_core::roles::{AuthorityRole, LobbyPresenceRole, LocalPlayerRole};
 
 pub(crate) fn insert_roles_at_startup(cli: Res<CliOptions>, mut commands: Commands) {
     if cli.dedicated {
@@ -10,18 +10,18 @@ pub(crate) fn insert_roles_at_startup(cli: Res<CliOptions>, mut commands: Comman
         debug!("Roles inserted: AuthorityRole, LobbyPresenceRole");
     } else {
         match cli.net_mode {
-            untypes_core::cli::CliNetMode::Offline => {
+            uncommon_app_core::cli::CliNetMode::Offline => {
                 commands.insert_resource(AuthorityRole);
                 commands.insert_resource(LocalPlayerRole);
                 debug!("Roles inserted: AuthorityRole, LocalPlayerRole");
             }
-            untypes_core::cli::CliNetMode::PeerHost { .. } => {
+            uncommon_app_core::cli::CliNetMode::PeerHost { .. } => {
                 commands.insert_resource(AuthorityRole);
                 commands.insert_resource(LocalPlayerRole);
                 commands.insert_resource(LobbyPresenceRole);
                 debug!("Roles inserted: AuthorityRole, LocalPlayerRole, LobbyPresenceRole");
             }
-            untypes_core::cli::CliNetMode::Join { .. } => {
+            uncommon_app_core::cli::CliNetMode::Join { .. } => {
                 commands.insert_resource(LocalPlayerRole);
                 commands.insert_resource(LobbyPresenceRole);
                 debug!("Roles inserted: LocalPlayerRole, LobbyPresenceRole");

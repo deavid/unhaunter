@@ -23,7 +23,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_picking::backend::prelude::*;
 use unpicking_core::picking::*;
-use unrender_std::materials::CustomMaterial1;
+use unrender_std::custom_material1::CustomMaterial1;
 
 /// Main picking system that handles mouse interaction with custom map sprites.
 ///

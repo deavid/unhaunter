@@ -15,7 +15,7 @@ pub(crate) fn app_setup(app: &mut App) {
     );
     app.add_systems(
         bevy::prelude::Update,
-        apply_remote_movable_motion.run_if(untypes_core::roles::is_pure_client),
+        apply_remote_movable_motion.run_if(uncommon_app_core::roles::is_pure_client),
     );
 }
 

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::prelude::*;
 use std::f32::consts::TAU;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 
 #[derive(Component, Debug)]
 pub struct GhostOrbParticle {

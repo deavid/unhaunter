@@ -1,4 +1,5 @@
 pub mod assets;
+pub mod colors;
 pub mod components;
 
 pub mod authoritative {

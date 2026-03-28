@@ -12,13 +12,14 @@ use unbehavior_core::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::utils::rebuild_collision_data;
+use uncommon_app_core::states::{AppState, SimulationState};
+use uninput_core::states::InGameUiState;
 use uninteraction_core::events::{RoomChangedEvent, RoomStateSyncEvent};
 use unmission_core::events::LevelReadyEvent;
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::components::visuals::ResolutionFactor;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
-use untypes_core::states::{AppState, GameState, SimulationState};
 
 /// Processes level completion after the level is fully loaded.
 ///
@@ -42,7 +43,7 @@ fn after_level_ready(
     mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
     room_topology: Res<RoomTopology>,
     mut next_app_state: ResMut<NextState<AppState>>,
-    mut next_game_state: ResMut<NextState<GameState>>,
+    mut next_game_state: ResMut<NextState<InGameUiState>>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
 ) {
     if ev.is_empty() {
@@ -56,7 +57,7 @@ fn after_level_ready(
 
     // Switch to in-game state
     next_app_state.set(AppState::InGame);
-    next_game_state.set(GameState::Running);
+    next_game_state.set(InGameUiState::Running);
 
     // Send synchronization events
     ev_room_sync.write(RoomStateSyncEvent);

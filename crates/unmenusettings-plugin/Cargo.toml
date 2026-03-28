@@ -17,8 +17,6 @@ bevy-persistent = { workspace = true }
 strum = { workspace = true }
 
 
-unui-core = { workspace = true }
-unfoundation-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unsettings-core = { workspace = true }
 unmenu-core = { workspace = true }

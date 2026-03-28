@@ -97,4 +97,12 @@ pub struct ManualAssets {
     pub manual_quartz: Handle<Image>,
     #[asset(path = "manual/images/chapter5/sage.png")]
     pub manual_sage: Handle<Image>,
+
+    // Fonts
+    #[asset(path = "fonts/LondrinaSolid-Regular.ttf")]
+    pub font_londrina_light: Handle<Font>,
+    #[asset(path = "fonts/ChakraPetch-Regular.ttf")]
+    pub font_chakra_regular: Handle<Font>,
+    #[asset(path = "fonts/ChakraPetch-SemiBold.ttf")]
+    pub font_chakra_semibold: Handle<Font>,
 }

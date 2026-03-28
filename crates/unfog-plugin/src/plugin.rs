@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use untypes_core::states::{AppState, SimulationState};
+use uncommon_app_core::states::{AppState, SimulationState};
 
 use crate::metrics;
 use unfog_core::resources::MiasmaConfig;

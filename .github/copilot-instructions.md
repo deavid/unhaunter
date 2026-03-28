@@ -31,8 +31,8 @@ ignored. Focus exclusively on Rust workspace errors and warnings.
 
 ## Architecture & Module Structure
 
-The codebase follows a strict modular structure to minimize compile times and separate concerns. See
-[PROJECT_FILE_DESCRIPTIONS.md](PROJECT_FILE_DESCRIPTIONS.md) for a detailed map.
+The codebase follows a strict modular structure to minimize compile times and separate concerns. See Cargo.toml in the
+root for a detailed map.
 
 - **`un*-core`**: Low-level data types, components, and resources. **Must contain zero game logic, systems, or
   observers. It must NOT contain any Bevy `Plugin`.**

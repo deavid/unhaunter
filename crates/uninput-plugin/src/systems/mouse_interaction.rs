@@ -1,7 +1,7 @@
 use bevy::{input::mouse::MouseWheel, prelude::*};
 use uninput_core::components::PlayerInput;
+use uninput_core::resources::MissionInputFocus;
 use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
-use untruck_core::components::in_truck::InTruck;
 
 pub fn mouse_scroll_gear_system(
     mut scroll_events: MessageReader<MouseWheel>,
@@ -13,10 +13,9 @@ pub fn mouse_scroll_gear_system(
             Without<PlayerSpectating>,
         ),
     >,
-    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
-    game_state: Res<State<untypes_core::states::GameState>>,
+    focus: Res<MissionInputFocus>,
 ) {
-    if !q_in_truck.is_empty() || *game_state == untypes_core::states::GameState::Pause {
+    if !focus.has_focus {
         return;
     }
     for event in scroll_events.read() {

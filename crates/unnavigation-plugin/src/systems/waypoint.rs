@@ -3,8 +3,9 @@ use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::Stairs;
 use unboard_core::resources::visibility_data::VisibilityData;
+use unclassic_mode_core::components::GCameraArena;
 use uninput_core::components::PlayerInput;
-use uninput_core::resources::MouseVisibility;
+use uninput_core::resources::{MissionInputFocus, MouseVisibility};
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
@@ -14,7 +15,6 @@ use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::components::game::GameSprite;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
-use untags_core::game::GCameraArena;
 use untruck_core::components::in_truck::InTruck;
 
 use super::pathfinding::detect_stair_area;
@@ -46,11 +46,10 @@ pub(crate) fn create_waypoints_from_click(
     mouse: Res<ButtonInput<MouseButton>>,
     mouse_visibility: Res<MouseVisibility>,
     pathfinder: Pathfinder,
-    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
-    game_state: Res<State<untypes_core::states::GameState>>,
+    focus: Res<MissionInputFocus>,
 ) {
-    // Skip if local player is in truck or game is paused
-    if !q_in_truck.is_empty() || *game_state == untypes_core::states::GameState::Pause {
+    // Skip if mission does not have input focus
+    if !focus.has_focus {
         return;
     }
     // Only process clicks when mouse is visible

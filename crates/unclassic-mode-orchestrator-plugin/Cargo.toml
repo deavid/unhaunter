@@ -14,7 +14,7 @@ workspace = true
 unbehavior-core = { workspace = true }
 unboard-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unfoundation-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unghost-core = { workspace = true }
 unlight-core = { workspace = true }
 unsensing-core = { workspace = true }
@@ -25,8 +25,6 @@ unplayer-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unspatial-core = { workspace = true }
 unsoundfield-core = { workspace = true }
-untags-core = { workspace = true }
-untypes-core = { workspace = true }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 ordered-float = { workspace = true }

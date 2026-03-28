@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::str::FromStr;
+use uncommon_app_core::cli::CliOptions;
 use undifficulty_core::difficulty::Difficulty;
-use untypes_core::cli::CliOptions;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -46,7 +46,7 @@ fn main() {
 
     let bind_addresses = args.bind.clone();
 
-    let net_mode = untypes_core::cli::CliNetMode::PeerHost {
+    let net_mode = uncommon_app_core::cli::CliNetMode::PeerHost {
         port: args.host,
         bind_addresses,
     };

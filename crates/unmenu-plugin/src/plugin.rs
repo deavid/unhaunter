@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-
+use bevy_asset_loader::prelude::*;
+use uncommon_app_core::states::AppState;
+use unmenu_core::assets::MenuAssets;
 use unmenu_core::events;
 use unmenu_core::mission_select::CurrentMissionSelectMode;
 
@@ -8,6 +10,9 @@ pub struct UnhaunterCoreMenuPlugin;
 
 impl Plugin for UnhaunterCoreMenuPlugin {
     fn build(&self, app: &mut App) {
+        app.add_loading_state(
+            LoadingState::new(AppState::EngineBoot).load_collection::<MenuAssets>(),
+        );
         app.init_resource::<CurrentMissionSelectMode>();
         app.add_message::<events::MenuItemClicked>()
             .add_message::<events::MenuItemSelected>()

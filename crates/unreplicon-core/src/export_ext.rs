@@ -35,9 +35,9 @@ use bevy_replicon::prelude::{
 };
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use uncommon_app_core::roles::{AuthorityRole, is_pure_client};
+use uncommon_app_core::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
-use untypes_core::roles::{AuthorityRole, is_pure_client};
-use untypes_core::states::AppState;
 
 use crate::client_export::ExportClientComponent;
 use crate::noop::{noop_remove, noop_write};

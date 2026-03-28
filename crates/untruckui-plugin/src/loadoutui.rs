@@ -1,8 +1,8 @@
+use crate::colors;
 use crate::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::events::{
@@ -12,16 +12,17 @@ use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::equipment::{Hand, VisualKey};
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::types::evidence::Evidence;
+use uninput_core::states::InGameUiState;
 use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::assets::GearAssets;
-use unrender_std::materials::UIPanelMaterial;
+use unrender_std::custom_material2::UIPanelMaterial;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
 use unreplicon_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
-use untypes_core::states::GameState;
-use unui_core::assets::UiAssets;
+
+use crate::assets::TruckUiAssets;
 
 #[derive(Debug, Component, Clone)]
 pub(crate) enum LoadoutButton {
@@ -41,7 +42,7 @@ pub(crate) struct GearHelpTitle;
 
 pub(crate) fn setup_loadout_ui(
     p: &mut ChildSpawnerCommands,
-    ui_assets: &UiAssets,
+    truck_ui_assets: &TruckUiAssets,
     gear_assets: &GearAssets,
     materials: &mut Assets<UIPanelMaterial>,
     difficulty: &CurrentDifficulty,
@@ -105,7 +106,7 @@ pub(crate) fn setup_loadout_ui(
         p.spawn((
             Text::new("Player Inventory:"),
             TextFont {
-                font: ui_assets.font_chakra_light.clone(),
+                font: truck_ui_assets.font_chakra_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
                 ..default()
             },
@@ -150,7 +151,7 @@ pub(crate) fn setup_loadout_ui(
         p.spawn((
             Text::new("Van Inventory:"),
             TextFont {
-                font: ui_assets.font_chakra_light.clone(),
+                font: truck_ui_assets.font_chakra_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
                 ..default()
             },
@@ -223,7 +224,7 @@ pub(crate) fn setup_loadout_ui(
             p.spawn((
                 Text::new("Help and Item description:"),
                 TextFont {
-                    font: ui_assets.font_chakra_light.clone(),
+                    font: truck_ui_assets.font_chakra_light.clone(),
                     font_size: 25.0 * FONT_SCALE,
                     ..default()
                 },
@@ -238,7 +239,7 @@ pub(crate) fn setup_loadout_ui(
             p.spawn((
                 Text::new("Select which gear do you want to use to investigate. Click items on the truck inventory to bring them to your inventory. Click on items on your inventory to remove them. Hover items to see the description here."),
                 TextFont {
-                    font: ui_assets.font_titillium_regular.clone(),
+                    font: truck_ui_assets.font_titillium_regular.clone(),
                     font_size: 16.0 * FONT_SCALE,
                     ..default()
                 },
@@ -466,7 +467,7 @@ fn update_loadout_icons(
 fn button_clicked(
     mut ev_clk: MessageReader<EventButtonClicked>,
     q_gear: Query<(&PlayerSprite, &PlayerGear, Has<MainPlayer>)>,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
     mut ev_equip_van: MessageWriter<RequestEquipGearFromVan>,
     mut ev_unequip_hand: MessageWriter<RequestUnequipHand>,
@@ -558,6 +559,6 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (update_loadout_buttons, update_loadout_icons, button_clicked)
-            .run_if(in_state(GameState::Truck)),
+            .run_if(in_state(InGameUiState::Truck)),
     );
 }

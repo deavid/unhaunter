@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use unbehavior_core::components::Movable;
+use uncommon_app_core::roles::AuthorityRole;
+use uncommon_app_core::states::AppState;
 use unlocomotion_core::components::PlayerLocomotionState;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::direction::Direction;
-use untypes_core::roles::AuthorityRole;
-use untypes_core::states::AppState;
 
 /// Authority: inserts PlayerLocomotionState, Direction, and Movable on any player entity
 /// that is missing them. Fires on the first Update frame after a PlayerSprite entity is

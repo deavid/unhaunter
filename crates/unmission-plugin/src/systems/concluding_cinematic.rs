@@ -1,9 +1,9 @@
 use bevy::prelude::*;
+use uncommon_app_core::roles::AuthorityRole;
+use uncommon_app_core::states::AppState;
 use unmission_core::resources::MissionConcludingCinematic;
 use unmission_core::summary::SummaryData;
 use unreplicon_core::components::{MissionGoalEntity, ServerGamePhase};
-use untypes_core::roles::AuthorityRole;
-use untypes_core::states::AppState;
 
 pub(crate) fn on_mission_concluding(
     q_phase: Query<&ServerGamePhase, Changed<ServerGamePhase>>,

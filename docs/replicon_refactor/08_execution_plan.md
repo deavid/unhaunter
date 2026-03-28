@@ -70,13 +70,13 @@ dedicated design session before implementation begins:
 
 ## SP-1 — Infrastructure Primitives
 
-**Addresses:** F-09, F-16 (partial); enables all other sub-phases. **Affected crates:** `untypes-core`,
+**Addresses:** F-09, F-16 (partial); enables all other sub-phases. **Affected crates:** `uncommon-app-core`,
 `unengine-plugin`, `unhaunter` (app.rs). **Singleplayer after this phase:** Fully functional. Roles exist but are not
 yet used for branching. **Multiplayer after this phase:** No behaviour change. Roles are silently inserted.
 
-### 1.1 — Add `BootState` to `untypes-core`
+### 1.1 — Add `BootState` to `uncommon-app-core`
 
-**File:** `crates/untypes-core/src/states.rs`
+**File:** `crates/uncommon-app-core/src/states.rs`
 
 Add a new `BootState` enum alongside the existing states:
 
@@ -131,7 +131,7 @@ the function body before transitioning. This fixes F-09.
 
 ### 1.3 — Create Role Resources
 
-**File:** `crates/untypes-core/src/roles.rs` (new file; add `mod roles` to `lib.rs`)
+**File:** `crates/uncommon-app-core/src/roles.rs` (new file; add `mod roles` to `lib.rs`)
 
 Create three minimal marker resources:
 
@@ -179,14 +179,14 @@ During `Startup`, read `Res<CliOptions>` and insert the appropriate role resourc
 
 ## SP-2 — AppState Rename
 
-**Addresses:** F-12 (groundwork only; logic comes in SP-5). **Affected crates:** `untypes-core`, `unengine-plugin`,
+**Addresses:** F-12 (groundwork only; logic comes in SP-5). **Affected crates:** `uncommon-app-core`, `unengine-plugin`,
 `ungear-plugin`, `unui-plugin`, `untruck-plugin`, `unplayer-plugin`, `unmapload-plugin`, `unmanual-plugin`,
 `unghost-plugin`, `uncampaign-plugin`, `unreplicon-core`. **Risk:** Wide mechanical rename — no logic changes. Safe to
 merge quickly.
 
 ### 2.1 — Rename `AppState::Loading` → `AppState::EngineBoot`
 
-**File:** `crates/untypes-core/src/states.rs`
+**File:** `crates/uncommon-app-core/src/states.rs`
 
 ```rust
 pub enum AppState {
@@ -216,7 +216,7 @@ Change every `LoadingState::new(AppState::Loading)` → `LoadingState::new(AppSt
 
 ### 2.3 — Add `AppState::MissionLoading` Variant (stub)
 
-**File:** `crates/untypes-core/src/states.rs`
+**File:** `crates/uncommon-app-core/src/states.rs`
 
 Add the new variant with a doc comment:
 
@@ -263,13 +263,13 @@ The `SelectedMission` doc comment says clients observe `On<Add, SelectedMission>
 
 ## SP-3 — SimulationState Alignment
 
-**Addresses:** F-04, F-10, F-11a; enables SP-5. **Affected crates:** `untypes-core`, `unengine-plugin`,
+**Addresses:** F-04, F-10, F-11a; enables SP-5. **Affected crates:** `uncommon-app-core`, `unengine-plugin`,
 `unmapload-plugin`, `unthermal-plugin`, `unlight-plugin`, `unghost-plugin`, `uninteraction-plugin`, `unplayer-plugin`,
 `unreplicon-plugin`. **Can run in parallel with SP-4.**
 
 ### 3.1 — Rename `SimulationState` Variants
 
-**File:** `crates/untypes-core/src/states.rs`
+**File:** `crates/uncommon-app-core/src/states.rs`
 
 The current four variants do not match the 07 doc vocabulary. Rename:
 
@@ -287,7 +287,7 @@ This is a wide mechanical rename. Check all usages of `SimulationState::Running`
 
 ### 3.2 — Add `TearingDown` Variant
 
-**File:** `crates/untypes-core/src/states.rs`
+**File:** `crates/uncommon-app-core/src/states.rs`
 
 ```rust
 /// Mission has ended. Simulation ticks have stopped. Board entities are
@@ -727,7 +727,7 @@ if lobby_presence.is_some() {
 }
 ```
 
-Remove the `use untypes_core::cli::{CliOptions, NetMode};` import once `cli` is no longer needed in this file.
+Remove the `use uncommon-app_core::cli::{CliOptions, NetMode};` import once `cli` is no longer needed in this file.
 
 **Add the AFK fallback timer** by creating a local `Resource` and a companion system in the same file:
 
@@ -819,15 +819,15 @@ This function already contains the exact `NetMode` branch described above. The c
 The current code:
 
 ```rust
-if matches!(cli.net_mode, untypes_core::cli::NetMode::Offline) {
+if matches!(cli.net_mode, uncommon-app_core::cli::NetMode::Offline) {
     next_state.set(AppState::MissionSelect);
 } else {
     next_state.set(AppState::Lobby);
 }
 ```
 
-Replace `cli: Res<untypes_core::cli::CliOptions>` with
-`lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>` and update the branch:
+Replace `cli: Res<uncommon-app_core::cli::CliOptions>` with
+`lobby_presence: Option<Res<uncommon-app_core::roles::LobbyPresenceRole>>` and update the branch:
 
 ```rust
 if lobby_presence.is_some() {
@@ -837,7 +837,7 @@ if lobby_presence.is_some() {
 }
 ```
 
-Remove the `use untypes_core::cli::{CliOptions, NetMode}` import from `pause_ui.rs` once `cli` is no longer used.
+Remove the `use uncommon-app_core::cli::{CliOptions, NetMode}` import from `pause_ui.rs` once `cli` is no longer used.
 
 ### 6.3 — F-11b: Host Player Init Behind `LocalPlayerRole`
 
@@ -943,10 +943,10 @@ Before touching anything, confirm the following sites are explicitly permitted a
 **File:** `crates/unplayer-plugin/src/systems/sanityhealth.rs`, `app_setup` function
 
 The system registrations currently import and use function-item references `is_headless` and `is_authority` from
-`untypes_core::cli`:
+`uncommon-app_core::cli`:
 
 ```rust
-use untypes_core::cli::{is_authority, is_headless};
+use uncommon-app_core::cli::{is_authority, is_headless};
 // ...
 lose_sanity.run_if(not(is_headless)),
 visual_health.run_if(not(is_headless)),
@@ -965,7 +965,7 @@ health_regen.run_if(resource_exists::<AuthorityRole>()),
 server_apply_client_sanity.run_if(resource_exists::<AuthorityRole>()),
 ```
 
-Remove the `use untypes_core::cli::{is_authority, is_headless};` import once unused.
+Remove the `use uncommon-app_core::cli::{is_authority, is_headless};` import once unused.
 
 ### 8.2 — `unghost-plugin`: Visual Effect Systems
 
@@ -978,7 +978,7 @@ Remove the `use untypes_core::cli::{is_authority, is_headless};` import once unu
 an `if cli.is_headless() { return; }` early-exit guard. These systems should not run on the dedicated server at all.
 Replace the in-body guard with a registration-time gate:
 
-1. Remove the `cli: Res<untypes_core::cli::CliOptions>` parameter from each system.
+1. Remove the `cli: Res<uncommon-app_core::cli::CliOptions>` parameter from each system.
 2. Remove the `if cli.is_headless() { return; }` body.
 3. In the `app_setup` function that registers these systems, add `.run_if(resource_exists::<LocalPlayerRole>())` to each
    registration.
@@ -1000,8 +1000,8 @@ if local_player_role.is_some() {
 }
 ```
 
-Add `local_player_role: Option<Res<untypes_core::roles::LocalPlayerRole>>` to the system's parameter list and remove the
-`cli: Res<CliOptions>` parameter if it is no longer used elsewhere in the same function.
+Add `local_player_role: Option<Res<uncommon-app_core::roles::LocalPlayerRole>>` to the system's parameter list and
+remove the `cli: Res<CliOptions>` parameter if it is no longer used elsewhere in the same function.
 
 ### 8.3 — `unlobby-plugin`: Lobby UI Authority Check
 
@@ -1091,10 +1091,10 @@ Add `lobby_presence: Option<Res<LobbyPresenceRole>>` to each system's parameter 
 - `cargo clippy` passes.
 - Singleplayer: full mission loop unchanged.
 - `git grep 'is_headless'` in `crates/` returns only the permitted sites listed above (plus the definition in
-  `untypes_core::cli`).
+  `uncommon-app_core::cli`).
 - `git grep 'NetMode'` in `crates/` returns zero gameplay-system matches outside the permitted list (only boot-transport
   setup in `unreplicon-plugin/connection.rs` + `procman.rs`, boot config writes in `unhub-plugin/ui.rs`, and the enum
-  definition itself in `untypes_core/cli.rs`).
+  definition itself in `uncommon-app_core/cli.rs`).
 
 ---
 
@@ -1143,7 +1143,7 @@ There are also two `net_mode` match arms near the start of the function body:
 
    ```rust
    // Before:
-   if !matches!(p.cli.net_mode, untypes_core::cli::NetMode::Join { .. }) {
+   if !matches!(p.cli.net_mode, uncommon-app_core::cli::NetMode::Join { .. }) {
        player_gear = spawn_initial_gear(...);
    }
 
@@ -1175,8 +1175,8 @@ The orchestrator system uses a `SystemParam` struct (call it `OrchestratorParams
 fields:
 
 ```rust
-local_player_role: Option<Res<'w, untypes_core::roles::LocalPlayerRole>>,
-authority_role:    Option<Res<'w, untypes_core::roles::AuthorityRole>>,
+local_player_role: Option<Res<'w, uncommon-app_core::roles::LocalPlayerRole>>,
+authority_role:    Option<Res<'w, uncommon-app_core::roles::AuthorityRole>>,
 ```
 
 These replace all accesses to `p.cli.is_headless()` and `p.cli.net_mode` inside the spawner body. Remove the
@@ -1192,7 +1192,7 @@ These replace all accesses to `p.cli.is_headless()` and `p.cli.net_mode` inside 
 Both files derive a local boolean from `NetMode`:
 
 ```rust
-let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+let is_authority = !matches!(cli.net_mode, uncommon-app_core::cli::NetMode::Join { .. });
 ```
 
 The semantic is identical: "I own non-local players' positions" (authority node moves all players; join client only
@@ -1248,7 +1248,7 @@ Check which option applies by reading the `app_setup` registration site first.
 The current registration uses a locally-defined closure:
 
 ```rust
-use untypes_core::cli::{CliOptions, NetMode};
+use uncommon-app_core::cli::{CliOptions, NetMode};
 let is_authority =
     |cli: Res<CliOptions>| -> bool { !matches!(cli.net_mode, NetMode::Join { .. }) };
 
@@ -1268,13 +1268,13 @@ app.add_systems(
     Update,
     (
         update_ghost_behavior_dynamics_system
-            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+            .run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>()),
         sync_ghost_emitters,
     ).chain(),
 );
 ```
 
-Remove the `use untypes_core::cli::{CliOptions, NetMode};` import from `app_setup` once unused. Remove the
+Remove the `use uncommon-app_core::cli::{CliOptions, NetMode};` import from `app_setup` once unused. Remove the
 `is_authority` closure binding entirely.
 
 ### 9.5 — `ungearitems-plugin`: Sage and Repellent Flask Authority Check
@@ -1287,7 +1287,7 @@ Remove the `use untypes_core::cli::{CliOptions, NetMode};` import from `app_setu
 Both files derive an inline boolean:
 
 ```rust
-let is_authority = !matches!(cli.net_mode, untypes_core::cli::NetMode::Join { .. });
+let is_authority = !matches!(cli.net_mode, uncommon-app_core::cli::NetMode::Join { .. });
 ```
 
 The semantic is: "only the authority node triggers item activation and game-state mutation." Replace identically to 9.2:
@@ -1325,7 +1325,7 @@ present. Replace:
 // Replace:
 cli: Res<CliOptions>,
 // With:
-lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>,
+lobby_presence: Option<Res<uncommon-app_core::roles::LobbyPresenceRole>>,
 
 // Replace the condition:
 if lobby_presence.is_none() {
@@ -1339,7 +1339,7 @@ if lobby_presence.is_none() {
 }
 ```
 
-Remove the `use untypes_core::cli::{CliOptions, NetMode};` import from `mainmenu.rs` once unused.
+Remove the `use uncommon-app_core::cli::{CliOptions, NetMode};` import from `mainmenu.rs` once unused.
 
 ### 9.7 — Checkpoint
 
@@ -1349,9 +1349,9 @@ Remove the `use untypes_core::cli::{CliOptions, NetMode};` import from `mainmenu
   - `unmapload-plugin/src/plugin.rs` lines 19, 25
   - `unmapload-plugin/src/assets_debug.rs` lines 43, 49
   - `untmxmap-plugin/src/load_level.rs` line 51 (D-01 deferred)
-  - `untypes_core/src/cli.rs` (the function definition itself)
+  - `uncommon-app_core/src/cli.rs` (the function definition itself)
 - `git grep 'NetMode'` in `crates/` returns **only**:
-  - `untypes_core/src/cli.rs` (the enum definition)
+  - `uncommon-app_core/src/cli.rs` (the enum definition)
   - `unreplicon-plugin/src/systems/connection.rs` and `procman.rs` (boot-transport setup)
   - `unhub-plugin/src/ui.rs` lines 257, 267 (boot-time config write)
 
@@ -1367,15 +1367,15 @@ of SP-3 through SP-9 except that SP-1 must be committed first.** **Affected crat
 ### Background: Why SP-10 Exists
 
 The checkpoint greps in SP-8.X and SP-9.7 searched for `is_headless` and `NetMode` but not for `is_authority`. The
-`is_authority` function in `untypes_core::cli` wraps the same topology-branching logic (`NetMode::Join` check) without
-embedding either keyword, so it survived all previous audits. This sub-phase removes every surviving game-logic call
-site.
+`is_authority` function in `uncommon-app_core::cli` wraps the same topology-branching logic (`NetMode::Join` check)
+without embedding either keyword, so it survived all previous audits. This sub-phase removes every surviving game-logic
+call site.
 
 ### SP-10 Permitted Sites (do NOT change these)
 
 | File                                  | Lines | Reason permitted                                            |
 | ------------------------------------- | ----- | ----------------------------------------------------------- |
-| `untypes_core/src/cli.rs`             | 40–46 | The `is_authority` **definition** itself.                   |
+| `uncommon-app_core/src/cli.rs`        | 40–46 | The `is_authority` **definition** itself.                   |
 | `unreplicon-plugin/src/procman.rs`    | —     | Boot-transport setup; not game-logic topology branching.    |
 | `unreplicon-plugin/src/connection.rs` | —     | Boot-transport setup; not game-logic topology branching.    |
 | `unhub-plugin/src/ui.rs`              | —     | Config write at hub browser selection; not topology branch. |
@@ -1390,14 +1390,14 @@ site.
 - `crates/unghost-plugin/src/systems/gis/execution.rs`, `app_setup` function (lines ~168–171)
 - `crates/unghost-plugin/src/systems/gis/selection.rs`, `app_setup` function (lines ~24–27)
 
-All three files import `untypes_core::cli::is_authority` inside a local `app_setup` scope and pass the function item as
-a `.run_if(is_authority)` argument. Replace each with `resource_exists::<AuthorityRole>()`.
+All three files import `uncommon-app_core::cli::is_authority` inside a local `app_setup` scope and pass the function
+item as a `.run_if(is_authority)` argument. Replace each with `resource_exists::<AuthorityRole>()`.
 
 **`ghost_ai/mod.rs`** — four systems registered with `.run_if(is_authority)`:
 
 ```rust
 // Before:
-use untypes_core::cli::is_authority;
+use uncommon-app_core::cli::is_authority;
 // ...
 ghost_movement.run_if(is_authority),
 ghost_enrage.run_if(is_authority),
@@ -1405,19 +1405,19 @@ ghost_fade_out_system.run_if(is_authority),
 ghost_scale_glitch_system.run_if(is_authority),
 
 // After (each system, same pattern):
-ghost_movement.run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
-ghost_enrage.run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
-ghost_fade_out_system.run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
-ghost_scale_glitch_system.run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+ghost_movement.run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>()),
+ghost_enrage.run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>()),
+ghost_fade_out_system.run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>()),
+ghost_scale_glitch_system.run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>()),
 ```
 
-Remove the `use untypes_core::cli::is_authority;` import from the `app_setup` scope once unused.
+Remove the `use uncommon-app_core::cli::is_authority;` import from the `app_setup` scope once unused.
 
 **`gis/execution.rs`** — one tuple registered with `.run_if(is_authority)`:
 
 ```rust
 // Before:
-use untypes_core::cli::is_authority;
+use uncommon-app_core::cli::is_authority;
 app.add_systems(
     bevy::prelude::Update,
     (ghost_interaction_execution_system, watch_tween_insertions).run_if(is_authority),
@@ -1427,17 +1427,17 @@ app.add_systems(
 app.add_systems(
     bevy::prelude::Update,
     (ghost_interaction_execution_system, watch_tween_insertions)
-        .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+        .run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>()),
 );
 ```
 
-Remove the `use untypes_core::cli::is_authority;` import from the `app_setup` scope once unused.
+Remove the `use uncommon-app_core::cli::is_authority;` import from the `app_setup` scope once unused.
 
 **`gis/selection.rs`** — one system registered with `.run_if(is_authority)`:
 
 ```rust
 // Before:
-use untypes_core::cli::is_authority;
+use uncommon-app_core::cli::is_authority;
 app.add_systems(
     bevy::prelude::Update,
     ghost_interaction_selection_system.run_if(is_authority),
@@ -1447,11 +1447,11 @@ app.add_systems(
 app.add_systems(
     bevy::prelude::Update,
     ghost_interaction_selection_system
-        .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+        .run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>()),
 );
 ```
 
-Remove the `use untypes_core::cli::is_authority;` import from the `app_setup` scope once unused.
+Remove the `use uncommon-app_core::cli::is_authority;` import from the `app_setup` scope once unused.
 
 ---
 
@@ -1462,25 +1462,26 @@ Remove the `use untypes_core::cli::is_authority;` import from the `app_setup` sc
 - `crates/ungearitems-plugin/src/components/emfmeter.rs` (lines ~51, ~69)
 - `crates/ungearitems-plugin/src/components/thermometer.rs` (lines ~42, ~59)
 
-Both files call `untypes_core::cli::is_authority(cli)` inside a system body to derive a local `is_authority: bool`, then
-use it to gate battery drain state writes. Apply the same replacement used for `sage.rs` / `repellentflask.rs` in
+Both files call `uncommon-app_core::cli::is_authority(cli)` inside a system body to derive a local `is_authority: bool`,
+then use it to gate battery drain state writes. Apply the same replacement used for `sage.rs` / `repellentflask.rs` in
 SP-9.5.
 
-Add `authority: Option<Res<untypes_core::roles::AuthorityRole>>` to each system's parameter list and change the binding:
+Add `authority: Option<Res<uncommon-app_core::roles::AuthorityRole>>` to each system's parameter list and change the
+binding:
 
 ```rust
 // Before (both files):
-cli: Res<untypes_core::cli::CliOptions>,
+cli: Res<uncommon-app_core::cli::CliOptions>,
 // ...
-let is_authority = untypes_core::cli::is_authority(cli);
+let is_authority = uncommon-app_core::cli::is_authority(cli);
 
 // After:
-authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+authority: Option<Res<uncommon-app_core::roles::AuthorityRole>>,
 // ...
 let is_authority = authority.is_some();
 ```
 
-Remove the `cli: Res<untypes_core::cli::CliOptions>` parameter from each system once unused.
+Remove the `cli: Res<uncommon-app_core::cli::CliOptions>` parameter from each system once unused.
 
 ---
 
@@ -1494,7 +1495,7 @@ The `PlayerAuthoritativeLogicSet` configure-set call uses a function-item refere
 app.configure_sets(
     Update,
     unplayer_core::authoritative::PlayerAuthoritativeLogicSet
-        .run_if(untypes_core::cli::is_authority)
+        .run_if(uncommon-app_core::cli::is_authority)
         .after(unplayer_core::PlayerInputSet),
 );
 ```
@@ -1505,13 +1506,13 @@ Replace:
 app.configure_sets(
     Update,
     unplayer_core::authoritative::PlayerAuthoritativeLogicSet
-        .run_if(resource_exists::<untypes_core::roles::AuthorityRole>())
+        .run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>())
         .after(unplayer_core::PlayerInputSet),
 );
 ```
 
-No import change needed unless `untypes_core::cli` becomes unused after this edit — check all other import uses in the
-file.
+No import change needed unless `uncommon-app_core::cli` becomes unused after this edit — check all other import uses in
+the file.
 
 ---
 
@@ -1536,7 +1537,7 @@ This is a two-path dispatch (host vs. client), not a simple gate. Replace with `
 cli: Res<CliOptions>,
 
 // After:
-authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+authority: Option<Res<uncommon-app_core::roles::AuthorityRole>>,
 
 // Condition:
 if authority.is_some() {
@@ -1546,8 +1547,8 @@ if authority.is_some() {
 }
 ```
 
-Remove `use untypes_core::cli::CliOptions;` from the file once unused (verify against `player_movement_system` — that
-function was already cleaned in SP-9.2 and no longer needs `CliOptions`).
+Remove `use uncommon-app_core::cli::CliOptions;` from the file once unused (verify against `player_movement_system` —
+that function was already cleaned in SP-9.2 and no longer needs `CliOptions`).
 
 ---
 
@@ -1555,11 +1556,11 @@ function was already cleaned in SP-9.2 and no longer needs `CliOptions`).
 
 **File:** `crates/unplayer-plugin/src/systems/waypoint.rs`, `waypoint_following_system` function (line ~238)
 
-The function uses `cli: Res<untypes_core::cli::CliOptions>` and `is_authority(cli)` to decide whether to speculatively
-fire `ExecuteInteractionEvent` on the client:
+The function uses `cli: Res<uncommon-app_core::cli::CliOptions>` and `is_authority(cli)` to decide whether to
+speculatively fire `ExecuteInteractionEvent` on the client:
 
 ```rust
-cli: Res<untypes_core::cli::CliOptions>,
+cli: Res<uncommon-app_core::cli::CliOptions>,
 // ...
 let is_authority = is_authority(cli);
 // ...
@@ -1571,12 +1572,13 @@ if !is_authority {
 Replace with:
 
 ```rust
-authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+authority: Option<Res<uncommon-app_core::roles::AuthorityRole>>,
 // ...
 let is_authority = authority.is_some();
 ```
 
-Remove the `use untypes_core::cli::is_authority;` and the `Res<untypes_core::cli::CliOptions>` parameter once unused.
+Remove the `use uncommon-app_core::cli::is_authority;` and the `Res<uncommon-app_core::cli::CliOptions>` parameter once
+unused.
 
 ---
 
@@ -1597,12 +1599,12 @@ let is_authority = is_authority(cli);
 Replace:
 
 ```rust
-authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+authority: Option<Res<uncommon-app_core::roles::AuthorityRole>>,
 // ...
 let is_authority = authority.is_some();
 ```
 
-Remove `use untypes_core::cli::{CliOptions, is_authority};` from the file imports once unused.
+Remove `use uncommon-app_core::cli::{CliOptions, is_authority};` from the file imports once unused.
 
 ---
 
@@ -1615,7 +1617,7 @@ Remove `use untypes_core::cli::{CliOptions, is_authority};` from the file import
 
 **`loadoutui.rs`** — `button_clicked` already has `lobby_presence: Option<Res<LobbyPresenceRole>>` in its signature. The
 three `cli.is_authority()` calls gate whether to emit a `TruckLoadoutMessage` to the server. Add
-`authority: Option<Res<untypes_core::roles::AuthorityRole>>` and replace:
+`authority: Option<Res<uncommon-app_core::roles::AuthorityRole>>` and replace:
 
 ```rust
 // Before (three call sites):
@@ -1630,14 +1632,14 @@ if authority.is_none() {
 ```
 
 Remove `cli: Res<CliOptions>` from `button_clicked`'s parameter list once unused. Verify that `CliOptions` is not used
-elsewhere in `loadoutui.rs`; if not, remove the `use untypes_core::cli::CliOptions;` import.
+elsewhere in `loadoutui.rs`; if not, remove the `use uncommon-app_core::cli::CliOptions;` import.
 
 **`truckgear.rs`** — `initialize_truck_gear` is registered with a function-item gate:
 
 ```rust
 app.add_systems(
     Update,
-    initialize_truck_gear.run_if(untypes_core::cli::is_authority),
+    initialize_truck_gear.run_if(uncommon-app_core::cli::is_authority),
 );
 ```
 
@@ -1647,7 +1649,7 @@ Replace:
 app.add_systems(
     Update,
     initialize_truck_gear
-        .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+        .run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>()),
 );
 ```
 
@@ -1660,7 +1662,7 @@ app.add_systems(
 The function converts `is_authority(cli)` into the `Authority` enum:
 
 ```rust
-use untypes_core::cli::{CliOptions, is_authority};
+use uncommon-app_core::cli::{CliOptions, is_authority};
 // ...
 cli: Res<CliOptions>,
 // ...
@@ -1674,7 +1676,7 @@ let authority = if is_authority(cli) {
 Replace:
 
 ```rust
-authority_role: Option<Res<untypes_core::roles::AuthorityRole>>,
+authority_role: Option<Res<uncommon-app_core::roles::AuthorityRole>>,
 
 // Rename to avoid shadowing:
 let authority = if authority_role.is_some() {
@@ -1684,8 +1686,8 @@ let authority = if authority_role.is_some() {
 };
 ```
 
-Remove `use untypes_core::cli::{CliOptions, is_authority};` from the file imports and `cli: Res<CliOptions>` from the
-parameter list once unused.
+Remove `use uncommon-app_core::cli::{CliOptions, is_authority};` from the file imports and `cli: Res<CliOptions>` from
+the parameter list once unused.
 
 ---
 
@@ -1696,14 +1698,14 @@ parameter list once unused.
 `UnhaunterSummaryCorePlugin` runs `calculate_rewards_and_grades` only on the authority:
 
 ```rust
-calculate_rewards_and_grades.run_if(untypes_core::cli::is_authority),
+calculate_rewards_and_grades.run_if(uncommon-app_core::cli::is_authority),
 ```
 
 `UnhaunterSummaryPlugin` runs it on **non**-authority (clients reach `AppState::Summary`; the dedicated server does not
 show the summary screen):
 
 ```rust
-calculate_rewards_and_grades.run_if(not(untypes_core::cli::is_authority)),
+calculate_rewards_and_grades.run_if(not(uncommon-app_core::cli::is_authority)),
 ```
 
 Replace both:
@@ -1711,14 +1713,14 @@ Replace both:
 ```rust
 // First plugin:
 calculate_rewards_and_grades
-    .run_if(resource_exists::<untypes_core::roles::AuthorityRole>()),
+    .run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>()),
 
 // Second plugin:
 calculate_rewards_and_grades
-    .run_if(not(resource_exists::<untypes_core::roles::AuthorityRole>())),
+    .run_if(not(resource_exists::<uncommon-app_core::roles::AuthorityRole>())),
 ```
 
-Verify that `untypes_core::cli` is not imported elsewhere in `plugin.rs` and remove the import once unused.
+Verify that `uncommon-app_core::cli` is not imported elsewhere in `plugin.rs` and remove the import once unused.
 
 ---
 
@@ -1730,7 +1732,7 @@ Verify that `untypes_core::cli` is not imported elsewhere in `plugin.rs` and rem
 - `git grep 'is_headless'` in `crates/` returns **only** the permitted sites listed in SP-9.7.
 - `git grep 'NetMode'` in `crates/` returns **only** the permitted sites listed in SP-9.7.
 - `git grep 'is_authority'` in `crates/` returns **only**:
-  - `untypes_core/src/cli.rs` (the function definition lines 40–46)
+  - `uncommon-app_core/src/cli.rs` (the function definition lines 40–46)
   - Any permitted boot-transport sites explicitly listed in 10.0 above (`unreplicon-plugin`, `unhub-plugin`)
 - `git grep 'CliOptions'` in `crates/` returns **only** the definition site and the permitted boot and config sites
   (`unreplicon-plugin`, `unhub-plugin`, `unmapload-plugin`, `untmxmap-plugin`).
@@ -1792,4 +1794,4 @@ The entire plan is **done** when:
 8. `LobbyData`, `bridge_lobby_info_system`, `sync_player_state_to_net`, and `RoomOwner` are fully deleted with no dead
    references.
 9. No `cli.is_authority()`, `is_authority(cli)`, or `run_if(is_authority)` call sites remain in game-logic systems (only
-   the definition in `untypes_core/src/cli.rs` and the boot-time insertion in SP-1 are permitted).
+   the definition in `uncommon-app_core/src/cli.rs` and the boot-time insertion in SP-1 are permitted).

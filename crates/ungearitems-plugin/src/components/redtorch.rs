@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::RngExt;
 use unaudiospatial_core::emitter::AudioEmitter;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
@@ -146,11 +146,11 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         update_redtorch_skeleton
             .before(ungearitems_core::GearStateExportSet)
-            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+            .run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
     );
     app.add_systems(
         Update,
         (hydrate_redtorch_skin, update_redtorch_skin)
-            .run_if(resource_exists::<untypes_core::roles::LocalPlayerRole>),
+            .run_if(resource_exists::<uncommon_app_core::roles::LocalPlayerRole>),
     );
 }

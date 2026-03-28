@@ -14,15 +14,13 @@ workspace = true
 ungear-core = { workspace = true }
 unrender-std = { workspace = true }
 unspatial-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unboard-core = { workspace = true }
 unplayer-core = { workspace = true }
-untags-core = { workspace = true }
 untruck-core = { workspace = true }
 unmetrics-core = { workspace = true }
 unreplicon-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unfoundation-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }

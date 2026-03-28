@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use enum_iterator::all;
+use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
@@ -12,7 +13,6 @@ use unplayer_core::components::{MainPlayer, PlayerSprite};
 use untruck_core::components::in_truck::InTruck;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
-use untypes_core::states::AppState;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -427,7 +427,7 @@ fn trigger_in_truck_with_evidence_no_journal_system(
             // system_state.hinted_this_truck_session = false; // Allow re-hint if new unlogged evidence appears
         }
     } else {
-        // Not in GameState::Truck
+        // Not in InGameUiState::Truck
         system_state.time_entered_truck_with_unlogged_evidence = None;
         system_state.hinted_this_truck_session = false;
     }

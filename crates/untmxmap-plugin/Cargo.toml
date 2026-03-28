@@ -16,7 +16,7 @@ unboard-core = { workspace = true }
 undifficulty-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unmapload-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 untiled-core = { workspace = true }
 unrender-std = { workspace = true }
 unsettings-core = { workspace = true }

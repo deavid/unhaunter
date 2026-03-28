@@ -74,3 +74,34 @@ pub fn npc_help_dialog_from_tiled(
     };
     NpcHelpDialog::new(dialog)
 }
+
+/// Converts a map layer's raw property table into domain-level `BehaviorProperties`.
+/// This is the ACL conversion boundary: `tiled` types never escape past this function.
+pub fn behavior_properties_from_layer(
+    user_properties: &HashMap<String, tiled::PropertyValue>,
+) -> BehaviorProperties {
+    let properties = user_properties
+        .iter()
+        .map(|(key, value)| (key.clone(), to_unhaunter_prop(value)))
+        .collect();
+    BehaviorProperties::from_map(properties)
+}
+
+/// Creates an `NpcHelpDialog` from domain-level `BehaviorProperties` (Tiled-free).
+pub fn npc_help_dialog_from_properties(
+    classname: &str,
+    variant: &str,
+    properties: &BehaviorProperties,
+) -> NpcHelpDialog {
+    let key = format!("{classname}:{variant}:dialog");
+    let dialog = match properties.get_string_opt(&key) {
+        Some(v) => v,
+        None => {
+            warn!(
+                "NPCHelpDialog was expecting a user property named {key:?} in the layer but was not present"
+            );
+            String::new()
+        }
+    };
+    NpcHelpDialog::new(dialog)
+}

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unboard_core::BoardUpdateSet;
-use untypes_core::states::{AppState, SimulationState};
+use uncommon_app_core::states::{AppState, SimulationState};
 
 use unlight_core::resources::light_grid::LightGrid;
 

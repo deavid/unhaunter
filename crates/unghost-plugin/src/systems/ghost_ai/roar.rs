@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::RngExt;
 use unaudiospatial_core::emitter::AudioEmitter;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use unspatial_core::position::Position;
 
 /// Enables/disables debug logs for hunting behavior.

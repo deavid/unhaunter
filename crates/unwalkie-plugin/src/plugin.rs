@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
+use unwalkie_core::events::hint::OnScreenHintEvent;
 use unwalkie_core::events::walkie_types::WalkieTalkingEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -9,6 +10,7 @@ pub struct UnhaunterWalkieCorePlugin;
 
 impl Plugin for UnhaunterWalkieCorePlugin {
     fn build(&self, app: &mut App) {
+        app.add_message::<OnScreenHintEvent>();
         app.add_message::<WalkieTalkingEvent>();
         app.init_resource::<WalkiePlay>();
         app.init_resource::<PotentialIDTimer>();

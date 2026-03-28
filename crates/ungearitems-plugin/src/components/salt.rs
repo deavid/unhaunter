@@ -3,7 +3,8 @@ use bevy_replicon::prelude::Replicated;
 use rand::RngExt;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
+use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::salt::{
@@ -18,7 +19,6 @@ use unreplicon_core::messages::SaltDroppedMessage;
 use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
 
 use crate::metrics;
 

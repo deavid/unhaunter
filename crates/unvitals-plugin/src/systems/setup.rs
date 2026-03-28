@@ -2,8 +2,8 @@ use super::other;
 use super::sanity;
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::SimulationState;
+use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
+use uncommon_app_core::states::SimulationState;
 use unvitals_core::components::{PlayerVitals, Stamina};
 use unvitals_core::events::PlayerDiedEvent;
 

@@ -99,27 +99,27 @@ recommended approach is to store them as components on a `MissionInstance` entit
 
 These are read-only asset caches, lookup tables, or configuration that does not change per mission.
 
-| Resource                      | Crate            | Notes                                             |
-| ----------------------------- | ---------------- | ------------------------------------------------- |
-| `SpriteDB`                    | `unrender-std`   | Sprite metadata cache, populated once             |
-| `MapTileSetDb`                | `untiled-core`   | Atlas data (uses `AtlasData::Headless` on server) |
-| `PerlinNoise`                 | `unnoise-core`   | Read-only permutation lookup table                |
-| `PlayerAssets`                | `unplayer-core`  | `AssetCollection` — handles only                  |
-| `GhostAssets`                 | `unghost-core`   | `AssetCollection`                                 |
-| `MapAssets`                   | `unmapload-core` | `AssetCollection`                                 |
-| `MissionAssets`               | `unmapload-core` | `AssetCollection` — audio handles                 |
-| `TruckAssets`                 | `untruck-core`   | `AssetCollection`                                 |
-| `CustomSpritePickingSettings` | `unpicking-core` | Global picking config (server may skip)           |
-| `CliOptions`                  | `untypes-core`   | Command-line arguments, immutable at runtime      |
-| `GearSpawnerRegistry`         | `ungear-core`    | If all builders are stateless, can be shared      |
+| Resource                      | Crate               | Notes                                             |
+| ----------------------------- | ------------------- | ------------------------------------------------- |
+| `SpriteDB`                    | `unrender-std`      | Sprite metadata cache, populated once             |
+| `MapTileSetDb`                | `untiled-core`      | Atlas data (uses `AtlasData::Headless` on server) |
+| `PerlinNoise`                 | `unnoise-core`      | Read-only permutation lookup table                |
+| `PlayerAssets`                | `unplayer-core`     | `AssetCollection` — handles only                  |
+| `GhostAssets`                 | `unghost-core`      | `AssetCollection`                                 |
+| `MapAssets`                   | `unmapload-core`    | `AssetCollection`                                 |
+| `MissionAssets`               | `unmapload-core`    | `AssetCollection` — audio handles                 |
+| `TruckAssets`                 | `untruck-core`      | `AssetCollection`                                 |
+| `CustomSpritePickingSettings` | `unpicking-core`    | Global picking config (server may skip)           |
+| `CliOptions`                  | `uncommon-app-core` | Command-line arguments, immutable at runtime      |
+| `GearSpawnerRegistry`         | `ungear-core`       | If all builders are stateless, can be shared      |
 
 ### 3.3 Server-Singleton Resources
 
-| Resource         | Crate          | Notes                                                           |
-| ---------------- | -------------- | --------------------------------------------------------------- |
-| `NetworkConn`    | `unnet-plugin` | TCP listeners + client connections; needs multi-mission routing |
-| `PlayerRegistry` | `unnet-plugin` | UUID → NetworkId mapping; needs mission association             |
-| `CliOptions`     | `untypes-core` | Read-only CLI config                                            |
+| Resource         | Crate               | Notes                                                           |
+| ---------------- | ------------------- | --------------------------------------------------------------- |
+| `NetworkConn`    | `unnet-plugin`      | TCP listeners + client connections; needs multi-mission routing |
+| `PlayerRegistry` | `unnet-plugin`      | UUID → NetworkId mapping; needs mission association             |
+| `CliOptions`     | `uncommon-app-core` | Read-only CLI config                                            |
 
 ---
 
@@ -225,7 +225,7 @@ correct and requires no changes.
 ### 4.8 No Dangerous Global Statics
 
 The only `static` in game crates is `DIAGNOSTIC_CHANNEL` in `unmetrics-core` — a `LazyLock<StaticChannel>` used for
-fire-and-forget diagnostics. It is thread-safe and mission-agnostic. The `thread_local` RNG in `unfoundation-core` is
+fire-and-forget diagnostics. It is thread-safe and mission-agnostic. The `thread_local` RNG in `uncommon-app-core` is
 per-thread and safe.
 
 ---

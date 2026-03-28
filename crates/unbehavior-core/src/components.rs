@@ -107,3 +107,9 @@ impl RoomStateDelta {
         }
     }
 }
+
+/// Temporary component carrying domain-converted layer properties through the hydration pipeline.
+/// Inserted at `HydrationStage<1>` and removed at `HydrationStage<4>`.
+/// Replaces the former `PendingTiledLayerProperties` which held raw `tiled::PropertyValue` types.
+#[derive(Component)]
+pub struct PendingProperties(pub crate::behavior::BehaviorProperties);

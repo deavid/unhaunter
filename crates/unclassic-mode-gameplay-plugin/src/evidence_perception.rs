@@ -12,8 +12,8 @@ use uninteraction_core::interaction::Toggleable;
 use unlight_core::components::LightEmitter;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light_type::LightType;
+use unplayer_core::components::PlayerTag;
 use unspatial_core::position::Position;
-use untags_core::tags::PlayerTag;
 
 fn update_current_evidence_readings_from_player_perception_system(
     mut evidence_readings: ResMut<CurrentEvidenceReadings>,

@@ -7,9 +7,9 @@ use unbehavior_core::components::{Door, InteractableByGhost};
 use unbehavior_core::state::TileState;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::visibility_data::VisibilityData;
+use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};
 use unmetrics_core::metrics::SendMetric;
@@ -25,7 +25,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         bevy::prelude::Update,
         ghost_interaction_selection_system
-            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+            .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
     );
 }
 

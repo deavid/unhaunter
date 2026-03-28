@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use rand::prelude::*;
 use std::mem::swap;
 use unboard_core::resources::roomdb::RoomTopology;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::events::MapGeometryInitializedEvent;
 use unsoundfield_core::resources::SoundGrid;

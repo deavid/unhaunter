@@ -1,15 +1,18 @@
 use bevy::prelude::*;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::{Interactive, NpcHelpDialog};
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unclassic_mode_core::colors;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uninput_core::states::InGameUiState;
 use unnpc_core::events::NpcHelpEvent;
 use unplayer_core::components::MainPlayer;
-use unrender_std::materials::UIPanelMaterial;
+use unrender_std::custom_material2::UIPanelMaterial;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
-use untypes_core::states::GameState;
-use unui_core::assets::UiAssets;
+
+use crate::assets::NpcAssets;
+
+const PANEL_BGCOLOR: Color = Color::srgba(0.106, 0.129, 0.157, 0.8);
 
 #[derive(Debug, Component)]
 pub(crate) struct NpcUI;
@@ -22,15 +25,15 @@ pub(crate) struct NpcUIData {
 }
 
 pub(crate) fn keyboard(
-    game_state: Res<State<GameState>>,
-    mut game_next_state: ResMut<NextState<GameState>>,
+    game_state: Res<State<InGameUiState>>,
+    mut game_next_state: ResMut<NextState<InGameUiState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *game_state.get() != GameState::NpcHelp {
+    if *game_state.get() != InGameUiState::NpcHelp {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) || keyboard_input.just_pressed(KeyCode::KeyE) {
-        game_next_state.set(GameState::Running);
+        game_next_state.set(InGameUiState::Running);
     }
 }
 
@@ -43,7 +46,7 @@ pub(crate) fn cleanup(mut commands: Commands, qtui: Query<Entity, With<NpcUI>>) 
 pub(crate) fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<NpcAssets>,
     npcdata: Res<NpcUIData>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;
@@ -65,13 +68,13 @@ pub(crate) fn setup_ui(
             margin: MARGIN,
             ..default()
         })
-        .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR))
+        .insert(BackgroundColor(Color::srgba(0.082, 0.094, 0.118, 0.6)))
         .insert(NpcUI)
         .with_children(|parent| {
             // Mid content
             parent
                 .spawn(MaterialNode(materials.add(UIPanelMaterial {
-                    color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
+                    color: PANEL_BGCOLOR.into(),
                 })))
                 .insert(Node {
                     border: UiRect::all(Val::Px(1.0)),
@@ -92,7 +95,7 @@ pub(crate) fn setup_ui(
                             font_size: 35.0 * FONT_SCALE,
                             ..default()
                         })
-                        .insert(TextColor(colors::TRUCKUI_ACCENT_COLOR))
+                        .insert(TextColor(Color::srgba(0.290, 0.596, 0.706, 1.0)))
                         .insert(Node {
                             height: Val::Px(40.0 * UI_SCALE),
                             ..default()
@@ -103,7 +106,7 @@ pub(crate) fn setup_ui(
                             height: Val::Px(0.0),
                             ..default()
                         })
-                        .insert(BorderColor::all(colors::TRUCKUI_ACCENT_COLOR));
+                        .insert(BorderColor::all(Color::srgba(0.290, 0.596, 0.706, 1.0)));
                     mid_blk
                         .spawn(Text::new(npcdata.dialog.clone()))
                         .insert(TextFont {
@@ -129,7 +132,7 @@ pub(crate) fn setup_ui(
                             font_size: 25.0 * FONT_SCALE,
                             ..default()
                         })
-                        .insert(TextColor(colors::TRUCKUI_TEXT_COLOR))
+                        .insert(TextColor(Color::srgba(0.7, 0.82, 0.85, 1.0)))
                         .insert(Node {
                             margin: UiRect::all(Val::Px(4.0)),
                             align_content: AlignContent::End,
@@ -158,7 +161,7 @@ pub(crate) fn npchelp_event(
     mut ev_npc: MessageReader<NpcHelpEvent>,
     mut npc: Query<(Entity, &mut NpcHelpDialog)>,
     mut res_npc: ResMut<NpcUIData>,
-    mut game_next_state: ResMut<NextState<GameState>>,
+    mut game_next_state: ResMut<NextState<InGameUiState>>,
 ) {
     let Some(ev_npc) = ev_npc.read().next() else {
         return;
@@ -173,7 +176,7 @@ pub(crate) fn npchelp_event(
     };
     npcd.seen = true;
     res_npc.dialog.clone_from(&npcd.dialog);
-    game_next_state.set(GameState::NpcHelp);
+    game_next_state.set(InGameUiState::NpcHelp);
     // warn!(npcd.dialog);
 }
 
@@ -218,8 +221,8 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_message::<NpcHelpEvent>()
         .init_resource::<NpcUIData>()
         .add_systems(Update, npchelp_event)
-        .add_systems(OnEnter(GameState::NpcHelp), setup_ui)
-        .add_systems(OnExit(GameState::NpcHelp), cleanup)
+        .add_systems(OnEnter(InGameUiState::NpcHelp), setup_ui)
+        .add_systems(OnExit(InGameUiState::NpcHelp), cleanup)
         .add_systems(Update, keyboard)
         .add_systems(Update, auto_call_npchelp);
 }

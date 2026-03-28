@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use bevy_persistent::prelude::*;
 use std::path::Path;
+use uncommon_app_core::cli::CliOptions;
 use unprofile_core::profile::{PlayerProfileData, RuntimeInstallationId};
 use unreplicon_core::resources::LocalPlayer;
-use untypes_core::cli::CliOptions;
 use uuid::Uuid;
 
+use uncommon_app_core::states::AppState;
 use unprofile_core::events::DepositStakedEvent;
-use untypes_core::states::AppState;
 
 pub struct UnhaunterProfilePlugin;
 

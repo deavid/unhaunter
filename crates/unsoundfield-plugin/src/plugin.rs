@@ -1,7 +1,7 @@
 use crate::metrics;
 use crate::systems::*;
 use bevy::prelude::*;
-use untypes_core::states::AppState;
+use uncommon_app_core::states::AppState;
 
 pub struct UnhaunterSoundFieldPlugin;
 

@@ -1,12 +1,15 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use uncommon_app_core::states::AppState;
+use uninput_core::states::InGameUiState;
+use unplayer_core::components::MainPlayer;
 use unsettings_core::audio::AudioSettings;
+use untruck_core::components::in_truck::InTruck;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::components::truck_ui_markers::TruckUI;
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 use untruck_core::types::truck_button::TruckButtonType;
-use untypes_core::states::{AppState, GameState};
 
 // Component to mark the progress bar for hold buttons
 #[derive(Component)]
@@ -31,15 +34,15 @@ fn hide_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
 }
 
 fn keyboard(
-    game_state: Res<State<GameState>>,
-    mut game_next_state: ResMut<NextState<GameState>>,
+    mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    q_player: Query<Entity, (With<MainPlayer>, With<InTruck>)>,
 ) {
-    if *game_state.get() != GameState::Truck {
+    let Ok(player_entity) = q_player.single() else {
         return;
-    }
+    };
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        game_next_state.set(GameState::Running);
+        commands.entity(player_entity).remove::<InTruck>();
     }
 }
 
@@ -281,8 +284,8 @@ fn update_end_mission_button_status(
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnExit(AppState::InGame), cleanup);
-    app.add_systems(OnEnter(GameState::Truck), show_ui);
-    app.add_systems(OnExit(GameState::Truck), hide_ui);
+    app.add_systems(OnEnter(InGameUiState::Truck), show_ui);
+    app.add_systems(OnExit(InGameUiState::Truck), hide_ui);
     app.add_systems(Update, keyboard);
     app.add_systems(
         Update,
@@ -291,6 +294,6 @@ pub(crate) fn app_setup(app: &mut App) {
             update_craft_button_text,
             update_end_mission_button_status,
         )
-            .run_if(in_state(GameState::Truck)),
+            .run_if(in_state(InGameUiState::Truck)),
     );
 }

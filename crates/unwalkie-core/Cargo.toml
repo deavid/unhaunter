@@ -14,7 +14,7 @@ workspace = true
 [dependencies]
 unwalkie-types = { workspace = true }
 
-unfoundation-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unghost-core = { workspace = true }
 undifficulty-core = { workspace = true }
 ungear-core = { workspace = true }

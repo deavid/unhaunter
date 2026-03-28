@@ -159,23 +159,22 @@ dependencies = [
 
 [[package]]
 name = "android-activity"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef6978589202a00cd7e118380c448a08b6ed394c3a8df3a430d0898e3a42d046"
+checksum = "0f2a1bb052857d5dd49572219344a7332b31b76405648eabac5bc68978251bcd"
 dependencies = [
  "android-properties",
  "bitflags 2.11.0",
  "cc",
- "cesu8",
- "jni",
- "jni-sys",
+ "jni 0.22.4",
  "libc",
  "log",
  "ndk 0.9.0",
  "ndk-context",
  "ndk-sys 0.6.0+11769913",
  "num_enum",
- "thiserror 1.0.69",
+ "simd_cesu8",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -201,9 +200,9 @@ dependencies = [
 
 [[package]]
 name = "anstream"
-version = "0.6.21"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43d5b281e737544384e969a5ccad3f1cdd24b48086a0fc1b2a5262a26b8f4f4a"
+checksum = "824a212faf96e9acacdbd09febd34438f8f711fb84e09a8916013cd7815ca28d"
 dependencies = [
  "anstyle",
  "anstyle-parse",
@@ -216,15 +215,15 @@ dependencies = [
 
 [[package]]
 name = "anstyle"
-version = "1.0.13"
+version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5192cca8006f1fd4f7237516f40fa183bb07f8fbdfedaa0036de5ea9b0b45e78"
+checksum = "940b3a0ca603d1eade50a4846a2afffd5ef57a9feac2c0e2ec2e14f9ead76000"
 
 [[package]]
 name = "anstyle-parse"
-version = "0.2.7"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e7644824f0aa2c7b9384579234ef10eb7efb6a0deb83f9630a49594dd9c15c2"
+checksum = "52ce7f38b242319f7cabaa6813055467063ecdc9d355bbb4ce0c68908cd8130e"
 dependencies = [
  "utf8parse",
 ]
@@ -235,7 +234,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -246,7 +245,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -494,9 +493,9 @@ dependencies = [
 
 [[package]]
 name = "aws-lc-rs"
-version = "1.16.1"
+version = "1.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94bffc006df10ac2a68c83692d734a465f8ee6c5b384d8545a636f81d858f4bf"
+checksum = "a054912289d18629dc78375ba2c3726a3afe3ff71b4edba9dedfca0e3446d1fc"
 dependencies = [
  "aws-lc-sys",
  "zeroize",
@@ -504,9 +503,9 @@ dependencies = [
 
 [[package]]
 name = "aws-lc-sys"
-version = "0.38.0"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4321e568ed89bb5a7d291a7f37997c2c0df89809d7b6d12062c81ddb54aa782e"
+checksum = "1fa7e52a4c5c547c741610a2c6f123f3881e409b714cd27e6798ef020c514f0a"
 dependencies = [
  "cc",
  "cmake",
@@ -1596,9 +1595,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_replicon"
-version = "0.39.0"
+version = "0.39.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bea47169c9f377c4c5c9040f25140c1f4661094e53f1418aa32063c00c4e63fe"
+checksum = "4ea7372dfbefe9b1f10d9388f444c86eaefb29693ecc95be8934bbfda7c4eeac"
 dependencies = [
  "bevy",
  "bitflags 2.11.0",
@@ -2190,9 +2189,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.56"
+version = "1.2.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aebf35691d1bfb0ac386a69bac2fde4dd276fb618cf8bf4f5318fe285e821bb2"
+checksum = "7a0dd1ca384932ff3641c8718a02769f1698e7563dc6974ffd03346116310423"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -2286,9 +2285,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.60"
+version = "4.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2797f34da339ce31042b27d23607e051786132987f595b02ba4f6a6dffb7030a"
+checksum = "b193af5b67834b676abd72466a96c1024e6a6ad978a1f484bd90b85c94041351"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -2296,9 +2295,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.60"
+version = "4.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24a241312cea5059b13574bb9b3861cabf758b879c15190b37b6d6fd63ab6876"
+checksum = "714a53001bf66416adb0e2ef5ac857140e7dc3a0c48fb28b2f10762fc4b5069f"
 dependencies = [
  "anstream",
  "anstyle",
@@ -2308,9 +2307,9 @@ dependencies = [
 
 [[package]]
 name = "clap_derive"
-version = "4.5.55"
+version = "4.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a92793da1a46a5f2a02a6f4c46c6496b28c43638adea8306fcb0caa1634f24e5"
+checksum = "1110bd8a634a1ab8cb04345d8d878267d57c3cf1b38d91b71af6686408bbca6a"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -2320,9 +2319,9 @@ dependencies = [
 
 [[package]]
 name = "clap_lex"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a822ea5bc7590f9d40f1ba12c0dc3c2760f3482c6984db1573ad11031420831"
+checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
 name = "cmake"
@@ -2361,9 +2360,9 @@ checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
 
 [[package]]
 name = "colorchoice"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
+checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 
 [[package]]
 name = "combine"
@@ -2573,7 +2572,7 @@ dependencies = [
  "core-foundation-sys",
  "coreaudio-rs",
  "dasp_sample",
- "jni",
+ "jni 0.21.1",
  "js-sys",
  "libc",
  "mach2",
@@ -2801,7 +2800,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3014,14 +3013,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
 name = "euclid"
-version = "0.22.13"
+version = "0.22.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df61bf483e837f88d5c2291dcf55c67be7e676b3a51acc48db3a7b163b91ed63"
+checksum = "f1a05365e3b1c6d1650318537c7460c6923f1abdd272ad6842baa2b509957a06"
 dependencies = [
  "num-traits",
 ]
@@ -3999,9 +3998,9 @@ dependencies = [
 
 [[package]]
 name = "image"
-version = "0.25.9"
+version = "0.25.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6506c6c10786659413faa717ceebcb8f70731c0a60cbae39795fdf114519c1a"
+checksum = "85ab80394333c02fe689eaf900ab500fbd0c2213da414687ebf995a65d5a6104"
 dependencies = [
  "bytemuck",
  "byteorder-lite",
@@ -4017,8 +4016,8 @@ dependencies = [
  "rayon",
  "rgb",
  "tiff",
- "zune-core 0.5.1",
- "zune-jpeg 0.5.12",
+ "zune-core",
+ "zune-jpeg",
 ]
 
 [[package]]
@@ -4057,9 +4056,9 @@ checksum = "a257582fdcde896fd96463bf2d40eefea0580021c0712a0e2b028b60b47a837a"
 
 [[package]]
 name = "inotify"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f37dccff2791ab604f9babef0ba14fbe0be30bd368dc541e2b08d07c8aa908f3"
+checksum = "bd5b3eaf1a28b758ac0faa5a4254e8ab2705605496f1b1f3fbbc3988ad73d199"
 dependencies = [
  "bitflags 2.11.0",
  "inotify-sys",
@@ -4112,9 +4111,9 @@ checksum = "d98f6fed1fde3f8c21bc40a1abb88dd75e67924f9cffc3ef95607bad8017f8e2"
 
 [[package]]
 name = "iri-string"
-version = "0.7.10"
+version = "0.7.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c91338f0783edbd6195decb37bae672fd3b165faffb89bf7b9e6942f8b1a731a"
+checksum = "d8e7418f59cc01c88316161279a7f665217ae316b388e58a0d10e29f54f1e5eb"
 dependencies = [
  "memchr",
  "serde",
@@ -4146,9 +4145,9 @@ dependencies = [
 
 [[package]]
 name = "itoa"
-version = "1.0.17"
+version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92ecc6618181def0457392ccd0ee51198e065e016d1d527a7ac1b6dc7c1f09d2"
+checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "jni"
@@ -4159,7 +4158,7 @@ dependencies = [
  "cesu8",
  "cfg-if",
  "combine",
- "jni-sys",
+ "jni-sys 0.3.1",
  "log",
  "thiserror 1.0.69",
  "walkdir",
@@ -4167,10 +4166,62 @@ dependencies = [
 ]
 
 [[package]]
-name = "jni-sys"
-version = "0.3.0"
+name = "jni"
+version = "0.22.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
+checksum = "5efd9a482cf3a427f00d6b35f14332adc7902ce91efb778580e180ff90fa3498"
+dependencies = [
+ "cfg-if",
+ "combine",
+ "jni-macros",
+ "jni-sys 0.4.1",
+ "log",
+ "simd_cesu8",
+ "thiserror 2.0.18",
+ "walkdir",
+ "windows-link 0.2.1",
+]
+
+[[package]]
+name = "jni-macros"
+version = "0.22.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a00109accc170f0bdb141fed3e393c565b6f5e072365c3bd58f5b062591560a3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "rustc_version",
+ "simd_cesu8",
+ "syn",
+]
+
+[[package]]
+name = "jni-sys"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41a652e1f9b6e0275df1f15b32661cf0d4b78d4d87ddec5e0c3c20f097433258"
+dependencies = [
+ "jni-sys 0.4.1",
+]
+
+[[package]]
+name = "jni-sys"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6377a88cb3910bee9b0fa88d4f42e1d2da8e79915598f65fb0c7ee14c878af2"
+dependencies = [
+ "jni-sys-macros",
+]
+
+[[package]]
+name = "jni-sys-macros"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38c0b942f458fe50cdac086d2f946512305e5631e720728f2a61aabcd47a6264"
+dependencies = [
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "jobserver"
@@ -4249,9 +4300,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.182"
+version = "0.2.183"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6800badb6cb2082ffd7b6a67e6125bb39f18782f793520caee8cb8846be06112"
+checksum = "b5b646652bf6661599e1da8901b3b9522896f01e736bad5f723fe7a3a27f899d"
 
 [[package]]
 name = "libfuzzer-sys"
@@ -4281,9 +4332,9 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "libredox"
-version = "0.1.14"
+version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1744e39d1d6a9948f4f388969627434e31128196de472883b39f148769bfe30a"
+checksum = "7ddbf48fd451246b1f8c2610bd3b4ac0cc6e149d89832867093ab69a17194f08"
 dependencies = [
  "bitflags 2.11.0",
  "libc",
@@ -4479,9 +4530,9 @@ dependencies = [
 
 [[package]]
 name = "moxcms"
-version = "0.7.11"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac9557c559cd6fc9867e122e20d2cbefc9ca29d80d027a8e39310920ed2f0a97"
+checksum = "bb85c154ba489f01b25c0d36ae69a87e4a1c73a72631fc6c0eb6dde34a73e44b"
 dependencies = [
  "num-traits",
  "pxfm",
@@ -4553,7 +4604,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2076a31b7010b17a38c01907c45b945e8f11495ee4dd588309718901b1f7a5b7"
 dependencies = [
  "bitflags 2.11.0",
- "jni-sys",
+ "jni-sys 0.3.1",
  "log",
  "ndk-sys 0.5.0+25.2.9519653",
  "num_enum",
@@ -4567,7 +4618,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3f42e7bbe13d351b6bead8286a43aac9534b82bd3cc43e47037f012ebfd62d4"
 dependencies = [
  "bitflags 2.11.0",
- "jni-sys",
+ "jni-sys 0.3.1",
  "log",
  "ndk-sys 0.6.0+11769913",
  "num_enum",
@@ -4587,7 +4638,7 @@ version = "0.5.0+25.2.9519653"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c196769dd60fd4f363e11d948139556a344e79d451aeb2fa2fd040738ef7691"
 dependencies = [
- "jni-sys",
+ "jni-sys 0.3.1",
 ]
 
 [[package]]
@@ -4596,7 +4647,7 @@ version = "0.6.0+11769913"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
- "jni-sys",
+ "jni-sys 0.3.1",
 ]
 
 [[package]]
@@ -4692,7 +4743,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4757,9 +4808,9 @@ dependencies = [
 
 [[package]]
 name = "num_enum"
-version = "0.7.5"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1207a7e20ad57b847bbddc6776b968420d38292bbfe2089accff5e19e82454c"
+checksum = "5d0bca838442ec211fa11de3a8b0e0e8f3a4522575b5c4c06ed722e005036f26"
 dependencies = [
  "num_enum_derive",
  "rustversion",
@@ -4767,9 +4818,9 @@ dependencies = [
 
 [[package]]
 name = "num_enum_derive"
-version = "0.7.5"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff32365de1b6743cb203b710788263c44a03de03802daf96092f2da4fe6ba4d7"
+checksum = "680998035259dcfcafe653688bf2aa6d3e2dc05e98be6ab46afb089dc84f1df8"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -5024,7 +5075,7 @@ version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8b61bebd49e5d43f5f8cc7ee2891c16e0f41ec7954d36bcb6c14c5e0de867fb"
 dependencies = [
- "jni",
+ "jni 0.21.1",
  "ndk 0.8.0",
  "ndk-context",
  "num-derive",
@@ -5068,9 +5119,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.21.3"
+version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
+checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "once_cell_polyfill"
@@ -5098,9 +5149,9 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
 name = "orbclient"
-version = "0.3.50"
+version = "0.3.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52ad2c6bae700b7aa5d1cc30c59bdd3a1c180b09dbaea51e2ae2b8e1cf211fdd"
+checksum = "59aed3b33578edcfa1bc96a321d590d31832b6ad55a26f0313362ce687e9abd6"
 dependencies = [
  "libc",
  "libredox",
@@ -5108,9 +5159,9 @@ dependencies = [
 
 [[package]]
 name = "ordered-float"
-version = "5.1.0"
+version = "5.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f4779c6901a562440c3786d08192c6fbda7c1c2060edd10006b05ee35d10f2d"
+checksum = "0218004a4aae742209bee9c3cef05672f6b2708be36a50add8eb613b1f2a4008"
 dependencies = [
  "num-traits",
  "rand 0.8.5",
@@ -5293,9 +5344,9 @@ checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 
 [[package]]
 name = "portable-atomic-util"
-version = "0.2.5"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a9db96d7fa8782dd8c15ce32ffe8680bbd1e978a43bf51a34d39483540495f5"
+checksum = "091397be61a01d4be58e7841595bd4bfedb15f1cd54977d79b8271e94ed799a3"
 dependencies = [
  "portable-atomic",
 ]
@@ -5374,7 +5425,7 @@ version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e67ba7e9b2b56446f1d419b1d807906278ffa1a658a8a5d8a39dcb1f5a78614f"
 dependencies = [
- "toml_edit 0.25.4+spec-1.1.0",
+ "toml_edit 0.25.8+spec-1.1.0",
 ]
 
 [[package]]
@@ -5457,9 +5508,9 @@ dependencies = [
 
 [[package]]
 name = "quinn-proto"
-version = "0.11.13"
+version = "0.11.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1906b49b0c3bc04b5fe5d86a77925ae6524a19b816ae38ce1e426255f1d8a31"
+checksum = "434b42fec591c96ef50e21e886936e66d3cc3f737104fdb9b737c40ffb94c098"
 dependencies = [
  "aws-lc-rs",
  "bytes",
@@ -5662,9 +5713,9 @@ dependencies = [
 
 [[package]]
 name = "ravif"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef69c1990ceef18a116855938e74793a5f7496ee907562bd0857b6ac734ab285"
+checksum = "e52310197d971b0f5be7fe6b57530dcd27beb35c1b013f29d66c1ad73fbbcc45"
 dependencies = [
  "avif-serialize",
  "imgref",
@@ -5992,7 +6043,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6039,7 +6090,7 @@ checksum = "1d99feebc72bae7ab76ba994bb5e121b8d83d910ca40b36e0921f53becc41784"
 dependencies = [
  "core-foundation 0.10.1",
  "core-foundation-sys",
- "jni",
+ "jni 0.21.1",
  "log",
  "once_cell",
  "rustls",
@@ -6049,7 +6100,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6060,9 +6111,9 @@ checksum = "f87165f0995f63a9fbeea62b64d10b4d9d8e78ec6d7d51fb2125fda7bb36788f"
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.9"
+version = "0.103.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7df23109aa6c1567d1c575b9952556388da57401e4ace1d15f79eedad0d8f53"
+checksum = "df33b2b81ac578cabaf06b89b0631153a3f416b0a886e8a7a1707fb51abbd1ef"
 dependencies = [
  "aws-lc-rs",
  "ring",
@@ -6102,9 +6153,9 @@ dependencies = [
 
 [[package]]
 name = "schannel"
-version = "0.1.28"
+version = "0.1.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "891d81b926048e76efe18581bf793546b4c0eaf8448d72be8de2bbee5fd166e1"
+checksum = "91c1b7e4904c873ef0710c1f407dde2e6287de2bebc1bbbf7d430bb7cbffd939"
 dependencies = [
  "windows-sys 0.61.2",
 ]
@@ -6242,9 +6293,9 @@ dependencies = [
 
 [[package]]
 name = "serde_spanned"
-version = "1.0.4"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8bbf91e5a4d6315eee45e704372590b30e260ee83af6639d64557f51b067776"
+checksum = "876ac351060d4f882bb1032b6369eb0aef79ad9df1ea8bc404874d8cc3d0cd98"
 dependencies = [
  "serde_core",
 ]
@@ -6317,6 +6368,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e320a6c5ad31d271ad523dcf3ad13e2767ad8b1cb8f047f75a8aeaf8da139da2"
 
 [[package]]
+name = "simd_cesu8"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94f90157bb87cddf702797c5dadfa0be7d266cdf49e22da2fcaa32eff75b2c33"
+dependencies = [
+ "rustc_version",
+ "simdutf8",
+]
+
+[[package]]
 name = "simd_helpers"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6324,6 +6385,12 @@ checksum = "95890f873bec569a0362c235787f3aca6e1e887302ba4840839bcc6459c42da6"
 dependencies = [
  "quote",
 ]
+
+[[package]]
+name = "simdutf8"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
 
 [[package]]
 name = "skrifa"
@@ -6411,12 +6478,12 @@ dependencies = [
 
 [[package]]
 name = "socket2"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86f4aa3ad99f2088c990dfa82d367e19cb29268ed67c574d10d0a4bfe71f07e0"
+checksum = "3a766e1110788c36f4fa1c2b71b387a7815aa65f88ce0229841826633d93723e"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6670,16 +6737,16 @@ dependencies = [
 
 [[package]]
 name = "tiff"
-version = "0.10.3"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af9605de7fee8d9551863fd692cce7637f548dbd9db9180fcc07ccc6d26c336f"
+checksum = "b63feaf3343d35b6ca4d50483f94843803b0f51634937cc2ec519fc32232bc52"
 dependencies = [
  "fax",
  "flate2",
  "half",
  "quick-error",
  "weezl",
- "zune-jpeg 0.4.21",
+ "zune-jpeg",
 ]
 
 [[package]]
@@ -6730,9 +6797,9 @@ dependencies = [
 
 [[package]]
 name = "tinyvec"
-version = "1.10.0"
+version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfa5fdc3bce6191a1dbc8c02d5c8bffcf557bafa17c124c5264a458f1b0613fa"
+checksum = "3e61e67053d25a4e82c844e8424039d9745781b3fc4f32b8d55ed50f5f667ef3"
 dependencies = [
  "tinyvec_macros",
 ]
@@ -6806,7 +6873,7 @@ dependencies = [
  "toml_datetime 0.7.5+spec-1.1.0",
  "toml_parser",
  "toml_writer",
- "winnow",
+ "winnow 0.7.15",
 ]
 
 [[package]]
@@ -6820,9 +6887,9 @@ dependencies = [
 
 [[package]]
 name = "toml_datetime"
-version = "1.0.0+spec-1.1.0"
+version = "1.1.0+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32c2555c699578a4f59f0cc68e5116c8d7cabbd45e1409b989d4be085b53f13e"
+checksum = "97251a7c317e03ad83774a8752a7e81fb6067740609f75ea2b585b569a59198f"
 dependencies = [
  "serde_core",
 ]
@@ -6836,35 +6903,35 @@ dependencies = [
  "indexmap",
  "toml_datetime 0.7.5+spec-1.1.0",
  "toml_parser",
- "winnow",
+ "winnow 0.7.15",
 ]
 
 [[package]]
 name = "toml_edit"
-version = "0.25.4+spec-1.1.0"
+version = "0.25.8+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7193cbd0ce53dc966037f54351dbbcf0d5a642c7f0038c382ef9e677ce8c13f2"
+checksum = "16bff38f1d86c47f9ff0647e6838d7bb362522bdf44006c7068c2b1e606f1f3c"
 dependencies = [
  "indexmap",
- "toml_datetime 1.0.0+spec-1.1.0",
+ "toml_datetime 1.1.0+spec-1.1.0",
  "toml_parser",
- "winnow",
+ "winnow 1.0.0",
 ]
 
 [[package]]
 name = "toml_parser"
-version = "1.0.9+spec-1.1.0"
+version = "1.1.0+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "702d4415e08923e7e1ef96cd5727c0dfed80b4d2fa25db9647fe5eb6f7c5a4c4"
+checksum = "2334f11ee363607eb04df9b8fc8a13ca1715a72ba8662a26ac285c98aabb4011"
 dependencies = [
- "winnow",
+ "winnow 1.0.0",
 ]
 
 [[package]]
 name = "toml_writer"
-version = "1.0.6+spec-1.1.0"
+version = "1.1.0+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab16f14aed21ee8bfd8ec22513f7287cd4a91aa92e44edfe2c17ddd004e92607"
+checksum = "d282ade6016312faf3e41e57ebbba0c073e4056dab1232ab1cb624199648f8ed"
 
 [[package]]
 name = "tower"
@@ -6980,9 +7047,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-subscriber"
-version = "0.3.22"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f30143827ddab0d256fd843b7a66d164e9f271cfa0dde49142c5ca0ca291f1e"
+checksum = "cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319"
 dependencies = [
  "matchers",
  "nu-ansi-term",
@@ -7065,10 +7132,10 @@ dependencies = [
  "ndarray",
  "unaudiobg-core",
  "unboard-core",
+ "uncommon-app-core",
  "unplayer-core",
  "unsettings-core",
  "unspatial-core",
- "untypes-core",
  "unvitals-core",
 ]
 
@@ -7087,11 +7154,10 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "unaudiospatial-core",
+ "uncommon-app-core",
  "unmetrics-core",
  "unsettings-core",
  "unspatial-core",
- "untags-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7135,9 +7201,9 @@ dependencies = [
  "bevy",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "unmetrics-core",
  "unspatial-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7146,15 +7212,15 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_asset_loader",
  "uncareer-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
+ "unmaphub-core",
  "unmapload-core",
  "unmenu-core",
  "unprofile-core",
  "untmxmap-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -7174,13 +7240,20 @@ dependencies = [
  "bevy-persistent",
  "unboard-core",
  "uncareer-core",
+ "uncommon-app-core",
  "undifficulty-core",
  "unmission-core",
  "unplayer-core",
  "unprofile-core",
  "unreplicon-core",
- "untypes-core",
  "unvitals-core",
+]
+
+[[package]]
+name = "unclassic-mode-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
@@ -7191,6 +7264,8 @@ dependencies = [
  "bevy_platform",
  "unbehavior-core",
  "unboard-core",
+ "unclassic-mode-core",
+ "uncommon-app-core",
  "undifficulty-core",
  "ungear-core",
  "unghost-core",
@@ -7198,9 +7273,8 @@ dependencies = [
  "unlight-core",
  "unplayer-core",
  "unspatial-core",
- "untags-core",
  "untmxmap-core",
- "untypes-core",
+ "untruck-core",
 ]
 
 [[package]]
@@ -7214,8 +7288,8 @@ dependencies = [
  "unbehavior-core",
  "unboard-core",
  "uncareer-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "unghost-core",
  "unlight-core",
  "unmapload-core",
@@ -7225,8 +7299,6 @@ dependencies = [
  "unsensing-core",
  "unsoundfield-core",
  "unspatial-core",
- "untags-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7238,6 +7310,8 @@ dependencies = [
  "bevy_replicon",
  "unbehavior-core",
  "unboard-core",
+ "unclassic-mode-core",
+ "uncommon-app-core",
  "unghost-core",
  "uninput-core",
  "unlight-core",
@@ -7252,9 +7326,7 @@ dependencies = [
  "unsettings-core",
  "unsoundfield-core",
  "unspatial-core",
- "untags-core",
  "untmxmap-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7263,17 +7335,27 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_asset_loader",
  "unbehavior-core",
- "unfoundation-core",
+ "unclassic-mode-core",
+ "uncommon-app-core",
  "ungear-core",
  "uninput-core",
  "unmission-core",
  "unplayer-core",
- "unrender-std",
  "unsettings-core",
- "untypes-core",
- "unui-core",
  "unvitals-core",
+ "unwalkie-core",
+]
+
+[[package]]
+name = "uncommon-app-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "rand 0.10.0",
+ "serde",
 ]
 
 [[package]]
@@ -7284,7 +7366,7 @@ dependencies = [
  "enum-iterator",
  "serde",
  "strum",
- "unfoundation-core",
+ "uncommon-app-core",
 ]
 
 [[package]]
@@ -7316,11 +7398,10 @@ dependencies = [
  "rand 0.10.0",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "unfog-core",
- "unfoundation-core",
  "unghost-core",
  "unlight-core",
- "unmapload-core",
  "unmetrics-core",
  "unmission-core",
  "unnoise-core",
@@ -7328,23 +7409,6 @@ dependencies = [
  "unrender-std",
  "unsettings-core",
  "unspatial-core",
- "untypes-core",
-]
-
-[[package]]
-name = "unfoundation-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_platform",
- "rand 0.10.0",
-]
-
-[[package]]
-name = "unfps-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
 ]
 
 [[package]]
@@ -7352,7 +7416,6 @@ name = "unfps-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "unfps-core",
  "unmetrics-core",
 ]
 
@@ -7361,6 +7424,7 @@ name = "ungear-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "bevy_platform",
  "enum-iterator",
  "serde",
@@ -7378,17 +7442,15 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_replicon",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "ungear-core",
  "unmetrics-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",
- "untags-core",
  "untruck-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7399,7 +7461,7 @@ dependencies = [
  "enum-iterator",
  "serde",
  "strum",
- "unfoundation-core",
+ "uncommon-app-core",
  "ungear-core",
  "unghost-core",
 ]
@@ -7417,9 +7479,9 @@ dependencies = [
  "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
  "unfog-core",
- "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
@@ -7433,9 +7495,7 @@ dependencies = [
  "unreplicon-core",
  "unsoundfield-core",
  "unspatial-core",
- "untags-core",
  "unthermal-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7449,8 +7509,8 @@ dependencies = [
  "itertools 0.14.0",
  "rand 0.10.0",
  "serde",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "unspatial-core",
 ]
 
@@ -7466,11 +7526,12 @@ dependencies = [
  "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "ungearitems-core",
  "unghost-core",
  "uninteraction-core",
+ "unmapload-core",
  "unmetrics-core",
  "unmission-core",
  "unnoise-core",
@@ -7480,9 +7541,7 @@ dependencies = [
  "unsensing-core",
  "unsoundfield-core",
  "unspatial-core",
- "untags-core",
  "untruck-core",
- "untypes-core",
  "unvitals-core",
 ]
 
@@ -7501,6 +7560,7 @@ dependencies = [
  "unclassic-mode-orchestrator-plugin",
  "unclassic-mode-render-plugin",
  "unclassic-mode-ui-plugin",
+ "uncommon-app-core",
  "undifficulty-core",
  "undifficulty-plugin",
  "unfog-plugin",
@@ -7540,8 +7600,6 @@ dependencies = [
  "untmxmap-plugin",
  "untruck-plugin",
  "untruckui-plugin",
- "untypes-core",
- "unui-plugin",
  "unvitals-plugin",
  "unwalkie-plugin",
  "wasm-bindgen",
@@ -7589,13 +7647,11 @@ dependencies = [
  "crossbeam-channel",
  "reqwest",
  "tokio",
+ "uncommon-app-core",
  "unhub-client",
  "unmenu-core",
  "unprofile-core",
  "unreplicon-core",
- "untags-core",
- "untypes-core",
- "unui-core",
  "uuid",
 ]
 
@@ -7625,9 +7681,9 @@ checksum = "383ad40bb927465ec0ce7720e033cb4ca06912855fc35db31b5755d0de75b1ee"
 
 [[package]]
 name = "unicode-segmentation"
-version = "1.12.0"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6ccf251212114b54433ec949fd6a7841275f9ada20dddd2f29e9ceea4501493"
+checksum = "da36089a805484bcccfffe0739803392c8298778a2d2f09febf76fac5ad9025b"
 
 [[package]]
 name = "unicode-width"
@@ -7655,14 +7711,14 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "unclassic-mode-core",
+ "uncommon-app-core",
  "uninput-core",
  "unnavigation-core",
  "unplayer-core",
  "unsettings-core",
  "unspatial-core",
- "untags-core",
  "untruck-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7683,11 +7739,11 @@ dependencies = [
  "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "uninteraction-core",
  "unplayer-core",
  "unrender-std",
  "unspatial-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7698,6 +7754,7 @@ dependencies = [
  "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "ungear-core",
  "uninput-core",
  "unlocomotion-core",
@@ -7705,7 +7762,6 @@ dependencies = [
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",
- "untypes-core",
  "unvitals-core",
 ]
 
@@ -7742,9 +7798,9 @@ dependencies = [
  "rand 0.10.0",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
  "unfog-core",
- "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "uninput-core",
@@ -7758,7 +7814,14 @@ dependencies = [
  "unsensing-core",
  "unsettings-core",
  "unspatial-core",
- "untypes-core",
+]
+
+[[package]]
+name = "unlobby-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
 ]
 
 [[package]]
@@ -7768,16 +7831,16 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "enum-iterator",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
+ "unlobby-core",
  "unmapload-core",
  "unmenu-core",
+ "unplayer-core",
  "unprofile-core",
  "unrender-std",
  "unreplicon-core",
  "untmxmap-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -7797,6 +7860,7 @@ dependencies = [
  "bevy_replicon",
  "unaudiospatial-core",
  "unbehavior-core",
+ "uncommon-app-core",
  "undifficulty-core",
  "unfog-core",
  "ungear-core",
@@ -7809,7 +7873,6 @@ dependencies = [
  "unreplicon-core",
  "unspatial-core",
  "untruck-core",
- "untypes-core",
  "unvitals-core",
 ]
 
@@ -7819,11 +7882,10 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "unfoundation-core",
+ "uncommon-app-core",
+ "unmaphub-core",
  "unmenu-core",
  "unprofile-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -7840,10 +7902,17 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
- "unfoundation-core",
+ "uncommon-app-core",
  "unmanual-core",
- "untypes-core",
- "unui-core",
+ "unmenu-core",
+]
+
+[[package]]
+name = "unmaphub-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
 ]
 
 [[package]]
@@ -7851,11 +7920,10 @@ name = "unmaphub-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
+ "unmaphub-core",
  "unmenu-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -7864,10 +7932,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
- "bevy_platform",
- "tiled",
- "unboard-core",
- "untiled-core",
 ]
 
 [[package]]
@@ -7882,7 +7946,9 @@ dependencies = [
  "unbehavior",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
+ "uninput-core",
  "uninteraction-core",
  "unmapload-core",
  "unmetrics-core",
@@ -7891,7 +7957,6 @@ dependencies = [
  "unspatial-core",
  "untiled-core",
  "untmxmap-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7899,10 +7964,9 @@ name = "unmenu-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "unfoundation-core",
+ "bevy_asset_loader",
+ "uncommon-app-core",
  "unprofile-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -7910,10 +7974,9 @@ name = "unmenu-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "unfoundation-core",
+ "bevy_asset_loader",
+ "uncommon-app-core",
  "unmenu-core",
- "untags-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7924,11 +7987,9 @@ dependencies = [
  "bevy-persistent",
  "bevy_platform",
  "strum",
- "unfoundation-core",
+ "uncommon-app-core",
  "unmenu-core",
  "unsettings-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -7945,9 +8006,9 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "ordered-float",
+ "uncommon-app-core",
+ "uninput-core",
  "unmetrics-core",
- "unreplicon-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7968,12 +8029,12 @@ dependencies = [
  "bevy",
  "bevy_replicon",
  "unboard-core",
+ "uncommon-app-core",
  "unmission-core",
  "unplayer-core",
  "unreplicon-core",
  "unspatial-core",
  "untruck-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -7992,15 +8053,15 @@ dependencies = [
  "bevy",
  "unbehavior-core",
  "unboard-core",
+ "unclassic-mode-core",
+ "uncommon-app-core",
  "uninput-core",
  "unnavigation-core",
  "unnpc-core",
  "unplayer-core",
  "unrender-std",
  "unspatial-core",
- "untags-core",
  "untruck-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -8023,16 +8084,17 @@ name = "unnpc-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "unbehavior",
  "unbehavior-core",
- "unfoundation-core",
+ "unclassic-mode-core",
+ "uncommon-app-core",
+ "uninput-core",
  "unmapload-core",
  "unnpc-core",
  "unplayer-core",
  "unrender-std",
  "unspatial-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -8040,12 +8102,12 @@ name = "unpause-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "unfoundation-core",
+ "bevy_asset_loader",
+ "uncommon-app-core",
+ "uninput-core",
  "unmission-core",
  "unrender-std",
  "unreplicon-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -8088,19 +8150,18 @@ dependencies = [
  "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
- "unfoundation-core",
+ "uncommon-app-core",
  "ungear-core",
  "uninput-core",
  "uninteraction-core",
  "unlocomotion-core",
+ "unmapload-core",
  "unnavigation-core",
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
  "unspatial-core",
- "untags-core",
  "untruck-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -8142,17 +8203,10 @@ dependencies = [
  "bevy-persistent",
  "dirs",
  "ron 0.12.0",
+ "uncommon-app-core",
  "unprofile-core",
  "unreplicon-core",
- "untypes-core",
  "uuid",
-]
-
-[[package]]
-name = "unrender-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
 ]
 
 [[package]]
@@ -8161,12 +8215,12 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "image",
+ "uncommon-app-core",
  "unlocomotion-core",
  "unmetrics-core",
  "unrender-std",
  "unspatial-core",
  "untruck-core",
- "untypes-core",
  "winit",
 ]
 
@@ -8180,7 +8234,6 @@ dependencies = [
  "enum-iterator",
  "unbehavior-core",
  "ungear-core",
- "unrender-core",
 ]
 
 [[package]]
@@ -8190,9 +8243,9 @@ dependencies = [
  "bevy",
  "bevy_replicon",
  "serde",
+ "uncommon-app-core",
  "ungear-core",
  "unghost-core",
- "untypes-core",
  "uuid",
 ]
 
@@ -8206,8 +8259,8 @@ dependencies = [
  "bevy_replicon_renet",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
@@ -8219,8 +8272,6 @@ dependencies = [
  "unreplicon-core",
  "unreplicon-transport",
  "unspatial-core",
- "untags-core",
- "untypes-core",
  "uuid",
 ]
 
@@ -8235,10 +8286,10 @@ dependencies = [
  "bevy_replicon_renet",
  "crossbeam-channel",
  "serde_json",
+ "uncommon-app-core",
  "unhub-client",
  "unprofile-core",
  "unreplicon-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -8291,12 +8342,11 @@ dependencies = [
  "bevy",
  "rand 0.10.0",
  "unboard-core",
- "unfoundation-core",
+ "uncommon-app-core",
  "unmetrics-core",
  "unmission-core",
  "unsoundfield-core",
  "unspatial-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -8324,26 +8374,17 @@ name = "unsummary-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "unboard-core",
  "uncareer-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "unghost-core",
  "unmission-core",
  "unplayer-core",
  "unreplicon-core",
  "untmxmap-core",
- "untypes-core",
- "unui-core",
  "unvitals-core",
-]
-
-[[package]]
-name = "untags-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "serde",
 ]
 
 [[package]]
@@ -8365,14 +8406,13 @@ dependencies = [
  "rand 0.10.0",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "unmetrics-core",
  "unmission-core",
  "unsettings-core",
  "unspatial-core",
  "unthermal-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -8382,7 +8422,7 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "tiled",
- "unrender-core",
+ "unrender-std",
 ]
 
 [[package]]
@@ -8393,8 +8433,10 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "thiserror 2.0.18",
+ "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "untypes-core",
+ "untiled-core",
  "walkdir",
 ]
 
@@ -8408,13 +8450,13 @@ dependencies = [
  "normalize-path",
  "tiled",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
  "unmapload-core",
  "unrender-std",
  "unsettings-core",
  "untiled-core",
  "untmxmap-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -8435,16 +8477,17 @@ dependencies = [
  "bevy-persistent",
  "bevy_asset_loader",
  "unbehavior-core",
+ "uncommon-app-core",
  "undifficulty-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
+ "uninput-core",
  "unmapload-core",
  "unmission-core",
  "unplayer-core",
  "unsettings-core",
  "untruck-core",
- "untypes-core",
 ]
 
 [[package]]
@@ -8453,9 +8496,11 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_asset_loader",
  "bevy_platform",
+ "unclassic-mode-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "ungear-core",
  "unghost-core",
  "uninput-core",
@@ -8467,8 +8512,6 @@ dependencies = [
  "unreplicon-core",
  "unsettings-core",
  "untruck-core",
- "untypes-core",
- "unui-core",
  "unvitals-core",
  "unwalkie-core",
 ]
@@ -8478,32 +8521,6 @@ name = "untrusted"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
-
-[[package]]
-name = "untypes-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "serde",
-]
-
-[[package]]
-name = "unui-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_asset_loader",
-]
-
-[[package]]
-name = "unui-plugin"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_asset_loader",
- "untypes-core",
- "unui-core",
-]
 
 [[package]]
 name = "unvitals-core"
@@ -8521,6 +8538,7 @@ dependencies = [
  "bevy",
  "bevy_replicon",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
  "unghost-core",
  "unlight-core",
@@ -8528,10 +8546,8 @@ dependencies = [
  "unreplicon-core",
  "unsoundfield-core",
  "unspatial-core",
- "untags-core",
  "unthermal-core",
  "untruck-core",
- "untypes-core",
  "unvitals-core",
 ]
 
@@ -8543,8 +8559,8 @@ dependencies = [
  "bevy_platform",
  "enum-iterator",
  "rand 0.10.0",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "ungear-core",
  "unghost-core",
  "unwalkie-types",
@@ -8561,8 +8577,8 @@ dependencies = [
  "rand 0.10.0",
  "unbehavior-core",
  "unboard-core",
+ "uncommon-app-core",
  "undifficulty-core",
- "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
@@ -8578,8 +8594,6 @@ dependencies = [
  "unsettings-core",
  "unspatial-core",
  "untruck-core",
- "untypes-core",
- "unui-core",
  "unvitals-core",
  "unwalkie-core",
  "unwalkie-types",
@@ -8618,9 +8632,9 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uuid"
-version = "1.21.0"
+version = "1.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b672338555252d43fd2240c714dc444b8c6fb0a5c5335e65a07bba7742735ddb"
+checksum = "a68d3c8f01c0cfa54a75291d83601161799e4a89a39e0929f4b0354d88757a37"
 dependencies = [
  "getrandom 0.4.2",
  "js-sys",
@@ -8826,9 +8840,9 @@ dependencies = [
 
 [[package]]
 name = "wayland-backend"
-version = "0.3.13"
+version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eaa6143502b9a87f759cb6a649ca801a226f77740eb54f3951cba2227790afeb"
+checksum = "aa75f400b7f719bcd68b3f47cd939ba654cedeef690f486db71331eec4c6a406"
 dependencies = [
  "cc",
  "downcast-rs 1.2.1",
@@ -8923,9 +8937,9 @@ dependencies = [
 
 [[package]]
 name = "wayland-sys"
-version = "0.31.9"
+version = "0.31.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81d2bd69b1dadd601d0e98ef2fc9339a1b1e00cec5ee7545a77b5a0f52a90394"
+checksum = "374f6b70e8e0d6bf9461a32988fd553b59ff630964924dad6e4a4eb6bd538d17"
 dependencies = [
  "dlib",
  "log",
@@ -9140,7 +9154,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -9737,9 +9751,18 @@ dependencies = [
 
 [[package]]
 name = "winnow"
-version = "0.7.14"
+version = "0.7.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a5364e9d77fcdeeaa6062ced926ee3381faa2ee02d3eb83a5c27a8825540829"
+checksum = "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
+name = "winnow"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a90e88e4667264a994d34e6d1ab2d26d398dcdca8b7f52bec8668957517fc7d8"
 dependencies = [
  "memchr",
 ]
@@ -9950,18 +9973,18 @@ checksum = "6df3dc4292935e51816d896edcd52aa30bc297907c26167fec31e2b0c6a32524"
 
 [[package]]
 name = "zerocopy"
-version = "0.8.40"
+version = "0.8.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a789c6e490b576db9f7e6b6d661bcc9799f7c0ac8352f56ea20193b2681532e5"
+checksum = "efbb2a062be311f2ba113ce66f697a4dc589f85e78a4aea276200804cea0ed87"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.40"
+version = "0.8.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f65c489a7071a749c849713807783f70672b28094011623e200cb86dcb835953"
+checksum = "0e8bc7269b54418e7aeeef514aa68f8690b8c0489a06b0136e5f57c4c5ccab89"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -10036,12 +10059,6 @@ checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
 
 [[package]]
 name = "zune-core"
-version = "0.4.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f423a2c17029964870cfaabb1f13dfab7d092a62a29a89264f4d36990ca414a"
-
-[[package]]
-name = "zune-core"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb8a0807f7c01457d0379ba880ba6322660448ddebc890ce29bb64da71fb40f9"
@@ -10057,18 +10074,9 @@ dependencies = [
 
 [[package]]
 name = "zune-jpeg"
-version = "0.4.21"
+version = "0.5.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29ce2c8a9384ad323cf564b67da86e21d3cfdff87908bc1223ed5c99bc792713"
+checksum = "0b7a1c0af6e5d8d1363f4994b7a091ccf963d8b694f7da5b0b9cceb82da2c0a6"
 dependencies = [
- "zune-core 0.4.12",
-]
-
-[[package]]
-name = "zune-jpeg"
-version = "0.5.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "410e9ecef634c709e3831c2cfdb8d9c32164fae1c67496d5b68fff728eec37fe"
-dependencies = [
- "zune-core 0.5.1",
+ "zune-core",
 ]

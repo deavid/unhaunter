@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use untypes_core::states::{AppState, SimulationState};
+use uncommon_app_core::states::{AppState, SimulationState};
 
 pub fn simulation_state_transitions(
     app_state: Res<State<AppState>>,

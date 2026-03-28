@@ -1,17 +1,17 @@
 use crate::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
+use uncommon_app_core::roles::AuthorityRole;
+use uncommon_app_core::states::AppState;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::types::gear::equipment::Hand;
+use ungear_core::ui::EvidenceUI;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use uninput_core::components::PlayerInputMapping;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unreplicon_core::messages::RequestJournalEvidenceToggle;
 use untruck_core::types::truck_button::TruckButtonState;
-use untypes_core::roles::AuthorityRole;
-use untypes_core::states::AppState;
-use unui_core::components::game_ui::EvidenceUI;
 
 pub(crate) fn update_evidence_ui(
     q_gear: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,

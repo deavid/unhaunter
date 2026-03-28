@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_replicon::prelude::AppRuleExt;
+use uncommon_app_core::states::AppState;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::ghost_guess::GhostGuess;
+use unghost_core::tags::GhostTag;
 use unsensing_core::components::SpectralClarity;
-use untags_core::tags::GhostTag;
-use untypes_core::states::AppState;
 
 use unghost_core::events::{
     EvidenceClarityThresholdCrossed, GhostActualTypeChanged, GhostInteractionEvent,
@@ -25,7 +25,7 @@ impl Plugin for UnhaunterGhostCorePlugin {
     fn build(&self, app: &mut App) {
         let is_headless = app
             .world()
-            .get_resource::<untypes_core::cli::CliOptions>()
+            .get_resource::<uncommon_app_core::cli::CliOptions>()
             .map(|cli| cli.dedicated)
             .unwrap_or(false);
 

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
 use rand::prelude::*;
 use unaudiospatial_core::emitter::AudioEmitter;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic};
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;

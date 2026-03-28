@@ -1,5 +1,6 @@
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_platform::collections::HashSet;
+use uncommon_app_core::states::AppState;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
@@ -9,7 +10,6 @@ use unghost_core::types::evidence::Evidence;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSprite;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -63,8 +63,8 @@ fn trigger_all_objectives_met_reminder_system(
 fn trigger_player_leaves_truck_without_changing_loadout_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
-    mut prev_game_state: Local<GameState>,
+    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
+    mut was_in_truck: Local<bool>,
     mut walkie_play: ResMut<WalkiePlay>,
     difficulty: Res<undifficulty_core::current_difficulty::CurrentDifficulty>,
     player_gear_q: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
@@ -85,12 +85,12 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
         return;
     }
 
-    let current_gs = *game_state.get();
-    let previous_gs = *prev_game_state;
-    *prev_game_state = current_gs;
+    let currently_in_truck = !q_in_truck.is_empty();
+    let previously_in_truck = *was_in_truck;
+    *was_in_truck = currently_in_truck;
 
-    // Player leaves the truck (transitions from Truck to None)
-    if current_gs == GameState::Running && previous_gs == GameState::Truck {
+    // Player leaves the truck
+    if !currently_in_truck && previously_in_truck {
         *exited_truck_time = Some(time.elapsed_secs_f64());
 
         // Check if the current player has empty right hand

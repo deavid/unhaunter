@@ -17,4 +17,4 @@ serde = { workspace = true }
 uuid = { workspace = true }
 ungear-core = { workspace = true }
 unghost-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }

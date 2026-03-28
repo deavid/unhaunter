@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
-use unfoundation_core::colors;
+use unplayer_core::colors;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSpectating;

@@ -35,7 +35,7 @@ fn boardfield_update(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::states::SimulationState;
+    use uncommon_app_core::states::SimulationState;
     app.add_systems(
         PostUpdate,
         boardfield_update

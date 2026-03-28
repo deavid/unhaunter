@@ -1,5 +1,5 @@
 use bevy::{color::palettes::css, prelude::*};
-use unfoundation_core::colors;
+use unclassic_mode_core::colors;
 use unghost_core::types::evidence::Evidence;
 
 use untruck_core::types::truck_button::TruckButtonState;

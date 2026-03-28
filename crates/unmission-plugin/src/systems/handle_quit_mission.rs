@@ -1,7 +1,7 @@
 use bevy::prelude::*;
+use uncommon_app_core::roles::LobbyPresenceRole;
+use uncommon_app_core::states::AppState;
 use unmission_core::events::QuitMissionEvent;
-use untypes_core::roles::LobbyPresenceRole;
-use untypes_core::states::AppState;
 
 pub(crate) fn handle_quit_mission(
     mut ev: MessageReader<QuitMissionEvent>,

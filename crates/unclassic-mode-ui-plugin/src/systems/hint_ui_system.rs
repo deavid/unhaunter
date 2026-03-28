@@ -1,11 +1,16 @@
 use bevy::prelude::*;
 
+use crate::assets::GameUiAssets;
 use crate::resources::hint_ui_state::{HintAnimationPhase, HintUiState};
-use unfoundation_core::platform::plt;
-use untypes_core::states::AppState;
-use unui_core::assets::UiAssets;
-use unui_core::components::hint_ui::{HintBoxText, HintBoxUIRoot};
-use unui_core::events::hint::OnScreenHintEvent;
+use uncommon_app_core::platform::plt;
+use uncommon_app_core::states::AppState;
+use unwalkie_core::events::hint::OnScreenHintEvent;
+
+#[derive(Component, Debug, Default)]
+struct HintBoxUIRoot;
+
+#[derive(Component, Debug, Default)]
+struct HintBoxText;
 
 const HINT_BOX_WIDTH_PX: f32 = 350.0;
 const HINT_BOX_MARGIN_LEFT_PX: f32 = 20.0;
@@ -41,7 +46,7 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_systems(OnExit(AppState::InGame), cleanup_hint_ui_system);
 }
 
-fn setup_hint_ui_system(mut commands: Commands, ui_assets: Res<UiAssets>) {
+fn setup_hint_ui_system(mut commands: Commands, ui_assets: Res<GameUiAssets>) {
     let font_handle: Handle<Font> = ui_assets.font_overlock_regular.clone();
     let text_font_size = 18.0 * plt::FONT_SCALE;
 

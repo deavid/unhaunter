@@ -12,7 +12,9 @@ workspace = true
 
 [dependencies]
 undifficulty-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
+unboard-core = { workspace = true }
+untiled-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

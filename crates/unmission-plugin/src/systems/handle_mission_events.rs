@@ -1,16 +1,15 @@
 use bevy::prelude::*;
 use unboard_core::resources::board_topology::BoardTopology;
+use uncommon_app_core::states::SimulationState;
 use unmission_core::events::MissionCompletedEvent;
 use unmission_core::summary::SummaryData;
 use unmission_core::types::MissionEvent;
 use unreplicon_core::components::{LobbyInfo, ServerGamePhase};
-use untypes_core::states::{GameState, SimulationState};
 
 pub(crate) fn handle_mission_events(
     mut ev_mission: MessageReader<MissionEvent>,
     mut ev_mission_completed: MessageWriter<MissionCompletedEvent>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
-    mut game_next_state: ResMut<NextState<GameState>>,
     mut summary_data: Option<ResMut<SummaryData>>,
     board_topology: Res<BoardTopology>,
     mut q_server_phase: Query<(&mut ServerGamePhase, &mut LobbyInfo)>,
@@ -44,7 +43,6 @@ pub(crate) fn handle_mission_events(
                     });
                 }
 
-                game_next_state.set(GameState::Running);
                 next_sim_state.set(SimulationState::TearingDown);
 
                 for (mut phase, mut lobby) in q_server_phase.iter_mut() {

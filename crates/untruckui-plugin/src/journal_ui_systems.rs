@@ -1,8 +1,9 @@
+use crate::colors;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use uncommon_app_core::roles::AuthorityRole;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unfoundation_core::colors;
 use ungear_core::difficulty_ext::DifficultyGearExt;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::resources::ghost_guess::GhostGuess;
@@ -14,7 +15,6 @@ use unreplicon_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhos
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
-use untypes_core::roles::AuthorityRole;
 use unwalkie_core::resources::WalkiePlay;
 
 #[derive(SystemParam)]

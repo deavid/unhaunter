@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use untypes_core::states::AppState;
-use untypes_core::states::MapHubState;
+use uncommon_app_core::states::AppState;
+use unmaphub_core::states::MapHubState;
 
 use crate::difficulty_selection;
 

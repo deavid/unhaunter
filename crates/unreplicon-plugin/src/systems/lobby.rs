@@ -5,6 +5,8 @@ use bevy_replicon::prelude::{
 };
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
+use uncommon_app_core::roles::{AuthorityRole, LocalPlayerRole};
+use uncommon_app_core::states::{AppState, BootState, SimulationState};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
@@ -16,8 +18,6 @@ use unreplicon_core::ownership::{Owner, OwnerId};
 use unreplicon_core::resources::{
     ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer, MissionAutoJoinArmed,
 };
-use untypes_core::roles::{AuthorityRole, LocalPlayerRole};
-use untypes_core::states::{AppState, BootState, GameState, SimulationState};
 use uuid::Uuid;
 
 const AUTO_JOIN_BUFFER_SECS: f32 = 2.0;
@@ -37,7 +37,7 @@ pub(super) fn app_setup(app: &mut App) {
     app.replicate::<SelectedMission>();
 
     // Register local UI messages
-    app.add_message::<untypes_core::roles::DisconnectRequest>();
+    app.add_message::<uncommon_app_core::roles::DisconnectRequest>();
 
     // Initialize resources that are referenced by lobby UI systems.
     app.init_resource::<ClientUuidMap>();
@@ -86,7 +86,7 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Server-side: broadcast InGame state to clients when the mission starts.
     app.add_systems(
-        OnEnter(untypes_core::states::SimulationState::Ready),
+        OnEnter(uncommon_app_core::states::SimulationState::Ready),
         set_server_state_ingame.run_if(resource_exists::<AuthorityRole>),
     );
 
@@ -242,7 +242,7 @@ fn auto_start_headless_lobby(
     mut next_state: ResMut<NextState<AppState>>,
     authority: Option<Res<AuthorityRole>>,
     local_player: Option<Res<LocalPlayerRole>>,
-    cli: Res<untypes_core::cli::CliOptions>,
+    cli: Res<uncommon_app_core::cli::CliOptions>,
 ) {
     let is_dedicated = cli.dedicated;
     let is_authority = authority.is_some();
@@ -338,11 +338,11 @@ fn set_server_state_ingame(mut q: Query<(&mut ServerGamePhase, &mut LobbyInfo)>)
 
 /// Observe `SimulationState::Ready` and transition `AppState::MissionLoading → AppState::InGame`.
 fn observe_simulation_ready_to_enter_game(
-    sim_state: Res<State<untypes_core::states::SimulationState>>,
+    sim_state: Res<State<uncommon_app_core::states::SimulationState>>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut frame: Local<u32>,
 ) {
-    if *sim_state == untypes_core::states::SimulationState::Ready {
+    if *sim_state == uncommon_app_core::states::SimulationState::Ready {
         info!("Simulation ready; transitioning MissionLoading -> InGame");
         next_app_state.set(AppState::InGame);
     } else {
@@ -662,7 +662,6 @@ fn handle_request_abort_mission(
     uuid_map: Res<ClientUuidMap>,
     q_selected_mission: Query<Entity, With<SelectedMission>>,
     mut q_server_phase: Query<&mut ServerGamePhase>,
-    mut next_game_state: ResMut<NextState<GameState>>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
     mut commands: Commands,
 ) {
@@ -685,7 +684,6 @@ fn handle_request_abort_mission(
             // Trigger the same teardown path as MissionEvent::End so that
             // cleanup_mission_players despawns existing PlayerSprite entities
             // and server_teardown_grace_period eventually returns to AppState::Lobby.
-            next_game_state.set(GameState::Running);
             next_sim_state.set(SimulationState::TearingDown);
             for mut phase in q_server_phase.iter_mut() {
                 *phase = ServerGamePhase::Concluding;

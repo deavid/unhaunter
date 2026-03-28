@@ -55,8 +55,8 @@ Defined at `crates/unclassic-mode-plugin/src/systems/orchestrator.rs` lines 51â€
 ```rust
 #[derive(SystemParam)]
 pub(crate) struct ClassicModeSystemParam<'w> {
-    pub local_player_role: Option<Res<'w, untypes_core::roles::LocalPlayerRole>>,
-    pub authority_role: Option<Res<'w, untypes_core::roles::AuthorityRole>>,
+    pub local_player_role: Option<Res<'w, uncommon-app_core::roles::LocalPlayerRole>>,
+    pub authority_role: Option<Res<'w, uncommon-app_core::roles::AuthorityRole>>,
     pub asset_server: Res<'w, AssetServer>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub player_assets: Option<Res<'w, unplayer_core::assets::PlayerAssets>>,
@@ -905,12 +905,12 @@ Locate this block:
                     >,
                 ),
                 crate::systems::orchestrator::spawn_joined_player
-                    .run_if(in_state(untypes_core::states::AppState::InGame))
+                    .run_if(in_state(uncommon-app_core::states::AppState::InGame))
                     .run_if(not(resource_exists::<RepliconPlayerSpawningActive>)),
                 crate::systems::orchestrator::setup_replicated_player_visuals
-                    .run_if(in_state(untypes_core::states::AppState::InGame)),
+                    .run_if(in_state(uncommon-app_core::states::AppState::InGame)),
                 crate::systems::orchestrator::setup_replicated_ghost_visuals
-                    .run_if(in_state(untypes_core::states::AppState::InGame)),
+                    .run_if(in_state(uncommon-app_core::states::AppState::InGame)),
             ),
         );
 ```
@@ -927,9 +927,9 @@ Replace it with:
                     >,
                 ),
                 crate::systems::orchestrator::hydrate_players_system
-                    .run_if(in_state(untypes_core::states::AppState::InGame)),
+                    .run_if(in_state(uncommon-app_core::states::AppState::InGame)),
                 crate::systems::orchestrator::hydrate_ghosts_system
-                    .run_if(in_state(untypes_core::states::AppState::InGame)),
+                    .run_if(in_state(uncommon-app_core::states::AppState::InGame)),
             ),
         );
 ```

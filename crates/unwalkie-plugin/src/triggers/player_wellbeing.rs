@@ -2,12 +2,12 @@ use bevy::app::App;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use unboard_core::resources::roomdb::RoomTopology;
+use uncommon_app_core::states::AppState;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unlight_core::components::LightLevel;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::{Hiding, MainPlayer};
 use unspatial_core::position::Position;
-use untypes_core::states::{AppState, GameState};
 use unvitals_core::components::PlayerVitals;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay; // Corrected import for LightLevel
@@ -30,7 +30,6 @@ fn very_low_sanity_no_truck_return(
     qp: Query<(&PlayerVitals, &Position)>,
     room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
@@ -68,7 +67,6 @@ fn low_health_general_warning(
     qp: Query<(&PlayerVitals, &Position)>,
     room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
@@ -112,7 +110,6 @@ fn trigger_sanity_dropped_due_to_darkness_system(
     room_topology: Res<RoomTopology>,
     lg: If<Res<LightGrid>>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut darkness_sanity_tracker: Local<Option<(f32, Stopwatch)>>, // (sanity_at_darkness_start, timer)
     mut hint_triggered_this_episode: Local<bool>,
 ) {
@@ -186,7 +183,6 @@ fn trigger_sanity_dropped_due_to_ghost_system(
     ghost_query: Query<(Entity, &GhostSprite, &Position)>, // Query Entity to track specific ghost
     room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut interaction_sanity_tracker: Local<Option<(f32, Stopwatch, Entity)>>, // (sanity_at_interaction_start, timer, ghost_entity)
     mut hint_triggered_this_episode: Local<bool>,
 ) {

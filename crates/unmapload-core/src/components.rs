@@ -1,6 +1,3 @@
-use bevy::ecs::component::Component;
-use bevy_platform::collections::HashMap;
-
-/// Temporary component to carry over Tiled layer properties during the hydration pipeline.
-#[derive(Component)]
-pub struct PendingTiledLayerProperties(pub HashMap<String, tiled::PropertyValue>);
+// PendingTiledLayerProperties was removed from this module.
+// Its replacement, PendingProperties (using the Tiled-free BehaviorProperties type),
+// now lives in unbehavior_core::components::PendingProperties.

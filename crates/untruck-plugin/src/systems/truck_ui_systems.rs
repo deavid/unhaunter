@@ -5,12 +5,14 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungearitems_core::events::RequestCraftRepellent;
 use unghost_core::resources::ghost_guess::GhostGuess;
+use uninput_core::states::InGameUiState;
 use unmission_core::resources::MissionEndRequested;
 use unmission_core::types::MissionEvent;
+use unplayer_core::components::MainPlayer;
 use unsettings_core::audio::AudioSettings;
+use untruck_core::components::in_truck::InTruck;
 use untruck_core::events::truck::TruckUIEvent;
 use untruck_core::types::repellent_tracker::RepellentCraftTracker;
-use untypes_core::states::GameState;
 
 // Initialize the repellent craft tracker when entering a mission
 pub(crate) fn init_repellent_tracker(
@@ -34,13 +36,13 @@ fn truckui_event_handle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ev_truckui: MessageReader<TruckUIEvent>,
-    mut game_next_state: ResMut<NextState<GameState>>,
     gg: Res<GhostGuess>,
     audio_settings: Res<Persistent<AudioSettings>>,
     mut craft_tracker: ResMut<RepellentCraftTracker>,
     mut ev_craft_req: MessageWriter<RequestCraftRepellent>,
     mut ev_mission: MessageWriter<MissionEvent>,
     net_params: TruckNetParams,
+    q_player: Query<Entity, (With<MainPlayer>, With<InTruck>)>,
 ) {
     for ev in ev_truckui.read() {
         match ev {
@@ -51,7 +53,9 @@ fn truckui_event_handle(
                 ev_mission.write(MissionEvent::End);
             }
             TruckUIEvent::ExitTruck => {
-                game_next_state.set(GameState::Running);
+                for entity in q_player.iter() {
+                    commands.entity(entity).remove::<InTruck>();
+                }
             }
             TruckUIEvent::CraftRepellent => {
                 if let Some(ghost_type) = gg.ghost_type {
@@ -76,7 +80,9 @@ fn truckui_event_handle(
                         });
 
                     // Automatically exit the truck after crafting repellent
-                    game_next_state.set(GameState::Running);
+                    for entity in q_player.iter() {
+                        commands.entity(entity).remove::<InTruck>();
+                    }
                 } else {
                     debug!("CraftRepellent requested but no ghost type selected in journal");
                 }
@@ -88,6 +94,6 @@ fn truckui_event_handle(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        truckui_event_handle.run_if(in_state(GameState::Truck)),
+        truckui_event_handle.run_if(in_state(InGameUiState::Truck)),
     );
 }

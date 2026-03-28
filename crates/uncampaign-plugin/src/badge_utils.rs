@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use uncareer_core::grade::Grade;
-use unui_core::assets::UiAssets;
+
+use crate::assets::CampaignAssets;
 
 /// Utility for creating badge UI elements in the map hub
 pub(crate) struct BadgeUtils;
@@ -11,7 +12,7 @@ impl BadgeUtils {
     /// If grade is NA, no badge will be shown unless show_na is true
     pub(crate) fn create_badge(
         parent: &mut ChildSpawnerCommands,
-        ui_assets: &UiAssets,
+        campaign_assets: &CampaignAssets,
         grade: Grade,
         size: f32,
         show_na: bool,
@@ -26,10 +27,10 @@ impl BadgeUtils {
             .spawn((
                 // ImageNode with texture_atlas as a field, not a separate component
                 ImageNode {
-                    image: ui_assets.badges.clone(),
+                    image: campaign_assets.badges.clone(),
                     texture_atlas: Some(TextureAtlas {
                         index: grade.badge_index(),
-                        layout: ui_assets.badges_layout.clone(),
+                        layout: campaign_assets.badges_layout.clone(),
                     }),
                     ..default()
                 },

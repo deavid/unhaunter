@@ -1,12 +1,13 @@
 use bevy::{audio::Volume, prelude::*, time::Stopwatch};
 use bevy_persistent::Persistent;
 use rand::seq::IndexedRandom;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use unmission_core::events::LevelReadyEvent;
+use unplayer_core::components::MainPlayer;
 use unsettings_core::audio::AudioSettings;
-use untypes_core::states::{AppState, GameState};
-use unui_core::components::game_ui::WalkieText;
-use unui_core::events::hint::OnScreenHintEvent;
+use untruck_core::components::in_truck::InTruck;
+use unwalkie_core::components::WalkieText;
+use unwalkie_core::events::hint::OnScreenHintEvent;
 use unwalkie_core::events::walkie_types::WalkieTalkingEvent;
 use unwalkie_core::resources::{WalkiePlay, WalkieSoundState};
 use unwalkie_types::types::VoiceLineData;
@@ -23,10 +24,9 @@ fn on_game_load(
 
 fn state_tracking(
     mut walkie_play: ResMut<WalkiePlay>,
-    _app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
 ) {
-    if *game_state.get() == GameState::Truck {
+    if !q_in_truck.is_empty() {
         walkie_play.truck_accessed = true;
     }
 }

@@ -1,14 +1,13 @@
 use bevy::{input::mouse::MouseMotion, prelude::*};
-use unfoundation_core::colors;
+use uncommon_app_core::states::AppState;
+use unmenu_core::colors;
 use unmenu_core::components::{
-    MenuItemInteractive, MenuMouseTracker, MenuRoot, MenuUI, PrincipalMenuText,
+    MCamera, MenuItemInteractive, MenuMouseTracker, MenuRoot, MenuUI, PrincipalMenuText,
 };
 use unmenu_core::events::KeyboardNavigate;
 use unmenu_core::events::MenuEscapeEvent;
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::events::MenuItemSelected;
-use untags_core::game::MCamera;
-use untypes_core::states::AppState;
 
 /// Detects mouse movement to enable hover selection. Mouse movement is tracked to prevent
 /// unwanted initial hover states when opening menus.

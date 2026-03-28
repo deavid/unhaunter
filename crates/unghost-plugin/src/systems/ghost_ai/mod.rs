@@ -5,7 +5,7 @@ use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::prelude::*;
 use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::components::visuals::ResolutionFactor;
@@ -192,16 +192,18 @@ pub(crate) fn ghost_scale_glitch_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::states::SimulationState;
+    use uncommon_app_core::states::SimulationState;
 
     app.add_systems(
         Update,
         (
-            ghost_movement.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
-            ghost_enrage.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
-            ghost_fade_out_system.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+            ghost_movement.run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
+            ghost_enrage.run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
+            ghost_fade_out_system
+                .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
             update_ghost_warning_field,
-            ghost_scale_glitch_system.run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+            ghost_scale_glitch_system
+                .run_if(resource_exists::<uncommon_app_core::roles::AuthorityRole>),
         )
             .run_if(in_state(SimulationState::Ready)),
     );

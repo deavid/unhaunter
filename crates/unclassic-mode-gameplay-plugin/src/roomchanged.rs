@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
+use unclassic_mode_core::components::GCameraArena;
 use uninteraction_core::events::RoomChangedEvent;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use untags_core::game::GCameraArena;
-use untypes_core::states::GameState;
+use untruck_core::components::in_truck::InTruck;
 
 /// Handles `RoomChangedEvent` events, updating interactive object states and room
 /// data.
@@ -17,11 +17,11 @@ use untypes_core::states::GameState;
 ///
 /// * Updating the game's collision and lighting data after room-related changes.
 fn roomchanged_event(
+    mut commands: Commands,
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
     mut ev_room: MessageReader<RoomChangedEvent>,
-    pc: Query<(&PlayerSprite, &Transform), (Without<GCameraArena>, With<MainPlayer>)>,
+    pc: Query<(Entity, &PlayerSprite, &Transform), (Without<GCameraArena>, With<MainPlayer>)>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
-    mut game_next_state: ResMut<NextState<GameState>>,
 ) {
     let mut any_initialized = false;
     let mut any_open_van = false;
@@ -47,11 +47,13 @@ fn roomchanged_event(
     });
 
     if any_open_van {
-        game_next_state.set(GameState::Truck);
+        for (player_entity, _, _) in pc.iter() {
+            commands.entity(player_entity).insert(InTruck);
+        }
     }
 
     if any_initialized {
-        for (_player, p_transform) in pc.iter() {
+        for (_, _player, p_transform) in pc.iter() {
             for mut cam_trans in camera.iter_mut() {
                 cam_trans.translation = p_transform.translation;
             }

@@ -1,8 +1,8 @@
 use bevy::prelude::*;
+use uncommon_app_core::roles::AuthorityRole;
+use uncommon_app_core::states::AppState;
 use unnavigation_core::components::waypoint::WaypointQueue;
 use unplayer_core::components::PlayerSprite;
-use untypes_core::roles::AuthorityRole;
-use untypes_core::states::AppState;
 
 /// Authority: inserts WaypointQueue on any player entity that is missing it.
 /// Fires on the first Update frame after a PlayerSprite entity is spawned by the network layer.

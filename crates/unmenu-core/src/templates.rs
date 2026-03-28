@@ -1,11 +1,12 @@
+use crate::assets::MenuAssets;
+use crate::colors;
+use crate::colors::PANEL_BGCOLOR;
 use crate::components::*;
 use bevy::prelude::*;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE, VERSION};
-use unui_core::assets::UiAssets;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE, VERSION};
 
 /// Creates a standard menu background with the background image
-pub fn create_background(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
+pub fn create_background(parent: &mut ChildSpawnerCommands, ui_assets: &MenuAssets) {
     parent.spawn((
         ImageNode {
             image: ui_assets.menu_background.clone(),
@@ -23,7 +24,7 @@ pub fn create_background(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets
 }
 
 /// Creates a standard menu logo
-pub fn create_logo(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
+pub fn create_logo(parent: &mut ChildSpawnerCommands, ui_assets: &MenuAssets) {
     parent.spawn((
         ImageNode {
             image: ui_assets.title.clone(),
@@ -46,8 +47,8 @@ pub fn create_logo(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
 /// Creates a standard menu left strip
 pub fn create_menu_strip<'a, T: Component + Copy>(
     parent: &'a mut ChildSpawnerCommands,
-    _ui_assets: &UiAssets,  // Explicit unused parameter
-    _items: &[(T, String)], // Explicit unused parameter
+    _ui_assets: &MenuAssets, // Explicit unused parameter
+    _items: &[(T, String)],  // Explicit unused parameter
     selected_item_idx: usize,
 ) -> EntityCommands<'a> {
     let strip_color = Color::Srgba(Srgba {
@@ -88,7 +89,7 @@ pub fn create_menu_item<'a>(
     text: impl Into<String>,
     idx: usize,
     is_selected: bool,
-    ui_assets: &UiAssets,
+    ui_assets: &MenuAssets,
 ) -> EntityCommands<'a> {
     let text: String = text.into();
     debug!("Creating menu item {} with idx {}", text, idx);
@@ -133,7 +134,7 @@ pub fn create_menu_item<'a>(
 pub fn create_menu_item_disabled<'a>(
     strip: &'a mut ChildSpawnerCommands,
     text: impl Into<String>,
-    ui_assets: &UiAssets,
+    ui_assets: &MenuAssets,
 ) -> EntityCommands<'a> {
     let text: String = text.into();
     let mut entity_cmd = strip.spawn(Node {
@@ -160,7 +161,7 @@ pub fn create_menu_item_disabled<'a>(
 /// Creates a standard help text at the bottom of the screen
 pub fn create_help_text(
     parent: &mut ChildSpawnerCommands,
-    ui_assets: &UiAssets,
+    ui_assets: &MenuAssets,
     text: Option<String>,
 ) {
     let default_help_text = format!(
@@ -198,7 +199,7 @@ pub fn create_help_text(
 /// Creates a complete standard menu layout
 pub fn create_standard_menu_layout<T: Component + Copy>(
     commands: &mut Commands,
-    ui_assets: &UiAssets,
+    ui_assets: &MenuAssets,
     items: &[(T, String)],
     selected_item_idx: usize,
     help_text: Option<String>,
@@ -250,7 +251,7 @@ pub fn create_standard_menu_layout<T: Component + Copy>(
 /// Creates a breadcrumb-style navigation in the left strip, showing the current section path
 pub fn create_breadcrumb_navigation<'a>(
     parent: &'a mut ChildSpawnerCommands,
-    ui_assets: &UiAssets,
+    ui_assets: &MenuAssets,
     main_text: impl Into<String>,
     sub_text: impl Into<String>,
 ) -> EntityCommands<'a> {
@@ -330,7 +331,7 @@ pub fn create_breadcrumb_navigation<'a>(
 /// Creates a standard content area for informational displays (non-selectable)
 pub fn create_informational_content_area<'a>(
     parent: &'a mut ChildSpawnerCommands,
-    _ui_assets: &UiAssets,
+    _ui_assets: &MenuAssets,
 ) -> EntityCommands<'a> {
     let content_bg_color = Color::Srgba(Srgba {
         red: 0.0,
@@ -360,7 +361,7 @@ pub fn create_informational_content_area<'a>(
 /// Creates a content area with a semi-transparent background and selectable items
 pub fn create_selectable_content_area<'a>(
     parent: &'a mut ChildSpawnerCommands,
-    _ui_assets: &UiAssets, // Explicit unused parameter
+    _ui_assets: &MenuAssets, // Explicit unused parameter
     initial_selection: usize,
 ) -> EntityCommands<'a> {
     let content_bg_color = Color::Srgba(Srgba {
@@ -398,7 +399,7 @@ pub fn create_content_item<'a>(
     text: impl Into<String>,
     idx: usize,
     _is_selected: bool, // Always start unselected, systems will update this
-    ui_assets: &UiAssets,
+    ui_assets: &MenuAssets,
 ) -> EntityCommands<'a> {
     create_content_item_enabled(parent, text, idx, _is_selected, true, ui_assets)
 }
@@ -406,7 +407,7 @@ pub fn create_content_item<'a>(
 pub fn create_content_item_disabled<'a>(
     parent: &'a mut ChildSpawnerCommands,
     text: impl Into<String>,
-    ui_assets: &UiAssets,
+    ui_assets: &MenuAssets,
 ) -> EntityCommands<'a> {
     create_content_item_enabled(parent, text, 0, false, false, ui_assets)
 }
@@ -417,7 +418,7 @@ pub fn create_content_item_enabled<'a>(
     idx: usize,
     _is_selected: bool, // Always start unselected, systems will update this
     is_enabled: bool,
-    ui_assets: &UiAssets,
+    ui_assets: &MenuAssets,
 ) -> EntityCommands<'a> {
     let text: String = text.into();
     // Always start with not selected to avoid UI jumping
@@ -485,7 +486,7 @@ pub fn create_content_item_enabled<'a>(
 /// Should be added to a root UI node of a menu screen.
 pub fn create_player_status_bar(
     parent: &mut ChildSpawnerCommands,
-    ui_assets: &UiAssets,
+    ui_assets: &MenuAssets,
     player_profile: &unprofile_core::profile::PlayerProfileData,
 ) {
     parent
@@ -539,7 +540,7 @@ pub fn create_player_status_bar(
                     justify_content: JustifyContent::FlexStart,
                     ..default()
                 })
-                .insert(BackgroundColor(colors::PANEL_BGCOLOR.with_alpha(0.5)))
+                .insert(BackgroundColor(PANEL_BGCOLOR.with_alpha(0.5)))
                 .insert(BorderColor::all(colors::MENU_ITEM_COLOR_OFF))
                 .with_children(|progress_bar_container| {
                     // Actual Progress Fill

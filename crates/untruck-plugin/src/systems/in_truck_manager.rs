@@ -1,41 +1,29 @@
 use bevy::prelude::*;
-use unplayer_core::components::{Hiding, MainPlayer};
+use uninput_core::states::InGameUiState;
+use unplayer_core::components::Hiding;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::states::GameState;
 
-/// System that adds InTruck component when local player enters GameState::Truck
-pub(crate) fn on_enter_truck(
+fn on_intruck_added(
+    trigger: On<Add, InTruck>,
     mut commands: Commands,
-    query: Query<Entity, (With<MainPlayer>, Without<InTruck>)>,
+    mut next_state: ResMut<NextState<InGameUiState>>,
 ) {
-    let count = query.iter().count();
-    debug!(
-        "on_enter_truck: found {} MainPlayer entities without InTruck",
-        count
-    );
-    for entity in query.iter() {
-        info!("on_enter_truck: inserting InTruck on {:?}", entity);
-        commands
-            .entity(entity)
-            .insert(InTruck)
-            .insert(Hiding { hiding_spot: None });
-    }
+    commands
+        .entity(trigger.entity)
+        .insert(Hiding { hiding_spot: None });
+    next_state.set(InGameUiState::Truck);
 }
 
-/// System that removes InTruck component when local player exits GameState::Truck
-pub(crate) fn on_exit_truck(
+fn on_intruck_removed(
+    trigger: On<Remove, InTruck>,
     mut commands: Commands,
-    query: Query<Entity, (With<MainPlayer>, With<InTruck>)>,
+    mut next_state: ResMut<NextState<InGameUiState>>,
 ) {
-    for entity in query.iter() {
-        commands
-            .entity(entity)
-            .remove::<InTruck>()
-            .remove::<Hiding>();
-    }
+    commands.entity(trigger.entity).remove::<Hiding>();
+    next_state.set(InGameUiState::Running);
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(GameState::Truck), on_enter_truck);
-    app.add_systems(OnExit(GameState::Truck), on_exit_truck);
+    app.add_observer(on_intruck_added);
+    app.add_observer(on_intruck_removed);
 }

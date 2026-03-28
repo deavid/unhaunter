@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use unghost_core::resources::ghost_guess::GhostGuess;
+use uninput_core::states::InGameUiState;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::components::truck_ui_markers::TruckUIGhostGuess;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
-use untypes_core::states::GameState;
 
 /// System that handles ForceDiscardEvidenceEvents even when not in truck
 fn force_discard_evidence_system(
@@ -74,7 +74,7 @@ pub(crate) fn app_setup_core(app: &mut App) {
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        ghost_guess_system.run_if(in_state(GameState::Truck)),
+        ghost_guess_system.run_if(in_state(InGameUiState::Truck)),
     )
     .add_systems(Update, force_discard_evidence_system);
 }

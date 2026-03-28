@@ -1,5 +1,5 @@
+use crate::assets::MenuAssets;
 use bevy::prelude::*;
-use unui_core::assets::UiAssets;
 
 // Component Definitions
 
@@ -33,7 +33,7 @@ pub struct ScrollbarDownArrow;
 /// where the scrollbar is intended to be placed.
 ///
 /// This is not a system but a helper function.
-pub fn build_scrollbar_ui(scrollbar: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
+pub fn build_scrollbar_ui(scrollbar: &mut ChildSpawnerCommands, ui_assets: &MenuAssets) {
     scrollbar
         .spawn(Node {
             width: Val::Px(48.0),

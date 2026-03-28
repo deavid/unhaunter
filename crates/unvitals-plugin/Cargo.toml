@@ -15,13 +15,12 @@ bevy = { workspace = true }
 bevy_replicon = { workspace = true }
 unvitals-core = { workspace = true }
 unplayer-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unsoundfield-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unspatial-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unghost-core = { workspace = true }
-untags-core = { workspace = true }
 unlight-core = { workspace = true }
 unboard-core = { workspace = true }
 untruck-core = { workspace = true }

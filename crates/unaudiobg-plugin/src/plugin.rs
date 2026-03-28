@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use untypes_core::states::AppState;
+use uncommon_app_core::states::AppState;
 
 use unaudiobg_core::events::AmbientSoundMuteEvent;
 use unaudiobg_core::mute::AmbientMuteController;

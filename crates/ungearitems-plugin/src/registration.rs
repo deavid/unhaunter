@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::AppRuleExt;
 use unbehavior_core::components::{Collision, InteractableByGhost};
+use uncommon_app_core::roles::AuthorityRole;
 use ungear_core::components::core::{
     Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
     PerceivedClarity, StatusText,
@@ -19,7 +20,6 @@ use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::components::LightEmitter;
 use unlight_core::types::light_type::LightType;
-use untypes_core::roles::AuthorityRole;
 
 use crate::components::compass::Compass;
 use crate::components::emfmeter::EMFMeter;

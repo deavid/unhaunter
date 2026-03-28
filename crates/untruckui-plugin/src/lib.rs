@@ -1,4 +1,6 @@
 pub(crate) mod activity;
+pub(crate) mod assets;
+pub(crate) mod colors;
 pub(crate) mod evidence;
 pub(crate) mod evidence_status;
 pub(crate) mod journal_blinking_system;

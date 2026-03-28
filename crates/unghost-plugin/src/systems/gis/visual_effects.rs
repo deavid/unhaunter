@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
-use unfoundation_core::random_seed;
+use uncommon_app_core::random_seed;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
@@ -16,7 +16,7 @@ use crate::components::interaction::{
 
 /// Registers visual effects systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::roles::LocalPlayerRole;
+    use uncommon_app_core::roles::LocalPlayerRole;
     app.add_systems(
         bevy::prelude::Update,
         (
@@ -68,7 +68,7 @@ fn spawn_interaction_particles_system(
     measure.end_ms();
 }
 
-use unrender_std::materials::CustomMaterial1;
+use unrender_std::custom_material1::CustomMaterial1;
 
 /// System that handles motion blur effects for fast-moving objects
 fn motion_blur_system(

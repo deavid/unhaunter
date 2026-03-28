@@ -6,14 +6,14 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
 use unbehavior_core::behavior::Util;
+use unbehavior_core::components::PendingProperties;
 use unbehavior_core::components::TmxEntityId;
 use unboard_core::components::spawning::VanEntryPoint;
-use unmapload_core::components::PendingTiledLayerProperties;
+use unmapload_core::hydration::HydrationStage;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
 use untiled_core::tiledmap::map::{MapLayer, MapTile};
-use untypes_core::hydration::HydrationStage;
 
 use crate::level_setup::LoadLevelSystemParam;
 
@@ -138,7 +138,9 @@ pub(crate) fn process_and_spawn_tile(
     entity_commands
         .insert(b)
         .insert(HydrationStage::<1>)
-        .insert(PendingTiledLayerProperties(layer.user_properties.clone()));
+        .insert(PendingProperties(
+            unbehavior::behavior::behavior_properties_from_layer(&layer.user_properties),
+        ));
 
     // Validate position is within bounds
     assert!(

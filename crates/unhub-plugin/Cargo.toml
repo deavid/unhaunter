@@ -10,11 +10,10 @@ authors.workspace = true
 [dependencies]
 bevy = { workspace = true }
 unhub-client = { workspace = true }
-untypes-core = { workspace = true }
-untags-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unmenu-core = { workspace = true }
-unui-core = { workspace = true }
+
 unprofile-core = { workspace = true }
 reqwest = { workspace = true }
 tokio = { workspace = true }

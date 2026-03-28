@@ -295,7 +295,7 @@ pub(crate) fn despawn_gear_on_player_death(
     mut reader: MessageReader<unvitals_core::events::PlayerDiedEvent>,
     mut q_players: Query<&mut PlayerGear, With<PlayerSprite>>,
     mut commands: Commands,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
 ) {
     for _msg in reader.read() {
         // When a player dies, despawn all their gear (Authoritative only)
@@ -321,7 +321,7 @@ pub(crate) fn despawn_gear_on_player_death(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use untypes_core::states::AppState;
+    use uncommon_app_core::states::AppState;
     app.add_systems(
         Update,
         (

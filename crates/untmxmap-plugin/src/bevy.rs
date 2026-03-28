@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use std::path::{Path, PathBuf};
 use unboard_core::types::floor::FloorLevelMapping;
-use unrender_std::materials::CustomMaterial1;
+use unrender_std::custom_material1::CustomMaterial1;
 use unsettings_core::video::VideoSettings;
 use untiled_core::tiled::{AtlasData, MapTileSet, MapTileSetDb};
 use untiled_core::tiledmap::map::{MapLayer, MapLayerGroup, MapLayerType};

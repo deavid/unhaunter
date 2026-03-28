@@ -1,5 +1,6 @@
 pub mod components;
 pub mod resources;
+pub mod states;
 
 use bevy::prelude::*;
 

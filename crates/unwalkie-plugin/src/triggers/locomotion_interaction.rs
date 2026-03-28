@@ -7,15 +7,16 @@ use unbehavior_core::components::Door;
 use unbehavior_core::components::HidingSpot;
 use unbehavior_core::state::TileState;
 use unboard_core::resources::roomdb::RoomTopology;
+use uncommon_app_core::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::components::PlayerInputMapping;
+use uninput_core::states::InGameUiState;
 use unlocomotion_core::components::PlayerLocomotionState;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -31,7 +32,6 @@ const PLAYER_ERRATIC_MAX_DISTANCE: f32 = 6.0;
 /// triggers a walkie-talkie warning. The threshold is higher for experienced players.
 fn check_player_stuck_at_start(
     time: Res<Time>,
-    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     room_topology: Res<RoomTopology>,
     player_query: Query<&Position, With<MainPlayer>>,
@@ -94,7 +94,6 @@ fn check_player_stuck_at_start(
 /// triggers a walkie-talkie warning. Only applies to players with few completed missions.
 fn check_erratic_movement_early(
     time: Res<Time>,
-    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     room_topology: Res<RoomTopology>,
     player_query: Query<(&Position, &PlayerLocomotionState), With<MainPlayer>>,
@@ -132,7 +131,7 @@ fn check_erratic_movement_early(
             continue;
         }
 
-        // If player is not in a room and in GameState::None, increment timer
+        // If player is not in a room, increment timer
         let distance_from_spawn = player_position.distance(&spawn_position);
         let distance_from_avg = player_position.distance(m_avg);
 
@@ -160,7 +159,6 @@ fn check_erratic_movement_early(
 /// triggers a walkie-talkie hint about door interaction.
 fn check_door_interaction_hesitation(
     time: Res<Time>,
-    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     room_topology: Res<RoomTopology>,
     player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
@@ -221,7 +219,6 @@ fn check_door_interaction_hesitation(
 fn trigger_struggling_with_grab_drop(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<(&PlayerGear, &PlayerInputMapping), With<MainPlayer>>,
@@ -289,7 +286,6 @@ fn trigger_struggling_with_grab_drop(
 fn trigger_struggling_with_hide_unhide(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<&PlayerInputMapping, (With<MainPlayer>, Without<Hiding>)>,
@@ -341,7 +337,7 @@ fn trigger_struggling_with_hide_unhide(
 fn trigger_player_stays_hidden_too_long(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
+    game_state: Res<State<InGameUiState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     hiding_query: Query<Entity, (With<Hiding>, Without<InTruck>)>,
     ghost_query: Query<&unghost_core::components::ghost_sprite::GhostSprite>,
@@ -351,7 +347,7 @@ fn trigger_player_stays_hidden_too_long(
         *post_hunt_hidden_timer = None;
         return;
     }
-    if *game_state.get() != GameState::Running {
+    if *game_state.get() != InGameUiState::Running {
         *post_hunt_hidden_timer = None;
         return;
     }
@@ -394,7 +390,6 @@ fn trigger_player_stays_hidden_too_long(
 fn trigger_hunt_active_near_hiding_spot_no_hide(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&Position, Entity), Without<Hiding>>,
     hiding_spots: Query<&Position, With<HidingSpot>>,

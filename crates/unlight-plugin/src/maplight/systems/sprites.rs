@@ -4,9 +4,9 @@ use bevy_persistent::Persistent;
 use rand::RngExt;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::visibility_data::VisibilityData;
+use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
-use unfoundation_core::random_seed;
 use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::salt::UVReactive;
 use unlight_core::color_utils::lerp_color;
@@ -19,7 +19,7 @@ use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ShadowCaster,
 };
-use unrender_std::materials::CustomMaterial1;
+use unrender_std::custom_material1::CustomMaterial1;
 use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unsettings_core::video::VideoSettings;
 use unspatial_core::position::Position;

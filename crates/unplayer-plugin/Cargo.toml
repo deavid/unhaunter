@@ -13,12 +13,12 @@ workspace = true
 
 [dependencies]
 unbehavior-core = { workspace = true }
-unfoundation-core = { workspace = true }
+unmapload-core = { workspace = true }
 unboard-core = { workspace = true }
 unplayer-core = { workspace = true }
 unlocomotion-core = { workspace = true }
 uninput-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unnavigation-core = { workspace = true }
 unrender-std = { workspace = true }
 uninteraction-core = { workspace = true }
@@ -27,7 +27,6 @@ unaudiospatial-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unspatial-core = { workspace = true }
 untruck-core = { workspace = true }
-untags-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }

@@ -12,9 +12,9 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-untypes-core = { workspace = true }
-unui-core = { workspace = true }
-unfoundation-core = { workspace = true }
+bevy_asset_loader = { workspace = true }
+uninput-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unrender-std = { workspace = true }
 unreplicon-core = { workspace = true }
 unmission-core = { workspace = true }

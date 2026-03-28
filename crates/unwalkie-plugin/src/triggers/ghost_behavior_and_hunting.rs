@@ -1,11 +1,11 @@
 use bevy::{prelude::*, time::Stopwatch};
 use unboard_core::resources::roomdb::RoomTopology;
+use uncommon_app_core::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
-use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -15,7 +15,6 @@ const NO_EVASION_MAX_DISTANCE: f32 = 1.0; // Max distance player can move to sti
 fn trigger_hunt_warning_no_player_evasion_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     q_player: Query<
         (&Position, Option<&Hiding>, &PlayerGear),

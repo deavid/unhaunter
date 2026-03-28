@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
+use uncommon_app_core::states::AppState;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
-use untypes_core::states::{AppState, GameState};
 
 use unboard_core::resources::roomdb::RoomTopology;
 use ungear_core::components::playergear::PlayerGear;
@@ -25,7 +25,6 @@ fn trigger_darkness_level_system(
     light_grid: If<Res<LightGrid>>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
-    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     mut stopwatch: Local<Stopwatch>,
@@ -60,7 +59,6 @@ fn trigger_breach_showcase(
     time: Res<Time>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
-    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_breach: Query<&Position, With<GhostBreach>>,
@@ -103,7 +101,6 @@ fn trigger_ghost_showcase(
     time: Res<Time>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
-    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_ghost: Query<&Position, With<unghost_core::components::ghost_sprite::GhostSprite>>,
@@ -145,7 +142,6 @@ fn trigger_room_lights_on_gear_needs_dark(
     light_grid: If<Res<LightGrid>>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
-    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite, &PlayerGear), With<MainPlayer>>,
     q_gear: Query<(&Toggleable, &GearKind)>,
@@ -186,7 +182,6 @@ fn trigger_room_lights_on_gear_needs_dark(
 fn trigger_thermometer_non_freezing_fixation(
     time: Res<Time>,
     mut walkie_play: ResMut<WalkiePlay>,
-    _game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     mut stopwatch: Local<Stopwatch>,
     mut trigger_count: Local<u32>,
@@ -209,7 +204,7 @@ fn trigger_thermometer_non_freezing_fixation(
         if let Some(hand_entity) = player_gear.right_hand
             && let Ok((thermo, toggleable)) = q_thermometer.get(hand_entity)
         {
-            let temp_c = unfoundation_core::utils::temperature::kelvin_to_celsius(thermo.temp);
+            let temp_c = uncommon_app_core::utils::temperature::kelvin_to_celsius(thermo.temp);
             if toggleable.is_on && (1.0..=10.0).contains(&temp_c) {
                 any_player_fixing_on_cold = true;
                 break;

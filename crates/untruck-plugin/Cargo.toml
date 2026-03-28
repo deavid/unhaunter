@@ -12,9 +12,10 @@ workspace = true
 
 [dependencies]
 untruck-core = { workspace = true }
+uninput-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unmission-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 unplayer-core = { workspace = true }
 unbehavior-core = { workspace = true }
 ungear-core = { workspace = true }

@@ -12,7 +12,7 @@ workspace = true
 
 [dependencies]
 unmetrics-core = { workspace = true }
-untypes-core = { workspace = true }
-unreplicon-core = { workspace = true }
+uninput-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 bevy = { workspace = true }
 ordered-float = { workspace = true }

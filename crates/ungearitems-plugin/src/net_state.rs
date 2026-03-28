@@ -15,6 +15,8 @@
 
 use bevy::prelude::*;
 use bevy_replicon::prelude::{Channel, ClientId, ClientMessageAppExt, FromClient, Replicated};
+use uncommon_app_core::roles::{AuthorityRole, is_pure_client};
+use uncommon_app_core::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 use ungearitems_core::components::quartz::QuartzStoneData;
@@ -26,8 +28,6 @@ use ungearitems_core::components::uvtorch::UVTorch;
 use uninteraction_core::interaction::Toggleable;
 use unreplicon_core::client_export::ExportClientComponent;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
-use untypes_core::roles::{AuthorityRole, is_pure_client};
-use untypes_core::states::AppState;
 
 pub(crate) fn app_setup(app: &mut App) {
     // Register one ExportClientComponent<T> per gear component type.

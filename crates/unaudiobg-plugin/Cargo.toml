@@ -17,7 +17,7 @@ unplayer-core = { workspace = true }
 unvitals-core = { workspace = true }
 unboard-core = { workspace = true }
 unspatial-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

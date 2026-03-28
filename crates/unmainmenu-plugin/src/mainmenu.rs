@@ -2,15 +2,16 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unfoundation_core::platform::plt::VERSION;
+use uncommon_app_core::platform::plt::VERSION;
+use uncommon_app_core::states::AppState;
+use unmaphub_core::states::MapHubState;
+use unmenu_core::assets::MenuAssets;
 use unmenu_core::components::MenuItemInteractive;
 use unmenu_core::components::MenuUI;
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use unmenu_core::templates;
 use unprofile_core::profile::PlayerProfileData;
-use untypes_core::states::{AppState, MapHubState};
-use unui_core::assets::UiAssets;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
 pub(crate) enum MenuID {
@@ -64,10 +65,10 @@ pub(crate) fn setup(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
 
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
     player_profile: Res<Persistent<PlayerProfileData>>,
-    lobby_presence: Option<Res<untypes_core::roles::LobbyPresenceRole>>,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+    lobby_presence: Option<Res<uncommon_app_core::roles::LobbyPresenceRole>>,
+    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
 ) {
     let is_pure_client = lobby_presence.is_some() && authority.is_none();
 
@@ -118,7 +119,7 @@ pub(crate) fn setup_ui(
     // Call create_standard_menu_layout directly with commands, not with parent
     let menu_layout_entity = templates::create_standard_menu_layout(
         &mut commands,
-        &ui_assets,
+        &menu_assets,
         &menu_items,
         0,
         Some(format!(
@@ -133,7 +134,7 @@ pub(crate) fn setup_ui(
 
     // Add the persistent player status bar as a child of root_entity
     commands.entity(root_entity).with_children(|parent| {
-        templates::create_player_status_bar(parent, &ui_assets, &player_profile);
+        templates::create_player_status_bar(parent, &menu_assets, &player_profile);
     });
 
     debug!("Main menu created with root entity: {:?}", root_entity);
@@ -146,7 +147,7 @@ pub(crate) fn menu_event(
     mut next_map_hub_state: ResMut<NextState<MapHubState>>,
     mut current_mission_select_mode: ResMut<CurrentMissionSelectMode>,
     menu_items: Query<(&MenuID, &MenuItemInteractive)>,
-    mut ev_disconnect: MessageWriter<untypes_core::roles::DisconnectRequest>,
+    mut ev_disconnect: MessageWriter<uncommon_app_core::roles::DisconnectRequest>,
 ) {
     for ev in click_events.read() {
         if ev.state != AppState::MainMenu {
@@ -189,7 +190,7 @@ pub(crate) fn menu_event(
                     info!("Transitioning to SettingsMenu state");
                 }
                 MenuID::Disconnect => {
-                    ev_disconnect.write(untypes_core::roles::DisconnectRequest);
+                    ev_disconnect.write(uncommon_app_core::roles::DisconnectRequest);
                     // The actual teardown happens in unreplicon-plugin/connection.rs.
                     // Transition back to MainMenu so setup_ui re-runs and shows the offline menu.
                     next_app_state.set(AppState::MainMenu);

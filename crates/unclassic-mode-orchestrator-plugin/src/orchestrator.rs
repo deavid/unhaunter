@@ -7,13 +7,14 @@ use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
 use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
+use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfoundation_core::random_seed;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::resources::haunt_state::HauntState;
+use unghost_core::tags::GhostTag;
 use unlight_core::components::LightSensitive;
 use unmapload_core::events::loadlevel::MapEntitiesReadyEvent;
 use unmission_core::events::LevelReadyEvent;
@@ -23,11 +24,10 @@ use unreplicon_core::network_id::NetworkId;
 use unsensing_core::components::SpectralInfluence;
 use unsoundfield_core::components::SoundFieldSource;
 use unspatial_core::position::Position;
-use untags_core::tags::GhostTag;
 
 #[derive(SystemParam)]
 pub(crate) struct OrchestratorParam<'w> {
-    pub authority_role: Option<Res<'w, untypes_core::roles::AuthorityRole>>,
+    pub authority_role: Option<Res<'w, uncommon_app_core::roles::AuthorityRole>>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub board_topology: Res<'w, BoardTopology>,

@@ -53,3 +53,7 @@ pub struct MenuHelpText;
 /// Marker component for the UI root in menus.
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MenuUI;
+
+/// Marker component for the camera used in menus.
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MCamera;

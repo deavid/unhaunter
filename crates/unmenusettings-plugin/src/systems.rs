@@ -9,15 +9,15 @@ use crate::menus::{
 };
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unfoundation_core::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
+use uncommon_app_core::states::AppState;
+use unmenu_core::assets::MenuAssets;
+use unmenu_core::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
 use unmenu_core::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::templates;
 use unsettings_core::audio::AudioSettings;
 use unsettings_core::game::GameplaySettings;
 use unsettings_core::video::VideoSettings;
-use untypes_core::states::AppState;
-use unui_core::assets::UiAssets;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
@@ -130,7 +130,7 @@ fn menu_back_event(
     settings_state: Res<State<SettingsState>>,
     mut ev_menu: MessageWriter<MenuSettingClassSelected>,
     mut commands: Commands,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
 ) {
     for _ev in events.read() {
@@ -143,7 +143,7 @@ fn menu_back_event(
                 next_state.set(SettingsState::Lv1ClassSelection);
                 // Redraw Main Menu:
                 let menu_items = MenuSettingsLevel1::iter_events();
-                setup_ui_main_cat(&mut commands, &ui_assets, &qtui, "Settings", &menu_items);
+                setup_ui_main_cat(&mut commands, &menu_assets, &qtui, "Settings", &menu_items);
             }
             SettingsState::Lv3ValueEdit(menu) => {
                 ev_menu.write(MenuSettingClassSelected { menu: *menu });
@@ -156,7 +156,7 @@ fn menu_settings_class_selected(
     mut commands: Commands,
     mut events: MessageReader<MenuSettingClassSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
     audio_settings: Res<Persistent<AudioSettings>>,
     game_settings: Res<Persistent<GameplaySettings>>,
@@ -169,7 +169,7 @@ fn menu_settings_class_selected(
                 let menu_items = AudioSettingsMenu::iter_events(&audio_settings);
                 setup_ui_main_cat(
                     &mut commands,
-                    &ui_assets,
+                    &menu_assets,
                     &qtui,
                     "Audio Settings",
                     &menu_items,
@@ -180,7 +180,7 @@ fn menu_settings_class_selected(
                 let menu_items = GameplaySettingsMenu::iter_events(&game_settings);
                 setup_ui_main_cat(
                     &mut commands,
-                    &ui_assets,
+                    &menu_assets,
                     &qtui,
                     "Gameplay Settings",
                     &menu_items,
@@ -191,7 +191,7 @@ fn menu_settings_class_selected(
                 let menu_items = VideoSettingsMenu::iter_events(&video_settings);
                 setup_ui_main_cat(
                     &mut commands,
-                    &ui_assets,
+                    &menu_assets,
                     &qtui,
                     "Video Settings",
                     &menu_items,
@@ -207,7 +207,7 @@ fn menu_video_setting_selected(
     mut events: MessageReader<VideoSettingSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
     mut commands: Commands,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
     video_settings: Res<Persistent<VideoSettings>>,
 ) {
@@ -229,11 +229,11 @@ fn menu_video_setting_selected(
                 selected_item_idx: 0,
             })
             .with_children(|parent| {
-                templates::create_background(parent, &ui_assets);
-                templates::create_logo(parent, &ui_assets);
-                templates::create_breadcrumb_navigation(parent, &ui_assets, "Video Settings", ev.setting.to_string());
+                templates::create_background(parent, &menu_assets);
+                templates::create_logo(parent, &menu_assets);
+                templates::create_breadcrumb_navigation(parent, &menu_assets, "Video Settings", ev.setting.to_string());
 
-                let mut content_area = templates::create_selectable_content_area(parent, &ui_assets, 0);
+                let mut content_area = templates::create_selectable_content_area(parent, &menu_assets, 0);
 
                 content_area.insert(MenuMouseTracker::default());
                 content_area.insert(MenuRoot { selected_item: 0 });
@@ -258,7 +258,7 @@ fn menu_video_setting_selected(
                                         item_text,
                                         idx,
                                         idx == 0,
-                                        &ui_assets,
+                                        &menu_assets,
                                     )
                                     .insert(MenuItem::new(idx, *event));
                                     idx += 1;
@@ -269,7 +269,7 @@ fn menu_video_setting_selected(
                                 "Go Back",
                                 idx,
                                 false,
-                                &ui_assets,
+                                &menu_assets,
                             )
                             .insert(MenuItem::new(idx, MenuEvent::Back(MenuEvBack)));
                         });
@@ -277,7 +277,7 @@ fn menu_video_setting_selected(
 
                 templates::create_help_text(
                     parent,
-                    &ui_assets,
+                    &menu_assets,
                     Some("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back".to_string())
                 );
             });
@@ -314,7 +314,7 @@ fn menu_audio_setting_selected(
     mut commands: Commands,
     mut events: MessageReader<AudioSettingSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
@@ -341,15 +341,15 @@ fn menu_audio_setting_selected(
             })
             .with_children(|parent| {
                 // Background
-                templates::create_background(parent, &ui_assets);
+                templates::create_background(parent, &menu_assets);
 
                 // Logo
-                templates::create_logo(parent, &ui_assets);
+                templates::create_logo(parent, &menu_assets);
 
                 // Create breadcrumb navigation with title - show the full path
                 templates::create_breadcrumb_navigation(
                     parent,
-                    &ui_assets,
+                    &menu_assets,
                     "Audio Settings",
                     ev.setting.to_string()
                 );
@@ -357,7 +357,7 @@ fn menu_audio_setting_selected(
                 // Create content area for settings items
                 let mut content_area = templates::create_selectable_content_area(
                     parent,
-                    &ui_assets,
+                    &menu_assets,
                     0 // Initial selection
                 );
 
@@ -391,7 +391,7 @@ fn menu_audio_setting_selected(
                                         item_text,
                                         idx,
                                         idx == 0, // First item selected by default
-                                        &ui_assets
+                                        &menu_assets
                                     )
                                     .insert(MenuItem::new(idx, *event));
                                     idx += 1;
@@ -404,7 +404,7 @@ fn menu_audio_setting_selected(
                                 "Go Back",
                                 idx,
                                 false,
-                                &ui_assets
+                                &menu_assets
                             )
                             .insert(MenuItem::new(idx, MenuEvent::Back(MenuEvBack)));
                         });
@@ -413,7 +413,7 @@ fn menu_audio_setting_selected(
                 // Help text
                 templates::create_help_text(
                     parent,
-                    &ui_assets,
+                    &menu_assets,
                     Some("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back".to_string())
                 );
             });
@@ -471,7 +471,7 @@ fn menu_gameplay_setting_selected(
     mut commands: Commands,
     mut events: MessageReader<GameplaySettingSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
-    ui_assets: Res<UiAssets>,
+    menu_assets: Res<MenuAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
     game_settings: Res<Persistent<GameplaySettings>>,
 ) {
@@ -498,16 +498,16 @@ fn menu_gameplay_setting_selected(
             })
             .with_children(|parent| {
                 // Background
-                templates::create_background(parent, &ui_assets);
+                templates::create_background(parent, &menu_assets);
 
                 // Logo
 
-                templates::create_logo(parent, &ui_assets);
+                templates::create_logo(parent, &menu_assets);
 
                 // Create breadcrumb navigation with title - show the full path
                 templates::create_breadcrumb_navigation(
                     parent,
-                    &ui_assets,
+                    &menu_assets,
                     "Gameplay Settings",
                     ev.setting.to_string(),
                 );
@@ -515,7 +515,7 @@ fn menu_gameplay_setting_selected(
                 // Create content area for settings items
                 let mut content_area = templates::create_selectable_content_area(
                     parent,
-                    &ui_assets,
+                    &menu_assets,
                     0 // Initial selection
                 );
 
@@ -549,7 +549,7 @@ fn menu_gameplay_setting_selected(
                                         item_text,
                                         idx,
                                         idx == 0, // First item selected by default
-                                        &ui_assets
+                                        &menu_assets
                                     )
                                     .insert(MenuItem::new(idx, *event));
                                     idx += 1;
@@ -562,7 +562,7 @@ fn menu_gameplay_setting_selected(
                                 "Go Back",
                                 idx,
                                 false,
-                                &ui_assets
+                                &menu_assets
                             )
                             .insert(MenuItem::new(idx, MenuEvent::Back(MenuEvBack)));
                         });
@@ -571,7 +571,7 @@ fn menu_gameplay_setting_selected(
                 // Help text
                 templates::create_help_text(
                     parent,
-                    &ui_assets,
+                    &menu_assets,
                     Some("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back".to_string())
                 );
             });

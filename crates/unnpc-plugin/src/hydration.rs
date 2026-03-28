@@ -1,11 +1,10 @@
 use bevy::prelude::*;
 use unbehavior_core::behavior::{Behavior, Interactive};
-use unbehavior_core::components;
-use unmapload_core::components::PendingTiledLayerProperties;
-use untypes_core::hydration::HydrationStage;
+use unbehavior_core::components::{self, PendingProperties};
+use unmapload_core::hydration::HydrationStage;
 
 fn hydration_npc_system(
-    mut q: Query<(Entity, &Behavior, &PendingTiledLayerProperties), With<HydrationStage<3>>>,
+    mut q: Query<(Entity, &Behavior, &PendingProperties), With<HydrationStage<3>>>,
     mut commands: Commands,
 ) {
     use bevy::picking::Pickable;
@@ -15,7 +14,7 @@ fn hydration_npc_system(
             commands
                 .entity(entity)
                 .insert(Pickable::default())
-                .insert(unbehavior::behavior::npc_help_dialog_from_tiled(
+                .insert(unbehavior::behavior::npc_help_dialog_from_properties(
                     "NPC",
                     &cfg.variant,
                     &pending_props.0,

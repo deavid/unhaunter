@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use unboard_core::resources::roomdb::RoomTopology;
+use uncommon_app_core::states::AppState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
@@ -9,7 +10,6 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untruck_core::truckgear::TruckGear;
-use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
@@ -20,7 +20,6 @@ fn quartz_cracked_feedback(
     q_quartz: Query<&QuartzStoneData>,
     room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     time: Res<Time>,
     mut last_cracks: Local<Option<u8>>,
 ) {
@@ -63,7 +62,6 @@ fn quartz_shattered_feedback(
     q_quartz: Query<&QuartzStoneData>,
     room_topology: Res<RoomTopology>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     time: Res<Time>,
     mut shattered: Local<bool>,
 ) {
@@ -103,7 +101,6 @@ fn quartz_shattered_feedback(
 fn trigger_quartz_unused_in_relevant_situation_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -187,7 +184,6 @@ fn trigger_quartz_unused_in_relevant_situation_system(
 fn trigger_sage_unused_in_relevant_situation_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
@@ -320,7 +316,6 @@ struct SageEffectivenessTracker {
 fn trigger_sage_activated_ineffectively_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(Entity, &PlayerGear), (With<PlayerSprite>, With<MainPlayer>)>, // Added Entity to ID player
     ghost_query: Query<&GhostSprite>,
@@ -473,7 +468,6 @@ fn reset_hunt_sage_tracker_on_mission_change(
 fn trigger_sage_unused_defensively_during_hunt_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
-    _game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,

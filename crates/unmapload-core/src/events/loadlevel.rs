@@ -1,8 +1,5 @@
 use bevy::prelude::*;
 
-use unboard_core::types::floor::FloorLevelMapping;
-use untiled_core::tiledmap::map::MapLayer;
-
 /// Event triggered to load a new level from a TMX map file.
 ///
 /// This event initiates the level loading process, despawning existing entities,
@@ -13,15 +10,11 @@ pub struct LoadLevelEvent {
     pub map_filepath: String,
 }
 
-#[derive(Debug, Clone, Message)]
-pub struct LevelLoadedEvent {
-    /// The file path that has been loaded.
-    pub map_filepath: String,
-    /// The layers of the map loaded
-    pub layers: Vec<(usize, MapLayer)>,
-    /// Floor level mapping information
-    pub floor_mapping: FloorLevelMapping,
-}
+/// Fired by `unmapload-plugin` after level geometry and all tile entities are spawned.
+/// This is the public signal that a map load has started; listen to this to initialize
+/// domain state in response to a new mission map.
+#[derive(Debug, Clone, Message, Default)]
+pub struct LevelLoadedEvent;
 
 #[derive(Debug, Clone, Message, Default)]
 pub struct MapEntitiesReadyEvent {}

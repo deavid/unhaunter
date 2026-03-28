@@ -4,7 +4,7 @@
 
 use crate::difficulty::Difficulty;
 use crate::difficulty_settings::DifficultySettings;
-use unfoundation_core::utils::temperature::celsius_to_kelvin;
+use uncommon_app_core::utils::temperature::celsius_to_kelvin;
 
 impl DifficultySettings for Difficulty {
     // --- Ghost Behavior ---

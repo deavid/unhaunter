@@ -24,7 +24,6 @@ use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
-use untypes_core::states::GameState;
 use unvitals_core::components::Stamina;
 
 const PLAYER_SPEED: f32 = 0.04;
@@ -37,8 +36,10 @@ const DIR_MAG3: f32 = DIR_MAG2 * 40.0;
 const DIR_RED: f32 = 1.001;
 
 pub(crate) fn dispatch_interact_intent(
+    mut commands: Commands,
     players: Query<
         (
+            Entity,
             &Position,
             &PlayerInput,
             Option<&Hiding>,
@@ -59,12 +60,11 @@ pub(crate) fn dispatch_interact_intent(
     >,
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut ev_interaction_req: MessageWriter<InteractionRequestMessage>,
-    mut game_next_state: ResMut<NextState<GameState>>,
     mut ev_sound: MessageWriter<SoundEvent>,
     mut ev_npc: Option<MessageWriter<NpcHelpEvent>>,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
 ) {
-    for (pos, player_input, hiding, in_truck, spectating) in players.iter() {
+    for (player_entity, pos, player_input, hiding, in_truck, spectating) in players.iter() {
         if in_truck.is_some() || hiding.is_some() || spectating.is_some() {
             continue;
         }
@@ -100,7 +100,7 @@ pub(crate) fn dispatch_interact_intent(
                         ev.write(NpcHelpEvent::new(entity));
                     }
                     if behavior.is_van_entry() {
-                        game_next_state.set(GameState::Truck);
+                        commands.entity(player_entity).insert(InTruck);
                         if let Some(interactive) = interactive {
                             ev_sound.write(SoundEvent {
                                 sound_file: interactive.sound_for_moving_into_state(behavior),
@@ -134,7 +134,7 @@ pub(crate) fn dispatch_interact_intent(
 
 pub(crate) fn apply_movement_intent(
     time: Res<Time>,
-    authority: Option<Res<untypes_core::roles::AuthorityRole>>,
+    authority: Option<Res<uncommon_app_core::roles::AuthorityRole>>,
     mut players: Query<(
         &mut Position,
         &mut Direction,
@@ -385,7 +385,6 @@ pub(crate) fn app_setup(app: &mut App) {
             dispatch_interact_intent,
             apply_movement_intent,
             drive_character_animation,
-        )
-            .run_if(in_state(GameState::Running)),
+        ),
     );
 }

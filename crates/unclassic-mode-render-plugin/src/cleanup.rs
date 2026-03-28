@@ -3,9 +3,9 @@ use bevy_replicon::prelude::Remote;
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
+use unclassic_mode_core::components::GCameraArena;
+use uncommon_app_core::states::{AppState, SimulationState};
 use unrender_std::components::game::GameSprite;
-use untags_core::game::GCameraArena;
-use untypes_core::states::{AppState, SimulationState};
 
 fn cleanup_game(
     mut commands: Commands,

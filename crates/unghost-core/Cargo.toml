@@ -16,7 +16,7 @@ bevy_asset_loader = { workspace = true }
 serde = { workspace = true }
 undifficulty-core = { workspace = true }
 unspatial-core = { workspace = true }
-unfoundation-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 rand = { workspace = true }
 enum-iterator = { workspace = true }
 itertools = { workspace = true }

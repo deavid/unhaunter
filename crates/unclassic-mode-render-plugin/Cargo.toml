@@ -11,6 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+unclassic-mode-core = { workspace = true }
 unbehavior-core = { workspace = true }
 unboard-core = { workspace = true }
 unlocomotion-core = { workspace = true }
@@ -27,9 +28,8 @@ unrender-std = { workspace = true }
 unreplicon-core = { workspace = true }
 unsettings-core = { workspace = true }
 unspatial-core = { workspace = true }
-untags-core = { workspace = true }
 untmxmap-core = { workspace = true }
-untypes-core = { workspace = true }
+uncommon-app-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 bevy_replicon = { workspace = true }

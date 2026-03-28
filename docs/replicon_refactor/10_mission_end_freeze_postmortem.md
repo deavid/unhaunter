@@ -227,7 +227,7 @@ app.add_systems(
     (
         handle_mission_events::handle_mission_events,            // ← no gate
         evaluate_mission_end::evaluate_mission_end
-            .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+            .run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>),
     )
         .run_if(in_state(AppState::InGame)),
 );
@@ -343,7 +343,7 @@ And the lobby entity spawning in `unreplicon-plugin/src/systems/lobby.rs`:
 app.add_systems(
     OnEnter(SimulationState::TearingDown),
     calculate_rewards_and_grades
-        .run_if(resource_exists::<untypes_core::roles::AuthorityRole>),
+        .run_if(resource_exists::<uncommon-app_core::roles::AuthorityRole>),
 );
 ```
 

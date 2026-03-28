@@ -4,24 +4,55 @@ use bevy::ui::widget::ImageNode;
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 use unbehavior_core::behavior::Behavior;
-use unfoundation_core::colors;
-use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unclassic_mode_core::colors;
+use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_app_core::states::AppState;
+use ungear_core::assets::GearAssets;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::ui::EvidenceUI;
+use uninput_core::states::InGameUiState;
 use unmission_core::resources::MissionConcludingCinematic;
 use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
-use unrender_std::assets::GearAssets;
 use unsettings_core::game::GameplaySettings;
-use untypes_core::states::{AppState, GameState};
-use unui_core::assets::UiAssets;
-use unui_core::components::game_ui::{
-    DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
-    WalkieTextUIRoot,
-};
 use unvitals_core::components::PlayerVitals;
+use unwalkie_core::components::WalkieText;
+
+use crate::assets::GameUiAssets;
 
 /// Marker for the fade-to-black overlay that plays during the mission concluding cinematic.
 #[derive(Component)]
 struct MissionFadeOverlay;
+
+#[derive(Component, Debug)]
+struct GameUI;
+
+#[derive(Component, Debug, PartialEq, Eq)]
+enum ElementObjectUI {
+    Name,
+    Description,
+    Grab,
+}
+
+#[derive(Component, Debug)]
+struct DamageBackground {
+    exp: f32,
+}
+
+impl DamageBackground {
+    fn new(exp: f32) -> Self {
+        Self { exp }
+    }
+}
+
+#[derive(Component, Debug)]
+#[allow(dead_code)]
+struct HeldObjectUI;
+
+#[derive(Component, Debug)]
+struct RightSideGearUI;
+
+#[derive(Component, Debug, Default)]
+struct WalkieTextUIRoot;
 
 fn update_damage_vignette_color(
     qp: Query<(&PlayerVitals, Has<PlayerSpectating>), With<MainPlayer>>,
@@ -109,7 +140,7 @@ fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
 
 fn setup_ui(
     mut commands: Commands,
-    ui_assets: Res<UiAssets>,
+    ui_assets: Res<GameUiAssets>,
     gear_assets: Res<GearAssets>,
     game_settings: Res<Persistent<GameplaySettings>>,
 ) {
@@ -370,7 +401,7 @@ fn setup_ui(
     debug!("Game UI loaded");
 }
 
-fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
+fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, ui_assets: &GameUiAssets) {
     parent
         .spawn((
             Text::default(),
@@ -469,15 +500,15 @@ fn toggle_held_object_ui(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::InGame), setup_ui)
         .add_systems(OnExit(AppState::InGame), cleanup)
-        .add_systems(OnEnter(GameState::Running), resume)
-        .add_systems(OnExit(GameState::Running), pause)
+        .add_systems(OnEnter(InGameUiState::Running), resume)
+        .add_systems(OnExit(InGameUiState::Running), pause)
         .add_systems(
             Update,
             (
-                toggle_held_object_ui.run_if(in_state(GameState::Running)),
+                toggle_held_object_ui.run_if(in_state(InGameUiState::Running)),
                 update_damage_vignette_color,
             )
-                .run_if(in_state(GameState::Running)),
+                .run_if(in_state(InGameUiState::Running)),
         )
         .add_systems(Update, tick_mission_fade.run_if(in_state(AppState::InGame)));
 }

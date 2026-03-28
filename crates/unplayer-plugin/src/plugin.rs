@@ -1,8 +1,8 @@
 use super::systems;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use uncommon_app_core::states::AppState;
 use unplayer_core::assets::PlayerAssets;
-use untypes_core::states::AppState;
 
 pub struct UnhaunterPlayerCorePlugin;
 
