@@ -132,6 +132,7 @@ members = [
     "crates/unpicking-core",       # Mouse-to-world picking data
     "crates/unpicking-plugin",     # Visual feedback for interaction picking
     "crates/unghost-presentation", # Ghost: visual hydration, particles, scale glitch (package: unghost-presentation)
+    "crates/unlight-presentation", # Light: visual application of LightGrid to sprites/tiles (package: unlight-presentation)
 
     # ── 4b: Audio ────────────────────────────────────────────────────────
     "crates/unaudiobg-core",        # Ambient and background music data
@@ -380,11 +381,12 @@ unhub-plugin = { path = "crates/unhub-plugin" }
 # ════════════════════════════════════════════════════════════════════════════
 
 # ── 4a: Rendering ────────────────────────────────────────────────────────
-unrender-std = { path = "crates/unrender-std" }         # Standalone mesh / material helpers
-unspatial-plugin = { path = "crates/unspatial-plugin" } # Position→Transform isometric projection (PostUpdate)
-unrender-plugin = { path = "crates/unrender-plugin" }   # Main 2D isometric render pipeline and shaders
-unpicking-core = { path = "crates/unpicking-core" }     # Mouse-to-world picking data
-unpicking-plugin = { path = "crates/unpicking-plugin" } # Visual feedback for interaction picking
+unrender-std = { path = "crates/unrender-std" }                 # Standalone mesh / material helpers
+unspatial-plugin = { path = "crates/unspatial-plugin" }         # Position→Transform isometric projection (PostUpdate)
+unrender-plugin = { path = "crates/unrender-plugin" }           # Main 2D isometric render pipeline and shaders
+unpicking-core = { path = "crates/unpicking-core" }             # Mouse-to-world picking data
+unpicking-plugin = { path = "crates/unpicking-plugin" }         # Visual feedback for interaction picking
+unlight-presentation = { path = "crates/unlight-presentation" } # Light: visual application of LightGrid to sprites/tiles
 
 # ── 4b: Audio ────────────────────────────────────────────────────────────
 unaudiobg-core = { path = "crates/unaudiobg-core" }               # Ambient and background music data
@@ -455,6 +457,7 @@ ungearitems-plugin = { workspace = true }
 unghost-logic = { workspace = true }
 unghost-presentation = { workspace = true }
 unlight-plugin = { workspace = true }
+unlight-presentation = { workspace = true }
 unlobby-plugin = { workspace = true }
 unmapload-plugin = { workspace = true }
 unmaphub-plugin = { workspace = true }

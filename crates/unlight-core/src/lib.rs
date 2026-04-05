@@ -1,7 +1,9 @@
 pub mod color_utils;
 pub mod components;
 pub mod exposure;
+pub mod flashlight;
 pub mod resources;
+pub mod sets;
 pub mod spectral;
 pub mod tonemapping;
 pub mod types;

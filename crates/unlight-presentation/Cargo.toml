@@ -1,0 +1,41 @@
+[package]
+name = "unlight-presentation"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+uncommon-states-core = { workspace = true }
+uncommon-app-core = { workspace = true }
+unmission-core = { workspace = true }
+unlight-core = { workspace = true }
+unboard-core = { workspace = true }
+unbehavior-core = { workspace = true }
+undifficulty-core = { workspace = true }
+unspatial-core = { workspace = true }
+unrender-std = { workspace = true }
+unplayer-core = { workspace = true }
+ungear-core = { workspace = true }
+ungearitems-core = { workspace = true }
+unghost-core = { workspace = true }
+unfog-core = { workspace = true }
+uninput-core = { workspace = true }
+uninteraction-core = { workspace = true }
+unmapload-core = { workspace = true }
+unreplicon-core = { workspace = true }
+unsettings-core = { workspace = true }
+untmxmap-core = { workspace = true }
+unmetrics-core = { workspace = true }
+
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+bevy-persistent = { workspace = true }
+ndarray = { workspace = true }
+rand = { workspace = true }
+fastapprox = { workspace = true }

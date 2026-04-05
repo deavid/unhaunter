@@ -27,7 +27,8 @@ use ungearitems_plugin::plugin::{UnhaunterGearItemsCorePlugin, UnhaunterGearItem
 use unghost_logic::plugin::UnhaunterGhostLogicPlugin;
 use unghost_presentation::plugin::GhostPresentationPlugin;
 use uninventory_plugin::plugin::UnhaunterInventoryPlugin;
-use unlight_plugin::plugin::{UnhaunterLightCorePlugin, UnhaunterLightPlugin};
+use unlight_plugin::plugin::UnhaunterLightCorePlugin;
+use unlight_presentation::plugin::UnlightPresentationPlugin;
 use unlocomotion_plugin::plugin::UnhaunterLocomotionPlugin;
 use unnavigation_plugin::plugin::{UnhaunterNavigationClientPlugin, UnhaunterNavigationPlugin};
 use unnpc_plugin::plugin::{UnhaunterNPCCorePlugin, UnhaunterNPCPlugin};
@@ -290,7 +291,7 @@ pub fn app_run(args: AppArgs) {
         app.add_plugins((
             GhostPresentationPlugin,
             UnhaunterThermalPlugin,
-            UnhaunterLightPlugin,
+            UnlightPresentationPlugin,
             UnhaunterFogPlugin,
             UnhaunterFogCorePlugin,
             UnhaunterSpatialPlugin,

@@ -1,4 +1,4 @@
-use crate::maplight::definitions::{ActiveFlashlights, FlashlightData, GridResources};
+use crate::maplight::definitions::GridResources;
 use crate::maplight::visibility::compute_visibility;
 use crate::metrics::PLAYER_VISIBILITY;
 use bevy::prelude::*;
@@ -11,6 +11,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::components::{FlashlightBounceState, LightEmitter};
+use unlight_core::flashlight::{ActiveFlashlights, FlashlightData};
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light_type::LightType;
 use unmetrics_core::metrics::SendMetric;

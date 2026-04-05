@@ -3,15 +3,24 @@ use unboard_core::BoardUpdateSet;
 use uncommon_states_core::UIContextState;
 use unmission_core::types::SimulationState;
 
+use unlight_core::flashlight::ActiveFlashlights;
 use unlight_core::resources::light_grid::LightGrid;
+use unlight_core::sets::LightUpdateSet;
 
-use crate::{lighting_sim, maplight, metrics, systems::power_visuals};
+use crate::{lighting_sim, maplight, metrics};
 
 pub struct UnhaunterLightCorePlugin;
 
 impl Plugin for UnhaunterLightCorePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LightGrid>()
+            .init_resource::<ActiveFlashlights>()
+            .configure_sets(
+                PostUpdate,
+                LightUpdateSet::Gather
+                    .after(BoardUpdateSet::Lighting)
+                    .run_if(in_state(UIContextState::InGame).and(in_state(SimulationState::Ready))),
+            )
             .add_systems(PreUpdate, lighting_sim::systems::init_light_grid)
             .add_systems(
                 Update,
@@ -27,6 +36,12 @@ impl Plugin for UnhaunterLightCorePlugin {
                     maplight::systems::gathering::player_visibility_system
                         .after(BoardUpdateSet::Lighting)
                         .run_if(in_state(SimulationState::Ready)),
+                    (
+                        maplight::systems::gathering::gather_flashlights_system,
+                        maplight::systems::gathering::update_exposure_system,
+                    )
+                        .chain()
+                        .in_set(LightUpdateSet::Gather),
                 ),
             )
             .add_systems(
@@ -34,27 +49,5 @@ impl Plugin for UnhaunterLightCorePlugin {
                 lighting_sim::systems::reset_light_grid,
             );
         metrics::register_all(app);
-    }
-}
-
-pub struct UnhaunterLightPlugin;
-
-impl Plugin for UnhaunterLightPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            PostUpdate,
-            (
-                power_visuals::update_power_visuals,
-                maplight::systems::gathering::gather_flashlights_system,
-                maplight::systems::gathering::update_exposure_system,
-                maplight::systems::tiles::apply_lighting_to_tiles_system,
-                maplight::systems::sprites::apply_lighting_to_sprites_system,
-                maplight::systems::sprites::highlight_placement_tiles_system,
-            )
-                .chain()
-                .after(BoardUpdateSet::Lighting)
-                .run_if(in_state(UIContextState::InGame).and(in_state(SimulationState::Ready))),
-        );
-        maplight::systems::app_setup(app);
     }
 }

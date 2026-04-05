@@ -1,7 +1,5 @@
 use bevy_platform::collections::HashMap;
-use untmxmap_core::types::map::{
-    MapLayer, MapLayerGroup, MapLayerType, MapTile, MapTileList, Pos,
-};
+use untmxmap_core::types::map::{MapLayer, MapLayerGroup, MapLayerType, MapTile, MapTileList, Pos};
 
 // ----------- Load functions -------------------
 /// Entry point for loading tiled maps.

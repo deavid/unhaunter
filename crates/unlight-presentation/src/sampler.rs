@@ -1,4 +1,3 @@
-use crate::maplight::definitions::FlashlightData;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
@@ -7,6 +6,7 @@ use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::visibility_data::VisibilityData;
 use undifficulty_core::difficulty::Difficulty;
 use unlight_core::components::LightSensitive;
+use unlight_core::flashlight::FlashlightData;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::spectral::{SpectralInfluence, SpectralInfluenceType};
 use unlight_core::tonemapping::{self, TonemappingParams};

@@ -13,6 +13,7 @@ use ungearitems_core::components::salt::UVReactive;
 use unghost_core::components::presentation::spectral::SpectralClarity;
 use unlight_core::color_utils::lerp_color;
 use unlight_core::components::LightSensitive;
+use unlight_core::flashlight::ActiveFlashlights;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::spectral::SpectralInfluence;
 use unlight_core::types::light::LightData;
@@ -25,14 +26,14 @@ use unrender_std::custom_material1::CustomMaterial1;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::position::Position;
 
-use crate::maplight::definitions::{ActiveFlashlights, GridResources};
-use crate::maplight::sampler::{LightingSampler, SpectralParams};
-use crate::maplight::visuals::{
+use crate::definitions::GridResources;
+use crate::metrics;
+use crate::sampler::{LightingSampler, SpectralParams};
+use crate::visuals::{
     apply_alpha_modulator_visuals, apply_ecto_visuals, apply_emissive_visuals,
     apply_ethereal_visuals, apply_ir_visuals, apply_miasma_cloud_visuals, apply_uv_visuals,
     update_spectral_influence,
 };
-use crate::metrics;
 
 pub(crate) fn highlight_placement_tiles_system(
     qp: Query<(&Position, &PlayerGear, Has<MainPlayer>)>,

@@ -7628,6 +7628,7 @@ dependencies = [
  "uninteraction-plugin",
  "uninventory-plugin",
  "unlight-plugin",
+ "unlight-presentation",
  "unlobby-plugin",
  "unlocomotion-plugin",
  "unmainmenu-plugin",
@@ -7860,6 +7861,25 @@ dependencies = [
 
 [[package]]
 name = "unlight-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "ndarray",
+ "unbehavior-core",
+ "unboard-core",
+ "uncommon-states-core",
+ "ungear-core",
+ "uninteraction-core",
+ "unlight-core",
+ "unmetrics-core",
+ "unmission-core",
+ "unplayer-core",
+ "unspatial-core",
+]
+
+[[package]]
+name = "unlight-presentation"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",

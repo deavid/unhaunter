@@ -17,6 +17,7 @@ use uninput_core::resources::MouseVisibility;
 use uninteraction_core::hover::HoverState;
 use unlight_core::color_utils::lerp_color;
 use unlight_core::components::LightSensitive;
+use unlight_core::flashlight::ActiveFlashlights;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::spectral::SpectralInfluence;
 use unlight_core::types::light::LightData;
@@ -31,14 +32,14 @@ use unspatial_core::orientation::Orientation;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 
-use crate::maplight::definitions::{ActiveFlashlights, GridResources};
-use crate::maplight::sampler::{LightingSampler, SpectralParams};
-use crate::maplight::visuals::{
+use crate::definitions::GridResources;
+use crate::metrics::APPLY_LIGHTING;
+use crate::sampler::{LightingSampler, SpectralParams};
+use crate::visuals::{
     apply_alpha_modulator_visuals, apply_ecto_visuals, apply_emissive_visuals,
     apply_ethereal_visuals, apply_ir_visuals, apply_miasma_pressure, apply_uv_visuals,
     step_alpha_clamped, update_spectral_influence,
 };
-use crate::metrics::APPLY_LIGHTING;
 use unmetrics_core::metrics::SendMetric;
 
 #[expect(clippy::type_complexity)]
