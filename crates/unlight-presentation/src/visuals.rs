@@ -143,10 +143,10 @@ pub(crate) fn apply_ethereal_visuals<D: DifficultySettings>(
         .with_red(r * ld.visible + e_rl * 1.1 + ethereal.miss_delta / 2.0)
         .with_green(g * ld.visible + e_uv + e_rl + ethereal.miss_delta / 2.5);
 
-    if ethereal.warning_active || ethereal.hunt_target {
+    if ethereal.warning_active || ethereal.threat_active {
         // Make the ghost bright red and pulsing during a hunt/warning
         let pulse = (elapsed * 8.0).sin() * 0.5 + 0.5;
-        let base_intensity = if ethereal.hunt_target {
+        let base_intensity = if ethereal.threat_active {
             1.0
         } else {
             ethereal.warning_intensity

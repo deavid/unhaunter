@@ -4,7 +4,7 @@ use uncommon_states_core::UIContextState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
-use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::resources::signals::GhostHuntSignals;
 use unplayer_core::components::MainPlayer;
 use unspatial_core::position::Position;
 use unwalkie_core::events::walkie_types::WalkieEvent;
@@ -71,7 +71,7 @@ fn ghost_near_hunt(
     qp: Query<(&Position, &PlayerGear), With<MainPlayer>>,
     room_topology: Res<RoomTopology>,
     difficulty: Res<CurrentDifficulty>,
-    q_ghost: Query<&GhostSprite>,
+    hunt_signals: Res<GhostHuntSignals>,
     q_gear: Query<&GearKind>,
     time: Res<Time>,
 ) {
@@ -104,14 +104,9 @@ fn ghost_near_hunt(
             // Player is not inside the location, no need to tell them.
             continue;
         }
-        for ghost in q_ghost.iter() {
-            if (ghost.rage > ghost.rage_limit * 0.8)
-                && !ghost.hunt_warning_active
-                && !ghost.hunt_target
-            {
-                walkie_play.set(WalkieEvent::GhostNearHunt, time.elapsed_secs_f64());
-                return;
-            }
+        if hunt_signals.any_near_hunt_without_warning {
+            walkie_play.set(WalkieEvent::GhostNearHunt, time.elapsed_secs_f64());
+            return;
         }
     }
 }

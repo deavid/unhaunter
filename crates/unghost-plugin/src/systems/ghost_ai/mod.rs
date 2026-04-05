@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use unghost_core::components::logic::ghost_death::GhostDeathSignal;
 use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
+use unghost_core::resources::signals::{GhostHuntPressure, GhostHuntSignals, PrimaryGhostSignal};
 use unspatial_core::position::Position;
 
 use crate::systems::influence_sync::ghost_influence_visual_sync;
@@ -74,6 +75,67 @@ pub(crate) fn update_ghost_warning_field(
     haunt_state.ghost_warning_intensity = max_intensity * wave as f32;
 }
 
+pub(crate) fn refresh_ghost_hunt_signals(
+    mut signals: ResMut<GhostHuntSignals>,
+    q_ghost: Query<(&GhostSprite, &Position)>,
+) {
+    signals.any_present = false;
+    signals.any_hunting = false;
+    signals.any_warning_active = false;
+    signals.any_hunted_this_mission = false;
+    signals.any_hunt_likely = false;
+    signals.any_near_hunt_without_warning = false;
+    signals.primary = None;
+    signals.pressures.clear();
+
+    for (ghost, position) in q_ghost.iter() {
+        signals.any_present = true;
+        if signals.primary.is_none() {
+            signals.primary = Some(PrimaryGhostSignal {
+                class: ghost.class,
+                position: *position,
+                spawn_point: ghost.spawn_point.clone(),
+                health: ghost.get_health(),
+                hunting: ghost.hunting,
+                hunt_warning_active: ghost.hunt_warning_active,
+                repellent_hits: ghost.repellent_hits,
+            });
+        }
+
+        if ghost.hunt_warning_active && ghost.get_health() > 0.3 {
+            signals.any_warning_active = true;
+        }
+
+        if ghost.times_hunted_this_mission > 0 {
+            signals.any_hunted_this_mission = true;
+        }
+
+        let rage_ratio = if ghost.rage_limit > 0.0 {
+            ghost.rage / ghost.rage_limit
+        } else {
+            0.0
+        };
+
+        if ghost.hunt_warning_active || rage_ratio > 0.70 {
+            signals.any_hunt_likely = true;
+        }
+
+        if rage_ratio > 0.80 && !ghost.hunt_warning_active && !ghost.hunt_target {
+            signals.any_near_hunt_without_warning = true;
+        }
+
+        if !ghost.hunt_target {
+            continue;
+        }
+
+        signals.any_hunting = true;
+        signals.pressures.push(GhostHuntPressure {
+            position: *position,
+            calm_time_secs: ghost.calm_time_secs,
+        });
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     use unmission_core::types::SimulationState;
 
@@ -92,6 +154,11 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         ghost_influence_visual_sync.run_if(in_state(SimulationState::Ready)),
+    );
+
+    app.add_systems(
+        PostUpdate,
+        refresh_ghost_hunt_signals.run_if(in_state(SimulationState::Ready)),
     );
 
     crate::systems::dynamic_behavior_update::app_setup(app);

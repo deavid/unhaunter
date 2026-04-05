@@ -402,11 +402,11 @@ pub(crate) fn apply_lighting_to_tiles_system(
                         css::ALICE_BLUE.into(),
                         ethereal.warning_intensity.clamp(0.0, 1.0),
                     );
-                } else if ethereal.hunt_target {
+                } else if ethereal.threat_active {
                     src_color_base = lerp_color(
                         css::RED.into(),
                         css::ALICE_BLUE.into(),
-                        (ethereal.calm_time_secs / 10.0).clamp(0.0, 1.0),
+                        ethereal.threat_calm_mix.clamp(0.0, 1.0),
                     );
                 }
             }
@@ -451,7 +451,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 apply_alpha_modulator_visuals(am, elapsed, &mut opacity);
             }
 
-            if let Some(ethereal) = o_ethereal.filter(|e| !e.warning_active && !e.hunt_target) {
+            if let Some(ethereal) = o_ethereal.filter(|e| !e.warning_active && !e.threat_active) {
                 apply_ethereal_visuals(
                     ethereal,
                     o_spectral_clarity,

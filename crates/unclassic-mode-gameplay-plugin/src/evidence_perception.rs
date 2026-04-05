@@ -6,6 +6,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::components::presentation::ghost_orb_particle::GhostOrbParticle;
+use unghost_core::resources::signals::GhostHuntSignals;
 use uninteraction_core::interaction::Toggleable;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
@@ -30,6 +31,7 @@ fn update_current_evidence_readings_from_player_perception_system(
     q_orb: Query<&Position, With<GhostOrbParticle>>,
     q_light: Query<(&LightEmitter, &Toggleable, &Position)>,
     light_grid: If<Res<LightGrid>>,
+    hunt_signals: Res<GhostHuntSignals>,
     time: Res<Time>,
 ) {
     let Some((player_gear, player_pos, vis_data)) = player_query.iter().next() else {
@@ -40,9 +42,7 @@ fn update_current_evidence_readings_from_player_perception_system(
     let current_time = time.elapsed_secs_f64();
 
     // Check if any ghost is currently hunting (map-wide)
-    let is_any_ghost_hunting = q_ghost
-        .iter()
-        .any(|(g, _)| g.hunting > 0.0 || g.hunt_target);
+    let is_any_ghost_hunting = hunt_signals.any_hunting;
 
     // Helper closure to process a single piece of gear
     let mut process_gear = |entity: Entity, status_vis: bool, icon_vis: bool, sound_vis: bool| {

@@ -23,7 +23,6 @@ unmission-core = { workspace = true }
 uncareer-core = { workspace = true }
 unplayer-core = { workspace = true }
 unspatial-core = { workspace = true }
-unsoundfield-core = { workspace = true }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 ordered-float = { workspace = true }

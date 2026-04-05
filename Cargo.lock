@@ -7312,7 +7312,6 @@ dependencies = [
  "unmission-core",
  "unplayer-core",
  "unreplicon-core",
- "unsoundfield-core",
  "unspatial-core",
 ]
 

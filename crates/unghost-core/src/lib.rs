@@ -1,7 +1,6 @@
 pub mod assets;
 pub mod components;
 pub mod difficulty_ext;
-pub mod ethereal;
 pub mod events;
 pub mod requests;
 pub mod resources;

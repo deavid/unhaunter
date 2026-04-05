@@ -18,8 +18,8 @@ pub(crate) fn ghost_visual_sync(
         eth.warp = gs.warp;
         eth.warning_active = gs.hunt_warning_active;
         eth.warning_intensity = gs.hunt_warning_intensity;
-        eth.hunt_target = gs.hunt_target;
-        eth.calm_time_secs = gs.calm_time_secs;
+        eth.threat_active = gs.hunt_target;
+        eth.threat_calm_mix = (gs.calm_time_secs / 10.0).clamp(0.0, 1.0);
         eth.hit_delta = gs.repellent_hits_delta;
         eth.miss_delta = gs.repellent_misses_delta;
 

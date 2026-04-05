@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::prelude::IndexedRandom;
 use unbehavior_core::components::Movable;
-use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
 use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
@@ -12,15 +11,12 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::components::logic::ghost_breach::GhostBreach;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
-use unghost_core::requests::GhostSpawnRequest;
+use unghost_core::requests::{GhostBreachSpawnRequest, GhostSpawnRequest};
 use unghost_core::resources::haunt_state::HauntState;
-use unlight_core::components::LightSensitive;
-use unlight_core::spectral::SpectralInfluence;
 use unmapload_core::events::loadlevel::MapEntitiesReadyEvent;
 use unmission_core::events::LevelReadyEvent;
 use unmission_core::summary::SummaryData;
 use unplayer_core::components::PlayerSprite;
-use unsoundfield_core::components::SoundFieldSource;
 use unspatial_core::position::Position;
 
 #[derive(SystemParam)]
@@ -107,40 +103,16 @@ pub(crate) fn classic_mode_orchestrator(
                 *p.difficulty,
             ));
 
-            let breach_id = {
-                let mut ec = commands.spawn(ghost_spawn);
+            let breach_id = commands.spawn((ghost_spawn, GhostBreachSpawnRequest)).id();
 
-                ec.insert(GhostBreach)
-                    .insert(unspatial_core::boardposition::MapEntityFieldBPos(
-                        ghost_spawn.to_board_position(),
-                    ))
-                    .insert(LightSensitive {
-                        exposure_factor: 1.1,
-                        bias: 0.02,
-                    })
-                    .insert(SpectralInfluence::default().with_ultraviolet(1.0, 1.0))
-                    .insert(ThermalEmitter {
-                        room_restricted: true,
-                        ..default()
-                    })
-                    .insert(FluidEmitter::default())
-                    .insert(SoundFieldSource::default());
-
-                ec.id()
-            };
-
-            commands
-                .spawn((
-                    ghost_spawn,
-                    GhostSpawnRequest {
-                        ghost_types: possible_ghost_types,
-                    },
-                    p.haunt_state.ghost_dynamics,
-                ))
-                .insert(unghost_core::components::logic::ghost_sprite::GhostSprite {
-                    breach_id: Some(breach_id),
-                    ..default()
-                });
+            commands.spawn((
+                ghost_spawn,
+                GhostSpawnRequest {
+                    ghost_types: possible_ghost_types,
+                    breach_entity: Some(breach_id),
+                },
+                p.haunt_state.ghost_dynamics,
+            ));
 
             crate::influence_system::assign_ghost_influence(
                 &mut commands,

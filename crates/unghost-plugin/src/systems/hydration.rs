@@ -7,7 +7,7 @@ use unboard_core::components::spawning::HostileSpawnPoint;
 use unboard_core::entity::GameSprite;
 use unghost_core::components::logic::ghost_breach::GhostBreach;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
-use unghost_core::requests::GhostSpawnRequest;
+use unghost_core::requests::{GhostBreachSpawnRequest, GhostSpawnRequest};
 use unghost_core::tags::GhostTag;
 use unlight_core::components::LightSensitive;
 use unlight_core::spectral::SpectralInfluence;
@@ -56,13 +56,11 @@ fn hydration_ghost_logic_system(
 
 fn ghost_hydration_system(
     mut commands: Commands,
-    q: Query<(Entity, &GhostSpawnRequest, &Position, Option<&GhostSprite>), Without<GhostTag>>,
+    q: Query<(Entity, &GhostSpawnRequest, &Position), Without<GhostTag>>,
 ) {
-    for (entity, request, pos, maybe_sprite) in q.iter() {
+    for (entity, request, pos) in q.iter() {
         let mut ghost_sprite = GhostSprite::new(pos.to_board_position(), &request.ghost_types);
-        if let Some(existing_sprite) = maybe_sprite {
-            ghost_sprite.breach_id = existing_sprite.breach_id;
-        }
+        ghost_sprite.breach_id = request.breach_entity;
 
         commands
             .entity(entity)
@@ -87,6 +85,33 @@ fn ghost_hydration_system(
             .insert(Replicated)
             .insert(LerpPosition::new(*pos))
             .remove::<GhostSpawnRequest>();
+    }
+}
+
+fn breach_hydration_system(
+    mut commands: Commands,
+    q: Query<(Entity, &Position), (With<GhostBreachSpawnRequest>, Without<GhostBreach>)>,
+) {
+    for (entity, pos) in q.iter() {
+        commands
+            .entity(entity)
+            .insert(GhostBreach)
+            .insert(unspatial_core::boardposition::MapEntityFieldBPos(
+                pos.to_board_position(),
+            ))
+            .insert(LightSensitive {
+                exposure_factor: 1.1,
+                bias: 0.02,
+            })
+            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 1.0))
+            .insert(ThermalEmitter {
+                room_restricted: true,
+                ..default()
+            })
+            .insert(FluidEmitter::default())
+            .insert(SoundFieldSource::default())
+            .insert(Replicated)
+            .remove::<GhostBreachSpawnRequest>();
     }
 }
 
@@ -150,7 +175,11 @@ fn hydrate_breach_local_field_components(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (hydration_ghost_logic_system, ghost_hydration_system),
+        (
+            hydration_ghost_logic_system,
+            breach_hydration_system,
+            ghost_hydration_system,
+        ),
     );
     app.add_systems(
         Update,

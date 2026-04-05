@@ -5,7 +5,7 @@ use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use unghost_core::components::logic::ghost_breach::GhostBreach;
-use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::resources::signals::GhostHuntSignals;
 use uninvestigation_core::evidence::Evidence;
 use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSprite;
@@ -19,7 +19,7 @@ fn trigger_all_objectives_met_reminder_system(
     mut walkie_play: ResMut<WalkiePlay>,
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
-    q_ghost: Query<Entity, With<GhostSprite>>,
+    hunt_signals: Res<GhostHuntSignals>,
     q_breach: Query<Entity, With<GhostBreach>>,
     mut linger_timer: Local<Option<Stopwatch>>,
     qp_in_truck: Query<&InTruck, With<MainPlayer>>,
@@ -32,7 +32,7 @@ fn trigger_all_objectives_met_reminder_system(
         return;
     }
 
-    let ghost_expelled = q_ghost.is_empty();
+    let ghost_expelled = !hunt_signals.any_present;
     let breach_sealed = q_breach.is_empty();
 
     if ghost_expelled && breach_sealed {

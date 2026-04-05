@@ -250,7 +250,7 @@ pub(crate) fn apply_lighting_to_sprites_system(
         let visibility2 = visibility * visibility;
         let mut dcl = dst_color.to_linear();
         let is_hunting = o_ethereal
-            .map(|e| e.warning_active || e.hunt_target)
+            .map(|e| e.warning_active || e.threat_active)
             .unwrap_or(false);
         if !is_hunting {
             dcl.red *= visibility2;

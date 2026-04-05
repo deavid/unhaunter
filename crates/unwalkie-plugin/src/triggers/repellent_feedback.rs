@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
 use uncommon_states_core::UIContextState;
-use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::components::presentation::repellent_particle::RepellentParticle;
+use unghost_core::resources::signals::GhostHuntSignals;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::ghost::GhostType;
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
@@ -23,7 +23,7 @@ pub(crate) fn app_setup(app: &mut App) {
 
 fn repellent_feedback_trigger_system(
     time: Res<Time>,
-    ghost_query: Query<&GhostSprite>,
+    hunt_signals: Res<GhostHuntSignals>,
     repellent_particle_query: Query<&RepellentParticle>,
     ghost_guess: Res<GhostGuess>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -71,10 +71,10 @@ fn repellent_feedback_trigger_system(
 
         if *total_count < 50 {
             // Find the ghost we're actually dealing with
-            let Some(ghost_sprite) = ghost_query.iter().next() else {
+            let Some(primary) = hunt_signals.primary.clone() else {
                 continue;
             };
-            let real_ghost_type = ghost_sprite.class;
+            let real_ghost_type = primary.class;
 
             let repellent_evidences = repellent_type.evidences();
             let real_evidences = real_ghost_type.evidences();

@@ -3,7 +3,7 @@ use unboard_core::resources::roomdb::RoomTopology;
 use uncommon_states_core::UIContextState;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
-use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::resources::signals::GhostHuntSignals;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use unwalkie_core::events::walkie_types::WalkieEvent;
@@ -20,7 +20,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
         (&Position, Option<&Hiding>, &PlayerGear),
         (With<PlayerSprite>, With<MainPlayer>),
     >,
-    q_ghost: Query<&GhostSprite>,
+    hunt_signals: Res<GhostHuntSignals>,
     room_topology: Res<RoomTopology>,
     mut warning_timer: Local<Option<Stopwatch>>,
     mut player_pos_at_warning: Local<Option<Position>>,
@@ -68,16 +68,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
         }
 
         let is_player_hiding = maybe_hiding.is_some();
-        let mut is_hunt_warning_active_for_any_ghost = false;
-        for ghost_sprite in q_ghost.iter() {
-            if ghost_sprite.hunt_warning_active {
-                // Only trigger warning if ghost health is above 30%
-                if ghost_sprite.get_health() > 0.3 {
-                    is_hunt_warning_active_for_any_ghost = true;
-                    break;
-                }
-            }
-        }
+        let is_hunt_warning_active_for_any_ghost = hunt_signals.any_warning_active;
 
         // 3. Conditions for starting/resetting the timer
         if is_hunt_warning_active_for_any_ghost && !is_player_hiding {

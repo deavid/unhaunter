@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unghost_core::components::logic::ghost_sprite::GhostSprite;
-use unghost_core::tags::GhostTag;
+use unghost_core::resources::signals::GhostHuntSignals;
 use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
 use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::position::Position;
@@ -123,7 +122,7 @@ pub(crate) fn apply_ghost_proximity_damage(
             Without<InTruck>,
         ),
     >,
-    q_ghost: Query<(&Position, &GhostSprite), With<GhostTag>>,
+    hunt_signals: Res<GhostHuntSignals>,
     time: Res<Time>,
     difficulty: Res<CurrentDifficulty>,
     mut hunt_start: Local<f32>,
@@ -134,26 +133,21 @@ pub(crate) fn apply_ghost_proximity_damage(
         return;
     };
 
-    let any_hunting = q_ghost.iter().any(|(_, g)| g.hunt_target);
-
-    if !any_hunting {
+    if !hunt_signals.any_hunting {
         *hunt_start = 0.0;
     }
 
-    for (ghost_pos, ghost) in q_ghost.iter() {
-        if !ghost.hunt_target {
-            continue;
-        }
-
+    for pressure in hunt_signals.pressures.iter() {
         if *hunt_start == 0.0 {
             *hunt_start = time.elapsed_secs();
         }
         let ghost_strength = (time.elapsed_secs() - *hunt_start).clamp(0.0, 2.0);
 
-        let dist2 = player_pos.weighted_distance_squared(ghost_pos) + 2.0;
+        let dist2 = player_pos.weighted_distance_squared(&pressure.position) + 2.0;
 
         let dmg = dist2.recip() * difficulty.0.health_drain_rate();
-        let damage_to_apply = dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
+        let damage_to_apply =
+            dmg * dt * 30.0 * ghost_strength / (1.0 + pressure.calm_time_secs / 5.0);
         vitals.health -= damage_to_apply;
     }
 }

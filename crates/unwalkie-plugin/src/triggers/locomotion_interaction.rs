@@ -9,6 +9,7 @@ use unbehavior_core::state::TileState;
 use unboard_core::resources::roomdb::RoomTopology;
 use uncommon_states_core::UIContextState;
 use ungear_core::components::playergear::PlayerGear;
+use unghost_core::resources::signals::GhostHuntSignals;
 use uninput_core::components::PlayerInputMapping;
 use uninput_core::states::InGameUiState;
 use unlocomotion_core::components::PlayerLocomotionState;
@@ -340,6 +341,7 @@ fn trigger_player_stays_hidden_too_long(
     game_state: Res<State<InGameUiState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     hiding_query: Query<Entity, (With<Hiding>, Without<InTruck>)>,
+    hunt_signals: Res<GhostHuntSignals>,
     ghost_query: Query<&unghost_core::components::logic::ghost_sprite::GhostSprite>,
     mut post_hunt_hidden_timer: Local<Option<f32>>,
 ) {
@@ -358,8 +360,7 @@ fn trigger_player_stays_hidden_too_long(
         return;
     }
     // Check if any ghost is currently hunting
-    let hunt_active = ghost_query.iter().any(|g| g.hunting > 0.0);
-    if hunt_active {
+    if hunt_signals.any_hunting {
         *post_hunt_hidden_timer = None;
         return;
     }
@@ -393,7 +394,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&Position, Entity), Without<Hiding>>,
     hiding_spots: Query<&Position, With<HidingSpot>>,
-    ghost_query: Query<&unghost_core::components::logic::ghost_sprite::GhostSprite>,
+    hunt_signals: Res<GhostHuntSignals>,
     mut near_hiding_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &UIContextState::InGame {
@@ -402,8 +403,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     }
     let measure = metrics::TRIGGER_HUNT_ACTIVE_NEAR_HIDING_SPOT_NO_HIDE.time_measure();
     // Check if any ghost is actively hunting (hunting > 10.0)
-    let hunt_active = ghost_query.iter().any(|g| g.hunting > 10.0);
-    if !hunt_active {
+    if !hunt_signals.any_hunting {
         *near_hiding_timer = None;
         measure.end_ms();
         return;

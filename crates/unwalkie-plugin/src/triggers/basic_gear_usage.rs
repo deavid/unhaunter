@@ -6,8 +6,8 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::core::Battery;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
-use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
+use unghost_core::resources::signals::GhostHuntSignals;
 use uninput_core::components::PlayerInputMapping;
 use uninteraction_core::interaction::Toggleable;
 use uninvestigation_core::evidence::Evidence;
@@ -167,7 +167,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
-    ghost_query: Query<(&GhostSprite, &Position)>, // GhostSprite for breach_pos, Position for live pos
+    hunt_signals: Res<GhostHuntSignals>,
     haunt_state: Res<HauntState>, // For actual ghost evidences & fallback breach_pos
     room_topology: Res<RoomTopology>,
     difficulty: Res<CurrentDifficulty>,
@@ -193,8 +193,8 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     // 2. Get Ghost Info
     // Ghost's current position (if available) and its definitive spawn_point (breach)
     let mut ghost_targets = vec![];
-    for (gs, g_pos) in ghost_query.iter() {
-        ghost_targets.push((gs.spawn_point.clone(), Some(*g_pos)));
+    if let Some(primary) = hunt_signals.primary.clone() {
+        ghost_targets.push((primary.spawn_point, Some(primary.position)));
     }
     if ghost_targets.is_empty() {
         ghost_targets.push((haunt_state.breach_pos.to_board_position(), None));
@@ -370,7 +370,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     room_topology: Res<RoomTopology>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     difficulty: Res<CurrentDifficulty>,
-    ghost_query: Query<&GhostSprite>, // Add ghost query to check hunting state
+    hunt_signals: Res<GhostHuntSignals>,
     q_gear: Query<(&GearKind, &Toggleable, Option<&Battery>)>,
     mut tracker: Local<GearCycleUsageTracker>, // No Option, always track
 ) {
@@ -409,8 +409,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     let (input_mapping, player_gear) = matched_player_info.unwrap();
 
     // Check if any ghost is currently hunting - pause tracking if so
-    let ghost_hunting = ghost_query.iter().any(|g| g.hunting > 0.0);
-    if ghost_hunting {
+    if hunt_signals.any_hunting {
         // Don't reset tracker, just return and pause tracking while ghost is hunting
         return;
     }

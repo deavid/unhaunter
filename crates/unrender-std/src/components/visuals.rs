@@ -66,10 +66,10 @@ pub struct Ethereal {
     pub warning_active: bool,
     /// Intensity of the warning effect (0.0 to 1.0).
     pub warning_intensity: f32,
-    /// True if the entity is currently targeting something.
-    pub hunt_target: bool,
-    /// Recovery or calm time remaining.
-    pub calm_time_secs: f32,
+    /// True if the entity should render its full threat state.
+    pub threat_active: bool,
+    /// Presentation-only blending factor for threat coloring.
+    pub threat_calm_mix: f32,
     /// Visual impact from being "hit" by something (e.g., repellent).
     pub hit_delta: f32,
     /// Visual impact from a "miss" check.
@@ -84,8 +84,8 @@ impl Default for Ethereal {
             stability: 1.0,
             warning_active: false,
             warning_intensity: 0.0,
-            hunt_target: false,
-            calm_time_secs: 0.0,
+            threat_active: false,
+            threat_calm_mix: 0.0,
             hit_delta: 0.0,
             miss_delta: 0.0,
         }

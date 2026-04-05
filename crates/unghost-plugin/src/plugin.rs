@@ -16,6 +16,7 @@ use unghost_core::events::{
 };
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
+use unghost_core::resources::signals::GhostHuntSignals;
 
 use crate::{ghost_events, metrics};
 
@@ -47,6 +48,7 @@ impl Plugin for UnhaunterGhostLogicPlugin {
         ghost_events::app_setup(app);
         metrics::register_logic(app);
         app.init_resource::<ObjectInteractionConfig>()
+            .init_resource::<GhostHuntSignals>()
             .init_resource::<HauntState>()
             .init_resource::<CurrentEvidenceReadings>();
 

@@ -8,6 +8,7 @@ use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::components::presentation::repellent_particle::RepellentParticle;
+use unghost_core::resources::signals::GhostHuntSignals;
 use uninvestigation_core::ghost::GhostType;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
@@ -21,7 +22,7 @@ fn trigger_ghost_expelled_player_lingers_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    ghost_query: Query<Entity, With<GhostSprite>>,
+    hunt_signals: Res<GhostHuntSignals>,
     player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>, // Assuming only one player for now
     room_topology: Res<RoomTopology>,
     mut ghost_gone_and_player_in_location_timestamp: Local<Option<f64>>,
@@ -36,7 +37,7 @@ fn trigger_ghost_expelled_player_lingers_system(
     }
 
     // 2. Check Ghost Presence
-    let ghost_is_present = !ghost_query.is_empty();
+    let ghost_is_present = hunt_signals.any_present;
 
     // 3. Check Player Location - iterate all players (First Responder)
     for player_pos in player_query.iter() {
@@ -135,7 +136,7 @@ fn trigger_repellent_used_too_far_system(
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
-    ghost_query: Query<(&Position, &GhostSprite), Without<PlayerSprite>>,
+    hunt_signals: Res<GhostHuntSignals>,
     mut prev_repellent_state: Local<PrevRepellentState>,
     q_gear: Query<&GearKind>,
     q_repellent: Query<&RepellentFlask>,
@@ -148,52 +149,52 @@ fn trigger_repellent_used_too_far_system(
 
     // Iterate all players and ghosts (Simulation pattern - multi-entity)
     for (player_gear, player_pos) in player_query.iter() {
-        for (ghost_pos, ghost_sprite) in ghost_query.iter() {
-            // 2. Check current repellent state
-            let mut current_repellent_is_active = false;
-            let check_repellent = |entity: Entity| -> bool {
-                if let Ok(kind) = q_gear.get(entity)
-                    && *kind == GearKind::RepellentFlask
-                    && let Ok(repellent) = q_repellent.get(entity)
-                {
-                    return repellent.active && repellent.qty > 0;
-                }
-                false
+        let mut current_repellent_is_active = false;
+        let check_repellent = |entity: Entity| -> bool {
+            if let Ok(kind) = q_gear.get(entity)
+                && *kind == GearKind::RepellentFlask
+                && let Ok(repellent) = q_repellent.get(entity)
+            {
+                return repellent.active && repellent.qty > 0;
+            }
+            false
+        };
+
+        if player_gear.left_hand.map(check_repellent).unwrap_or(false)
+            || player_gear.right_hand.map(check_repellent).unwrap_or(false)
+            || player_gear.inventory.iter().any(|&e| check_repellent(e))
+        {
+            current_repellent_is_active = true;
+        }
+
+        // 3. Check if repellent is active and player is too far
+        if current_repellent_is_active {
+            let Some(primary) = hunt_signals.primary.clone() else {
+                prev_repellent_state.too_far_started = None;
+                continue;
             };
 
-            if player_gear.left_hand.map(check_repellent).unwrap_or(false)
-                || player_gear.right_hand.map(check_repellent).unwrap_or(false)
-                || player_gear.inventory.iter().any(|&e| check_repellent(e))
-            {
-                current_repellent_is_active = true;
+            if primary.health < 0.5 {
+                // Don't warn on this if the ghost is about to die.
+                continue;
             }
+            let distance = player_pos.distance(&primary.position);
+            let is_too_far = distance > EFFECTIVE_REPELLENT_RANGE;
 
-            // 3. Check if repellent is active and player is too far
-            if current_repellent_is_active {
-                let target_pos: Position = *ghost_pos;
-
-                if ghost_sprite.get_health() < 0.5 {
-                    // Don't warn on this if the ghost is about to die.
-                    continue;
-                }
-                let distance = player_pos.distance(&target_pos);
-                let is_too_far = distance > EFFECTIVE_REPELLENT_RANGE;
-
-                if is_too_far {
-                    if prev_repellent_state.too_far_started.is_none() {
-                        prev_repellent_state.too_far_started = Some(time.elapsed_secs_f64());
-                    } else if let Some(start_time) = prev_repellent_state.too_far_started
-                        && time.elapsed_secs_f64() - start_time >= TOO_FAR_DURATION_SECONDS
-                    {
-                        walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
-                        prev_repellent_state.too_far_started = None; // Reset after triggering
-                    }
-                } else {
-                    prev_repellent_state.too_far_started = None; // Reset if not too far
+            if is_too_far {
+                if prev_repellent_state.too_far_started.is_none() {
+                    prev_repellent_state.too_far_started = Some(time.elapsed_secs_f64());
+                } else if let Some(start_time) = prev_repellent_state.too_far_started
+                    && time.elapsed_secs_f64() - start_time >= TOO_FAR_DURATION_SECONDS
+                {
+                    walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
+                    prev_repellent_state.too_far_started = None; // Reset after triggering
                 }
             } else {
-                prev_repellent_state.too_far_started = None; // Reset if repellent not active
+                prev_repellent_state.too_far_started = None; // Reset if not too far
             }
+        } else {
+            prev_repellent_state.too_far_started = None; // Reset if repellent not active
         }
     }
 }
@@ -219,7 +220,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
-    mut ghost_query: Query<(&GhostSprite, &Position)>,
+    hunt_signals: Res<GhostHuntSignals>,
     repellent_particle_query: Query<&Position, With<RepellentParticle>>,
     mut tracker: Local<Option<RepellentReactionTracker>>,
     mut prev_rep_active_state: Local<PrevRepellentActiveState>,
@@ -241,64 +242,66 @@ fn trigger_repellent_provokes_strong_reaction_system(
 
     // Iterate all players and ghosts (Simulation pattern)
     for (player_gear, _player_pos) in player_query.iter() {
-        for (ghost_sprite, ghost_pos) in ghost_query.iter_mut() {
-            // 2. Detect Player Repellent Activation
-            let mut current_repellent_is_active_and_has_qty = false;
-            let check_repellent = |entity: Entity| -> bool {
-                if let Ok(kind) = q_gear.get(entity)
-                    && *kind == GearKind::RepellentFlask
-                    && let Ok(repellent) = q_repellent.get(entity)
-                {
-                    return repellent.active && repellent.qty > 0;
-                }
-                false
-            };
-
-            if player_gear.left_hand.map(check_repellent).unwrap_or(false)
-                || player_gear.right_hand.map(check_repellent).unwrap_or(false)
-                || player_gear.inventory.iter().any(|&e| check_repellent(e))
+        let mut current_repellent_is_active_and_has_qty = false;
+        let check_repellent = |entity: Entity| -> bool {
+            if let Ok(kind) = q_gear.get(entity)
+                && *kind == GearKind::RepellentFlask
+                && let Ok(repellent) = q_repellent.get(entity)
             {
-                current_repellent_is_active_and_has_qty = true;
+                return repellent.active && repellent.qty > 0;
             }
+            false
+        };
 
-            if current_repellent_is_active_and_has_qty && !prev_rep_active_state.was_active {
-                // Repellent was just activated this frame by the player
-                *tracker = Some(RepellentReactionTracker {
-                    repellent_activated_time: time.elapsed_secs(),
-                    initial_ghost_hunting_state: ghost_sprite.hunting,
-                });
-            }
+        if player_gear.left_hand.map(check_repellent).unwrap_or(false)
+            || player_gear.right_hand.map(check_repellent).unwrap_or(false)
+            || player_gear.inventory.iter().any(|&e| check_repellent(e))
+        {
+            current_repellent_is_active_and_has_qty = true;
+        }
+
+        let Some(primary) = hunt_signals.primary.clone() else {
+            *tracker = None;
             prev_rep_active_state.was_active = current_repellent_is_active_and_has_qty;
+            continue;
+        };
 
-            // 3. Monitor Ghost Reaction (if tracker is active)
-            if let Some(tracker_data) = tracker.as_ref() {
-                let time_since_activation =
-                    time.elapsed_secs() - tracker_data.repellent_activated_time;
+        if current_repellent_is_active_and_has_qty && !prev_rep_active_state.was_active {
+            // Repellent was just activated this frame by the player
+            *tracker = Some(RepellentReactionTracker {
+                repellent_activated_time: time.elapsed_secs(),
+                initial_ghost_hunting_state: primary.hunting,
+            });
+        }
+        prev_rep_active_state.was_active = current_repellent_is_active_and_has_qty;
 
-                if time_since_activation <= REACTION_WINDOW_SECONDS {
-                    let hunt_just_started = ghost_sprite.hunting > 0.0
-                        && tracker_data.initial_ghost_hunting_state == 0.0;
-                    // Also consider if hunt_warning_active just became true, if initial_ghost_hunting_state was low and warning was false
-                    let warning_just_started = ghost_sprite.hunt_warning_active
-                        && ghost_sprite.hunting < 1.0
-                        && tracker_data.initial_ghost_hunting_state < 1.0;
+        // 3. Monitor Ghost Reaction (if tracker is active)
+        if let Some(tracker_data) = tracker.as_ref() {
+            let time_since_activation = time.elapsed_secs() - tracker_data.repellent_activated_time;
 
-                    let particles_nearby = repellent_particle_query.iter().any(|particle_pos| {
-                        ghost_pos.distance(particle_pos) < PARTICLE_NEARBY_THRESHOLD
-                    });
-                    if (hunt_just_started || warning_just_started)
-                        && particles_nearby
-                        && walkie_play.set(
-                            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees,
-                            time.elapsed_secs_f64(),
-                        )
-                    {
-                        *tracker = None; // Reset tracker after successful trigger
-                    }
-                } else {
-                    // Window has passed
-                    *tracker = None;
+            if time_since_activation <= REACTION_WINDOW_SECONDS {
+                let hunt_just_started =
+                    primary.hunting > 0.0 && tracker_data.initial_ghost_hunting_state == 0.0;
+                // Also consider if hunt_warning_active just became true, if initial_ghost_hunting_state was low and warning was false
+                let warning_just_started = primary.hunt_warning_active
+                    && primary.hunting < 1.0
+                    && tracker_data.initial_ghost_hunting_state < 1.0;
+
+                let particles_nearby = repellent_particle_query.iter().any(|particle_pos| {
+                    primary.position.distance(particle_pos) < PARTICLE_NEARBY_THRESHOLD
+                });
+                if (hunt_just_started || warning_just_started)
+                    && particles_nearby
+                    && walkie_play.set(
+                        WalkieEvent::RepellentUsedGhostEnragesPlayerFlees,
+                        time.elapsed_secs_f64(),
+                    )
+                {
+                    *tracker = None; // Reset tracker after successful trigger
                 }
+            } else {
+                // Window has passed
+                *tracker = None;
             }
         }
     }
