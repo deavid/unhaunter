@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
+use crate::types::map::MapLayer;
 use unboard_core::types::floor::FloorLevelMapping;
-use untiled_core::tiledmap::map::MapLayer;
 
 /// Internal pipeline event carrying raw map data from the Tiled loader to the map setup system.
 /// Only consumed within the T3 map pipeline (`untmxmap-plugin` → `unmapload-plugin`).

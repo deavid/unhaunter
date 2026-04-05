@@ -17,7 +17,6 @@ undifficulty-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unmapload-core = { workspace = true }
 unreplicon-core = { workspace = true }
-untiled-core = { workspace = true }
 unrender-std = { workspace = true }
 unsettings-core = { workspace = true }
 

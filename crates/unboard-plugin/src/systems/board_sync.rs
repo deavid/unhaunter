@@ -79,7 +79,7 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         (
             populate_grid_on_spawn,
-            sync_map_entity_field.run_if(in_state(unorchestrator_core::UIContextState::InGame)),
+            sync_map_entity_field.run_if(in_state(uncommon_states_core::UIContextState::InGame)),
         ),
     );
 }

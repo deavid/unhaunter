@@ -12,8 +12,8 @@ workspace = true
 
 [dependencies]
 
+uncommon-states-core = { workspace = true }
 uncommon-app-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 unmanual-core = { workspace = true }
 unmenu-core = { workspace = true }
 

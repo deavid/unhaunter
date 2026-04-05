@@ -214,6 +214,6 @@ pub(crate) fn hydrate_players_system(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        hydrate_players_system.run_if(in_state(unorchestrator_core::UIContextState::InGame)),
+        hydrate_players_system.run_if(in_state(uncommon_states_core::UIContextState::InGame)),
     );
 }

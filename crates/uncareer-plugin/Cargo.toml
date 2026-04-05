@@ -12,6 +12,7 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
+uncommon-states-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 uncareer-core = { workspace = true }
@@ -22,4 +23,3 @@ unplayer-core = { workspace = true }
 unboard-core = { workspace = true }
 unreplicon-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unorchestrator-core = { workspace = true }

@@ -5,7 +5,7 @@ use unprofile_core::profile::{PlayerProfileData, RuntimeInstallationId};
 use unreplicon_core::resources::LocalPlayer;
 use uuid::Uuid;
 
-use unorchestrator_core::UIContextState;
+use uncommon_states_core::UIContextState;
 use unprofile_core::events::DepositStakedEvent;
 
 pub struct UnhaunterProfilePlugin {

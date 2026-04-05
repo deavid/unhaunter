@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::assets::GameUiAssets;
 use crate::resources::hint_ui_state::{HintAnimationPhase, HintUiState};
 use uncommon_app_core::platform::plt;
-use unorchestrator_core::UIContextState;
+use uncommon_states_core::UIContextState;
 use unwalkie_core::events::hint::OnScreenHintEvent;
 
 #[derive(Component, Debug, Default)]

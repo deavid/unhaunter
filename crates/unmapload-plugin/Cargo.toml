@@ -12,15 +12,14 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
+uncommon-states-core = { workspace = true }
 bevy_replicon = { workspace = true }
 unspatial-core = { workspace = true }
 unbehavior = { workspace = true }
 unbehavior-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unboard-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 unreplicon-core = { workspace = true }
-untiled-core = { workspace = true }
 unmetrics-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unmapload-core = { workspace = true }

@@ -13,16 +13,16 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 
+uncommon-states-core = { workspace = true }
 unrender-std = { workspace = true }
 unlocomotion-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unspatial-core = { workspace = true }
 unmetrics-core = { workspace = true }
 untruck-core = { workspace = true }
 unboard-core = { workspace = true }
 unmapload-core = { workspace = true }
-untiled-core = { workspace = true }
+untmxmap-core = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 winit = { workspace = true }

@@ -1,5 +1,5 @@
 use bevy_platform::collections::HashMap;
-use untiled_core::tiledmap::map::{
+use untmxmap_core::types::map::{
     MapLayer, MapLayerGroup, MapLayerType, MapTile, MapTileList, Pos,
 };
 

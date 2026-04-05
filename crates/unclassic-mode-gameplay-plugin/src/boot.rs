@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unorchestrator_core::BootState;
+use uncommon_states_core::BootState;
 use untmxmap_core::resources::maps::Maps;
 
 pub(crate) fn set_boot_ready_when_maps_loaded(

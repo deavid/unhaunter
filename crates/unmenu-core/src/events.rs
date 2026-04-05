@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unorchestrator_core::UIContextState;
+use uncommon_states_core::UIContextState;
 
 /// Event sent when keyboard navigation (up/down arrows) changes the selected menu item.
 /// This event is distinct from hover-based selection to enable specific behaviors like

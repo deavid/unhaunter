@@ -12,13 +12,13 @@ workspace = true
 
 [dependencies]
 
+uncommon-states-core = { workspace = true }
 unspatial-core = { workspace = true }
 unboard-core = { workspace = true }
 unbehavior-core = { workspace = true }
 uninput-core = { workspace = true }
 uninteraction-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unlight-core = { workspace = true }
 ungear-core = { workspace = true }

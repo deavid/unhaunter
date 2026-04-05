@@ -4,9 +4,9 @@ use bevy::{
     prelude::*,
     window::{CursorOptions, PrimaryWindow},
 };
+use uncommon_states_core::UIContextState;
 use uninput_core::resources::MissionInputFocus;
 use uninput_core::resources::MouseVisibility;
-use unorchestrator_core::UIContextState;
 
 fn system_hide_mouse(
     mut cursor_options_query: Query<&mut CursorOptions, With<PrimaryWindow>>,

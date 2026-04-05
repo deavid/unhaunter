@@ -11,10 +11,10 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+uncommon-states-core = { workspace = true }
 unclassic-mode-core = { workspace = true }
 untruck-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unmission-core = { workspace = true }
 unplayer-core = { workspace = true }

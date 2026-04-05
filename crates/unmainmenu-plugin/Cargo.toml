@@ -12,7 +12,7 @@ workspace = true
 
 [dependencies]
 
-unorchestrator-core = { workspace = true }
+uncommon-states-core = { workspace = true }
 unreplicon-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unmenu-core = { workspace = true }

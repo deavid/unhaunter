@@ -17,7 +17,7 @@ bevy_replicon_renet = { workspace = true }
 bevy_renet = { workspace = true }
 uuid = { workspace = true }
 
-unorchestrator-core = { workspace = true }
+uncommon-states-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unreplicon-transport = { workspace = true }
 undifficulty-core = { workspace = true }

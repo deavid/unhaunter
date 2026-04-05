@@ -326,7 +326,7 @@ pub(crate) fn despawn_gear_on_player_death(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use unorchestrator_core::UIContextState;
+    use uncommon_states_core::UIContextState;
     app.add_systems(
         Update,
         (

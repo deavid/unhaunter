@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unorchestrator_core::UIContextState;
+use uncommon_states_core::UIContextState;
 
 use crate::systems::keyboard;
 use crate::systems::waypoint;

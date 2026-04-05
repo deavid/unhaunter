@@ -1,5 +1,5 @@
 [package]
-name = "unorchestrator-core"
+name = "uncommon-states-core"
 version.workspace = true
 edition.workspace = true
 description = "High-level application orchestration and UI context states"

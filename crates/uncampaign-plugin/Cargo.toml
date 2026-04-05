@@ -13,8 +13,8 @@ workspace = true
 
 [dependencies]
 
+uncommon-states-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unmapload-core = { workspace = true }

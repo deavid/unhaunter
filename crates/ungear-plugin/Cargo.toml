@@ -11,6 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+uncommon-states-core = { workspace = true }
 ungear-core = { workspace = true }
 unrender-std = { workspace = true }
 unspatial-core = { workspace = true }
@@ -20,7 +21,6 @@ unplayer-core = { workspace = true }
 untruck-core = { workspace = true }
 unmetrics-core = { workspace = true }
 unreplicon-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unmission-core = { workspace = true }
 unbehavior-core = { workspace = true }

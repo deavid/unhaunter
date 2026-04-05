@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 use unboard_core::types::floor::FloorLevelMapping;
 use unrender_std::custom_material1::CustomMaterial1;
 use unsettings_core::video::VideoSettings;
-use untiled_core::tiled::{AtlasData, MapTileSet, MapTileSetDb};
-use untiled_core::tiledmap::map::{MapLayer, MapLayerGroup, MapLayerType};
 use untmxmap_core::resources::upscale::UpscaleIndex;
+use untmxmap_core::tiled::{AtlasData, MapTileSet, MapTileSetDb};
+use untmxmap_core::types::map::{MapLayer, MapLayerGroup, MapLayerType};
 
 use super::load::load_tile_layer_iter;
 

@@ -12,11 +12,11 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
+uncommon-states-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 dirs = { workspace = true }
 unprofile-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 uuid = { workspace = true }
 ron = { workspace = true }
 unreplicon-core = { workspace = true }

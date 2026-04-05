@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use unorchestrator_core::UIContextState;
+use uncommon_states_core::UIContextState;
 
 use crate::assets::PauseAssets;
 use crate::systems;

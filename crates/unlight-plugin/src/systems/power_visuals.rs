@@ -4,8 +4,8 @@ use unbehavior_core::state::TileState;
 use unboard_core::entity::MapTileSprite;
 use unmapload_core::resources::SpriteDB;
 use unrender_std::custom_material1::CustomMaterial1;
-use untiled_core::tiled::AtlasData;
-use untiled_core::tiled::MapTileSetDb;
+use untmxmap_core::tiled::AtlasData;
+use untmxmap_core::tiled::MapTileSetDb;
 
 use unlight_core::resources::light_grid::LightGrid;
 type TileVisualMutableQuery<'w, 's> = Query<

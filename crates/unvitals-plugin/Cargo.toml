@@ -11,13 +11,13 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+uncommon-states-core = { workspace = true }
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }
 unvitals-core = { workspace = true }
 unplayer-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unmission-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 unsoundfield-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unspatial-core = { workspace = true }

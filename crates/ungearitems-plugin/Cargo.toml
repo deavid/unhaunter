@@ -32,9 +32,9 @@ unthermal-core = { workspace = true }
 unprofile-core = { workspace = true }
 unplayer-core = { workspace = true }
 
-unreplicon-core = { workspace = true }
-unorchestrator-core = { workspace = true }
+uncommon-states-core = { workspace = true }
 
+unreplicon-core = { workspace = true }
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
 bevy_replicon = { workspace = true }

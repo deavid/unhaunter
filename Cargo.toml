@@ -20,6 +20,7 @@ members = [
     # Zero internal game dependencies. Dependency arrow points here.
     # ════════════════════════════════════════════════════════════════════════
     "crates/uncommon-app-core",    # Base platform utilities and basic types
+    "crates/uncommon-states-core",
     "crates/unspatial-core",       # Coordinate math (isometric, Position, Direction)
     "crates/unnoise-core",         # Procedural noise math (Perlin)
     "crates/unmetrics-core",       # Performance diagnostic data structures
@@ -95,7 +96,6 @@ members = [
     "crates/unclassic-mode-gameplay-plugin",     # Phasmo-style ruleset
     "crates/unclassic-mode-orchestrator-plugin", # Ghost selection and level setup
     "crates/uninput-plugin",                     # Physical key → game action binding
-    "crates/unorchestrator-core",
 
     # ════════════════════════════════════════════════════════════════════════
     # Tier 3 · Infrastructure & Adapters
@@ -106,7 +106,6 @@ members = [
     # ── 3a: Map Pipeline (Tiled ACL) ─────────────────────────────────────
     # Translates on-disk Tiled map data into domain types. Domain is never
     # aware of the Tiled format after this boundary.
-    "crates/untiled-core",     # Raw Tiled data structures (external format)
     "crates/untmxmap-core",    # High-level map loader and asset indexer
     "crates/untmxmap-plugin",
     "crates/unmapload-plugin",
@@ -339,6 +338,7 @@ unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 uncareer-core = { path = "crates/uncareer-core" }               # Career progression state and events
 unprofile-core = { path = "crates/unprofile-core" }             # Player save-file data structures (gameplay progression)
 unmapload-core = { path = "crates/unmapload-core" }             # Map load protocol: LoadLevelEvent, LevelLoadedEvent, MapEntitiesReadyEvent
+uncommon-states-core = { path = "crates/uncommon-states-core" }
 
 # ════════════════════════════════════════════════════════════════════════════
 # Tier 2 · Application Layer
@@ -351,8 +351,6 @@ uncareer-plugin = { path = "crates/uncareer-plugin" }                           
 unclassic-mode-gameplay-plugin = { path = "crates/unclassic-mode-gameplay-plugin" }         # Phasmo-style ruleset
 unclassic-mode-orchestrator-plugin = { path = "crates/unclassic-mode-orchestrator-plugin" } # Ghost selection and level setup
 uninput-plugin = { path = "crates/uninput-plugin" }                                         # Physical key → game action binding
-unorchestrator-core = { path = "crates/unorchestrator-core" }
-
 # ════════════════════════════════════════════════════════════════════════════
 # Tier 3 · Infrastructure & Adapters
 # External I/O, file formats, and persistence.
@@ -362,7 +360,6 @@ unorchestrator-core = { path = "crates/unorchestrator-core" }
 # ── 3a: Map Pipeline (Tiled ACL) ─────────────────────────────────────────
 # Translates on-disk Tiled map data into domain types. Domain is never
 # aware of the Tiled format after this boundary.
-untiled-core = { path = "crates/untiled-core" }         # Raw Tiled data structures (external format)
 untmxmap-core = { path = "crates/untmxmap-core" }       # High-level map loader and asset indexer
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unmapload-plugin = { path = "crates/unmapload-plugin" }
@@ -434,10 +431,10 @@ clap = { workspace = true }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
 
+uncommon-states-core = { workspace = true }
 undifficulty-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unmission-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 unvitals-plugin = { workspace = true }
 uninventory-plugin = { workspace = true }
 unlocomotion-plugin = { workspace = true }

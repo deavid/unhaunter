@@ -248,8 +248,8 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            hydrate_ghosts_system.run_if(in_state(unorchestrator_core::UIContextState::InGame)),
-            hydrate_breach_system.run_if(in_state(unorchestrator_core::UIContextState::InGame)),
+            hydrate_ghosts_system.run_if(in_state(uncommon_states_core::UIContextState::InGame)),
+            hydrate_breach_system.run_if(in_state(uncommon_states_core::UIContextState::InGame)),
         ),
     );
 }

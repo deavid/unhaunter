@@ -15,7 +15,7 @@ use unmapload_core::components::TileVisualRef;
 use unmapload_core::hydration::HydrationStage;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
-use untiled_core::tiledmap::map::{MapLayer, MapTile};
+use untmxmap_core::types::map::{MapLayer, MapTile};
 
 use crate::level_setup::LoadLevelSystemParam;
 

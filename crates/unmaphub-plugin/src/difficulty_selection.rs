@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncommon_states_core::UIContextState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
@@ -12,7 +13,6 @@ use unmenu_core::{
     events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
-use unorchestrator_core::UIContextState;
 
 /// UI component marker for the difficulty selection screen
 #[derive(Component, Debug)]

@@ -4,8 +4,8 @@ use unmapload_core::components::TileVisualRef;
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::custom_material1::CustomMaterial1;
 use unrender_std::utils::quadcc::QuadCC;
-use untiled_core::tiled::AtlasData;
-use untiled_core::tiled::MapTileSetDb;
+use untmxmap_core::tiled::AtlasData;
+use untmxmap_core::tiled::MapTileSetDb;
 
 /// Hydrate core tile visual references into render components on client builds.
 fn hydrate_tile_visual_refs(

@@ -61,7 +61,7 @@ const UNHAUNTER_CRATES: &[&str] = &[
     "unnoise_core",
     "unnpc_core",
     "unnpc_plugin",
-    "unorchestrator_core",
+    "uncommon_states_core",
     "unpause_plugin",
     "unpicking_core",
     "unpicking_plugin",

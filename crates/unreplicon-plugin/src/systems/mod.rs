@@ -7,7 +7,7 @@ pub mod roles;
 use bevy::prelude::*;
 use bevy_replicon::prelude::RepliconPlugins;
 use bevy_replicon_renet::RepliconRenetPlugins;
-use unorchestrator_core::UIContextState;
+use uncommon_states_core::UIContextState;
 use unreplicon_core::export_ext::RepliconExportSet;
 
 pub(crate) fn app_setup(app: &mut App) {

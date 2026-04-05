@@ -3,7 +3,7 @@ use crate::systems::*;
 use bevy::prelude::*;
 use unaudiospatial_core::events::SoundEvent;
 use unaudiospatial_core::listener::SpatialListener;
-use unorchestrator_core::UIContextState;
+use uncommon_states_core::UIContextState;
 
 pub struct UnhaunterSpatialAudioPlugin {
     pub enable: bool,

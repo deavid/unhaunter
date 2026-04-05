@@ -2,7 +2,7 @@ use crate::assets::CampaignAssets;
 use crate::unified_mission_selection;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use unorchestrator_core::UIContextState;
+use uncommon_states_core::UIContextState;
 
 pub struct UnhaunterCampaignPlugin;
 

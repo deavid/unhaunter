@@ -11,10 +11,10 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+uncommon-states-core = { workspace = true }
 unmetrics-core = { workspace = true }
 uninput-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unmission-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 bevy = { workspace = true }
 ordered-float = { workspace = true }

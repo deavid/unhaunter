@@ -12,13 +12,13 @@ workspace = true
 
 [dependencies]
 
+uncommon-states-core = { workspace = true }
 unspatial-core = { workspace = true }
 unlight-core = { workspace = true }
 unghost-core = { workspace = true }
 unbehavior-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unmission-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unboard-core = { workspace = true }
 uninput-core = { workspace = true }
@@ -32,7 +32,7 @@ unreplicon-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
 unsettings-core = { workspace = true }
-untiled-core = { workspace = true }
+untmxmap-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

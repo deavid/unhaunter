@@ -15,10 +15,10 @@ workspace = true
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
 
+uncommon-states-core = { workspace = true }
 undifficulty-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unreplicon-core = { workspace = true }
-unorchestrator-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unboard-core = { workspace = true }
 uncareer-core = { workspace = true }

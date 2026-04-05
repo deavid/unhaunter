@@ -6,4 +6,5 @@
 pub mod assets;
 pub mod events;
 pub mod resources;
+pub mod tiled;
 pub mod types;
