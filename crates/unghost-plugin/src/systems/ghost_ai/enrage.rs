@@ -1,6 +1,5 @@
 use super::movement::spawn_salty_trace;
 use super::roar::{RoarDecision, RoarReason, RoarType, execute_roar_decision};
-use crate::components::fade_out::FadeOut;
 use crate::metrics::GHOST_ENRAGE;
 use crate::utils::{mean::MeanValue, time::PrintingTimer};
 use bevy::prelude::*;
@@ -12,7 +11,8 @@ use unboard_core::resources::roomdb::RoomTopology;
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
+use unghost_core::components::logic::ghost_death::GhostDeathSignal;
+use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating};
 use unspatial_core::position::Position;
@@ -39,7 +39,7 @@ pub(crate) struct RageUpdateResult {
 pub(crate) fn ghost_enrage(
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
-    mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
+    mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<GhostDeathSignal>>,
     q_player: Query<
         (&PlayerVitals, &Position, Option<&Hiding>),
         (
@@ -72,7 +72,6 @@ pub(crate) fn ghost_enrage(
             &mut ghost,
             ghost_position,
             &mut commands,
-            &gs_audio.asset_server,
             &board_collision,
         );
 
@@ -156,16 +155,17 @@ pub(crate) fn ghost_enrage(
 // Helper functions for simplified ghost behavior processing
 
 /// Updates basic ghost timers
-fn update_ghost_timers_simple(ghost: &mut GhostSprite, dt: f32, time: &Res<Time>) {
+fn update_ghost_timers_simple(ghost: &mut GhostSprite, dt: f32, _time: &Res<Time>) {
     // Update calm time
     if ghost.calm_time_secs > 0.0 {
         ghost.calm_time_secs -= dt.min(ghost.calm_time_secs);
     }
 
     // Update salty effect timers if active
-    if !ghost.salty_effect_timer.is_finished() && ghost.hunting <= 0.1 {
-        ghost.salty_effect_timer.tick(time.delta());
-        ghost.salty_trace_spawn_timer.tick(time.delta());
+    if ghost.salty_effect_remaining_secs > 0.0 && ghost.hunting <= 0.1 {
+        ghost.salty_effect_remaining_secs -= dt;
+        ghost.salty_effect_remaining_secs = ghost.salty_effect_remaining_secs.max(0.0);
+        ghost.salty_trace_spawn_countdown_secs -= dt;
     }
 }
 
@@ -174,12 +174,11 @@ fn handle_salty_trace_spawning_simple(
     ghost: &mut GhostSprite,
     ghost_position: &Position,
     commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
     board_collision: &BoardCollisionField,
 ) {
-    if !ghost.salty_effect_timer.is_finished()
+    if ghost.salty_effect_remaining_secs > 0.0
         && ghost.hunting <= 0.1
-        && ghost.salty_trace_spawn_timer.just_finished()
+        && ghost.salty_trace_spawn_countdown_secs <= 0.0
     {
         if random_seed::rng().random_bool(0.5) {
             // Find valid floor tile
@@ -194,10 +193,10 @@ fn handle_salty_trace_spawning_simple(
             }
 
             if let Some(tile_position) = valid_tile {
-                spawn_salty_trace(commands, asset_server, tile_position);
+                spawn_salty_trace(commands, tile_position);
             }
         }
-        ghost.salty_trace_spawn_timer.reset();
+        ghost.salty_trace_spawn_countdown_secs = 0.3;
     }
 }
 

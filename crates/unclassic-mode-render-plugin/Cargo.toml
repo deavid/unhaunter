@@ -22,8 +22,6 @@ unnavigation-core = { workspace = true }
 unplayer-core = { workspace = true }
 unmapload-core = { workspace = true }
 unpicking-core = { workspace = true }
-unsoundfield-core = { workspace = true }
-unsensing-core = { workspace = true }
 unrender-std = { workspace = true }
 unreplicon-core = { workspace = true }
 unsettings-core = { workspace = true }

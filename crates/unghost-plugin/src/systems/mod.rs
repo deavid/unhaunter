@@ -4,6 +4,6 @@ pub(crate) mod ghost_ai;
 pub(crate) mod gis;
 pub(crate) mod hint_events;
 pub(crate) mod hydration;
+pub(crate) mod influence_sync;
 pub(crate) mod journal;
 pub(crate) mod sound_field_pulse;
-pub(crate) mod visual_sync;

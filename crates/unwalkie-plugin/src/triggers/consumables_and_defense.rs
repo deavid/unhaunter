@@ -5,7 +5,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::quartz::QuartzStoneData;
 use ungearitems_core::components::sage::SageBundleData;
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unorchestrator_core::UIContextState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;

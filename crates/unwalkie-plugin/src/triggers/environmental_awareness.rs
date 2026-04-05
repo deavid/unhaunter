@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
-use unghost_core::components::ghost_breach::GhostBreach;
+use unghost_core::components::logic::ghost_breach::GhostBreach;
 use unlight_core::resources::light_grid::LightGrid;
 use unorchestrator_core::UIContextState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
@@ -103,7 +103,7 @@ fn trigger_ghost_showcase(
     mut walkie_play: ResMut<WalkiePlay>,
     app_state: Res<State<UIContextState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
-    q_ghost: Query<&Position, With<unghost_core::components::ghost_sprite::GhostSprite>>,
+    q_ghost: Query<&Position, With<unghost_core::components::logic::ghost_sprite::GhostSprite>>,
     truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &UIContextState::InGame {

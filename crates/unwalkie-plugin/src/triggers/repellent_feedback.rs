@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
-use unghost_core::components::ghost_sprite::GhostSprite;
-use unghost_core::components::repellent_particle::RepellentParticle;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::components::presentation::repellent_particle::RepellentParticle;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::ghost::GhostType;
 use uninvestigation_core::resources::ghost_guess::GhostGuess;

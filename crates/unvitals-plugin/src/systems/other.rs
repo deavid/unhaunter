@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::tags::GhostTag;
 use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
 use unreplicon_core::ownership::LocallyOwned;

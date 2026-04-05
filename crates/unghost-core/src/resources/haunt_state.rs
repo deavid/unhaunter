@@ -1,4 +1,4 @@
-use crate::components::ghost_sprite::GhostBehaviorDynamics;
+use crate::components::logic::ghost_sprite::GhostBehaviorDynamics;
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use uninvestigation_core::evidence::Evidence;

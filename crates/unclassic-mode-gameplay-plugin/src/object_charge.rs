@@ -3,8 +3,8 @@
 use unboard_core::resources::roomdb::RoomTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_influence::{GhostInfluence, InfluenceType};
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unspatial_core::position::Position;
 

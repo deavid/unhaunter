@@ -74,7 +74,6 @@ const UNHAUNTER_CRATES: &[&str] = &[
     "unreplicon_core",
     "unreplicon_plugin",
     "unreplicon_transport",
-    "unsensing_core",
     "unsettings_core",
     "unsettings_plugin",
     "unsoundfield_core",

@@ -4,8 +4,8 @@ use ungear_core::components::core::{Electronic, EvidenceSensor, PerceivedClarity
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
-use unghost_core::components::ghost_orb_particle::GhostOrbParticle;
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::components::presentation::ghost_orb_particle::GhostOrbParticle;
 use uninteraction_core::interaction::Toggleable;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;

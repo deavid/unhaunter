@@ -1,16 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Component that gives the renderer information about how to render the ghost implementation.
-#[derive(Component, Debug, Clone, Copy, Reflect, Default, Serialize, Deserialize)]
-#[reflect(Component, Default)]
-pub struct SpectralClarity {
-    pub uv: f32,
-    pub rl: f32,
-    pub alpha: f32,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, Default, Serialize, Deserialize)]
 pub enum SpectralInfluenceType {
     #[default]
     Attractive,
@@ -18,7 +9,8 @@ pub enum SpectralInfluenceType {
 }
 
 /// Component for entities that have a "spectral signature" that reacts to non-visible light (UV/IR).
-#[derive(Component, Debug, Clone, Copy, PartialEq, Default, Reflect)]
+#[derive(Component, Debug, Clone, Copy, PartialEq, Default, Reflect, Serialize, Deserialize)]
+#[reflect(Component, Default)]
 pub struct SpectralInfluence {
     pub influence_type: SpectralInfluenceType,
     pub charge_value: f32,

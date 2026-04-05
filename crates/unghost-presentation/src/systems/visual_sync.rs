@@ -1,9 +1,12 @@
 use bevy::prelude::*;
-use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_death::GhostDeathSignal;
+use unghost_core::components::logic::ghost_sprite::GhostBehaviorDynamics;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::components::presentation::ghost_dying::GhostDying;
+use unghost_core::components::presentation::spectral::SpectralClarity;
+use unghost_core::tags::GhostTag;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::visuals::{Emissive, Ethereal};
-use unsensing_core::components::{SpectralInfluence, SpectralInfluenceType};
 
 use crate::metrics;
 
@@ -35,14 +38,26 @@ pub(crate) fn ghost_visual_sync(
     measure.end_ms();
 }
 
-pub(crate) fn ghost_influence_visual_sync(mut q: Query<(&GhostInfluence, &mut SpectralInfluence)>) {
-    let measure = metrics::GHOST_INFLUENCE_VISUAL_SYNC.time_measure();
-    for (gi, mut si) in q.iter_mut() {
-        si.charge_value = gi.charge_value;
-        si.influence_type = match gi.influence_type {
-            InfluenceType::Attractive => SpectralInfluenceType::Attractive,
-            InfluenceType::Repulsive => SpectralInfluenceType::Repulsive,
+pub(crate) fn ghost_clarity_sync(
+    mut q_ghost: Query<
+        (
+            &mut SpectralClarity,
+            &GhostBehaviorDynamics,
+            Option<&GhostDying>,
+            Option<&GhostDeathSignal>,
+        ),
+        With<GhostTag>,
+    >,
+) {
+    for (mut clarity, dynamics, dying_visual, dying_logic) in q_ghost.iter_mut() {
+        clarity.uv = dynamics.uv_ectoplasm_clarity;
+        clarity.rl = dynamics.rl_presence_clarity;
+        clarity.alpha = if let Some(dying) = dying_visual {
+            dying.timer.remaining_secs() / dying.timer.duration().as_secs_f32()
+        } else if dying_logic.is_some() {
+            0.0
+        } else {
+            dynamics.visual_alpha_multiplier
         };
     }
-    measure.end_ms();
 }

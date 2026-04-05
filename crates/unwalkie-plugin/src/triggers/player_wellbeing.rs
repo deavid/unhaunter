@@ -2,7 +2,7 @@ use bevy::app::App;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use unboard_core::resources::roomdb::RoomTopology;
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unlight_core::components::LightLevel;
 use unlight_core::resources::light_grid::LightGrid;
 use unorchestrator_core::UIContextState;

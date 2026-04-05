@@ -26,7 +26,7 @@ use ungearitems_core::components::sage::SageBundleData;
 use ungearitems_core::components::salt::{SaltData, SaltPile};
 use ungearitems_core::components::uvtorch::UVTorch;
 use ungearitems_core::events::RepellentHitNetMessage;
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Toggleable;
 use unorchestrator_core::UIContextState;
 use unreplicon_core::client_export::ExportClientComponent;

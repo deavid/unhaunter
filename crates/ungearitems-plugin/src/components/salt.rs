@@ -11,7 +11,7 @@ use ungearitems_core::components::salt::{
     SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltPileArmed, SaltPileArmingTimer,
     SaltyTrace, SaltyTraceTimer, UVReactive,
 };
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::sprite_layer::SpriteLayer;
@@ -70,6 +70,49 @@ fn hydrate_salt_pile_visuals(
             },
             Transform::from_translation(perspective::to_screen_coord(*pos))
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+            GameSprite,
+            SpriteLayer::default(),
+        ));
+    }
+}
+
+fn initialize_salty_trace_state(
+    mut commands: Commands,
+    q_new: Query<
+        Entity,
+        (
+            Added<SaltyTrace>,
+            Without<UVReactive>,
+            Without<SaltyTraceTimer>,
+        ),
+    >,
+) {
+    for entity in q_new.iter() {
+        commands.entity(entity).insert((
+            UVReactive(1.0),
+            SaltyTraceTimer(Timer::from_seconds(600.0, TimerMode::Once)),
+        ));
+    }
+}
+
+fn hydrate_salty_trace_visuals(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    q_new: Query<(Entity, &Position), (Added<SaltyTrace>, Without<Sprite>)>,
+) {
+    for (entity, pos) in q_new.iter() {
+        commands.entity(entity).insert((
+            Sprite {
+                image: asset_server.load("img/salt_particle.png"),
+                color: Color::srgba(0.33, 0.33, 0.33, 0.5),
+                custom_size: Some(Vec2::new(8.0, 8.0)),
+                ..default()
+            },
+            Transform::from_translation(perspective::to_screen_coord(*pos))
+                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+            MapColor {
+                color: Color::srgba(0.33, 0.33, 0.33, 0.5),
+            },
             GameSprite,
             SpriteLayer::default(),
         ));
@@ -137,10 +180,10 @@ fn salt_pile_system(
     for (mut ghost, ghost_position) in ghosts.iter_mut() {
         for (salt_pile_entity, salt_pile_position) in salt_piles.iter_mut() {
             if ghost_position.distance(salt_pile_position) < 2.0
-                && ghost.salty_effect_timer.elapsed_secs() > 1.0
+                && (120.0 - ghost.salty_effect_remaining_secs) > 1.0
             {
                 ghost.rage += 10.0;
-                ghost.salty_effect_timer.reset();
+                ghost.salty_effect_remaining_secs = 120.0;
 
                 for _ in 0..5 {
                     let mut particle_position = *salt_pile_position;
@@ -250,6 +293,8 @@ pub(crate) fn app_setup(app: &mut App) {
             update_salt_skin,
             salt_particle_system,
             salty_trace_system,
+            initialize_salty_trace_state,
+            hydrate_salty_trace_visuals,
             hydrate_salt_pile_visuals,
         )
             .run_if(resource_exists::<LocalPlayerRole>),

@@ -7,10 +7,11 @@ use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
+use unghost_core::components::presentation::spectral::SpectralClarity;
 use unlight_core::color_utils::lerp_color;
+use unlight_core::spectral::SpectralInfluence;
 use unlight_core::types::light::LightData;
 use unrender_std::components::visuals::{AlphaModulator, Emissive, Ethereal};
-use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
@@ -125,14 +126,10 @@ pub(crate) fn apply_ethereal_visuals<D: DifficultySettings>(
     let f = (ld.visible * difficulty.evidence_visibility() * 0.5 + ld.infrared * 4.0)
         .clamp(0.001, 0.999);
     *opacity = *opacity * f + orig_opacity * (1.0 - f);
-    *opacity *= (clarity.alpha * 0.5
-        + 0.5
-        + e_uv
-        + e_rl
-        + ld.ultraviolet * 2.0
-        + ld.red * 10.0
-        + ld.infrared)
-        .clamp(difficulty.evidence_visibility() * 0.1, 1.0);
+    let spectral_visibility =
+        (0.5 + e_uv + e_rl + ld.ultraviolet * 2.0 + ld.red * 10.0 + ld.infrared)
+            .clamp(difficulty.evidence_visibility() * 0.1, 1.0);
+    *opacity *= spectral_visibility * clarity.alpha.clamp(0.0, 1.0);
     let srgba = dst_color
         .with_luminance((l * ld.visible - ld.infrared - ethereal.hit_delta * 3.0).clamp(0.0, 1.0))
         .to_srgba();

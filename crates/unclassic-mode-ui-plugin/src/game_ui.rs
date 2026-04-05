@@ -126,13 +126,13 @@ fn cleanup(
     }
 }
 
-fn pause(mut qg: Query<&mut Visibility, With<GameUI>>) {
+fn pause(mut qg: Query<&mut Visibility, (With<GameUI>, Without<MissionFadeOverlay>)>) {
     for mut vis in qg.iter_mut() {
         *vis = Visibility::Hidden;
     }
 }
 
-fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
+fn resume(mut qg: Query<&mut Visibility, (With<GameUI>, Without<MissionFadeOverlay>)>) {
     for mut vis in qg.iter_mut() {
         *vis = Visibility::Visible;
     }

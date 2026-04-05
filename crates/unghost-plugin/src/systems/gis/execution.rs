@@ -7,11 +7,11 @@ use unbehavior_core::components::{InteractableByGhost, RoomStateDelta};
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use uncommon_app_core::random_seed;
-use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};
+use unghost_core::components::logic::interaction::{InteractionMotion, Locked};
+use unghost_core::events::{GhostBreakerSparkRequest, GhostInteractionEvent, GhostInteractionType};
 use uninteraction_core::events::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unmetrics_core::metrics::SendMetric;
-use unreplicon_core::messages::HostMovableMotionEvent;
 use unspatial_core::position::Position;
 
 use crate::metrics;
@@ -157,15 +157,11 @@ fn find_valid_destination_with_retry(
     None
 }
 
-use crate::systems::gis::visual_effects;
-
-use crate::components::interaction::{Locked, Tween, TweenEase};
-
 /// Registers execution systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         bevy::prelude::Update,
-        (ghost_interaction_execution_system, watch_tween_insertions)
+        ghost_interaction_execution_system
             .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
     );
 }
@@ -177,8 +173,9 @@ pub(crate) fn app_setup(app: &mut App) {
 /// animations, and sound effects.
 fn ghost_interaction_execution_system(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    time: Res<Time>,
     mut ev_ghost_interaction: MessageReader<GhostInteractionEvent>,
+    mut ev_breaker_sparks: MessageWriter<GhostBreakerSparkRequest>,
     q_targets: Query<(
         &Behavior,
         &Position,
@@ -192,9 +189,9 @@ fn ghost_interaction_execution_system(
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_topology: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
-    local_player_role: Option<Res<unreplicon_core::resources::LocalPlayerRole>>,
 ) {
     let measure = metrics::GIS_EXECUTION.time_measure();
+    let current_secs = time.elapsed_secs_f64();
     for event in ev_ghost_interaction.read() {
         // Minimal one-line log for each received interaction event
         if let Some(p) = event.destination {
@@ -243,6 +240,7 @@ fn ghost_interaction_execution_system(
                 if let Some(destination) = event.destination {
                     execute_throw_interaction(
                         &mut commands,
+                        current_secs,
                         &mut ev_sound,
                         &q_targets,
                         &q_objects,
@@ -262,6 +260,7 @@ fn ghost_interaction_execution_system(
             GhostInteractionType::Nudge => {
                 execute_nudge_interaction(
                     &mut commands,
+                    current_secs,
                     &mut ev_sound,
                     &q_targets,
                     &q_objects,
@@ -276,6 +275,7 @@ fn ghost_interaction_execution_system(
                 if let Some(destination) = event.destination {
                     execute_haunted_move_interaction(
                         &mut commands,
+                        current_secs,
                         &mut ev_sound,
                         &q_targets,
                         &q_objects,
@@ -293,61 +293,29 @@ fn ghost_interaction_execution_system(
             }
 
             GhostInteractionType::Lock => {
-                execute_lock_interaction(&mut commands, &mut ev_sound, &q_targets, event.target);
+                execute_lock_interaction(
+                    &mut commands,
+                    current_secs,
+                    &mut ev_sound,
+                    &q_targets,
+                    event.target,
+                );
             }
 
             GhostInteractionType::TripBreaker => {
                 execute_trip_breaker_interaction(
-                    &mut commands,
-                    &asset_server,
+                    &mut ev_breaker_sparks,
                     &mut ev_interaction_executor,
                     &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
-                    local_player_role.as_deref(),
                 );
             }
         }
     }
 
     measure.end_ms();
-}
-
-/// Server-only: emit `HostMovableMotionEvent` whenever a new `Tween` is inserted
-/// on a map entity (thrown, nudged, or haunted-moved by the ghost).
-///
-/// `unreplicon-plugin`'s `broadcast_movable_motion` system reads this event and
-/// forwards the animation parameters to all connected join clients as
-/// `MovableMotionBroadcast`, which they replay locally via `apply_remote_movable_motion`.
-fn watch_tween_insertions(
-    q_new_tweens: Query<(Entity, &Tween), Added<Tween>>,
-    mut ev_host_movable: MessageWriter<HostMovableMotionEvent>,
-) {
-    for (entity, tween) in q_new_tweens.iter() {
-        let ease = match tween.ease_fn {
-            TweenEase::Linear => 0u8,
-            TweenEase::ParabolicArc => 1u8,
-            TweenEase::SineEaseOut => 2u8,
-        };
-        ev_host_movable.write(HostMovableMotionEvent {
-            entity,
-            start: [
-                tween.start_pos.x,
-                tween.start_pos.y,
-                tween.start_pos.z,
-                tween.start_pos.visual_priority,
-            ],
-            end: [
-                tween.end_pos.x,
-                tween.end_pos.y,
-                tween.end_pos.z,
-                tween.end_pos.visual_priority,
-            ],
-            duration: tween.timer.duration().as_secs_f32(),
-            ease,
-        });
-    }
 }
 
 /// Execute toggle interaction (lights, switches)
@@ -449,6 +417,7 @@ fn execute_door_creak_interaction(
 /// Execute throw interaction (object flies through air)
 fn execute_throw_interaction(
     commands: &mut Commands,
+    current_secs: f64,
     ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
@@ -476,9 +445,13 @@ fn execute_throw_interaction(
             30,  // max attempts
             2.0, // search radius
         ) {
-            // Create a tween animation for the throw
-            let tween = Tween::new_throw(*current_position, valid_destination, 0.5);
-            commands.entity(target).insert(tween);
+            let motion = InteractionMotion::new_throw(
+                *current_position,
+                valid_destination,
+                current_secs,
+                0.5,
+            );
+            commands.entity(target).insert(motion);
 
             // Play throw sound effect
             ev_sound.write(SoundEvent {
@@ -504,6 +477,7 @@ fn execute_throw_interaction(
 /// Execute nudge interaction (small object movement)
 fn execute_nudge_interaction(
     commands: &mut Commands,
+    current_secs: f64,
     ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
@@ -537,22 +511,20 @@ fn execute_nudge_interaction(
             None
         };
 
-        // Create appropriate tween based on destination availability
-        let tween = if let Some(dest) = final_destination {
-            Tween::new_nudge_to(*current_position, dest, 0.6)
+        let motion = if let Some(dest) = final_destination {
+            InteractionMotion::new_nudge_to(*current_position, dest, current_secs, 0.6)
         } else if destination.is_some() {
             // Original destination was provided but validation failed
             warn!(
                 "GIS execution -> Nudge interaction for {:?} FAILED: could not find valid destination after 30 attempts, falling back to local nudge",
                 target
             );
-            Tween::new_nudge(*current_position, 0.45)
+            InteractionMotion::new_nudge(*current_position, current_secs, 0.45)
         } else {
-            // No destination provided, use local nudge
-            Tween::new_nudge(*current_position, 0.45)
+            InteractionMotion::new_nudge(*current_position, current_secs, 0.45)
         };
 
-        commands.entity(target).insert(tween);
+        commands.entity(target).insert(motion);
 
         // Play nudge sound effect
         ev_sound.write(SoundEvent {
@@ -572,6 +544,7 @@ fn execute_nudge_interaction(
 /// Execute haunted move interaction (slow object slide)
 fn execute_haunted_move_interaction(
     commands: &mut Commands,
+    current_secs: f64,
     ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
@@ -599,9 +572,13 @@ fn execute_haunted_move_interaction(
             30,  // max attempts
             2.5, // search radius for haunted moves
         ) {
-            // Create a slow haunted movement animation
-            let tween = Tween::new_haunted_move(*current_position, valid_destination, 4.5);
-            commands.entity(target).insert(tween);
+            let motion = InteractionMotion::new_haunted_move(
+                *current_position,
+                valid_destination,
+                current_secs,
+                4.5,
+            );
+            commands.entity(target).insert(motion);
 
             // Play haunted move sound effect
             ev_sound.write(SoundEvent {
@@ -627,6 +604,7 @@ fn execute_haunted_move_interaction(
 /// Execute lock interaction (temporarily lock a door)
 fn execute_lock_interaction(
     commands: &mut Commands,
+    current_secs: f64,
     ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
@@ -638,9 +616,10 @@ fn execute_lock_interaction(
 ) {
     // Check if the target entity exists and get its position for sound
     if let Ok((_, position, _, _)) = q_targets.get(target) {
-        // Add a locked component with a 10-second timer
-        let lock_timer = Timer::from_seconds(10.0, TimerMode::Once);
-        commands.entity(target).insert(Locked(lock_timer));
+        // Add a Locked component that expires 10 seconds from now
+        commands
+            .entity(target)
+            .insert(Locked::new(current_secs, 10.0));
 
         // Play door lock sound effect
         ev_sound.write(SoundEvent {
@@ -659,8 +638,7 @@ fn execute_lock_interaction(
 
 /// Execute trip breaker interaction (turn off main power)
 fn execute_trip_breaker_interaction(
-    commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
+    ev_breaker_sparks: &mut MessageWriter<GhostBreakerSparkRequest>,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
     ev_sound: &mut MessageWriter<SoundEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
@@ -671,7 +649,6 @@ fn execute_trip_breaker_interaction(
         Option<&RoomStateDelta>,
     )>,
     target: Entity,
-    local_player_role: Option<&unreplicon_core::resources::LocalPlayerRole>,
 ) {
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
         ev_interaction_executor.write(ExecuteInteractionEvent {
@@ -688,10 +665,9 @@ fn execute_trip_breaker_interaction(
             broadcast: true,
         });
 
-        // Spawn electrical sparks visual effect
-        if local_player_role.is_some() {
-            visual_effects::spawn_electrical_sparks(commands, asset_server, *position);
-        }
+        ev_breaker_sparks.write(GhostBreakerSparkRequest {
+            position: *position,
+        });
     } else {
         error!(
             "GIS execution -> TripBreaker interaction for {:?} FAILED: target entity not found or missing components",

@@ -1,29 +1,25 @@
-use bevy::color::palettes::css;
 use bevy::prelude::*;
+use bevy_replicon::prelude::Replicated;
 use rand::prelude::*;
-use unboard_core::components::mapcolor::MapColor;
-use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::roomdb::RoomTopology;
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use ungearitems_core::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
-use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
-use unghost_core::components::ghost_sprite::GhostSprite;
+use ungearitems_core::components::salt::SaltyTrace;
+use unghost_core::components::logic::ghost_death::GhostDeathSignal;
+use unghost_core::components::logic::ghost_influence::{GhostInfluence, InfluenceType};
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::summary::SummaryData;
 use unplayer_core::components::PlayerTag;
 use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating};
-use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::boardposition::BoardPosition;
-use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 use unvitals_core::components::PlayerVitals;
 
-use crate::components::fade_out::FadeOut;
 use crate::metrics::GHOST_MOVEMENT;
 
 // Constants for movement penalties
@@ -41,7 +37,7 @@ pub(crate) fn ghost_movement(
         (
             Without<PlayerTag>,
             Without<GhostInfluence>,
-            Without<FadeOut>,
+            Without<GhostDeathSignal>,
         ),
     >,
     qp: Query<
@@ -77,6 +73,7 @@ pub(crate) fn ghost_movement(
 
     let mut rng = random_seed::rng();
     let dt = time.delta_secs() * 60.0;
+    let current_secs = time.elapsed_secs_f64();
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
@@ -303,17 +300,11 @@ pub(crate) fn ghost_movement(
             if let Some(breach) = ghost.breach_id {
                 commands
                     .entity(breach)
-                    .insert(FadeOut::new(5.0))
-                    .insert(MapColor {
-                        color: Color::WHITE.with_alpha(1.0),
-                    });
+                    .insert(GhostDeathSignal::new(current_secs, 5.0));
             }
             commands
                 .entity(entity)
-                .insert(FadeOut::new(5.0))
-                .insert(MapColor {
-                    color: Color::WHITE.with_alpha(1.0),
-                });
+                .insert(GhostDeathSignal::new(current_secs, 5.0));
         }
     }
     measure.end_ms();
@@ -379,35 +370,7 @@ fn calculate_movement_penalties(
     penalty_score
 }
 
-/// Spawns a `SaltyTrace` entity at the given `tile_position`.
-pub(crate) fn spawn_salty_trace(
-    commands: &mut Commands,
-    asset_server: &Res<AssetServer>,
-    tile_position: BoardPosition,
-) {
-    let mut pos = tile_position.to_position();
-    let mut rng = random_seed::rng();
-    pos.x += rng.random_range(-0.2..0.2);
-    pos.y += rng.random_range(-0.2..0.2);
-    pos.z += rng.random_range(-0.05..0.05); // Add small Z variation for traces
-    commands
-        .spawn(Sprite {
-            image: asset_server.load("img/salt_particle.png"),
-            color: css::DARK_GRAY.with_alpha(0.5).into(),
-            custom_size: Some(Vec2::new(8.0, 8.0)),
-            ..default()
-        })
-        .insert(
-            Transform::from_translation(perspective::to_screen_coord(pos))
-                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
-        )
-        .insert(pos)
-        .insert(SaltyTrace)
-        .insert(UVReactive(1.0))
-        .insert(SaltyTraceTimer(Timer::from_seconds(600.0, TimerMode::Once)))
-        .insert(MapColor {
-            color: css::DARK_GRAY.with_alpha(0.5).into(),
-        })
-        .insert(GameSprite)
-        .insert(SpriteLayer::default());
+/// Spawns a shared salty-trace skeleton at the given tile.
+pub(crate) fn spawn_salty_trace(commands: &mut Commands, tile_position: BoardPosition) {
+    commands.spawn((SaltyTrace, tile_position.to_position(), Replicated));
 }

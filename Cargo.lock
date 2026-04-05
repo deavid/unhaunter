@@ -7307,13 +7307,11 @@ dependencies = [
  "uncommon-app-core",
  "undifficulty-core",
  "unghost-core",
- "uninvestigation-core",
  "unlight-core",
  "unmapload-core",
  "unmission-core",
  "unplayer-core",
  "unreplicon-core",
- "unsensing-core",
  "unsoundfield-core",
  "unspatial-core",
 ]
@@ -7340,9 +7338,7 @@ dependencies = [
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
- "unsensing-core",
  "unsettings-core",
- "unsoundfield-core",
  "unspatial-core",
  "untmxmap-core",
 ]
@@ -7542,11 +7538,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "unghost-plugin"
+name = "unghost-logic"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_asset_loader",
  "bevy_replicon",
  "rand 0.10.0",
  "unaudiobg-core",
@@ -7566,13 +7561,34 @@ dependencies = [
  "unnoise-core",
  "unorchestrator-core",
  "unplayer-core",
- "unrender-std",
  "unreplicon-core",
- "unsensing-core",
  "unsoundfield-core",
  "unspatial-core",
  "untruck-core",
  "unvitals-core",
+]
+
+[[package]]
+name = "unghost-presentation"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "bevy_asset_loader",
+ "rand 0.10.0",
+ "unboard-core",
+ "uncommon-app-core",
+ "unghost-core",
+ "unlight-core",
+ "unmapload-core",
+ "unmetrics-core",
+ "unmission-core",
+ "unorchestrator-core",
+ "unrender-std",
+ "unreplicon-core",
+ "unsettings-core",
+ "unspatial-core",
+ "untmxmap-core",
 ]
 
 [[package]]
@@ -7597,7 +7613,8 @@ dependencies = [
  "unfps-plugin",
  "ungear-plugin",
  "ungearitems-plugin",
- "unghost-plugin",
+ "unghost-logic",
+ "unghost-presentation",
  "unhub-plugin",
  "uninput-plugin",
  "uninteraction-plugin",
@@ -7829,6 +7846,7 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "ndarray",
+ "serde",
  "unbehavior-core",
  "unspatial-core",
 ]
@@ -7850,6 +7868,7 @@ dependencies = [
  "unfog-core",
  "ungear-core",
  "ungearitems-core",
+ "unghost-core",
  "uninput-core",
  "uninteraction-core",
  "unlight-core",
@@ -7860,7 +7879,6 @@ dependencies = [
  "unplayer-core",
  "unrender-std",
  "unreplicon-core",
- "unsensing-core",
  "unsettings-core",
  "unspatial-core",
  "untiled-core",
@@ -8359,14 +8377,6 @@ name = "unsafe-libyaml"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
-
-[[package]]
-name = "unsensing-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "serde",
-]
 
 [[package]]
 name = "unsettings-core"

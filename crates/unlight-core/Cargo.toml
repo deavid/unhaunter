@@ -16,3 +16,4 @@ unbehavior-core = { workspace = true }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 ndarray = { workspace = true }
+serde = { workspace = true }

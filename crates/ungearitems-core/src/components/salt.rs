@@ -36,7 +36,8 @@ pub struct SaltParticle;
 pub struct SaltParticleTimer(pub Timer);
 
 /// Marker component for salt trace entities.
-#[derive(Component)]
+#[derive(Component, Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
 pub struct SaltyTrace;
 
 /// Component to store the intensity of the green UV glow for SaltyTrace entities.

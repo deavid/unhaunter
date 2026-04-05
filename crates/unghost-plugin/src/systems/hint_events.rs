@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::events::{EvidenceClarityThresholdCrossed, GhostActualTypeChanged};
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::resources::current_evidence_readings::{

@@ -13,8 +13,7 @@ use unreplicon_core::components::{
     LobbyInfo, NetworkEntityReady, OwnershipSentMarker, RepliconPlayerSpawningActive,
 };
 use unreplicon_core::messages::{
-    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, HostMovableMotionEvent,
-    MovableMotionBroadcast, OwnershipGranted,
+    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, OwnershipGranted,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -81,7 +80,6 @@ fn player_spawn_telemetry(
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
     // Register server → client messages
-    app.add_mapped_server_message::<MovableMotionBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearSpawnBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearDespawnBroadcast>(Channel::Ordered);
     // NOTE: OwnershipGranted is registered as a plain (non-mapped) server message.
@@ -91,8 +89,6 @@ pub(super) fn app_setup(app: &mut App) {
     // handle_ownership_granted performs the entity map lookup manually.
     app.add_server_message::<OwnershipGranted>(Channel::Ordered);
 
-    // Register local messages
-    app.add_message::<HostMovableMotionEvent>();
     app.init_resource::<PendingOwnershipGrantQueue>();
 
     replication::app_setup(app);
@@ -105,12 +101,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
         OnEnter(SimulationState::Spawning),
         setup_mission_players.run_if(resource_exists::<AuthorityRole>),
-    );
-
-    // Server-side: message handlers + net state sync.
-    app.add_systems(
-        Update,
-        broadcast_movable_motion.run_if(resource_exists::<AuthorityRole>),
     );
 
     // Server-side: spawn player entities for clients that joined after mission start.
@@ -303,25 +293,6 @@ fn spawn_late_joining_players(
             "spawn_late_joining_players: spawned skeleton {:?} for late-joining player {} (owner={:?})",
             entity, player.player_uuid, socket_owner_id
         );
-    }
-}
-
-/// Server: broadcast a ghost-induced movable-object motion.
-fn broadcast_movable_motion(
-    mut reader: MessageReader<HostMovableMotionEvent>,
-    mut ev_broadcast: MessageWriter<ToClients<MovableMotionBroadcast>>,
-) {
-    for msg in reader.read() {
-        ev_broadcast.write(ToClients {
-            mode: SendMode::Broadcast,
-            message: MovableMotionBroadcast {
-                entity: msg.entity,
-                start: msg.start,
-                end: msg.end,
-                duration: msg.duration,
-                ease: msg.ease,
-            },
-        });
     }
 }
 

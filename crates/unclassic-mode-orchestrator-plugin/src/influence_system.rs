@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomTopology;
-use unghost_core::components::ghost_breach::GhostBreach;
-use unghost_core::components::ghost_influence::GhostInfluence;
+use unghost_core::components::logic::ghost_breach::GhostBreach;
+use unghost_core::components::logic::ghost_influence::GhostInfluence;
 use unghost_core::resources::haunt_state::HauntState;
+use unlight_core::spectral::SpectralInfluence;
 use unplayer_core::components::PlayerSprite;
-use unsensing_core::components::SpectralInfluence;
 use unspatial_core::position::Position;
 
 pub(crate) fn assign_ghost_influence(

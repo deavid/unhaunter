@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-use std::time::Duration;
 use uncommon_app_core::random_seed;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::ghost::GhostType;
@@ -150,8 +149,8 @@ impl GhostBehaviorDynamics {
 
 /// Represents a ghost entity in the game world.
 ///
-/// This component stores the ghost's type, spawn point, target location,
-/// interaction stats, current mood, hunting state, and other relevant attributes.
+/// Timer fields have been replaced with plain floats to avoid embedding Timer types
+/// in a replicated component (Rule D: logic components must not contain Timers).
 #[derive(Component, Debug, Serialize, Deserialize, Reflect)]
 #[reflect(Component, Default)]
 pub struct GhostSprite {
@@ -159,8 +158,7 @@ pub struct GhostSprite {
     pub class: GhostType,
     /// The ghost's designated spawn point (breach) on the game board.
     pub spawn_point: BoardPosition,
-    /// The ghost's current target location in the game world. `None` if the ghost is
-    /// wandering aimlessly.
+    /// The ghost's current target location in the game world.
     pub target_point: Option<Position>,
     /// Number of times the ghost has been hit with the correct type of repellent.
     pub repellent_hits: i64,
@@ -178,29 +176,28 @@ pub struct GhostSprite {
     pub repellent_misses_delta: f32,
     /// The entity ID of the ghost's visual breach effect.
     pub breach_id: Option<Entity>,
-    /// The ghost's current rage level, which influences its hunting behavior. Higher
-    /// rage increases the likelihood of a hunt.
+    /// The ghost's current rage level, which influences its hunting behavior.
     pub rage: f32,
     /// Export of the rage limit for other systems to consider.
     pub rage_limit: f32,
-    /// The ghost's hunting state. A value greater than 0 indicates that the ghost is
-    /// actively hunting a player.
+    /// The ghost's hunting state. A value greater than 0 indicates active hunting.
     pub hunting: f32,
     /// Flag indicating whether the ghost is currently targeting a player during a hunt.
     pub hunt_target: bool,
     /// Time in seconds since the ghost started its current hunt.
     pub hunt_time_secs: f32,
-    /// The ghost's current warping intensity, which affects its movement speed. Higher
-    /// values result in faster warping.
+    /// The ghost's current warping intensity, which affects its movement speed.
     pub warp: f32,
     /// The ghost got hit by sage, and it will be calm for a while.
     pub calm_time_secs: f32,
-    /// Timer to track the duration of the "Salty" side effect.
-    #[serde(skip, default = "default_timer")]
-    pub salty_effect_timer: Timer,
-    /// Timer to control the frequency of spawning Salty Traces.
-    #[serde(skip, default = "default_trace_timer")]
-    pub salty_trace_spawn_timer: Timer,
+    /// Remaining seconds of the "Salty" side effect. 0.0 means inactive (effect finished).
+    /// Set to a positive value (e.g. 120.0) when the ghost hits a salt pile.
+    /// Replaces the old `salty_effect_timer: Timer`.
+    pub salty_effect_remaining_secs: f32,
+    /// Countdown in seconds until the next salty trace is spawned (repeating, 0.3s cycle).
+    /// When this reaches 0 a trace is spawned and it resets to 0.3.
+    /// Replaces the old `salty_trace_spawn_timer: Timer`.
+    pub salty_trace_spawn_countdown_secs: f32,
     /// Makes the ghost wait more for the next attack but it will be a harder attack.
     pub rage_limit_multiplier: f32,
     /// Timer for pre-warning phase before hunt warning begins (anticipatory audio muting)
@@ -213,16 +210,6 @@ pub struct GhostSprite {
     pub hunt_warning_intensity: f32,
     /// Number of times the ghost has hunted in the current mission.
     pub times_hunted_this_mission: i64,
-}
-
-fn default_timer() -> Timer {
-    let mut timer = Timer::from_seconds(120.0, TimerMode::Once);
-    timer.tick(Duration::from_secs(120));
-    timer
-}
-
-fn default_trace_timer() -> Timer {
-    Timer::from_seconds(0.3, TimerMode::Repeating)
 }
 
 impl Default for GhostSprite {
@@ -244,8 +231,8 @@ impl Default for GhostSprite {
             hunt_time_secs: 0.0,
             warp: 0.0,
             calm_time_secs: 0.0,
-            salty_effect_timer: default_timer(),
-            salty_trace_spawn_timer: default_trace_timer(),
+            salty_effect_remaining_secs: 0.0,
+            salty_trace_spawn_countdown_secs: 0.3,
             rage_limit_multiplier: 1.0,
             rage_limit: 100.0,
             pre_warning_timer: 0.0,
@@ -266,48 +253,20 @@ impl bevy::ecs::entity::MapEntities for GhostSprite {
 }
 
 impl GhostSprite {
-    /// Creates a new `GhostSprite` with a random `GhostType` and the specified spawn
-    /// point.
-    ///
-    /// The ghost's initial mood, hunting state, and other attributes are set to
-    /// default values.
+    /// Creates a new `GhostSprite` with a random `GhostType` and the specified spawn point.
     pub fn new(spawn_point: BoardPosition, ghost_types: &[GhostType]) -> Self {
         let mut rng = random_seed::rng();
         let idx = rng.random_range(0..ghost_types.len());
         let class = ghost_types[idx];
         debug!("Ghost type: {:?} - {:?}", class, class.evidences());
-        let mut salty_effect_timer = Timer::from_seconds(120.0, TimerMode::Once);
-        salty_effect_timer.tick(Duration::from_secs(120));
         GhostSprite {
             class,
             spawn_point,
-            target_point: None,
-            repellent_hits: 0,
-            repellent_misses: 0,
-            repellent_hits_frame: 0.0,
-            repellent_misses_frame: 0.0,
-            repellent_hits_delta: 0.0,
-            repellent_misses_delta: 0.0,
-            breach_id: None,
-            rage: 0.0,
-            hunting: 0.0,
-            hunt_target: false,
-            hunt_time_secs: 0.0,
-            warp: 0.0,
-            calm_time_secs: 0.0,
-            salty_effect_timer,
-            salty_trace_spawn_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
-            rage_limit_multiplier: 1.0,
-            rage_limit: 100.0,
-            pre_warning_timer: 0.0,
-            hunt_warning_active: false,
-            hunt_warning_timer: 0.0,
-            hunt_warning_intensity: 0.0,
-            times_hunted_this_mission: 0,
+            ..Default::default()
         }
     }
 
-    /// Sets the `breach_id` field, associating the ghost with its visual breach effect.
+    /// Sets the `breach_id` field, associating the ghost with its breach entity.
     pub fn with_breachid(self, breach_id: Entity) -> Self {
         Self {
             breach_id: Some(breach_id),

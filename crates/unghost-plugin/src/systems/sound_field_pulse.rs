@@ -38,8 +38,8 @@ pub(crate) fn ghost_sound_field_pulse(
             v *= loudness * 4.5 / l;
             let vn = v.normalize() * 1.5;
             let newbpos = Position {
-                x: (bpos.x as f32 + vn.x),
-                y: (bpos.y as f32 + vn.y),
+                x: bpos.x as f32 + vn.x,
+                y: bpos.y as f32 + vn.y,
                 z: bpos.z as f32,
                 visual_priority: 0.0,
             }
@@ -89,8 +89,8 @@ pub(crate) fn handle_ghost_sound_field_broadcast(
             v *= loudness * 4.5 / l;
             let vn = v.normalize() * 1.5;
             let newbpos = Position {
-                x: (bpos.x as f32 + vn.x),
-                y: (bpos.y as f32 + vn.y),
+                x: bpos.x as f32 + vn.x,
+                y: bpos.y as f32 + vn.y,
                 z: bpos.z as f32,
                 visual_priority: 0.0,
             }
@@ -100,11 +100,11 @@ pub(crate) fn handle_ghost_sound_field_broadcast(
     }
 }
 
-pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
+pub(crate) fn app_setup(app: &mut App) {
     use unreplicon_core::resources::is_pure_client;
-    app.add_systems(bevy::prelude::Update, ghost_sound_field_pulse);
+    app.add_systems(Update, ghost_sound_field_pulse);
     app.add_systems(
-        bevy::prelude::Update,
+        Update,
         handle_ghost_sound_field_broadcast.run_if(is_pure_client),
     );
 }

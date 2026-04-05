@@ -72,6 +72,11 @@ root for a detailed map.
 Avoid running commands where possible. Usage of commands to read, write or edit files is forbidden; for example `cat`,
 `sed`, `awk` are not allowed.
 
+**File Deletion Reminder:** If a task requires removing files, remember that file deletion can be done directly through
+the IDE file operation tools (for example Explorer delete) instead of only thinking in terms of terminal commands or
+patch-based edits. Do not overlook IDE-native file deletion as an available option. The tool name is ` apply_patch`, and
+it supports `Delete File` operations in its patch format.
+
 ## File Reading Guidelines
 
 When using the `read_file` tool, always read in chunks of **1000 lines or more**. Never read less than 1000 lines in a

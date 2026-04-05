@@ -17,9 +17,7 @@ undifficulty-core = { workspace = true }
 unreplicon-core = { workspace = true }
 uncommon-app-core = { workspace = true }
 unghost-core = { workspace = true }
-uninvestigation-core = { workspace = true }
 unlight-core = { workspace = true }
-unsensing-core = { workspace = true }
 unmapload-core = { workspace = true }
 unmission-core = { workspace = true }
 uncareer-core = { workspace = true }

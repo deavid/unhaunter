@@ -21,7 +21,7 @@ use uncommon_app_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
-use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
+use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use uninvestigation_core::evidence::Evidence;
 use unlight_core::resources::light_grid::LightGrid;
 use unmetrics_core::metrics::SendMetric;

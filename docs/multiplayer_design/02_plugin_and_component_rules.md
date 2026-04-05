@@ -121,6 +121,59 @@ When a user clicks the screen:
 3. The Intent Event is routed over the network (Client → Server via Replicon's ClientEvent).
 4. `unX-logic` receives the `InteractAt` event, evaluates if it's legal, and updates the canonical simulation data.
 
+### Rule D: Explicit Component Intent (Physical Segregation)
+
+Components defined in `unX-core` must physically declare their intent by their location in the module structure. We do
+not rely on comments or vibes. `unX-core/src/components/` must be segregated into explicitly named files or folders:
+
+1. **`logic` (e.g., `components/logic.rs` or `components/logic/`):**
+   - **What:** Authoritative Networked State. The canonical "truth" of the simulation.
+   - **Rule:** EVERYTHING in this module SHOULD BE REPLICATED (e.g., `GhostSprite`, `Position`). (DO NOT BLINDLY ADD
+     REPLICATED, AUDIT WHY IS NOT)
+   - **Exception (Server-Only State):** Pure server-side calculations (like AI pathfinding heatmaps, internal ghost
+     brain state, or spatial broadphases) that the client NEVER needs to read for presentation do not need replication,
+     but they absolutely stay in `logic`.
+2. **`presentation` / `local` (e.g., `components/presentation.rs` or `components/local/`):**
+   - **What:** Local Inter-Domain Markers, Ephemera, visual targets, timers.
+   - **Rule:** EVERYTHING in this module MUST NOT BE REPLICATED (e.g., `GhostOrbParticle`, `InteractionParticle`,
+     `MotionBlur`).
+
+- **The Trap:** Dumping all components into a single `components.rs` file leads to "Topology Bleed" because developers
+  will inevitably straddle the line or guess wrong during code reviews. With a single file, depending on convenience, we
+  will classify a component as logic today and presentation tomorrow.
+- **The Fix:** A component must never straddle the line. By forcing it into a `logic` or `presentation` folder/file, the
+  developer explicitly declares it.
+
+  **WARNING ON TIMERS:** Do NOT blindly classify all `Timer`s as Presentation. You must THINK about what the timer
+  controls:
+  - If it controls a visual fade, an animation protocol, or ephemeral lifespan (`fade_timer: Timer`, `alpha: f32`), it
+    is a **Presentation** component.
+  - If it controls a gameplay rule, cooldown, or state transition (e.g., `attack_cooldown: Timer`), it is a **Logic**
+    component and belongs in Networked State. (Note: For bandwidth efficiency, prefer absolute physical timestamps like
+    `unlocks_at: f64` over ticking `Timer`s for replicated logic state, but if a `Timer` drives game rules, it stays in
+    `logic`). we can now instantly verify if something in a `logic` file is missing replication, or if something in a
+    `presentation` file is illegally modifying game state.
+
+### Rule E: The Component Access Matrix (Read/Write Rules)
+
+To prevent Topology Bleed, the read/write permissions for the two classes of components are strictly enforced across
+crate boundaries:
+
+**1. Logic Components (`components/logic/`)**
+
+- **`unX-logic` crates:** `Read` and `Write` (Can query `&mut` or use Commands to `insert`/`remove`). The server owns
+  and adjudicates this state.
+- **`unX-presentation` crates:** `Read-Only` (Can only query `&`). Presentation MUST NEVER mutate authoritative game
+  state.
+
+**2. Presentation/Local Components (`components/presentation/`)**
+
+- **`unX-logic` crates:** `No Access` (Should not Read or Write). Game rules must not depend on visual ephemera,
+  client-side animation timers, or local markers. If logic requires a cross-network visual effect, it must mutate a
+  Logic Component, and Presentation reacts to it.
+- **`unX-presentation` crates:** `Read` and `Write`. The presentation layer fully owns, spawns, mutates, and despawns
+  these components.
+
 ---
 
 ## 4. Enforcement (How we stop bugs)

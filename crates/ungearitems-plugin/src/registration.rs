@@ -14,7 +14,7 @@ use ungearitems_core::components::flashlight::{Flashlight, FlashlightSkin};
 use ungearitems_core::components::quartz::{QuartzStoneData, QuartzStoneSkin};
 use ungearitems_core::components::recorder::Recorder;
 use ungearitems_core::components::sage::{SageBundleData, SageBundleSkin};
-use ungearitems_core::components::salt::{SaltData, SaltPile};
+use ungearitems_core::components::salt::{SaltData, SaltPile, SaltyTrace};
 use ungearitems_core::components::thermometer::Thermometer;
 use uninteraction_core::interaction::Toggleable;
 use uninvestigation_core::evidence::Evidence;
@@ -45,6 +45,7 @@ pub(crate) fn register_all(app: &mut App) {
     app.replicate::<RepellentFlask>();
     app.replicate::<SaltData>();
     app.replicate::<SaltPile>();
+    app.replicate::<SaltyTrace>();
     app.replicate::<SageBundleData>();
     app.replicate::<QuartzStoneData>();
     app.set_marker_fns::<LocallyOwned, Flashlight>(noop_write::<Flashlight>, noop_remove);

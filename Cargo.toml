@@ -46,7 +46,6 @@ members = [
     "crates/unfog-plugin",
     "crates/unlight-core",        # Illumination model
     "crates/unlight-plugin",
-    "crates/unsensing-core",      # Spectral/sensing component types (UV, IR, spectral clarity)
     "crates/unnavigation-core",   # Pathfinding graph (data only, no systems)
     "crates/unreplicon-core",     # Networking / replication
     "crates/unreplicon-plugin",
@@ -54,7 +53,7 @@ members = [
     # ── 1b: The Actors (Entities & AI) ───────────────────────────────────
     # Everything that inhabits and acts within the stage.
     "crates/unghost-core",        # Ghost: evidence types, enrage state, AI data
-    "crates/unghost-plugin",
+    "crates/unghost-plugin",      # Ghost: simulation logic (package name: unghost-logic)
     "crates/unplayer-core",       # Player: state, stats, asset handles
     "crates/unplayer-plugin",
     "crates/uninput-core",        # Input bus (TIER EXCEPTION: T1b despite T2 plugin; domain state, not app logic)
@@ -128,11 +127,12 @@ members = [
     # ════════════════════════════════════════════════════════════════════════
 
     # ── 4a: Rendering ────────────────────────────────────────────────────
-    "crates/unrender-std",     # Standalone mesh / material helpers
-    "crates/unspatial-plugin", # Position→Transform isometric projection (PostUpdate)
-    "crates/unrender-plugin",  # Main 2D isometric render pipeline and shaders
-    "crates/unpicking-core",   # Mouse-to-world picking data
-    "crates/unpicking-plugin", # Visual feedback for interaction picking
+    "crates/unrender-std",         # Standalone mesh / material helpers
+    "crates/unspatial-plugin",     # Position→Transform isometric projection (PostUpdate)
+    "crates/unrender-plugin",      # Main 2D isometric render pipeline and shaders
+    "crates/unpicking-core",       # Mouse-to-world picking data
+    "crates/unpicking-plugin",     # Visual feedback for interaction picking
+    "crates/unghost-presentation", # Ghost: visual hydration, particles, scale glitch (package: unghost-presentation)
 
     # ── 4b: Audio ────────────────────────────────────────────────────────
     "crates/unaudiobg-core",        # Ambient and background music data
@@ -296,7 +296,6 @@ unfog-core = { path = "crates/unfog-core" }                   # Miasma fog
 unfog-plugin = { path = "crates/unfog-plugin" }
 unlight-core = { path = "crates/unlight-core" }               # Illumination model
 unlight-plugin = { path = "crates/unlight-plugin" }
-unsensing-core = { path = "crates/unsensing-core" }           # Spectral/sensing component types (UV, IR, spectral clarity)
 
 # Other:
 unnavigation-core = { path = "crates/unnavigation-core" } # Pathfinding graph (data only)
@@ -305,17 +304,18 @@ unreplicon-plugin = { path = "crates/unreplicon-plugin" }
 
 # ── 1b: The Actors (Entities & AI) ───────────────────────────────────────
 # Everything that inhabits and acts within the stage.
-unlocomotion-core = { path = "crates/unlocomotion-core" }     # Locomotion state component
-unlocomotion-plugin = { path = "crates/unlocomotion-plugin" } # Kinematics and movement
-unnavigation-plugin = { path = "crates/unnavigation-plugin" } # Waypoint creation and integration
-unghost-core = { path = "crates/unghost-core" }               # Ghost: evidence, enrage state, AI data
-unghost-plugin = { path = "crates/unghost-plugin" }
-unplayer-core = { path = "crates/unplayer-core" }             # Player: state, stats, asset handles
+unlocomotion-core = { path = "crates/unlocomotion-core" }       # Locomotion state component
+unlocomotion-plugin = { path = "crates/unlocomotion-plugin" }   # Kinematics and movement
+unnavigation-plugin = { path = "crates/unnavigation-plugin" }   # Waypoint creation and integration
+unghost-core = { path = "crates/unghost-core" }                 # Ghost: evidence, enrage state, AI data
+unghost-logic = { path = "crates/unghost-plugin" }
+unghost-presentation = { path = "crates/unghost-presentation" }
+unplayer-core = { path = "crates/unplayer-core" }               # Player: state, stats, asset handles
 unplayer-plugin = { path = "crates/unplayer-plugin" }
-uninput-core = { path = "crates/uninput-core" }               # Input bus (TIER EXCEPTION: T1b despite T2 plugin)
-unnpc-core = { path = "crates/unnpc-core" }                   # Helper NPC data (not in workspace members)
+uninput-core = { path = "crates/uninput-core" }                 # Input bus (TIER EXCEPTION: T1b despite T2 plugin)
+unnpc-core = { path = "crates/unnpc-core" }                     # Helper NPC data (not in workspace members)
 unnpc-plugin = { path = "crates/unnpc-plugin" }
-unclassic-mode-core = { path = "crates/unclassic-mode-core" } # Classic mode shared types: camera marker, game colors
+unclassic-mode-core = { path = "crates/unclassic-mode-core" }   # Classic mode shared types: camera marker, game colors
 
 
 # ── 1c: The Mechanics (Gameplay Verbs) ───────────────────────────────────
@@ -455,7 +455,8 @@ unfog-plugin = { workspace = true }
 unfps-plugin = { workspace = true }
 ungear-plugin = { workspace = true }
 ungearitems-plugin = { workspace = true }
-unghost-plugin = { workspace = true }
+unghost-logic = { workspace = true }
+unghost-presentation = { workspace = true }
 unlight-plugin = { workspace = true }
 unlobby-plugin = { workspace = true }
 unmapload-plugin = { workspace = true }

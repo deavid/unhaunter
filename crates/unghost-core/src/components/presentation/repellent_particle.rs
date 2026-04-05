@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use uninvestigation_core::ghost::GhostType;
 use unspatial_core::direction::Direction;
 
+/// Local-only particle component for repellent visual effects.
+/// Never replicated. Owned and ticked entirely by unghost-presentation.
 #[derive(Component, Debug, Clone, PartialEq)]
 pub struct RepellentParticle {
     pub class: GhostType,
@@ -13,7 +15,7 @@ pub struct RepellentParticle {
 
 impl RepellentParticle {
     const MAX_LIFE: f32 = 30.0;
-    pub const DEFAULT_COLOR: Color = Color::srgba(1.0, 1.0, 0.0, 0.15); // Approx. css::YELLOW.with_alpha(0.3).with_blue(0.02)
+    pub const DEFAULT_COLOR: Color = Color::srgba(1.0, 1.0, 0.0, 0.15);
 
     pub fn new(class: GhostType) -> Self {
         Self {

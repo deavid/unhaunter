@@ -1,4 +1,3 @@
-use crate::components::interaction::Locked;
 use bevy::prelude::*;
 use rand::Rng;
 use rand::RngExt;
@@ -10,7 +9,8 @@ use unboard_core::resources::visibility_data::VisibilityData;
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::interaction::Locked;
 use unghost_core::events::{GhostInteractionEvent, GhostInteractionType};
 use unghost_core::types::ghost::personality::GhostTypePersonalityExt;
 use unmetrics_core::metrics::SendMetric;

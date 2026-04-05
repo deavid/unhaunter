@@ -10,9 +10,11 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
 use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::salt::UVReactive;
+use unghost_core::components::presentation::spectral::SpectralClarity;
 use unlight_core::color_utils::lerp_color;
 use unlight_core::components::LightSensitive;
 use unlight_core::resources::light_grid::LightGrid;
+use unlight_core::spectral::SpectralInfluence;
 use unlight_core::types::light::LightData;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::MainPlayer;
@@ -20,7 +22,6 @@ use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Emissive, Ethereal, ShadowCaster,
 };
 use unrender_std::custom_material1::CustomMaterial1;
-use unsensing_core::components::{SpectralClarity, SpectralInfluence};
 use unsettings_core::video::VideoSettings;
 use unspatial_core::position::Position;
 

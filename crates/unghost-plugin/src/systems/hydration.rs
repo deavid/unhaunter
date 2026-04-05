@@ -4,16 +4,17 @@ use unbehavior_core::behavior::{Behavior, Util};
 use unbehavior_core::components::{InteractableByGhost, Movable};
 use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
 use unboard_core::components::spawning::HostileSpawnPoint;
-use unghost_core::components::ghost_breach::GhostBreach;
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unboard_core::entity::GameSprite;
+use unghost_core::components::logic::ghost_breach::GhostBreach;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::requests::GhostSpawnRequest;
 use unghost_core::tags::GhostTag;
-use uninvestigation_core::GhostSpawnRequest;
 use unlight_core::components::LightSensitive;
+use unlight_core::spectral::SpectralInfluence;
 use unmapload_core::hydration::HydrationStage;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::resources::AuthorityRole;
-use unsensing_core::components::SpectralInfluence;
 use unsoundfield_core::components::SoundFieldSource;
 use unspatial_core::lerp_position::LerpPosition;
 use unspatial_core::position::Position;
@@ -95,6 +96,57 @@ fn mark_breach_replicated(q: Query<Entity, Added<GhostBreach>>, mut commands: Co
     }
 }
 
+fn hydrate_ghost_local_field_components(
+    mut commands: Commands,
+    q: Query<(Entity, &Position), (With<GhostTag>, With<GhostSprite>, Without<GameSprite>)>,
+) {
+    for (entity, pos) in q.iter() {
+        commands
+            .entity(entity)
+            .insert(GameSprite)
+            .insert(unspatial_core::boardposition::MapEntityFieldBPos(
+                pos.to_board_position(),
+            ))
+            .insert(LightSensitive {
+                exposure_factor: 0.5,
+                bias: 0.01,
+            })
+            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 0.0))
+            .insert(ThermalEmitter {
+                room_restricted: true,
+                ..default()
+            })
+            .insert(FluidEmitter::default())
+            .insert(SoundFieldSource::default())
+            .insert(LerpPosition::new(*pos));
+    }
+}
+
+fn hydrate_breach_local_field_components(
+    mut commands: Commands,
+    q: Query<(Entity, &Position), (With<GhostBreach>, Without<GameSprite>)>,
+) {
+    for (entity, pos) in q.iter() {
+        commands
+            .entity(entity)
+            .insert(GameSprite)
+            .insert(unspatial_core::boardposition::MapEntityFieldBPos(
+                pos.to_board_position(),
+            ))
+            .insert(LightSensitive {
+                exposure_factor: 1.1,
+                bias: 0.02,
+            })
+            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 1.0))
+            .insert(ThermalEmitter {
+                room_restricted: true,
+                ..default()
+            })
+            .insert(FluidEmitter::default())
+            .insert(SoundFieldSource::default());
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
@@ -103,5 +155,13 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         mark_breach_replicated.run_if(resource_exists::<AuthorityRole>),
+    );
+    app.add_systems(
+        Update,
+        (
+            hydrate_ghost_local_field_components,
+            hydrate_breach_local_field_components,
+        )
+            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
     );
 }

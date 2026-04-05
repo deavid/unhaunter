@@ -8,7 +8,7 @@ use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
 use unboard_core::resources::board_topology::BoardTopology;
 use uncommon_app_core::random_seed;
-use unghost_core::components::ghost_influence::InfluenceType;
+use unghost_core::components::logic::ghost_influence::InfluenceType;
 use unspatial_core::position::Position;
 
 /// Represents one complete ghost setup configuration (spawn + influences)

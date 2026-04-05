@@ -10,7 +10,7 @@ use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::sage::{
     SageBundleData, SageBundleSkin, SageSmokeParticle, SmokeParticleTimer,
 };
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::sprite_layer::SpriteLayer;

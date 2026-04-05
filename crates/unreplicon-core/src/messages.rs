@@ -122,61 +122,6 @@ impl bevy::ecs::entity::MapEntities for RequestDrop {
     }
 }
 
-/// Local-only Bevy event fired by `watch_tween_insertions` on the authority
-/// whenever a `Tween` component is added to any map entity.
-///
-/// Never travels over the network. `unreplicon-plugin` reads this and
-/// broadcasts `MovableMotionBroadcast` to all connected join clients so they
-/// can replay the same animation locally.
-#[derive(Debug, Clone, Message)]
-pub struct HostMovableMotionEvent {
-    /// The entity that is moving.
-    pub entity: Entity,
-    /// World-space start position `[x, y, z, visual_priority]`.
-    pub start: [f32; 4],
-    /// World-space end position `[x, y, z, visual_priority]`.
-    pub end: [f32; 4],
-    /// Animation duration in seconds.
-    pub duration: f32,
-    /// Ease function: 0 = Linear, 1 = ParabolicArc, 2 = SineEaseOut.
-    pub ease: u8,
-}
-
-/// Broadcast by the server to all join clients when a ghost interaction moves
-/// a map object (throw, nudge, haunted-move). Clients replay the same tween
-/// animation locally to keep visual state in sync.
-#[derive(Debug, Clone, Serialize, Deserialize, Message)]
-pub struct MovableMotionBroadcast {
-    /// The entity that is moving.
-    pub entity: Entity,
-    /// World-space start position `[x, y, z, visual_priority]`.
-    pub start: [f32; 4],
-    /// World-space end position `[x, y, z, visual_priority]`.
-    pub end: [f32; 4],
-    /// Animation duration in seconds.
-    pub duration: f32,
-    /// Ease function: 0 = Linear, 1 = ParabolicArc, 2 = SineEaseOut.
-    pub ease: u8,
-}
-
-impl Default for MovableMotionBroadcast {
-    fn default() -> Self {
-        Self {
-            entity: Entity::PLACEHOLDER,
-            start: [0.0; 4],
-            end: [0.0; 4],
-            duration: 0.0,
-            ease: 0,
-        }
-    }
-}
-
-impl bevy::ecs::entity::MapEntities for MovableMotionBroadcast {
-    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
-        self.entity = mapper.get_mapped(self.entity);
-    }
-}
-
 /// Local-only Bevy event fired by `drop_object` on the authority (listen-server host)
 /// when a player drops a gear item onto the floor.
 ///

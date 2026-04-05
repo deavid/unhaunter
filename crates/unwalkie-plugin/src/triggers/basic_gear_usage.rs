@@ -6,7 +6,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::core::Battery;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::kind::GearKind;
-use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use uninput_core::components::PlayerInputMapping;
 use uninteraction_core::interaction::Toggleable;

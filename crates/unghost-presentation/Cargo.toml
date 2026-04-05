@@ -1,0 +1,31 @@
+[package]
+name = "unghost-presentation"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+uncommon-app-core = { workspace = true }
+unmapload-core = { workspace = true }
+unboard-core = { workspace = true }
+unrender-std = { workspace = true }
+unmetrics-core = { workspace = true }
+unspatial-core = { workspace = true }
+unghost-core = { workspace = true }
+unlight-core = { workspace = true }
+unreplicon-core = { workspace = true }
+unorchestrator-core = { workspace = true }
+unmission-core = { workspace = true }
+untmxmap-core = { workspace = true }
+unsettings-core = { workspace = true }
+
+bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
+bevy-persistent = { workspace = true }
+rand = { workspace = true }

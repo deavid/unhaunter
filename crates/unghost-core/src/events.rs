@@ -68,3 +68,9 @@ pub struct GhostInteractionEvent {
     /// Optional destination position for movement-based interactions (Throw, HauntedMove)
     pub destination: Option<Position>,
 }
+
+/// Emitted by ghost logic when a breaker trip should materialize local spark particles.
+#[derive(Message, Debug, Clone)]
+pub struct GhostBreakerSparkRequest {
+    pub position: Position,
+}
