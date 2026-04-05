@@ -76,6 +76,28 @@ impl bevy::ecs::entity::MapEntities for OwnershipGranted {
     }
 }
 
+/// Message sent by the server to revoke ownership of an entity from a client.
+/// The receiving client must remove `LocallyOwned` from the entity.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
+#[reflect(Default)]
+pub struct OwnershipRevoked {
+    pub entity: Entity,
+}
+
+impl Default for OwnershipRevoked {
+    fn default() -> Self {
+        Self {
+            entity: Entity::PLACEHOLDER,
+        }
+    }
+}
+
+impl bevy::ecs::entity::MapEntities for OwnershipRevoked {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        self.entity = mapper.get_mapped(self.entity);
+    }
+}
+
 /// Message sent by a client to request picking up a gear entity.
 #[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]

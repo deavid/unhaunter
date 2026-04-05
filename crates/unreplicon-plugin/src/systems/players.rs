@@ -13,7 +13,7 @@ use unreplicon_core::components::{
     LobbyInfo, NetworkEntityReady, OwnershipSentMarker, RepliconPlayerSpawningActive,
 };
 use unreplicon_core::messages::{
-    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, OwnershipGranted,
+    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, OwnershipGranted, OwnershipRevoked,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -88,6 +88,7 @@ pub(super) fn app_setup(app: &mut App) {
     // time (which happens when the entity is initially hidden from the client).
     // handle_ownership_granted performs the entity map lookup manually.
     app.add_server_message::<OwnershipGranted>(Channel::Ordered);
+    app.add_server_message::<OwnershipRevoked>(Channel::Ordered);
 
     app.init_resource::<PendingOwnershipGrantQueue>();
 
@@ -118,7 +119,12 @@ pub(super) fn app_setup(app: &mut App) {
 
     app.add_systems(
         Update,
-        (handle_ownership_granted, process_pending_ownership_grants).run_if(is_pure_client),
+        (
+            handle_ownership_granted,
+            handle_ownership_revoked,
+            process_pending_ownership_grants,
+        )
+            .run_if(is_pure_client),
     );
 
     // Cleanup the spawning-active marker when leaving InGame.
@@ -419,6 +425,29 @@ fn handle_ownership_granted(
             server_entity,
             frames_waited: 0,
         });
+    }
+}
+
+/// Client: Handle ownership revocation — remove `LocallyOwned` from the entity.
+fn handle_ownership_revoked(
+    mut reader: MessageReader<OwnershipRevoked>,
+    entity_map: Res<ServerEntityMap>,
+    mut commands: Commands,
+) {
+    for msg in reader.read() {
+        let server_entity = msg.entity;
+        if let Some(client_entity) = entity_map.to_client().get(&server_entity).copied() {
+            info!(
+                "handle_ownership_revoked: removing LocallyOwned from client {:?} (server {:?})",
+                client_entity, server_entity
+            );
+            commands.entity(client_entity).remove::<LocallyOwned>();
+        } else {
+            warn!(
+                "handle_ownership_revoked: no client mapping for server entity {:?}",
+                server_entity
+            );
+        }
     }
 }
 

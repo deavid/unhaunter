@@ -18,7 +18,6 @@ use bevy_replicon::prelude::{Channel, ClientId, ClientMessageAppExt, FromClient,
 use uncommon_states_core::UIContextState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 use ungearitems_core::components::quartz::QuartzStoneData;
 use ungearitems_core::components::redtorch::RedTorch;
@@ -112,13 +111,6 @@ fn from_owner_id(owner_id: OwnerId) -> ClientId {
     }
 }
 
-fn gear_entities(gear: &PlayerGear) -> impl Iterator<Item = Entity> + '_ {
-    [gear.left_hand, gear.right_hand]
-        .into_iter()
-        .flatten()
-        .chain(gear.inventory.iter().copied())
-}
-
 fn handle_salt_drop(
     mut reader: MessageReader<FromClient<SaltDroppedMessage>>,
     mut commands: Commands,
@@ -142,122 +134,94 @@ fn handle_salt_drop(
 // Send systems (pure client only)
 // ---------------------------------------------------------------------------
 
+// TODO: Optimize/Throttle - Continuous state currently blasting every frame
 fn send_export_flashlight(
-    q_player: Query<&PlayerGear, With<LocallyOwned>>,
-    q_comp: Query<&Flashlight>,
+    q_items: Query<(Entity, &Flashlight), With<LocallyOwned>>,
     mut writer: MessageWriter<ExportClientComponent<Flashlight>>,
 ) {
-    for gear in q_player.iter() {
-        for entity in gear_entities(gear) {
-            if let Ok(comp) = q_comp.get(entity) {
-                writer.write(ExportClientComponent {
-                    entity,
-                    data: comp.clone(),
-                });
-            }
-        }
+    for (entity, comp) in q_items.iter() {
+        writer.write(ExportClientComponent {
+            entity,
+            data: comp.clone(),
+        });
     }
 }
 
+// TODO: Optimize/Throttle - Continuous state currently blasting every frame
 fn send_export_uvtorch(
-    q_player: Query<&PlayerGear, With<LocallyOwned>>,
-    q_comp: Query<&UVTorch>,
+    q_items: Query<(Entity, &UVTorch), With<LocallyOwned>>,
     mut writer: MessageWriter<ExportClientComponent<UVTorch>>,
 ) {
-    for gear in q_player.iter() {
-        for entity in gear_entities(gear) {
-            if let Ok(comp) = q_comp.get(entity) {
-                writer.write(ExportClientComponent {
-                    entity,
-                    data: comp.clone(),
-                });
-            }
-        }
+    for (entity, comp) in q_items.iter() {
+        writer.write(ExportClientComponent {
+            entity,
+            data: comp.clone(),
+        });
     }
 }
 
+// TODO: Optimize/Throttle - Continuous state currently blasting every frame
 fn send_export_redtorch(
-    q_player: Query<&PlayerGear, With<LocallyOwned>>,
-    q_comp: Query<&RedTorch>,
+    q_items: Query<(Entity, &RedTorch), With<LocallyOwned>>,
     mut writer: MessageWriter<ExportClientComponent<RedTorch>>,
 ) {
-    for gear in q_player.iter() {
-        for entity in gear_entities(gear) {
-            if let Ok(comp) = q_comp.get(entity) {
-                writer.write(ExportClientComponent {
-                    entity,
-                    data: comp.clone(),
-                });
-            }
-        }
+    for (entity, comp) in q_items.iter() {
+        writer.write(ExportClientComponent {
+            entity,
+            data: comp.clone(),
+        });
     }
 }
 
+// TODO: Optimize/Throttle - Continuous state currently blasting every frame
 fn send_export_repellentflask(
-    q_player: Query<&PlayerGear, With<LocallyOwned>>,
-    q_comp: Query<&RepellentFlask>,
+    q_items: Query<(Entity, &RepellentFlask), With<LocallyOwned>>,
     mut writer: MessageWriter<ExportClientComponent<RepellentFlask>>,
 ) {
-    for gear in q_player.iter() {
-        for entity in gear_entities(gear) {
-            if let Ok(comp) = q_comp.get(entity) {
-                writer.write(ExportClientComponent {
-                    entity,
-                    data: comp.clone(),
-                });
-            }
-        }
+    for (entity, comp) in q_items.iter() {
+        writer.write(ExportClientComponent {
+            entity,
+            data: comp.clone(),
+        });
     }
 }
 
+// TODO: Optimize/Throttle - Continuous state currently blasting every frame
 fn send_export_salt(
-    q_player: Query<&PlayerGear, With<LocallyOwned>>,
-    q_comp: Query<&SaltData>,
+    q_items: Query<(Entity, &SaltData), With<LocallyOwned>>,
     mut writer: MessageWriter<ExportClientComponent<SaltData>>,
 ) {
-    for gear in q_player.iter() {
-        for entity in gear_entities(gear) {
-            if let Ok(comp) = q_comp.get(entity) {
-                writer.write(ExportClientComponent {
-                    entity,
-                    data: comp.clone(),
-                });
-            }
-        }
+    for (entity, comp) in q_items.iter() {
+        writer.write(ExportClientComponent {
+            entity,
+            data: comp.clone(),
+        });
     }
 }
 
+// TODO: Optimize/Throttle - Continuous state currently blasting every frame
 fn send_export_sage(
-    q_player: Query<&PlayerGear, With<LocallyOwned>>,
-    q_comp: Query<&SageBundleData>,
+    q_items: Query<(Entity, &SageBundleData), With<LocallyOwned>>,
     mut writer: MessageWriter<ExportClientComponent<SageBundleData>>,
 ) {
-    for gear in q_player.iter() {
-        for entity in gear_entities(gear) {
-            if let Ok(comp) = q_comp.get(entity) {
-                writer.write(ExportClientComponent {
-                    entity,
-                    data: comp.clone(),
-                });
-            }
-        }
+    for (entity, comp) in q_items.iter() {
+        writer.write(ExportClientComponent {
+            entity,
+            data: comp.clone(),
+        });
     }
 }
 
+// TODO: Optimize/Throttle - Continuous state currently blasting every frame
 fn send_export_quartz(
-    q_player: Query<&PlayerGear, With<LocallyOwned>>,
-    q_comp: Query<&QuartzStoneData>,
+    q_items: Query<(Entity, &QuartzStoneData), With<LocallyOwned>>,
     mut writer: MessageWriter<ExportClientComponent<QuartzStoneData>>,
 ) {
-    for gear in q_player.iter() {
-        for entity in gear_entities(gear) {
-            if let Ok(comp) = q_comp.get(entity) {
-                writer.write(ExportClientComponent {
-                    entity,
-                    data: comp.clone(),
-                });
-            }
-        }
+    for (entity, comp) in q_items.iter() {
+        writer.write(ExportClientComponent {
+            entity,
+            data: comp.clone(),
+        });
     }
 }
 
@@ -265,25 +229,24 @@ fn send_export_quartz(
 /// component (e.g. Thermometer, EMFMeter, Recorder, etc.).
 /// Entities covered by a specialist send system are explicitly skipped to
 /// avoid duplicate messages.
+// TODO: Optimize/Throttle - Continuous state currently blasting every frame
 fn send_export_toggleable(
-    q_player: Query<&PlayerGear, With<LocallyOwned>>,
-    q_specialist: Query<(), Or<(With<Flashlight>, With<UVTorch>, With<RedTorch>)>>,
-    q_comp: Query<&Toggleable>,
+    q_items: Query<
+        (Entity, &Toggleable),
+        (
+            With<LocallyOwned>,
+            Without<Flashlight>,
+            Without<UVTorch>,
+            Without<RedTorch>,
+        ),
+    >,
     mut writer: MessageWriter<ExportClientComponent<Toggleable>>,
 ) {
-    for gear in q_player.iter() {
-        for entity in gear_entities(gear) {
-            // Skip entities handled by a specialist send system.
-            if q_specialist.get(entity).is_ok() {
-                continue;
-            }
-            if let Ok(comp) = q_comp.get(entity) {
-                writer.write(ExportClientComponent {
-                    entity,
-                    data: *comp,
-                });
-            }
-        }
+    for (entity, comp) in q_items.iter() {
+        writer.write(ExportClientComponent {
+            entity,
+            data: *comp,
+        });
     }
 }
 

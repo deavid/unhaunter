@@ -134,7 +134,8 @@ pub(crate) fn queue_drop_request(
                 continue;
             };
 
-            commands.entity(entity).remove::<LocallyOwned>();
+            // Intentionally retain LocallyOwned — the dropping player remains the Designated Driver
+            // and continues simulating the gear's internal state while it is on the floor.
             writer_drop.write(RequestDrop {
                 entity,
                 position: [player_pos.x, player_pos.y, player_pos.z],

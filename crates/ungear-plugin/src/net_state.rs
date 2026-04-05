@@ -19,9 +19,10 @@ use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unmission_core::types::SimulationState;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unreplicon_core::events::PlayerNetworkReconnected;
-use unreplicon_core::messages::{OwnershipGranted, RequestDrop, RequestGrab};
+use unplayer_core::components::{MainPlayer, PlayerDisconnected, PlayerSprite};
+use unreplicon_core::components::NetworkEntityReady;
+use unreplicon_core::events::{PlayerNetworkDisconnected, PlayerNetworkReconnected};
+use unreplicon_core::messages::{OwnershipGranted, OwnershipRevoked, RequestDrop, RequestGrab};
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole, is_pure_client};
@@ -145,9 +146,22 @@ fn handle_request_grab(
         let client_id = msg.client_id;
         let item_entity = msg.message.entity;
 
-        if let Ok((entity, owner, is_gear, is_furniture)) = q_items.get(item_entity)
-            && owner.is_none()
-        {
+        if let Ok((entity, old_owner, is_gear, is_furniture)) = q_items.get(item_entity) {
+            // Revoke simulation authority from the old driver if different from the new grabber.
+            if let Some(old_owner) = old_owner {
+                let old_client_id = from_owner_id(old_owner.0);
+                if old_client_id != client_id {
+                    if old_client_id == ClientId::Server {
+                        commands.entity(entity).remove::<LocallyOwned>();
+                    } else {
+                        commands.write_message(ToClients {
+                            mode: SendMode::Direct(old_client_id),
+                            message: OwnershipRevoked { entity },
+                        });
+                    }
+                }
+            }
+
             let owner_id = to_owner_id(client_id);
             commands.entity(entity).insert(Owner(owner_id));
             commands.entity(entity).remove::<FloorItemCollidable>();
@@ -185,7 +199,8 @@ fn handle_request_drop(
         if let Ok((entity, owner, is_gear, is_furniture)) = q_items.get(item_entity)
             && from_owner_id(owner.0) == client_id
         {
-            commands.entity(entity).remove::<Owner>();
+            // Owner is intentionally retained — the dropping player remains the Designated Driver
+            // and continues simulating the gear's internal state while it is on the floor.
             commands.entity(entity).insert(FloorItemCollidable);
             commands.entity(entity).insert(Position {
                 x: msg.message.position[0],
@@ -505,6 +520,68 @@ fn handle_truck_loadout_message(
     }
 }
 
+fn orphan_catcher(
+    mut reader: MessageReader<PlayerNetworkDisconnected>,
+    q_all_players: Query<(&PlayerSprite, &Owner)>,
+    q_eligible_survivors: Query<
+        (&PlayerSprite, &Owner),
+        (With<NetworkEntityReady>, Without<PlayerDisconnected>),
+    >,
+    mut q_gear: Query<(Entity, &mut Owner), Without<PlayerSprite>>,
+    mut commands: Commands,
+) {
+    for msg in reader.read() {
+        // Identify the disconnected player's OwnerId (may already have PlayerDisconnected,
+        // so we search all players to reliably find their OwnerId).
+        let Some(disconnected_owner) = q_all_players
+            .iter()
+            .find(|(sprite, _)| sprite.id == msg.player_uuid)
+            .map(|(_, owner)| owner.0)
+        else {
+            warn!(
+                "orphan_catcher: no player entity found for UUID {}",
+                msg.player_uuid
+            );
+            continue;
+        };
+
+        // Find a surviving, ready, connected player to inherit simulation authority.
+        let Some(survivor_owner) = q_eligible_survivors
+            .iter()
+            .find(|(sprite, _)| sprite.id != msg.player_uuid)
+            .map(|(_, owner)| owner.0)
+        else {
+            warn!(
+                "orphan_catcher: no surviving player for orphaned gear of UUID {}",
+                msg.player_uuid
+            );
+            continue;
+        };
+
+        let survivor_client_id = from_owner_id(survivor_owner);
+
+        // Reassign all gear (inventory or deployed) owned by the disconnected player.
+        for (entity, mut owner) in q_gear.iter_mut() {
+            if owner.0 != disconnected_owner {
+                continue;
+            }
+            owner.0 = survivor_owner;
+            if survivor_client_id == ClientId::Server {
+                commands.entity(entity).insert(LocallyOwned);
+            } else {
+                commands.write_message(ToClients {
+                    mode: SendMode::Direct(survivor_client_id),
+                    message: OwnershipGranted { entity },
+                });
+            }
+            info!(
+                "orphan_catcher: reassigned entity {:?} from {:?} to {:?}",
+                entity, disconnected_owner, survivor_owner
+            );
+        }
+    }
+}
+
 fn reconcile_gear_on_reconnect(
     mut reader: MessageReader<PlayerNetworkReconnected>,
     q_players: Query<(&PlayerSprite, &PlayerGear)>,
@@ -810,7 +887,7 @@ pub(crate) fn app_setup(app: &mut App) {
     );
     app.add_systems(
         Update,
-        reconcile_gear_on_reconnect
+        (reconcile_gear_on_reconnect, orphan_catcher)
             .run_if(resource_exists::<AuthorityRole>)
             .run_if(in_state(SimulationState::Ready)),
     );
