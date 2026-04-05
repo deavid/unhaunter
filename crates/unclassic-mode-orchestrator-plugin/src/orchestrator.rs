@@ -83,6 +83,24 @@ pub(crate) fn classic_mode_orchestrator(
                 .unwrap_or(Position::new_i64(0, 0, 0));
 
             let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set().as_vec();
+            let ghost_type_names = possible_ghost_types
+                .iter()
+                .map(|ghost_type| ghost_type.name())
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            info!(
+                "MULTIPLAYER_GHOST_POOL_AUTHORITY: difficulty={:?} ghost_count={} ghost_types=[{}]",
+                p.difficulty.0,
+                possible_ghost_types.len(),
+                ghost_type_names
+            );
+            if possible_ghost_types.is_empty() {
+                warn!(
+                    "MULTIPLAYER_GHOST_POOL_AUTHORITY: authoritative difficulty {:?} produced an empty ghost pool during mission setup",
+                    p.difficulty.0
+                );
+            }
 
             commands.insert_resource(SummaryData::new(
                 possible_ghost_types.clone(),

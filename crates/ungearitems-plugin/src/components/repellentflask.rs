@@ -8,6 +8,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::equipment::EquipmentPosition;
+use ungearitems_core::events::RepellentHitNetMessage;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use uninteraction_core::interaction::Triggered;
@@ -17,7 +18,7 @@ use unorchestrator_core::UIContextState;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::Emissive;
 use unreplicon_core::ownership::LocallyOwned;
-use unreplicon_core::resources::LocalPlayerRole;
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
@@ -171,6 +172,8 @@ fn repellent_update(
     bf: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
     difficulty: Res<CurrentDifficulty>,
+    authority: Option<Res<AuthorityRole>>,
+    mut hit_writer: MessageWriter<RepellentHitNetMessage>,
     mut positions: Local<Array3<Vec<Vec3>>>,
     mut positions_dirty: Local<Vec<(usize, usize, usize)>>,
     time: Res<Time>,
@@ -205,6 +208,11 @@ fn repellent_update(
             positions_dirty.push(nidx);
         }
     }
+
+    // On a pure join client we cannot write to the server-authoritative GhostSprite.
+    // Instead we accumulate hits/misses and send them to the server each frame.
+    let mut frame_hits: f32 = 0.0;
+    let mut frame_misses: f32 = 0.0;
 
     for (mut r_pos, mut rep, mut mapcolor, entity, mut o_emissive) in &mut qrp {
         rep.life -= dt;
@@ -304,49 +312,75 @@ fn repellent_update(
             if dist2 < 4.5 {
                 let dist2b = (dist2 + 1.0) * 2.0;
                 if ghost.class == rep.class {
-                    ghost.repellent_hits_frame += dt * 180.2 / dist2b;
-                    // Correct repellent - turn electric blue
+                    // Correct repellent: turn particle electric blue.
                     rep.hit_correct = true;
+                    if authority.is_some() {
+                        // Authority: mutate the local (authoritative) GhostSprite directly.
+                        ghost.repellent_hits_frame += dt * 180.2 / dist2b;
+                    } else {
+                        // Pure client: accumulate and send to the server.
+                        frame_hits += dt * 180.2 / dist2b;
+                    }
                 } else {
-                    // Incorrect repellent - turn bright red
-                    ghost.repellent_misses_frame += dt * 120.2 / dist2b;
+                    // Incorrect repellent: turn particle bright red.
                     rep.hit_incorrect = true;
+                    if authority.is_some() {
+                        ghost.repellent_misses_frame += dt * 120.2 / dist2b;
+                    } else {
+                        frame_misses += dt * 120.2 / dist2b;
+                    }
                 }
                 rep.life -= 20.0 * dt / dist2b;
                 // cmd.entity(entity).despawn();
             }
         }
     }
-    for (_pos, mut ghost) in &mut qgs {
-        if ghost.repellent_hits_frame >= 1.0 {
-            while ghost.repellent_hits_frame >= 1.0 {
-                ghost.repellent_hits += 1;
-                ghost.repellent_hits_frame -= 1.0;
-                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood();
+
+    // Pure join client: send accumulated hit data to the server.
+    // The server applies it to the authoritative GhostSprite and replicates
+    // the result (including squish/stretch deltas) back to all clients.
+    if authority.is_none() && (frame_hits > 0.0 || frame_misses > 0.0) {
+        hit_writer.write(RepellentHitNetMessage {
+            hits_this_frame: frame_hits,
+            misses_this_frame: frame_misses,
+        });
+    }
+
+    // Delta accumulation and decay: only on authority (single-player or mesh host).
+    // Dedicated-server path is handled by handle_repellent_hits / repellent_ghost_delta_tick
+    // in net_state.rs so that the ghost's delta fields replicate correctly.
+    if authority.is_some() {
+        for (_pos, mut ghost) in &mut qgs {
+            if ghost.repellent_hits_frame >= 1.0 {
+                while ghost.repellent_hits_frame >= 1.0 {
+                    ghost.repellent_hits += 1;
+                    ghost.repellent_hits_frame -= 1.0;
+                    ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood();
+                }
+                ghost.repellent_hits_delta = 1.0;
+            } else {
+                ghost.repellent_hits_frame = (ghost.repellent_hits_frame - dt).max(0.0);
+                ghost.repellent_hits_delta -= dt;
+                ghost.repellent_hits_delta = ghost
+                    .repellent_hits_delta
+                    .clamp(0.0, 1.0)
+                    .max(ghost.repellent_hits_frame);
             }
-            ghost.repellent_hits_delta = 1.0;
-        } else {
-            ghost.repellent_hits_frame = (ghost.repellent_hits_frame - dt).max(0.0);
-            ghost.repellent_hits_delta -= dt;
-            ghost.repellent_hits_delta = ghost
-                .repellent_hits_delta
-                .clamp(0.0, 1.0)
-                .max(ghost.repellent_hits_frame);
-        }
-        if ghost.repellent_misses_frame >= 1.0 {
-            while ghost.repellent_misses_frame >= 1.0 {
-                ghost.repellent_misses += 1;
-                ghost.repellent_misses_frame -= 1.0;
-                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood();
+            if ghost.repellent_misses_frame >= 1.0 {
+                while ghost.repellent_misses_frame >= 1.0 {
+                    ghost.repellent_misses += 1;
+                    ghost.repellent_misses_frame -= 1.0;
+                    ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood();
+                }
+                ghost.repellent_misses_delta = 1.0;
+            } else {
+                ghost.repellent_misses_frame = (ghost.repellent_misses_frame - dt).max(0.0);
+                ghost.repellent_misses_delta -= dt;
+                ghost.repellent_misses_delta = ghost
+                    .repellent_misses_delta
+                    .clamp(0.0, 1.0)
+                    .max(ghost.repellent_misses_frame);
             }
-            ghost.repellent_misses_delta = 1.0;
-        } else {
-            ghost.repellent_misses_frame = (ghost.repellent_misses_frame - dt).max(0.0);
-            ghost.repellent_misses_delta -= dt;
-            ghost.repellent_misses_delta = ghost
-                .repellent_misses_delta
-                .clamp(0.0, 1.0)
-                .max(ghost.repellent_misses_frame);
         }
     }
 

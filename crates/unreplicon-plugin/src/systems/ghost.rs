@@ -91,7 +91,20 @@ fn sync_ghost_guess_to_mission_goal(
     if !res.is_changed() {
         return;
     }
+
+    if q_goal.is_empty() {
+        warn!(
+            "sync_ghost_guess_to_mission_goal: GhostGuess changed but MissionGoalEntity is missing; state={:?}",
+            *res
+        );
+        return;
+    }
+
     for mut comp in q_goal.iter_mut() {
+        info!(
+            "GHOST_GUESS_BRIDGE_SERVER: syncing resource to mission goal entity: {:?}",
+            *res
+        );
         *comp = res.clone();
     }
 }
@@ -115,6 +128,10 @@ fn sync_mission_goal_to_ghost_guess(
     mut res: ResMut<GhostGuess>,
 ) {
     for comp in q_goal.iter() {
+        info!(
+            "GHOST_GUESS_BRIDGE_CLIENT: applying replicated mission goal GhostGuess {:?}",
+            *comp
+        );
         *res = comp.clone();
     }
 }
@@ -148,8 +165,22 @@ fn server_teardown_grace_period(
     mut next_app_state: ResMut<NextState<UIContextState>>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
     mut q_server_phase: Query<&mut ServerGamePhase>,
+    q_gamesprites: Query<
+        Entity,
+        (
+            With<unboard_core::entity::GameSprite>,
+            Without<bevy_replicon::prelude::Remote>,
+        ),
+    >,
+    ui_state: Res<State<UIContextState>>,
 ) {
     if timer.is_none() {
+        let gs_count = q_gamesprites.iter().count();
+        warn!(
+            "TEARDOWN_GRACE_START: ui_state={:?} local_gamesprites={} — server beginning 5s grace period before returning to Lobby",
+            ui_state.get(),
+            gs_count
+        );
         *timer = Some(Timer::from_seconds(5.0, TimerMode::Once));
     }
 
@@ -160,6 +191,13 @@ fn server_teardown_grace_period(
     if !grace_timer.is_finished() {
         return;
     }
+
+    let gs_count = q_gamesprites.iter().count();
+    warn!(
+        "TEARDOWN_GRACE_END: ui_state={:?} local_gamesprites={} — server returning to Lobby. If gamesprites > 0, they will survive into mission 2.",
+        ui_state.get(),
+        gs_count
+    );
 
     for mut phase in q_server_phase.iter_mut() {
         *phase = ServerGamePhase::Lobby;

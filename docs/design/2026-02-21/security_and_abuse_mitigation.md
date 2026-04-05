@@ -94,7 +94,7 @@ We flip this asymmetry by moving the "cost of entry" away from the stateless RES
   `429 Too Many Requests`. Even with a sophisticated script, an attacker can only hold 2 servers hostage, and they are
   evicted 10 seconds later.
 
-## 5. Infrastructure Hardening (The SRE Reality)
+## 5. Infrastructure Hardening (Operational Reality)
 
 A custom protocol deters casual script kiddies, but basic application hardening prevents catastrophic failures. During
 our internal IDE audit of the V1 Hub, we identified massive vulnerabilities that must be permanently ruled out:

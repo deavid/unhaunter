@@ -32,7 +32,6 @@ impl Plugin for UnhaunterGearCorePlugin {
         app.replicate::<GearMarker>();
         app.replicate::<GearKind>();
         app.replicate::<DeployedGear>();
-        app.set_marker_fns::<LocallyOwned, PlayerGear>(noop_write::<PlayerGear>, noop_remove);
         app.set_marker_fns::<LocallyOwned, HeldObject>(noop_write::<HeldObject>, noop_remove);
         app.set_marker_fns::<LocallyOwned, GearMarker>(noop_write::<GearMarker>, noop_remove);
         app.set_marker_fns::<LocallyOwned, GearKind>(noop_write::<GearKind>, noop_remove);
@@ -52,5 +51,6 @@ impl Plugin for UnhaunterGearPlugin {
             LoadingState::new(UIContextState::EngineBoot).load_collection::<GearAssets>(),
         );
         systems::app_setup(app);
+        crate::debug::app_setup(app);
     }
 }

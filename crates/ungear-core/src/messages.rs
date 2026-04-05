@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use uninvestigation_core::ghost::GhostType;
+
 use crate::components::playergear::HeldObject;
 use crate::types::gear::equipment::Hand;
 use crate::types::gear::kind::GearKind;
@@ -37,6 +39,8 @@ impl bevy::ecs::entity::MapEntities for ExportPlayerGearMessage {
 pub enum TruckLoadoutAction {
     /// Equip a gear item from the van inventory into the first free slot.
     AddGear(GearKind),
+    /// Craft or refill repellent for the requested ghost type.
+    CraftRepellent(GhostType),
     /// Unequip the item currently held in the given hand.
     ClearHand(Hand),
     /// Unequip the backpack item at the given index.

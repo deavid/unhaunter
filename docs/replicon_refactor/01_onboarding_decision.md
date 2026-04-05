@@ -39,8 +39,8 @@ declare "this component should be synced" and let the underlying system handle t
 ## 2. Evaluating `bevy_replicon`: Poking Holes and Hard Blockers
 
 `bevy_replicon` emerged as the industry-standard solution for Bevy networking, utilizing ECS reflection to automatically
-sync components. However, adopting a framework requires surrendering some control. As an SRE-minded project aiming for
-"six nines" of reliability, we aggressively poked holes in the framework to ensure it could support Unhaunter's specific
+sync components. However, adopting a framework requires surrendering some control. As a reliability-focused project with
+strict uptime expectations, we aggressively poked holes in the framework to ensure it could support Unhaunter's specific
 requirements.
 
 ### Blocker A: The "Server-Authoritative" Paradigm vs. Local Prediction
@@ -147,7 +147,7 @@ the "God Crate" problem by allowing us to define replication rules directly insi
 `ungear`, etc.).
 
 While it forces us to adopt strict ECS component splitting, manage visibility masks for local prediction, and write
-interpolation systems, these constraints actually enforce a cleaner, more robust architecture that aligns with our SRE
-goals.
+interpolation systems, these constraints actually enforce a cleaner, more robust architecture that aligns with our
+reliability goals.
 
 We are proceeding with the migration.

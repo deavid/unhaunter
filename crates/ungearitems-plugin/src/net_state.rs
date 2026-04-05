@@ -15,21 +15,30 @@
 
 use bevy::prelude::*;
 use bevy_replicon::prelude::{Channel, ClientId, ClientMessageAppExt, FromClient, Replicated};
+use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 use ungearitems_core::components::quartz::QuartzStoneData;
 use ungearitems_core::components::redtorch::RedTorch;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use ungearitems_core::components::sage::SageBundleData;
-use ungearitems_core::components::salt::SaltData;
+use ungearitems_core::components::salt::{SaltData, SaltPile};
 use ungearitems_core::components::uvtorch::UVTorch;
+use ungearitems_core::events::RepellentHitNetMessage;
+use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Toggleable;
 use unorchestrator_core::UIContextState;
 use unreplicon_core::client_export::ExportClientComponent;
+use unreplicon_core::messages::SaltDroppedMessage;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
-use unreplicon_core::resources::{AuthorityRole, is_pure_client};
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole, is_pure_client};
+use unspatial_core::position::Position;
 
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_client_message::<SaltDroppedMessage>(Channel::Ordered);
+    app.add_client_message::<RepellentHitNetMessage>(Channel::Unreliable);
+
     // Register one ExportClientComponent<T> per gear component type.
     // All use the mapped variant so replicon auto-translates entity IDs.
     app.add_mapped_client_message::<ExportClientComponent<Flashlight>>(Channel::Unreliable);
@@ -64,6 +73,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
+            handle_salt_drop,
             handle_import_flashlight,
             handle_import_uvtorch,
             handle_import_redtorch,
@@ -72,8 +82,21 @@ pub(crate) fn app_setup(app: &mut App) {
             handle_import_sage,
             handle_import_quartz,
             handle_import_toggleable,
+            handle_repellent_hits,
         )
             .run_if(resource_exists::<AuthorityRole>)
+            .run_if(in_state(UIContextState::InGame)),
+    );
+
+    // Dedicated server only: drive ghost repellent delta accumulation / decay.
+    // On host/single-player this is handled by the authority branch inside
+    // repellent_update (which runs because LocalPlayerRole is present there).
+    app.add_systems(
+        Update,
+        repellent_ghost_delta_tick
+            .after(handle_repellent_hits)
+            .run_if(resource_exists::<AuthorityRole>)
+            .run_if(not(resource_exists::<LocalPlayerRole>))
             .run_if(in_state(UIContextState::InGame)),
     );
 }
@@ -94,6 +117,25 @@ fn gear_entities(gear: &PlayerGear) -> impl Iterator<Item = Entity> + '_ {
         .into_iter()
         .flatten()
         .chain(gear.inventory.iter().copied())
+}
+
+fn handle_salt_drop(
+    mut reader: MessageReader<FromClient<SaltDroppedMessage>>,
+    mut commands: Commands,
+) {
+    for msg in reader.read() {
+        let [x, y, z, visual_priority] = msg.message.pos;
+        commands.spawn((
+            SaltPile,
+            Position {
+                x,
+                y,
+                z,
+                visual_priority,
+            },
+            Replicated,
+        ));
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -438,5 +480,79 @@ fn handle_import_toggleable(
             continue;
         }
         *toggleable = msg.message.data;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Repellent hit forwarding (dedicated server)
+// ---------------------------------------------------------------------------
+
+/// Server side: receives accumulated repellent hit data sent by pure join
+/// clients each frame that their local particles register contact with the
+/// ghost. Adds the reported amounts to the ghost's frame accumulators so the
+/// authority `GhostSprite` reflects the actual damage.
+///
+/// Runs on all authority nodes. On host/single-player, no messages will arrive
+/// from the pure-client path (there are no pure clients), so this is a no-op.
+fn handle_repellent_hits(
+    mut reader: MessageReader<FromClient<RepellentHitNetMessage>>,
+    mut q_ghost: Query<&mut GhostSprite>,
+) {
+    for msg in reader.read() {
+        let hits = msg.message.hits_this_frame;
+        let misses = msg.message.misses_this_frame;
+        for mut ghost in q_ghost.iter_mut() {
+            ghost.repellent_hits_frame += hits;
+            ghost.repellent_misses_frame += misses;
+        }
+        debug!(
+            "handle_repellent_hits: applied hits={:.3} misses={:.3} from client {:?}",
+            hits, misses, msg.client_id
+        );
+    }
+}
+
+/// Dedicated-server only: drives ghost repellent delta accumulation and decay
+/// every frame. On host/single-player the equivalent logic runs inside the
+/// authority branch of `repellent_update` (which only executes when
+/// `LocalPlayerRole` is present). This system fills the gap on a dedicated
+/// server where `repellent_update` never runs.
+fn repellent_ghost_delta_tick(
+    mut q_ghost: Query<&mut GhostSprite>,
+    difficulty: Res<CurrentDifficulty>,
+    time: Res<Time>,
+) {
+    let dt = time.delta_secs();
+    for mut ghost in q_ghost.iter_mut() {
+        if ghost.repellent_hits_frame >= 1.0 {
+            while ghost.repellent_hits_frame >= 1.0 {
+                ghost.repellent_hits += 1;
+                ghost.repellent_hits_frame -= 1.0;
+                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood();
+            }
+            ghost.repellent_hits_delta = 1.0;
+        } else {
+            ghost.repellent_hits_frame = (ghost.repellent_hits_frame - dt).max(0.0);
+            ghost.repellent_hits_delta -= dt;
+            ghost.repellent_hits_delta = ghost
+                .repellent_hits_delta
+                .clamp(0.0, 1.0)
+                .max(ghost.repellent_hits_frame);
+        }
+        if ghost.repellent_misses_frame >= 1.0 {
+            while ghost.repellent_misses_frame >= 1.0 {
+                ghost.repellent_misses += 1;
+                ghost.repellent_misses_frame -= 1.0;
+                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood();
+            }
+            ghost.repellent_misses_delta = 1.0;
+        } else {
+            ghost.repellent_misses_frame = (ghost.repellent_misses_frame - dt).max(0.0);
+            ghost.repellent_misses_delta -= dt;
+            ghost.repellent_misses_delta = ghost
+                .repellent_misses_delta
+                .clamp(0.0, 1.0)
+                .max(ghost.repellent_misses_frame);
+        }
     }
 }

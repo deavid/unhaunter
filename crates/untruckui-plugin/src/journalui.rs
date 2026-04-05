@@ -16,6 +16,26 @@ pub(crate) fn setup_journal_ui(
     truck_ui_assets: &TruckUiAssets,
     difficulty: &CurrentDifficulty,
 ) {
+    let mission_ghosts = difficulty.0.ghost_set().as_vec();
+    let mission_ghost_names = mission_ghosts
+        .iter()
+        .map(|ghost_type| ghost_type.name())
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    info!(
+        "TRUCK_JOURNAL_GHOST_LIST_BUILD: current_difficulty={:?} ghost_count={} ghost_types=[{}]",
+        difficulty.0,
+        mission_ghosts.len(),
+        mission_ghost_names
+    );
+    if mission_ghosts.is_empty() {
+        warn!(
+            "TRUCK_JOURNAL_GHOST_LIST_BUILD: current_difficulty={:?} produced an empty ghost list while building the truck journal",
+            difficulty.0
+        );
+    }
+
     // Journal contents
     p.spawn((
         Text::new("Select evidence:"),
@@ -131,7 +151,7 @@ pub(crate) fn setup_journal_ui(
     .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR))
     .with_children(|ghost_selection| {
         // Use difficulty.0 (CurrentDifficulty) to get the ghost_set via extension trait
-        for ghost_type in difficulty.0.ghost_set().as_vec() {
+        for ghost_type in mission_ghosts {
             ghost_selection
                 .spawn(Button)
                 .insert(Node {

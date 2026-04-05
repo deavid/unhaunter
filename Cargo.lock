@@ -7459,10 +7459,13 @@ dependencies = [
  "bevy",
  "bevy_asset_loader",
  "bevy_replicon",
+ "unbehavior-core",
  "unboard-core",
  "uncommon-app-core",
  "undifficulty-core",
  "ungear-core",
+ "ungearitems-core",
+ "unlight-core",
  "unmetrics-core",
  "unmission-core",
  "unorchestrator-core",
@@ -7471,6 +7474,7 @@ dependencies = [
  "unreplicon-core",
  "unspatial-core",
  "untruck-core",
+ "unvitals-core",
 ]
 
 [[package]]
@@ -8320,15 +8324,9 @@ dependencies = [
  "bevy_renet",
  "bevy_replicon",
  "bevy_replicon_renet",
- "unbehavior-core",
  "unboard-core",
- "uncommon-app-core",
  "undifficulty-core",
- "ungear-core",
- "ungearitems-core",
- "uninteraction-core",
  "uninvestigation-core",
- "unlight-core",
  "unmapload-core",
  "unmission-core",
  "unorchestrator-core",
@@ -8336,7 +8334,7 @@ dependencies = [
  "unreplicon-core",
  "unreplicon-transport",
  "unspatial-core",
- "unvitals-core",
+ "untmxmap-core",
  "uuid",
 ]
 

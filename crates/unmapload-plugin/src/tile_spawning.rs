@@ -4,6 +4,7 @@
 //! It converts tile data from Tiled into game entities with appropriate components and behaviors.
 
 use bevy::prelude::*;
+use bevy_platform::collections::HashSet;
 use bevy_replicon::prelude::Replicated;
 use unbehavior_core::behavior::Util;
 use unbehavior_core::components::PendingProperties;
@@ -48,7 +49,9 @@ pub(crate) fn process_and_spawn_tile(
     commands: &mut Commands,
     c: &mut f32,
     existing_tmx_map: &bevy_platform::collections::HashMap<TmxEntityId, Entity>,
+    scheduled_for_despawn: &HashSet<Entity>,
     q_positions: &Query<&Position>,
+    map_filepath: &str,
 ) {
     // Get the map tile components from the SpriteDB
     let mt = p
@@ -61,14 +64,13 @@ pub(crate) fn process_and_spawn_tile(
     // When a client joins, server-replicated dynamic entities (doors, switches, etc.)
     // arrive before the map loads. Instead of spawning a duplicate, we attach components
     // to the existing entity using insert_if_new to preserve server-authoritative state.
-    let stitch_entity = {
-        let tmx_id = TmxEntityId {
-            layer_idx,
-            x: tile.pos.x,
-            y: tile.pos.y,
-        };
-        existing_tmx_map.get(&tmx_id).copied()
+    let stitch_tmx_id = TmxEntityId {
+        layer_idx,
+        x: tile.pos.x,
+        y: tile.pos.y,
     };
+
+    let stitch_entity = existing_tmx_map.get(&stitch_tmx_id).copied();
 
     let mut beh = mt.behavior.clone();
 
@@ -98,17 +100,47 @@ pub(crate) fn process_and_spawn_tile(
         commands.spawn((new_pos, VanEntryPoint, GameSprite));
     }
 
-    // Spawn the base entity, or reuse existing replicated entity for stitch.
-    let mut entity_commands = if let Some(existing) = stitch_entity {
-        if let Ok(server_pos) = q_positions.get(existing) {
-            pos = *server_pos;
+    // Helper to determine what we do with the stitch entity
+    let (should_reuse, existing_to_reuse) = stitch_entity.map_or((false, None), |existing| {
+        if scheduled_for_despawn.contains(&existing) {
+            (false, Some(existing)) // Conflict: skip reuse, but keep around for logging
+        } else {
+            (true, Some(existing)) // Clean reuse
         }
-        warn!(
-            "Existing entity: {existing:?} - {}",
+    });
+
+    // Spawn the base entity, or reuse existing replicated entity for stitch.
+    let mut entity_commands = if should_reuse {
+        let existing = existing_to_reuse.unwrap();
+        trace!(
+            "TILE_STITCH_REUSE: map={} entity={:?} tmx_id={:?} behavior={}",
+            map_filepath,
+            existing,
+            stitch_tmx_id,
             beh.key_cvo().to_key_string()
         );
+        if let Ok(server_pos) = q_positions.get(existing) {
+            pos = *server_pos;
+        } else {
+            warn!(
+                "TILE_STITCH_MISSING_POSITION: map={} entity={:?} tmx_id={:?} behavior={} has no Position at stitch time",
+                map_filepath,
+                existing,
+                stitch_tmx_id,
+                beh.key_cvo().to_key_string()
+            );
+        }
         commands.entity(existing)
     } else {
+        if let Some(existing) = existing_to_reuse {
+            warn!(
+                "TILE_STITCH_CONFLICT_AVOIDED: map={} entity={:?} tmx_id={:?} behavior={} was scheduled for despawn. Spawning new entity instead to avoid panic.",
+                map_filepath,
+                existing,
+                stitch_tmx_id,
+                beh.key_cvo().to_key_string()
+            );
+        }
         commands.spawn_empty()
     };
 

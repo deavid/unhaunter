@@ -5,7 +5,7 @@
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_platform::collections::HashMap;
+use bevy_platform::collections::{HashMap, HashSet};
 use bevy_replicon::prelude::Remote;
 use ndarray::Array3;
 use unboard_core::entity::GameSprite;
@@ -73,17 +73,51 @@ fn load_level_handler(
     mut ev: MessageReader<LevelDataEvent>,
     mut commands: Commands,
     qgs: Query<Entity, (With<GameSprite>, Without<Remote>)>,
+    q_remote_tmx: Query<Entity, (With<unbehavior_core::components::TmxEntityId>, With<Remote>)>,
     q_positions: Query<&Position>,
     mut p: LoadLevelSystemParam,
     mut ev_geometry_init: MessageWriter<MapGeometryInitializedEvent>,
     mut ev_level_loaded: MessageWriter<LevelLoadedEvent>,
     time: Res<Time>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
+    ui_state: Res<State<UIContextState>>,
+    sim_state: Res<State<SimulationState>>,
 ) {
     // Get the loaded event or return early if none
     let Some(loaded_event) = ev.read().next() else {
         return;
     };
+
+    let local_gamesprites = qgs.iter().count();
+    let remote_tmx_entities = q_remote_tmx.iter().count();
+    let existing_tmx_count = p.existing_tmx_entities.iter().count();
+    let is_authority = p.authority.is_some();
+
+    // Log WHO is loading, WHEN (state), and WHAT entities exist at load start.
+    // This distinguishes: dedicated server vs client, first vs second mission,
+    // and whether zombie entities survived from a previous load.
+    if local_gamesprites > 0 {
+        warn!(
+            "LOAD_HANDLER_CONTEXT: map={} ui_state={:?} sim_state={:?} authority={} local_gamesprites={} remote_tmx={} existing_tmx={} — local GameSprites exist at load start, expected 0",
+            loaded_event.map_filepath,
+            ui_state.get(),
+            sim_state.get(),
+            is_authority,
+            local_gamesprites,
+            remote_tmx_entities,
+            existing_tmx_count
+        );
+    } else {
+        info!(
+            "LOAD_HANDLER_CONTEXT: map={} ui_state={:?} sim_state={:?} authority={} local_gamesprites=0 remote_tmx={} existing_tmx={}",
+            loaded_event.map_filepath,
+            ui_state.get(),
+            sim_state.get(),
+            is_authority,
+            remote_tmx_entities,
+            existing_tmx_count
+        );
+    }
 
     info!("Starting level load: {}", loaded_event.map_filepath);
 
@@ -92,6 +126,19 @@ fn load_level_handler(
 
     // --- 1. Cleanup & Reset ---
     // Despawn existing game entities (except remotely replicated!)
+    let scheduled_for_despawn: HashSet<Entity> = qgs.iter().collect();
+    if scheduled_for_despawn.is_empty() {
+        debug!(
+            "LEVEL_LOAD_CLEANUP_BEGIN: map={} scheduled_game_sprite_despawns=0 existing_tmx_entities_before_cleanup={}",
+            loaded_event.map_filepath, existing_tmx_count
+        );
+    } else {
+        warn!(
+            "LEVEL_LOAD_ZOMBIE_GAMESPRITES: map={} {} local GameSprite entities scheduled for despawn at load start",
+            loaded_event.map_filepath,
+            scheduled_for_despawn.len()
+        );
+    }
     for entity in &qgs {
         commands.entity(entity).despawn();
     }
@@ -172,6 +219,36 @@ fn load_level_handler(
         .map(|(e, id)| (id.clone(), e))
         .collect();
 
+    let stale_stitch_candidates: Vec<_> = existing_tmx_map
+        .iter()
+        .filter_map(|(tmx_id, entity)| {
+            scheduled_for_despawn
+                .contains(entity)
+                .then_some((tmx_id.clone(), *entity))
+        })
+        .collect();
+
+    if stale_stitch_candidates.is_empty() {
+        debug!(
+            "LEVEL_LOAD_STITCH_SCAN: map={} existing_tmx_entities={} stale_candidates=0",
+            loaded_event.map_filepath,
+            existing_tmx_map.len()
+        );
+    } else {
+        warn!(
+            "LEVEL_LOAD_STITCH_SCAN: map={} existing_tmx_entities={} stale_candidates={} entities scheduled for despawn are still available for Tmx stitching in this load",
+            loaded_event.map_filepath,
+            existing_tmx_map.len(),
+            stale_stitch_candidates.len()
+        );
+        for (tmx_id, entity) in stale_stitch_candidates.iter().take(12) {
+            warn!(
+                "LEVEL_LOAD_STALE_STITCH_CANDIDATE: map={} entity={:?} tmx_id={:?}",
+                loaded_event.map_filepath, entity, tmx_id
+            );
+        }
+    }
+
     let mut depth_counter = 0.0;
     for (layer_idx, (maptiles, layer)) in tile_layers_iter().enumerate() {
         // Get floor z-index from the layer's floor_mapping
@@ -194,7 +271,9 @@ fn load_level_handler(
                 &mut commands,
                 &mut depth_counter,
                 &existing_tmx_map,
+                &scheduled_for_despawn,
                 &q_positions,
+                &loaded_event.map_filepath,
             );
         }
     }
@@ -213,8 +292,28 @@ pub(crate) fn reset_level_resources(
     sdb.clear();
 }
 
+/// Logs how many local GameSprite entities are still alive when InGame is exited.
+/// On a dedicated server, ClassicModeRenderPlugin is absent so its cleanup_game system
+/// never runs. This log proves whether entities survive into the next mission.
+fn observe_cleanup_gap(qgs: Query<Entity, (With<GameSprite>, Without<Remote>)>) {
+    let count = qgs.iter().count();
+    if count > 0 {
+        warn!(
+            "INGAGE_EXIT_CLEANUP_GAP: {} local GameSprite entities still alive at OnExit(InGame). No cleanup_game system is registered here — these will become zombie entities for the next mission load.",
+            count
+        );
+    } else {
+        debug!(
+            "INGAGE_EXIT_CLEANUP_GAP: 0 local GameSprite entities at OnExit(InGame) — entities were already cleaned up."
+        );
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnExit(UIContextState::InGame), reset_level_resources);
+    app.add_systems(
+        OnExit(UIContextState::InGame),
+        (observe_cleanup_gap, reset_level_resources).chain(),
+    );
     app.add_systems(
         PostUpdate,
         load_level_handler.run_if(bevy::prelude::on_message::<LevelDataEvent>),

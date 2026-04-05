@@ -90,7 +90,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(Flashlight::default());
+            cmd.insert_if_new(Flashlight::default());
             if !is_authority {
                 cmd.insert(FlashlightSkin::default());
             }
@@ -276,7 +276,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(UVTorch::default());
+            cmd.insert_if_new(UVTorch::default());
             if !is_authority {
                 cmd.insert(UVTorchSkin::default());
             }
@@ -411,7 +411,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(RedTorch::default());
+            cmd.insert_if_new(RedTorch::default());
             if !is_authority {
                 cmd.insert(RedTorchSkin::default());
             }
@@ -594,7 +594,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(RepellentFlask::default());
+            cmd.insert_if_new(RepellentFlask::default());
         },
     );
 
@@ -614,7 +614,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(QuartzStoneData::default());
+            cmd.insert_if_new(QuartzStoneData::default());
             if !is_authority {
                 cmd.insert(QuartzStoneSkin::default());
             }
@@ -637,7 +637,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(SaltData::default());
+            cmd.insert_if_new(SaltData::default());
         },
     );
 
@@ -657,7 +657,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(SageBundleData::default());
+            cmd.insert_if_new(SageBundleData::default());
             if !is_authority {
                 cmd.insert(SageBundleSkin::new());
             }

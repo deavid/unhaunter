@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use uninvestigation_core::ghost::GhostType;
 
@@ -7,4 +8,14 @@ use uninvestigation_core::ghost::GhostType;
 #[derive(Clone, Debug, Message)]
 pub struct RequestCraftRepellent {
     pub ghost_type: GhostType,
+}
+
+/// Sent from a pure join client to the dedicated server every frame that local
+/// repellent particles register hits against the ghost. The server applies the
+/// accumulated frame damage to the authoritative `GhostSprite` and replicates
+/// the result back to all clients so squish/stretch visuals work correctly.
+#[derive(Clone, Debug, Serialize, Deserialize, Message)]
+pub struct RepellentHitNetMessage {
+    pub hits_this_frame: f32,
+    pub misses_this_frame: f32,
 }

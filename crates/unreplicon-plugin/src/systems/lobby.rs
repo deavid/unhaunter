@@ -20,6 +20,7 @@ use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LocalPlayerRo
 use unreplicon_core::resources::{
     ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer, MissionAutoJoinArmed,
 };
+use untmxmap_core::resources::maps::Maps;
 use uuid::Uuid;
 
 const AUTO_JOIN_BUFFER_SECS: f32 = 2.0;
@@ -145,6 +146,14 @@ fn process_auto_join(
         *lobby_wait_started_at = Some(now);
     }
 
+    let mission_count = q_mission.iter().count();
+    if mission_count > 1 {
+        warn!(
+            "process_auto_join: found {} SelectedMission entities; expected exactly 1 while syncing client mission state",
+            mission_count
+        );
+    }
+
     let Some(mission) = q_mission.iter().next() else {
         auto_join_armed.0 = false;
         *sync_timer = None;
@@ -170,6 +179,15 @@ fn process_auto_join(
             .unwrap_or(false);
 
         *tracked_mission_joinable = waited_in_lobby_long_enough && mission_age_ok;
+        info!(
+            "MULTIPLAYER_MISSION_AUTO_JOIN_TRACK: map='{}' seed={} difficulty='{}' waited_in_lobby_long_enough={} mission_age_ok={} current_difficulty={:?}",
+            mission.map_path,
+            mission.map_seed,
+            mission.difficulty_id,
+            waited_in_lobby_long_enough,
+            mission_age_ok,
+            current_difficulty.0
+        );
     }
 
     if !*tracked_mission_joinable {
@@ -195,6 +213,10 @@ fn process_auto_join(
 
     current_map_seed.0 = mission.map_seed;
     if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
+        info!(
+            "MULTIPLAYER_MISSION_AUTO_JOIN_APPLY: map='{}' seed={} mission_difficulty={:?} previous_current_difficulty={:?}",
+            mission.map_path, mission.map_seed, diff, current_difficulty.0
+        );
         *current_difficulty = CurrentDifficulty::new(diff);
     } else {
         warn!(
@@ -215,6 +237,42 @@ fn current_unix_time_secs() -> Option<f64> {
         .duration_since(UNIX_EPOCH)
         .ok()
         .map(|d| d.as_secs_f64())
+}
+
+fn parse_difficulty_id(context: &str, difficulty_id: &str) -> Option<Difficulty> {
+    let Ok(parsed_difficulty) = Difficulty::from_str(difficulty_id) else {
+        warn!(
+            "{}: difficulty '{}' could not be parsed",
+            context, difficulty_id
+        );
+        return None;
+    };
+
+    Some(parsed_difficulty)
+}
+
+fn resolve_mission_difficulty(
+    map_filepath: &str,
+    lobby_selected_difficulty: &str,
+    maps: &Maps,
+) -> Option<Difficulty> {
+    let map = maps.maps.iter().find(|map| map.path == map_filepath);
+
+    if let Some(map) = map {
+        if map.mission_data.is_campaign_mission {
+            return Some(map.mission_data.difficulty);
+        }
+    } else {
+        warn!(
+            "resolve_mission_difficulty: selected map '{}' was not found in Maps resource; falling back to lobby-selected difficulty",
+            map_filepath
+        );
+    }
+
+    parse_difficulty_id(
+        "resolve_mission_difficulty/lobby_fallback",
+        lobby_selected_difficulty,
+    )
 }
 
 /// Helper to get UUID for a Replicon ClientId
@@ -264,6 +322,7 @@ fn spawn_lobby_entity_if_missing(
     local_player: Option<Res<LocalPlayerRole>>,
     local_player_res: Option<Res<LocalPlayer>>,
     mut uuid_map: ResMut<ClientUuidMap>,
+    current_difficulty: Res<CurrentDifficulty>,
 ) {
     if !q_lobby.is_empty() {
         return;
@@ -288,12 +347,24 @@ fn spawn_lobby_entity_if_missing(
         uuid_map.0.insert(OwnerId::Server, uuid);
     }
 
+    let selected_difficulty = "standard-challenge".to_string();
+
+    if let Some(lobby_difficulty) = parse_difficulty_id(
+        "AUTHORITY_LOBBY_BOOTSTRAP_DIFFICULTY_STATE",
+        &selected_difficulty,
+    ) {
+        info!(
+            "AUTHORITY_LOBBY_BOOTSTRAP_DIFFICULTY_STATE: selected_difficulty={:?} authoritative_current_difficulty={:?} leader={:?}",
+            lobby_difficulty, current_difficulty.0, leader_uuid
+        );
+    }
+
     commands.spawn((
         Replicated,
         LobbyInfo {
             players,
             selected_map: None,
-            selected_difficulty: "standard-challenge".to_string(),
+            selected_difficulty: selected_difficulty.clone(),
             leader_uuid,
         },
         ServerGamePhase::Lobby,
@@ -306,12 +377,22 @@ fn reset_lobby_entity_on_reenter(
     mut q_existing: Query<(&mut LobbyInfo, &mut ServerGamePhase)>,
     q_selected_mission: Query<Entity, With<SelectedMission>>,
     mut commands: Commands,
+    current_difficulty: Res<CurrentDifficulty>,
 ) {
     if let Ok((mut lobby, mut game_phase)) = q_existing.single_mut() {
         // Re-entering Lobby after a mission: reset selection, signal state change.
         *game_phase = ServerGamePhase::Lobby;
         lobby.selected_map = None;
         lobby.set_changed();
+        if let Some(lobby_difficulty) = parse_difficulty_id(
+            "AUTHORITY_LOBBY_REENTER_DIFFICULTY_STATE",
+            &lobby.selected_difficulty,
+        ) {
+            info!(
+                "AUTHORITY_LOBBY_REENTER_DIFFICULTY_STATE: selected_difficulty={:?} authoritative_current_difficulty={:?}",
+                lobby_difficulty, current_difficulty.0
+            );
+        }
         info!("Lobby entity reset for new session (phase set to Lobby)");
     } else {
         warn!("reset_lobby_entity_on_reenter: Lobby entity not found!");
@@ -486,6 +567,7 @@ fn on_client_disconnected(
     };
 
     for (mut lobby, phase) in q_lobby.iter_mut() {
+        let connected_before = lobby.players.iter().filter(|p| p.connected).count();
         if *phase == ServerGamePhase::Lobby {
             // Hard remove
             lobby.players.retain(|p| p.player_uuid != uuid);
@@ -513,6 +595,18 @@ fn on_client_disconnected(
             info!(
                 "Leader disconnected; new leader_uuid={:?}",
                 lobby.leader_uuid
+            );
+        }
+
+        let connected_after = lobby.players.iter().filter(|p| p.connected).count();
+        debug!(
+            "LOBBY_DISCONNECT_STATE: phase={:?} disconnected_uuid={} connected_before={} connected_after={} leader_uuid={:?}",
+            phase, uuid, connected_before, connected_after, lobby.leader_uuid
+        );
+        if *phase != ServerGamePhase::Lobby && connected_after == 0 {
+            warn!(
+                "LOBBY_DISCONNECT_LAST_PLAYER: last connected player left during phase {:?}; mission-end fallback logic should take over",
+                phase
             );
         }
     }
@@ -545,6 +639,7 @@ fn handle_request_select_difficulty(
     mut reader: MessageReader<FromClient<RequestSelectDifficulty>>,
     mut q_lobby: Query<&mut LobbyInfo>,
     uuid_map: Res<ClientUuidMap>,
+    current_difficulty: Res<CurrentDifficulty>,
 ) {
     for msg in reader.read() {
         trace!(
@@ -565,6 +660,20 @@ fn handle_request_select_difficulty(
                 continue;
             }
             info!("Difficulty selected: {}", msg.message.difficulty_id);
+            let Some(requested_difficulty) = parse_difficulty_id(
+                "AUTHORITY_LOBBY_DIFFICULTY_SELECTION_APPLIED",
+                &msg.message.difficulty_id,
+            ) else {
+                warn!(
+                    "RequestSelectDifficulty received unknown difficulty '{}' from leader {:?}; ignoring request",
+                    msg.message.difficulty_id, sender_uuid
+                );
+                continue;
+            };
+            info!(
+                "AUTHORITY_LOBBY_DIFFICULTY_SELECTION_APPLIED: lobby_selected_difficulty={:?} authoritative_current_difficulty={:?}",
+                requested_difficulty, current_difficulty.0
+            );
             lobby.selected_difficulty = msg.message.difficulty_id.clone();
         }
     }
@@ -577,6 +686,8 @@ fn handle_request_start_mission(
     mut ev_load: MessageWriter<LoadLevelEvent>,
     mut commands: Commands,
     mut next_app_state: ResMut<NextState<UIContextState>>,
+    mut current_difficulty: ResMut<CurrentDifficulty>,
+    maps: Res<Maps>,
 ) {
     for msg in reader.read() {
         let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
@@ -594,6 +705,38 @@ fn handle_request_start_mission(
                 warn!("RequestStartMission but no map selected; ignored");
                 continue;
             };
+            let previous_current_difficulty = current_difficulty.0;
+            let Some(selected_difficulty) =
+                resolve_mission_difficulty(map_filepath, &lobby.selected_difficulty, &maps)
+            else {
+                warn!(
+                    "MULTIPLAYER_MISSION_START_UNKNOWN_DIFFICULTY: unable to resolve mission difficulty for map '{}' with lobby-selected difficulty '{}'",
+                    map_filepath, lobby.selected_difficulty
+                );
+                continue;
+            };
+            if selected_difficulty != current_difficulty.0 {
+                info!(
+                    "MULTIPLAYER_MISSION_START_DIFFICULTY_SYNC: syncing authoritative CurrentDifficulty from {:?} to resolved mission difficulty {:?}",
+                    current_difficulty.0, selected_difficulty
+                );
+                current_difficulty.0 = selected_difficulty;
+            }
+            info!(
+                "MULTIPLAYER_MISSION_START_SERVER: map='{}' seed={} lobby_selected_difficulty='{}' resolved_mission_difficulty={:?} authoritative_current_difficulty_before={:?} authoritative_current_difficulty_after={:?}",
+                map_filepath,
+                msg.message.map_seed,
+                lobby.selected_difficulty,
+                selected_difficulty,
+                previous_current_difficulty,
+                current_difficulty.0
+            );
+            if selected_difficulty != current_difficulty.0 {
+                warn!(
+                    "MULTIPLAYER_MISSION_START_DIFFICULTY_MISMATCH: mission is starting with lobby difficulty {:?}, but authoritative CurrentDifficulty is {:?} even after sync. Ghost selection and other mission systems will read the resource value.",
+                    selected_difficulty, current_difficulty.0
+                );
+            }
             info!("Starting mission: {}", map_filepath);
             ev_load.write(LoadLevelEvent {
                 map_filepath: map_filepath.clone(),
@@ -605,7 +748,7 @@ fn handle_request_start_mission(
                 SelectedMission {
                     map_path: map_filepath.clone(),
                     map_seed: msg.message.map_seed,
-                    difficulty_id: lobby.selected_difficulty.clone(),
+                    difficulty_id: selected_difficulty.to_string(),
                     started_at_unix_secs: current_unix_time_secs().unwrap_or(0.0),
                 },
             ));

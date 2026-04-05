@@ -117,6 +117,16 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
     } else {
         if let Some((evidence, discard)) = clicked_evidence_type {
             let mark_as_found = !discard && !p.gg.evidences_found.contains(&evidence);
+            info!(
+                "JOURNAL_UI_CLIENT: sending evidence toggle evidence={:?} discard={} mark_as_found={} local_guess ghost={:?} found={:?} missing={:?} discarded={:?}",
+                evidence,
+                discard,
+                mark_as_found,
+                p.gg.ghost_type,
+                p.gg.evidences_found,
+                p.gg.evidences_missing,
+                p.gg.ghosts_discarded
+            );
             p.ev_evidence_toggle.write(RequestJournalEvidenceToggle {
                 evidence,
                 discard,
@@ -131,6 +141,15 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
             } else {
                 Some(ghost_type)
             };
+            info!(
+                "JOURNAL_UI_CLIENT: sending ghost toggle ghost={:?} discard={} resolved_guess={:?} local_guess found={:?} missing={:?} discarded={:?}",
+                ghost_type,
+                discard,
+                new_guess,
+                p.gg.evidences_found,
+                p.gg.evidences_missing,
+                p.gg.ghosts_discarded
+            );
             p.ev_ghost_toggle.write(RequestJournalGhostToggle {
                 discard,
                 ghost_type: new_guess,

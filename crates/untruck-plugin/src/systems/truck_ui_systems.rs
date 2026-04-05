@@ -3,12 +3,14 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
+use ungear_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
 use ungearitems_core::events::RequestCraftRepellent;
 use uninput_core::states::InGameUiState;
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unmission_core::resources::MissionEndRequested;
 use unmission_core::types::MissionEvent;
 use unplayer_core::components::MainPlayer;
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unsettings_core::audio::AudioSettings;
 use untruck_core::components::in_truck::InTruck;
 use untruck_core::events::truck::TruckUIEvent;
@@ -40,8 +42,11 @@ fn truckui_event_handle(
     audio_settings: Res<Persistent<AudioSettings>>,
     mut craft_tracker: ResMut<RepellentCraftTracker>,
     mut ev_craft_req: MessageWriter<RequestCraftRepellent>,
+    mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
     mut ev_mission: MessageWriter<MissionEvent>,
     net_params: TruckNetParams,
+    authority: Option<Res<AuthorityRole>>,
+    local_player_role: Option<Res<LocalPlayerRole>>,
     q_player: Query<Entity, (With<MainPlayer>, With<InTruck>)>,
 ) {
     for ev in ev_truckui.read() {
@@ -59,8 +64,40 @@ fn truckui_event_handle(
             }
             TruckUIEvent::CraftRepellent => {
                 if let Some(ghost_type) = gg.ghost_type {
-                    ev_craft_req.write(RequestCraftRepellent { ghost_type });
+                    let in_truck_main_players: Vec<Entity> = q_player.iter().collect();
+                    let before_remaining = craft_tracker.remaining_crafts();
+
+                    debug!(
+                        "REPELLENT: TruckUIEvent::CraftRepellent received authority={} local_player_role={} main_players_in_truck={:?} ghost_type={:?} remaining_before={}",
+                        authority.is_some(),
+                        local_player_role.is_some(),
+                        in_truck_main_players,
+                        ghost_type,
+                        before_remaining
+                    );
+
+                    if authority.is_none() {
+                        warn!(
+                            "REPELLENT: Craft repellent requested on non-authority node; sending TruckLoadoutMessage::CraftRepellent for ghost_type={:?}",
+                            ghost_type
+                        );
+                        ev_loadout.write(TruckLoadoutMessage {
+                            action: TruckLoadoutAction::CraftRepellent(ghost_type),
+                        });
+                    } else {
+                        debug!(
+                            "REPELLENT: Craft repellent requested on authority node; writing local RequestCraftRepellent for ghost_type={:?}",
+                            ghost_type
+                        );
+                        ev_craft_req.write(RequestCraftRepellent { ghost_type });
+                    }
                     craft_tracker.craft();
+
+                    debug!(
+                        "REPELLENT: Craft request dispatched for ghost_type={:?}; remaining_after={}",
+                        ghost_type,
+                        craft_tracker.remaining_crafts()
+                    );
 
                     commands
                         .spawn(AudioPlayer::new(
@@ -80,11 +117,17 @@ fn truckui_event_handle(
                         });
 
                     // Automatically exit the truck after crafting repellent
-                    for entity in q_player.iter() {
+                    for entity in in_truck_main_players {
+                        debug!(
+                            "REPELLENT: Removing InTruck from MainPlayer entity {:?} after craft request",
+                            entity
+                        );
                         commands.entity(entity).remove::<InTruck>();
                     }
                 } else {
-                    debug!("CraftRepellent requested but no ghost type selected in journal");
+                    warn!(
+                        "REPELLENT: CraftRepellent requested but no ghost type selected in journal"
+                    );
                 }
             }
         }

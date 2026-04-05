@@ -23,6 +23,10 @@ unreplicon-core = { workspace = true }
 unorchestrator-core = { workspace = true }
 undifficulty-core = { workspace = true }
 unmission-core = { workspace = true }
+unbehavior-core = { workspace = true }
+ungearitems-core = { workspace = true }
+unvitals-core = { workspace = true }
+unlight-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }

@@ -33,7 +33,7 @@ fn materialize_players_from_spawn_requests(
 ) {
     for (entity, pos, req) in q_spawn.iter() {
         info!(
-            "SRE: materialize_players_from_spawn_requests running for entity {:?} uuid={}",
+            "materialize_players_from_spawn_requests: materializing entity {:?} for player {}",
             entity, req.player_uuid
         );
         commands.entity(entity).insert((

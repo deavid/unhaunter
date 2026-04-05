@@ -27,9 +27,11 @@ pub(crate) fn evaluate_mission_end(
 ) {
     let mut active_players = 0;
     let mut players_in_truck = 0;
+    let mut disconnected_or_inactive_players = 0;
 
     for (_, in_truck, spectating, disconnected, inactive) in query_players.iter() {
         if disconnected || inactive {
+            disconnected_or_inactive_players += 1;
             continue;
         }
         if spectating {
@@ -50,13 +52,34 @@ pub(crate) fn evaluate_mission_end(
     if active_players == 0 {
         let now = time.elapsed_secs();
         let start = empty_timer.get_or_insert(now);
+        if (now - *start) <= f32::EPSILON {
+            debug!(
+                "MISSION_END_EMPTY_TIMER_STARTED: active_players=0 truck_players={} disconnected_or_inactive={} authority={} time={:.3}",
+                players_in_truck,
+                disconnected_or_inactive_players,
+                authority.is_some(),
+                now
+            );
+        }
         if now - *start > 2.0 {
             if authority.is_some() {
+                warn!(
+                    "MISSION_END_EMPTY_TIMER_ELAPSED: emitting MissionEvent::End after {:.3}s with active_players=0 disconnected_or_inactive={} truck_players={}",
+                    now - *start,
+                    disconnected_or_inactive_players,
+                    players_in_truck
+                );
                 ev_mission.write(MissionEvent::End);
             }
             *empty_timer = None;
         }
     } else {
+        if empty_timer.is_some() {
+            debug!(
+                "MISSION_END_EMPTY_TIMER_CLEARED: active_players={} truck_players={} disconnected_or_inactive={}",
+                active_players, players_in_truck, disconnected_or_inactive_players
+            );
+        }
         *empty_timer = None;
     }
 }

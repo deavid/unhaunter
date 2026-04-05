@@ -28,6 +28,10 @@ fn handle_journal_evidence_toggle(
     mut writer: MessageWriter<JournalEvidenceToggled>,
 ) {
     for msg in reader.read() {
+        info!(
+            "JOURNAL_NET: received evidence toggle from client {:?}: evidence={:?} discard={} mark_as_found={}",
+            msg.client_id, msg.message.evidence, msg.message.discard, msg.message.mark_as_found
+        );
         writer.write(JournalEvidenceToggled {
             evidence: msg.message.evidence,
             discard: msg.message.discard,
@@ -41,6 +45,10 @@ fn handle_journal_ghost_toggle(
     mut writer: MessageWriter<JournalGhostToggled>,
 ) {
     for msg in reader.read() {
+        info!(
+            "JOURNAL_NET: received ghost toggle from client {:?}: ghost={:?} discard={}",
+            msg.client_id, msg.message.ghost_type, msg.message.discard
+        );
         writer.write(JournalGhostToggled {
             ghost_type: msg.message.ghost_type,
             discard: msg.message.discard,
@@ -53,9 +61,11 @@ pub(crate) fn apply_journal_evidence_toggle(
     mut ghost_guess: Option<ResMut<GhostGuess>>,
 ) {
     let Some(ref mut ghost_guess) = ghost_guess else {
+        warn!("apply_journal_evidence_toggle: GhostGuess resource missing");
         return;
     };
     for msg in reader.read() {
+        let before = ghost_guess.clone();
         if msg.discard {
             if ghost_guess.evidences_missing.contains(&msg.evidence) {
                 ghost_guess.evidences_missing.remove(&msg.evidence);
@@ -71,6 +81,10 @@ pub(crate) fn apply_journal_evidence_toggle(
             // Non-discard clear maps to "unset".
             ghost_guess.evidences_missing.remove(&msg.evidence);
         }
+        info!(
+            "JOURNAL_APPLY: evidence toggle applied evidence={:?} discard={} mark_as_found={} before={:?} after={:?}",
+            msg.evidence, msg.discard, msg.mark_as_found, before, *ghost_guess
+        );
     }
 }
 
@@ -79,9 +93,11 @@ pub(crate) fn apply_journal_ghost_toggle(
     mut ghost_guess: Option<ResMut<GhostGuess>>,
 ) {
     let Some(ref mut ghost_guess) = ghost_guess else {
+        warn!("apply_journal_ghost_toggle: GhostGuess resource missing");
         return;
     };
     for msg in reader.read() {
+        let before = ghost_guess.clone();
         if msg.discard {
             if let Some(ghost_type) = msg.ghost_type {
                 if ghost_guess.ghosts_discarded.contains(&ghost_type) {
@@ -96,5 +112,9 @@ pub(crate) fn apply_journal_ghost_toggle(
         } else {
             ghost_guess.ghost_type = msg.ghost_type;
         }
+        info!(
+            "JOURNAL_APPLY: ghost toggle applied ghost={:?} discard={} before={:?} after={:?}",
+            msg.ghost_type, msg.discard, before, *ghost_guess
+        );
     }
 }

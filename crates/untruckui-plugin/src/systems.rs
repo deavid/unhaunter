@@ -2,9 +2,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uninput_core::states::InGameUiState;
 use unorchestrator_core::UIContextState;
-use unplayer_core::components::MainPlayer;
 use unsettings_core::audio::AudioSettings;
-use untruck_core::components::in_truck::InTruck;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::components::truck_ui_markers::TruckUI;
 use untruck_core::events::truck::TruckUIEvent;
@@ -34,15 +32,11 @@ fn hide_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
 }
 
 fn keyboard(
-    mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    q_player: Query<Entity, (With<MainPlayer>, With<InTruck>)>,
+    mut ev_truckui: MessageWriter<TruckUIEvent>,
 ) {
-    let Ok(player_entity) = q_player.single() else {
-        return;
-    };
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        commands.entity(player_entity).remove::<InTruck>();
+        ev_truckui.write(TruckUIEvent::ExitTruck);
     }
 }
 
@@ -286,7 +280,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnExit(UIContextState::InGame), cleanup);
     app.add_systems(OnEnter(InGameUiState::Truck), show_ui);
     app.add_systems(OnExit(InGameUiState::Truck), hide_ui);
-    app.add_systems(Update, keyboard);
+    app.add_systems(Update, keyboard.run_if(in_state(InGameUiState::Truck)));
     app.add_systems(
         Update,
         (

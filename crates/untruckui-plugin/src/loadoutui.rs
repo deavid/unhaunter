@@ -466,7 +466,7 @@ fn update_loadout_icons(
 
 fn button_clicked(
     mut ev_clk: MessageReader<EventButtonClicked>,
-    q_gear: Query<(&PlayerSprite, &PlayerGear, Has<MainPlayer>)>,
+    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear, Has<MainPlayer>)>,
     authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
     mut ev_equip_van: MessageWriter<RequestEquipGearFromVan>,
@@ -477,8 +477,8 @@ fn button_clicked(
         return;
     };
 
-    let Some(p_gear) = q_gear
-        .iter()
+    let Some(mut p_gear) = q_gear
+        .iter_mut()
         .find_map(|(_p, g, is_main)| if is_main { Some(g) } else { None })
     else {
         warn!(
@@ -501,12 +501,25 @@ fn button_clicked(
                 return;
             }
             if authority.is_none() {
+                info!(
+                    "TRUCK_UI_CLIENT: sending ClearHand({:?}) with local gear state left={:?} right={:?} inv={:?}",
+                    inv.hand, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
+                );
+                match inv.hand {
+                    Hand::Left => p_gear.left_hand = None,
+                    Hand::Right => p_gear.right_hand = None,
+                }
                 // Pure Client: Send the intent to the server.
                 ev_loadout.write(TruckLoadoutMessage {
                     action: TruckLoadoutAction::ClearHand(inv.hand),
                 });
                 return;
             }
+
+            debug!(
+                "TRUCK_UI_AUTH: handling ClearHand({:?}) locally with gear state left={:?} right={:?} inv={:?}",
+                inv.hand, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
+            );
 
             // Authority (Host): emit the domain event.
             ev_unequip_hand.write(RequestUnequipHand { hand: inv.hand });
@@ -525,12 +538,22 @@ fn button_clicked(
             }
 
             if authority.is_none() {
+                info!(
+                    "TRUCK_UI_CLIENT: sending ClearInventorySlot({}) with local gear state left={:?} right={:?} inv={:?}",
+                    idx, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
+                );
+                let _removed = p_gear.inventory.remove(idx);
                 // Pure Client: Send the intent to the server.
                 ev_loadout.write(TruckLoadoutMessage {
                     action: TruckLoadoutAction::ClearInventorySlot(idx),
                 });
                 return;
             }
+
+            debug!(
+                "TRUCK_UI_AUTH: handling ClearInventorySlot({}) locally with gear state left={:?} right={:?} inv={:?}",
+                idx, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
+            );
 
             // Authority (Host): emit the domain event.
             ev_unequip_slot.write(RequestUnequipInventorySlot { idx });
@@ -542,12 +565,21 @@ fn button_clicked(
             }
 
             if authority.is_none() {
+                info!(
+                    "TRUCK_UI_CLIENT: sending AddGear({:?}) with local gear state left={:?} right={:?} inv={:?}",
+                    kind, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
+                );
                 // Pure Client: Send the intent to the server.
                 ev_loadout.write(TruckLoadoutMessage {
                     action: TruckLoadoutAction::AddGear(*kind),
                 });
                 return;
             }
+
+            debug!(
+                "TRUCK_UI_AUTH: handling AddGear({:?}) locally with gear state left={:?} right={:?} inv={:?}",
+                kind, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
+            );
 
             // Authority (Host): emit the domain event.
             ev_equip_van.write(RequestEquipGearFromVan { kind: *kind });

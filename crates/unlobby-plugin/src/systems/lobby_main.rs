@@ -356,6 +356,10 @@ pub(crate) fn handle_clicks(
                     if let Ok(mission) = q_selected_mission.single() {
                         current_map_seed.0 = mission.map_seed;
                         if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
+                            info!(
+                                "MULTIPLAYER_MISSION_JOIN_CLICK: map='{}' seed={} mission_difficulty={:?} previous_current_difficulty={:?}",
+                                mission.map_path, mission.map_seed, diff, current_difficulty.0
+                            );
                             *current_difficulty = CurrentDifficulty::new(diff);
                         } else {
                             warn!(
@@ -368,6 +372,10 @@ pub(crate) fn handle_clicks(
                             map_filepath: mission.map_path.clone(),
                         });
                         next_app_state.set(UIContextState::MissionLoading);
+                    } else {
+                        warn!(
+                            "MULTIPLAYER_MISSION_JOIN_CLICK: lobby UI thought a mission existed, but SelectedMission.single() failed"
+                        );
                     }
                 } else if is_room_owner {
                     // Owner: request the server to start a new mission.
