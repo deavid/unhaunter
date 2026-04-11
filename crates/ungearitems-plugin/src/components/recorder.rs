@@ -56,7 +56,7 @@ pub(crate) fn update_recorder(
             }
             s *= f;
 
-            let s_db = (s / 92.0).tanh() * 92.0 - 93.0;
+            let s_db = (s / 2000.0).tanh() * 92.0 - 93.0;
 
             if s_db < -50.0 {
                 GearSpriteID::Recorder1.to_visual_key()
@@ -133,7 +133,7 @@ pub(crate) fn update_recorder(
 
             if evp_recorded {
                 let clarity = haunt_state.ghost_dynamics.evp_recording_clarity.max(0.0);
-                recorder.amt_recorded += dt * difficulty.0.equipment_sensitivity() * 2.1 * clarity;
+                recorder.amt_recorded += dt * difficulty.0.equipment_sensitivity() * 6.3 * clarity;
             } else {
                 recorder.amt_recorded -= dt * 0.1;
             }
@@ -228,7 +228,7 @@ pub(crate) fn update_recorder(
                     "- EVP RECORDED -".to_string()
                 }
             } else {
-                let vol = (recorder.sound / 92.0).tanh() * 92.0 - 93.0;
+                let vol = (recorder.sound / 2000.0).tanh() * 92.0 - 93.0;
                 format!("Volume: {:4.0}dB ({})", vol, recorder.evp_recorded_count)
             }
         } else {

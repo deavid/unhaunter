@@ -5,5 +5,4 @@ pub mod flashlight;
 pub mod resources;
 pub mod sets;
 pub mod spectral;
-pub mod tonemapping;
 pub mod types;

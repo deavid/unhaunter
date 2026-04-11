@@ -47,8 +47,11 @@ pub(crate) fn calculate_and_emit_rewards(
             continue;
         };
 
-        // 1. Compute grade and base reward
-        // We use the evaluator to determine the grade from the score.
+        // 1. Compute score and grade
+        // calculate_score must run here so full_score is populated before grading.
+        // The authority never enters Summary state, so update_score() (which runs
+        // only in Summary) cannot be relied upon to set full_score first.
+        sd.calculate_score(evaluator.0.as_ref());
         let grade = evaluator.0.evaluate_grade(sd.full_score);
 
         // 2. Compute money earned

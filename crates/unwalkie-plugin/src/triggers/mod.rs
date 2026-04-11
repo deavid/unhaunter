@@ -6,6 +6,7 @@ pub(crate) mod evidence_gathering_logic;
 pub(crate) mod ghost_behavior_and_hunting;
 pub(crate) mod locomotion_interaction;
 pub(crate) mod mission_progression_and_truck;
+pub(crate) mod net;
 pub(crate) mod player_wellbeing;
 pub(crate) mod potential_id_prompt;
 pub(crate) mod repellent_expulsion;

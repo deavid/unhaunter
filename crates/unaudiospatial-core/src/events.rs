@@ -6,5 +6,4 @@ pub struct SoundEvent {
     pub sound_file: String,
     pub volume: f32,
     pub position: Option<Position>,
-    pub broadcast: bool,
 }

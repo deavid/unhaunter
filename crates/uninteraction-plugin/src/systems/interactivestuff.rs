@@ -1,6 +1,4 @@
-use unaudiospatial_core::emitter::AudioEmitter;
 use unbehavior_core::behavior::Behavior;
-use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::RoomStateDelta;
 use unboard_core::resources::roomdb::RoomState;
 use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
@@ -31,8 +29,6 @@ pub struct InteractiveStuff<'w, 's> {
     pub bf: Option<Res<'w, SpriteDB>>,
     /// Used to insert updated Behavior components on entities.
     pub commands: Commands<'w, 's>,
-    /// System param for playing spatial audio events.
-    pub audio: AudioEmitter<'w>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
     pub roomtopo: ResMut<'w, RoomTopology>,
@@ -160,7 +156,6 @@ impl InteractiveStuff<'_, '_> {
         &mut self,
         entity: Entity,
         item_pos: &Position,
-        interactive: Option<&Interactive>,
         behavior: &Behavior,
         room_state: Option<&RoomStateDelta>,
         ietype: InteractionExecutionType,
@@ -191,7 +186,7 @@ impl InteractiveStuff<'_, '_> {
             } else if *other_tuid == tuid {
                 continue;
             }
-            let (beh_state, _other_tileset, _other_tileuid, other_behavior) = {
+            let (beh_state, _other_tileset, _other_tileuid, _other_behavior) = {
                 let other = bf.map_tile.get(other_tuid).unwrap();
                 (
                     other.behavior.state(),
@@ -239,12 +234,6 @@ impl InteractiveStuff<'_, '_> {
 
             self.apply_behavior_update(entity, other_tuid, behavior);
 
-            if ietype == InteractionExecutionType::ChangeState
-                && let Some(interactive) = interactive
-            {
-                let sound_file = interactive.sound_for_moving_into_state(&other_behavior);
-                self.audio.play_audio(sound_file, 1.0, item_pos);
-            }
             return true;
         }
         if let Some(ftuid) = force_tuid {

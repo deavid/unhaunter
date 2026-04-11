@@ -47,7 +47,10 @@ use unthermal_plugin::plugin::UnhaunterThermalPlugin;
 // Audio & Spatial
 use unaudiobg_plugin::plugin::UnhaunterAudioBgPlugin;
 use unaudiospatial_plugin::plugin::UnhaunterSpatialAudioPlugin;
-use unwalkie_plugin::plugin::{UnhaunterWalkieCorePlugin, UnhaunterWalkiePlugin};
+use unwalkie_logic::plugin::UnhaunterWalkieLogicPlugin;
+use unwalkie_plugin::plugin::{
+    UnhaunterWalkieCorePlugin, UnhaunterWalkiePlugin,
+};
 
 // UI & Menu Systems
 use unlobby_plugin::plugin::UnhaunterLobbyPlugin;
@@ -260,6 +263,9 @@ pub fn app_run(args: AppArgs) {
 
     // == CAREER & ECONOMY ==
     app.add_plugins(UnhaunterCareerPlugin);
+
+    // == WALKIE NET (all peers: registers message channels + server-side systems) ==
+    app.add_plugins(UnhaunterWalkieLogicPlugin);
 
     // == DOMAIN LOGIC (Part 2: Gameplay Modes) ==
     app.add_plugins((ClassicModeOrchestratorPlugin, ClassicModeGameplayPlugin));

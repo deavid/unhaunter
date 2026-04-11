@@ -160,7 +160,7 @@ pub fn identify_active_light_sources(
         })
     };
 
-    for (entity, ndidx) in &lg.prebaked_metadata.light_sources {
+    for (entity, _ndidx) in &lg.prebaked_metadata.light_sources {
         let Ok((_pos, behavior)) = qt.get(*entity) else {
             continue;
         };
@@ -171,8 +171,15 @@ pub fn identify_active_light_sources(
             behavior.p.light.light_emission_enabled
         };
 
-        if can_emit && let Some(source_id) = lg.prebaked_lighting[*ndidx].light_info.source_id {
-            active_source_ids.insert(source_id);
+        if can_emit {
+            if let Some(&source_id) = lg.prebaked_metadata.light_source_ids.get(entity) {
+                active_source_ids.insert(source_id);
+            } else {
+                warn!(
+                    "identify_active_light_sources: entity {:?} can emit but has no source_id in light_source_ids",
+                    entity
+                );
+            }
         }
     }
     active_source_ids

@@ -335,6 +335,7 @@ untruck-core = { path = "crates/untruck-core" }                 # Mission loadou
 untruck-plugin = { path = "crates/untruck-plugin" }
 unwalkie-types = { path = "crates/unwalkie-types" }             # Walkie shared message types (not in workspace members)
 unwalkie-core = { path = "crates/unwalkie-core" }               # Walkie-talkie communication mechanics
+unwalkie-logic = { path = "crates/unwalkie-logic" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 uncareer-core = { path = "crates/uncareer-core" }               # Career progression state and events
 unprofile-core = { path = "crates/unprofile-core" }             # Player save-file data structures (gameplay progression)
@@ -481,6 +482,7 @@ unmanual-plugin = { workspace = true }
 unpicking-plugin = { workspace = true }
 untruck-plugin = { workspace = true }
 untruckui-plugin = { workspace = true }
+unwalkie-logic = { workspace = true }
 unwalkie-plugin = { workspace = true }
 untmxmap-plugin = { workspace = true }
 unpause-plugin = { workspace = true }

@@ -105,7 +105,6 @@ pub(crate) fn dispatch_interact_intent(
                                 sound_file: interactive.sound_for_moving_into_state(behavior),
                                 volume: 1.0,
                                 position: Some(*item_pos),
-                                broadcast: false,
                             });
                         }
                     } else {

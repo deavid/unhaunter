@@ -5,7 +5,6 @@ use crate::utils::{mean::MeanValue, time::PrintingTimer};
 use bevy::prelude::*;
 use rand::RngExt;
 use unaudiobg_core::events::AmbientSoundMuteEvent;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use unboard_core::resources::roomdb::RoomTopology;
 use uncommon_app_core::random_seed;
@@ -13,6 +12,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::components::logic::ghost_death::GhostDeathSignal;
 use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
+
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating};
 use unspatial_core::position::Position;
@@ -39,7 +39,10 @@ pub(crate) struct RageUpdateResult {
 pub(crate) fn ghost_enrage(
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
-    mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<GhostDeathSignal>>,
+    mut qg: Query<
+        (Entity, &mut GhostSprite, &Position, &GhostBehaviorDynamics),
+        Without<GhostDeathSignal>,
+    >,
     q_player: Query<
         (&PlayerVitals, &Position, Option<&Hiding>),
         (
@@ -49,7 +52,7 @@ pub(crate) fn ghost_enrage(
             Without<InTruck>,
         ),
     >,
-    mut gs_audio: AudioEmitter,
+    time: Res<Time>,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
     mut last_roar: Local<f32>,
@@ -59,13 +62,13 @@ pub(crate) fn ghost_enrage(
 ) {
     let measure = GHOST_ENRAGE.time_measure();
 
-    timer.tick(gs_audio.time.delta());
-    let dt = gs_audio.time.delta_secs();
+    timer.tick(time.delta());
+    let dt = time.delta_secs();
     *last_roar += dt;
 
-    for (mut ghost, ghost_position, dynamics) in qg.iter_mut() {
+    for (ghost_entity, mut ghost, ghost_position, dynamics) in qg.iter_mut() {
         // 1. Update basic timers
-        update_ghost_timers_simple(&mut ghost, dt, &gs_audio.time);
+        update_ghost_timers_simple(&mut ghost, dt, &time);
 
         // 2. Handle salty trace spawning
         handle_salty_trace_spawning_simple(
@@ -96,16 +99,17 @@ pub(crate) fn ghost_enrage(
                 execute_roar_decision(
                     &roar_decision,
                     &mut last_roar,
-                    &mut gs_audio,
+                    ghost_entity,
                     ghost_position,
+                    time.elapsed_secs_f64(),
+                    &mut commands,
                 );
             }
             continue;
         }
 
         // 6. Handle pre-warning and warning phases
-        let warning_result =
-            handle_warning_phases(&mut ghost, dt, &gs_audio.time, &mut ev_ambient_mute);
+        let warning_result = handle_warning_phases(&mut ghost, dt, &time, &mut ev_ambient_mute);
 
         // 7. Calculate rage
         let rage_result = calculate_rage_update(
@@ -139,8 +143,10 @@ pub(crate) fn ghost_enrage(
         execute_roar_decision(
             &roar_decision,
             &mut *last_roar,
-            &mut gs_audio,
+            ghost_entity,
             ghost_position,
+            time.elapsed_secs_f64(),
+            &mut commands,
         );
 
         // 10. Debug logging

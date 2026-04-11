@@ -178,6 +178,72 @@ impl WalkiePlay {
             .map(|(e, _)| e == evidence)
             .unwrap_or(false)
     }
+
+    /// For client use: runs the same cooldown checks as `set()` but does **not** queue the
+    /// event for local audio. Returns `true` if the checks passed and a `ProposeWalkieEvent`
+    /// should be sent to the server. Updates `played_events.last_played` to prevent proposal spam.
+    #[allow(dead_code)]
+    pub fn set_client_propose(&mut self, event: WalkieEvent, time: f64) -> bool {
+        // Don't propose while the walkie is currently playing something.
+        if self.event.is_some() {
+            return false;
+        }
+        let saved_count = self
+            .other_mission_event_count
+            .get(&event)
+            .copied()
+            .unwrap_or_default();
+        let effective_priority = event.effective_priority(saved_count);
+
+        if self.priority_bar > effective_priority.value() {
+            return false;
+        }
+        let mut count = 0;
+        if let Some(event_stats) = self.played_events.get(&event) {
+            count = event_stats.count + event_stats.other_count;
+            let next_time_to_play = event.time_to_play(count);
+            if time - event_stats.last_played < next_time_to_play {
+                return false;
+            }
+        }
+        let min_delay_mult = effective_priority.time_factor() as f64;
+        let timing_mult = event.repeat_behavior().timing_multiplier();
+        if time - self.last_message_time
+            < (20.0 + count as f64 * 30.0 + saved_count as f64 * 10.0)
+                * min_delay_mult
+                * timing_mult
+        {
+            return false;
+        }
+        if self.priority_bar < effective_priority.value() {
+            self.priority_bar = self.priority_bar * 0.8 + effective_priority.value() * 0.199;
+        }
+        // Update last_played to prevent proposal spam while waiting for the server to respond.
+        self.played_events.entry(event).or_default().last_played = time;
+        true
+    }
+
+    /// Force-queue an event for local audio playback (called when the server broadcasts a
+    /// `BroadcastWalkieEvent`). Bypasses all cooldown checks.
+    pub fn set_forced(&mut self, event: WalkieEvent, time: f64) {
+        let count = self
+            .played_events
+            .get(&event)
+            .map(|s| s.count + s.other_count + 1)
+            .unwrap_or(1);
+        self.played_events.insert(
+            event.clone(),
+            WalkieEventStats {
+                count,
+                other_count: 0,
+                last_played: time,
+            },
+        );
+        self.event = Some(event);
+        self.state = None;
+        self.current_voice_line = None;
+        // last_message_time is updated when playback ends in walkie_play.rs
+    }
 }
 
 #[derive(Clone, Debug, Component, PartialEq, Eq)]

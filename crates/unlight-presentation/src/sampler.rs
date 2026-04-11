@@ -9,12 +9,13 @@ use unlight_core::components::LightSensitive;
 use unlight_core::flashlight::FlashlightData;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::spectral::{SpectralInfluence, SpectralInfluenceType};
-use unlight_core::tonemapping::{self, TonemappingParams};
 use unlight_core::types::light::{LightData, LightFieldData};
 use unlight_core::types::light_type::LightType;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
+
+use crate::tonemapping::{self, TonemappingParams};
 
 pub(crate) fn calculate_tutorial_light_factor(difficulty: &Difficulty) -> f32 {
     match difficulty {

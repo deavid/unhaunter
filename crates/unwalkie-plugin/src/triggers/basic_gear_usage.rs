@@ -16,6 +16,7 @@ use unplayer_core::components::{MainPlayer, PlayerSprite};
 use uncommon_states_core::UIContextState;
 use unspatial_core::position::Position;
 use unwalkie_core::events::walkie_types::WalkieEvent;
+use unwalkie_core::messages::ProposeWalkieEvent;
 use unwalkie_core::resources::WalkiePlay; // Core walkie types
 
 // Local struct to track the state for this specific trigger
@@ -31,6 +32,7 @@ fn trigger_gear_selected_not_activated_system(
     room_topology: Res<RoomTopology>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&PlayerInputMapping, &PlayerGear, &Position), With<MainPlayer>>,
     q_gear: Query<(&GearKind, &Toggleable, Option<&Battery>)>,
     mut tracker: Local<Option<RightHandGearStateTracker>>,
@@ -142,9 +144,11 @@ fn trigger_gear_selected_not_activated_system(
         const INACTIVITY_THRESHOLD_SECONDS: f32 = 10.0;
         if current_tracker_ref.inactive_duration
             >= INACTIVITY_THRESHOLD_SECONDS * (1 + *r_triggered * 5) as f32
-            && walkie_play.set(
+            && crate::triggers::net::walkie_set_or_propose(
                 WalkieEvent::GearSelectedNotActivated,
                 time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
             )
         {
             // Event was successfully set to play. Reset local tracker to prevent immediate re-trigger for this instance.
@@ -166,6 +170,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
     hunt_signals: Res<GhostHuntSignals>,
     haunt_state: Res<HauntState>, // For actual ghost evidences & fallback breach_pos
@@ -342,9 +347,11 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     if let Some(current_tracker_ref) = tracker.as_ref()
         && current_tracker_ref.duration_in_hotspot_with_ineffective_tool_active
             > HOTSPOT_DURATION_THRESHOLD
-        && walkie_play.set(
+        && crate::triggers::net::walkie_set_or_propose(
             WalkieEvent::DidNotSwitchStartingGearInHotspot,
             time.elapsed_secs_f64(),
+            &mut walkie_play,
+            &mut ev_propose,
         )
     {
         *tracker = None; // Reset after triggering
@@ -366,6 +373,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&PlayerInputMapping, &PlayerGear, &Position), With<MainPlayer>>,
     room_topology: Res<RoomTopology>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -495,7 +503,12 @@ fn trigger_did_not_cycle_to_other_gear_system(
     // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
     if tracker.time_with_current_tool_continuously_active > TOOL_ACTIVE_THRESHOLD_SECONDS
         && tracker.time_since_last_q_press > Q_PRESS_INACTIVITY_THRESHOLD_SECONDS
-        && walkie_play.set(WalkieEvent::DidNotCycleToOtherGear, time.elapsed_secs_f64())
+        && crate::triggers::net::walkie_set_or_propose(
+            WalkieEvent::DidNotCycleToOtherGear,
+            time.elapsed_secs_f64(),
+            &mut walkie_play,
+            &mut ev_propose,
+        )
     {
         // Reset timers after successfully triggering to give player time
         tracker.time_with_current_tool_continuously_active = 0.0;

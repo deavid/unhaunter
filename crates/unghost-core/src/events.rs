@@ -1,11 +1,14 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::ghost::GhostType;
 use unspatial_core::position::Position;
 
 /// Represents the type of interaction a ghost can perform with the environment
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Reflect, Default)]
+#[reflect(Serialize, Deserialize)]
 pub enum GhostInteractionType {
+    #[default]
     /// Toggle lights or switches on/off
     Toggle,
     /// Slam a door shut quickly with loud noise

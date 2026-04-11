@@ -82,9 +82,10 @@ fn load_level_handler(
     mut next_sim_state: ResMut<NextState<SimulationState>>,
     ui_state: Res<State<UIContextState>>,
     sim_state: Res<State<SimulationState>>,
+    maps: Option<Res<untmxmap_core::resources::maps::Maps>>,
 ) {
     // Get the loaded event or return early if none
-    let Some(loaded_event) = ev.read().next() else {
+    let Some(loaded_event) = ev.read().last() else {
         return;
     };
 
@@ -201,6 +202,28 @@ fn load_level_handler(
         bf.z_floor_map = loaded_event.floor_mapping.z_to_floor.clone();
         bf.floor_mapping = loaded_event.floor_mapping.clone();
 
+        // Populate mission financial data from the Maps index so that T2 orchestrator
+        // can copy it into SummaryData without importing a T3 type directly.
+        if let Some(ref maps) = maps {
+            if let Some(map_entry) = maps
+                .maps
+                .iter()
+                .find(|m| m.path == loaded_event.map_filepath)
+            {
+                bf.mission_reward_base = map_entry.mission_data.mission_reward_base;
+                bf.required_deposit = map_entry.mission_data.required_deposit;
+            } else {
+                warn!(
+                    "level_setup: No Maps entry found for map path '{}'; mission_reward_base and required_deposit will default to 0",
+                    loaded_event.map_filepath
+                );
+            }
+        } else {
+            warn!(
+                "level_setup: Maps resource not available; mission_reward_base and required_deposit will default to 0"
+            );
+        }
+
         // Re-allocate board data fields with calculated dimensions
         p.bcf.0 = Array3::from_elem(map_size, CollisionFieldData::default());
         p.bef.0 = Array3::default(map_size);
@@ -286,10 +309,30 @@ pub(crate) fn reset_level_resources(
     mut roomtopo: ResMut<RoomTopology>,
     mut roomstate: ResMut<RoomStateMap>,
     mut sdb: ResMut<SpriteDB>,
+    mut next_sim_state: ResMut<NextState<SimulationState>>,
 ) {
     roomtopo.reset();
     roomstate.reset();
     sdb.clear();
+    next_sim_state.set(SimulationState::Unloaded);
+}
+
+fn teardown_map_entities(
+    mut commands: Commands,
+    qgs: Query<Entity, (With<GameSprite>, Without<Remote>)>,
+    mut bf: ResMut<BoardTopology>,
+    mut bcf: ResMut<BoardCollisionField>,
+    mut bef: ResMut<BoardEntityField>,
+) {
+    for entity in qgs.iter() {
+        commands.entity(entity).despawn();
+    }
+
+    bf.reset();
+    bcf.reset();
+    bef.reset();
+
+    debug!("Map entities torn down and topological resources reset.");
 }
 
 /// Logs how many local GameSprite entities are still alive when InGame is exited.
@@ -314,6 +357,7 @@ pub(crate) fn app_setup(app: &mut App) {
         OnExit(UIContextState::InGame),
         (observe_cleanup_gap, reset_level_resources).chain(),
     );
+    app.add_systems(OnEnter(SimulationState::Unloaded), teardown_map_entities);
     app.add_systems(
         PostUpdate,
         load_level_handler.run_if(bevy::prelude::on_message::<LevelDataEvent>),

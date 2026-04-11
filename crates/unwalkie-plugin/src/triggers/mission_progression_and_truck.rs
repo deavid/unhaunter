@@ -12,11 +12,13 @@ use unplayer_core::components::PlayerSprite;
 use untruck_core::components::in_truck::InTruck;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 const LINGER_DURATION_SECONDS: f32 = 45.0;
 
 fn trigger_all_objectives_met_reminder_system(
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     hunt_signals: Res<GhostHuntSignals>,
@@ -50,9 +52,11 @@ fn trigger_all_objectives_met_reminder_system(
         timer.tick(time.delta());
         // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         if timer.elapsed_secs() >= LINGER_DURATION_SECONDS
-            && walkie_play.set(
+            && crate::triggers::net::walkie_set_or_propose(
                 WalkieEvent::AllObjectivesMetReminderToEndMission,
                 time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
             )
         {
             *linger_timer = None; // Reset timer after firing
@@ -66,6 +70,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     q_in_truck: Query<(), (With<MainPlayer>, With<InTruck>)>,
     mut was_in_truck: Local<bool>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     difficulty: Res<undifficulty_core::current_difficulty::CurrentDifficulty>,
     player_gear_q: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
     mut exited_truck_time: Local<Option<f64>>,
@@ -155,9 +160,11 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
             (exited_time - last_gear_evidences_change_time.unwrap_or(exited_time)) > 120.0;
         let trigger = (*empty_right_handed || too_long_checking_evidence) && !*has_repellent_flask;
         if trigger
-            && walkie_play.set(
+            && crate::triggers::net::walkie_set_or_propose(
                 WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout,
                 cur_time,
+                &mut walkie_play,
+                &mut ev_propose,
             )
         {
             *exited_truck_time = None;
@@ -166,9 +173,13 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, trigger_all_objectives_met_reminder_system)
-        .add_systems(
-            Update,
-            trigger_player_leaves_truck_without_changing_loadout_system,
-        );
+    app.add_systems(
+        Update,
+        trigger_all_objectives_met_reminder_system,
+    )
+    .add_systems(
+        Update,
+        trigger_player_leaves_truck_without_changing_loadout_system
+            ,
+    );
 }

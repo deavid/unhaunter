@@ -8,6 +8,7 @@ use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 pub(crate) struct TutorialGearExplanationsTriggerPlugin;
 
@@ -30,6 +31,7 @@ pub(crate) fn app_setup(app: &mut App) {
 
 fn trigger_evidence_gear_explanations(
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     current_difficulty_res: Res<CurrentDifficulty>,
     player_gear_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     time: Res<Time>,
@@ -61,8 +63,12 @@ fn trigger_evidence_gear_explanations(
                         };
 
                         if is_enabled
-                            && walkie_play
-                                .set(WalkieEvent::GearExplanation(*kind), time.elapsed_secs_f64())
+                            && crate::triggers::net::walkie_set_or_propose(
+                                WalkieEvent::GearExplanation(*kind),
+                                time.elapsed_secs_f64(),
+                                &mut walkie_play,
+                                &mut ev_propose,
+                            )
                         {
                             debug!(
                                 "Evidence gear explanation triggered for {:?} because it's enabled.",
@@ -86,6 +92,7 @@ fn trigger_evidence_gear_explanations(
 
 fn trigger_support_item_explanations(
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     current_difficulty_res: Res<CurrentDifficulty>,
     player_gear_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     time: Res<Time>,
@@ -103,7 +110,12 @@ fn trigger_support_item_explanations(
                 kind,
                 GearKind::Salt | GearKind::QuartzStone | GearKind::SageBundle
             )
-            && walkie_play.set(WalkieEvent::GearExplanation(*kind), time.elapsed_secs_f64())
+            && crate::triggers::net::walkie_set_or_propose(
+                WalkieEvent::GearExplanation(*kind),
+                time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
+            )
         {
             debug!(
                 "Support item explanation triggered for {:?} because it's in an active hand.",

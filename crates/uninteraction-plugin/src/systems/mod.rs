@@ -39,7 +39,7 @@ pub(crate) fn app_setup_core(app: &mut App) {
     // changes arriving via bevy_replicon replication on pure clients).
     app.add_systems(
         Update,
-        trigger_grid_rebuild_on_sync
+        (trigger_grid_rebuild_on_sync, trigger_interactive_sounds)
             .run_if(in_state(unmission_core::types::SimulationState::Ready)),
     );
 }
@@ -132,6 +132,18 @@ fn trigger_grid_rebuild_on_sync(
     }
 }
 
+fn trigger_interactive_sounds(
+    mut audio: unaudiospatial_core::emitter::AudioEmitter,
+    q_interactive: Query<(Ref<Behavior>, &Interactive, &Position)>,
+) {
+    for (behavior, interactive, pos) in q_interactive.iter() {
+        if behavior.is_changed() && !behavior.is_added() {
+            let sound_file = interactive.sound_for_moving_into_state(&behavior);
+            audio.play_audio(sound_file, 1.0, pos);
+        }
+    }
+}
+
 fn handle_interaction_request(
     mut reader: MessageReader<FromClient<InteractionRequestMessage>>,
     q_interactive: Query<(Entity, &MapEntityFieldBPos), With<Interactive>>,
@@ -175,20 +187,14 @@ fn handle_interaction_request(
 fn interaction_event_handler(
     mut ev_reader: MessageReader<ExecuteInteractionEvent>,
     mut interactive_stuff: InteractiveStuff,
-    q_interactive: Query<(
-        Option<&Interactive>,
-        &Behavior,
-        Option<&RoomStateDelta>,
-        &Position,
-    )>,
+    q_interactive: Query<(&Behavior, Option<&RoomStateDelta>, &Position)>,
     mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
 ) {
     for ev in ev_reader.read() {
-        if let Ok((interactive, behavior, room_state, pos)) = q_interactive.get(ev.entity) {
+        if let Ok((behavior, room_state, pos)) = q_interactive.get(ev.entity) {
             if interactive_stuff.execute_interaction(
                 ev.entity,
                 pos,
-                interactive,
                 behavior,
                 room_state,
                 ev.ietype.clone(),

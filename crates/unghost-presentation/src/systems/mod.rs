@@ -4,6 +4,7 @@ pub(crate) mod ghost_orb;
 pub(crate) mod ghost_scale_glitch;
 pub(crate) mod ghost_traces;
 pub(crate) mod gis;
+pub(crate) mod interaction_audio;
 pub(crate) mod visual_sync;
 
 pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
@@ -13,4 +14,5 @@ pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
     ghost_scale_glitch::app_setup(app);
     ghost_traces::app_setup(app);
     gis::app_setup(app);
+    interaction_audio::app_setup(app);
 }

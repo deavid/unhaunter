@@ -11,12 +11,13 @@ use unghost_core::resources::signals::GhostHuntSignals;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untruck_core::truckgear::TruckGear;
-use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 /// Triggers a feedback event when the player's quartz stone cracks, after the hunt is over or player leaves the location.
 fn quartz_cracked_feedback(
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
     q_quartz: Query<&QuartzStoneData>,
     room_topology: Res<RoomTopology>,
@@ -49,7 +50,12 @@ fn quartz_cracked_feedback(
                 && quartz.cracks < 4
             {
                 // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                walkie_play.set(WalkieEvent::QuartzCrackedFeedback, time.elapsed_secs_f64());
+                crate::triggers::net::walkie_set_or_propose(
+                    unwalkie_core::events::walkie_types::WalkieEvent::QuartzCrackedFeedback,
+                    time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
+                );
             }
             *last_cracks = Some(quartz.cracks);
         }
@@ -59,6 +65,7 @@ fn quartz_cracked_feedback(
 /// Triggers a feedback event when the player's quartz stone shatters, after the hunt is over or player leaves the location.
 fn quartz_shattered_feedback(
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
     q_quartz: Query<&QuartzStoneData>,
     room_topology: Res<RoomTopology>,
@@ -90,9 +97,11 @@ fn quartz_shattered_feedback(
             && !*shattered
         {
             // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-            walkie_play.set(
-                WalkieEvent::QuartzShatteredFeedback,
+            crate::triggers::net::walkie_set_or_propose(
+                unwalkie_core::events::walkie_types::WalkieEvent::QuartzShatteredFeedback,
                 time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
             );
             *shattered = true;
         }
@@ -103,6 +112,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     hunt_signals: Res<GhostHuntSignals>,
     difficulty: Res<CurrentDifficulty>,
@@ -164,9 +174,11 @@ fn trigger_quartz_unused_in_relevant_situation_system(
             }
 
             // 8. Trigger Event: All conditions met
-            if walkie_play.set(
-                WalkieEvent::QuartzUnusedInRelevantSituation,
+            if crate::triggers::net::walkie_set_or_propose(
+                unwalkie_core::events::walkie_types::WalkieEvent::QuartzUnusedInRelevantSituation,
                 time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
             ) {
                 return;
             }
@@ -178,6 +190,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     hunt_signals: Res<GhostHuntSignals>,
     difficulty: Res<CurrentDifficulty>,
@@ -239,9 +252,11 @@ fn trigger_sage_unused_in_relevant_situation_system(
 
             if player_has_unlit_sage {
                 // Trigger hint to light it up!
-                if walkie_play.set(
-                    WalkieEvent::SageUnusedInRelevantSituation,
+                if crate::triggers::net::walkie_set_or_propose(
+                    unwalkie_core::events::walkie_types::WalkieEvent::SageUnusedInRelevantSituation,
                     time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
                 ) {
                     return;
                 }
@@ -277,9 +292,11 @@ fn trigger_sage_unused_in_relevant_situation_system(
             }
 
             // 8. Trigger Event: All conditions met
-            if walkie_play.set(
-                WalkieEvent::SageUnusedInRelevantSituation,
+            if crate::triggers::net::walkie_set_or_propose(
+                unwalkie_core::events::walkie_types::WalkieEvent::SageUnusedInRelevantSituation,
                 time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
             ) {
                 return;
             }
@@ -302,6 +319,7 @@ fn trigger_sage_activated_ineffectively_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(Entity, &PlayerGear), (With<PlayerSprite>, With<MainPlayer>)>, // Added Entity to ID player
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
@@ -388,9 +406,11 @@ fn trigger_sage_activated_ineffectively_system(
                             ghost_sprite.calm_time_secs - tracker.initial_ghost_calm_time_secs;
                         if calm_increase < MIN_EFFECTIVE_SAGE_CALM_INCREASE {
                             // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                            walkie_play.set(
-                                WalkieEvent::SageActivatedIneffectively,
+                            crate::triggers::net::walkie_set_or_propose(
+                                unwalkie_core::events::walkie_types::WalkieEvent::SageActivatedIneffectively,
                                 time.elapsed_secs_f64(),
+                                &mut walkie_play,
+                                &mut ev_propose,
                             );
                         }
                     }
@@ -454,6 +474,7 @@ fn trigger_sage_unused_defensively_during_hunt_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     hunt_signals: Res<GhostHuntSignals>,
     difficulty: Res<CurrentDifficulty>,
@@ -511,9 +532,11 @@ fn trigger_sage_unused_defensively_during_hunt_system(
 
                     if player_has_unconsumed_sage_now && !*sage_was_activated_during_this_hunt {
                         // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                        walkie_play.set(
-                            WalkieEvent::SageUnusedDefensivelyDuringHunt,
+                        crate::triggers::net::walkie_set_or_propose(
+                            unwalkie_core::events::walkie_types::WalkieEvent::SageUnusedDefensivelyDuringHunt,
                             time.elapsed_secs_f64(),
+                            &mut walkie_play,
+                            &mut ev_propose,
                         );
                     }
                     // Reset tracker for the next hunt
@@ -547,16 +570,32 @@ fn trigger_sage_unused_defensively_during_hunt_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, quartz_cracked_feedback);
-    app.add_systems(Update, quartz_shattered_feedback);
-    app.add_systems(Update, trigger_quartz_unused_in_relevant_situation_system);
-    app.add_systems(Update, trigger_sage_unused_in_relevant_situation_system);
-    app.add_systems(Update, trigger_sage_activated_ineffectively_system);
+    app.add_systems(
+        Update,
+        quartz_cracked_feedback,
+    );
+    app.add_systems(
+        Update,
+        quartz_shattered_feedback,
+    );
+    app.add_systems(
+        Update,
+        trigger_quartz_unused_in_relevant_situation_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_sage_unused_in_relevant_situation_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_sage_activated_ineffectively_system,
+    );
     app.init_resource::<HuntSageUsageTracker>()
         .add_systems(Update, reset_hunt_sage_tracker_on_mission_change)
         .add_systems(
             Update,
             trigger_sage_unused_defensively_during_hunt_system
-                .after(reset_hunt_sage_tracker_on_mission_change),
+                .after(reset_hunt_sage_tracker_on_mission_change)
+                ,
         );
 }

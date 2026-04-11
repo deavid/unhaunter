@@ -66,6 +66,8 @@ fn hydrate_tile_visual_refs(
 
                 if let Some(mut transform) = transform {
                     transform.scale = scale;
+                } else {
+                    commands.entity(entity).insert(Transform::from_scale(scale));
                 }
             }
             AtlasData::Tiles(v_img) => {
@@ -111,6 +113,8 @@ fn hydrate_tile_visual_refs(
 
                 if let Some(mut transform) = transform {
                     transform.scale = scale;
+                } else {
+                    commands.entity(entity).insert(Transform::from_scale(scale));
                 }
             }
             AtlasData::Headless => {

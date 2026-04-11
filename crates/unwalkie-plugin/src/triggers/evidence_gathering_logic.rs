@@ -15,6 +15,7 @@ use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 const DELAY_AFTER_INCORRECT_MARKING_SECONDS: f32 = 10.0;
 
@@ -29,6 +30,7 @@ fn trigger_emf_non_emf5_fixation_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     truck_button_query: Query<&TruckUIButton>,
     haunt_state: Res<HauntState>,
     current_difficulty_res: Res<CurrentDifficulty>,
@@ -74,7 +76,12 @@ fn trigger_emf_non_emf5_fixation_system(
         } else if let Some(start_time) = incorrect_marker_state.emf5_incorrectly_marked_since {
             let duration_of_conflict = time.elapsed_secs() - start_time;
             if duration_of_conflict > DELAY_AFTER_INCORRECT_MARKING_SECONDS
-                && walkie_play.set(WalkieEvent::EMFNonEMF5Fixation, time.elapsed_secs_f64())
+                && crate::triggers::net::walkie_set_or_propose(
+                    unwalkie_core::events::walkie_types::WalkieEvent::EMFNonEMF5Fixation,
+                    time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
+                )
             {
                 // Hint was played, reset the state to prevent immediate re-trigger
                 *incorrect_marker_state = IncorrectEvidenceMarkedState::default();
@@ -100,6 +107,7 @@ fn trigger_journal_conflicting_evidence_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     truck_button_query: Query<&TruckUIButton>,
     haunt_state: Res<HauntState>,
     mut tracker: Local<ConflictingEvidenceTracker>,
@@ -158,9 +166,11 @@ fn trigger_journal_conflicting_evidence_system(
             if duration_of_conflict > CONFLICT_DURATION_THRESHOLD_SECONDS {
                 // TODO: Add PlayerProfileData check here.
                 // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                if walkie_play.set(
-                    WalkieEvent::JournalConflictingEvidence,
+                if crate::triggers::net::walkie_set_or_propose(
+                    unwalkie_core::events::walkie_types::WalkieEvent::JournalConflictingEvidence,
                     time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
                 ) {
                     // Hint was played, reset the timer to prevent immediate re-trigger for this same conflict.
                     // The conflict might still exist, but we've hinted.
@@ -191,6 +201,7 @@ fn trigger_clear_evidence_no_action_ckey_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     player_query: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
     mut tracked_state: ResMut<ClearEvidenceTrackedState>,
@@ -241,7 +252,7 @@ fn trigger_clear_evidence_no_action_ckey_system(
 
                     // If we assume the player *hasn't* acknowledged it via C_KEY (which is hard to check here without more context
                     // on how C_KEY interaction is recorded globally or against specific evidence), we'd fire the hint.
-                    if walkie_play.set(WalkieEvent::ClearEvidenceFoundNoActionCKey, current_time) {
+                    if crate::triggers::net::walkie_set_or_propose(WalkieEvent::ClearEvidenceFoundNoActionCKey, current_time, &mut walkie_play, &mut ev_propose) {
                         // info!("[Walkie] Triggered ClearEvidenceFoundNoActionCKey for {:?}.", evidence_type);
                         // Mark this specific evidence as hinted to avoid re-triggering immediately
                         // This could be done by removing it or updating its timestamp
@@ -274,6 +285,7 @@ fn trigger_clear_evidence_no_action_truck_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     truck_button_query: Query<&TruckUIButton>,
     mut tracked_state: ResMut<NoActionTruckTrackedState>,
@@ -310,7 +322,7 @@ fn trigger_clear_evidence_no_action_truck_system(
                 .entry(evidence_type)
                 .or_insert(current_time);
             if current_time - *entry >= TIME_UNLOGGED_FOR_TRUCK_HINT_SECONDS
-                && walkie_play.set(WalkieEvent::ClearEvidenceFoundNoActionTruck, current_time)
+                && crate::triggers::net::walkie_set_or_propose(WalkieEvent::ClearEvidenceFoundNoActionTruck, current_time, &mut walkie_play, &mut ev_propose)
             {
                 // info!("[Walkie] Triggered ClearEvidenceFoundNoActionTruck for {:?}.", evidence_type);
                 to_remove.push(evidence_type);
@@ -343,6 +355,7 @@ fn trigger_in_truck_with_evidence_no_journal_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     truck_button_query: Query<&TruckUIButton>,
     mut system_state: ResMut<InTruckNoJournalActionState>,
@@ -410,7 +423,7 @@ fn trigger_in_truck_with_evidence_no_journal_system(
                     && (current_time - time_entered >= TIME_IN_TRUCK_NO_JOURNAL_ACTION_SECONDS)
                 {
                     // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                    if walkie_play.set(WalkieEvent::InTruckWithEvidenceNoJournal, current_time) {
+                    if crate::triggers::net::walkie_set_or_propose(WalkieEvent::InTruckWithEvidenceNoJournal, current_time, &mut walkie_play, &mut ev_propose) {
                         // info!("[Walkie] Triggered InTruckWithEvidenceNoJournal.");
                         system_state.hinted_this_truck_session = true;
                         // system_state.time_entered_truck_with_unlogged_evidence = None; // Reset after hinting
@@ -441,6 +454,7 @@ fn trigger_evidence_confirmed_feedback_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     truck_button_query: Query<&TruckUIButton>,
     current_difficulty_res: Res<CurrentDifficulty>,
@@ -495,7 +509,12 @@ fn trigger_evidence_confirmed_feedback_system(
 
             if let Some(event_to_send) = walkie_event_to_send {
                 // Attempt to set the event. If successful, mark it in the tracker.
-                if walkie_play.set(event_to_send, time.elapsed_secs_f64()) {
+                if crate::triggers::net::walkie_set_or_propose(
+                    event_to_send,
+                    time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
+                ) {
                     // info!("[Walkie] Triggered {:?} confirmation.", evidence_type);
                     walkie_play.set_evidence_hint(evidence_type, time.elapsed_secs_f64());
                 }
@@ -505,13 +524,31 @@ fn trigger_evidence_confirmed_feedback_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, trigger_emf_non_emf5_fixation_system);
-    app.add_systems(Update, trigger_journal_conflicting_evidence_system);
+    app.add_systems(
+        Update,
+        trigger_emf_non_emf5_fixation_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_journal_conflicting_evidence_system,
+    );
     app.init_resource::<ClearEvidenceTrackedState>();
     app.init_resource::<NoActionTruckTrackedState>();
     app.init_resource::<InTruckNoJournalActionState>();
-    app.add_systems(Update, trigger_clear_evidence_no_action_ckey_system);
-    app.add_systems(Update, trigger_clear_evidence_no_action_truck_system);
-    app.add_systems(Update, trigger_in_truck_with_evidence_no_journal_system);
-    app.add_systems(Update, trigger_evidence_confirmed_feedback_system);
+    app.add_systems(
+        Update,
+        trigger_clear_evidence_no_action_ckey_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_clear_evidence_no_action_truck_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_in_truck_with_evidence_no_journal_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_evidence_confirmed_feedback_system,
+    );
 }

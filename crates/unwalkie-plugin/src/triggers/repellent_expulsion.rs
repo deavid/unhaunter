@@ -14,6 +14,7 @@ use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 /// How long player must linger after ghost is gone
 const LINGER_THRESHOLD_SECONDS: f64 = 10.0;
@@ -22,6 +23,7 @@ fn trigger_ghost_expelled_player_lingers_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     hunt_signals: Res<GhostHuntSignals>,
     player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>, // Assuming only one player for now
     room_topology: Res<RoomTopology>,
@@ -55,9 +57,11 @@ fn trigger_ghost_expelled_player_lingers_system(
             } else if let Some(start_time) = *ghost_gone_and_player_in_location_timestamp {
                 let duration_lingering = time.elapsed_secs_f64() - start_time;
                 if duration_lingering > LINGER_THRESHOLD_SECONDS
-                    && walkie_play.set(
-                        WalkieEvent::GhostExpelledPlayerLingers,
+                    && crate::triggers::net::walkie_set_or_propose(
+                        unwalkie_core::events::walkie_types::WalkieEvent::GhostExpelledPlayerLingers,
                         time.elapsed_secs_f64(),
+                        &mut walkie_play,
+                        &mut ev_propose,
                     )
                 {
                     // Event successfully set, reset timer to prevent immediate re-trigger
@@ -78,6 +82,7 @@ fn trigger_has_repellent_enters_location_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     room_topology: Res<RoomTopology>,
     q_gear: Query<&GearKind>,
@@ -112,9 +117,11 @@ fn trigger_has_repellent_enters_location_system(
             .is_some();
 
         if player_is_currently_inside && has_valid_repellent {
-            walkie_play.set(
+            crate::triggers::net::walkie_set_or_propose(
                 WalkieEvent::HasRepellentEntersLocation,
                 time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
             );
             return; // First responder wins
         }
@@ -135,6 +142,7 @@ fn trigger_repellent_used_too_far_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     hunt_signals: Res<GhostHuntSignals>,
     mut prev_repellent_state: Local<PrevRepellentState>,
@@ -187,7 +195,12 @@ fn trigger_repellent_used_too_far_system(
                 } else if let Some(start_time) = prev_repellent_state.too_far_started
                     && time.elapsed_secs_f64() - start_time >= TOO_FAR_DURATION_SECONDS
                 {
-                    walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
+                    crate::triggers::net::walkie_set_or_propose(
+                        WalkieEvent::RepellentUsedTooFar,
+                        time.elapsed_secs_f64(),
+                        &mut walkie_play,
+                        &mut ev_propose,
+                    );
                     prev_repellent_state.too_far_started = None; // Reset after triggering
                 }
             } else {
@@ -219,6 +232,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     hunt_signals: Res<GhostHuntSignals>,
     repellent_particle_query: Query<&Position, With<RepellentParticle>>,
@@ -292,9 +306,11 @@ fn trigger_repellent_provokes_strong_reaction_system(
                 });
                 if (hunt_just_started || warning_just_started)
                     && particles_nearby
-                    && walkie_play.set(
+                    && crate::triggers::net::walkie_set_or_propose(
                         WalkieEvent::RepellentUsedGhostEnragesPlayerFlees,
                         time.elapsed_secs_f64(),
+                        &mut walkie_play,
+                        &mut ev_propose,
                     )
                 {
                     *tracker = None; // Reset tracker after successful trigger
@@ -326,6 +342,7 @@ fn trigger_repellent_exhausted_correct_type_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
     repellent_particle_query: Query<Entity, With<RepellentParticle>>,
@@ -401,9 +418,11 @@ fn trigger_repellent_exhausted_correct_type_system(
                     time.elapsed_secs() - check_state.time_exhaustion_confirmed;
                 // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                 if particles_are_few || time_since_exhaustion > MAX_PARTICLE_CLEAR_WAIT_SECONDS {
-                    walkie_play.set(
+                    crate::triggers::net::walkie_set_or_propose(
                         WalkieEvent::RepellentExhaustedGhostPresentCorrectType,
                         time.elapsed_secs_f64(),
+                        &mut walkie_play,
+                        &mut ev_propose,
                     );
                     *check_state = RepellentExhaustedCheckState::default(); // Reset after triggering
                 }
@@ -449,6 +468,7 @@ fn trigger_ghost_expelled_player_missed_simplified_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     mut removed_ghost_query: RemovedComponents<GhostSprite>, // Reacts to GhostSprite removal
     player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>,
     room_topology: Res<RoomTopology>,
@@ -484,9 +504,11 @@ fn trigger_ghost_expelled_player_missed_simplified_system(
                 //     "Ghost {:?} despawned. Player was outside. Triggering GhostExpelledPlayerMissed.",
                 //     removed_ghost_entity
                 // );
-                walkie_play.set(
+                crate::triggers::net::walkie_set_or_propose(
                     WalkieEvent::GhostExpelledPlayerMissed,
                     time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
                 );
                 processed_ghosts.0.insert(removed_ghost_entity); // Mark as processed
             // Since WalkiePlay.set() handles cooldowns, one trigger per despawned ghost is fine.
@@ -505,11 +527,26 @@ fn trigger_ghost_expelled_player_missed_simplified_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, trigger_ghost_expelled_player_lingers_system);
-    app.add_systems(Update, trigger_has_repellent_enters_location_system);
-    app.add_systems(Update, trigger_repellent_provokes_strong_reaction_system);
-    app.add_systems(Update, trigger_repellent_used_too_far_system);
-    app.add_systems(Update, trigger_repellent_exhausted_correct_type_system);
+    app.add_systems(
+        Update,
+        trigger_ghost_expelled_player_lingers_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_has_repellent_enters_location_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_repellent_provokes_strong_reaction_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_repellent_used_too_far_system,
+    );
+    app.add_systems(
+        Update,
+        trigger_repellent_exhausted_correct_type_system,
+    );
     app.init_resource::<ProcessedMissedExpulsionGhosts>()
         .add_systems(
             Update,
@@ -518,6 +555,7 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_systems(
             Update,
             trigger_ghost_expelled_player_missed_simplified_system
-                .after(reset_processed_missed_expulsion_ghosts_on_new_mission),
+                .after(reset_processed_missed_expulsion_ghosts_on_new_mission)
+                ,
         );
 }

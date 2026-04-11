@@ -9,12 +9,14 @@ use unplayer_core::components::MainPlayer;
 use unspatial_core::position::Position;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 /// Reminds the player to pick up equipment if they enter the location without any gear during the tutorial.
 /// Only triggers if the player is in the game, not in the truck, and has accessed the truck at least once.
 /// Uses a stopwatch to avoid spamming the reminder and only warns within the first minute inside.
 fn player_forgot_equipment(
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     qp: Query<(&Position, &PlayerGear), With<MainPlayer>>,
     room_topology: Res<RoomTopology>,
     mut stopwatch: Local<Stopwatch>,
@@ -61,13 +63,19 @@ fn player_forgot_equipment(
         // Too much time inside the location, we want to warn mainly when it crosses the main door.
         return;
     }
-    walkie_play.set(WalkieEvent::GearInVan, time.elapsed_secs_f64());
+    crate::triggers::net::walkie_set_or_propose(
+        WalkieEvent::GearInVan,
+        time.elapsed_secs_f64(),
+        &mut walkie_play,
+        &mut ev_propose,
+    );
 }
 
 /// Warns the player via walkie-talkie when the ghost is close to starting a hunt in the tutorial.
 /// Only triggers if the player is inside the location and the ghost's rage is high but not yet hunting.
 fn ghost_near_hunt(
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     qp: Query<(&Position, &PlayerGear), With<MainPlayer>>,
     room_topology: Res<RoomTopology>,
     difficulty: Res<CurrentDifficulty>,
@@ -105,7 +113,12 @@ fn ghost_near_hunt(
             continue;
         }
         if hunt_signals.any_near_hunt_without_warning {
-            walkie_play.set(WalkieEvent::GhostNearHunt, time.elapsed_secs_f64());
+            crate::triggers::net::walkie_set_or_propose(
+                WalkieEvent::GhostNearHunt,
+                time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
+            );
             return;
         }
     }
@@ -113,6 +126,12 @@ fn ghost_near_hunt(
 
 /// Registers the above systems to the Bevy app.
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, player_forgot_equipment)
-        .add_systems(Update, ghost_near_hunt);
+    app.add_systems(
+        Update,
+        player_forgot_equipment,
+    )
+    .add_systems(
+        Update,
+        ghost_near_hunt,
+    );
 }

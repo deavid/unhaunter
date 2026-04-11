@@ -8,6 +8,7 @@ use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use uninvestigation_core::resources::potential_id_timer::{PotentialIDData, PotentialIDTimer};
 use unprofile_core::profile::PlayerProfileData;
 use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 // PotentialIDTimer struct definition removed from here
 
@@ -18,6 +19,7 @@ fn potential_id_prompt_system(
     player_profile: Res<Persistent<PlayerProfileData>>,
     difficulty: Res<CurrentDifficulty>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     time: Res<Time>,
 ) {
     let difficulty_info = &difficulty.0;
@@ -157,9 +159,11 @@ fn potential_id_prompt_system(
                 .unwrap_or(0);
 
             if current_ack_count == initial_ack_count {
-                let event_triggered = walkie_play.set(
+                let event_triggered = crate::triggers::net::walkie_set_or_propose(
                     WalkieEvent::PotentialGhostIDWithNewEvidence,
                     time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
                 );
 
                 if event_triggered {
@@ -192,5 +196,8 @@ fn potential_id_prompt_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, potential_id_prompt_system);
+    app.add_systems(
+        Update,
+        potential_id_prompt_system,
+    );
 }

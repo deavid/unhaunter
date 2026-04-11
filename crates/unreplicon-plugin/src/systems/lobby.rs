@@ -256,21 +256,18 @@ fn resolve_mission_difficulty(
     lobby_selected_difficulty: &str,
     maps: &Maps,
 ) -> Option<Difficulty> {
-    let map = maps.maps.iter().find(|map| map.path == map_filepath);
-
-    if let Some(map) = map {
-        if map.mission_data.is_campaign_mission {
-            return Some(map.mission_data.difficulty);
-        }
-    } else {
+    // In multiplayer, the lobby difficulty selector always wins.
+    // Per-map difficulty (is_campaign_mission) only applies to single-player campaign mode,
+    // which is handled separately in uncampaign-plugin/unified_mission_selection.rs.
+    if !maps.maps.iter().any(|map| map.path == map_filepath) {
         warn!(
-            "resolve_mission_difficulty: selected map '{}' was not found in Maps resource; falling back to lobby-selected difficulty",
+            "resolve_mission_difficulty: selected map '{}' was not found in Maps resource; proceeding with lobby-selected difficulty",
             map_filepath
         );
     }
 
     parse_difficulty_id(
-        "resolve_mission_difficulty/lobby_fallback",
+        "resolve_mission_difficulty/lobby_selected",
         lobby_selected_difficulty,
     )
 }

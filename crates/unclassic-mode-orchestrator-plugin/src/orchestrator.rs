@@ -98,10 +98,10 @@ pub(crate) fn classic_mode_orchestrator(
                 );
             }
 
-            commands.insert_resource(SummaryData::new(
-                possible_ghost_types.clone(),
-                *p.difficulty,
-            ));
+            let mut summary_data = SummaryData::new(vec![], *p.difficulty);
+            summary_data.mission_reward_base = p.board_topology.mission_reward_base;
+            summary_data.required_deposit = p.board_topology.required_deposit;
+            commands.insert_resource(summary_data);
 
             let breach_id = commands.spawn((ghost_spawn, GhostBreachSpawnRequest)).id();
 

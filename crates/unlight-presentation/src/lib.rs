@@ -1,4 +1,5 @@
 pub mod plugin;
+pub mod tonemapping;
 
 mod definitions;
 mod metrics;

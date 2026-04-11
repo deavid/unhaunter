@@ -166,6 +166,7 @@ pub fn prebake_lighting_field(
     let mut next_source_id = 1; // Start from 1, 0 is reserved for "no source"
 
     lg.prebaked_metadata = Default::default();
+    lg.prebaked_wave_edges.clear();
     // Process all entities to find light sources
     for (entity, pos, behavior) in qt.iter() {
         let board_pos = pos.to_board_position();
@@ -185,16 +186,69 @@ pub fn prebake_lighting_field(
             let color = behavior.p.light.color();
 
             light_source_count += 1;
-            prebaked[idx].light_info = LightInfo {
-                source_id: Some(next_source_id),
-                lux,
-                color,
-            };
+            let this_source_id = next_source_id;
+            next_source_id += 1;
+
+            // Always register entity → ID and add to light_sources list
             lg.prebaked_metadata
                 .light_source_ids
-                .insert(entity, next_source_id);
+                .insert(entity, this_source_id);
             lg.prebaked_metadata.light_sources.push((entity, idx));
-            next_source_id += 1;
+
+            // Deterministic "Stronger Wins": only the brighter light occupies the
+            // static prebaked tile. The loser is injected as a wave edge so the
+            // dynamic propagation system can handle it at runtime.
+            if let Some(existing_source_id) = prebaked[idx].light_info.source_id {
+                if lux > prebaked[idx].light_info.lux {
+                    // New light is stronger — demote the existing occupant to a wave edge
+                    let loser_lux = prebaked[idx].light_info.lux;
+                    let loser_color = prebaked[idx].light_info.color;
+                    let loser_source_id = existing_source_id;
+                    let pos_f32 = (board_pos.x as f32, board_pos.y as f32, board_pos.z as f32);
+                    lg.prebaked_wave_edges.push(WaveEdgeData {
+                        position: board_pos.clone(),
+                        source_id: loser_source_id,
+                        lux: loser_lux,
+                        color: loser_color,
+                        wave_edge: WaveEdge {
+                            src_light_lux: loser_lux,
+                            distance_travelled: 2.0,
+                            current_pos: pos_f32,
+                            iir_mean_pos: pos_f32,
+                            iir_mean_iir_mean_pos: pos_f32,
+                        },
+                    });
+                    // Winner claims the tile
+                    prebaked[idx].light_info = LightInfo {
+                        source_id: Some(this_source_id),
+                        lux,
+                        color,
+                    };
+                } else {
+                    // Existing light is stronger — current entity is the loser
+                    let pos_f32 = (board_pos.x as f32, board_pos.y as f32, board_pos.z as f32);
+                    lg.prebaked_wave_edges.push(WaveEdgeData {
+                        position: board_pos.clone(),
+                        source_id: this_source_id,
+                        lux,
+                        color,
+                        wave_edge: WaveEdge {
+                            src_light_lux: lux,
+                            distance_travelled: 2.0,
+                            current_pos: pos_f32,
+                            iir_mean_pos: pos_f32,
+                            iir_mean_iir_mean_pos: pos_f32,
+                        },
+                    });
+                }
+            } else {
+                // Tile is empty — write normally
+                prebaked[idx].light_info = LightInfo {
+                    source_id: Some(this_source_id),
+                    lux,
+                    color,
+                };
+            }
         }
     }
 
@@ -241,7 +295,6 @@ pub fn prebake_lighting_field(
 
     // Track statistics
     let mut _propagated_tiles = 0;
-    lg.prebaked_wave_edges = Vec::new();
 
     // Define neighbor directions
     let directions = [

@@ -10,6 +10,7 @@ use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceR
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unplayer_core::components::MainPlayer;
 use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 fn trigger_almost_ready_to_craft_repellent_system(
     player_query: Query<&PlayerGear, With<MainPlayer>>,
@@ -18,6 +19,7 @@ fn trigger_almost_ready_to_craft_repellent_system(
     app_state: Res<State<UIContextState>>,
     difficulty: Res<CurrentDifficulty>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     time: Res<Time>,
     mut clear_evidences: Local<HashSet<Evidence>>,
     mut repellent_crafted: Local<bool>,
@@ -110,9 +112,12 @@ fn trigger_almost_ready_to_craft_repellent_system(
         return;
     }
 
-    walkie_play.set(WalkieEvent::JournalPointsToOneGhostNoCraft, current_time);
+    crate::triggers::net::walkie_set_or_propose(WalkieEvent::JournalPointsToOneGhostNoCraft, current_time, &mut walkie_play, &mut ev_propose);
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, trigger_almost_ready_to_craft_repellent_system);
+    app.add_systems(
+        Update,
+        trigger_almost_ready_to_craft_repellent_system,
+    );
 }

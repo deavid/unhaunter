@@ -6,13 +6,16 @@ use unboard_core::components::physics::{FluidEmitter, ThermalEmitter};
 use unboard_core::components::spawning::HostileSpawnPoint;
 use unboard_core::entity::GameSprite;
 use unghost_core::components::logic::ghost_breach::GhostBreach;
+use unghost_core::components::logic::ghost_influence::GhostInfluence;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::vocalization::GhostVocalization;
 use unghost_core::requests::{GhostBreachSpawnRequest, GhostSpawnRequest};
 use unghost_core::tags::GhostTag;
 use unlight_core::components::LightSensitive;
 use unlight_core::spectral::SpectralInfluence;
 use unmapload_core::hydration::HydrationStage;
 use unmetrics_core::metrics::SendMetric;
+use unmission_core::summary::SummaryData;
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::resources::AuthorityRole;
 use unsoundfield_core::components::SoundFieldSource;
@@ -57,10 +60,22 @@ fn hydration_ghost_logic_system(
 fn ghost_hydration_system(
     mut commands: Commands,
     q: Query<(Entity, &GhostSpawnRequest, &Position), Without<GhostTag>>,
+    mut summary_data: Option<ResMut<SummaryData>>,
 ) {
     for (entity, request, pos) in q.iter() {
         let mut ghost_sprite = GhostSprite::new(pos.to_board_position(), &request.ghost_types);
         ghost_sprite.breach_id = request.breach_entity;
+
+        // Record the actual chosen ghost type for the summary screen.
+        // SummaryData was intentionally initialized with an empty ghost_types list;
+        // the real selection happens here when the ghost entity is hydrated.
+        if let Some(ref mut sd) = summary_data {
+            sd.ghost_types.push(ghost_sprite.class);
+        } else {
+            warn!(
+                "ghost_hydration_system: SummaryData resource not found while hydrating ghost; ghost type will not be recorded in summary"
+            );
+        }
 
         commands
             .entity(entity)
@@ -82,6 +97,7 @@ fn ghost_hydration_system(
             })
             .insert(FluidEmitter::default())
             .insert(SoundFieldSource::default())
+            .insert(GhostVocalization::default())
             .insert(Replicated)
             .insert(LerpPosition::new(*pos))
             .remove::<GhostSpawnRequest>();
@@ -103,7 +119,9 @@ fn breach_hydration_system(
                 exposure_factor: 1.1,
                 bias: 0.02,
             })
-            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 1.0))
+            // Breach responds to UV intensity but intentionally skips the slate-blue tint
+            // (uv_color_shift = 0.0) so the ecto visual material golden color shows through.
+            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 0.0))
             .insert(ThermalEmitter {
                 room_restricted: true,
                 ..default()
@@ -118,6 +136,20 @@ fn breach_hydration_system(
 fn mark_breach_replicated(q: Query<Entity, Added<GhostBreach>>, mut commands: Commands) {
     for entity in q.iter() {
         commands.entity(entity).insert(Replicated);
+    }
+}
+
+/// Inserts `SpectralInfluence` on entities whose `GhostInfluence` arrived via
+/// replication but were never passed through `assign_ghost_influence` on this node.
+/// On the authority the component is already present (inserted by the orchestrator).
+/// On pure clients it is missing because `SpectralInfluence` is not replicated,
+/// yet `ghost_influence_visual_sync` and the lighting system both require it.
+fn hydrate_ghost_influence_spectral(
+    mut commands: Commands,
+    q: Query<Entity, (With<GhostInfluence>, Without<SpectralInfluence>)>,
+) {
+    for entity in q.iter() {
+        commands.entity(entity).insert(SpectralInfluence::default());
     }
 }
 
@@ -162,7 +194,9 @@ fn hydrate_breach_local_field_components(
                 exposure_factor: 1.1,
                 bias: 0.02,
             })
-            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 1.0))
+            // Breach responds to UV intensity but intentionally skips the slate-blue tint
+            // (uv_color_shift = 0.0) so the ecto visual material golden color shows through.
+            .insert(SpectralInfluence::default().with_ultraviolet(1.0, 0.0))
             .insert(ThermalEmitter {
                 room_restricted: true,
                 ..default()
@@ -193,4 +227,8 @@ pub(crate) fn app_setup(app: &mut App) {
         )
             .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
     );
+    // Runs on all nodes (authority and clients): inserts SpectralInfluence whenever
+    // GhostInfluence is present but SpectralInfluence is missing. On the authority
+    // the orchestrator already inserts it; on pure clients this is the only path.
+    app.add_systems(Update, hydrate_ghost_influence_spectral);
 }

@@ -1,4 +1,4 @@
-use std::net::{SocketAddr, UdpSocket};
+use std::net::{SocketAddr, ToSocketAddrs, UdpSocket};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::resources::TransportConfig;
@@ -73,7 +73,7 @@ fn handle_hub_connection_request(
     channels: Res<RepliconChannels>,
     installation_id: Option<Res<RuntimeInstallationId>>,
 ) {
-    let Some(req) = ev.read().next() else {
+    let Some(req) = ev.read().last() else {
         return;
     };
 
@@ -93,8 +93,14 @@ fn handle_hub_connection_request(
         ..Default::default()
     };
 
-    let server_addr: SocketAddr = match req.address.parse() {
-        Ok(a) => a,
+    let server_addr: SocketAddr = match req.address.to_socket_addrs() {
+        Ok(mut addrs) => match addrs.next() {
+            Some(a) => a,
+            None => {
+                error!("DNS resolution returned no addresses for '{}'", req.address);
+                return;
+            }
+        },
         Err(e) => {
             error!("Invalid server address '{}': {e}", req.address);
             return;

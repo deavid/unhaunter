@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::RngExt;
-use unaudiospatial_core::emitter::AudioEmitter;
 use uncommon_app_core::random_seed;
+use unghost_core::components::logic::vocalization::GhostVocalization;
 use unspatial_core::position::Position;
 
 /// Enables/disables debug logs for hunting behavior.
@@ -77,19 +77,22 @@ pub(crate) enum RoarReason {
 pub(crate) fn execute_roar_decision(
     roar_decision: &RoarDecision,
     last_roar: &mut f32,
-    ga: &mut AudioEmitter,
+    ghost_entity: Entity,
     ghost_position: &Position,
+    current_time: f64,
+    commands: &mut Commands,
 ) {
     if roar_decision.should_play_now {
         let roar_time_threshold = roar_decision.time_override.unwrap_or(3.0);
         if *last_roar > roar_time_threshold
             && let Some(roar_sound) = roar_decision.roar_type.get_sound()
         {
-            ga.play_audio(
-                roar_sound,
-                roar_decision.roar_type.get_volume(),
-                ghost_position,
-            );
+            commands.entity(ghost_entity).insert(GhostVocalization {
+                sound_file: roar_sound,
+                volume: roar_decision.roar_type.get_volume(),
+                position: *ghost_position,
+                triggered_at: current_time,
+            });
             *last_roar = 0.0;
 
             if DEBUG_HUNTS {

@@ -210,10 +210,12 @@ fn server_teardown_grace_period(
 fn on_server_phase_lobby(
     q_phase: Query<&ServerGamePhase, Changed<ServerGamePhase>>,
     mut next_app_state: ResMut<NextState<UIContextState>>,
+    mut next_sim_state: ResMut<NextState<SimulationState>>,
 ) {
     for phase in q_phase.iter() {
         if *phase == ServerGamePhase::Lobby {
             info!("ServerGamePhase::Lobby observed while InGame — returning to lobby");
+            next_sim_state.set(SimulationState::Unloaded);
             next_app_state.set(UIContextState::Lobby);
         }
     }

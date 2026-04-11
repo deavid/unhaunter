@@ -13,6 +13,7 @@ use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::thermometer::Thermometer;
 use uninteraction_core::interaction::Toggleable;
 use unwalkie_core::events::walkie_types::WalkieEvent;
+use unwalkie_core::messages::ProposeWalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
 /// System that monitors the player's exposure to darkness.
@@ -25,6 +26,7 @@ fn trigger_darkness_level_system(
     light_grid: If<Res<LightGrid>>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     app_state: Res<State<UIContextState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     mut stopwatch: Local<Stopwatch>,
@@ -47,7 +49,12 @@ fn trigger_darkness_level_system(
     if any_in_dark {
         stopwatch.tick(time.delta()); // Changed from *seconds_dark += time.delta_secs();
         if stopwatch.elapsed_secs() > 2.0 {
-            walkie_play.set(WalkieEvent::DarkRoomNoLightUsed, time.elapsed_secs_f64());
+            crate::triggers::net::walkie_set_or_propose(
+                WalkieEvent::DarkRoomNoLightUsed,
+                time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
+            );
         }
     } else {
         stopwatch.reset(); // Changed from *seconds_dark = 0.0;
@@ -59,6 +66,7 @@ fn trigger_breach_showcase(
     time: Res<Time>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     app_state: Res<State<UIContextState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_breach: Query<&Position, With<GhostBreach>>,
@@ -88,7 +96,12 @@ fn trigger_breach_showcase(
                 && breach_room.is_some()
                 && player_room == breach_room
                 && breach_pos.distance(player_pos) < 3.0
-                && walkie_play.set(WalkieEvent::BreachShowcase, time.elapsed_secs_f64())
+                && crate::triggers::net::walkie_set_or_propose(
+                    WalkieEvent::BreachShowcase,
+                    time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
+                )
             {
                 return;
             }
@@ -101,6 +114,7 @@ fn trigger_ghost_showcase(
     time: Res<Time>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     app_state: Res<State<UIContextState>>,
     qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_ghost: Query<&Position, With<unghost_core::components::logic::ghost_sprite::GhostSprite>>,
@@ -128,7 +142,12 @@ fn trigger_ghost_showcase(
             if player_room.is_some()
                 && ghost_room.is_some()
                 && player_room == ghost_room
-                && walkie_play.set(WalkieEvent::GhostShowcase, time.elapsed_secs_f64())
+                && crate::triggers::net::walkie_set_or_propose(
+                    WalkieEvent::GhostShowcase,
+                    time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
+                )
             {
                 return;
             }
@@ -142,6 +161,7 @@ fn trigger_room_lights_on_gear_needs_dark(
     light_grid: If<Res<LightGrid>>,
     room_topology: Res<RoomTopology>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     app_state: Res<State<UIContextState>>,
     qp: Query<(&Position, &PlayerSprite, &PlayerGear), With<MainPlayer>>,
     q_gear: Query<(&Toggleable, &GearKind)>,
@@ -167,9 +187,11 @@ fn trigger_room_lights_on_gear_needs_dark(
                 && light_grid.light_field[player_bpos.ndidx()].lux > 0.5
             {
                 // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                if walkie_play.set(
+                if crate::triggers::net::walkie_set_or_propose(
                     WalkieEvent::RoomLightsOnGearNeedsDark,
                     time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
                 ) {
                     return;
                 }
@@ -182,6 +204,7 @@ fn trigger_room_lights_on_gear_needs_dark(
 fn trigger_thermometer_non_freezing_fixation(
     time: Res<Time>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     app_state: Res<State<UIContextState>>,
     mut stopwatch: Local<Stopwatch>,
     mut trigger_count: Local<u32>,
@@ -216,9 +239,11 @@ fn trigger_thermometer_non_freezing_fixation(
         stopwatch.tick(time.delta());
         if stopwatch.elapsed_secs() > REQUIRED_DURATION {
             // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-            walkie_play.set(
+            crate::triggers::net::walkie_set_or_propose(
                 WalkieEvent::ThermometerNonFreezingFixation,
                 time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
             );
             *trigger_count += 1;
             stopwatch.reset();

@@ -10,6 +10,7 @@ use unplayer_core::components::{Hiding, MainPlayer};
 use unspatial_core::position::Position;
 use unvitals_core::components::PlayerVitals;
 use unwalkie_core::events::walkie_types::WalkieEvent;
+use unwalkie_core::messages::ProposeWalkieEvent;
 use unwalkie_core::resources::WalkiePlay; // Corrected import for LightLevel
 
 // Constants for SanityDroppedBelowThresholdDarkness
@@ -27,6 +28,7 @@ const MIN_INTERACTION_DURATION_SECONDS: f32 = 7.0; // Reduced from 10 to 7 secon
 /// This has been made more sensitive to help players when their sanity is critically low.
 fn very_low_sanity_no_truck_return(
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     qp: Query<(&PlayerVitals, &Position)>,
     room_topology: Res<RoomTopology>,
     app_state: Res<State<UIContextState>>,
@@ -53,9 +55,11 @@ fn very_low_sanity_no_truck_return(
     stopwatch.tick(time.delta());
     if stopwatch.elapsed_secs() > 15.0 {
         // Reduced from 20 seconds to 15 seconds for more responsive warnings
-        walkie_play.set(
+        crate::triggers::net::walkie_set_or_propose(
             WalkieEvent::VeryLowSanityNoTruckReturn,
             time.elapsed_secs_f64(),
+            &mut walkie_play,
+            &mut ev_propose,
         );
         stopwatch.reset();
     }
@@ -64,6 +68,7 @@ fn very_low_sanity_no_truck_return(
 /// Triggers a warning if the player's health drops below 50% for 30 seconds while inside the location.
 fn low_health_general_warning(
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     qp: Query<(&PlayerVitals, &Position)>,
     room_topology: Res<RoomTopology>,
     app_state: Res<State<UIContextState>>,
@@ -90,9 +95,11 @@ fn low_health_general_warning(
     stopwatch.tick(time.delta());
     if stopwatch.elapsed_secs() > 30.0 {
         // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-        walkie_play.set(
+        crate::triggers::net::walkie_set_or_propose(
             WalkieEvent::LowHealthGeneralWarning,
             time.elapsed_secs_f64(),
+            &mut walkie_play,
+            &mut ev_propose,
         );
         stopwatch.reset();
     }
@@ -102,6 +109,7 @@ fn low_health_general_warning(
 fn trigger_sanity_dropped_due_to_darkness_system(
     time: Res<Time>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     // FIXME: WTF is "LightLevel"? this does not exist, this seems a hallucination from the original code.
     player_query: Query<
         (&PlayerVitals, &Position, &LightLevel),
@@ -164,9 +172,11 @@ fn trigger_sanity_dropped_due_to_darkness_system(
             if timer.elapsed_secs() >= MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS
                 && player_vitals.sanity < MAX_SANITY_FOR_HINT_PERCENT_SHARED
                 && (*initial_sanity - player_vitals.sanity) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
-                && walkie_play.set(
+                && crate::triggers::net::walkie_set_or_propose(
                     WalkieEvent::SanityDroppedBelowThresholdDarkness,
                     time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
                 )
             {
                 *hint_triggered_this_episode = true;
@@ -179,6 +189,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
 fn trigger_sanity_dropped_due_to_ghost_system(
     time: Res<Time>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&PlayerVitals, &Position, Option<&Hiding>), With<MainPlayer>>,
     ghost_query: Query<(Entity, &GhostSprite, &Position)>, // Query Entity to track specific ghost
     room_topology: Res<RoomTopology>,
@@ -268,9 +279,11 @@ fn trigger_sanity_dropped_due_to_ghost_system(
             if timer.elapsed_secs() >= MIN_INTERACTION_DURATION_SECONDS
                 && player_vitals.sanity < MAX_SANITY_FOR_HINT_PERCENT_SHARED
                 && (*initial_sanity - player_vitals.sanity) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
-                && walkie_play.set(
+                && crate::triggers::net::walkie_set_or_propose(
                     WalkieEvent::SanityDroppedBelowThresholdGhost,
                     time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
                 )
             {
                 *hint_triggered_this_episode = true;
@@ -280,10 +293,22 @@ fn trigger_sanity_dropped_due_to_ghost_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, very_low_sanity_no_truck_return);
-    app.add_systems(Update, low_health_general_warning);
-    app.add_systems(Update, trigger_sanity_dropped_due_to_darkness_system); // Added new system
-    app.add_systems(Update, trigger_sanity_dropped_due_to_ghost_system); // Added new system
+    app.add_systems(
+        Update,
+        very_low_sanity_no_truck_return,
+    );
+    app.add_systems(
+        Update,
+        low_health_general_warning,
+    );
+    app.add_systems(
+        Update,
+        trigger_sanity_dropped_due_to_darkness_system,
+    ); // Added new system
+    app.add_systems(
+        Update,
+        trigger_sanity_dropped_due_to_ghost_system,
+    ); // Added new system
 }
 
 // FIXME: The LightLevel component seems to be here as a placeholder, we need to understand its purpose.

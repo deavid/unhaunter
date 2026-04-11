@@ -199,9 +199,6 @@ pub(crate) fn process_and_spawn_tile(
     // Add board position component
     entity_commands.insert_if_new(MapEntityFieldBPos(pos.to_board_position()));
 
-    // Add standard components to all tile entities
-    let transform = Transform::from_xyz(pos.x, pos.y, pos.visual_priority);
-
     // TODO: This is inserting Behavior which eventually we should replicate, when we do, we need to consider that
     // .. this code considers the map-loaded behavior to be authoritative, and that might be wrong.
     entity_commands.insert_if_new(beh.clone());
@@ -229,6 +226,5 @@ pub(crate) fn process_and_spawn_tile(
         // We intentionally insert `pos` here (even if it matches the server's replicated Position)
         // to guarantee `Changed<Position>` fires, triggering `apply_perspective` to compute the correct isometric Transform.
         .insert(pos)
-        .insert(Visibility::Hidden)
-        .insert(transform);
+        .insert(Visibility::Hidden);
 }

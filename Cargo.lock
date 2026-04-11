@@ -7551,7 +7551,6 @@ dependencies = [
  "bevy_replicon",
  "rand 0.10.0",
  "unaudiobg-core",
- "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
  "uncommon-app-core",
@@ -7582,6 +7581,7 @@ dependencies = [
  "bevy-persistent",
  "bevy_asset_loader",
  "rand 0.10.0",
+ "unaudiospatial-core",
  "unboard-core",
  "uncommon-app-core",
  "uncommon-states-core",
@@ -7658,6 +7658,7 @@ dependencies = [
  "untruck-plugin",
  "untruckui-plugin",
  "unvitals-plugin",
+ "unwalkie-logic",
  "unwalkie-plugin",
  "wasm-bindgen",
 ]
@@ -8646,10 +8647,22 @@ dependencies = [
  "bevy_platform",
  "enum-iterator",
  "rand 0.10.0",
+ "serde",
  "uncommon-app-core",
  "undifficulty-core",
  "ungear-core",
  "uninvestigation-core",
+ "unwalkie-types",
+]
+
+[[package]]
+name = "unwalkie-logic"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_replicon",
+ "unreplicon-core",
+ "unwalkie-core",
  "unwalkie-types",
 ]
 
@@ -8660,6 +8673,7 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_platform",
+ "bevy_replicon",
  "enum-iterator",
  "rand 0.10.0",
  "unbehavior-core",
@@ -8680,6 +8694,7 @@ dependencies = [
  "unplayer-core",
  "unprofile-core",
  "unrender-std",
+ "unreplicon-core",
  "unsettings-core",
  "unspatial-core",
  "untruck-core",

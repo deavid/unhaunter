@@ -70,6 +70,34 @@ fn populate_grid_on_spawn(
     }
 }
 
+/// Repopulates the `BoardEntityField` entirely when the map is fully loaded.
+/// Allows entities that arrived via the network before the map was ready
+/// to accurately be placed in the spatial index.
+fn repopulate_grid_on_topology_load(
+    mut board_entity_field: ResMut<BoardEntityField>,
+    board_topology: Res<BoardTopology>,
+    q_all: Query<(Entity, &MapEntityFieldBPos)>,
+) {
+    if !board_topology.is_changed() || board_topology.map_size == (0, 0, 0) {
+        return;
+    }
+
+    // Clear the existing field
+    for cell in board_entity_field.0.iter_mut() {
+        cell.clear();
+    }
+
+    // Repopulate from all active position components
+    for (entity, bpos) in q_all.iter() {
+        if let Some(idx) = bpos.0.ndidx_checked(board_topology.map_size) {
+            let cell = &mut board_entity_field.0[idx];
+            if !cell.contains(&entity) {
+                cell.push(entity);
+            }
+        }
+    }
+}
+
 pub(crate) fn register_diagnostics(app: &mut App) {
     app.register_diagnostic(Diagnostic::new(SYNC_MAP_ENTITY_FIELD).with_suffix("ms"));
 }
@@ -79,6 +107,8 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         (
             populate_grid_on_spawn,
+            repopulate_grid_on_topology_load
+                .run_if(in_state(uncommon_states_core::UIContextState::InGame)),
             sync_map_entity_field.run_if(in_state(uncommon_states_core::UIContextState::InGame)),
         ),
     );

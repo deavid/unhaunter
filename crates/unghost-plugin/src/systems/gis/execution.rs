@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use rand::prelude::*;
-use unaudiospatial_core::events::SoundEvent;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::{InteractableByGhost, RoomStateDelta};
@@ -8,6 +7,7 @@ use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use uncommon_app_core::random_seed;
 use unghost_core::components::logic::interaction::{InteractionMotion, Locked};
+use unghost_core::components::logic::interaction_sound::GhostInteractionSoundCue;
 use unghost_core::events::{GhostBreakerSparkRequest, GhostInteractionEvent, GhostInteractionType};
 use uninteraction_core::events::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interaction::ExecuteInteractionEvent;
@@ -184,7 +184,6 @@ fn ghost_interaction_execution_system(
     )>,
     q_objects: Query<&Position, With<InteractableByGhost>>,
     mut ev_interaction_executor: MessageWriter<ExecuteInteractionEvent>,
-    mut ev_sound: MessageWriter<SoundEvent>,
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_topology: Res<BoardTopology>,
@@ -218,8 +217,9 @@ fn ghost_interaction_execution_system(
 
             GhostInteractionType::DoorSlam => {
                 execute_door_slam_interaction(
+                    &mut commands,
+                    current_secs,
                     &mut ev_interaction_executor,
-                    &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
@@ -228,8 +228,9 @@ fn ghost_interaction_execution_system(
 
             GhostInteractionType::DoorCreak => {
                 execute_door_creak_interaction(
+                    &mut commands,
+                    current_secs,
                     &mut ev_interaction_executor,
-                    &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
@@ -241,7 +242,6 @@ fn ghost_interaction_execution_system(
                     execute_throw_interaction(
                         &mut commands,
                         current_secs,
-                        &mut ev_sound,
                         &q_targets,
                         &q_objects,
                         event.target,
@@ -261,7 +261,6 @@ fn ghost_interaction_execution_system(
                 execute_nudge_interaction(
                     &mut commands,
                     current_secs,
-                    &mut ev_sound,
                     &q_targets,
                     &q_objects,
                     event.target,
@@ -276,7 +275,6 @@ fn ghost_interaction_execution_system(
                     execute_haunted_move_interaction(
                         &mut commands,
                         current_secs,
-                        &mut ev_sound,
                         &q_targets,
                         &q_objects,
                         event.target,
@@ -293,20 +291,15 @@ fn ghost_interaction_execution_system(
             }
 
             GhostInteractionType::Lock => {
-                execute_lock_interaction(
-                    &mut commands,
-                    current_secs,
-                    &mut ev_sound,
-                    &q_targets,
-                    event.target,
-                );
+                execute_lock_interaction(&mut commands, current_secs, &q_targets, event.target);
             }
 
             GhostInteractionType::TripBreaker => {
                 execute_trip_breaker_interaction(
+                    &mut commands,
+                    current_secs,
                     &mut ev_breaker_sparks,
                     &mut ev_interaction_executor,
-                    &mut ev_sound,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
@@ -347,8 +340,9 @@ fn execute_toggle_interaction(
 
 /// Execute door slam interaction (fast door closure)
 fn execute_door_slam_interaction(
+    commands: &mut Commands,
+    current_secs: f64,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
-    ev_sound: &mut MessageWriter<SoundEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
         &Behavior,
@@ -365,11 +359,10 @@ fn execute_door_slam_interaction(
             force_tuid: None,
         });
 
-        ev_sound.write(SoundEvent {
-            sound_file: "sounds/door-close.ogg".to_string(),
-            volume: 1.5, // Louder than normal door close to simulate slam
-            position: Some(*position),
-            broadcast: true,
+        commands.entity(target).insert(GhostInteractionSoundCue {
+            position: *position,
+            kind: GhostInteractionType::DoorSlam,
+            triggered_at: current_secs,
         });
     } else {
         error!(
@@ -381,8 +374,9 @@ fn execute_door_slam_interaction(
 
 /// Execute door creak interaction (slow door movement)
 fn execute_door_creak_interaction(
+    commands: &mut Commands,
+    current_secs: f64,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
-    ev_sound: &mut MessageWriter<SoundEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
         &Behavior,
@@ -399,12 +393,10 @@ fn execute_door_creak_interaction(
             force_tuid: None,
         });
 
-        // Play door creak sound effect
-        ev_sound.write(SoundEvent {
-            sound_file: "sounds/door_creak_slow.ogg".to_string(),
-            volume: 0.7,
-            position: Some(*position),
-            broadcast: true,
+        commands.entity(target).insert(GhostInteractionSoundCue {
+            position: *position,
+            kind: GhostInteractionType::DoorCreak,
+            triggered_at: current_secs,
         });
     } else {
         error!(
@@ -418,7 +410,6 @@ fn execute_door_creak_interaction(
 fn execute_throw_interaction(
     commands: &mut Commands,
     current_secs: f64,
-    ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -453,12 +444,10 @@ fn execute_throw_interaction(
             );
             commands.entity(target).insert(motion);
 
-            // Play throw sound effect
-            ev_sound.write(SoundEvent {
-                sound_file: "sounds/object_throw_generic.ogg".to_string(),
-                volume: 0.8,
-                position: Some(*current_position),
-                broadcast: true,
+            commands.entity(target).insert(GhostInteractionSoundCue {
+                position: *current_position,
+                kind: GhostInteractionType::Throw,
+                triggered_at: current_secs,
             });
         } else {
             warn!(
@@ -478,7 +467,6 @@ fn execute_throw_interaction(
 fn execute_nudge_interaction(
     commands: &mut Commands,
     current_secs: f64,
-    ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -526,12 +514,10 @@ fn execute_nudge_interaction(
 
         commands.entity(target).insert(motion);
 
-        // Play nudge sound effect
-        ev_sound.write(SoundEvent {
-            sound_file: "sounds/object_nudge_1.ogg".to_string(),
-            volume: 0.6,
-            position: Some(*current_position),
-            broadcast: true,
+        commands.entity(target).insert(GhostInteractionSoundCue {
+            position: *current_position,
+            kind: GhostInteractionType::Nudge,
+            triggered_at: current_secs,
         });
     } else {
         error!(
@@ -545,7 +531,6 @@ fn execute_nudge_interaction(
 fn execute_haunted_move_interaction(
     commands: &mut Commands,
     current_secs: f64,
-    ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -580,12 +565,10 @@ fn execute_haunted_move_interaction(
             );
             commands.entity(target).insert(motion);
 
-            // Play haunted move sound effect
-            ev_sound.write(SoundEvent {
-                sound_file: "sounds/object_drag_wood.ogg".to_string(),
-                volume: 0.9,
-                position: Some(*current_position),
-                broadcast: true,
+            commands.entity(target).insert(GhostInteractionSoundCue {
+                position: *current_position,
+                kind: GhostInteractionType::HauntedMove,
+                triggered_at: current_secs,
             });
         } else {
             warn!(
@@ -605,7 +588,6 @@ fn execute_haunted_move_interaction(
 fn execute_lock_interaction(
     commands: &mut Commands,
     current_secs: f64,
-    ev_sound: &mut MessageWriter<SoundEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -621,12 +603,10 @@ fn execute_lock_interaction(
             .entity(target)
             .insert(Locked::new(current_secs, 10.0));
 
-        // Play door lock sound effect
-        ev_sound.write(SoundEvent {
-            sound_file: "sounds/door_lock_heavy.ogg".to_string(),
-            volume: 0.9,
-            position: Some(*position),
-            broadcast: true,
+        commands.entity(target).insert(GhostInteractionSoundCue {
+            position: *position,
+            kind: GhostInteractionType::Lock,
+            triggered_at: current_secs,
         });
     } else {
         error!(
@@ -638,9 +618,10 @@ fn execute_lock_interaction(
 
 /// Execute trip breaker interaction (turn off main power)
 fn execute_trip_breaker_interaction(
+    commands: &mut Commands,
+    current_secs: f64,
     ev_breaker_sparks: &mut MessageWriter<GhostBreakerSparkRequest>,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
-    ev_sound: &mut MessageWriter<SoundEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
         &Behavior,
@@ -658,11 +639,10 @@ fn execute_trip_breaker_interaction(
         });
 
         // Play breaker trip sound effect
-        ev_sound.write(SoundEvent {
-            sound_file: "sounds/switch-on-2.ogg".to_string(),
-            volume: 1.0,
-            position: Some(*position),
-            broadcast: true,
+        commands.entity(target).insert(GhostInteractionSoundCue {
+            position: *position,
+            kind: GhostInteractionType::TripBreaker,
+            triggered_at: current_secs,
         });
 
         ev_breaker_sparks.write(GhostBreakerSparkRequest {

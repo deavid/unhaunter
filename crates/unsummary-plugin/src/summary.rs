@@ -59,10 +59,16 @@ pub(crate) fn update_time(
     let total_sanity: f32 = qp.iter().map(|(_, v)| v.sanity).sum();
     let player_count = qp.iter().count();
     let alive_count = qp.iter().filter(|(_, v)| v.health > 0.0).count();
-    sd.player_count = player_count;
-    sd.alive_count = alive_count;
-    if player_count > 0 {
-        sd.average_sanity = total_sanity / player_count as f32;
+
+    // Only update player counts while no death has been detected yet.
+    // Once `death_timer` is Some, players may have started despawning —
+    // preserve the last valid snapshot instead of overwriting with zeros.
+    if death_timer.is_none() {
+        sd.player_count = player_count;
+        sd.alive_count = alive_count;
+        if player_count > 0 {
+            sd.average_sanity = total_sanity / player_count as f32;
+        }
     }
 
     if player_count > 0 && alive_count == 0 {

@@ -20,6 +20,7 @@ use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 use crate::metrics;
 
@@ -37,6 +38,7 @@ fn check_player_stuck_at_start(
     room_topology: Res<RoomTopology>,
     player_query: Query<&Position, With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     mut stuck_timer: Local<Stopwatch>,
     player_profile: Res<Persistent<PlayerProfileData>>,
     mut initial_position: Local<Option<Position>>,
@@ -84,7 +86,12 @@ fn check_player_stuck_at_start(
 
         if stuck_timer.elapsed_secs() > min_time_secs {
             // warn!("Player stuck at start for {} seconds", stuck_timer.elapsed_secs());
-            walkie_play.set(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
+            crate::triggers::net::walkie_set_or_propose(
+                WalkieEvent::PlayerStuckAtStart,
+                time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
+            );
         }
     }
 }
@@ -99,6 +106,7 @@ fn check_erratic_movement_early(
     room_topology: Res<RoomTopology>,
     player_query: Query<(&Position, &PlayerLocomotionState), With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     mut not_entered_timer: Local<Stopwatch>,
     mut avg_position: Local<Option<Position>>,
     player_profile: Res<Persistent<PlayerProfileData>>,
@@ -149,7 +157,12 @@ fn check_erratic_movement_early(
         }
 
         if not_entered_timer.elapsed_secs() > ERRATIC_MOVEMENT_EARLY_SECONDS {
-            walkie_play.set(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
+            crate::triggers::net::walkie_set_or_propose(
+                WalkieEvent::ErraticMovementEarly,
+                time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
+            );
         }
     }
 }
@@ -165,6 +178,7 @@ fn check_door_interaction_hesitation(
     player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     door_query: Query<(&Position, &Behavior), With<Door>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     mut hesitation_timer: Local<Stopwatch>,
 ) {
     if app_state.get() != &UIContextState::InGame {
@@ -205,9 +219,11 @@ fn check_door_interaction_hesitation(
         hesitation_timer.tick(time.delta());
 
         if hesitation_timer.elapsed_secs() > 3.0
-            && walkie_play.set(
+            && crate::triggers::net::walkie_set_or_propose(
                 WalkieEvent::DoorInteractionHesitation,
                 time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
             )
         {
             hesitation_timer.reset();
@@ -221,6 +237,7 @@ fn trigger_struggling_with_grab_drop(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<(&PlayerGear, &PlayerInputMapping), With<MainPlayer>>,
     mut full_and_failed_grab_timer: Local<Option<Stopwatch>>,
@@ -267,7 +284,12 @@ fn trigger_struggling_with_grab_drop(
                 if stopwatch.elapsed_secs() > 5.0 {
                     // Duration player struggles
                     // FIXME: Additional verification and tuning is needed for this trigger. It worked before, but it was too much.
-                    if walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64())
+                    if crate::triggers::net::walkie_set_or_propose(
+                        WalkieEvent::StrugglingWithGrabDrop,
+                        time.elapsed_secs_f64(),
+                        &mut walkie_play,
+                        &mut ev_propose,
+                    )
                     {
                         *full_and_failed_grab_timer = None; // Reset timer after successful trigger
                     }
@@ -288,6 +310,7 @@ fn trigger_struggling_with_hide_unhide(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<&PlayerInputMapping, (With<MainPlayer>, Without<Hiding>)>,
     mut hide_key_timer: Local<Option<Stopwatch>>,
@@ -313,9 +336,11 @@ fn trigger_struggling_with_hide_unhide(
 
                 // If player has been holding [E] for over 2 seconds while not hidden, trigger event
                 if timer.elapsed_secs() > 2.0
-                    && walkie_play.set(
+                    && crate::triggers::net::walkie_set_or_propose(
                         WalkieEvent::StrugglingWithHideUnhide,
                         time.elapsed_secs_f64(),
+                        &mut walkie_play,
+                        &mut ev_propose,
                     )
                 {
                     // FIXME: Additional verification and tuning is needed for this trigger.
@@ -340,6 +365,7 @@ fn trigger_player_stays_hidden_too_long(
     app_state: Res<State<UIContextState>>,
     game_state: Res<State<InGameUiState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     hiding_query: Query<Entity, (With<Hiding>, Without<InTruck>)>,
     hunt_signals: Res<GhostHuntSignals>,
     ghost_query: Query<&unghost_core::components::logic::ghost_sprite::GhostSprite>,
@@ -375,9 +401,11 @@ fn trigger_player_stays_hidden_too_long(
     if let Some(start_time) = *post_hunt_hidden_timer {
         if now - start_time > 10.0 {
             // FIXME: Additional verification and tuning is needed for this trigger.
-            walkie_play.set(
+            crate::triggers::net::walkie_set_or_propose(
                 WalkieEvent::PlayerStaysHiddenTooLong,
                 time.elapsed_secs_f64(),
+                &mut walkie_play,
+                &mut ev_propose,
             );
             // Only trigger once per hiding session
             *post_hunt_hidden_timer = None;
@@ -392,6 +420,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     player_query: Query<(&Position, Entity), Without<Hiding>>,
     hiding_spots: Query<&Position, With<HidingSpot>>,
     hunt_signals: Res<GhostHuntSignals>,
@@ -420,9 +449,11 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
             if let Some(start) = *near_hiding_timer {
                 if now - start > 2.0 {
                     // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                    walkie_play.set(
+                    crate::triggers::net::walkie_set_or_propose(
                         WalkieEvent::HuntActiveNearHidingSpotNoHide,
                         time.elapsed_secs_f64(),
+                        &mut walkie_play,
+                        &mut ev_propose,
                     );
                     // Only trigger once per hunt
                     *near_hiding_timer = None;
@@ -452,6 +483,7 @@ pub(crate) fn app_setup(app: &mut App) {
             trigger_struggling_with_hide_unhide,
             trigger_player_stays_hidden_too_long,
             trigger_hunt_active_near_hiding_spot_no_hide,
-        ),
+        )
+            ,
     );
 }

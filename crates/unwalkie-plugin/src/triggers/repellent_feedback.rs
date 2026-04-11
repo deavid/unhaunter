@@ -5,8 +5,10 @@ use unghost_core::components::presentation::repellent_particle::RepellentParticl
 use unghost_core::resources::signals::GhostHuntSignals;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::ghost::GhostType;
+use uninvestigation_core::messages::RequestJournalEvidenceToggle;
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
+use unwalkie_core::messages::ProposeWalkieEvent;
 use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 
 // Track which repellent types have already given hints this mission
@@ -27,7 +29,9 @@ fn repellent_feedback_trigger_system(
     repellent_particle_query: Query<&RepellentParticle>,
     ghost_guess: Res<GhostGuess>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     mut ev_force_discard: MessageWriter<ForceDiscardEvidenceEvent>,
+    mut ev_evidence_toggle: MessageWriter<RequestJournalEvidenceToggle>,
     mut hints_given: ResMut<RepellentHintsGiven>,
     app_state: Res<State<UIContextState>>,
 ) {
@@ -110,11 +114,24 @@ fn repellent_feedback_trigger_system(
                 let walkie_event = WalkieEvent::IncorrectRepellentHint(selected_evidence);
 
                 // Attempt to play the walkie event
-                if walkie_play.set(walkie_event, time.elapsed_secs_f64()) {
+                if crate::triggers::net::walkie_set_or_propose(
+                    walkie_event,
+                    time.elapsed_secs_f64(),
+                    &mut walkie_play,
+                    &mut ev_propose,
+                ) {
                     debug!(
                         "RepellentFeedback: Sending hint for evidence {:?} and forcing discard (repellent {:?} vs ghost {:?}, {} total particles)",
                         selected_evidence, repellent_type, real_ghost_type, total_count
                     );
+                    // Send the discard through the proper network channel so all clients
+                    // (and server replication) reflect the change correctly.
+                    ev_evidence_toggle.write(RequestJournalEvidenceToggle {
+                        evidence: selected_evidence,
+                        discard: true,
+                        mark_as_found: false,
+                    });
+                    // Also fire the local UI event so the button gets locked immediately.
                     ev_force_discard.write(ForceDiscardEvidenceEvent(selected_evidence));
 
                     // Mark this repellent type as having given a hint and remove from ready_to_play

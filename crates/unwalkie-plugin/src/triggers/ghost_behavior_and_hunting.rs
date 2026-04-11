@@ -6,8 +6,8 @@ use ungear_core::types::gear::kind::GearKind;
 use unghost_core::resources::signals::GhostHuntSignals;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
-use unwalkie_core::events::walkie_types::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
+use unwalkie_core::messages::ProposeWalkieEvent;
 
 const NO_EVASION_TIMER_SECONDS: f32 = 4.0;
 const NO_EVASION_MAX_DISTANCE: f32 = 1.0; // Max distance player can move to still be considered "not evaded"
@@ -16,6 +16,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
     time: Res<Time>,
     app_state: Res<State<UIContextState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     q_player: Query<
         (&Position, Option<&Hiding>, &PlayerGear),
         (With<PlayerSprite>, With<MainPlayer>),
@@ -91,9 +92,11 @@ fn trigger_hunt_warning_no_player_evasion_system(
                     if let Some(initial_pos) = *player_pos_at_warning {
                         if player_current_pos.distance(&initial_pos) < NO_EVASION_MAX_DISTANCE {
                             // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                            if walkie_play.set(
-                                WalkieEvent::HuntWarningNoPlayerEvasion,
+                            if crate::triggers::net::walkie_set_or_propose(
+                                unwalkie_core::events::walkie_types::WalkieEvent::HuntWarningNoPlayerEvasion,
                                 time.elapsed_secs_f64(),
+                                &mut walkie_play,
+                                &mut ev_propose,
                             ) {
                                 *warning_timer = None;
                                 *player_pos_at_warning = None;
@@ -119,5 +122,8 @@ fn trigger_hunt_warning_no_player_evasion_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, trigger_hunt_warning_no_player_evasion_system);
+    app.add_systems(
+        Update,
+        trigger_hunt_warning_no_player_evasion_system,
+    );
 }

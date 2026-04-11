@@ -101,7 +101,7 @@ fn update_ghost_behavior_dynamics_system(
             evidence_visibility_recip,
         );
         if *report_time > 10.0 {
-            debug!(
+            warn!(
                 "Dynamics: Frz:{:.2}, Orbs:{:.2}, UV:{:.2}, EMF:{:.2}, EVP:{:.2}, SprtBx:{:.2}, RL:{:.2}, CPM500:{:.2}, Alpha:{:.2}, Rage:{:.2}",
                 dynamics.freezing_temp_clarity,
                 dynamics.floating_orbs_clarity,

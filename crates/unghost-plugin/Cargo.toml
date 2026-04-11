@@ -22,7 +22,6 @@ unboard-core = { workspace = true }
 unmission-core = { workspace = true }
 unlight-core = { workspace = true }
 unsoundfield-core = { workspace = true }
-unaudiospatial-core = { workspace = true }
 unplayer-core = { workspace = true }
 unvitals-core = { workspace = true }
 unmetrics-core = { workspace = true }

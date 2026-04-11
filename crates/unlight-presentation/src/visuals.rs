@@ -127,9 +127,9 @@ pub(crate) fn apply_ethereal_visuals<D: DifficultySettings>(
         .clamp(0.001, 0.999);
     *opacity = *opacity * f + orig_opacity * (1.0 - f);
     let spectral_visibility =
-        (0.5 + e_uv + e_rl + ld.ultraviolet * 2.0 + ld.red * 10.0 + ld.infrared)
+        (0.5 + e_uv + e_rl + ld.ultraviolet * 2.0 + ld.red * 10.0 + ld.infrared * 2.0)
             .clamp(difficulty.evidence_visibility() * 0.1, 1.0);
-    *opacity *= spectral_visibility * clarity.alpha.clamp(0.0, 1.0);
+    *opacity *= spectral_visibility * (clarity.alpha + ld.red * 2.0).clamp(0.0, 1.0);
     let srgba = dst_color
         .with_luminance((l * ld.visible - ld.infrared - ethereal.hit_delta * 3.0).clamp(0.0, 1.0))
         .to_srgba();
@@ -140,8 +140,9 @@ pub(crate) fn apply_ethereal_visuals<D: DifficultySettings>(
     *opacity = *opacity * (1.0 - k_hit) + orig_opacity.cbrt() * k_hit;
 
     let mut final_color = srgba
-        .with_red(r * ld.visible + e_rl * 1.1 + ethereal.miss_delta / 2.0)
-        .with_green(g * ld.visible + e_uv + e_rl + ethereal.miss_delta / 2.5);
+        .with_red(r * ld.visible + ethereal.miss_delta / 2.0 - e_rl * 2.0)
+        .with_green(g * ld.visible + e_uv + e_rl + ethereal.miss_delta / 2.5 - e_rl / 2.0)
+        .with_blue(srgba.blue + e_rl);
 
     if ethereal.warning_active || ethereal.threat_active {
         // Make the ghost bright red and pulsing during a hunt/warning

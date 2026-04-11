@@ -19,8 +19,10 @@ pub struct BoardTopology {
     // Complete floor mapping information
     pub floor_mapping: FloorLevelMapping,
 
-    pub map_path: String,      // Path to the current map file
-    pub level_ready_time: f32, // Time when the level became ready
+    pub map_path: String,         // Path to the current map file
+    pub level_ready_time: f32,    // Time when the level became ready
+    pub mission_reward_base: i64, // Base money reward for completing this mission
+    pub required_deposit: i64,    // Insurance deposit required for this mission
 }
 
 impl BoardTopology {
@@ -83,6 +85,8 @@ impl FromWorld for BoardTopology {
             },
             map_path: String::new(), // Initialize map_path with an empty string
             level_ready_time: 0.0,   // Initialize level_ready_time
+            mission_reward_base: 0,
+            required_deposit: 0,
         }
     }
 }

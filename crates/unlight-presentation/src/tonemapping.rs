@@ -24,6 +24,7 @@ pub fn artistic_tonemap(x: f32, exposure: f32) -> f32 {
     compressed + bloom.max(0.0)
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TonemappingParams {
     pub tutorial_light_factor: f32,
     pub dark_color2: Vec4,

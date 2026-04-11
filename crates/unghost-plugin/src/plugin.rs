@@ -5,6 +5,8 @@ use unghost_core::components::logic::ghost_death::GhostDeathSignal;
 use unghost_core::components::logic::ghost_influence::GhostInfluence;
 use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::components::logic::interaction::{InteractionMotion, Locked};
+use unghost_core::components::logic::interaction_sound::GhostInteractionSoundCue;
+use unghost_core::components::logic::vocalization::GhostVocalization;
 use unghost_core::components::presentation::spectral::SpectralClarity;
 use unghost_core::tags::GhostTag;
 use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
@@ -40,6 +42,8 @@ impl Plugin for UnhaunterGhostLogicPlugin {
         app.replicate::<InteractionMotion>();
         app.replicate::<Locked>();
         app.replicate::<SpectralClarity>();
+        app.replicate::<GhostInteractionSoundCue>();
+        app.replicate::<GhostVocalization>();
         crate::systems::hydration::app_setup(app);
         crate::systems::evidence_decay::app_setup(app);
         crate::systems::ghost_ai::app_setup(app);

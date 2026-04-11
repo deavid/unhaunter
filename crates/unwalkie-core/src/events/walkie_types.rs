@@ -1,5 +1,6 @@
 use bevy::prelude::Message;
 use enum_iterator::Sequence;
+use serde::{Deserialize, Serialize};
 use undifficulty_core::difficulty::Difficulty;
 use ungear_core::types::gear::kind::GearKind;
 use uninvestigation_core::evidence::Evidence;
@@ -38,7 +39,7 @@ pub enum WalkieRepeatBehavior {
 }
 
 /// Sending this event will cause the walkie to play a message.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Sequence)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Sequence, Serialize, Deserialize)]
 pub enum WalkieEvent {
     /// When the player forgets the stuff in the van.
     GearInVan,
