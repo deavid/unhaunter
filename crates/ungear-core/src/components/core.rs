@@ -79,3 +79,28 @@ pub struct Handheld;
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct StatusText(pub String);
+
+impl StatusText {
+    pub fn update(
+        &mut self,
+        entity: Entity,
+        commands: &mut Commands,
+        is_refresh: bool,
+        new_text: String,
+    ) {
+        if is_refresh {
+            self.0 = new_text;
+            commands
+                .entity(entity)
+                .insert(StatusTextRefreshTimer(Timer::from_seconds(
+                    1.0 / 15.0,
+                    TimerMode::Once,
+                )));
+        }
+    }
+}
+
+/// Tracks when to refresh the status text.
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct StatusTextRefreshTimer(pub Timer);

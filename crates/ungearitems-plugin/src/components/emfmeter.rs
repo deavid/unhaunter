@@ -5,7 +5,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::core::{
-    Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
+    Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText, StatusTextRefreshTimer,
 };
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
@@ -28,7 +28,9 @@ pub(crate) use ungearitems_core::components::emfmeter::{EMFLevel, EMFMeter};
 use unreplicon_core::resources::LocalPlayerRole;
 
 pub(crate) fn update_emfmeter(
+    mut commands: Commands,
     mut q_emf: Query<(
+        Entity,
         &mut EMFMeter,
         &mut StatusText,
         &mut GearSprite,
@@ -39,6 +41,7 @@ pub(crate) fn update_emfmeter(
         &ItemName,
         &EquipmentPosition,
         &mut PerceivedClarity,
+        Has<StatusTextRefreshTimer>,
     )>,
     mut gs_audio: AudioEmitter,
     miasma: If<Res<MiasmaGrid>>,
@@ -52,6 +55,7 @@ pub(crate) fn update_emfmeter(
     let measure = metrics::EMF_UPDATE.time_measure();
     let is_authority = authority.is_some();
     for (
+        entity,
         mut emf,
         mut status,
         mut sprite,
@@ -62,10 +66,22 @@ pub(crate) fn update_emfmeter(
         name,
         ep,
         mut perceived_clarity,
+        has_timer,
     ) in q_emf.iter_mut()
     {
         let mut rng = random_seed::rng();
         emf.frame_counter = emf.frame_counter.wrapping_add(1);
+
+        let sec = gs_audio.time.elapsed_secs();
+
+        // Manage start time for sensitivity ramp-up
+        if toggle.is_on {
+            if emf.start_time_secs.is_none() {
+                emf.start_time_secs = Some(sec);
+            }
+        } else {
+            emf.start_time_secs = None;
+        }
 
         // Update Battery Drain Rate
         if is_authority {
@@ -134,12 +150,19 @@ pub(crate) fn update_emfmeter(
                     let temp_l1 = emf.temp_l1;
                     emf.temp_l2.push(temp_l1);
                 }
-                let sec = gs_audio.time.elapsed_secs();
                 if emf.last_meter_update_secs + 0.5 < sec {
                     emf.last_meter_update_secs = sec;
                     let sum_temp: f32 = emf.temp_l2.iter().sum();
                     let avg_temp: f32 = sum_temp / emf.temp_l2.len() as f32;
                     let mut new_emf = (avg_temp - emf.temp_l1).abs() * 3.0;
+
+                    // Apply sensitivity ramp-up
+                    if let Some(start_time) = emf.start_time_secs {
+                        let elapsed = sec - start_time;
+                        let sensitivity = (elapsed / 5.0).clamp(0.0, 1.0);
+                        new_emf *= sensitivity;
+                    }
+
                     emf.emf -= 0.2 * difficulty.0.equipment_sensitivity();
                     emf.emf /= 1.4_f32.powf(difficulty.0.equipment_sensitivity());
 
@@ -198,36 +221,36 @@ pub(crate) fn update_emfmeter(
         let on_s = on_off(toggle.is_on);
 
         // Show garbled text when enabled but glitching
-        if toggle.is_on && electronic.glitch_timer > 0.0 {
+        let new_status = if toggle.is_on && electronic.glitch_timer > 0.0 {
             let garbled = match random_seed::rng().random_range(0..4) {
                 0 => "Reading: ERR0R\nEnergy: ###.###",
                 1 => "Reading: ---.--\nEnergy: FAULT",
                 2 => "INTERFERENCE DET---\nCALIBRATING...",
                 _ => "Signal Lost\nReacquiring...",
             };
-            status.0 = format!("{}:  {}\n{}", name.0, on_s, garbled);
-            continue;
-        }
-
-        // Regular display
-        let msg = if toggle.is_on {
-            let emf_status_text = emf.emf_level.to_status();
-            let blinking_emf_text = if emf.frame_counter % 30 < 15
-                && emf.blinking_hint_active
-                && emf.emf_level == EMFLevel::EMF5
-            {
-                format!(">[{}]<", emf_status_text)
-            } else {
-                format!("  {}  ", emf_status_text)
-            };
-            format!(
-                "Reading: {:>6.1}mG {}\nEnergy: {:>9.3}T",
-                emf.emf, blinking_emf_text, emf.miasma_pressure_2,
-            )
+            format!("{}:  {}\n{}", name.0, on_s, garbled)
         } else {
-            "".to_string()
+            // Regular display
+            let msg = if toggle.is_on {
+                let emf_status_text = emf.emf_level.to_status();
+                let blinking_emf_text = if emf.frame_counter % 30 < 15
+                    && emf.blinking_hint_active
+                    && emf.emf_level == EMFLevel::EMF5
+                {
+                    format!(">[{}]<", emf_status_text)
+                } else {
+                    format!("  {}  ", emf_status_text)
+                };
+                format!(
+                    "Reading: {:>6.1}mG {}\nEnergy: {:>9.3}T",
+                    emf.emf, blinking_emf_text, emf.miasma_pressure_2,
+                )
+            } else {
+                "".to_string()
+            };
+            format!("{}:  {}\n{}", name.0, on_s, msg)
         };
-        status.0 = format!("{}:  {}\n{}", name.0, on_s, msg);
+        status.update(entity, &mut commands, !has_timer, new_status);
 
         perceived_clarity.from_status_text =
             if toggle.is_on && emf.emf_level == EMFLevel::EMF5 && electronic.glitch_timer <= 0.0 {

@@ -48,9 +48,7 @@ use unthermal_plugin::plugin::UnhaunterThermalPlugin;
 use unaudiobg_plugin::plugin::UnhaunterAudioBgPlugin;
 use unaudiospatial_plugin::plugin::UnhaunterSpatialAudioPlugin;
 use unwalkie_logic::plugin::UnhaunterWalkieLogicPlugin;
-use unwalkie_plugin::plugin::{
-    UnhaunterWalkieCorePlugin, UnhaunterWalkiePlugin,
-};
+use unwalkie_plugin::plugin::{UnhaunterWalkieCorePlugin, UnhaunterWalkiePlugin};
 
 // UI & Menu Systems
 use unlobby_plugin::plugin::UnhaunterLobbyPlugin;

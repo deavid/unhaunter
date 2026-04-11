@@ -13,10 +13,17 @@ pub struct GhostOrbParticle {
     pub frequency: Vec3,
     pub phase: Vec3,
     pub base_position: Vec3,
+    pub speed_multiplier: f32,
+    pub drift_velocity: Vec2,
 }
 
 impl GhostOrbParticle {
-    pub fn new(life: f32, initial_spawn_time: f32, base_position: Vec3) -> Self {
+    pub fn new(
+        life: f32,
+        initial_spawn_time: f32,
+        base_position: Vec3,
+        speed_multiplier: f32,
+    ) -> Self {
         let mut rng = random_seed::rng();
         Self {
             life,
@@ -37,6 +44,9 @@ impl GhostOrbParticle {
                 rng.random_range(0.0..TAU),
             ),
             base_position,
+            speed_multiplier,
+            drift_velocity: Vec2::new(rng.random_range(-1.0..1.0), rng.random_range(-1.0..1.0))
+                .normalize_or_zero(),
         }
     }
 }

@@ -4,4 +4,5 @@ pub mod ghost_influence;
 pub mod ghost_sprite;
 pub mod interaction;
 pub mod interaction_sound;
+pub mod red_light_charge;
 pub mod vocalization;

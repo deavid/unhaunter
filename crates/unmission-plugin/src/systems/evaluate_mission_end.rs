@@ -8,6 +8,8 @@ use unplayer_core::components::PlayerSprite;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 
+const EMPTY_MISSION_END_GRACE_SECS: f32 = 5.0;
+
 pub(crate) fn evaluate_mission_end(
     query_players: Query<
         (
@@ -61,10 +63,10 @@ pub(crate) fn evaluate_mission_end(
                 now
             );
         }
-        if now - *start > 2.0 {
+        if now - *start > EMPTY_MISSION_END_GRACE_SECS {
             if authority.is_some() {
                 warn!(
-                    "MISSION_END_EMPTY_TIMER_ELAPSED: emitting MissionEvent::End after {:.3}s with active_players=0 disconnected_or_inactive={} truck_players={}",
+                    "MISSION_END_EMPTY_TIMER_ELAPSED: requesting mission end after {:.3}s with active_players=0 disconnected_or_inactive={} truck_players={}",
                     now - *start,
                     disconnected_or_inactive_players,
                     players_in_truck

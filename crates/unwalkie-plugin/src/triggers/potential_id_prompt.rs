@@ -7,8 +7,8 @@ use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceR
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use uninvestigation_core::resources::potential_id_timer::{PotentialIDData, PotentialIDTimer};
 use unprofile_core::profile::PlayerProfileData;
-use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 use unwalkie_core::messages::ProposeWalkieEvent;
+use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 
 // PotentialIDTimer struct definition removed from here
 
@@ -196,8 +196,5 @@ fn potential_id_prompt_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        potential_id_prompt_system,
-    );
+    app.add_systems(Update, potential_id_prompt_system);
 }

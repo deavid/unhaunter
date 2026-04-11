@@ -11,8 +11,8 @@ use unghost_core::resources::signals::GhostHuntSignals;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untruck_core::truckgear::TruckGear;
-use unwalkie_core::resources::WalkiePlay;
 use unwalkie_core::messages::ProposeWalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 /// Triggers a feedback event when the player's quartz stone cracks, after the hunt is over or player leaves the location.
 fn quartz_cracked_feedback(
@@ -570,32 +570,16 @@ fn trigger_sage_unused_defensively_during_hunt_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        quartz_cracked_feedback,
-    );
-    app.add_systems(
-        Update,
-        quartz_shattered_feedback,
-    );
-    app.add_systems(
-        Update,
-        trigger_quartz_unused_in_relevant_situation_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_sage_unused_in_relevant_situation_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_sage_activated_ineffectively_system,
-    );
+    app.add_systems(Update, quartz_cracked_feedback);
+    app.add_systems(Update, quartz_shattered_feedback);
+    app.add_systems(Update, trigger_quartz_unused_in_relevant_situation_system);
+    app.add_systems(Update, trigger_sage_unused_in_relevant_situation_system);
+    app.add_systems(Update, trigger_sage_activated_ineffectively_system);
     app.init_resource::<HuntSageUsageTracker>()
         .add_systems(Update, reset_hunt_sage_tracker_on_mission_change)
         .add_systems(
             Update,
             trigger_sage_unused_defensively_during_hunt_system
-                .after(reset_hunt_sage_tracker_on_mission_change)
-                ,
+                .after(reset_hunt_sage_tracker_on_mission_change),
         );
 }

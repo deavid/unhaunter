@@ -1,13 +1,12 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use rand::RngExt;
-use unaudiospatial_core::emitter::AudioEmitter;
 use uncommon_app_core::random_seed;
 use uncommon_app_core::utils::temperature::kelvin_to_celsius;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::core::{
-    Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
+    Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText, StatusTextRefreshTimer,
 };
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
@@ -23,7 +22,9 @@ use unthermal_core::resources::ThermalGrid;
 use crate::metrics;
 
 pub(crate) fn update_thermometer(
+    mut commands: Commands,
     mut q_thermometer: Query<(
+        Entity,
         &mut Thermometer,
         &mut StatusText,
         &mut GearSprite,
@@ -33,8 +34,8 @@ pub(crate) fn update_thermometer(
         &Position,
         &ItemName,
         &mut PerceivedClarity,
+        Has<StatusTextRefreshTimer>,
     )>,
-    mut gs_audio: AudioEmitter,
     tg: If<Res<ThermalGrid>>,
     difficulty: Res<CurrentDifficulty>,
     player_profile: Res<Persistent<PlayerProfileData>>,
@@ -43,6 +44,7 @@ pub(crate) fn update_thermometer(
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
     let is_authority = authority.is_some();
     for (
+        entity,
         mut thermometer,
         mut status,
         mut sprite,
@@ -52,6 +54,7 @@ pub(crate) fn update_thermometer(
         pos,
         name,
         mut perceived_clarity,
+        has_timer,
     ) in q_thermometer.iter_mut()
     {
         let mut rng = random_seed::rng();
@@ -83,7 +86,7 @@ pub(crate) fn update_thermometer(
             let bpos = pos.to_board_position();
             let temperature = tg.temperature_field[bpos.ndidx()];
             let temp_reading = temperature;
-            let air_mass: f32 = 5.0 / difficulty.0.equipment_sensitivity();
+            let air_mass: f32 = 50.0 / difficulty.0.equipment_sensitivity();
 
             // Double noise reduction to remove any noise from measurement.
             let n = thermometer.frame_counter as usize % thermometer.temp_l2.len();
@@ -118,46 +121,40 @@ pub(crate) fn update_thermometer(
             if !(kelvin_to_celsius(thermometer.temp) < 0.0 && electronic.glitch_timer <= 0.0) {
                 thermometer.blinking_hint_active = false;
             }
-
-            // Possibly play crackling/static sounds during glitches
-            if electronic.glitch_timer > 0.0 && random_seed::rng().random_range(0.0..1.0) < 0.3 {
-                gs_audio.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, &pos);
-            }
         }
 
         // Update Status Text
         let on_s = on_off(toggle.is_on);
 
         // Show garbled text when glitching
-        if toggle.is_on && electronic.glitch_timer > 0.0 {
-            let garbled = match random_seed::rng().random_range(0..4) {
-                0 => "Temperature: ERR0R",
-                1 => "Temperature: ---.--°C",
-                2 => "Temperature: ?**.??°C",
-                _ => "SENSOR MALFUNCTION",
-            };
-            status.0 = format!("{}: {}\n{}", name.0, on_s, garbled);
-            continue;
-        }
-
-        // Regular display
-        let msg = if toggle.is_on {
-            let temp_celsius = kelvin_to_celsius(thermometer.temp);
-            if thermometer.blinking_hint_active {
-                let temp_str = format!("{:>5.1}ºC", temp_celsius);
-                let blinking_temp_str = if thermometer.frame_counter % 30 < 15 {
-                    format!(">[{}]<", temp_str.trim())
-                } else {
-                    format!("  {}  ", temp_str.trim())
-                };
-                format!("Temperature: {}", blinking_temp_str)
-            } else {
-                format!("Temperature: {:>5.1}ºC", temp_celsius)
+        let new_status_msg = if toggle.is_on && electronic.glitch_timer > 0.0 {
+            match random_seed::rng().random_range(0..4) {
+                0 => "Temperature: ERR0R".to_string(),
+                1 => "Temperature: ---.--°C".to_string(),
+                2 => "Temperature: ?**.??°C".to_string(),
+                _ => "SENSOR MALFUNCTION".to_string(),
             }
         } else {
-            "".to_string()
+            // Regular display
+            if toggle.is_on {
+                let temp_celsius = kelvin_to_celsius(thermometer.temp);
+                if thermometer.blinking_hint_active {
+                    let temp_str = format!("{:>5.1}ºC", temp_celsius);
+                    let blinking_temp_str = if thermometer.frame_counter % 30 < 15 {
+                        format!(">[{}]<", temp_str.trim())
+                    } else {
+                        format!("  {}  ", temp_str.trim())
+                    };
+                    format!("Temperature: {}", blinking_temp_str)
+                } else {
+                    format!("Temperature: {:>5.1}ºC", temp_celsius)
+                }
+            } else {
+                "".to_string()
+            }
         };
-        status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
+        let new_status = format!("{}: {}\n{}", name.0, on_s, new_status_msg);
+        status.update(entity, &mut commands, !has_timer, new_status);
 
         perceived_clarity.from_status_text = if toggle.is_on
             && kelvin_to_celsius(thermometer.temp) < 0.0

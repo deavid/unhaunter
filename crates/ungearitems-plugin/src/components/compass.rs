@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use ungear_core::components::core::{GearSprite, ItemName, StatusText};
+use ungear_core::components::core::{GearSprite, ItemName, StatusText, StatusTextRefreshTimer};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::compass::Compass;
@@ -10,10 +10,21 @@ use unreplicon_core::resources::LocalPlayerRole;
 use crate::metrics;
 
 pub(crate) fn update_compass(
-    mut q_compass: Query<(&mut StatusText, &mut GearSprite, &Toggleable, &ItemName), With<Compass>>,
+    mut commands: Commands,
+    mut q_compass: Query<
+        (
+            Entity,
+            &mut StatusText,
+            &mut GearSprite,
+            &Toggleable,
+            &ItemName,
+            Has<StatusTextRefreshTimer>,
+        ),
+        With<Compass>,
+    >,
 ) {
     let measure = metrics::COMPASS_UPDATE.time_measure();
-    for (mut status, mut sprite, toggle, name) in q_compass.iter_mut() {
+    for (entity, mut status, mut sprite, toggle, name, has_timer) in q_compass.iter_mut() {
         sprite.0 = GearSpriteID::Compass.to_visual_key();
 
         let on_s = on_off(toggle.is_on);
@@ -22,7 +33,8 @@ pub(crate) fn update_compass(
         } else {
             "".to_string()
         };
-        status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
+        let new_status = format!("{}: {}\n{}", name.0, on_s, msg);
+        status.update(entity, &mut commands, !has_timer, new_status);
     }
 
     measure.end_ms();

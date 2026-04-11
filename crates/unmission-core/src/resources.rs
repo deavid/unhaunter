@@ -10,8 +10,9 @@ pub struct MissionEndRequested(pub bool);
 /// Tracks the local fade-to-black timer before transitioning to Summary.
 #[derive(Resource)]
 pub struct MissionConcludingCinematic {
-    /// Countdown timer. When finished, the client transitions to AppState::Summary
-    /// provided SummaryData also exists.
+    /// Countdown timer. When finished, the client transitions to AppState::Summary.
+    ///
+    /// SummaryData is local-only and is not a replication gate for this transition.
     pub timer: Timer,
     /// Whether player inputs have been disabled for the duration of this cinematic.
     pub inputs_blocked: bool,

@@ -1,42 +1,36 @@
-/// Smooths audio volume transitions using a unified decibel-based approach.
+/// Smooths audio volume transitions using a cubic curve approach.
 ///
-/// Implements smooth volume transitions for both fade-in and fade-out using an exponential
-/// envelope that respects perceived loudness (decibels).
+/// Implements smooth volume transitions for both fade-in and fade-out using a perceptual
+/// curve (cubic root) that feels natural and avoids mathematical singularities at zero.
 ///
 /// # Arguments
 /// * `current_linear` - Current linear volume (0.0..1.0 or higher for overdrive)
 /// * `target_linear` - Desired linear volume endpoint
-/// * `db_per_second` - Rate of change in decibels per second (e.g., 10.0 dB/s)
+/// * `speed` - Rate of change in perceptual units per second (e.g., 10.0 units/s for a 100ms fade)
 /// * `dt_secs` - Delta time in seconds for this frame
 ///
 /// # Returns
 /// New linear volume after smoothing
-pub fn smooth_volume_db(
-    current_linear: f32,
-    target_linear: f32,
-    db_per_second: f32,
-    dt_secs: f32,
-) -> f32 {
-    // Clamp to avoid log of zero
-    let current_linear = current_linear.max(0.000001);
-    let target_linear = target_linear.max(0.000001);
+pub fn smooth_volume(current_linear: f32, target_linear: f32, speed: f32, dt_secs: f32) -> f32 {
+    // Clamp to non-negative numbers
+    let current_linear = current_linear.max(0.0);
+    let target_linear = target_linear.max(0.0);
 
-    // Convert to decibels: dB = 20 * log10(linear)
-    let current_db = 20.0 * current_linear.log10();
-    let target_db = 20.0 * target_linear.log10();
+    // Convert to perceptual space: perc = cubic_root(linear)
+    let current_perc = current_linear.cbrt();
+    let target_perc = target_linear.cbrt();
 
     // Calculate how much we can move per frame
-    let max_db_change = db_per_second * dt_secs;
+    let max_change = speed * dt_secs;
+    let diff = target_perc - current_perc;
 
-    // Move towards target by at most max_db_change
-    let new_db = if (target_db - current_db).abs() < max_db_change {
-        target_db
-    } else if target_db > current_db {
-        current_db + max_db_change
+    // Move current towards target by at most max_change
+    let new_perc = if diff.abs() < max_change {
+        target_perc
     } else {
-        current_db - max_db_change
+        current_perc + diff.signum() * max_change
     };
 
-    // Convert back to linear: linear = 10^(dB/20)
-    10f32.powf(new_db / 20.0)
+    // Convert back to linear: linear = perc ^ 3
+    new_perc.max(0.0).powi(3)
 }

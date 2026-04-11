@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 use uncareer_core::events::{CareerDeathRecordedEvent, CareerRewardCalculatedEvent};
 use uncommon_states_core::UIContextState;
-use unmission_core::types::SimulationState;
 use unprofile_core::events::DepositStakedEvent;
-use unreplicon_core::resources::AuthorityRole;
+use unreplicon_core::resources::LocalPlayerRole;
 
 mod profile_update;
 mod reward;
@@ -33,16 +32,10 @@ pub(crate) fn app_setup(app: &mut App) {
         ),
     );
 
-    // Authority (server) computes rewards during teardown
-    app.add_systems(
-        OnEnter(SimulationState::TearingDown),
-        reward::calculate_and_emit_rewards.run_if(resource_exists::<AuthorityRole>),
-    );
-
-    // Clients (non-authority) compute rewards when entering summary screen
-    // to populate their local SummaryData for display.
+    // Summary is local-only and is built on player-bearing nodes when the
+    // summary screen is entered.
     app.add_systems(
         OnEnter(UIContextState::Summary),
-        reward::calculate_and_emit_rewards.run_if(not(resource_exists::<AuthorityRole>)),
+        reward::calculate_and_emit_rewards.run_if(resource_exists::<LocalPlayerRole>),
     );
 }

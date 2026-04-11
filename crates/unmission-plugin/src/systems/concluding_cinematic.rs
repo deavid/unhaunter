@@ -1,12 +1,16 @@
 use bevy::prelude::*;
 use uncommon_states_core::UIContextState;
 use unmission_core::resources::MissionConcludingCinematic;
-use unmission_core::summary::SummaryData;
-use unreplicon_core::components::{MissionGoalEntity, ServerGamePhase};
-use unreplicon_core::resources::AuthorityRole;
+use unreplicon_core::components::ServerGamePhase;
 
 pub(crate) fn on_mission_concluding(
-    q_phase: Query<&ServerGamePhase, Changed<ServerGamePhase>>,
+    q_phase: Query<
+        &ServerGamePhase,
+        (
+            Changed<ServerGamePhase>,
+            With<unreplicon_core::components::LobbyInfo>,
+        ),
+    >,
     mut commands: Commands,
 ) {
     for phase in q_phase.iter() {
@@ -23,9 +27,6 @@ pub(crate) fn on_mission_concluding(
 pub(crate) fn tick_mission_concluding(
     mut commands: Commands,
     cinematic: Option<ResMut<MissionConcludingCinematic>>,
-    summary_data: Option<Res<SummaryData>>,
-    authority: Option<Res<AuthorityRole>>,
-    q_goal: Query<&SummaryData, With<MissionGoalEntity>>,
     mut next_app_state: ResMut<NextState<UIContextState>>,
     time: Res<Time>,
 ) {
@@ -38,14 +39,6 @@ pub(crate) fn tick_mission_concluding(
         return;
     }
 
-    // summary_data on authority or summary_data replicated component on client
-    let ready = if authority.is_some() {
-        summary_data.is_some()
-    } else {
-        q_goal.iter().next().is_some()
-    };
-    if ready {
-        next_app_state.set(UIContextState::Summary);
-        commands.remove_resource::<MissionConcludingCinematic>();
-    }
+    next_app_state.set(UIContextState::Summary);
+    commands.remove_resource::<MissionConcludingCinematic>();
 }

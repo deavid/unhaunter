@@ -9,6 +9,7 @@ pub(crate) fn handle_quit_mission(
     lobby_presence: Option<Res<LobbyPresenceRole>>,
 ) {
     for _ in ev.read() {
+        // Local-only exit path: this does not conclude the mission for other players.
         // SP-6.2: navigate by role — lobby-presence means networked, offline goes to mission select.
         if lobby_presence.is_some() {
             next_state.set(UIContextState::Lobby);

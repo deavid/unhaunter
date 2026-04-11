@@ -31,12 +31,31 @@ pub struct RequestStartMission {
     pub map_seed: u64,
 }
 
-/// Sent by the (room-owner) client to abort a mission that has been started.
+/// Sent by a client to request entering the currently running mission.
 ///
-/// On the server this arrives as `FromClient<RequestAbortMission>`.
-/// The server validates ownership then despawns the `SelectedMission` entity.
+/// On the server this arrives as `FromClient<RequestJoinMission>`.
+/// The server validates the sender against `LobbyInfo`, records the player's
+/// mission intent, and spawns the player's avatar skeleton once mission
+/// spawning is active.
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
-pub struct RequestAbortMission;
+pub struct RequestJoinMission;
+
+/// Explicit reason for requesting that the authority conclude the current mission.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum MissionEndReason {
+    TruckExitInitiated,
+    LeaderAborted,
+}
+
+/// Sent by a client to request that the authority conclude the current mission.
+///
+/// On the server this arrives as `FromClient<RequestEndMission>`.
+/// The authority validates the request based on the reason, then triggers the
+/// authority-owned mission teardown flow.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct RequestEndMission {
+    pub reason: MissionEndReason,
+}
 
 // ---------------------------------------------------------------------------
 // Phase 3: Players, Movement, and Interactions

@@ -61,4 +61,5 @@ pub struct EMFMeter {
     pub last_sound_secs: f32,
     pub last_meter_update_secs: f32,
     pub blinking_hint_active: bool,
+    pub start_time_secs: Option<f32>,
 }

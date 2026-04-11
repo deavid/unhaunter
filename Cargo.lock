@@ -7331,7 +7331,6 @@ dependencies = [
  "unlight-core",
  "unlocomotion-core",
  "unmapload-core",
- "unmission-core",
  "unnavigation-core",
  "unpicking-core",
  "unplayer-core",
@@ -7590,10 +7589,12 @@ dependencies = [
  "unmapload-core",
  "unmetrics-core",
  "unmission-core",
+ "unnoise-core",
  "unrender-std",
  "unreplicon-core",
  "unsettings-core",
  "unspatial-core",
+ "unthermal-core",
  "untmxmap-core",
 ]
 
@@ -8129,8 +8130,6 @@ name = "unmission-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_replicon",
- "unboard-core",
  "uncommon-states-core",
  "uninteraction-core",
  "unmission-core",
@@ -8663,7 +8662,6 @@ dependencies = [
  "bevy_replicon",
  "unreplicon-core",
  "unwalkie-core",
- "unwalkie-types",
 ]
 
 [[package]]

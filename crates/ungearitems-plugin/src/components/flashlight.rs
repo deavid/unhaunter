@@ -1,6 +1,8 @@
 use unaudiospatial_core::emitter::AudioEmitter;
 use uncommon_app_core::random_seed;
-use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
+use ungear_core::components::core::{
+    Battery, Electronic, GearSprite, ItemName, StatusText, StatusTextRefreshTimer,
+};
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unlight_core::components::LightEmitter;
 use unmetrics_core::metrics::SendMetric;
@@ -16,6 +18,52 @@ pub(crate) use ungearitems_core::components::flashlight::{
     Flashlight, FlashlightSkin, FlashlightStatus,
 };
 use unreplicon_core::ownership::LocallyOwned;
+
+pub(crate) trait FlashlightSkinExt {
+    fn calculate_output_power(
+        status: &FlashlightStatus,
+        battery_level: f32,
+        glitch_timer: f32,
+    ) -> f32;
+    fn update_output_power(
+        &mut self,
+        status: &FlashlightStatus,
+        battery_level: f32,
+        glitch_timer: f32,
+    );
+}
+
+impl FlashlightSkinExt for FlashlightSkin {
+    fn calculate_output_power(
+        status: &FlashlightStatus,
+        battery_level: f32,
+        glitch_timer: f32,
+    ) -> f32 {
+        let base_power = match status {
+            FlashlightStatus::Off => 0.0,
+            FlashlightStatus::Low => 4.0,
+            FlashlightStatus::Mid => 16.0,
+            FlashlightStatus::High => 64.0,
+        };
+        let battery_factor = battery_level.sqrt() + 0.02;
+        let normal_power = base_power * battery_factor;
+        if glitch_timer > 0.0 && normal_power > 0.0 {
+            let glitch_power = glitch_timer * 4.0 * battery_factor;
+            return glitch_power.max(normal_power * 0.5);
+        }
+        normal_power
+    }
+
+    fn update_output_power(
+        &mut self,
+        status: &FlashlightStatus,
+        battery_level: f32,
+        glitch_timer: f32,
+    ) {
+        let new_power = Self::calculate_output_power(status, battery_level, glitch_timer);
+        self.output_power = (self.output_power * 2.0 + new_power) / 3.0;
+    }
+}
 
 pub(crate) fn update_flashlight_skeleton(
     mut commands: Commands,
@@ -56,7 +104,9 @@ pub(crate) fn update_flashlight_skeleton(
 }
 
 pub(crate) fn update_flashlight_skin(
+    mut commands: Commands,
     mut q_flashlight: Query<(
+        Entity,
         &mut Flashlight,
         &mut FlashlightSkin,
         &mut LightEmitter,
@@ -67,11 +117,13 @@ pub(crate) fn update_flashlight_skin(
         &ItemName,
         &Position,
         Option<&LocallyOwned>,
+        Has<StatusTextRefreshTimer>,
     )>,
     mut ga: AudioEmitter,
 ) {
     let measure = metrics::FLASHLIGHT_UPDATE.time_measure();
     for (
+        entity,
         mut flashlight,
         mut skin,
         mut flashlight_render,
@@ -82,6 +134,7 @@ pub(crate) fn update_flashlight_skin(
         name,
         pos,
         locally_owned,
+        has_timer,
     ) in q_flashlight.iter_mut()
     {
         skin.frame_counter = skin.frame_counter.wrapping_add(1) % 210;
@@ -158,25 +211,26 @@ pub(crate) fn update_flashlight_skin(
             ""
         };
 
-        if electronic.glitch_timer > 0.0 {
+        let new_status = if electronic.glitch_timer > 0.0 {
             let garbled = match random_seed::rng().random_range(0..4) {
                 0 => "Bat---y: E--OR",
                 1 => "UV Status: -.--%",
                 2 => "WAVEL--GTH FA--T",
                 _ => "CALIB---ING...",
             };
-            status.0 = format!("{}: {}  {}\n{}", name.0, on_s, overheat, garbled);
+            format!("{}: {}  {}\n{}", name.0, on_s, overheat, garbled)
         } else {
             let heat_temp = 15.0 + skin.heatsink_temp * 70.0;
-            status.0 = format!(
+            format!(
                 "{}: {}  {}\nBattery:   {:>3.0}% {:>5.1}ºC",
                 name.0,
                 on_s,
                 overheat,
                 battery.level * 100.0,
                 heat_temp
-            );
-        }
+            )
+        };
+        status.update(entity, &mut commands, !has_timer, new_status);
     }
 
     measure.end_ms();

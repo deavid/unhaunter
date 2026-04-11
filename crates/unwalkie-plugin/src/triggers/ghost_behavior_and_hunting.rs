@@ -6,8 +6,8 @@ use ungear_core::types::gear::kind::GearKind;
 use unghost_core::resources::signals::GhostHuntSignals;
 use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
-use unwalkie_core::resources::WalkiePlay;
 use unwalkie_core::messages::ProposeWalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 const NO_EVASION_TIMER_SECONDS: f32 = 4.0;
 const NO_EVASION_MAX_DISTANCE: f32 = 1.0; // Max distance player can move to still be considered "not evaded"
@@ -122,8 +122,5 @@ fn trigger_hunt_warning_no_player_evasion_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        trigger_hunt_warning_no_player_evasion_system,
-    );
+    app.add_systems(Update, trigger_hunt_warning_no_player_evasion_system);
 }

@@ -3,8 +3,8 @@ use unboard_core::components::mapcolor::MapColor;
 use unboard_core::entity::GameSprite;
 use uncommon_states_core::UIContextState;
 use ungear_core::assets::GearAssets;
-use ungear_core::components::core::GearSprite;
-use ungear_core::components::core::StatusText;
+use ungear_core::components::core::StatusTextRefreshTimer;
+use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
@@ -183,7 +183,7 @@ fn update_gear_ui(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         FixedUpdate,
-        update_gear_ui.run_if(in_state(UIContextState::InGame)),
+        (update_gear_ui, update_status_refresh_timers).run_if(in_state(UIContextState::InGame)),
     )
     .add_systems(
         Update,
@@ -193,4 +193,17 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         keyboard_gear.run_if(in_state(UIContextState::InGame)),
     );
+}
+
+fn update_status_refresh_timers(
+    mut commands: Commands,
+    mut q_status: Query<(Entity, &mut StatusTextRefreshTimer)>,
+    time: Res<Time>,
+) {
+    for (entity, mut timer) in q_status.iter_mut() {
+        timer.0.tick(time.delta());
+        if timer.0.just_finished() {
+            commands.entity(entity).remove::<StatusTextRefreshTimer>();
+        }
+    }
 }

@@ -94,10 +94,13 @@ fn handle_hub_connection_request(
     };
 
     let server_addr: SocketAddr = match req.address.to_socket_addrs() {
-        Ok(mut addrs) => match addrs.next() {
+        Ok(mut addrs) => match addrs.find(|a| a.is_ipv4()) {
             Some(a) => a,
             None => {
-                error!("DNS resolution returned no addresses for '{}'", req.address);
+                error!(
+                    "DNS resolution returned no IPv4 addresses for '{}'",
+                    req.address
+                );
                 return;
             }
         },
@@ -190,7 +193,10 @@ fn startup_transport_system(
         } => {
             let port = *port;
 
-            let mut public_addresses = vec![SocketAddr::from(([0, 0, 0, 0], port))];
+            let mut public_addresses = vec![
+                SocketAddr::from(([0, 0, 0, 0], port)),
+                SocketAddr::from(([0, 0, 0, 0, 0, 0, 0, 0], port)),
+            ];
 
             for addr_str in bind_addresses {
                 match addr_str.parse::<SocketAddr>() {
@@ -212,7 +218,7 @@ fn startup_transport_system(
                 public_addresses,
                 authentication: ServerAuthentication::Unsecure,
             };
-            let socket = match UdpSocket::bind(SocketAddr::from(([0, 0, 0, 0], port))) {
+            let socket = match UdpSocket::bind(("[::]", port)).or_else(|_| UdpSocket::bind(("0.0.0.0", port))) {
                 Ok(s) => s,
                 Err(e) => {
                     error!("Failed to bind UDP socket on port {port}: {e}");
@@ -231,8 +237,14 @@ fn startup_transport_system(
             info!("Replicon transport: listening on UDP port {port}");
         }
         TransportConfig::Join { address, ticket } => {
-            let server_addr: SocketAddr = match address.parse() {
-                Ok(a) => a,
+            let server_addr: SocketAddr = match address.to_socket_addrs() {
+                Ok(mut addrs) => match addrs.find(|a| a.is_ipv4()) {
+                    Some(a) => a,
+                    None => {
+                        error!("DNS resolution returned no IPv4 addresses for '{address}'");
+                        return;
+                    }
+                },
                 Err(e) => {
                     error!("Invalid server address '{address}': {e}");
                     return;

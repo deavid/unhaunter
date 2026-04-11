@@ -584,13 +584,13 @@ fn orphan_catcher(
 
 fn reconcile_gear_on_reconnect(
     mut reader: MessageReader<PlayerNetworkReconnected>,
-    q_players: Query<(&PlayerSprite, &PlayerGear)>,
+    q_players: Query<(Entity, &PlayerSprite, &PlayerGear)>,
     mut commands: Commands,
 ) {
     for msg in reader.read() {
-        let Some((_sprite, gear)) = q_players
+        let Some((player_entity, _sprite, gear)) = q_players
             .iter()
-            .find(|(sprite, _)| sprite.id == msg.player_uuid)
+            .find(|(_, sprite, _)| sprite.id == msg.player_uuid)
         else {
             warn!(
                 "reconcile_gear_on_reconnect: no player found for UUID {}",
@@ -598,6 +598,12 @@ fn reconcile_gear_on_reconnect(
             );
             continue;
         };
+
+        // Update owner on the parent player entity and remove OwnershipSentMarker so the server resends it
+        commands
+            .entity(player_entity)
+            .insert(Owner(msg.new_owner_id))
+            .remove::<unreplicon_core::components::OwnershipSentMarker>();
 
         for gear_entity in gear
             .left_hand

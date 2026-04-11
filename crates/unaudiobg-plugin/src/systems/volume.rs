@@ -11,7 +11,7 @@ use unvitals_core::components::PlayerVitals;
 
 use unaudiobg_core::components::{GameSound, SoundType};
 use unaudiobg_core::mute::AmbientMuteController;
-use unaudiobg_core::smooth::smooth_volume_db;
+use unaudiobg_core::smooth::smooth_volume;
 
 /// Calculates the ambient sound volumes based on player visibility.
 ///
@@ -155,26 +155,25 @@ pub(crate) fn update_ambient_sound_volumes(
     let volume_factor =
         2.0 * master_volume_setting * ambient_volume_setting * global_volume.volume.to_linear();
 
-    // Unified dB smoothing: 10 dB per second
+    // Unified perceptual smoothing: 2.0 perceptual units per second (0 to 1 in 500ms) for most sounds
     let dt_secs = time.delta_secs();
-    const DB_PER_SECOND: f32 = 10.0;
 
     // Update each ambient sound entity
     for (game_sound, mut audio_sink) in &mut game_sound_query {
-        let base_volume = match game_sound.class {
-            SoundType::BackgroundHouse => house_volume,
-            SoundType::BackgroundStreet => street_volume,
-            SoundType::HeartBeat => heartbeat_volume,
-            SoundType::Insane => insane_volume,
+        let (base_volume, speed) = match game_sound.class {
+            SoundType::BackgroundHouse => (house_volume, 0.4), // 5x slower (2.5s)
+            SoundType::BackgroundStreet => (street_volume, 0.4), // 5x slower (2.5s)
+            SoundType::HeartBeat => (heartbeat_volume, 2.0),
+            SoundType::Insane => (insane_volume, 2.0),
         };
 
         // Calculate target volume: base * mute (settings are applied in volume_factor)
         let calculated_volume = base_volume * mute_multiplier;
 
-        // Apply dB-based smoothing for all tracks
+        // Apply cubic-based smoothing for all tracks
         let current_linear = audio_sink.volume().to_linear();
         let target_linear = calculated_volume * volume_factor;
-        let new_volume = smooth_volume_db(current_linear, target_linear, DB_PER_SECOND, dt_secs);
+        let new_volume = smooth_volume(current_linear, target_linear, speed, dt_secs);
 
         // Apply to audio sink
         audio_sink.set_volume(bevy::audio::Volume::Linear(new_volume.clamp(0.00001, 10.0)));

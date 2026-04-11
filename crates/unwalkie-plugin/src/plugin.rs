@@ -1,8 +1,8 @@
+use crate::metrics;
 use bevy::prelude::*;
 use uninvestigation_core::resources::potential_id_timer::PotentialIDTimer;
 use unwalkie_core::events::hint::OnScreenHintEvent;
 use unwalkie_core::events::walkie_types::WalkieTalkingEvent;
-use crate::metrics;
 
 /// Client-only plugin that handles audio playback, hints, and metrics.
 pub struct UnhaunterWalkieCorePlugin;

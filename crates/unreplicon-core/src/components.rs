@@ -64,7 +64,8 @@ pub enum ServerGamePhase {
     InProgress,
     /// Mission over; server is computing/publishing results. All ticking has stopped.
     Concluding,
-    /// Results published and available on SummaryData.
+    /// Authority teardown is complete and clients should already have entered
+    /// their own local summary flow.
     Ended,
 }
 
@@ -104,8 +105,7 @@ pub struct RepliconGhostSpawningActive;
 
 /// Marker component placed on the singleton "mission goal" entity.
 ///
-/// This entity carries replicated journal components (`GhostGuess`,
-/// `SummaryData`) so clients can receive them from the server without the
-/// need for a per-ghost or per-player lookup.
+/// This entity carries replicated mission-wide journal state such as `GhostGuess`.
+/// Local per-player summary state must not be attached here.
 #[derive(Component, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct MissionGoalEntity;

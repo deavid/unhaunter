@@ -25,6 +25,8 @@ unmission-core = { workspace = true }
 untmxmap-core = { workspace = true }
 unaudiospatial-core = { workspace = true }
 unsettings-core = { workspace = true }
+unthermal-core = { workspace = true }
+unnoise-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

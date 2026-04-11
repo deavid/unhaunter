@@ -13,8 +13,8 @@ use uninvestigation_core::ghost::GhostType;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use unwalkie_core::events::walkie_types::WalkieEvent;
-use unwalkie_core::resources::WalkiePlay;
 use unwalkie_core::messages::ProposeWalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 /// How long player must linger after ghost is gone
 const LINGER_THRESHOLD_SECONDS: f64 = 10.0;
@@ -527,26 +527,11 @@ fn trigger_ghost_expelled_player_missed_simplified_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        trigger_ghost_expelled_player_lingers_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_has_repellent_enters_location_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_repellent_provokes_strong_reaction_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_repellent_used_too_far_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_repellent_exhausted_correct_type_system,
-    );
+    app.add_systems(Update, trigger_ghost_expelled_player_lingers_system);
+    app.add_systems(Update, trigger_has_repellent_enters_location_system);
+    app.add_systems(Update, trigger_repellent_provokes_strong_reaction_system);
+    app.add_systems(Update, trigger_repellent_used_too_far_system);
+    app.add_systems(Update, trigger_repellent_exhausted_correct_type_system);
     app.init_resource::<ProcessedMissedExpulsionGhosts>()
         .add_systems(
             Update,
@@ -555,7 +540,6 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_systems(
             Update,
             trigger_ghost_expelled_player_missed_simplified_system
-                .after(reset_processed_missed_expulsion_ghosts_on_new_mission)
-                ,
+                .after(reset_processed_missed_expulsion_ghosts_on_new_mission),
         );
 }

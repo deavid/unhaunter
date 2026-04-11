@@ -11,8 +11,8 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }
 unreplicon-core = { workspace = true }
 unwalkie-core = { workspace = true }
-unwalkie-types = { workspace = true }

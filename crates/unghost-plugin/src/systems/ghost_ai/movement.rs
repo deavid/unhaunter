@@ -10,7 +10,9 @@ use ungearitems_core::components::salt::SaltyTrace;
 use unghost_core::components::logic::ghost_death::GhostDeathSignal;
 use unghost_core::components::logic::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::red_light_charge::{GhostRedLightCharge, RedLightChargeMode};
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
+use unlight_core::resources::light_grid::LightGrid;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::summary::SummaryData;
 use unplayer_core::components::PlayerTag;
@@ -25,6 +27,12 @@ use crate::metrics::GHOST_MOVEMENT;
 // Constants for movement penalties
 const WALL_AVOIDANCE_PENALTY: f32 = -100.0; // Negative because it's added to score
 const FLOOR_CHANGE_PENALTY_BASE: f32 = -50.0; // Negative, base penalty for changing floors
+const DISCHARGE_SPEED_MULTIPLIER: f32 = 1.45;
+const CHARGING_SPEED_MULTIPLIER_IN_RED: f32 = 0.45;
+const DISCHARGE_WARP_TRIGGER_CHANCE: i32 = 250;
+const BASE_WARP_TRIGGER_CHANCE: i32 = 500;
+const HUNT_DRAIN_BONUS_IN_RED: f32 = 0.65;
+const RED_SEEK_RADIUS: i64 = 3;
 
 /// Updates the ghost's position based on its target location, hunting state, and
 /// warping intensity.
@@ -33,7 +41,12 @@ const FLOOR_CHANGE_PENALTY_BASE: f32 = -50.0; // Negative, base penalty for chan
 /// world according to its current state and objectives.
 pub(crate) fn ghost_movement(
     mut q: Query<
-        (&mut GhostSprite, &mut Position, Entity),
+        (
+            &mut GhostSprite,
+            &mut Position,
+            Entity,
+            Option<&mut GhostRedLightCharge>,
+        ),
         (
             Without<PlayerTag>,
             Without<GhostInfluence>,
@@ -59,6 +72,7 @@ pub(crate) fn ghost_movement(
     config: Res<ObjectInteractionConfig>,
     object_query: Query<(&Position, &GhostInfluence)>,
     difficulty: Res<CurrentDifficulty>,
+    light_grid: Option<Res<LightGrid>>,
     mut log_timer: Local<f32>,
 ) {
     let measure = GHOST_MOVEMENT.time_measure();
@@ -66,18 +80,81 @@ pub(crate) fn ghost_movement(
     *log_timer -= time.delta_secs();
     if *log_timer <= 0.0 {
         *log_timer = 10.0;
-        for (_, pos, entity) in q.iter() {
+        for (_, pos, entity, _) in q.iter() {
             info!("[ghost_movement] ghost {:?} position: {:?}", entity, pos);
         }
     }
 
     let mut rng = random_seed::rng();
     let dt = time.delta_secs() * 60.0;
+    let dt_secs = time.delta_secs();
     let current_secs = time.elapsed_secs_f64();
-    for (mut ghost, mut pos, entity) in q.iter_mut() {
+    for (mut ghost, mut pos, entity, mut red_charge) in q.iter_mut() {
+        let mut speed_multiplier = 1.0;
+        let mut warp_trigger_chance = BASE_WARP_TRIGGER_CHANCE;
+        let mut can_accumulate_warp = true;
+        let mut force_red_seek_target = None;
+
+        if let Some(charge) = red_charge.as_deref_mut() {
+            let red_intensity = sample_red_intensity_at(&light_grid, *pos, &bf);
+            let in_reactive_red = red_intensity > charge.red_react_threshold;
+
+            match charge.mode {
+                RedLightChargeMode::Charging => {
+                    if in_reactive_red {
+                        charge.charge += red_intensity * charge.charge_rate * dt_secs;
+                        can_accumulate_warp = false;
+                        ghost.warp = 0.0;
+                        speed_multiplier = CHARGING_SPEED_MULTIPLIER_IN_RED;
+                        ghost.hunting -= HUNT_DRAIN_BONUS_IN_RED * dt_secs;
+                        if ghost.hunting <= 0.0 {
+                            ghost.hunting = 0.0;
+                            if ghost.hunt_target {
+                                info!("Hunt interrupted by sustained red-light exposure");
+                            }
+                            ghost.hunt_target = false;
+                        }
+                        force_red_seek_target = find_brightest_red_target(
+                            &light_grid,
+                            *pos,
+                            &bf,
+                            &board_collision,
+                            RED_SEEK_RADIUS,
+                        );
+                    }
+
+                    if charge.charge >= charge.threshold {
+                        charge.mode = RedLightChargeMode::Discharging;
+                        charge.charge = charge.threshold;
+                        info!(
+                            "Ghost {:?} reached red-light overload threshold; switching to discharge mode",
+                            entity
+                        );
+                    }
+                }
+                RedLightChargeMode::Discharging => {
+                    charge.charge -= charge.discharge_rate * dt_secs;
+                    speed_multiplier = DISCHARGE_SPEED_MULTIPLIER;
+                    warp_trigger_chance = DISCHARGE_WARP_TRIGGER_CHANCE;
+                    if charge.charge <= 0.0 {
+                        charge.charge = 0.0;
+                        charge.mode = RedLightChargeMode::Charging;
+                        info!(
+                            "Ghost {:?} finished red-light discharge; returning to charging mode",
+                            entity
+                        );
+                    }
+                }
+            }
+        }
+
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
-            if rng.random_range(0..500) == 0 && delta.distance() > 3.0 && ghost.warp < 0.1 {
+            if can_accumulate_warp
+                && rng.random_range(0..warp_trigger_chance) == 0
+                && delta.distance() > 3.0
+                && ghost.warp < 0.1
+            {
                 // Sometimes, warp ahead. This also is to increase visibility of the ghost
                 ghost.warp += 40.0;
             }
@@ -105,9 +182,18 @@ pub(crate) fn ghost_movement(
                         delta.dy /= (dlen + 1.5) / 4.0;
                         delta.dz /= (dlen + 1.5) / 4.0;
                     }
-                    pos.x += delta.dx / 70.0 * dt * difficulty.0.ghost_hunting_aggression();
-                    pos.y += delta.dy / 70.0 * dt * difficulty.0.ghost_hunting_aggression();
-                    pos.z += delta.dz / 10.0 * dt * difficulty.0.ghost_hunting_aggression();
+                    pos.x += delta.dx / 70.0
+                        * dt
+                        * difficulty.0.ghost_hunting_aggression()
+                        * speed_multiplier;
+                    pos.y += delta.dy / 70.0
+                        * dt
+                        * difficulty.0.ghost_hunting_aggression()
+                        * speed_multiplier;
+                    pos.z += delta.dz / 10.0
+                        * dt
+                        * difficulty.0.ghost_hunting_aggression()
+                        * speed_multiplier;
                     ghost.hunting -= dt / 60.0;
                 }
                 if ghost.hunting < 0.0 {
@@ -122,9 +208,9 @@ pub(crate) fn ghost_movement(
                     info!("Hunt finished");
                 }
             } else {
-                pos.x += delta.dx / 200.0 * dt * difficulty.0.ghost_speed();
-                pos.y += delta.dy / 200.0 * dt * difficulty.0.ghost_speed();
-                pos.z += delta.dz / 20.0 * dt * difficulty.0.ghost_speed();
+                pos.x += delta.dx / 200.0 * dt * difficulty.0.ghost_speed() * speed_multiplier;
+                pos.y += delta.dy / 200.0 * dt * difficulty.0.ghost_speed() * speed_multiplier;
+                pos.z += delta.dz / 20.0 * dt * difficulty.0.ghost_speed() * speed_multiplier;
             }
             pos.z = pos.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
             if dlen < 0.5 {
@@ -133,6 +219,9 @@ pub(crate) fn ghost_movement(
             if finalize {
                 ghost.target_point = None;
             }
+        }
+        if let Some(seek_target) = force_red_seek_target {
+            ghost.target_point = Some(seek_target);
         }
         if ghost.target_point.is_none() || (ghost.hunt_target && rng.random_range(0..60) == 0) {
             let mut target_point = ghost.spawn_point.to_position();
@@ -308,6 +397,83 @@ pub(crate) fn ghost_movement(
         }
     }
     measure.end_ms();
+}
+
+fn sample_red_intensity_at(
+    light_grid: &Option<Res<LightGrid>>,
+    pos: Position,
+    bf: &Res<BoardTopology>,
+) -> f32 {
+    let Some(light_grid) = light_grid else {
+        return 0.0;
+    };
+    let bpos = pos.to_board_position();
+    if !bpos.is_valid(bf.map_size) {
+        return 0.0;
+    }
+    light_grid
+        .light_field
+        .get(bpos.ndidx())
+        .map(|f| f.additional.red.max(0.0))
+        .unwrap_or(0.0)
+}
+
+fn find_brightest_red_target(
+    light_grid: &Option<Res<LightGrid>>,
+    pos: Position,
+    bf: &Res<BoardTopology>,
+    board_collision: &Res<BoardCollisionField>,
+    radius: i64,
+) -> Option<Position> {
+    let Some(light_grid) = light_grid else {
+        return None;
+    };
+
+    let origin = pos.to_board_position();
+    if !origin.is_valid(bf.map_size) {
+        return None;
+    }
+
+    let mut best = origin.clone();
+    let mut best_red = light_grid
+        .light_field
+        .get(origin.ndidx())
+        .map(|f| f.additional.red)
+        .unwrap_or(0.0);
+
+    for dz in -1..=1 {
+        for dy in -radius..=radius {
+            for dx in -radius..=radius {
+                let candidate = BoardPosition {
+                    x: origin.x + dx,
+                    y: origin.y + dy,
+                    z: origin.z + dz,
+                };
+                if !candidate.is_valid(bf.map_size) {
+                    continue;
+                }
+                let idx = candidate.ndidx();
+                if !board_collision.0[idx].ghost_free {
+                    continue;
+                }
+                let red = light_grid
+                    .light_field
+                    .get(idx)
+                    .map(|f| f.additional.red)
+                    .unwrap_or(0.0);
+                if red > best_red {
+                    best_red = red;
+                    best = candidate;
+                }
+            }
+        }
+    }
+
+    if best == origin {
+        None
+    } else {
+        Some(best.to_position())
+    }
 }
 
 /// Calculates the score contribution from object influences.

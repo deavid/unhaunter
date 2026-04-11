@@ -20,7 +20,9 @@ use unplayer_core::colors::player_color;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::components::visuals::AlphaModulator;
 use unreplicon_core::components::{LobbyInfo, SelectedMission};
-use unreplicon_core::messages::{RequestAbortMission, RequestStartMission};
+use unreplicon_core::messages::{
+    MissionEndReason, RequestEndMission, RequestJoinMission, RequestStartMission,
+};
 use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unreplicon_core::resources::{CurrentMapSeed, LocalPlayer, MissionAutoJoinArmed};
 use untmxmap_core::resources::maps::Maps;
@@ -306,7 +308,8 @@ pub(crate) fn handle_clicks(
     mut current_map_seed: ResMut<CurrentMapSeed>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
     mut ev_start: MessageWriter<RequestStartMission>,
-    mut ev_abort: MessageWriter<RequestAbortMission>,
+    mut ev_join: MessageWriter<RequestJoinMission>,
+    mut ev_abort: MessageWriter<RequestEndMission>,
     mut ev_load: MessageWriter<LoadLevelEvent>,
 ) {
     let lobby_info = q_lobby.single().ok();
@@ -352,8 +355,10 @@ pub(crate) fn handle_clicks(
                 let host_in_mission = !q_selected_mission.is_empty();
 
                 if host_in_mission {
-                    // Everyone (including owner) joins the confirmed mission.
+                    // Everyone joins explicitly. Loading the level locally without
+                    // notifying the server would leave the player without an avatar.
                     if let Ok(mission) = q_selected_mission.single() {
+                        ev_join.write(RequestJoinMission);
                         current_map_seed.0 = mission.map_seed;
                         if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
                             info!(
@@ -367,7 +372,7 @@ pub(crate) fn handle_clicks(
                                 mission.difficulty_id
                             );
                         }
-                        info!("Joining mission: map={}", mission.map_path);
+                        info!("Joining mission: map={} (join request sent)", mission.map_path);
                         ev_load.write(LoadLevelEvent {
                             map_filepath: mission.map_path.clone(),
                         });
@@ -378,13 +383,14 @@ pub(crate) fn handle_clicks(
                         );
                     }
                 } else if is_room_owner {
-                    // Owner: request the server to start a new mission.
-                    // The Leader stays in Lobby and must click "Join Mission" once the server confirms.
                     let selected_map = lobby_info.and_then(|li| li.selected_map.clone());
                     match selected_map {
                         Some(map_filepath) if !map_filepath.is_empty() => {
                             let map_seed = uncommon_app_core::random_seed::heavy_rng_seed();
-                            info!("Room owner requesting mission start: map={}", map_filepath);
+                            info!(
+                                "Room owner requesting mission start: map={} seed={}",
+                                map_filepath, map_seed
+                            );
                             ev_start.write(RequestStartMission { map_seed });
                         }
                         _ => {
@@ -396,7 +402,9 @@ pub(crate) fn handle_clicks(
             Some(LobbyMenuAction::AbortMission) => {
                 if is_room_owner && !q_selected_mission.is_empty() {
                     info!("Room owner requesting mission abort");
-                    ev_abort.write(RequestAbortMission);
+                    ev_abort.write(RequestEndMission {
+                        reason: MissionEndReason::LeaderAborted,
+                    });
                 }
             }
             Some(LobbyMenuAction::ExitLobby) => {

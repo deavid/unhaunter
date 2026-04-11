@@ -14,8 +14,8 @@ use untruck_core::components::in_truck::InTruck;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use unwalkie_core::events::walkie_types::WalkieEvent;
-use unwalkie_core::resources::WalkiePlay;
 use unwalkie_core::messages::ProposeWalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 const DELAY_AFTER_INCORRECT_MARKING_SECONDS: f32 = 10.0;
 
@@ -252,7 +252,12 @@ fn trigger_clear_evidence_no_action_ckey_system(
 
                     // If we assume the player *hasn't* acknowledged it via C_KEY (which is hard to check here without more context
                     // on how C_KEY interaction is recorded globally or against specific evidence), we'd fire the hint.
-                    if crate::triggers::net::walkie_set_or_propose(WalkieEvent::ClearEvidenceFoundNoActionCKey, current_time, &mut walkie_play, &mut ev_propose) {
+                    if crate::triggers::net::walkie_set_or_propose(
+                        WalkieEvent::ClearEvidenceFoundNoActionCKey,
+                        current_time,
+                        &mut walkie_play,
+                        &mut ev_propose,
+                    ) {
                         // info!("[Walkie] Triggered ClearEvidenceFoundNoActionCKey for {:?}.", evidence_type);
                         // Mark this specific evidence as hinted to avoid re-triggering immediately
                         // This could be done by removing it or updating its timestamp
@@ -322,7 +327,12 @@ fn trigger_clear_evidence_no_action_truck_system(
                 .entry(evidence_type)
                 .or_insert(current_time);
             if current_time - *entry >= TIME_UNLOGGED_FOR_TRUCK_HINT_SECONDS
-                && crate::triggers::net::walkie_set_or_propose(WalkieEvent::ClearEvidenceFoundNoActionTruck, current_time, &mut walkie_play, &mut ev_propose)
+                && crate::triggers::net::walkie_set_or_propose(
+                    WalkieEvent::ClearEvidenceFoundNoActionTruck,
+                    current_time,
+                    &mut walkie_play,
+                    &mut ev_propose,
+                )
             {
                 // info!("[Walkie] Triggered ClearEvidenceFoundNoActionTruck for {:?}.", evidence_type);
                 to_remove.push(evidence_type);
@@ -423,7 +433,12 @@ fn trigger_in_truck_with_evidence_no_journal_system(
                     && (current_time - time_entered >= TIME_IN_TRUCK_NO_JOURNAL_ACTION_SECONDS)
                 {
                     // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                    if crate::triggers::net::walkie_set_or_propose(WalkieEvent::InTruckWithEvidenceNoJournal, current_time, &mut walkie_play, &mut ev_propose) {
+                    if crate::triggers::net::walkie_set_or_propose(
+                        WalkieEvent::InTruckWithEvidenceNoJournal,
+                        current_time,
+                        &mut walkie_play,
+                        &mut ev_propose,
+                    ) {
                         // info!("[Walkie] Triggered InTruckWithEvidenceNoJournal.");
                         system_state.hinted_this_truck_session = true;
                         // system_state.time_entered_truck_with_unlogged_evidence = None; // Reset after hinting
@@ -524,31 +539,13 @@ fn trigger_evidence_confirmed_feedback_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        trigger_emf_non_emf5_fixation_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_journal_conflicting_evidence_system,
-    );
+    app.add_systems(Update, trigger_emf_non_emf5_fixation_system);
+    app.add_systems(Update, trigger_journal_conflicting_evidence_system);
     app.init_resource::<ClearEvidenceTrackedState>();
     app.init_resource::<NoActionTruckTrackedState>();
     app.init_resource::<InTruckNoJournalActionState>();
-    app.add_systems(
-        Update,
-        trigger_clear_evidence_no_action_ckey_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_clear_evidence_no_action_truck_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_in_truck_with_evidence_no_journal_system,
-    );
-    app.add_systems(
-        Update,
-        trigger_evidence_confirmed_feedback_system,
-    );
+    app.add_systems(Update, trigger_clear_evidence_no_action_ckey_system);
+    app.add_systems(Update, trigger_clear_evidence_no_action_truck_system);
+    app.add_systems(Update, trigger_in_truck_with_evidence_no_journal_system);
+    app.add_systems(Update, trigger_evidence_confirmed_feedback_system);
 }

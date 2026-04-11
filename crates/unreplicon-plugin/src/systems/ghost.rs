@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::{AppRuleExt, Channel, ServerMessageAppExt};
 use uncommon_states_core::UIContextState;
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
-use unmission_core::summary::SummaryData;
 use unmission_core::types::SimulationState;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
@@ -12,8 +11,7 @@ use unreplicon_core::resources::{AuthorityRole, is_pure_client};
 
 pub(super) fn app_setup(app: &mut App) {
     // Register Phase 2 replicated components.
-    // Ghost domain types are now registered in unghost-plugin.
-    // SummaryData is now registered in unmission-plugin.
+    // GhostGuess remains the shared replicated mission whiteboard.
     app.replicate::<MissionGoalEntity>();
 
     // Register server → client messages.
@@ -29,28 +27,20 @@ pub(super) fn app_setup(app: &mut App) {
         cleanup_ghost_entities.run_if(resource_exists::<AuthorityRole>),
     );
 
-    // Resource Bridges (Singleton Entity -> Resource)
+    // Resource Bridges (singleton mission-goal entity <-> local GhostGuess resource)
     app.add_systems(
         Update,
-        (
-            sync_ghost_guess_to_mission_goal,
-            sync_summary_data_to_mission_goal,
-        )
-            .run_if(resource_exists::<AuthorityRole>),
+        sync_ghost_guess_to_mission_goal.run_if(resource_exists::<AuthorityRole>),
     );
     app.add_systems(
         Update,
-        (
-            sync_mission_goal_to_ghost_guess,
-            sync_mission_goal_to_summary_data,
-        )
-            .run_if(is_pure_client),
+        sync_mission_goal_to_ghost_guess.run_if(is_pure_client),
     );
 
     // Server: mission lifecycle
     app.add_systems(
         Update,
-        (sync_mission_result_phase, server_teardown_grace_period)
+        server_teardown_grace_period
             .run_if(resource_exists::<AuthorityRole>)
             .run_if(in_state(SimulationState::TearingDown)),
     );
@@ -66,12 +56,11 @@ pub(super) fn app_setup(app: &mut App) {
 }
 
 fn setup_goal_entity(mut commands: Commands) {
-    // Singleton entity for journal + mission-result replication.
+    // Singleton entity for shared mission whiteboard replication.
     commands.spawn((
         bevy_replicon::prelude::Replicated,
         MissionGoalEntity,
         GhostGuess::default(),
-        SummaryData::default(),
     ));
     info!("setup_goal_entity: MissionGoalEntity spawned");
 }
@@ -109,19 +98,6 @@ fn sync_ghost_guess_to_mission_goal(
     }
 }
 
-/// Bridge: Sync SummaryData resource to singleton entity (Server).
-fn sync_summary_data_to_mission_goal(
-    res: Res<SummaryData>,
-    mut q_goal: Query<&mut SummaryData, With<MissionGoalEntity>>,
-) {
-    if !res.is_changed() {
-        return;
-    }
-    for mut comp in q_goal.iter_mut() {
-        *comp = res.clone();
-    }
-}
-
 /// Bridge: Sync singleton entity to GhostGuess resource (Client).
 fn sync_mission_goal_to_ghost_guess(
     q_goal: Query<&GhostGuess, (With<MissionGoalEntity>, Changed<GhostGuess>)>,
@@ -136,35 +112,12 @@ fn sync_mission_goal_to_ghost_guess(
     }
 }
 
-/// Bridge: Sync singleton entity to SummaryData resource (Client).
-fn sync_mission_goal_to_summary_data(
-    q_goal: Query<&SummaryData, (With<MissionGoalEntity>, Changed<SummaryData>)>,
-    mut res: ResMut<SummaryData>,
-) {
-    for comp in q_goal.iter() {
-        *res = comp.clone();
-    }
-}
-
-fn sync_mission_result_phase(
-    summary: Res<SummaryData>,
-    mut q_server_phase: Query<&mut ServerGamePhase>,
-) {
-    if !summary.is_changed() {
-        return;
-    }
-
-    for mut sas in q_server_phase.iter_mut() {
-        *sas = ServerGamePhase::Ended;
-    }
-}
-
 fn server_teardown_grace_period(
     mut timer: Local<Option<Timer>>,
     time: Res<Time>,
     mut next_app_state: ResMut<NextState<UIContextState>>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
-    mut q_server_phase: Query<&mut ServerGamePhase>,
+    mut q_server_phase: Query<&mut ServerGamePhase, With<unreplicon_core::components::LobbyInfo>>,
     q_gamesprites: Query<
         Entity,
         (
@@ -208,7 +161,13 @@ fn server_teardown_grace_period(
 }
 
 fn on_server_phase_lobby(
-    q_phase: Query<&ServerGamePhase, Changed<ServerGamePhase>>,
+    q_phase: Query<
+        &ServerGamePhase,
+        (
+            Changed<ServerGamePhase>,
+            With<unreplicon_core::components::LobbyInfo>,
+        ),
+    >,
     mut next_app_state: ResMut<NextState<UIContextState>>,
     mut next_sim_state: ResMut<NextState<SimulationState>>,
 ) {

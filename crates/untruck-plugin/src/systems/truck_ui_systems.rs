@@ -8,8 +8,8 @@ use ungearitems_core::events::RequestCraftRepellent;
 use uninput_core::states::InGameUiState;
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unmission_core::resources::MissionEndRequested;
-use unmission_core::types::MissionEvent;
 use unplayer_core::components::MainPlayer;
+use unreplicon_core::messages::{MissionEndReason, RequestEndMission};
 use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unsettings_core::audio::AudioSettings;
 use untruck_core::components::in_truck::InTruck;
@@ -43,7 +43,7 @@ fn truckui_event_handle(
     mut craft_tracker: ResMut<RepellentCraftTracker>,
     mut ev_craft_req: MessageWriter<RequestCraftRepellent>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
-    mut ev_mission: MessageWriter<MissionEvent>,
+    mut ev_end_mission: MessageWriter<RequestEndMission>,
     net_params: TruckNetParams,
     authority: Option<Res<AuthorityRole>>,
     local_player_role: Option<Res<LocalPlayerRole>>,
@@ -55,7 +55,9 @@ fn truckui_event_handle(
                 if !net_params.mission_end_requested.0 {
                     continue;
                 }
-                ev_mission.write(MissionEvent::End);
+                ev_end_mission.write(RequestEndMission {
+                    reason: MissionEndReason::TruckExitInitiated,
+                });
             }
             TruckUIEvent::ExitTruck => {
                 for entity in q_player.iter() {

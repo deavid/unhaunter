@@ -8,8 +8,8 @@ use unghost_core::resources::signals::GhostHuntSignals;
 use unplayer_core::components::MainPlayer;
 use unspatial_core::position::Position;
 use unwalkie_core::events::walkie_types::WalkieEvent;
-use unwalkie_core::resources::WalkiePlay;
 use unwalkie_core::messages::ProposeWalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 /// Reminds the player to pick up equipment if they enter the location without any gear during the tutorial.
 /// Only triggers if the player is in the game, not in the truck, and has accessed the truck at least once.
@@ -126,12 +126,6 @@ fn ghost_near_hunt(
 
 /// Registers the above systems to the Bevy app.
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        player_forgot_equipment,
-    )
-    .add_systems(
-        Update,
-        ghost_near_hunt,
-    );
+    app.add_systems(Update, player_forgot_equipment)
+        .add_systems(Update, ghost_near_hunt);
 }

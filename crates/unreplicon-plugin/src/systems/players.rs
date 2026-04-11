@@ -2,24 +2,28 @@ mod replication;
 
 use bevy::prelude::*;
 use bevy_replicon::prelude::{
-    Channel, ClientId, Replicated, SendMode, ServerMessageAppExt, ToClients,
+    Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode, ServerMessageAppExt,
+    ToClients,
 };
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use unmission_core::types::SimulationState;
 use unplayer_core::components::{PlayerSpawnRequest, PlayerSprite};
 use unreplicon_core::components::{
-    LobbyInfo, NetworkEntityReady, OwnershipSentMarker, RepliconPlayerSpawningActive,
+    LobbyInfo, LobbyPlayerInfo, NetworkEntityReady, OwnershipSentMarker,
+    RepliconPlayerSpawningActive, SelectedMission,
 };
 use unreplicon_core::messages::{
     FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, OwnershipGranted, OwnershipRevoked,
+    RequestJoinMission,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unreplicon_core::resources::AuthorityRole;
-use unreplicon_core::resources::{LocalPlayerRole, is_pure_client};
+use unreplicon_core::resources::{ClientUuidMap, LocalPlayerRole, is_pure_client};
 use unspatial_core::position::Position;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy)]
 struct PendingOwnershipGrant {
@@ -29,6 +33,9 @@ struct PendingOwnershipGrant {
 
 #[derive(Resource, Default)]
 struct PendingOwnershipGrantQueue(Vec<PendingOwnershipGrant>);
+
+#[derive(Resource, Default)]
+struct PendingMissionJoinRequests(HashSet<Uuid>);
 
 // Periodic diagnostics for player spawn and ownership handoff state.
 #[allow(clippy::manual_is_multiple_of)]
@@ -79,6 +86,7 @@ fn player_spawn_telemetry(
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
+    app.add_client_message::<RequestJoinMission>(Channel::Ordered);
     // Register server → client messages
     app.add_server_message::<FloorGearSpawnBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearDespawnBroadcast>(Channel::Ordered);
@@ -91,29 +99,28 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_server_message::<OwnershipRevoked>(Channel::Ordered);
 
     app.init_resource::<PendingOwnershipGrantQueue>();
+    app.init_resource::<PendingMissionJoinRequests>();
 
     replication::app_setup(app);
 
     // Periodic diagnostics for player spawning and ownership handoff.
     app.add_systems(Update, player_spawn_telemetry);
 
-    // Host/offline: spawn and tag player entities when InGame starts.
-    // Gated by AuthorityRole so it runs on Host and Dedicated Server.
     app.add_systems(
         OnEnter(SimulationState::Spawning),
-        setup_mission_players.run_if(resource_exists::<AuthorityRole>),
+        activate_player_spawning.run_if(resource_exists::<AuthorityRole>),
     );
 
-    // Server-side: spawn player entities for clients that joined after mission start.
     app.add_systems(
         Update,
         (
-            spawn_late_joining_players,
+            handle_request_join_mission,
+            process_pending_mission_join_requests,
             grant_ownership_when_ready,
             warn_on_stuck_pending_handover,
         )
             .run_if(resource_exists::<AuthorityRole>)
-            .run_if(in_state(SimulationState::Ready))
+            .run_if(in_state(SimulationState::Spawning).or(in_state(SimulationState::Ready)))
             .run_if(resource_exists::<RepliconPlayerSpawningActive>),
     );
 
@@ -138,6 +145,13 @@ fn player_ready_for_handover(has_ready_marker: bool) -> bool {
     has_ready_marker
 }
 
+fn to_owner_id(client_id: ClientId) -> OwnerId {
+    match client_id {
+        ClientId::Server => OwnerId::Server,
+        ClientId::Client(entity) => OwnerId::Client(entity),
+    }
+}
+
 /// Helper: convert OwnerId to Replicon ClientId.
 fn from_owner_id(owner_id: OwnerId) -> ClientId {
     match owner_id {
@@ -146,18 +160,15 @@ fn from_owner_id(owner_id: OwnerId) -> ClientId {
     }
 }
 
-/// Server: called once on `OnEnter(SimulationState::Spawning)`.
-/// Spawns a minimal network skeleton for each lobby player.
-/// Domain components (vitals, locomotion, gear, etc.) are inserted by each
-/// domain's own hydration system reacting to `Added<PlayerSprite>`.
-fn setup_mission_players(
-    q_lobby: Query<&LobbyInfo>,
-    q_spawn_points: Query<&Position, With<PlayerSpawnPoint>>,
-    mut commands: Commands,
-) {
-    // Signal that replicon-based player spawning is now active.
+fn activate_player_spawning(mut commands: Commands) {
     commands.insert_resource(RepliconPlayerSpawningActive);
+}
 
+fn spawn_position_for_player(
+    player_uuid: Uuid,
+    lobby: &LobbyInfo,
+    q_spawn_points: &Query<&Position, With<PlayerSpawnPoint>>,
+) -> Position {
     let spawn_points: Vec<Position> = q_spawn_points.iter().copied().collect();
     let default_pos = Position {
         x: 0.0,
@@ -166,140 +177,232 @@ fn setup_mission_players(
         visual_priority: 0.0,
     };
 
-    let Ok(lobby) = q_lobby.single() else {
-        warn!("setup_mission_players: no LobbyInfo entity found — skipping player spawn");
-        return;
+    let Some(player_idx) = lobby
+        .players
+        .iter()
+        .position(|player| player.player_uuid == player_uuid)
+    else {
+        warn!(
+            "spawn_position_for_player: player {} missing from lobby ordering; using default position",
+            player_uuid
+        );
+        return default_pos;
     };
 
-    for (idx, player) in lobby.players.iter().enumerate() {
-        // Pick a deterministic spawn point based on lobby order.
-        let spawn_pos = spawn_points
-            .get(idx % spawn_points.len().max(1))
-            .copied()
-            .unwrap_or(default_pos);
+    spawn_points
+        .get(player_idx % spawn_points.len().max(1))
+        .copied()
+        .unwrap_or(default_pos)
+}
 
-        let net_id = NetworkId::from(player.player_uuid);
+fn spawn_requested_player(
+    player: &LobbyPlayerInfo,
+    lobby: &LobbyInfo,
+    q_existing_sprites: &Query<&PlayerSprite>,
+    q_pending_spawn: &Query<&PlayerSpawnRequest>,
+    q_spawn_points: &Query<&Position, With<PlayerSpawnPoint>>,
+    commands: &mut Commands,
+) -> bool {
+    if q_existing_sprites
+        .iter()
+        .any(|sprite| sprite.id == player.player_uuid)
+    {
         info!(
-            "setup_mission_players: processing lobby player uuid={} idx={}",
-            player.player_uuid, idx
+            "spawn_requested_player: player {} already has an avatar; skipping duplicate join request",
+            player.player_uuid
         );
+        return false;
+    }
 
-        // Spawn a thin request entity. unplayer-plugin materializes PlayerSprite
-        // and the canonical player baseline components.
-        let entity_commands = commands.spawn((
+    if q_pending_spawn
+        .iter()
+        .any(|request| request.player_uuid == player.player_uuid)
+    {
+        info!(
+            "spawn_requested_player: player {} already has a pending spawn request",
+            player.player_uuid
+        );
+        return false;
+    }
+
+    let spawn_pos = spawn_position_for_player(player.player_uuid, lobby, q_spawn_points);
+    let net_id = NetworkId::from(player.player_uuid);
+    let entity = commands
+        .spawn((
             spawn_pos,
             PlayerSpawnRequest {
                 player_uuid: player.player_uuid,
                 network_id: net_id,
             },
             Replicated,
-        ));
-        let entity = entity_commands.id();
+        ))
+        .id();
 
-        let is_host = player.current_socket.is_none();
+    let owner_id = player.current_socket.unwrap_or(OwnerId::Server);
+    if owner_id == OwnerId::Server {
+        commands
+            .entity(entity)
+            .insert((Owner(OwnerId::Server), LocallyOwned));
+    } else {
+        commands.entity(entity).insert(Owner(owner_id));
+    }
 
-        if is_host {
-            // Host player: authority owns it locally.
-            commands
-                .entity(entity)
-                .insert((Owner(OwnerId::Server), LocallyOwned));
+    info!(
+        "spawn_requested_player: spawned avatar skeleton {:?} for player {} (owner={:?})",
+        entity, player.player_uuid, owner_id
+    );
+    true
+}
 
-            info!(
-                "setup_mission_players: spawned host skeleton {:?} for player {}",
-                entity, player.player_uuid
+fn handle_request_join_mission(
+    mut reader: MessageReader<FromClient<RequestJoinMission>>,
+    q_lobby: Query<&LobbyInfo>,
+    q_selected_mission: Query<&SelectedMission>,
+    q_existing_sprites: Query<&PlayerSprite>,
+    q_pending_spawn: Query<&PlayerSpawnRequest>,
+    q_spawn_points: Query<&Position, With<PlayerSpawnPoint>>,
+    uuid_map: Res<ClientUuidMap>,
+    mut pending_join_requests: ResMut<PendingMissionJoinRequests>,
+    mut commands: Commands,
+) {
+    let Ok(lobby) = q_lobby.single() else {
+        warn!("handle_request_join_mission: missing LobbyInfo; cannot process join requests");
+        return;
+    };
+
+    for msg in reader.read() {
+        let requester_owner = to_owner_id(msg.client_id);
+        let Some(requester_uuid) = uuid_map.0.get(&requester_owner).copied() else {
+            warn!(
+                "handle_request_join_mission: missing UUID mapping for {:?}; cannot honor join request",
+                msg.client_id
             );
+            continue;
+        };
+
+        let Some(player) = lobby
+            .players
+            .iter()
+            .find(|player| player.player_uuid == requester_uuid)
+        else {
+            warn!(
+                "handle_request_join_mission: requester {} is not present in LobbyInfo",
+                requester_uuid
+            );
+            continue;
+        };
+
+        if q_selected_mission.is_empty() {
+            info!(
+                "handle_request_join_mission: queueing join request from {} until mission selection exists",
+                requester_uuid
+            );
+            pending_join_requests.0.insert(requester_uuid);
+            continue;
+        }
+
+        if player.current_socket != Some(requester_owner) && requester_owner != OwnerId::Server {
+            warn!(
+                "handle_request_join_mission: requester {} sent from mismatched owner {:?} (lobby has {:?})",
+                requester_uuid, requester_owner, player.current_socket
+            );
+            continue;
+        }
+
+        if !player.connected && requester_owner != OwnerId::Server {
+            warn!(
+                "handle_request_join_mission: requester {} is not marked connected; queuing denied",
+                requester_uuid
+            );
+            continue;
+        }
+
+        let spawned = spawn_requested_player(
+            player,
+            lobby,
+            &q_existing_sprites,
+            &q_pending_spawn,
+            &q_spawn_points,
+            &mut commands,
+        );
+
+        if spawned {
+            pending_join_requests.0.remove(&requester_uuid);
         } else {
-            let socket_owner_id = player.current_socket.unwrap();
-            commands.entity(entity).insert(Owner(socket_owner_id));
+            pending_join_requests.0.insert(requester_uuid);
+        }
+    }
+}
 
-            // NOTE: We no longer send OwnershipGranted immediately.
-            // The grant_ownership_when_ready system will send it once the entity
-            // is fully hydrated (e.g. has PlayerGear).
-            info!(
-                "setup_mission_players: spawned remote skeleton {:?} for player {} (owner={:?})",
-                entity, player.player_uuid, socket_owner_id
+fn process_pending_mission_join_requests(
+    q_lobby: Query<&LobbyInfo>,
+    q_selected_mission: Query<&SelectedMission>,
+    q_existing_sprites: Query<&PlayerSprite>,
+    q_pending_spawn: Query<&PlayerSpawnRequest>,
+    q_spawn_points: Query<&Position, With<PlayerSpawnPoint>>,
+    mut pending_join_requests: ResMut<PendingMissionJoinRequests>,
+    mut commands: Commands,
+) {
+    if pending_join_requests.0.is_empty() {
+        return;
+    }
+    if q_selected_mission.is_empty() {
+        warn!(
+            "process_pending_mission_join_requests: mission join queue is non-empty but no SelectedMission exists"
+        );
+        pending_join_requests.0.clear();
+        return;
+    }
+
+    let Ok(lobby) = q_lobby.single() else {
+        warn!("process_pending_mission_join_requests: missing LobbyInfo; cannot drain join queue");
+        return;
+    };
+
+    let queued_players: Vec<Uuid> = pending_join_requests.0.iter().copied().collect();
+    for player_uuid in queued_players {
+        let Some(player) = lobby
+            .players
+            .iter()
+            .find(|player| player.player_uuid == player_uuid)
+        else {
+            warn!(
+                "process_pending_mission_join_requests: queued player {} is no longer in LobbyInfo; dropping request",
+                player_uuid
             );
+            pending_join_requests.0.remove(&player_uuid);
+            continue;
+        };
+
+        if !player.connected && player.current_socket.is_some() {
+            debug!(
+                "process_pending_mission_join_requests: queued player {} is not currently connected; keeping request queued",
+                player_uuid
+            );
+            continue;
+        }
+
+        if spawn_requested_player(
+            player,
+            lobby,
+            &q_existing_sprites,
+            &q_pending_spawn,
+            &q_spawn_points,
+            &mut commands,
+        ) {
+            pending_join_requests.0.remove(&player_uuid);
         }
     }
 }
 
 /// Server: on entering TearingDown, remove the spawning-active marker and despawn
 /// no gameplay entities. Domain plugins own their own teardown.
-fn cleanup_player_spawning_flag(mut commands: Commands) {
-    commands.remove_resource::<RepliconPlayerSpawningActive>();
-}
-
-/// Server: runs every frame during InGame to spawn player entities for clients that
-/// connected (and were added to lobby.players) after setup_mission_players already ran.
-/// Domain plugins react to Added<PlayerSprite> to insert their own components.
-fn spawn_late_joining_players(
-    q_lobby: Query<&LobbyInfo>,
-    q_existing_sprites: Query<&PlayerSprite>,
-    q_pending_spawn: Query<&PlayerSpawnRequest>,
-    q_spawn_points: Query<&Position, With<unboard_core::components::spawning::PlayerSpawnPoint>>,
+fn cleanup_player_spawning_flag(
     mut commands: Commands,
+    mut pending_join_requests: ResMut<PendingMissionJoinRequests>,
 ) {
-    let Ok(lobby) = q_lobby.single() else {
-        return;
-    };
-
-    let spawn_points: Vec<Position> = q_spawn_points.iter().copied().collect();
-    let default_pos = Position {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
-        visual_priority: 0.0,
-    };
-
-    for (idx, player) in lobby.players.iter().enumerate() {
-        // Only handle remote clients that are currently connected.
-        if player.current_socket.is_none() || !player.connected {
-            continue;
-        }
-
-        // Skip if a PlayerSprite already exists for this player UUID.
-        if q_existing_sprites
-            .iter()
-            .any(|s| s.id == player.player_uuid)
-        {
-            continue;
-        }
-
-        // Skip if a request entity is already pending materialization.
-        if q_pending_spawn
-            .iter()
-            .any(|r| r.player_uuid == player.player_uuid)
-        {
-            continue;
-        }
-
-        let spawn_pos = spawn_points
-            .get(idx % spawn_points.len().max(1))
-            .copied()
-            .unwrap_or(default_pos);
-
-        let net_id = NetworkId::from(player.player_uuid);
-        let socket_owner_id = player.current_socket.unwrap();
-
-        let entity_commands = commands.spawn((
-            spawn_pos,
-            PlayerSpawnRequest {
-                player_uuid: player.player_uuid,
-                network_id: net_id,
-            },
-            Owner(socket_owner_id),
-            Replicated,
-        ));
-        let entity = entity_commands.id();
-
-        // NOTE: We no longer send OwnershipGranted immediately.
-        // The grant_ownership_when_ready system will send it once the entity
-        // is fully hydrated (e.g. has PlayerGear).
-        info!(
-            "spawn_late_joining_players: spawned skeleton {:?} for late-joining player {} (owner={:?})",
-            entity, player.player_uuid, socket_owner_id
-        );
-    }
+    pending_join_requests.0.clear();
+    commands.remove_resource::<RepliconPlayerSpawningActive>();
 }
 
 /// Server: Watches for entities that have been stamped as fully hydrated by the domains.
@@ -316,10 +419,12 @@ fn grant_ownership_when_ready(
             Without<OwnershipSentMarker>,
         ),
     >,
+    local_player: Option<Res<LocalPlayerRole>>,
     mut commands: Commands,
 ) {
+    let is_dedicated_server = local_player.is_none();
     for (entity, owner, has_ready_marker) in q_ready.iter() {
-        if !player_ready_for_handover(has_ready_marker) {
+        if !is_dedicated_server && !player_ready_for_handover(has_ready_marker) {
             continue;
         }
 
@@ -361,8 +466,12 @@ fn warn_on_stuck_pending_handover(
             Without<OwnershipSentMarker>,
         ),
     >,
+    local_player: Option<Res<LocalPlayerRole>>,
     mut wait_frames_by_entity: Local<HashMap<Entity, u16>>,
 ) {
+    if local_player.is_none() {
+        return; // Dedicated servers don't use NetworkEntityReady
+    }
     wait_frames_by_entity.retain(|entity, _| q_pending.get(*entity).is_ok());
 
     for (entity, owner) in q_pending.iter() {

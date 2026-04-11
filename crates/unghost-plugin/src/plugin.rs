@@ -6,6 +6,7 @@ use unghost_core::components::logic::ghost_influence::GhostInfluence;
 use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::components::logic::interaction::{InteractionMotion, Locked};
 use unghost_core::components::logic::interaction_sound::GhostInteractionSoundCue;
+use unghost_core::components::logic::red_light_charge::GhostRedLightCharge;
 use unghost_core::components::logic::vocalization::GhostVocalization;
 use unghost_core::components::presentation::spectral::SpectralClarity;
 use unghost_core::tags::GhostTag;
@@ -36,6 +37,7 @@ impl Plugin for UnhaunterGhostLogicPlugin {
         app.replicate::<GhostBreach>();
         app.replicate::<GhostDeathSignal>();
         app.replicate::<GhostInfluence>();
+        app.replicate::<GhostRedLightCharge>();
         app.replicate::<GhostSprite>();
         app.replicate::<GhostBehaviorDynamics>();
         app.replicate::<GhostGuess>();

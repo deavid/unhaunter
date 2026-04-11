@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use rand::RngExt;
-use unaudiospatial_core::emitter::AudioEmitter;
 use uncommon_app_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
@@ -25,23 +24,14 @@ pub(crate) fn update_redtorch_skeleton(
         ),
         With<LocallyOwned>,
     >,
-    mut ga: AudioEmitter,
 ) {
     let measure = metrics::REDTORCH_UPDATE.time_measure();
-    for (mut redtorch, mut battery, toggle, electronic, pos) in q_redtorch.iter_mut() {
+    for (mut redtorch, mut battery, toggle, _electronic, _pos) in q_redtorch.iter_mut() {
         // Sync internal enabled with Toggleable
         redtorch.enabled = toggle.is_on;
 
         // Update Battery Drain Rate
         battery.drain_rate = if redtorch.enabled { 0.0001 } else { 0.0 };
-
-        // Play static/interference sounds when glitching
-        if electronic.glitch_timer > 0.0
-            && redtorch.enabled
-            && random_seed::rng().random_range(0.0..1.0) < 0.2
-        {
-            ga.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
-        }
     }
 
     measure.end_ms();
@@ -78,7 +68,7 @@ pub(crate) fn update_redtorch_skin(
             0.0
         };
         if redtorch.enabled && electronic.glitch_timer > 0.0 {
-            skin.output_power = electronic.glitch_timer * 0.3;
+            skin.output_power = (electronic.glitch_timer * 0.3).max(new_power * 0.5);
         } else {
             skin.output_power = (skin.output_power * 5.0 + new_power) / 6.0;
         }

@@ -31,6 +31,8 @@ fn keyboard(
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
         game_next_state.set(InGameUiState::Running);
+        // This only exits the local player from the mission flow. It is not an
+        // authority request to conclude the mission for every player.
         ev_quit.write(QuitMissionEvent);
     }
 }

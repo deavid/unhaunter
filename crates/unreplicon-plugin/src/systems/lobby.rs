@@ -9,30 +9,28 @@ use uncommon_states_core::{BootState, UIContextState};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
 use unmapload_core::events::loadlevel::LoadLevelEvent;
+use unmission_core::resources::MissionEndRequested;
+use unmission_core::types::MissionEvent;
 use unmission_core::types::SimulationState;
 use unreplicon_core::components::{LobbyInfo, LobbyPlayerInfo, SelectedMission, ServerGamePhase};
 use unreplicon_core::events::{PlayerNetworkDisconnected, PlayerNetworkReconnected};
 use unreplicon_core::messages::{
-    RequestAbortMission, RequestSelectDifficulty, RequestSelectMap, RequestStartMission,
+    MissionEndReason, RequestEndMission, RequestJoinMission, RequestSelectDifficulty,
+    RequestSelectMap, RequestStartMission,
 };
 use unreplicon_core::ownership::{Owner, OwnerId};
 use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LocalPlayerRole};
-use unreplicon_core::resources::{
-    ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer, MissionAutoJoinArmed,
-};
+use unreplicon_core::resources::{ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer};
 use untmxmap_core::resources::maps::Maps;
 use uuid::Uuid;
-
-const AUTO_JOIN_BUFFER_SECS: f32 = 2.0;
-const AUTO_JOIN_WAITING_LOBBY_SECS: f32 = 0.75;
-const AUTO_JOIN_MAX_MISSION_AGE_SECS: f64 = 30.0;
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
     app.add_client_message::<RequestSelectMap>(Channel::Ordered);
     app.add_client_message::<RequestSelectDifficulty>(Channel::Ordered);
     app.add_client_message::<RequestStartMission>(Channel::Ordered);
-    app.add_client_message::<RequestAbortMission>(Channel::Ordered);
+    app.add_client_message::<RequestJoinMission>(Channel::Ordered);
+    app.add_client_message::<RequestEndMission>(Channel::Ordered);
 
     // Register replicated components
     app.replicate::<LobbyInfo>();
@@ -48,8 +46,9 @@ pub(super) fn app_setup(app: &mut App) {
     app.init_resource::<ClientUuidMap>();
     app.init_resource::<LocalPlayer>();
     app.init_resource::<CurrentMapSeed>();
-    app.init_resource::<MissionAutoJoinArmed>();
+    app.init_resource::<unreplicon_core::resources::MissionAutoJoinArmed>();
     app.init_resource::<HostGone>();
+    app.init_resource::<unreplicon_core::resources::MissionAutoJoinArmed>();
     app.init_resource::<unreplicon_core::resources::RoomIdentification>();
 
     // Observer: fires whenever a client entity loses ConnectedClient on disconnect.
@@ -102,134 +101,72 @@ pub(super) fn app_setup(app: &mut App) {
             handle_request_select_map,
             handle_request_select_difficulty,
             handle_request_start_mission,
-            handle_request_abort_mission,
+            handle_request_end_mission,
         )
             .run_if(resource_exists::<AuthorityRole>),
     );
 
-    app.add_systems(Update, process_auto_join);
+    app.add_systems(
+        Update,
+        process_auto_join.run_if(in_state(UIContextState::Lobby)),
+    );
 }
 
 fn process_auto_join(
-    q_mission: Query<&SelectedMission>,
+    q_selected_mission: Query<&SelectedMission>,
     q_server_phase: Query<&ServerGamePhase>,
-    local_player: Option<Res<LocalPlayerRole>>,
-    authority: Option<Res<AuthorityRole>>,
-    app_state: Res<State<UIContextState>>,
+    mut ev_load: MessageWriter<LoadLevelEvent>,
+    mut ev_join: MessageWriter<RequestJoinMission>,
+    mut next_ui_state: ResMut<NextState<UIContextState>>,
     sim_state: Res<State<SimulationState>>,
+    auto_join_armed: Option<ResMut<unreplicon_core::resources::MissionAutoJoinArmed>>,
     mut current_map_seed: ResMut<CurrentMapSeed>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
-    mut ev_load: MessageWriter<LoadLevelEvent>,
-    mut next_app_state: ResMut<NextState<UIContextState>>,
-    mut auto_join_armed: ResMut<MissionAutoJoinArmed>,
-    time: Res<Time>,
-    mut sync_timer: Local<Option<f32>>,
-    mut lobby_wait_started_at: Local<Option<f32>>,
-    mut tracked_mission_seed: Local<Option<u64>>,
-    mut tracked_mission_joinable: Local<bool>,
 ) {
-    if authority.is_some() || local_player.is_none() {
-        auto_join_armed.0 = false;
-        return;
-    }
-    if *app_state.get() != UIContextState::Lobby {
-        auto_join_armed.0 = false;
-        *sync_timer = None;
-        *lobby_wait_started_at = None;
-        *tracked_mission_seed = None;
-        *tracked_mission_joinable = false;
-        return;
-    }
-
-    let now = time.elapsed_secs();
-    if lobby_wait_started_at.is_none() {
-        *lobby_wait_started_at = Some(now);
-    }
-
-    let mission_count = q_mission.iter().count();
-    if mission_count > 1 {
-        warn!(
-            "process_auto_join: found {} SelectedMission entities; expected exactly 1 while syncing client mission state",
-            mission_count
-        );
-    }
-
-    let Some(mission) = q_mission.iter().next() else {
-        auto_join_armed.0 = false;
-        *sync_timer = None;
-        *tracked_mission_seed = None;
-        *tracked_mission_joinable = false;
+    let Ok(mission) = q_selected_mission.single() else {
+        if let Some(mut armed) = auto_join_armed {
+            armed.0 = false;
+        }
         return;
     };
 
-    if *tracked_mission_seed != Some(mission.map_seed) {
-        *tracked_mission_seed = Some(mission.map_seed);
-        *sync_timer = None;
+    let Some(mut armed) = auto_join_armed else {
+        return;
+    };
 
-        let waited_in_lobby_long_enough = lobby_wait_started_at
-            .map(|started| now - started >= AUTO_JOIN_WAITING_LOBBY_SECS)
-            .unwrap_or(false);
+    let is_ready = *sim_state.get() == SimulationState::Ready
+        || q_server_phase
+            .iter()
+            .any(|phase| *phase == ServerGamePhase::InProgress);
 
-        let mission_age_ok = current_unix_time_secs()
-            .map(|unix_now| {
-                mission.started_at_unix_secs > 0.0
-                    && unix_now >= mission.started_at_unix_secs
-                    && (unix_now - mission.started_at_unix_secs) <= AUTO_JOIN_MAX_MISSION_AGE_SECS
-            })
-            .unwrap_or(false);
+    if !armed.0 {
+        if !is_ready {
+            armed.0 = true;
+            info!(
+                "process_auto_join: Armed for auto-join (map={})",
+                mission.map_path
+            );
+        }
+        return;
+    }
 
-        *tracked_mission_joinable = waited_in_lobby_long_enough && mission_age_ok;
+    if is_ready {
+        armed.0 = false;
+        current_map_seed.0 = mission.map_seed;
+        if let Some(diff) = parse_difficulty_id("process_auto_join", &mission.difficulty_id) {
+            *current_difficulty = CurrentDifficulty::new(diff);
+        }
         info!(
-            "MULTIPLAYER_MISSION_AUTO_JOIN_TRACK: map='{}' seed={} difficulty='{}' waited_in_lobby_long_enough={} mission_age_ok={} current_difficulty={:?}",
-            mission.map_path,
-            mission.map_seed,
-            mission.difficulty_id,
-            waited_in_lobby_long_enough,
-            mission_age_ok,
-            current_difficulty.0
+            "process_auto_join: Triggering synchronized auto-join intent (map={})",
+            mission.map_path
         );
-    }
 
-    if !*tracked_mission_joinable {
-        auto_join_armed.0 = false;
-        return;
+        ev_join.write(RequestJoinMission);
+        ev_load.write(LoadLevelEvent {
+            map_filepath: mission.map_path.clone(),
+        });
+        next_ui_state.set(UIContextState::MissionLoading);
     }
-
-    auto_join_armed.0 = true;
-
-    let ready_by_sim_state = *sim_state.get() == SimulationState::Ready;
-    let ready_by_server_phase = q_server_phase
-        .iter()
-        .any(|phase| *phase == ServerGamePhase::InProgress);
-    if !ready_by_sim_state && !ready_by_server_phase {
-        *sync_timer = None;
-        return;
-    }
-
-    let start = sync_timer.get_or_insert(now);
-    if now - *start < AUTO_JOIN_BUFFER_SECS {
-        return;
-    }
-
-    current_map_seed.0 = mission.map_seed;
-    if let Ok(diff) = Difficulty::from_str(&mission.difficulty_id) {
-        info!(
-            "MULTIPLAYER_MISSION_AUTO_JOIN_APPLY: map='{}' seed={} mission_difficulty={:?} previous_current_difficulty={:?}",
-            mission.map_path, mission.map_seed, diff, current_difficulty.0
-        );
-        *current_difficulty = CurrentDifficulty::new(diff);
-    } else {
-        warn!(
-            "process_auto_join: unknown difficulty '{}'; keeping current",
-            mission.difficulty_id
-        );
-    }
-    ev_load.write(LoadLevelEvent {
-        map_filepath: mission.map_path.clone(),
-    });
-    next_app_state.set(UIContextState::MissionLoading);
-    auto_join_armed.0 = false;
-    *sync_timer = None;
 }
 
 fn current_unix_time_secs() -> Option<f64> {
@@ -753,37 +690,36 @@ fn handle_request_start_mission(
     }
 }
 
-fn handle_request_abort_mission(
-    mut reader: MessageReader<FromClient<RequestAbortMission>>,
+fn handle_request_end_mission(
+    mut reader: MessageReader<FromClient<RequestEndMission>>,
     q_lobby: Query<&LobbyInfo>,
     uuid_map: Res<ClientUuidMap>,
-    q_selected_mission: Query<Entity, With<SelectedMission>>,
-    mut q_server_phase: Query<&mut ServerGamePhase>,
-    mut next_sim_state: ResMut<NextState<SimulationState>>,
-    mut commands: Commands,
+    mission_end_requested: Res<MissionEndRequested>,
+    mut ev_mission: MessageWriter<MissionEvent>,
 ) {
     for msg in reader.read() {
         let Some(sender_uuid) = client_uuid(msg.client_id, &uuid_map) else {
             continue;
         };
         for lobby in q_lobby.iter() {
-            if Some(sender_uuid) != lobby.leader_uuid {
+            let allowed = match msg.message.reason {
+                MissionEndReason::LeaderAborted => Some(sender_uuid) == lobby.leader_uuid,
+                MissionEndReason::TruckExitInitiated => mission_end_requested.0,
+            };
+
+            if !allowed {
                 warn!(
-                    "RequestAbortMission from non-leader {:?}; ignored",
-                    sender_uuid
+                    "RequestEndMission {:?} rejected for sender {:?}",
+                    msg.message.reason, sender_uuid
                 );
                 continue;
             }
-            info!("Aborting mission");
-            for entity in q_selected_mission.iter() {
-                commands.entity(entity).despawn();
-            }
-            // Trigger the same teardown path as MissionEvent::End so domain-owned
-            // teardown systems can despawn gameplay entities.
-            next_sim_state.set(SimulationState::TearingDown);
-            for mut phase in q_server_phase.iter_mut() {
-                *phase = ServerGamePhase::Concluding;
-            }
+
+            info!(
+                "RequestEndMission {:?} accepted from sender {:?}",
+                msg.message.reason, sender_uuid
+            );
+            ev_mission.write(MissionEvent::End);
         }
     }
 }

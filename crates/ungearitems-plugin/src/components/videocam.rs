@@ -56,7 +56,7 @@ pub(crate) fn update_videocam_skin(
             0.0
         };
         if toggle.is_on && electronic.glitch_timer > 0.0 {
-            new_power = electronic.glitch_timer * 2.0;
+            new_power = (electronic.glitch_timer * 2.0).max(new_power * 0.5);
         }
         videocam.output_power = (videocam.output_power * 8.0 + new_power) / 9.0;
 

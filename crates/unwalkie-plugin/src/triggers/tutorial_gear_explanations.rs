@@ -7,8 +7,8 @@ use ungear_core::types::gear::kind::GearKind;
 use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unwalkie_core::events::walkie_types::WalkieEvent;
-use unwalkie_core::resources::WalkiePlay;
 use unwalkie_core::messages::ProposeWalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 pub(crate) struct TutorialGearExplanationsTriggerPlugin;
 

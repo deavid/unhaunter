@@ -3,7 +3,7 @@ use bevy_persistent::Persistent;
 use uncommon_states_core::UIContextState;
 use unsettings_core::audio::AudioSettings;
 
-use unaudiobg_core::smooth::smooth_volume_db;
+use unaudiobg_core::smooth::smooth_volume;
 
 /// Component marking an entity as playing menu music.
 #[derive(Component, Debug, Default)]
@@ -11,8 +11,8 @@ pub(crate) struct MenuSound {
     despawn: bool,
 }
 
-/// Unified dB smoothing rate for both menu music and background tracks
-const DB_PER_SECOND: f32 = 10.0;
+/// Unified perceptual smoothing rate for both menu music and background tracks (2.0 units/s)
+const VOLUME_SPEED: f32 = 2.0;
 
 /// Manages menu music spawning and lifecycle based on AppState.
 /// Spawns menu music when not in game, triggers despawn when entering game.
@@ -76,10 +76,10 @@ pub(crate) fn despawn_sound(
                 * global_volume.volume.to_linear()
         };
 
-        let new_volume = smooth_volume_db(
+        let new_volume = smooth_volume(
             current_linear,
             target_linear,
-            DB_PER_SECOND,
+            VOLUME_SPEED,
             time.delta_secs(),
         );
 

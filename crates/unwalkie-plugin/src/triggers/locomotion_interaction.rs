@@ -19,8 +19,8 @@ use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 use unwalkie_core::events::walkie_types::WalkieEvent;
-use unwalkie_core::resources::WalkiePlay;
 use unwalkie_core::messages::ProposeWalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 use crate::metrics;
 
@@ -289,8 +289,7 @@ fn trigger_struggling_with_grab_drop(
                         time.elapsed_secs_f64(),
                         &mut walkie_play,
                         &mut ev_propose,
-                    )
-                    {
+                    ) {
                         *full_and_failed_grab_timer = None; // Reset timer after successful trigger
                     }
                 }
@@ -483,7 +482,6 @@ pub(crate) fn app_setup(app: &mut App) {
             trigger_struggling_with_hide_unhide,
             trigger_player_stays_hidden_too_long,
             trigger_hunt_active_near_hiding_spot_no_hide,
-        )
-            ,
+        ),
     );
 }

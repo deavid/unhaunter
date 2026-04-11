@@ -11,8 +11,8 @@ use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSprite;
 use untruck_core::components::in_truck::InTruck;
 use unwalkie_core::events::walkie_types::WalkieEvent;
-use unwalkie_core::resources::WalkiePlay;
 use unwalkie_core::messages::ProposeWalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 const LINGER_DURATION_SECONDS: f32 = 45.0;
 
@@ -173,13 +173,9 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        trigger_all_objectives_met_reminder_system,
-    )
-    .add_systems(
-        Update,
-        trigger_player_leaves_truck_without_changing_loadout_system
-            ,
-    );
+    app.add_systems(Update, trigger_all_objectives_met_reminder_system)
+        .add_systems(
+            Update,
+            trigger_player_leaves_truck_without_changing_loadout_system,
+        );
 }

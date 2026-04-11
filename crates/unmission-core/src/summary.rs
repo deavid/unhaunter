@@ -6,10 +6,13 @@ use uninvestigation_core::ghost::GhostType;
 
 use uncareer_core::grade::Grade;
 
-#[derive(
-    Debug, Clone, Resource, Component, Default, Serialize, Deserialize, Reflect, PartialEq,
-)]
-#[reflect(Component, Resource, Default, PartialEq)]
+/// Local per-player mission summary state.
+///
+/// This resource is computed and animated locally on player-bearing nodes.
+/// It must never be replicated or attached to replicated entities.
+/// Headless authority-only nodes do not own or build a summary.
+#[derive(Debug, Clone, Resource, Default, Serialize, Deserialize, Reflect, PartialEq)]
+#[reflect(Resource, Default, PartialEq)]
 pub struct SummaryData {
     pub time_taken_secs: f32,
     pub ghost_types: Vec<GhostType>,

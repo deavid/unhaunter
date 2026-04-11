@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use rand::RngExt;
-use unaudiospatial_core::emitter::AudioEmitter;
 use uncommon_app_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
@@ -21,15 +20,17 @@ pub(crate) trait UVTorchSkinExt {
 
 impl UVTorchSkinExt for UVTorchSkin {
     fn calculate_output_power(enabled: bool, battery_level: f32, glitch_timer: f32) -> f32 {
-        if glitch_timer > 0.0 {
-            return glitch_timer * 0.5; // Weaker flickering than flashlight
-        }
-
         if !enabled {
             return 0.0;
         }
 
-        4.0 * (battery_level.sqrt() + 0.05)
+        let normal_power = 4.0 * (battery_level.sqrt() + 0.05);
+        if glitch_timer > 0.0 {
+            // Keep EMI subtle: never dim below 50% of normal UV output.
+            return (glitch_timer * 0.5).max(normal_power * 0.5);
+        }
+
+        normal_power
     }
 
     fn update_output_power(&mut self, enabled: bool, battery_level: f32, glitch_timer: f32) {
@@ -49,23 +50,14 @@ pub(crate) fn update_uvtorch_skeleton(
         ),
         With<LocallyOwned>,
     >,
-    mut ga: AudioEmitter,
 ) {
     let measure = metrics::UVTORCH_UPDATE.time_measure();
-    for (mut uvtorch, mut battery, toggle, electronic, pos) in q_uvtorch.iter_mut() {
+    for (mut uvtorch, mut battery, toggle, _electronic, _pos) in q_uvtorch.iter_mut() {
         // Sync internal enabled with Toggleable
         uvtorch.enabled = toggle.is_on;
 
         // Update Battery Drain Rate
         battery.drain_rate = if uvtorch.enabled { 0.0001 } else { 0.0 };
-
-        // Play static/interference sounds when glitching
-        if electronic.glitch_timer > 0.0
-            && uvtorch.enabled
-            && random_seed::rng().random_range(0.0..1.0) < 0.2
-        {
-            ga.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
-        }
     }
 
     measure.end_ms();

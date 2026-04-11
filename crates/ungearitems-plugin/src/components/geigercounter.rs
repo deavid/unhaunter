@@ -15,7 +15,7 @@ use crate::metrics;
 use bevy::prelude::*;
 use rand::RngExt;
 use ungear_core::components::core::{
-    Battery, Electronic, GearSprite, PerceivedClarity, StatusText,
+    Battery, Electronic, GearSprite, PerceivedClarity, StatusText, StatusTextRefreshTimer,
 };
 use ungear_core::types::gear::equipment::EquipmentPosition;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
@@ -39,7 +39,9 @@ impl GeigerCounterExt for GeigerCounter {
 }
 
 pub(crate) fn update_geigercounter(
+    mut commands: Commands,
     mut q_geiger: Query<(
+        Entity,
         &mut GeigerCounter,
         &mut StatusText,
         &mut GearSprite,
@@ -49,6 +51,7 @@ pub(crate) fn update_geigercounter(
         &Position,
         &EquipmentPosition,
         &mut PerceivedClarity,
+        Has<StatusTextRefreshTimer>,
     )>,
     mut gs_audio: AudioEmitter,
     sg: If<Res<SoundGrid>>,
@@ -58,6 +61,7 @@ pub(crate) fn update_geigercounter(
 ) {
     let measure = metrics::GEIGER_UPDATE.time_measure();
     for (
+        entity,
         mut geiger,
         mut status,
         mut sprite,
@@ -67,6 +71,7 @@ pub(crate) fn update_geigercounter(
         pos,
         _ep,
         mut perceived_clarity,
+        has_timer,
     ) in q_geiger.iter_mut()
     {
         let mut rng = random_seed::rng();
@@ -172,14 +177,14 @@ pub(crate) fn update_geigercounter(
         let on_s = on_off(toggle.is_on);
 
         // Show garbled text when enabled (intent) but glitching (actual state)
-        if toggle.is_on && electronic.glitch_timer > 0.0 {
+        let new_status = if toggle.is_on && electronic.glitch_timer > 0.0 {
             let garbled = match rng.random_range(0..4) {
                 0 => "Reading: ERR0R\nEnergy: ###.###",
                 1 => "Reading: ---.--\nEnergy: FAULT",
                 2 => "INTERFERENCE DET---\nCALIBRATING...",
                 _ => "Signal Lost\nReacquiring...",
             };
-            status.0 = format!("{name}:  {on_s}\n{garbled}");
+            format!("{name}:  {on_s}\n{garbled}")
         } else {
             let msg = if toggle.is_on && electronic.glitch_timer <= 0.0 {
                 let cpm_text = format!("{:.1}", geiger.sound_display);
@@ -196,8 +201,9 @@ pub(crate) fn update_geigercounter(
             } else {
                 "".to_string()
             };
-            status.0 = format!("{name}: {on_s}\n{msg}");
-        }
+            format!("{name}: {on_s}\n{msg}")
+        };
+        status.update(entity, &mut commands, !has_timer, new_status);
 
         // Update GearSprite
         if toggle.is_on {

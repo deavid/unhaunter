@@ -293,22 +293,10 @@ fn trigger_sanity_dropped_due_to_ghost_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        very_low_sanity_no_truck_return,
-    );
-    app.add_systems(
-        Update,
-        low_health_general_warning,
-    );
-    app.add_systems(
-        Update,
-        trigger_sanity_dropped_due_to_darkness_system,
-    ); // Added new system
-    app.add_systems(
-        Update,
-        trigger_sanity_dropped_due_to_ghost_system,
-    ); // Added new system
+    app.add_systems(Update, very_low_sanity_no_truck_return);
+    app.add_systems(Update, low_health_general_warning);
+    app.add_systems(Update, trigger_sanity_dropped_due_to_darkness_system); // Added new system
+    app.add_systems(Update, trigger_sanity_dropped_due_to_ghost_system); // Added new system
 }
 
 // FIXME: The LightLevel component seems to be here as a placeholder, we need to understand its purpose.

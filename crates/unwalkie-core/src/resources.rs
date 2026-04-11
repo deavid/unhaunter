@@ -21,6 +21,7 @@ pub struct WalkiePlay {
     pub state: Option<WalkieSoundState>,
     pub current_voice_line: Option<VoiceLineData>,
     pub last_message_time: f64,
+    pub last_proposed_time: HashMap<WalkieEvent, f64>,
     pub truck_accessed: bool,
     pub urgent_pending: bool,
     pub evidence_hinted_not_logged_via_walkie: Option<(Evidence, f64)>,
@@ -34,8 +35,8 @@ impl Default for WalkiePlay {
             played_events: Default::default(),
             state: Default::default(),
             current_voice_line: Default::default(),
-            // Set to a negative value so the first message can be played immediately
             last_message_time: -100.0,
+            last_proposed_time: Default::default(),
             truck_accessed: Default::default(),
             urgent_pending: Default::default(),
             other_mission_event_count: Default::default(),
@@ -188,6 +189,16 @@ impl WalkiePlay {
         if self.event.is_some() {
             return false;
         }
+
+        // Prevent proposal spam while waiting for the server to logic it
+        if self
+            .last_proposed_time
+            .get(&event)
+            .is_some_and(|last_prop| time - last_prop < 5.0)
+        {
+            return false;
+        }
+
         let saved_count = self
             .other_mission_event_count
             .get(&event)
@@ -218,8 +229,8 @@ impl WalkiePlay {
         if self.priority_bar < effective_priority.value() {
             self.priority_bar = self.priority_bar * 0.8 + effective_priority.value() * 0.199;
         }
-        // Update last_played to prevent proposal spam while waiting for the server to respond.
-        self.played_events.entry(event).or_default().last_played = time;
+        // Update last_proposed_time to prevent proposal spam while waiting for the server to respond.
+        self.last_proposed_time.insert(event, time);
         true
     }
 

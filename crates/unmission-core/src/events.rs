@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::summary::SummaryData;
-
 #[derive(Debug, Clone, Message, Default)]
 pub struct LevelReadyEvent {
     pub open_van: bool,
@@ -13,10 +11,9 @@ pub struct MapGeometryInitializedEvent {
     pub origin: (i32, i32, i32),
 }
 
-#[derive(Debug, Clone, Message)]
-pub struct MissionCompletedEvent {
-    pub summary: SummaryData,
-}
-
 #[derive(Debug, Clone, Message, Default)]
+/// Local-only request to leave the current mission UI flow.
+///
+/// This is not an authority mission-conclusion signal and must not be used to
+/// end the mission for other players.
 pub struct QuitMissionEvent;

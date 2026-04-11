@@ -3,7 +3,9 @@ use unaudiospatial_core::emitter::AudioEmitter;
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use ungear_core::components::core::{GearSprite, ItemName, PerceivedClarity, StatusText};
+use ungear_core::components::core::{
+    GearSprite, ItemName, PerceivedClarity, StatusText, StatusTextRefreshTimer,
+};
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
 use unprofile_core::profile::PlayerProfileData;
@@ -22,7 +24,9 @@ use unspatial_core::position::Position;
 use crate::metrics;
 
 pub(crate) fn update_recorder(
+    mut commands: Commands,
     mut q_recorder: Query<(
+        Entity,
         &mut Recorder,
         &mut StatusText,
         &mut GearSprite,
@@ -30,16 +34,26 @@ pub(crate) fn update_recorder(
         &Position,
         &ItemName,
         &mut PerceivedClarity,
+        Has<StatusTextRefreshTimer>,
     )>,
-    mut gs_audio: AudioEmitter,
+    gs_audio: AudioEmitter,
     sg: If<Res<SoundGrid>>,
     haunt_state: Res<HauntState>,
     difficulty: Res<CurrentDifficulty>,
     player_profile: If<Res<Persistent<PlayerProfileData>>>,
 ) {
     let measure = metrics::SOUND_UPDATE.time_measure();
-    for (mut recorder, mut status, mut sprite, toggle, pos, name, mut perceived_clarity) in
-        q_recorder.iter_mut()
+    for (
+        entity,
+        mut recorder,
+        mut status,
+        mut sprite,
+        toggle,
+        pos,
+        name,
+        mut perceived_clarity,
+        has_timer,
+    ) in q_recorder.iter_mut()
     {
         let mut rng = random_seed::rng();
         recorder.frame_counter = recorder.frame_counter.wrapping_add(1);
@@ -94,12 +108,6 @@ pub(crate) fn update_recorder(
 
         sprite.0 = if !toggle.is_on {
             GearSpriteID::RecorderOff.to_visual_key()
-        } else if recorder.display_glitch_timer > 0.0 && rng.random_range(0.0..1.0) < 0.4 {
-            match rng.random_range(0..3) {
-                0 => GearSpriteID::RecorderOff.to_visual_key(),
-                1 => GearSpriteID::Recorder4.to_visual_key(), // Show max reading
-                _ => GearSpriteID::Recorder1.to_visual_key(),
-            }
         } else {
             op_sprite
         };
@@ -124,7 +132,9 @@ pub(crate) fn update_recorder(
             }
 
             let mut evp_recorded = false;
-            if let Some(ghost_pos) = haunt_state.ghost_warning_position {
+            if recorder.display_glitch_timer <= 0.0
+                && let Some(ghost_pos) = haunt_state.ghost_warning_position
+            {
                 let dist2 = pos.distance2(&ghost_pos);
                 if dist2 < 2.0 * 2.0 && haunt_state.evidences.contains(&Evidence::EVPRecording) {
                     evp_recorded = true;
@@ -165,11 +175,6 @@ pub(crate) fn update_recorder(
             // Decrement glitch timer if active
             if recorder.display_glitch_timer > 0.0 {
                 recorder.display_glitch_timer -= dt;
-
-                // Play static/interference sound when glitching
-                if rng.random_range(0.0..1.0) < 0.4 {
-                    gs_audio.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
-                }
             }
 
             // Decrement false reading timer
@@ -189,11 +194,6 @@ pub(crate) fn update_recorder(
                     if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
                         recorder.display_glitch_timer = 0.4;
                     }
-
-                    // Random false audio spikes
-                    if rng.random_range(0.0..1.0) < effect_strength.powi(3) * 0.5 {
-                        recorder.false_reading_timer = rng.random_range(0.5..2.0);
-                    }
                 }
             }
         }
@@ -202,7 +202,7 @@ pub(crate) fn update_recorder(
         let on_s = on_off(toggle.is_on);
 
         // Show garbled text when glitching
-        if toggle.is_on && recorder.display_glitch_timer > 0.0 {
+        let new_status = if toggle.is_on && recorder.display_glitch_timer > 0.0 {
             let garbled = match rng.random_range(0..5) {
                 0 => "Vol: ****ERROR****",
                 1 => "INTERFERENCE DETE---",
@@ -210,31 +210,31 @@ pub(crate) fn update_recorder(
                 3 => "SIGNAL:NOISE=0.---",
                 _ => "AUDIO MALFUNCTION",
             };
-            status.0 = format!("{}: {}\n{}", name.0, on_s, garbled);
-            continue;
-        }
-
-        // Normal display
-        let msg = if toggle.is_on {
-            if recorder.evp_recorded_display {
-                // This state implies evidence has been found and is being actively displayed
-                if recorder.blinking_hint_active {
-                    if recorder.frame_counter % 30 < 15 {
-                        "- EVP RECORDED !!! -".to_string()
+            format!("{}: {}\n{}", name.0, on_s, garbled)
+        } else {
+            // Normal display
+            let msg = if toggle.is_on {
+                if recorder.evp_recorded_display {
+                    // This state implies evidence has been found and is being actively displayed
+                    if recorder.blinking_hint_active {
+                        if recorder.frame_counter % 30 < 15 {
+                            "- EVP RECORDED !!! -".to_string()
+                        } else {
+                            "- EVP RECORDED     -".to_string()
+                        }
                     } else {
-                        "- EVP RECORDED     -".to_string()
+                        "- EVP RECORDED -".to_string()
                     }
                 } else {
-                    "- EVP RECORDED -".to_string()
+                    let vol = (recorder.sound / 2000.0).tanh() * 92.0 - 93.0;
+                    format!("Volume: {:4.0}dB ({})", vol, recorder.evp_recorded_count)
                 }
             } else {
-                let vol = (recorder.sound / 2000.0).tanh() * 92.0 - 93.0;
-                format!("Volume: {:4.0}dB ({})", vol, recorder.evp_recorded_count)
-            }
-        } else {
-            "".to_string()
+                "".to_string()
+            };
+            format!("{}: {}\n{}", name.0, on_s, msg)
         };
-        status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
+        status.update(entity, &mut commands, !has_timer, new_status);
 
         perceived_clarity.from_status_text = if toggle.is_on
             && recorder.evp_recorded_count > 0

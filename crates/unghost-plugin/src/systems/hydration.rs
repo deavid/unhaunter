@@ -8,9 +8,11 @@ use unboard_core::entity::GameSprite;
 use unghost_core::components::logic::ghost_breach::GhostBreach;
 use unghost_core::components::logic::ghost_influence::GhostInfluence;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::components::logic::red_light_charge::GhostRedLightCharge;
 use unghost_core::components::logic::vocalization::GhostVocalization;
 use unghost_core::requests::{GhostBreachSpawnRequest, GhostSpawnRequest};
 use unghost_core::tags::GhostTag;
+use uninvestigation_core::evidence::Evidence;
 use unlight_core::components::LightSensitive;
 use unlight_core::spectral::SpectralInfluence;
 use unmapload_core::hydration::HydrationStage;
@@ -77,9 +79,13 @@ fn ghost_hydration_system(
             );
         }
 
-        commands
-            .entity(entity)
-            .insert(ghost_sprite)
+        let has_red_light_evidence = ghost_sprite
+            .class
+            .evidences()
+            .contains(&Evidence::RLPresence);
+
+        let mut ec = commands.entity(entity);
+        ec.insert(ghost_sprite)
             .insert(GhostTag)
             .insert(NetworkId(0)) // Ghost is always 0 in MVP
             .insert(unspatial_core::boardposition::MapEntityFieldBPos(
@@ -101,6 +107,10 @@ fn ghost_hydration_system(
             .insert(Replicated)
             .insert(LerpPosition::new(*pos))
             .remove::<GhostSpawnRequest>();
+
+        if has_red_light_evidence {
+            ec.insert(GhostRedLightCharge::default());
+        }
     }
 }
 
@@ -206,6 +216,21 @@ fn hydrate_breach_local_field_components(
     }
 }
 
+fn despawn_ghosts_on_teardown(
+    mut commands: Commands,
+    q: Query<
+        Entity,
+        Or<(
+            With<unghost_core::components::logic::ghost_sprite::GhostSprite>,
+            With<unghost_core::components::logic::ghost_breach::GhostBreach>,
+        )>,
+    >,
+) {
+    for entity in q.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
@@ -226,6 +251,11 @@ pub(crate) fn app_setup(app: &mut App) {
             hydrate_breach_local_field_components,
         )
             .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
+    );
+    app.add_systems(
+        OnEnter(unmission_core::types::SimulationState::TearingDown),
+        despawn_ghosts_on_teardown
+            .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
     );
     // Runs on all nodes (authority and clients): inserts SpectralInfluence whenever
     // GhostInfluence is present but SpectralInfluence is missing. On the authority
