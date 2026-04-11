@@ -12,7 +12,7 @@ use unmission_core::types::SimulationState;
 use unplayer_core::components::{PlayerSpawnRequest, PlayerSprite};
 use unreplicon_core::components::{
     LobbyInfo, LobbyPlayerInfo, NetworkEntityReady, OwnershipSentMarker,
-    RepliconPlayerSpawningActive, SelectedMission,
+    RepliconPlayerSpawningActive,
 };
 use unreplicon_core::messages::{
     FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, OwnershipGranted, OwnershipRevoked,
@@ -108,7 +108,10 @@ pub(super) fn app_setup(app: &mut App) {
 
     app.add_systems(
         OnEnter(SimulationState::Spawning),
-        activate_player_spawning.run_if(resource_exists::<AuthorityRole>),
+        (
+            activate_player_spawning.run_if(resource_exists::<AuthorityRole>),
+            auto_request_join_mission,
+        ),
     );
 
     app.add_systems(
@@ -162,6 +165,11 @@ fn from_owner_id(owner_id: OwnerId) -> ClientId {
 
 fn activate_player_spawning(mut commands: Commands) {
     commands.insert_resource(RepliconPlayerSpawningActive);
+}
+
+fn auto_request_join_mission(mut ev_join: MessageWriter<RequestJoinMission>) {
+    info!("auto_request_join_mission: local map reached Spawning phase -> sending intent-to-play");
+    ev_join.write(RequestJoinMission);
 }
 
 fn spawn_position_for_player(
@@ -257,7 +265,6 @@ fn spawn_requested_player(
 fn handle_request_join_mission(
     mut reader: MessageReader<FromClient<RequestJoinMission>>,
     q_lobby: Query<&LobbyInfo>,
-    q_selected_mission: Query<&SelectedMission>,
     q_existing_sprites: Query<&PlayerSprite>,
     q_pending_spawn: Query<&PlayerSpawnRequest>,
     q_spawn_points: Query<&Position, With<PlayerSpawnPoint>>,
@@ -291,15 +298,6 @@ fn handle_request_join_mission(
             );
             continue;
         };
-
-        if q_selected_mission.is_empty() {
-            info!(
-                "handle_request_join_mission: queueing join request from {} until mission selection exists",
-                requester_uuid
-            );
-            pending_join_requests.0.insert(requester_uuid);
-            continue;
-        }
 
         if player.current_socket != Some(requester_owner) && requester_owner != OwnerId::Server {
             warn!(
@@ -336,7 +334,6 @@ fn handle_request_join_mission(
 
 fn process_pending_mission_join_requests(
     q_lobby: Query<&LobbyInfo>,
-    q_selected_mission: Query<&SelectedMission>,
     q_existing_sprites: Query<&PlayerSprite>,
     q_pending_spawn: Query<&PlayerSpawnRequest>,
     q_spawn_points: Query<&Position, With<PlayerSpawnPoint>>,
@@ -344,13 +341,6 @@ fn process_pending_mission_join_requests(
     mut commands: Commands,
 ) {
     if pending_join_requests.0.is_empty() {
-        return;
-    }
-    if q_selected_mission.is_empty() {
-        warn!(
-            "process_pending_mission_join_requests: mission join queue is non-empty but no SelectedMission exists"
-        );
-        pending_join_requests.0.clear();
         return;
     }
 
