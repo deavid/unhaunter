@@ -153,7 +153,6 @@ impl GhostBehaviorDynamics {
 /// in a replicated component (Rule D: logic components must not contain Timers).
 #[derive(Component, Debug, Serialize, Deserialize, Reflect)]
 #[reflect(Component, Default)]
-#[component(map_entities)]
 pub struct GhostSprite {
     /// The specific type of ghost, which determines its characteristics and abilities.
     pub class: GhostType,
@@ -241,14 +240,6 @@ impl Default for GhostSprite {
             hunt_warning_timer: 0.0,
             hunt_warning_intensity: 0.0,
             times_hunted_this_mission: 0,
-        }
-    }
-}
-
-impl bevy::ecs::entity::MapEntities for GhostSprite {
-    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
-        if let Some(ref mut h) = self.breach_id {
-            *h = mapper.get_mapped(*h);
         }
     }
 }

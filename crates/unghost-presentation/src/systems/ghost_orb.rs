@@ -33,7 +33,7 @@ fn spawn_ghost_orb_particles(
     mut commands: Commands,
     time: Res<Time>,
     mut spawn_timer: ResMut<OrbSpawnTimer>,
-    breach_query: Query<(Entity, &Position), With<GhostBreach>>,
+    breach_query: Query<&Position, With<GhostBreach>>,
     ghost_query: Query<(&GhostSprite, &GhostBehaviorDynamics)>,
 ) {
     let mut rng = random_seed::rng();
@@ -43,10 +43,11 @@ fn spawn_ghost_orb_particles(
         return;
     }
 
-    for (breach_entity, breach_pos) in breach_query.iter() {
+    for breach_pos in breach_query.iter() {
+        let breach_board_pos = breach_pos.to_board_position();
         let Some((_, dynamics)) = ghost_query
             .iter()
-            .find(|(g, _)| g.breach_id == Some(breach_entity))
+            .find(|(g, _)| g.spawn_point == breach_board_pos)
         else {
             continue;
         };
