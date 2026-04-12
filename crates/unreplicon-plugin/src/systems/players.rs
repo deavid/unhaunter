@@ -6,7 +6,7 @@ use bevy_replicon::prelude::{
     ToClients,
 };
 use bevy_replicon::shared::server_entity_map::ServerEntityMap;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use unboard_core::components::spawning::PlayerSpawnPoint;
 use unmission_core::types::SimulationState;
 use unplayer_core::components::{PlayerSpawnRequest, PlayerSprite};
@@ -33,9 +33,6 @@ struct PendingOwnershipGrant {
 
 #[derive(Resource, Default)]
 struct PendingOwnershipGrantQueue(Vec<PendingOwnershipGrant>);
-
-#[derive(Resource, Default)]
-struct PendingMissionJoinRequests(HashSet<Uuid>);
 
 // Periodic diagnostics for player spawn and ownership handoff state.
 #[allow(clippy::manual_is_multiple_of)]
@@ -99,7 +96,6 @@ pub(super) fn app_setup(app: &mut App) {
     app.add_server_message::<OwnershipRevoked>(Channel::Ordered);
 
     app.init_resource::<PendingOwnershipGrantQueue>();
-    app.init_resource::<PendingMissionJoinRequests>();
 
     replication::app_setup(app);
 
@@ -118,7 +114,6 @@ pub(super) fn app_setup(app: &mut App) {
         Update,
         (
             handle_request_join_mission,
-            process_pending_mission_join_requests,
             grant_ownership_when_ready,
             warn_on_stuck_pending_handover,
         )
@@ -269,7 +264,6 @@ fn handle_request_join_mission(
     q_pending_spawn: Query<&PlayerSpawnRequest>,
     q_spawn_points: Query<&Position, With<PlayerSpawnPoint>>,
     uuid_map: Res<ClientUuidMap>,
-    mut pending_join_requests: ResMut<PendingMissionJoinRequests>,
     mut commands: Commands,
 ) {
     let Ok(lobby) = q_lobby.single() else {
@@ -315,7 +309,7 @@ fn handle_request_join_mission(
             continue;
         }
 
-        let spawned = spawn_requested_player(
+        spawn_requested_player(
             player,
             lobby,
             &q_existing_sprites,
@@ -323,65 +317,6 @@ fn handle_request_join_mission(
             &q_spawn_points,
             &mut commands,
         );
-
-        if spawned {
-            pending_join_requests.0.remove(&requester_uuid);
-        } else {
-            pending_join_requests.0.insert(requester_uuid);
-        }
-    }
-}
-
-fn process_pending_mission_join_requests(
-    q_lobby: Query<&LobbyInfo>,
-    q_existing_sprites: Query<&PlayerSprite>,
-    q_pending_spawn: Query<&PlayerSpawnRequest>,
-    q_spawn_points: Query<&Position, With<PlayerSpawnPoint>>,
-    mut pending_join_requests: ResMut<PendingMissionJoinRequests>,
-    mut commands: Commands,
-) {
-    if pending_join_requests.0.is_empty() {
-        return;
-    }
-
-    let Ok(lobby) = q_lobby.single() else {
-        warn!("process_pending_mission_join_requests: missing LobbyInfo; cannot drain join queue");
-        return;
-    };
-
-    let queued_players: Vec<Uuid> = pending_join_requests.0.iter().copied().collect();
-    for player_uuid in queued_players {
-        let Some(player) = lobby
-            .players
-            .iter()
-            .find(|player| player.player_uuid == player_uuid)
-        else {
-            warn!(
-                "process_pending_mission_join_requests: queued player {} is no longer in LobbyInfo; dropping request",
-                player_uuid
-            );
-            pending_join_requests.0.remove(&player_uuid);
-            continue;
-        };
-
-        if !player.connected && player.current_socket.is_some() {
-            debug!(
-                "process_pending_mission_join_requests: queued player {} is not currently connected; keeping request queued",
-                player_uuid
-            );
-            continue;
-        }
-
-        if spawn_requested_player(
-            player,
-            lobby,
-            &q_existing_sprites,
-            &q_pending_spawn,
-            &q_spawn_points,
-            &mut commands,
-        ) {
-            pending_join_requests.0.remove(&player_uuid);
-        }
     }
 }
 
@@ -389,9 +324,7 @@ fn process_pending_mission_join_requests(
 /// no gameplay entities. Domain plugins own their own teardown.
 fn cleanup_player_spawning_flag(
     mut commands: Commands,
-    mut pending_join_requests: ResMut<PendingMissionJoinRequests>,
 ) {
-    pending_join_requests.0.clear();
     commands.remove_resource::<RepliconPlayerSpawningActive>();
 }
 
