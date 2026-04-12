@@ -90,12 +90,17 @@ impl StatusText {
     ) {
         if is_refresh {
             self.0 = new_text;
-            commands
-                .entity(entity)
-                .insert(StatusTextRefreshTimer(Timer::from_seconds(
-                    1.0 / 15.0,
-                    TimerMode::Once,
-                )));
+            // The entity may be despawned in the same frame (e.g., gear grabbed into inventory).
+            // Queue as a closure so the command is silently skipped if the entity no longer exists.
+            commands.queue(move |world: &mut World| {
+                if let Ok(mut entity_mut) = world.get_entity_mut(entity) {
+                    entity_mut.insert(StatusTextRefreshTimer(Timer::from_seconds(
+                        1.0 / 15.0,
+                        TimerMode::Once,
+                    )));
+                }
+                // Entity was despawned (e.g. gear moved to inventory) — this is expected, skip silently.
+            });
         }
     }
 }
