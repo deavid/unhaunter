@@ -625,7 +625,7 @@ pub enum ServerGamePhase {
     InProgress,
     /// Mission over; server is computing/publishing results. All ticking has stopped.
     Concluding,
-    Ended,  // Results published and available on SummaryData
+    Ended,  // Results published
 }
 ```
 
@@ -633,7 +633,7 @@ pub enum ServerGamePhase {
 
 - When the "End Mission" action fires or TPK occurs, the server transitions `SimulationState → TearingDown` (added in
   SP-3) and sets `ServerGamePhase::Concluding`.
-- In `OnEnter(SimulationState::TearingDown)`: compute scores, populate `SummaryData`/`MissionResultNet`, set
+- In `OnEnter(SimulationState::TearingDown)`: compute scores set
   `ServerGamePhase::Ended`. After a grace period (≥5 seconds), despawn board entities and return to
   `SimulationState::Unloaded` + `ServerGamePhase::Lobby`.
 
@@ -697,10 +697,6 @@ fn tick_mission_concluding(
     }
 }
 ```
-
-The existing `apply_mission_result_net` function in `unreplicon-plugin/src/systems/ghost.rs` must be refactored: remove
-the `next_state.set(AppState::Summary)` call from it entirely (its only job now is to copy net data into `SummaryData`),
-and add `.run_if(in_state(AppState::InGame))` to its registration.
 
 ### 5.3 — F-08: Summary → Lobby Navigation
 
@@ -906,7 +902,7 @@ Mission requested (RequestStartMission message received):
   → AppState::InGame (server perspective; not a UX concept)
 
 Mission end trigger:
-  → SimulationState::TearingDown  (ticking stops; SummaryData published)
+  → SimulationState::TearingDown  (ticking stops; )
   → ServerGamePhase::Concluding → Ended
   → SimulationState::Unloaded  (arrays cleared, board entities despawned)
   → ServerGamePhase::Lobby  (back to waiting for next mission)

@@ -279,12 +279,6 @@ function**: `setup_goal_entity()` **Trigger**: `OnEnter(AppState::InGame)`, auth
 (Replicated, MissionGoalEntity, GhostGuess::default(), SummaryData::default())
 ```
 
-**Replicated → client**: `GhostGuess`, `SummaryData`
-
-The server writes the current `GhostGuess` and `SummaryData` resources into this entity every frame. Clients read back
-into local resources. **Client hydration**: None required. **Client cleanup**: Entity is despawned on
-`OnExit(AppState::InGame)`.
-
 ---
 
 ## 4. Entities That Are NOT Replicated
