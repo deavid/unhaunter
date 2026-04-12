@@ -24,6 +24,46 @@ struct NextGearClickTarget;
 #[derive(Component, Debug)]
 struct SwapHandsClickTarget;
 
+fn gear_background_color(hovered: bool, pressed: bool) -> Color {
+    if pressed {
+        colors::INVENTORY_STATS_COLOR.with_alpha(0.26)
+    } else if hovered {
+        colors::INVENTORY_STATS_COLOR.with_alpha(0.12)
+    } else {
+        Color::NONE
+    }
+}
+
+fn gear_image_tint(hovered: bool, pressed: bool) -> Color {
+    if pressed {
+        Color::srgb(0.84, 0.92, 1.0)
+    } else if hovered {
+        Color::srgb(0.94, 0.97, 1.0)
+    } else {
+        Color::WHITE
+    }
+}
+
+fn swap_text_color(hovered: bool, pressed: bool) -> Color {
+    if pressed {
+        Color::WHITE
+    } else if hovered {
+        Color::srgb(0.92, 0.95, 1.0)
+    } else {
+        colors::INVENTORY_STATS_COLOR
+    }
+}
+
+fn swap_background_color(hovered: bool, pressed: bool) -> Color {
+    if pressed {
+        colors::INVENTORY_STATS_COLOR.with_alpha(0.24)
+    } else if hovered {
+        colors::INVENTORY_STATS_COLOR.with_alpha(0.10)
+    } else {
+        Color::NONE
+    }
+}
+
 fn gear_ui_click_system(
     mut click_events: MessageReader<Pointer<Click>>,
     q_left: Query<(), With<LeftHandGearClickTarget>>,
@@ -58,12 +98,55 @@ fn gear_ui_click_system(
     }
 }
 
+fn gear_ui_feedback_system(
+    mut q_icons: Query<
+        (&Interaction, &mut ImageNode, &mut BackgroundColor),
+        Or<(
+            With<LeftHandGearClickTarget>,
+            With<RightHandGearClickTarget>,
+            With<NextGearClickTarget>,
+        )>,
+    >,
+    mut q_text: Query<
+        (&Interaction, &mut TextColor, &mut BackgroundColor),
+        (
+            With<SwapHandsClickTarget>,
+            Without<LeftHandGearClickTarget>,
+            Without<RightHandGearClickTarget>,
+            Without<NextGearClickTarget>,
+        ),
+    >,
+) {
+    for (interaction, mut image, mut background) in &mut q_icons {
+        let (hovered, pressed) = match *interaction {
+            Interaction::Pressed => (true, true),
+            Interaction::Hovered => (true, false),
+            Interaction::None => (false, false),
+        };
+        image.color = gear_image_tint(hovered, pressed);
+        background.0 = gear_background_color(hovered, pressed);
+    }
+
+    for (interaction, mut text_color, mut background) in &mut q_text {
+        let (hovered, pressed) = match *interaction {
+            Interaction::Pressed => (true, true),
+            Interaction::Hovered => (true, false),
+            Interaction::None => (false, false),
+        };
+        text_color.0 = swap_text_color(hovered, pressed);
+        background.0 = swap_background_color(hovered, pressed);
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        gear_ui_click_system
-            .in_set(uninput_core::PlayerInputSet)
-            .run_if(in_state(UIContextState::InGame)),
+        (
+            gear_ui_feedback_system.run_if(in_state(UIContextState::InGame)),
+            gear_ui_click_system
+                .in_set(uninput_core::PlayerInputSet)
+                .run_if(in_state(UIContextState::InGame)),
+        ),
     );
 }
 
@@ -92,7 +175,9 @@ pub(crate) fn setup_ui_gear_inv_left(
             margin: UiRect::all(Val::Px(-8.0 * UI_SCALE)),
             ..default()
         })
+        .insert(BackgroundColor(Color::NONE))
         .insert(Inventory::new_left())
+        .insert(Interaction::default())
         .insert(LeftHandGearClickTarget)
         .insert(Pickable::default());
         p.spawn(Text::new("[TAB]: T.Aux"))
@@ -174,7 +259,9 @@ pub(crate) fn setup_ui_gear_inv_right(
             align_self: AlignSelf::Center,
             ..default()
         })
+        .insert(BackgroundColor(Color::NONE))
         .insert(InventoryNext::non_empty())
+        .insert(Interaction::default())
         .insert(NextGearClickTarget)
         .insert(Pickable::default());
         p.spawn(ImageNode {
@@ -190,7 +277,9 @@ pub(crate) fn setup_ui_gear_inv_right(
             width: Val::Px(80.0 * UI_SCALE),
             ..default()
         })
+        .insert(BackgroundColor(Color::NONE))
         .insert(Inventory::new_right())
+        .insert(Interaction::default())
         .insert(RightHandGearClickTarget)
         .insert(Pickable::default());
         p.spawn(Text::new("-"))
@@ -236,12 +325,15 @@ pub(crate) fn setup_ui_gear_inv_right(
                     Val::Px(0.0 * UI_SCALE),
                     Val::Px(-2.0 * UI_SCALE),
                 ),
+                padding: UiRect::axes(Val::Px(6.0 * UI_SCALE), Val::Px(2.0 * UI_SCALE)),
                 align_content: AlignContent::Start,
                 justify_content: JustifyContent::Start,
                 align_self: AlignSelf::Start,
                 justify_self: JustifySelf::Start,
                 ..default()
             })
+            .insert(BackgroundColor(Color::NONE))
+            .insert(Interaction::default())
             .insert(TextLayout::default())
             .insert(SwapHandsClickTarget)
             .insert(Pickable::default());

@@ -54,6 +54,35 @@ struct RightSideGearUI;
 #[derive(Component, Debug, Default)]
 struct WalkieTextUIRoot;
 
+fn evidence_panel_feedback_system(
+    mut q_evidence_click_panel: Query<
+        (&Interaction, &mut BackgroundColor),
+        With<EvidenceClickTarget>,
+    >,
+    mut q_evidence_text: Query<
+        (&Interaction, &mut BackgroundColor),
+        (With<EvidenceUI>, Without<EvidenceClickTarget>),
+    >,
+) {
+    for (interaction, mut background) in &mut q_evidence_click_panel {
+        background.0 = match *interaction {
+            Interaction::Pressed => colors::PANEL_BGCOLOR
+                .with_luminance((colors::PANEL_BGCOLOR.luminance() * 1.25).clamp(0.0, 1.0)),
+            Interaction::Hovered => colors::PANEL_BGCOLOR
+                .with_luminance((colors::PANEL_BGCOLOR.luminance() * 1.12).clamp(0.0, 1.0)),
+            Interaction::None => colors::PANEL_BGCOLOR,
+        };
+    }
+
+    for (interaction, mut background) in &mut q_evidence_text {
+        background.0 = match *interaction {
+            Interaction::Pressed => colors::INVENTORY_STATS_COLOR.with_alpha(0.18),
+            Interaction::Hovered => colors::INVENTORY_STATS_COLOR.with_alpha(0.08),
+            Interaction::None => Color::NONE,
+        };
+    }
+}
+
 fn update_damage_vignette_color(
     qp: Query<(&PlayerVitals, Has<PlayerSpectating>), With<MainPlayer>>,
     mut qb: Query<(
@@ -290,6 +319,7 @@ fn setup_ui(
         .insert(colors::DEBUG_BCOLOR)
         .insert(BackgroundColor(colors::PANEL_BGCOLOR))
         .insert(Pickable::default())
+        .insert(Interaction::default())
         .insert(EvidenceClickTarget)
         .with_children(evidence);
 
@@ -416,8 +446,13 @@ fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, ui_assets: &GameUiAssets
             },
             TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)),
             TextLayout::default(),
-            Node::default(),
+            Node {
+                padding: UiRect::axes(Val::Px(8.0 * UI_SCALE), Val::Px(4.0 * UI_SCALE)),
+                ..default()
+            },
+            BackgroundColor(Color::NONE),
             Pickable::default(),
+            Interaction::default(),
             EvidenceUI,
         ))
         .with_children(|parent| {
@@ -512,6 +547,7 @@ pub(crate) fn app_setup(app: &mut App) {
             (
                 toggle_held_object_ui.run_if(in_state(InGameUiState::Running)),
                 update_damage_vignette_color,
+                evidence_panel_feedback_system.run_if(in_state(UIContextState::InGame)),
             )
                 .run_if(in_state(InGameUiState::Running)),
         )
