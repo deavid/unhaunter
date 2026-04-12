@@ -19,7 +19,7 @@ pub struct PlayerTag;
 #[reflect(Component, Default)]
 pub struct PlayerDisconnected;
 
-/// Marks a player entity that is connected but unresponsive (no heartbeat for >5s).
+/// Marks a player entity that is connected but unresponsive (AFK for >2 minutes).
 #[derive(Component, Debug, Clone, Default, Reflect, Serialize, Deserialize)]
 #[reflect(Component, Default)]
 pub struct PlayerInactive;

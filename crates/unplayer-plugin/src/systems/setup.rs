@@ -3,13 +3,14 @@ use bevy_replicon::prelude::AppMarkerExt;
 use bevy_replicon::prelude::AppRuleExt;
 use uncommon_states_core::UIContextState;
 use unlocomotion_core::components::PlayerLocomotionState;
-use unplayer_core::components::{Hiding, PlayerSpectating, PlayerSprite};
+use unplayer_core::components::{Hiding, PlayerInactive, PlayerSpectating, PlayerSprite};
 use unreplicon_core::noop::{noop_remove, noop_write};
 use unreplicon_core::ownership::LocallyOwned;
 use unreplicon_core::resources::LocalPlayerRole;
 use unspatial_core::direction::Direction;
 use untruck_core::components::in_truck::InTruck;
 
+use crate::systems::afk;
 use crate::systems::hide;
 use crate::systems::hydration;
 use crate::systems::input;
@@ -29,7 +30,9 @@ pub(crate) fn app_setup_core(app: &mut App) {
     app.replicate::<Hiding>();
     app.replicate::<InTruck>();
     app.replicate::<PlayerSpectating>();
+    app.replicate::<PlayerInactive>();
 
+    afk::app_setup(app);
     hydration::app_setup(app);
 
     // Configure the authoritative logic set

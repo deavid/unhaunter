@@ -1,3 +1,4 @@
+pub(crate) mod afk;
 pub(crate) mod hide;
 pub(crate) mod hydration;
 pub(crate) mod input;
