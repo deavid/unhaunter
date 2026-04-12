@@ -1,6 +1,10 @@
 use crate::assets::SummaryAssets;
 use crate::components::{SCamera, SummaryUI, SummaryUIType};
 use bevy::{color::palettes::css, prelude::*};
+use unghost_core::components::logic::ghost_death::GhostDeathSignal;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
+use unghost_core::tags::GhostTag;
+use ungearitems_core::events::RepellentUsedEvent;
 use unboard_core::resources::board_topology::BoardTopology;
 use uncareer_core::grade::Grade;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -42,17 +46,72 @@ pub(crate) fn cleanup(
     }
 }
 
+pub(crate) fn reset_summary_for_mission(
+    mut sd: ResMut<SummaryData>,
+    difficulty: Res<CurrentDifficulty>,
+    board_topology: Option<Res<BoardTopology>>,
+) {
+    *sd = SummaryData::new(vec![], *difficulty);
+    if let Some(board_topology) = board_topology {
+        sd.map_path = board_topology.map_path.clone();
+        sd.mission_reward_base = board_topology.mission_reward_base;
+        sd.required_deposit = board_topology.required_deposit;
+    }
+}
+
+/// Passive observer: records each ghost's type as they become visible on this node.
+/// Works on all nodes because `GhostSprite` is a replicated component — clients see
+/// `Added<GhostSprite>` the moment the authority's hydration propagates.
+pub(crate) fn track_spawned_ghosts(
+    q: Query<&GhostSprite, (Added<GhostSprite>, With<GhostTag>)>,
+    mut sd: ResMut<SummaryData>,
+) {
+    for sprite in q.iter() {
+        sd.ghost_types.push(sprite.class);
+    }
+}
+
+/// Passive observer: increments the unhaunted counter when a `GhostDeathSignal`
+/// is attached to a ghost entity. The signal is replicated, so clients observe it
+/// the same frame the authority inserts it.
+pub(crate) fn track_dead_ghosts(
+    q: Query<(), (Added<GhostDeathSignal>, With<GhostTag>)>,
+    mut sd: ResMut<SummaryData>,
+) {
+    for _ in q.iter() {
+        sd.ghosts_unhaunted += 1;
+    }
+}
+
+/// Passive observer: increments the repellent-used counter from the local
+/// `RepellentUsedEvent` emitted by the repellent flask system. This is a
+/// local-only event (the flask is always held by the local player).
+pub(crate) fn track_repellent_use(
+    mut ev: MessageReader<RepellentUsedEvent>,
+    mut sd: ResMut<SummaryData>,
+) {
+    for _ in ev.read() {
+        sd.repellent_used_amt += 1;
+    }
+}
+
 pub(crate) fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
     mut app_next_state: ResMut<NextState<UIContextState>>,
     qp: Query<(&PlayerSprite, &PlayerVitals)>,
     difficulty: Res<CurrentDifficulty>,
+    board_topology: Option<Res<BoardTopology>>,
     mut death_timer: Local<Option<f32>>,
 ) {
     // SummaryData is local-only. This system maintains the local mission snapshot
     // used later by the summary screen and local reward calculation.
     sd.difficulty = *difficulty;
+    if let Some(board_topology) = board_topology {
+        sd.map_path = board_topology.map_path.clone();
+        sd.mission_reward_base = board_topology.mission_reward_base;
+        sd.required_deposit = board_topology.required_deposit;
+    }
     sd.time_taken_secs += time.delta_secs();
     let total_sanity: f32 = qp.iter().map(|(_, v)| v.sanity).sum();
     let player_count = qp.iter().count();
@@ -654,36 +713,12 @@ pub(crate) fn store_mission_id(
     mut sd: ResMut<SummaryData>,
     board_topology: Option<Res<unboard_core::resources::board_topology::BoardTopology>>,
 ) {
-    // Debug: Log initial state of SummaryData and BoardTopology
-    info!(
-        "store_mission_id: SummaryData current_mission_id='{}'",
-        sd.map_path
-    );
-
-    match &board_topology {
-        Some(bd) => info!(
-            "store_mission_id: BoardTopology is available, map_path='{}'",
-            bd.map_path
-        ),
-        None => info!("store_mission_id: BoardTopology is NOT available (resource not found)"),
-    }
-
-    // If the current_mission_id is empty but we have board data available, use that
     if sd.map_path.is_empty() {
         if let Some(bd) = board_topology {
-            info!("Setting mission ID from board_topology: {}", bd.map_path);
             sd.map_path = bd.map_path.clone();
         } else {
             warn!("No board data available to set mission ID");
-
-            // For debugging - examine SummaryData to see what ghost types exist
-            info!(
-                "Ghost types in SummaryData: {:?}, unhaunted: {}",
-                sd.ghost_types, sd.ghosts_unhaunted
-            );
         }
-    } else {
-        info!("Using existing mission ID: {}", sd.map_path);
     }
 }
 

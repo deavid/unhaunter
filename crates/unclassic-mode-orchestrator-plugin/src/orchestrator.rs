@@ -15,7 +15,6 @@ use unghost_core::requests::{GhostBreachSpawnRequest, GhostSpawnRequest};
 use unghost_core::resources::haunt_state::HauntState;
 use unmapload_core::events::loadlevel::MapEntitiesReadyEvent;
 use unmission_core::events::LevelReadyEvent;
-use unmission_core::summary::SummaryData;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::position::Position;
 
@@ -97,11 +96,6 @@ pub(crate) fn classic_mode_orchestrator(
                     p.difficulty.0
                 );
             }
-
-            let mut summary_data = SummaryData::new(vec![], *p.difficulty);
-            summary_data.mission_reward_base = p.board_topology.mission_reward_base;
-            summary_data.required_deposit = p.board_topology.required_deposit;
-            commands.insert_resource(summary_data);
 
             let breach_id = commands.spawn((ghost_spawn, GhostBreachSpawnRequest)).id();
 

@@ -17,7 +17,6 @@ use unlight_core::components::LightSensitive;
 use unlight_core::spectral::SpectralInfluence;
 use unmapload_core::hydration::HydrationStage;
 use unmetrics_core::metrics::SendMetric;
-use unmission_core::summary::SummaryData;
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::resources::AuthorityRole;
 use unsoundfield_core::components::SoundFieldSource;
@@ -62,22 +61,10 @@ fn hydration_ghost_logic_system(
 fn ghost_hydration_system(
     mut commands: Commands,
     q: Query<(Entity, &GhostSpawnRequest, &Position), Without<GhostTag>>,
-    mut summary_data: Option<ResMut<SummaryData>>,
 ) {
     for (entity, request, pos) in q.iter() {
         let mut ghost_sprite = GhostSprite::new(pos.to_board_position(), &request.ghost_types);
         ghost_sprite.breach_id = request.breach_entity;
-
-        // Record the actual chosen ghost type for the summary screen.
-        // SummaryData was intentionally initialized with an empty ghost_types list;
-        // the real selection happens here when the ghost entity is hydrated.
-        if let Some(ref mut sd) = summary_data {
-            sd.ghost_types.push(ghost_sprite.class);
-        } else {
-            warn!(
-                "ghost_hydration_system: SummaryData resource not found while hydrating ghost; ghost type will not be recorded in summary"
-            );
-        }
 
         let has_red_light_evidence = ghost_sprite
             .class

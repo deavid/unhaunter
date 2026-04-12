@@ -14,7 +14,6 @@ use unghost_core::components::logic::red_light_charge::{GhostRedLightCharge, Red
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unlight_core::resources::light_grid::LightGrid;
 use unmetrics_core::metrics::SendMetric;
-use unmission_core::summary::SummaryData;
 use unplayer_core::components::PlayerTag;
 use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating};
 use unspatial_core::boardposition::BoardPosition;
@@ -68,7 +67,6 @@ pub(crate) fn ghost_movement(
         ),
     >,
     room_topology: Res<RoomTopology>,
-    mut summary: ResMut<SummaryData>,
     bf: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
     mut commands: Commands,
@@ -391,8 +389,6 @@ pub(crate) fn ghost_movement(
             }
         }
         if ghost.get_health() < 0.0 {
-            summary.ghosts_unhaunted += 1;
-
             // 1. Emit smoke effect over the network
             particle_net_writer.write(ToClients {
                 mode: SendMode::Broadcast,

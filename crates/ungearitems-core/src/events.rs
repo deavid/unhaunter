@@ -19,3 +19,10 @@ pub struct RepellentHitNetMessage {
     pub hits_this_frame: f32,
     pub misses_this_frame: f32,
 }
+
+/// Emitted locally on a player-bearing node when the repellent flask starts
+/// dispensing (i.e. a full flask begins its discharge). Used by the summary
+/// domain to count repellent uses without the gear domain importing presentation
+/// types.
+#[derive(Clone, Debug, Message)]
+pub struct RepellentUsedEvent;

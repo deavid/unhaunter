@@ -26,3 +26,5 @@ unmission-core = { workspace = true }
 unplayer-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 unvitals-core = { workspace = true }
+unghost-core = { workspace = true }
+ungearitems-core = { workspace = true }
