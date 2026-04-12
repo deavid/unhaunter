@@ -126,6 +126,7 @@ impl Default for PlayerSpawnRequest {
 /// Marks a player entity that is currently hiding.
 #[derive(Component, Serialize, Deserialize, Reflect)]
 #[reflect(Component, Default)]
+#[component(map_entities)]
 #[derive(Default)]
 pub struct Hiding {
     pub hiding_spot: Option<Entity>,

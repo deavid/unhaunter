@@ -153,6 +153,7 @@ impl GhostBehaviorDynamics {
 /// in a replicated component (Rule D: logic components must not contain Timers).
 #[derive(Component, Debug, Serialize, Deserialize, Reflect)]
 #[reflect(Component, Default)]
+#[component(map_entities)]
 pub struct GhostSprite {
     /// The specific type of ghost, which determines its characteristics and abilities.
     pub class: GhostType,
