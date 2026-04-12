@@ -392,14 +392,18 @@ pub(crate) fn swap_hand_equipment(
 /// This moves the gear cleanup responsibility from the Vitals domain to the Inventory domain.
 pub(crate) fn despawn_gear_on_player_death(
     mut reader: MessageReader<unvitals_core::events::PlayerDiedEvent>,
-    mut q_players: Query<&mut PlayerGear, With<PlayerSprite>>,
+    mut q_players: Query<(&PlayerSprite, &mut PlayerGear)>,
     mut commands: Commands,
     authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
 ) {
-    for _msg in reader.read() {
+    if authority.is_none() {
+        return;
+    }
+
+    for msg in reader.read() {
         // When a player dies, despawn all their gear (Authoritative only)
-        if authority.is_some() {
-            for mut gear in q_players.iter_mut() {
+        for (sprite, mut gear) in q_players.iter_mut() {
+            if sprite.network_id == msg.id {
                 if let Some(e) = gear.left_hand {
                     commands.entity(e).despawn();
                 }
