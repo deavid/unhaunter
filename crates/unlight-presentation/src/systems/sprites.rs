@@ -101,8 +101,14 @@ pub(crate) fn apply_lighting_to_sprites_system(
     let Ok(vf) = q_vf.single() else {
         return;
     };
+    if vf.visibility_field.is_empty() {
+        return;
+    }
     let measure = metrics::APPLY_LIGHTING_SPRITES.time_measure();
     let bf = &grids.bf;
+    if bf.map_size.0 == 0 {
+        return;
+    }
     let miasma = &grids.miasma;
     let miasma_config = &grids.miasma_config;
     let quality_factor = video_settings.quality.to_quality_factor3();
