@@ -22,6 +22,10 @@ use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
 use unvitals_core::components::PlayerVitals;
 
+use bevy_replicon::prelude::*;
+use unghost_core::components::logic::vocalization::GhostVocalization;
+use unreplicon_core::messages::SpawnParticleNetEvent;
+
 use crate::metrics::GHOST_MOVEMENT;
 
 // Constants for movement penalties
@@ -74,6 +78,8 @@ pub(crate) fn ghost_movement(
     difficulty: Res<CurrentDifficulty>,
     light_grid: Option<Res<LightGrid>>,
     mut log_timer: Local<f32>,
+    mut particle_net_writer: MessageWriter<ToClients<SpawnParticleNetEvent>>,
+    qp_breach: Query<&Position, Without<GhostSprite>>,
 ) {
     let measure = GHOST_MOVEMENT.time_measure();
 
@@ -386,10 +392,38 @@ pub(crate) fn ghost_movement(
         }
         if ghost.get_health() < 0.0 {
             summary.ghosts_unhaunted += 1;
+
+            // 1. Emit smoke effect over the network
+            particle_net_writer.write(ToClients {
+                mode: SendMode::Broadcast,
+                message: SpawnParticleNetEvent {
+                    particle_type: "smoke".to_string(),
+                    position: [pos.x, pos.y, pos.z],
+                },
+            });
+
+            // 2. Play the death cry/growl sound authoritative trigger
+            commands.entity(entity).insert(GhostVocalization {
+                sound_file: "sounds/ghost-roar-1.ogg".to_string(),
+                volume: 2.0,
+                position: *pos,
+                triggered_at: current_secs,
+            });
+
             if let Some(breach) = ghost.breach_id {
                 commands
                     .entity(breach)
                     .insert(GhostDeathSignal::new(current_secs, 5.0));
+
+                if let Ok(breach_pos) = qp_breach.get(breach) {
+                    particle_net_writer.write(ToClients {
+                        mode: SendMode::Broadcast,
+                        message: SpawnParticleNetEvent {
+                            particle_type: "smoke".to_string(),
+                            position: [breach_pos.x, breach_pos.y, breach_pos.z],
+                        },
+                    });
+                }
             }
             commands
                 .entity(entity)

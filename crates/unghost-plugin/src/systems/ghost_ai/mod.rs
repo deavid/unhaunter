@@ -16,6 +16,8 @@ pub(crate) mod roar;
 use enrage::ghost_enrage;
 use movement::ghost_movement;
 
+use unghost_core::components::logic::vocalization::GhostVocalization;
+
 /// Logic side of ghost entity dying.
 ///
 /// Despawns entities once their logic-owned `GhostDeathSignal` duration elapses.
@@ -23,12 +25,17 @@ use movement::ghost_movement;
 pub(crate) fn ghost_dying_logic_system(
     mut commands: Commands,
     time: Res<Time>,
-    query: Query<(Entity, &GhostDeathSignal)>,
+    mut query: Query<(Entity, &GhostDeathSignal, Option<&mut GhostVocalization>)>,
 ) {
     let current_secs = time.elapsed_secs_f64();
-    for (entity, dying) in query.iter() {
+    for (entity, dying, voc_opt) in query.iter_mut() {
         if dying.is_finished(current_secs) {
             commands.entity(entity).despawn();
+        } else if let Some(mut voc) = voc_opt.filter(|v| {
+            current_secs >= dying.started_at_secs + 3.0 && v.sound_file == "sounds/ghost-roar-1.ogg"
+        }) {
+            voc.sound_file = "sounds/ghost-roar-4.ogg".to_string();
+            voc.triggered_at = current_secs;
         }
     }
 }
