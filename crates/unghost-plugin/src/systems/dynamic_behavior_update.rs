@@ -133,7 +133,7 @@ fn sync_ghost_field_sources(
     let measure = metrics::GHOST_EMITTER_SYNC.time_measure();
     let freezing = haunt_state.ghost_dynamics.freezing_temp_clarity;
     let ghost_target_temp =
-        uncommon_app_core::utils::temperature::celsius_to_kelvin(1.0 - 4.0 * freezing);
+        uncommon_app_core::utils::temperature::celsius_to_kelvin(1.0 - 10.0 * freezing);
     let power = freezing * 0.5 + 0.5;
 
     const GHOST_MAX_POWER: f32 = 0.01;
