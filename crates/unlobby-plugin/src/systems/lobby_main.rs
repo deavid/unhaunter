@@ -372,7 +372,10 @@ pub(crate) fn handle_clicks(
                                 mission.difficulty_id
                             );
                         }
-                        info!("Joining mission: map={} (join request sent)", mission.map_path);
+                        info!(
+                            "Joining mission: map={} (join request sent)",
+                            mission.map_path
+                        );
                         ev_load.write(LoadLevelEvent {
                             map_filepath: mission.map_path.clone(),
                         });

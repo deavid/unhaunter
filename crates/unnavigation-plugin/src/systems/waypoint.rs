@@ -47,6 +47,8 @@ pub(crate) fn create_waypoints_from_click(
     mouse_visibility: Res<MouseVisibility>,
     pathfinder: Pathfinder,
     focus: Res<MissionInputFocus>,
+    hover_map: Res<bevy::picking::hover::HoverMap>,
+    q_ui: Query<(), With<bevy::ui::Node>>,
 ) {
     // Skip if mission does not have input focus
     if !focus.has_focus {
@@ -152,8 +154,19 @@ pub(crate) fn create_waypoints_from_click(
         }
     }
 
-    // If no interactive was clicked, check for ground clicks via raw mouse input
-    if !interactive_clicked && mouse.just_pressed(MouseButton::Left) {
+    // Check if the mouse is hovering over any UI elements
+    let mut mouse_over_ui = false;
+    if let Some(pointer_map) = hover_map.get(&bevy::picking::pointer::PointerId::Mouse) {
+        for (entity, _) in pointer_map.iter() {
+            if q_ui.contains(*entity) {
+                mouse_over_ui = true;
+                break;
+            }
+        }
+    }
+
+    // If no interactive was clicked and we are not hovering UI, check for ground clicks via raw mouse input
+    if !interactive_clicked && !mouse_over_ui && mouse.just_pressed(MouseButton::Left) {
         let Ok(window) = q_window.single() else {
             return;
         };

@@ -40,6 +40,9 @@ pub struct PlayerInput {
     /// Cycle inventory.
     pub inventory_cycle: bool,
 
+    /// Cycle inventory in the reverse direction.
+    pub inventory_cycle_prev: bool,
+
     /// Swap hands.
     pub inventory_swap: bool,
 
@@ -60,6 +63,7 @@ impl Default for PlayerInput {
             use_right_hand: false,
             use_left_hand: false,
             inventory_cycle: false,
+            inventory_cycle_prev: false,
             inventory_swap: false,
             aim_direction: Vec2::ZERO,
         }
@@ -86,6 +90,7 @@ impl PlayerInput {
         self.use_right_hand = false;
         self.use_left_hand = false;
         self.inventory_cycle = false;
+        self.inventory_cycle_prev = false;
         self.inventory_swap = false;
     }
 

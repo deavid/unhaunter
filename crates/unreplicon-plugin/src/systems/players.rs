@@ -322,9 +322,7 @@ fn handle_request_join_mission(
 
 /// Server: on entering TearingDown, remove the spawning-active marker and despawn
 /// no gameplay entities. Domain plugins own their own teardown.
-fn cleanup_player_spawning_flag(
-    mut commands: Commands,
-) {
+fn cleanup_player_spawning_flag(mut commands: Commands) {
     commands.remove_resource::<RepliconPlayerSpawningActive>();
 }
 

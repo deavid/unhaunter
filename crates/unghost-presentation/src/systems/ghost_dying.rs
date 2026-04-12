@@ -1,16 +1,16 @@
 use bevy::prelude::*;
+use bevy::sprite::Sprite;
 use rand::prelude::*;
 use unboard_core::components::mapcolor::MapColor;
+use unboard_core::entity::GameSprite;
 use uncommon_app_core::random_seed;
 use uncommon_states_core::UIContextState;
 use unghost_core::components::logic::ghost_death::GhostDeathSignal;
 use unghost_core::components::presentation::ghost_dying::GhostDying;
-use unreplicon_core::resources::LocalPlayerRole;
-use unspatial_core::position::Position;
-use unboard_core::entity::GameSprite;
-use bevy::sprite::Sprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
+use unreplicon_core::resources::LocalPlayerRole;
 use unspatial_core::perspective::to_screen_coord;
+use unspatial_core::position::Position;
 
 #[derive(Component)]
 struct GhostDeathSmokeParticle {
@@ -72,8 +72,10 @@ fn tick_ghost_dying_visuals_system(
                         },
                         SpriteLayer::default(),
                     ))
-                    .insert(Transform::from_translation(to_screen_coord(*pos))
-                        .with_scale(Vec3::new(0.2, 0.2, 0.2)))
+                    .insert(
+                        Transform::from_translation(to_screen_coord(*pos))
+                            .with_scale(Vec3::new(0.2, 0.2, 0.2)),
+                    )
                     .insert(GhostDeathSmokeParticle {
                         timer: Timer::from_seconds(5.0, TimerMode::Once),
                         dx: rng.random_range(-0.9..0.9),

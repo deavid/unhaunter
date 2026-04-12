@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use unspatial_core::position::Position;
-use unspatial_core::direction::Direction;
-use untruck_core::components::in_truck::InTruck;
 use unplayer_core::components::{PlayerInactive, PlayerSprite};
 use unreplicon_core::resources::AuthorityRole;
+use unspatial_core::direction::Direction;
+use unspatial_core::position::Position;
+use untruck_core::components::in_truck::InTruck;
 
 const AFK_TIMEOUT_SECS: f32 = 120.0;
 
@@ -24,14 +24,17 @@ pub(crate) fn app_setup(app: &mut App) {
 pub(crate) fn track_afk_system(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_players: Query<(
-        Entity,
-        &Position,
-        Option<&Direction>,
-        Option<&mut AfkTracker>,
-        Has<PlayerInactive>,
-        Has<InTruck>,
-    ), With<PlayerSprite>>,
+    mut q_players: Query<
+        (
+            Entity,
+            &Position,
+            Option<&Direction>,
+            Option<&mut AfkTracker>,
+            Has<PlayerInactive>,
+            Has<InTruck>,
+        ),
+        With<PlayerSprite>,
+    >,
 ) {
     let dt = time.delta_secs();
 

@@ -9,7 +9,7 @@ use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncommon_states_core::UIContextState;
 use ungear_core::assets::GearAssets;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::ui::EvidenceUI;
+use ungear_core::ui::{EvidenceClickTarget, EvidenceUI};
 use uninput_core::states::InGameUiState;
 use unmission_core::resources::MissionConcludingCinematic;
 use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
@@ -278,6 +278,7 @@ fn setup_ui(
         })
         .insert(colors::DEBUG_BCOLOR)
         .insert(BackgroundColor(colors::PANEL_BGCOLOR))
+        .insert(Pickable::default())
         .with_children(inv_left);
 
         p.spawn(Node {
@@ -288,6 +289,8 @@ fn setup_ui(
         })
         .insert(colors::DEBUG_BCOLOR)
         .insert(BackgroundColor(colors::PANEL_BGCOLOR))
+        .insert(Pickable::default())
+        .insert(EvidenceClickTarget)
         .with_children(evidence);
 
         p.spawn(Node {
@@ -302,6 +305,7 @@ fn setup_ui(
         })
         .insert(colors::DEBUG_BCOLOR)
         .insert(BackgroundColor(colors::PANEL_BGCOLOR))
+        .insert(Pickable::default())
         .with_children(|p| {
             p.spawn(Node {
                 align_items: AlignItems::Start,
@@ -413,6 +417,7 @@ fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, ui_assets: &GameUiAssets
             TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)),
             TextLayout::default(),
             Node::default(),
+            Pickable::default(),
             EvidenceUI,
         ))
         .with_children(|parent| {

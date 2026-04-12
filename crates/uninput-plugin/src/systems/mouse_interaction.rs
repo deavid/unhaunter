@@ -19,9 +19,13 @@ pub fn mouse_scroll_gear_system(
         return;
     }
     for event in scroll_events.read() {
-        if event.y != 0.0 {
+        if event.y < 0.0 {
             for mut player_input in q_player.iter_mut() {
                 player_input.inventory_cycle = true;
+            }
+        } else if event.y > 0.0 {
+            for mut player_input in q_player.iter_mut() {
+                player_input.inventory_cycle_prev = true;
             }
         }
     }

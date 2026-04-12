@@ -218,7 +218,9 @@ fn startup_transport_system(
                 public_addresses,
                 authentication: ServerAuthentication::Unsecure,
             };
-            let socket = match UdpSocket::bind(("[::]", port)).or_else(|_| UdpSocket::bind(("0.0.0.0", port))) {
+            let socket = match UdpSocket::bind(("[::]", port))
+                .or_else(|_| UdpSocket::bind(("0.0.0.0", port)))
+            {
                 Ok(s) => s,
                 Err(e) => {
                     error!("Failed to bind UDP socket on port {port}: {e}");

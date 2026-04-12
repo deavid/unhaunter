@@ -347,6 +347,20 @@ pub(crate) fn cycle_inventory(
                     .insert(EquipmentPosition::Hand(Hand::Right));
             }
         }
+
+        if player_input.inventory_cycle_prev {
+            player_input.inventory_cycle_prev = false;
+            if let Some(entity) = player_gear.right_hand.take() {
+                player_gear.inventory.insert(0, entity);
+                commands.entity(entity).insert(EquipmentPosition::Stowed);
+            }
+            if let Some(entity) = player_gear.inventory.pop() {
+                player_gear.right_hand = Some(entity);
+                commands
+                    .entity(entity)
+                    .insert(EquipmentPosition::Hand(Hand::Right));
+            }
+        }
     }
 }
 
