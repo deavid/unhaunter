@@ -15,7 +15,7 @@ pub(crate) fn assign_ghost_influence(
     position_query: &Query<&Position>,
     room_topology: &RoomTopology,
     board_topology: &BoardTopology,
- ) -> Position {
+) -> Position {
     let mut objects_by_floor_with_positions: HashMap<i64, Vec<(Entity, Position)>> = HashMap::new();
     let player_positions: Vec<Position> = player_spawn_query.iter().copied().collect();
     let mut missing_position_count = 0usize;
@@ -90,12 +90,13 @@ pub(crate) fn assign_ghost_influence(
         "Haunted object influence candidate filtering summary"
     );
 
-    let (selected_spawn_point, selected_objects) = crate::selection::select_influence_objects_with_simulation(
-        &objects_by_floor_with_positions,
-        ghost_spawn_points,
-        &player_positions,
-        board_topology,
-    );
+    let (selected_spawn_point, selected_objects) =
+        crate::selection::select_influence_objects_with_simulation(
+            &objects_by_floor_with_positions,
+            ghost_spawn_points,
+            &player_positions,
+            board_topology,
+        );
 
     for (entity, influence_type) in selected_objects {
         commands.entity(entity).insert((

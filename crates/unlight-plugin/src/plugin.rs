@@ -4,7 +4,6 @@ use uncommon_states_core::UIContextState;
 use unmission_core::types::SimulationState;
 
 use unlight_core::flashlight::ActiveFlashlights;
-use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::sets::LightUpdateSet;
 
 use crate::{lighting_sim, maplight, metrics};
@@ -13,8 +12,7 @@ pub struct UnhaunterLightCorePlugin;
 
 impl Plugin for UnhaunterLightCorePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<LightGrid>()
-            .init_resource::<ActiveFlashlights>()
+        app.init_resource::<ActiveFlashlights>()
             .configure_sets(
                 PostUpdate,
                 LightUpdateSet::Gather

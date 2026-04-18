@@ -16,18 +16,22 @@ use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
-pub fn init_light_grid(
-    mut lg: If<ResMut<LightGrid>>,
-    mut ev: MessageReader<MapGeometryInitializedEvent>,
-) {
+pub fn init_light_grid(mut commands: Commands, mut ev: MessageReader<MapGeometryInitializedEvent>) {
     for ev in ev.read() {
-        lg.light_field = Array3::from_elem(ev.map_size, LightFieldData::default());
-        lg.exposure = unlight_core::exposure::ExposureModel::new();
+        use ndarray::Array3;
+        use unlight_core::resources::light_grid::LightGrid;
+        use unlight_core::types::light::LightFieldData;
+        let lg = LightGrid {
+            light_field: Array3::from_elem(ev.map_size, LightFieldData::default()),
+            exposure: unlight_core::exposure::ExposureModel::new(),
+            ..Default::default()
+        };
+        commands.insert_resource(lg);
     }
 }
 
-pub fn reset_light_grid(mut lg: If<ResMut<LightGrid>>) {
-    lg.reset();
+pub fn reset_light_grid(mut commands: Commands) {
+    commands.remove_resource::<LightGrid>();
 }
 
 /// System to rebuild the entire lighting field based on prebaked data and active sources.
