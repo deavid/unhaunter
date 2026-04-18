@@ -1,6 +1,19 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+// --- Hub ↔ Client Protocol ---
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PingRequest {
+    pub installation_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PingResponse {
+    pub ok: bool,
+    pub online_players_estimate: usize,
+}
+
 // --- Hub ↔ ProcMan Protocol ---
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

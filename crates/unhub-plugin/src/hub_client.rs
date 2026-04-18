@@ -46,8 +46,8 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
     let hub_url = if let Some(url) = &hub_config.hub_url {
         url.clone()
     } else {
-        warn!("Hub URL not configured, using default localhost:3000");
-        "http://localhost:3000".to_string()
+        info!("Hub URL not configured, using default https://hub.unhaunter.com");
+        "https://hub.unhaunter.com".to_string()
     };
 
     let worker_hub_url = hub_url.clone();

@@ -1,7 +1,9 @@
 use dashmap::DashMap;
+use moka::sync::Cache;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::sync::Arc;
+use std::time::Duration;
 use unhub_client::protocol::RoomSummary;
 use uuid::Uuid;
 
@@ -14,6 +16,7 @@ pub struct HubState {
     pub rooms_by_ip: Arc<DashMap<std::net::IpAddr, Vec<String>>>,
     pub room_to_ip: Arc<DashMap<String, std::net::IpAddr>>,
     pub nonces: Arc<DashMap<String, NonceEntry>>,
+    pub active_players: Cache<Uuid, ()>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -54,6 +57,10 @@ impl HubState {
             rooms_by_ip: Arc::new(DashMap::new()),
             room_to_ip: Arc::new(DashMap::new()),
             nonces: Arc::new(DashMap::new()),
+            active_players: Cache::builder()
+                .max_capacity(100_000)
+                .time_to_live(Duration::from_secs(7200))
+                .build(),
         }
     }
 }

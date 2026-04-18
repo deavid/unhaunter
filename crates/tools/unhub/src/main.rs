@@ -9,6 +9,7 @@ use axum::{
     routing::{get, post},
 };
 use std::net::SocketAddr;
+use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -34,11 +35,18 @@ async fn main() -> anyhow::Result<()> {
     });
 
     // REST API
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     let app = Router::new()
         .route("/health", get(api::health))
+        .route("/v1/ping", post(api::ping))
         .route("/v1/challenge", post(api::challenge))
         .route("/v1/rooms/create", post(api::create_room))
         .route("/v1/rooms/join/{code}", post(api::join_room))
+        .layer(cors)
         .with_state(state);
 
     let api_addr: SocketAddr = "0.0.0.0:3000".parse()?;

@@ -8,10 +8,23 @@ use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 use sha2::Digest;
 use unhub_client::protocol::{
     CreateRoomRequest, CreateRoomResponse, HealthResponse, HubError, JoinRoomRequest,
-    JoinRoomResponse, ProcManMessage,
+    JoinRoomResponse, PingRequest, PingResponse, ProcManMessage,
 };
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unhub_client::{generate_room_code, generate_room_secret};
+
+pub async fn ping(
+    State(state): State<HubState>,
+    Json(payload): Json<PingRequest>,
+) -> Json<PingResponse> {
+    state.active_players.insert(payload.installation_id, ());
+    state.active_players.run_pending_tasks();
+
+    Json(PingResponse {
+        ok: true,
+        online_players_estimate: state.active_players.entry_count() as usize,
+    })
+}
 
 pub async fn health(State(state): State<HubState>) -> Json<HealthResponse> {
     Json(HealthResponse {

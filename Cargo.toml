@@ -245,6 +245,8 @@ chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
 tokio-util = { version = "0.7", features = ["codec"] }
 base64 = "0.22"
+moka = "0.12.15"
+
 
 # ── Tools ────────────────────────────────────────────────────────────────────
 # Development / build-time utilities; not part of the game runtime.
