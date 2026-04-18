@@ -21,7 +21,8 @@ use unreplicon_core::messages::{
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unreplicon_core::resources::AuthorityRole;
-use unreplicon_core::resources::{ClientUuidMap, LocalPlayerRole, is_pure_client};
+use unreplicon_core::resources::LobbyPresenceRole;
+use unreplicon_core::resources::{ClientUuidMap, LocalPlayer, LocalPlayerRole, is_pure_client};
 use unspatial_core::position::Position;
 use uuid::Uuid;
 
@@ -264,8 +265,54 @@ fn handle_request_join_mission(
     q_pending_spawn: Query<&PlayerSpawnRequest>,
     q_spawn_points: Query<&Position, With<PlayerSpawnPoint>>,
     uuid_map: Res<ClientUuidMap>,
+    local_player: Option<Res<LocalPlayer>>,
+    lobby_presence: Option<Res<LobbyPresenceRole>>,
     mut commands: Commands,
 ) {
+    // Offline single-player: no LobbyInfo entity exists by design (LobbyPresenceRole is absent).
+    // Spawn the local player directly from the LocalPlayer resource and return early.
+    if lobby_presence.is_none() {
+        let has_messages = reader.read().count() > 0;
+        if !has_messages {
+            return;
+        }
+        let Some(local_player) = local_player else {
+            warn!("handle_request_join_mission: offline mode but LocalPlayer resource missing");
+            return;
+        };
+        let Some(player_uuid) = local_player.0 else {
+            warn!("handle_request_join_mission: offline mode but LocalPlayer UUID not set");
+            return;
+        };
+        if q_existing_sprites.iter().any(|s| s.id == player_uuid)
+            || q_pending_spawn.iter().any(|r| r.player_uuid == player_uuid)
+        {
+            return;
+        }
+        let spawn_pos = q_spawn_points.iter().next().copied().unwrap_or(Position {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            visual_priority: 0.0,
+        });
+        let net_id = NetworkId::from(player_uuid);
+        commands.spawn((
+            spawn_pos,
+            PlayerSpawnRequest {
+                player_uuid,
+                network_id: net_id,
+            },
+            Replicated,
+            Owner(OwnerId::Server),
+            LocallyOwned,
+        ));
+        info!(
+            "handle_request_join_mission: offline single-player spawn for {}",
+            player_uuid
+        );
+        return;
+    }
+
     let Ok(lobby) = q_lobby.single() else {
         warn!("handle_request_join_mission: missing LobbyInfo; cannot process join requests");
         return;

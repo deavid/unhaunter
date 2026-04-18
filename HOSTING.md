@@ -11,7 +11,7 @@ VPS. This stack allows players to create and join rooms using short codes instea
 
 Three separate programs work together in this stack:
 
-```
+```text
 Players ──HTTPS/HTTP──► Caddy Reverse Proxy
                          │
                          │  Local proxy (localhost:3000)
