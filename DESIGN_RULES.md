@@ -151,3 +151,49 @@ derived resources what capabilities exist right now. It prevents:
 - Repeated re-interpretation of configuration in unrelated domains
 - Implicit contracts where "config was read earlier, so this system assumes X"
 - Headless/client mode checks scattered throughout unrelated systems, making refactoring brittle
+
+---
+
+## Multiplayer-First Architecture
+
+Unhaunter is a **multiplayer-first** game. Single-player is not a separate mode — it is a degenerate case of multiplayer
+where there happens to be exactly one player and no remote peers.
+
+### Intent
+
+The goal is that offline single-player and peer-host multiplayer share **identical code paths** end to end. This means
+single-player should eventually run with a local in-memory transport, making the process indistinguishable from a
+peer-host from the code's perspective.
+
+### Why — Countering the Obvious Objections
+
+**"A local transport adds overhead."** That overhead is _desired_. It lets single-player exercise the same
+serialization, deserialization, and replication paths as real multiplayer. If the overhead is unacceptable in
+single-player, it is unacceptable in multiplayer too — and must be fixed there. Single-player must not be a performance
+escape hatch that hides multiplayer costs.
+
+**"Same-frame delivery assumptions break with a transport."** Good. Code that assumes same-frame delivery is
+latency-intolerant and will fail under real network conditions. A local transport that delivers messages one frame later
+finds these bugs early, in the safest possible environment, before they surprise us in a real networked session.
+
+**"A fake transport hides complexity."** The opposite. Separate single-player and multiplayer code paths are the
+complexity. Each divergence is a branch that must be tested, maintained, and kept in sync. A unified path means one
+thing to test, one thing to break, one thing to fix.
+
+### Practical Implication
+
+**FORBIDDEN:** Adding `if lobby_presence.is_none()` / `if is_offline` branches in gameplay, message handlers, or
+orchestration systems as a permanent solution. These are acceptable as short-term workarounds with a comment marking
+them for removal once the local transport exists.
+
+**ALLOWED:** A single code path that works correctly whether the transport is local (in-memory) or remote (TCP/UDP).
+Systems should be written assuming a transport always exists.
+
+### Current State
+
+Single-player currently has no transport (`LobbyPresenceRole` absent, `transport=NOT_FOUND`). Until a local in-memory
+transport is wired up, short-term workarounds gating on `LobbyPresenceRole` are tolerated but must be marked with:
+
+```rust
+// TODO(multiplayer-first): remove once single-player uses a local in-memory transport
+```

@@ -59,6 +59,7 @@ fn truckui_event_handle(
                     continue;
                 }
                 if lobby_presence.is_none() {
+                    // TODO(multiplayer-first): remove once single-player uses a local in-memory transport.
                     // Offline single-player: no network transport exists, so RequestEndMission
                     // (a client message) would never be delivered. Write MissionEvent::End directly.
                     info!(
