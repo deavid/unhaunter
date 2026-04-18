@@ -38,16 +38,19 @@ pub fn rebuild_collision_data(
         .filter(|(_e, _p, b)| b.p.movement.player_collision)
     {
         let bpos = pos.to_board_position();
+        let idx = bpos.ndidx();
 
-        let colfd = CollisionFieldData {
-            player_free: false,
-            ghost_free: !behavior.p.movement.ghost_collision,
-            see_through: behavior.p.light.see_through,
-            wall_orientation: behavior.orientation(),
-            is_dynamic: behavior.p.movement.is_dynamic,
-            stair_offset: behavior.p.movement.stair_offset,
-        };
-        bcf.0[bpos.ndidx()] = colfd;
+        bcf.0[idx].player_free = false;
+        bcf.0[idx].ghost_free &= !behavior.p.movement.ghost_collision;
+        bcf.0[idx].see_through &= behavior.p.light.see_through;
+        bcf.0[idx].is_dynamic |= behavior.p.movement.is_dynamic;
+
+        if behavior.orientation() != Orientation::None {
+            bcf.0[idx].wall_orientation = behavior.orientation();
+        }
+        if behavior.p.movement.stair_offset != 0 {
+            bcf.0[idx].stair_offset = behavior.p.movement.stair_offset;
+        }
     }
     for (_entity, pos, behavior) in qt
         .iter()
