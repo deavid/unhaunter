@@ -7,6 +7,7 @@ use unmenu_core::assets::MenuAssets;
 use unmenu_core::components::{MCamera, MenuItemInteractive, MenuUI};
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
+use unreplicon_core::components::LobbyInfo;
 use unreplicon_core::messages::HubConnectionRequested;
 use unreplicon_core::resources::RoomIdentification;
 
@@ -25,6 +26,9 @@ pub struct HubMenuMarker;
 
 #[derive(Component)]
 pub struct HubCodeDisplay;
+
+#[derive(Component)]
+pub struct HubStatusLabel;
 
 impl std::fmt::Display for HubMenuID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -90,6 +94,24 @@ pub fn setup_hub_ui(mut commands: Commands, ui_assets: Res<MenuAssets>) {
                     TextColor(Color::WHITE),
                 ));
             });
+
+        // Status label shown while pending / connecting.
+        parent.spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                right: Val::Px(50.0 * plt::UI_SCALE),
+                top: Val::Px(160.0 * plt::UI_SCALE),
+                ..default()
+            },
+            HubStatusLabel,
+            Text::new(""),
+            TextFont {
+                font: ui_assets.font_kode_bold.clone(),
+                font_size: 32.0 * plt::FONT_SCALE,
+                ..default()
+            },
+            TextColor(Color::srgb(1.0, 0.85, 0.2)),
+        ));
     });
 }
 
@@ -243,7 +265,6 @@ pub fn update_code_input(
 
 pub fn handle_hub_responses(
     mut hub_status: ResMut<HubStatus>,
-    mut next_app_state: ResMut<NextState<UIContextState>>,
     mut room_ident: ResMut<RoomIdentification>,
     mut hub_conn_events: MessageWriter<HubConnectionRequested>,
 ) {
@@ -253,30 +274,81 @@ pub fn handle_hub_responses(
                 info!("Hub: Room created: {} at {}", data.code, data.addr);
                 room_ident.code = Some(data.code);
                 room_ident.secret = Some(data.secret);
-                // Transport layer will listen to this event and handle connection setup instead.
                 hub_conn_events.write(HubConnectionRequested {
                     address: data.addr,
                     ticket: Some(data.ticket),
                 });
-                next_app_state.set(UIContextState::Lobby);
+                // Stay on the Hub screen; await_lobby_then_transition will move us to
+                // Lobby once the server's LobbyInfo arrives via replication.
+                hub_status.is_pending = false;
+                hub_status.is_connecting = true;
             }
             HubResponse::RoomJoined(data) => {
                 info!("Hub: Room joined: {} at {}", data.code, data.addr);
                 room_ident.code = Some(data.code);
                 room_ident.secret = Some(data.secret);
-                // Transport layer will listen to this event and handle connection setup instead.
                 hub_conn_events.write(HubConnectionRequested {
                     address: data.addr,
                     ticket: Some(data.ticket),
                 });
-                next_app_state.set(UIContextState::Lobby);
+                // Same: stay on Hub, wait for LobbyInfo replication before going to Lobby.
+                hub_status.is_pending = false;
+                hub_status.is_connecting = true;
             }
             HubResponse::Error(e) => {
                 error!("Hub error: {}", e);
+                hub_status.is_connecting = false;
             }
             HubResponse::PingResult { .. } => {
                 // Handled by update_hub_status; nothing to do in the Hub UI handler.
             }
         }
+    }
+}
+
+/// While is_connecting, poll for a replicated LobbyInfo entity. Once one
+/// arrives, start a short countdown before entering Lobby to let remaining
+/// replication packets settle.
+pub fn await_lobby_then_transition(
+    mut hub_status: ResMut<HubStatus>,
+    q_lobby: Query<(), With<LobbyInfo>>,
+    mut next_app_state: ResMut<NextState<UIContextState>>,
+    time: Res<Time>,
+) {
+    if !hub_status.is_connecting {
+        return;
+    }
+    if let Some(ref mut remaining) = hub_status.lobby_ready_timer {
+        *remaining -= time.delta_secs();
+        if *remaining <= 0.0 {
+            info!("Hub: lobby ready timer elapsed — transitioning to Lobby");
+            hub_status.is_connecting = false;
+            hub_status.lobby_ready_timer = None;
+            next_app_state.set(UIContextState::Lobby);
+        }
+    } else if !q_lobby.is_empty() {
+        info!("Hub: LobbyInfo received via replication — starting 1s countdown");
+        hub_status.lobby_ready_timer = Some(1.0);
+    }
+}
+
+/// Updates the Hub screen status label to give connecting feedback.
+pub fn update_hub_status_label(
+    hub_status: Res<HubStatus>,
+    mut q_label: Query<&mut Text, With<HubStatusLabel>>,
+) {
+    if !hub_status.is_changed() {
+        return;
+    }
+    for mut text in &mut q_label {
+        text.0 = if hub_status.lobby_ready_timer.is_some() {
+            "Ready! Entering lobby…".to_string()
+        } else if hub_status.is_connecting {
+            "CONNECTING… please wait".to_string()
+        } else if hub_status.is_pending {
+            "Contacting Hub…".to_string()
+        } else {
+            "".to_string()
+        };
     }
 }

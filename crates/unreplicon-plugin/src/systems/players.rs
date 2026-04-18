@@ -57,7 +57,7 @@ fn player_spawn_telemetry(
         return;
     }
 
-    info!(
+    trace!(
         "player_spawn_telemetry: tick={} auth={} local_player={} spawning_active={} state={:?}",
         *frames,
         authority.is_some(),
@@ -67,7 +67,7 @@ fn player_spawn_telemetry(
     );
     for (e, req, spr, own, rdy, sent, locown) in q.iter() {
         if req.is_some() || spr.is_some() {
-            info!(
+            trace!(
                 "player_spawn_telemetry: entity {:?} spawn_request={} player_sprite={} owner={:?} network_ready={} ownership_sent={} locally_owned={}",
                 e,
                 req.is_some(),

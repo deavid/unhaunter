@@ -673,6 +673,7 @@ pub(crate) fn update_deployment_status_ui(
         (With<DeploymentStatusText>, Without<MissionLaunchControl>),
     >,
     auto_join_armed: Option<Res<MissionAutoJoinArmed>>,
+    auto_join_delay: Option<Res<unreplicon_core::resources::MissionAutoJoinDelay>>,
     sim_state: Res<State<SimulationState>>,
     time: Res<Time>,
 ) {
@@ -692,7 +693,10 @@ pub(crate) fn update_deployment_status_ui(
         *visibility = Visibility::Hidden;
     }
 
-    let status_text = if *sim_state.get() == SimulationState::Ready {
+    let counting_down = auto_join_delay.is_some_and(|d| d.0.is_some());
+    let status_text = if counting_down {
+        "READY! JOINING MISSION..."
+    } else if *sim_state.get() == SimulationState::Ready {
         "SYNCING TELEMETRY..."
     } else {
         "INITIALIZING DEPLOYMENT..."

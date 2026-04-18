@@ -3,6 +3,7 @@ use bevy_renet::RenetServer;
 use bevy_renet::netcode::NetcodeServerTransport;
 use bevy_replicon::prelude::ConnectedClient;
 use bevy_replicon::shared::backend::connected_client::NetworkId;
+use unhub_client::protocol::DedicatedToProcMan;
 use unreplicon_core::ownership::OwnerId;
 use unreplicon_core::resources::ClientUuidMap;
 
@@ -13,6 +14,7 @@ pub(super) fn app_setup(app: &mut App) {
     // client entity with both ConnectedClient and NetworkId, so we can safely retrieve the
     // renet ClientId and map it to a UUID.
     app.add_observer(validate_new_connection_observer);
+    app.add_observer(on_client_disconnected_observer);
 }
 
 /// Observes each newly connected client entity (after ConnectedClient + NetworkId are
@@ -112,4 +114,49 @@ fn validate_new_connection_observer(
         "Client {:?} authenticated successfully for Player: {}",
         client_id, ticket.player_uuid
     );
+
+    // Notify procman so it can track player count and extend the room's lifetime.
+    if let Some(procman) = procman.as_ref() {
+        let _ = procman.tx.send(DedicatedToProcMan::PlayerJoined {
+            player_uuid: ticket.player_uuid,
+        });
+    }
+}
+
+/// Observes each disconnecting client entity to notify procman of the updated player count.
+fn on_client_disconnected_observer(
+    trigger: On<Remove, ConnectedClient>,
+    procman: Option<Res<ProcManChannel>>,
+    mut uuid_map: ResMut<ClientUuidMap>,
+    q_connected: Query<(), With<ConnectedClient>>,
+) {
+    let entity = trigger.entity;
+    let owner_id = OwnerId::Client(entity);
+
+    // The entity still has ConnectedClient during Remove observers, so subtract 1 for the
+    // entity being removed.
+    let remaining_count = q_connected.iter().count().saturating_sub(1);
+
+    let player_uuid = uuid_map.0.remove(&owner_id);
+
+    if let Some(procman) = procman.as_ref() {
+        match player_uuid {
+            Some(uuid) => {
+                let _ = procman.tx.send(DedicatedToProcMan::PlayerLeft {
+                    player_uuid: uuid,
+                    remaining_count,
+                });
+                info!(
+                    "on_client_disconnected_observer: entity {:?} ({}) left; remaining={}",
+                    entity, uuid, remaining_count
+                );
+            }
+            None => {
+                warn!(
+                    "on_client_disconnected_observer: no UUID found for entity {:?}; cannot notify procman",
+                    entity
+                );
+            }
+        }
+    }
 }

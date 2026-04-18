@@ -170,6 +170,7 @@
           Restart=always
           RestartSec=5
           Environment=RUST_LOG=debug
+          Environment=BEVY_ASSET_ROOT={{ install_dir }}
 
           [Install]
           WantedBy=multi-user.target

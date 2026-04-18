@@ -162,6 +162,13 @@ fn handle_hub_connection_request(
 
     commands.insert_resource(RenetClient::new(connection_config));
     commands.insert_resource(transport);
+
+    // Transition roles: we are now a pure client connected to a dedicated server.
+    commands.remove_resource::<AuthorityRole>();
+    commands.insert_resource(LobbyPresenceRole);
+    info!(
+        "handle_hub_connection_request: roles updated — AuthorityRole removed, LobbyPresenceRole inserted"
+    );
 }
 
 fn startup_transport_system(

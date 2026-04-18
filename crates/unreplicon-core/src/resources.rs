@@ -64,6 +64,11 @@ pub struct CurrentMapSeed(pub u64);
 #[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MissionAutoJoinArmed(pub bool);
 
+/// Countdown timer (seconds remaining) between detecting a ready server and
+/// actually triggering the auto-join. `None` = not yet started.
+#[derive(Resource, Default, Debug, Clone, Copy)]
+pub struct MissionAutoJoinDelay(pub Option<f32>);
+
 /// Credentials returned by the hub server that identify this client's room.
 ///
 /// `code` is a human-readable join code; `secret` is used for hub server auth.

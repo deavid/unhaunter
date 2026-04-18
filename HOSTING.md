@@ -272,3 +272,10 @@ sudo journalctl -u unhub.service -f
 ```bash
 sudo journalctl -u unprocman.service -f
 ```
+
+**To update servers:**
+
+```bash
+cargo build --release -p unhub -p unprocman -p unhaunter --bin unhub --bin unprocman --bin unhaunter_dedicated && \
+  ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com
+```

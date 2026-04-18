@@ -47,6 +47,11 @@ impl Plugin for UnhaunterHubPlugin {
             Update,
             ui::handle_hub_responses.run_if(in_state(UIContextState::Hub)),
         );
+        app.add_systems(
+            Update,
+            (ui::await_lobby_then_transition, ui::update_hub_status_label)
+                .run_if(in_state(UIContextState::Hub)),
+        );
         app.add_systems(OnExit(UIContextState::Hub), ui::despawn_hub_ui);
     }
 }

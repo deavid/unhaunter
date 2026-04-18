@@ -41,6 +41,12 @@ pub enum HubResponse {
 pub struct HubStatus {
     pub last_response: Option<HubResponse>,
     pub is_pending: bool,
+    /// Set after hub responds with a room address; stays true while we wait for
+    /// the server's LobbyInfo to arrive via replication before entering Lobby.
+    pub is_connecting: bool,
+    /// Counts down (in seconds) after LobbyInfo arrives before entering Lobby.
+    /// None = not yet triggered; Some(t) = t seconds remaining.
+    pub lobby_ready_timer: Option<f32>,
     pub is_online: bool,
     pub online_players: usize,
 }

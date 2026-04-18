@@ -19,6 +19,7 @@ use unreplicon_core::messages::{
     RequestSelectMap, RequestStartMission,
 };
 use unreplicon_core::ownership::{Owner, OwnerId};
+use unreplicon_core::resources::LobbyPresenceRole;
 use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LocalPlayerRole};
 use unreplicon_core::resources::{ClientUuidMap, CurrentMapSeed, HostGone, LocalPlayer};
 use untmxmap_core::resources::maps::Maps;
@@ -47,8 +48,8 @@ pub(super) fn app_setup(app: &mut App) {
     app.init_resource::<LocalPlayer>();
     app.init_resource::<CurrentMapSeed>();
     app.init_resource::<unreplicon_core::resources::MissionAutoJoinArmed>();
+    app.init_resource::<unreplicon_core::resources::MissionAutoJoinDelay>();
     app.init_resource::<HostGone>();
-    app.init_resource::<unreplicon_core::resources::MissionAutoJoinArmed>();
     app.init_resource::<unreplicon_core::resources::RoomIdentification>();
 
     // Observer: fires whenever a client entity loses ConnectedClient on disconnect.
@@ -65,6 +66,12 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(in_state(SimulationState::Ready)),
     );
 
+    // Dedicated server: when maps finish loading (BootState::Ready), transition
+    // EngineBoot -> MainMenu so auto_start_headless_lobby can fire.
+    // Non-dedicated clients get this transition from UnhaunterMapLoadPlugin's
+    // bevy_asset_loader LoadingState, which is not added for dedicated servers.
+    app.add_systems(OnEnter(BootState::Ready), dedicated_boot_transition);
+
     // Two hooks so the transition to Lobby is caught regardless of which state
     // settles last.  On a dedicated server, ServerState::Running fires at startup
     // (before maps load) and BootState::Ready fires once maps are ready — both
@@ -78,10 +85,18 @@ pub(super) fn app_setup(app: &mut App) {
         ),
     );
 
-    // Server-side lobby lifecycle
+    // Server-side lobby lifecycle.
+    // Guard: AuthorityRole AND LobbyPresenceRole.
+    // - Dedicated server: AuthorityRole + LobbyPresenceRole (no LocalPlayerRole) — spawns on startup.
+    // - PeerHost: AuthorityRole + LocalPlayerRole + LobbyPresenceRole — spawns when in Lobby.
+    // - Standalone offline player: AuthorityRole + LocalPlayerRole, NO LobbyPresenceRole — must NOT
+    //   spawn a LobbyInfo; they may transition to a pure client via Hub UI and the stale entity
+    //   would then coexist with the replicated one from the server, breaking q_lobby.single().
     app.add_systems(
         Update,
-        spawn_lobby_entity_if_missing.run_if(resource_exists::<AuthorityRole>),
+        spawn_lobby_entity_if_missing
+            .run_if(resource_exists::<AuthorityRole>)
+            .run_if(resource_exists::<LobbyPresenceRole>),
     );
     app.add_systems(
         OnEnter(UIContextState::Lobby),
@@ -120,13 +135,16 @@ fn process_auto_join(
     mut next_ui_state: ResMut<NextState<UIContextState>>,
     sim_state: Res<State<SimulationState>>,
     auto_join_armed: Option<ResMut<unreplicon_core::resources::MissionAutoJoinArmed>>,
+    mut auto_join_delay: ResMut<unreplicon_core::resources::MissionAutoJoinDelay>,
     mut current_map_seed: ResMut<CurrentMapSeed>,
     mut current_difficulty: ResMut<CurrentDifficulty>,
+    time: Res<Time>,
 ) {
     let Ok(mission) = q_selected_mission.single() else {
         if let Some(mut armed) = auto_join_armed {
             armed.0 = false;
         }
+        auto_join_delay.0 = None;
         return;
     };
 
@@ -142,6 +160,7 @@ fn process_auto_join(
     if !armed.0 {
         if !is_ready {
             armed.0 = true;
+            auto_join_delay.0 = None;
             info!(
                 "process_auto_join: Armed for auto-join (map={})",
                 mission.map_path
@@ -151,7 +170,15 @@ fn process_auto_join(
     }
 
     if is_ready {
+        // Tick the 1-second delay before actually joining.
+        let remaining = auto_join_delay.0.get_or_insert(1.0);
+        *remaining -= time.delta_secs();
+        if *remaining > 0.0 {
+            return;
+        }
+        // Timer elapsed — fire the join.
         armed.0 = false;
+        auto_join_delay.0 = None;
         current_map_seed.0 = mission.map_seed;
         if let Some(diff) = parse_difficulty_id("process_auto_join", &mission.difficulty_id) {
             *current_difficulty = CurrentDifficulty::new(diff);
@@ -227,6 +254,21 @@ fn to_owner_id(client_id: ClientId) -> OwnerId {
 }
 
 /// Server: In hub-less dedicated mode, transition to Lobby immediately.
+fn dedicated_boot_transition(
+    local_player: Option<Res<LocalPlayerRole>>,
+    ui_state: Res<State<UIContextState>>,
+    mut next_ui_state: ResMut<NextState<UIContextState>>,
+) {
+    if local_player.is_some() {
+        return; // Only for dedicated servers (no local player)
+    }
+    if *ui_state.get() != UIContextState::EngineBoot {
+        return;
+    }
+    info!("Dedicated server: BootState::Ready reached, auto-transitioning EngineBoot -> MainMenu");
+    next_ui_state.set(UIContextState::MainMenu);
+}
+
 fn auto_start_headless_lobby(
     procman: Option<Res<unreplicon_transport::resources::ProcManChannel>>,
     mut next_state: ResMut<NextState<UIContextState>>,
