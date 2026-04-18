@@ -18,6 +18,7 @@ uncommon-app-core = { workspace = true }
 unmenu-core = { workspace = true }
 unprofile-core = { workspace = true }
 unmaphub-core = { workspace = true }
+unhub-plugin = { workspace = true }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

@@ -49,7 +49,10 @@ pub(crate) struct MenuUILayout;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(UIContextState::MainMenu), (setup, setup_ui))
-        .add_systems(Update, menu_event);
+        .add_systems(
+            Update,
+            (menu_event, update_hub_button_availability).run_if(in_state(UIContextState::MainMenu)),
+        );
 }
 
 pub(crate) fn setup(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
@@ -149,6 +152,7 @@ pub(crate) fn menu_event(
     mut current_mission_select_mode: ResMut<CurrentMissionSelectMode>,
     menu_items: Query<(&MenuID, &MenuItemInteractive)>,
     mut ev_disconnect: MessageWriter<DisconnectRequest>,
+    hub_status: Res<unhub_plugin::hub_client::HubStatus>,
 ) {
     for ev in click_events.read() {
         if ev.state != UIContextState::MainMenu {
@@ -179,8 +183,12 @@ pub(crate) fn menu_event(
                     info!("Transitioning to Lobby state");
                 }
                 MenuID::Hub => {
-                    next_app_state.set(UIContextState::Hub);
-                    info!("Transitioning to Hub state");
+                    if hub_status.is_online {
+                        next_app_state.set(UIContextState::Hub);
+                        info!("Transitioning to Hub state");
+                    } else {
+                        warn!("Hub clicked but HubStatus is offline.");
+                    }
                 }
                 MenuID::Manual => {
                     next_app_state.set(UIContextState::UserManual);
@@ -205,6 +213,46 @@ pub(crate) fn menu_event(
             }
         } else {
             warn!("Clicked menu item identifier {} not found in query", ev.pos);
+        }
+    }
+}
+
+pub(crate) fn update_hub_button_availability(
+    hub_status: Res<unhub_plugin::hub_client::HubStatus>,
+    q_button: Query<(Entity, &MenuID, Option<&Button>, &Children), With<MenuItemInteractive>>,
+    mut q_text: Query<&mut TextColor>,
+    mut commands: Commands,
+) {
+    for (entity, menu_id, button_opt, children) in q_button.iter() {
+        if *menu_id == MenuID::Hub {
+            if hub_status.is_online && button_opt.is_none() {
+                // Was offline, now online -> re-enable
+                commands
+                    .entity(entity)
+                    .insert(Button)
+                    .insert(Interaction::None);
+
+                for child in children.iter() {
+                    if let Ok(mut text_color) = q_text.get_mut(child) {
+                        text_color.0 = unmenu_core::colors::MENU_ITEM_COLOR_OFF;
+                    }
+                }
+            } else if !hub_status.is_online && button_opt.is_some() {
+                // Was online, now offline -> disable
+                commands
+                    .entity(entity)
+                    .remove::<Button>()
+                    .remove::<Interaction>();
+            }
+
+            // Continuously force the color if it is offline so that unmenu-plugin's frame delay doesn't override it.
+            if !hub_status.is_online {
+                for child in children.iter() {
+                    if let Ok(mut text_color) = q_text.get_mut(child) {
+                        text_color.0 = unmenu_core::colors::MENU_ITEM_COLOR_OFF.with_alpha(0.3);
+                    }
+                }
+            }
         }
     }
 }

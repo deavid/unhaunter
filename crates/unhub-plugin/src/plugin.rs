@@ -28,7 +28,14 @@ impl Plugin for UnhaunterHubPlugin {
 
         // Client side logic
         app.add_systems(Startup, hub_client::setup_hub_client);
-        app.add_systems(Update, hub_client::update_hub_status);
+        app.add_systems(
+            OnEnter(UIContextState::MainMenu),
+            hub_client::trigger_ping_system,
+        );
+        app.add_systems(
+            Update,
+            (hub_client::update_hub_status, hub_client::ping_hub_system),
+        );
 
         // UI systems
         app.add_systems(OnEnter(UIContextState::Hub), ui::setup_hub_ui);

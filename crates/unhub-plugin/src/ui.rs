@@ -274,6 +274,9 @@ pub fn handle_hub_responses(
             HubResponse::Error(e) => {
                 error!("Hub error: {}", e);
             }
+            HubResponse::PingResult { .. } => {
+                // Handled by update_hub_status; nothing to do in the Hub UI handler.
+            }
         }
     }
 }

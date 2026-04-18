@@ -7334,7 +7334,6 @@ dependencies = [
  "unlight-core",
  "unmapload-core",
  "unmission-core",
- "unplayer-core",
  "unreplicon-core",
  "unspatial-core",
 ]
@@ -7728,6 +7727,7 @@ name = "unhub-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "crossbeam-channel",
  "reqwest",
  "tokio",
@@ -8007,6 +8007,7 @@ dependencies = [
  "bevy-persistent",
  "uncommon-app-core",
  "uncommon-states-core",
+ "unhub-plugin",
  "unmaphub-core",
  "unmenu-core",
  "unprofile-core",

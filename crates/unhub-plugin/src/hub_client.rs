@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use crossbeam_channel::{Receiver, Sender};
 use unhub_client::protocol::{
     ChallengeRequest, ChallengeResponse, CreateRoomRequest, CreateRoomResponse, JoinRoomRequest,
-    JoinRoomResponse,
+    JoinRoomResponse, PingRequest, PingResponse,
 };
 
 #[derive(Resource, Debug, Clone, Default)]
@@ -25,11 +25,15 @@ pub enum HubRequest {
         code: String,
         player_uuid: uuid::Uuid,
     },
+    Ping {
+        installation_id: uuid::Uuid,
+    },
 }
 
 pub enum HubResponse {
     RoomCreated(CreateRoomResponse),
     RoomJoined(JoinRoomResponse),
+    PingResult { ok: bool, online_players: usize },
     Error(String),
 }
 
@@ -37,6 +41,20 @@ pub enum HubResponse {
 pub struct HubStatus {
     pub last_response: Option<HubResponse>,
     pub is_pending: bool,
+    pub is_online: bool,
+    pub online_players: usize,
+}
+
+#[derive(Resource)]
+pub struct HubPingTimer(pub Timer);
+
+impl Default for HubPingTimer {
+    fn default() -> Self {
+        let mut timer = Timer::new(std::time::Duration::from_secs(300), TimerMode::Repeating);
+        // Force an immediate ping on the first run
+        timer.tick(std::time::Duration::from_secs(300));
+        Self(timer)
+    }
 }
 
 pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
@@ -160,6 +178,35 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
                             }
                         }
                     }
+                    HubRequest::Ping { installation_id } => {
+                        let res = client
+                            .post(format!("{}/v1/ping", worker_hub_url))
+                            .json(&PingRequest { installation_id })
+                            .timeout(std::time::Duration::from_secs(3))
+                            .send()
+                            .await;
+                        match res {
+                            Ok(resp) if resp.status().is_success() => {
+                                if let Ok(data) = resp.json::<PingResponse>().await {
+                                    let _ = tx_to_bevy.send(HubResponse::PingResult {
+                                        ok: data.ok,
+                                        online_players: data.online_players_estimate,
+                                    });
+                                } else {
+                                    let _ = tx_to_bevy.send(HubResponse::PingResult {
+                                        ok: false,
+                                        online_players: 0,
+                                    });
+                                }
+                            }
+                            _ => {
+                                let _ = tx_to_bevy.send(HubResponse::PingResult {
+                                    ok: false,
+                                    online_players: 0,
+                                });
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -170,11 +217,39 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
         rx: rx_from_worker,
     });
     commands.insert_resource(HubStatus::default());
+    commands.insert_resource(HubPingTimer::default());
+}
+
+pub fn trigger_ping_system(mut timer: ResMut<HubPingTimer>) {
+    // Setting ticked time to duration forces it to trigger immediately next Update
+    timer.0.set_elapsed(std::time::Duration::from_secs(300));
+}
+
+pub fn ping_hub_system(
+    time: Res<Time>,
+    mut timer: ResMut<HubPingTimer>,
+    client: Res<HubClient>,
+    profile: Option<Res<bevy_persistent::Persistent<unprofile_core::profile::PlayerProfileData>>>,
+) {
+    timer.0.tick(time.delta());
+
+    if timer.0.just_finished()
+        && let Some(profile) = &profile
+    {
+        let _ = client.tx.send(HubRequest::Ping {
+            installation_id: profile.installation_id,
+        });
+    }
 }
 
 pub fn update_hub_status(mut status: ResMut<HubStatus>, client: Res<HubClient>) {
     while let Ok(resp) = client.rx.try_recv() {
-        status.last_response = Some(resp);
-        status.is_pending = false;
+        if let HubResponse::PingResult { ok, online_players } = resp {
+            status.is_online = ok;
+            status.online_players = online_players;
+        } else {
+            status.last_response = Some(resp);
+            status.is_pending = false;
+        }
     }
 }
