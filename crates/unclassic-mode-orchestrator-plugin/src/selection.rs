@@ -22,6 +22,13 @@ pub(crate) struct GhostSetupCandidate {
     pub score: f32,
 }
 
+const CROSS_FLOOR_DISTANCE_PENALTY: f32 = 20.0;
+const DEBUG_SELECT_MAX: bool = false;
+const EA_POPULATION_SIZE: usize = 50;
+const EA_ELITE_COUNT: usize = 10;
+const EA_GENERATIONS: usize = 3;
+const EA_MUTATION_BREACH_CHANCE: f32 = 0.5;
+
 pub(crate) fn select_ghost_spawn_point(
     potential_spawns: &[Position],
     rng: &mut impl Rng,
@@ -112,6 +119,7 @@ pub(crate) fn select_influence_objects(
     }
 
     if total_repulsive < MIN_REPULSIVE {
+        unrestricted_floors.shuffle(rng);
         let needed = MIN_REPULSIVE - total_repulsive;
         for floor_z in &unrestricted_floors {
             if let Some(floor_objects) = objects_by_floor_copy.get_mut(floor_z)
@@ -132,6 +140,7 @@ pub(crate) fn select_influence_objects(
     }
 
     if total_attractive < MIN_ATTRACTIVE {
+        unrestricted_floors.shuffle(rng);
         let needed = MIN_ATTRACTIVE - total_attractive;
         for floor_z in &unrestricted_floors {
             if let Some(floor_objects) = objects_by_floor_copy.get_mut(floor_z)
@@ -154,6 +163,92 @@ pub(crate) fn select_influence_objects(
     selected_objects
 }
 
+fn score_distance(a: &Position, b: &Position) -> f32 {
+    let mut distance = a.distance(b);
+    if a.z.trunc() != b.z.trunc() {
+        distance += CROSS_FLOOR_DISTANCE_PENALTY;
+    }
+    distance
+}
+
+fn calculate_set_signature(set: &[Position], origin: &Position) -> [f32; 6] {
+    if set.is_empty() {
+        return [0.0; 6];
+    }
+
+    let mut mean_x = 0.0;
+    let mut mean_y = 0.0;
+    let mut mean_z = 0.0;
+
+    for p in set {
+        mean_x += p.x - origin.x;
+        mean_y += p.y - origin.y;
+        mean_z += p.z - origin.z;
+    }
+
+    let n = set.len() as f32;
+    mean_x /= n;
+    mean_y /= n;
+    mean_z /= n;
+
+    let mut spread_x = 0.0;
+    let mut spread_y = 0.0;
+    let mut spread_z = 0.0;
+
+    for p in set {
+        spread_x += ((p.x - origin.x) - mean_x).abs();
+        spread_y += ((p.y - origin.y) - mean_y).abs();
+        spread_z += ((p.z - origin.z) - mean_z).abs();
+    }
+
+    spread_x /= n;
+    spread_y /= n;
+    spread_z /= n;
+
+    [mean_x, mean_y, mean_z, spread_x, spread_y, spread_z]
+}
+
+fn signature_distance(sig_a: &[f32; 6], sig_b: &[f32; 6]) -> f32 {
+    let mut dist_sq = 0.0;
+    for i in 0..6 {
+        dist_sq += (sig_a[i] - sig_b[i]).powi(2);
+    }
+    dist_sq.sqrt()
+}
+
+fn setup_distance(
+    a: &GhostSetupCandidate,
+    b: &GhostSetupCandidate,
+    entity_positions: &HashMap<Entity, Position>,
+) -> f32 {
+    let breach_dist = score_distance(&a.spawn_point, &b.spawn_point);
+
+    let extract_pos = |c: &GhostSetupCandidate, target_type| {
+        c.influence_assignments
+            .iter()
+            .filter(|(_, t)| *t == target_type)
+            .filter_map(|(e, _)| entity_positions.get(e))
+            .copied()
+            .collect::<Vec<_>>()
+    };
+
+    let a_attr = extract_pos(a, InfluenceType::Attractive);
+    let b_attr = extract_pos(b, InfluenceType::Attractive);
+    let dist_attr = signature_distance(
+        &calculate_set_signature(&a_attr, &a.spawn_point),
+        &calculate_set_signature(&b_attr, &b.spawn_point),
+    );
+
+    let a_rep = extract_pos(a, InfluenceType::Repulsive);
+    let b_rep = extract_pos(b, InfluenceType::Repulsive);
+    let dist_rep = signature_distance(
+        &calculate_set_signature(&a_rep, &a.spawn_point),
+        &calculate_set_signature(&b_rep, &b.spawn_point),
+    );
+
+    breach_dist + dist_attr + dist_rep
+}
+
 fn score_ghost_setup(
     ghost_spawn: &Position,
     influence_objects: &[(Entity, InfluenceType, Position)],
@@ -169,14 +264,14 @@ fn score_ghost_setup(
     };
 
     for (_, _, obj_pos) in influence_objects {
-        distances.push(ghost_spawn.distance(obj_pos));
+        distances.push(score_distance(ghost_spawn, obj_pos));
     }
     if let Some(pos) = player_pos {
-        distances.push(ghost_spawn.distance(pos));
+        distances.push(score_distance(ghost_spawn, pos));
     }
     for (i, (_, _, pos1)) in influence_objects.iter().enumerate() {
         for (_, _, pos2) in influence_objects.iter().skip(i + 1) {
-            distances.push(pos1.distance(pos2));
+            distances.push(score_distance(pos1, pos2));
         }
     }
 
@@ -184,10 +279,7 @@ fn score_ghost_setup(
         return 0.0;
     }
 
-    let sum_logs: f32 = distances
-        .iter()
-        .map(|&d| if d > 0.0 { d.ln() } else { -10.0 })
-        .sum();
+    let sum_logs: f32 = distances.iter().map(|&d| (d + 1.0).ln()).sum();
     let n = distances.len() as f32;
     (sum_logs / n).exp()
 }
@@ -197,7 +289,6 @@ pub(crate) fn generate_scored_ghost_setup(
     objects_by_floor_with_positions: &HashMap<i64, Vec<(Entity, Position)>>,
     player_spawn_points: &[Position],
     board_toplogy: &BoardTopology,
-    simulation_count: usize,
 ) -> (Position, Vec<(Entity, InfluenceType)>) {
     let start_time = Instant::now();
     let mut objects_by_floor: HashMap<i64, Vec<Entity>> = HashMap::new();
@@ -211,10 +302,10 @@ pub(crate) fn generate_scored_ghost_setup(
         }
     }
 
-    let mut candidates: Vec<GhostSetupCandidate> = Vec::with_capacity(simulation_count);
+    let mut candidates: Vec<GhostSetupCandidate> = Vec::with_capacity(EA_POPULATION_SIZE);
     let mut rng = random_seed::rng();
 
-    for _ in 0..simulation_count {
+    for _ in 0..EA_POPULATION_SIZE {
         let spawn_point = select_ghost_spawn_point(ghost_spawn_points, &mut rng)
             .unwrap_or(Position::new_i64(0, 0, 0));
         let influence_assignments =
@@ -226,7 +317,6 @@ pub(crate) fn generate_scored_ghost_setup(
             }
         }
         let score = score_ghost_setup(&spawn_point, &influence_with_pos, player_spawn_points);
-        let score = (score / 16.0).powi(5);
         candidates.push(GhostSetupCandidate {
             spawn_point,
             influence_assignments,
@@ -234,26 +324,109 @@ pub(crate) fn generate_scored_ghost_setup(
         });
     }
 
-    let total_score: f32 = candidates.iter().map(|c| c.score.max(0.001)).sum();
-    let chosen_setup = if total_score > 0.0 {
-        let mut choice_value = rng.random::<f32>() * total_score;
-        let mut chosen_idx = 0;
-        for (i, candidate) in candidates.iter().enumerate() {
-            choice_value -= candidate.score.max(0.001);
-            if choice_value <= 0.0 {
-                chosen_idx = i;
-                break;
+    for _ in 0..EA_GENERATIONS {
+        candidates.sort_by(|a, b| b.score.total_cmp(&a.score));
+
+        let map_diagonal = ((board_toplogy.map_size.0.pow(2)
+            + board_toplogy.map_size.1.pow(2)
+            + board_toplogy.map_size.2.pow(2)) as f32)
+            .sqrt()
+            .max(10.0);
+
+        // Sequential Niching (Fitness Sharing) to build diverse elites
+        let mut i = 0;
+        while i < EA_ELITE_COUNT && i < candidates.len() {
+            let reference_elite = candidates[i].clone();
+
+            for candidate in candidates.iter_mut().skip(i + 1) {
+                let d = setup_distance(&reference_elite, candidate, &entity_positions);
+
+                // Scale-invariant distance 0..1
+                let normalized_dist = d / map_diagonal;
+
+                // Smooth Cauchy-like similarity that drops accurately
+                let similarity = 1.0 / (1.0 + (normalized_dist * 10.0).powi(2));
+
+                let novelty_factor = (1.0 - similarity).clamp(0.0, 1.0);
+                candidate.score *= novelty_factor;
             }
+
+            // Re-sort ONLY the remainder so the next most highly scored AND diverse setup bubbles up
+            candidates[(i + 1)..].sort_by(|a, b| b.score.total_cmp(&a.score));
+            i += 1;
         }
-        candidates.remove(chosen_idx)
+
+        let mut next_generation = Vec::with_capacity(EA_POPULATION_SIZE);
+        for candidate in candidates.iter().take(EA_ELITE_COUNT) {
+            next_generation.push(candidate.clone());
+        }
+
+        for _ in EA_ELITE_COUNT..EA_POPULATION_SIZE {
+            let parent_idx = rng.random_range(0..EA_ELITE_COUNT);
+            let parent = &candidates[parent_idx];
+
+            let mut child_spawn_point = parent.spawn_point;
+            let mut child_influences = parent.influence_assignments.clone();
+
+            if rng.random::<f32>() < EA_MUTATION_BREACH_CHANCE {
+                child_spawn_point = select_ghost_spawn_point(ghost_spawn_points, &mut rng)
+                    .unwrap_or(Position::new_i64(0, 0, 0));
+            } else {
+                child_influences =
+                    select_influence_objects(&objects_by_floor, board_toplogy, &mut rng);
+            }
+
+            let mut influence_with_pos = Vec::new();
+            for (entity, influence_type) in &child_influences {
+                if let Some(position) = entity_positions.get(entity) {
+                    influence_with_pos.push((*entity, *influence_type, *position));
+                }
+            }
+            let score =
+                score_ghost_setup(&child_spawn_point, &influence_with_pos, player_spawn_points);
+
+            next_generation.push(GhostSetupCandidate {
+                spawn_point: child_spawn_point,
+                influence_assignments: child_influences,
+                score,
+            });
+        }
+        candidates = next_generation;
+    }
+
+    candidates.sort_by(|a, b| b.score.total_cmp(&a.score));
+    let best_score = candidates[0].score;
+
+    let chosen_setup = if DEBUG_SELECT_MAX {
+        candidates.remove(0)
     } else {
-        candidates.remove(rng.random_range(0..candidates.len()))
+        let elite_candidates = &candidates[0..EA_ELITE_COUNT];
+        let total_score: f32 = elite_candidates.iter().map(|c| c.score.max(0.001)).sum();
+        if total_score > 0.0 {
+            let mut choice_value = rng.random::<f32>() * total_score;
+            let mut chosen_idx = 0;
+            for (i, candidate) in elite_candidates.iter().enumerate() {
+                choice_value -= candidate.score.max(0.001);
+                if choice_value <= 0.0 {
+                    chosen_idx = i;
+                    break;
+                }
+            }
+            candidates.remove(chosen_idx)
+        } else {
+            candidates.remove(rng.random_range(0..EA_ELITE_COUNT))
+        }
     };
 
     let elapsed = start_time.elapsed();
     debug!(
-        "Ghost setup simulation completed: {} simulations in {:.2?}. Selected setup score: {:.2}",
-        simulation_count, elapsed, chosen_setup.score
+        "Ghost setup EVOLUTION completed: {} generations of {} pop in {:.2?}. Selected setup score: {:.2}. Best score: {:.2}. Debug max select: {}",
+        EA_GENERATIONS,
+        EA_POPULATION_SIZE,
+        elapsed,
+        chosen_setup.score,
+        best_score,
+        DEBUG_SELECT_MAX
     );
 
     (chosen_setup.spawn_point, chosen_setup.influence_assignments)
@@ -270,6 +443,5 @@ pub(crate) fn select_influence_objects_with_simulation(
         objects_by_floor_with_positions,
         player_spawn_points,
         board_toplogy,
-        64,
     )
 }

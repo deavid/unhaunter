@@ -9,13 +9,11 @@ use unboard_core::resources::roomdb::RoomTopology;
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unghost_core::components::logic::ghost_breach::GhostBreach;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::requests::{GhostBreachSpawnRequest, GhostSpawnRequest};
 use unghost_core::resources::haunt_state::HauntState;
 use unmapload_core::events::loadlevel::MapEntitiesReadyEvent;
 use unmission_core::events::LevelReadyEvent;
-use unplayer_core::components::PlayerSprite;
 use unspatial_core::position::Position;
 
 #[derive(SystemParam)]
@@ -32,8 +30,6 @@ pub(crate) fn classic_mode_orchestrator(
     mut commands: Commands,
     mut ev_level_ready: MessageWriter<LevelReadyEvent>,
     mut ev_entities_ready: MessageReader<MapEntitiesReadyEvent>,
-    q_ghost_breach: Query<&Position, With<GhostBreach>>,
-    q_player_sprite: Query<&Position, With<PlayerSprite>>,
     q_position: Query<&Position>,
     q_player_spawns: Query<&Position, With<PlayerSpawnPoint>>,
     q_ghost_spawns: Query<&Position, With<HostileSpawnPoint>>,
@@ -72,10 +68,15 @@ pub(crate) fn classic_mode_orchestrator(
     if p.authority_role.is_some() {
         // --- Spawn Ghost ---
         {
-            let ghost_spawn = ghost_spawn_points
-                .choose(&mut rng)
-                .copied()
-                .unwrap_or(Position::new_i64(0, 0, 0));
+            let ghost_spawn = crate::influence_system::assign_ghost_influence(
+                &mut commands,
+                &movable_objects,
+                &ghost_spawn_points,
+                &q_player_spawns,
+                &q_position,
+                &p.room_topology,
+                &p.board_topology,
+            );
 
             let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set().as_vec();
             let ghost_type_names = possible_ghost_types
@@ -107,17 +108,6 @@ pub(crate) fn classic_mode_orchestrator(
                 },
                 p.haunt_state.ghost_dynamics,
             ));
-
-            crate::influence_system::assign_ghost_influence(
-                &mut commands,
-                &movable_objects,
-                &q_ghost_breach,
-                &q_player_sprite,
-                &q_position,
-                &p.room_topology,
-                &p.board_topology,
-                &p.haunt_state,
-            );
         }
     } // end if !Join
 
