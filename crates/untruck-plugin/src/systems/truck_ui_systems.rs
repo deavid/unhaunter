@@ -8,9 +8,10 @@ use ungearitems_core::events::RequestCraftRepellent;
 use uninput_core::states::InGameUiState;
 use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unmission_core::resources::MissionEndRequested;
+use unmission_core::types::MissionEvent;
 use unplayer_core::components::MainPlayer;
 use unreplicon_core::messages::{MissionEndReason, RequestEndMission};
-use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
+use unreplicon_core::resources::{AuthorityRole, LobbyPresenceRole, LocalPlayerRole};
 use unsettings_core::audio::AudioSettings;
 use untruck_core::components::in_truck::InTruck;
 use untruck_core::events::truck::TruckUIEvent;
@@ -44,9 +45,11 @@ fn truckui_event_handle(
     mut ev_craft_req: MessageWriter<RequestCraftRepellent>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
     mut ev_end_mission: MessageWriter<RequestEndMission>,
+    mut ev_mission: MessageWriter<MissionEvent>,
     net_params: TruckNetParams,
     authority: Option<Res<AuthorityRole>>,
     local_player_role: Option<Res<LocalPlayerRole>>,
+    lobby_presence: Option<Res<LobbyPresenceRole>>,
     q_player: Query<Entity, (With<MainPlayer>, With<InTruck>)>,
 ) {
     for ev in ev_truckui.read() {
@@ -55,9 +58,18 @@ fn truckui_event_handle(
                 if !net_params.mission_end_requested.0 {
                     continue;
                 }
-                ev_end_mission.write(RequestEndMission {
-                    reason: MissionEndReason::TruckExitInitiated,
-                });
+                if lobby_presence.is_none() {
+                    // Offline single-player: no network transport exists, so RequestEndMission
+                    // (a client message) would never be delivered. Write MissionEvent::End directly.
+                    info!(
+                        "EndMission: offline single-player path, writing MissionEvent::End directly"
+                    );
+                    ev_mission.write(MissionEvent::End);
+                } else {
+                    ev_end_mission.write(RequestEndMission {
+                        reason: MissionEndReason::TruckExitInitiated,
+                    });
+                }
             }
             TruckUIEvent::ExitTruck => {
                 for entity in q_player.iter() {
