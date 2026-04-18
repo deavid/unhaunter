@@ -18,6 +18,9 @@ pub(crate) fn handle_mission_events(
                 next_sim_state.set(SimulationState::TearingDown);
 
                 if q_server_phase.is_empty() {
+                    // TODO(multiplayer-first): remove once offline play uses a local in-memory
+                    // transport. With a loopback transport, ServerGamePhase replication would
+                    // drive MissionConcludingCinematic insertion the same way as online play.
                     // Offline single-player: no LobbyInfo entity exists, so
                     // on_mission_concluding will never fire. Insert the cinematic directly.
                     info!(

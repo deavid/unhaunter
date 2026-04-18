@@ -269,6 +269,9 @@ fn handle_request_join_mission(
     lobby_presence: Option<Res<LobbyPresenceRole>>,
     mut commands: Commands,
 ) {
+    // TODO(multiplayer-first): remove once offline play uses a local in-memory transport.
+    // With a loopback transport, the normal RequestJoinMission message flow would handle
+    // this case and this entire branch could be deleted.
     // Offline single-player: no LobbyInfo entity exists by design (LobbyPresenceRole is absent).
     // Spawn the local player directly from the LocalPlayer resource and return early.
     if lobby_presence.is_none() {
