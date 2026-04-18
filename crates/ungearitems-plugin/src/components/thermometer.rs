@@ -84,7 +84,10 @@ pub(crate) fn update_thermometer(
                 visual_priority: pos.visual_priority,
             };
             let bpos = pos.to_board_position();
-            let temperature = tg.temperature_field[bpos.ndidx()];
+            let temperature = bpos
+                .ndidx_checked(tg.temperature_field.dim())
+                .map(|idx| tg.temperature_field[idx])
+                .unwrap_or(tg.ambient_temp);
             let temp_reading = temperature;
             let air_mass: f32 = 50.0 / difficulty.0.equipment_sensitivity();
 
