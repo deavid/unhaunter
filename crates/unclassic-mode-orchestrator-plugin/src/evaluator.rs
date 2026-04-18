@@ -32,6 +32,10 @@ impl MissionEvaluator for ClassicEvaluator {
     fn evaluate_grade(&self, score: i64) -> Grade {
         // Grade thresholds for Classic Mode.
         // In the future, these could be sourced from map data if passed to the evaluator.
+        if score <= 0 {
+            // No ghosts were unhaunted — the player did nothing, so N/A rather than F.
+            return Grade::NA;
+        }
         Grade::from_score(score, 1000, 800, 600, 400)
     }
 }

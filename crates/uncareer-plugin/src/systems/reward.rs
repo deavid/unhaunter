@@ -84,11 +84,9 @@ pub(crate) fn calculate_and_emit_rewards(
         0
     };
 
-    let deposit_refunded = if sd.mission_successful {
-        deposit.amount
-    } else {
-        0
-    };
+    // Deposit is only lost when the local player dies (KIA branch above returns early).
+    // Leaving empty-handed is not punished by deposit loss.
+    let deposit_refunded = deposit.amount;
 
     sd.grade_achieved = grade;
     sd.grade_multiplier = grade_multiplier;
