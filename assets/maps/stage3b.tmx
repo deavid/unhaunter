@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="35" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="35" nextobjectid="1">
  <properties>
   <property name="author" value="deavidsedice"/>
+  <property name="campaign_difficulty" value="TutorialChapter3"/>
+  <property name="campaign_order" value="03B"/>
   <property name="display_name" value="Albright &amp; Associates - Suite 300"/>
   <property name="flavor_text" value="This downtown office suite has seen better days. After the last firm moved out citing &quot;unusual disturbances&quot; - flickering lights, strange static on phone lines, and files moving on their own - the space has remained empty. An unnerving cold permeates the empty cubicles and private offices."/>
-  <property name="location_address" value="Suite 300 - 45 Market Street"/>
-  <property name="location_name" value="Albright &amp; Associates"/>
-  <property name="is_campaign_mission" type="bool" value="true"/>
-  <property name="campaign_order" type="string" value="03B"/>
-  <property name="campaign_difficulty" type="string" value="TutorialChapter3"/>
-  <property name="map_preview_image" type="string" value="maps/previews/stage3b.png"/>
-  <property name="required_deposit" type="int" value="310"/>
-  <property name="mission_reward_base" type="int" value="171"/>
   <property name="grade_a_score_threshold" type="int" value="700"/>
   <property name="grade_b_score_threshold" type="int" value="550"/>
   <property name="grade_c_score_threshold" type="int" value="350"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="location_address" value="Suite 300 - 45 Market Street"/>
+  <property name="location_name" value="Albright &amp; Associates"/>
+  <property name="map_preview_image" value="maps/previews/stage3b.png"/>
   <property name="min_player_level" type="int" value="5"/>
+  <property name="mission_reward_base" type="int" value="171"/>
+  <property name="required_deposit" type="int" value="310"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
  <tileset firstgid="266" source="unhaunter_spritesheetA_6x6x10.tsx"/>
  <tileset firstgid="330" source="unhaunter_spritesheetB_6x6x10.tsx"/>
  <tileset firstgid="394" source="unhaunter_spritesheetB_3x3x3.tsx"/>
- <group id="2" name="Ground Level" class="FloorLevel" visible="0">
+ <group id="2" name="Ground Level" class="FloorLevel">
   <properties>
    <property name="FloorLevel::display_name" value="Ground floor"/>
    <property name="FloorLevel::number" type="int" value="0"/>
@@ -141,7 +141,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,38,0,0,0,38,0,38,0,0,0,0,0,0,0,0,38,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,38,0,0,0,38,0,38,0,0,0,0,0,0,0,0,38,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,38,0,0,0,0,0,38,0,0,0,0,0,0,0,0,38,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -535,7 +535,7 @@
 </data>
   </layer>
  </group>
- <group id="22" name="Upper Level" class="FloorLevel" offsetx="0" offsety="-36">
+ <group id="22" name="Upper Level" class="FloorLevel" visible="0" offsetx="0" offsety="-36">
   <properties>
    <property name="FloorLevel::display_name" value="Upper Floor"/>
    <property name="FloorLevel::number" type="int" value="1"/>

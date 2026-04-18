@@ -21,7 +21,7 @@
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
  <tileset firstgid="266" source="unhaunter_spritesheetA_6x6x10.tsx"/>
- <group id="58" name="Cellar" class="FloorLevel">
+ <group id="58" name="Cellar" class="FloorLevel" visible="0">
   <properties>
    <property name="FloorLevel::display_name" value="Cellar"/>
    <property name="FloorLevel::number" type="int" value="-1"/>
@@ -999,7 +999,7 @@
 </data>
   </layer>
  </group>
- <group id="36" name="Second Floor" class="FloorLevel" visible="0">
+ <group id="36" name="Second Floor" class="FloorLevel">
   <properties>
    <property name="FloorLevel::display_name" value="Second Floor"/>
    <property name="FloorLevel::number" type="int" value="1"/>
@@ -1117,7 +1117,7 @@
 0,79,0,0,84,83,0,0,0,0,0,0,0,79,0,0,0,0,79,0,0,0,0,0,79,0,0,0,0,79,0,79,0,0,0,0,79,0,0,0,0,0,
 0,79,0,0,0,0,0,0,0,0,0,0,0,79,0,0,0,0,79,0,0,0,82,80,81,80,80,80,0,81,0,79,80,80,80,0,81,0,0,0,0,0,
 0,79,0,0,0,0,0,0,0,0,0,0,0,79,0,0,0,0,79,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,79,0,0,0,0,0,
-0,79,0,0,0,0,0,0,0,0,0,0,0,79,0,0,0,0,79,0,0,0,79,80,80,80,0,80,80,80,0,0,80,0,80,80,81,0,0,0,0,0,
+0,79,0,0,0,0,0,0,0,0,0,0,0,79,0,0,0,0,79,0,0,0,79,80,80,80,0,80,80,80,0,82,80,0,80,80,81,0,0,0,0,0,
 0,79,0,0,0,0,0,0,0,0,0,0,0,79,0,0,0,0,79,0,0,0,79,0,0,0,0,0,0,79,0,79,0,0,0,0,79,0,0,0,0,0,
 0,79,0,0,0,0,0,0,0,0,0,0,0,79,0,0,0,0,79,0,0,0,79,0,0,0,0,0,0,79,0,79,0,0,0,0,79,0,0,0,0,0,
 0,79,0,0,0,0,0,0,0,0,0,0,0,79,0,0,0,0,79,0,0,0,79,0,0,0,0,0,0,79,80,81,0,0,0,0,79,0,0,0,0,0,
