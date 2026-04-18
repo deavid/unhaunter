@@ -42,6 +42,37 @@ use crate::visuals::{
 };
 use unmetrics_core::metrics::SendMetric;
 
+fn resolve_tile_sample_offset(behavior: &Behavior) -> Direction {
+    let (mut dx, mut dy) = behavior.p.display.light_recv_offset;
+
+    // Opaque wall sprites visually represent the boundary facing the exterior floor tile.
+    // Shift their presentation sampling so stacked interior props on the same board tile
+    // keep their own canonical interior lighting and visibility.
+    if behavior.p.is_wall {
+        match behavior.orientation() {
+            Orientation::XAxis => dy -= 1, // "Outside" Left Wall = -Y in Unhaunter
+            Orientation::YAxis => dx += 1, // "Outside" Right Wall = +X in Unhaunter
+            Orientation::Both => {
+                dx += 1;
+                dy -= 1;
+            }
+            Orientation::None => {}
+        }
+    }
+
+    Direction {
+        dx: dx as f32,
+        dy: dy as f32,
+        dz: 0.0,
+    }
+}
+
+fn resolve_tile_sample_position(pos: Position, o_behavior: Option<&Behavior>) -> Position {
+    o_behavior
+        .map(|behavior| pos + resolve_tile_sample_offset(behavior))
+        .unwrap_or(pos)
+}
+
 #[expect(clippy::type_complexity)]
 pub(crate) fn apply_lighting_to_tiles_system(
     mut qt2: Query<
@@ -94,6 +125,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
     video_settings: Res<Persistent<VideoSettings>>,
 ) {
     let bf = &grids.bf;
+    let bcf = &grids.bcf;
     let bef = &grids.bef;
     let miasma = &grids.miasma;
     let video_quality = video_settings.quality.to_quality_factor3();
@@ -268,10 +300,49 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 .unwrap_or_default();
             let mut opacity: f32 = 1.0;
 
-            let mut bpos = pos.to_board_position_size(bf.map_size);
+            let sample_pos = resolve_tile_sample_position(*pos, o_behavior);
+            let sample_bpos = sample_pos.to_board_position_size(bf.map_size);
+            let tile_bpos = pos.to_board_position_size(bf.map_size);
+
+            let sample_visibility = vf.visibility_field[sample_bpos.ndidx()].clamp(0.0, 1.0);
+
+            // Hide interior props from outside viewers.
+            // If the entity is on a wall tile but is NOT a wall or a door itself,
+            // we determine if the player is looking at it from the "outside"
+            // (the exterior facing of the wall) based on geographic coordinates.
+            let mut final_visibility = sample_visibility;
+            if !o_behavior
+                .map(|b| b.p.is_wall || b.p.is_door)
+                .unwrap_or(false)
+            {
+                let cf = &bcf.0[tile_bpos.ndidx()];
+                if !cf.player_free && !cf.see_through {
+                    // It sits exactly on an opaque/vision-blocking wall tile
+                    match cf.wall_orientation {
+                        Orientation::XAxis => {
+                            // Wall separates Inside (-Y) from Outside (+Y).
+                            // Unhaunter `y` is inverted, so `player.y < tile_bpos.y` means Player is Outside.
+                            if player_bpos.y < tile_bpos.y {
+                                final_visibility = 0.0;
+                            }
+                        }
+                        Orientation::YAxis => {
+                            // Wall separates Inside (-X) from Outside (+X).
+                            if player_bpos.x > tile_bpos.x {
+                                final_visibility = 0.0;
+                            }
+                        }
+                        Orientation::Both => {
+                            if player_bpos.y < tile_bpos.y || player_bpos.x > tile_bpos.x {
+                                final_visibility = 0.0;
+                            }
+                        }
+                        Orientation::None => {}
+                    }
+                }
+            }
+
             if let Some(behavior) = o_behavior {
-                bpos.x += behavior.p.display.light_recv_offset.0;
-                bpos.y += behavior.p.display.light_recv_offset.1;
                 if behavior.p.display.auto_hide {
                     // Make big objects semitransparent when the player is behind them
                     const MAX_DIST: f32 = 8.0;
@@ -285,17 +356,16 @@ pub(crate) fn apply_lighting_to_tiles_system(
                     }
                 }
             } else {
-                let visibility: f32 = vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
-                opacity = (visibility * 1.5).clamp(0.0001, 1.0);
+                opacity = (final_visibility * 1.5).clamp(0.0001, 1.0);
             }
 
             // Use a margin (that should be baked on the map) to avoid negative access.
-            if bpos.x < 2 || bpos.y < 2 {
+            if sample_bpos.x < 2 || sample_bpos.y < 2 {
                 continue;
             }
 
             let mut lux_c;
-            let vis_c = sampler.f_vis(vf.visibility_field[bpos.ndidx()]);
+            let vis_c = sampler.f_vis(final_visibility);
 
             // Corner offsets correspond to tile intersections.
             // In our isometric perspective (PERSPECTIVE_X/Y in perspective.rs):
@@ -305,40 +375,44 @@ pub(crate) fn apply_lighting_to_tiles_system(
             // (+0.5, -0.5) -> Screen Bottom
             let (mut lux_right, vis_right, mut color_right, ld_right) = sampler
                 .fpos_sampling_corner(
-                    *pos + Direction {
-                        dx: 0.5,
-                        dy: 0.5,
-                        dz: 0.0,
-                    },
+                    sample_pos
+                        + Direction {
+                            dx: 0.5,
+                            dy: 0.5,
+                            dz: 0.0,
+                        },
                     o_light_sens,
                 );
             let (mut lux_left, vis_left, mut color_left, ld_left) = sampler.fpos_sampling_corner(
-                *pos + Direction {
-                    dx: -0.5,
-                    dy: -0.5,
-                    dz: 0.0,
-                },
+                sample_pos
+                    + Direction {
+                        dx: -0.5,
+                        dy: -0.5,
+                        dz: 0.0,
+                    },
                 o_light_sens,
             );
             let (mut lux_top, vis_top, mut color_top, ld_top) = sampler.fpos_sampling_corner(
-                *pos + Direction {
-                    dx: -0.5,
-                    dy: 0.5,
-                    dz: 0.0,
-                },
+                sample_pos
+                    + Direction {
+                        dx: -0.5,
+                        dy: 0.5,
+                        dz: 0.0,
+                    },
                 o_light_sens,
             );
             let (mut lux_bot, vis_bot, mut color_bot, ld_bot) = sampler.fpos_sampling_corner(
-                *pos + Direction {
-                    dx: 0.5,
-                    dy: -0.5,
-                    dz: 0.0,
-                },
+                sample_pos
+                    + Direction {
+                        dx: 0.5,
+                        dy: -0.5,
+                        dz: 0.0,
+                    },
                 o_light_sens,
             );
 
             let ((mut r, mut g, mut b), _raw, light_data) = sampler
-                .fpos_gamma_color(*pos, o_light_sens.is_some())
+                .fpos_gamma_color(sample_pos, o_light_sens.is_some())
                 .unwrap_or(((1.0, 1.0, 1.0), (1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
             if let Some(ls) = o_light_sens {
                 r = (r + ls.bias).max(0.05);
@@ -374,7 +448,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
             if let Some(behavior) = o_behavior
                 && behavior.p.movement.walkable
             {
-                lightdata_map.insert(bpos.clone(), light_data);
+                lightdata_map.insert(sample_bpos.clone(), light_data);
             }
             let max_color = r.max(g).max(b).max(0.2);
             let mut src_color_base = Color::srgb(r / max_color, g / max_color, b / max_color);
@@ -436,9 +510,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                     lux_left = lux_c;
                 }
             }
-            opacity = opacity
-                .min(vf.visibility_field[bpos.ndidx()] * 2.0)
-                .clamp(0.0, 1.0);
+            opacity = opacity.min(final_visibility * 2.0).clamp(0.0, 1.0);
             let mut new_mat = materials1.get(&mat.0).unwrap().clone();
             let orig_mat = new_mat.clone();
 
@@ -470,7 +542,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                     elapsed,
                     &mut opacity,
                     &mut dst_color,
-                    vf.visibility_field[bpos.ndidx()],
+                    final_visibility,
                     &mut rng,
                 );
             }
@@ -484,25 +556,14 @@ pub(crate) fn apply_lighting_to_tiles_system(
                     emissive,
                     &light_data,
                     elapsed,
-                    vf.visibility_field[bpos.ndidx()],
+                    final_visibility,
                     &mut dst_color,
                 );
             }
 
             if let Some(si) = o_spectral_influence.as_deref() {
-                apply_uv_visuals(
-                    si,
-                    &ld,
-                    vf.visibility_field[bpos.ndidx()],
-                    &mut opacity,
-                    &mut dst_color,
-                );
-                apply_ir_visuals(
-                    si,
-                    &light_data,
-                    vf.visibility_field[bpos.ndidx()],
-                    &mut opacity,
-                );
+                apply_uv_visuals(si, &ld, final_visibility, &mut opacity, &mut dst_color);
+                apply_ir_visuals(si, &light_data, final_visibility, &mut opacity);
             }
 
             if !is_tile {
