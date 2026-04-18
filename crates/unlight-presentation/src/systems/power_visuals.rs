@@ -148,6 +148,15 @@ fn update_single_visual(
         return;
     }
 
+    // If the current sheet_idx already belongs to a valid tile in the same CVO group
+    // with the same visual state, it's just a different random variant — keep it.
+    let current_tuid = (behavior.key_tuid().0, current_mat.data.sheet_idx);
+    if sprite_db.map_tile.get(&current_tuid).is_some_and(|c| {
+        c.behavior.key_cvo() == behavior.key_cvo() && c.behavior.state() == visual_state
+    }) {
+        return;
+    }
+
     preserve_runtime_lighting(&current_mat, &mut target_mat);
     *material_handle = MeshMaterial2d(materials1.add(target_mat));
 }
