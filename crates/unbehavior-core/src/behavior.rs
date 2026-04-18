@@ -501,7 +501,7 @@ impl SpriteConfig {
                 p.display.disable = true;
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = true;
-                p.light.emission_power = -0.5;
+                p.light.emission_power = 0.5;
                 p.light.heat_coef = 6;
                 p.light.color = LinearRgba::new(1.0, 0.75, 0.1, 1.0);
                 p.is_light_source = true;
