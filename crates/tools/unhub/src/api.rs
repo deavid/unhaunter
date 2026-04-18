@@ -53,7 +53,7 @@ pub async fn challenge(
     }
 
     // Extract IP (same logic as create_room)
-    let client_ip = if config.trust_proxy_headers {
+    let client_ip = if config.trust_proxy_headers && addr.ip().is_loopback() {
         headers
             .get("X-Forwarded-For")
             .and_then(|h| h.to_str().ok())
@@ -130,7 +130,7 @@ pub async fn create_room(
         ));
     }
 
-    let client_ip = if config.trust_proxy_headers {
+    let client_ip = if config.trust_proxy_headers && addr.ip().is_loopback() {
         headers
             .get("X-Forwarded-For")
             .and_then(|h| h.to_str().ok())

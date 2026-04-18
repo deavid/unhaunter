@@ -1,0 +1,204 @@
+---
+# -----------------------------------------------------------------------------
+# Unhaunter Multiplayer Stack Deployment Playbook
+# -----------------------------------------------------------------------------
+# This is an Ansible playbook. It automates the installation of the Hub, Process
+# Manager, Dedicated game servers, and configures Caddy (HTTPS) and systemd.
+#
+# PREREQUISITES (on your dev machine):
+#   1. Ansible installed: `sudo apt install ansible` (or via pip)
+#   2. Rsync installed: `sudo apt install rsync`
+#   3. Binaries compiled locally from the repository root:
+#      `cargo build --release -p unhub -p unprocman -p unhaunter --bin unhub --bin unprocman --bin unhaunter_dedicated`
+#
+# HOW TO RUN:
+#   ansible-playbook deploy/multiplayer.yml -i "YOUR_VPS_IP," -u YOUR_SSH_USER -e "domain=hub.yourdomain.com"
+#
+# NOTES:
+# - Replace `YOUR_SSH_USER` with a user that has sudo privileges on your server (e.g., debian, ubuntu, or root).
+# - The trailing comma in the `-i` IP argument is required for Ansible to treat it as a host instead of a file.
+# -----------------------------------------------------------------------------
+
+- name: Deploy Unhaunter Multiplayer Stack
+  hosts: all
+  become: yes
+  vars:
+    # Set to 'localhost' if testing locally, or pass '-e domain=YOUR_DOMAIN' when running the playbook.
+    caddy_domain: "{{ domain | default('localhost') }}"
+    install_dir: "/opt/unhaunter"
+
+    # Generate a consistent, idempotent UUID strictly tied to this server's hostname
+    procman_uuid: "{{ inventory_hostname | to_uuid }}"
+
+    # Path to the locally compiled binaries and assets on your dev machine
+    local_target: "../target/release"
+    local_assets: "../assets"
+
+  tasks:
+    - name: Create unhaunter user
+      user:
+        name: unhaunter
+        system: yes
+        home: "{{ install_dir }}"
+        shell: /bin/false
+
+    - name: Ensure target directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: unhaunter
+        group: unhaunter
+        mode: "0755"
+      loop:
+        - "{{ install_dir }}"
+        - "{{ install_dir }}/bin"
+
+    - name: Copy binaries from dev machine to server
+      copy:
+        src: "{{ local_target }}/{{ item }}"
+        dest: "{{ install_dir }}/bin/{{ item }}"
+        owner: unhaunter
+        group: unhaunter
+        mode: "0755"
+      loop:
+        - unhub
+        - unprocman
+        - unhaunter_dedicated
+      notify: Restart Services
+
+    - name: Sync assets directory
+      synchronize:
+        src: "{{ local_assets }}/"
+        dest: "{{ install_dir }}/assets/"
+        delete: yes
+        rsync_path: "sudo rsync"
+        rsync_opts:
+          - "--chown=unhaunter:unhaunter"
+      delegate_to: localhost
+      become: no
+
+    # --- Bypass the Bootstrap Dance ---
+    - name: Template hub_config.ron
+      copy:
+        dest: "{{ install_dir }}/hub_config.ron"
+        content: |
+          (
+              version: 1,
+              api_bind: "127.0.0.1:3000",
+              procman_bind: "127.0.0.1:11000",
+              official_server_keys: {},
+              banned_uuids: [],
+              allowed_procman_uuids: ["{{ procman_uuid }}"],
+              max_rooms_per_ip: 2,
+              trust_proxy_headers: true,
+              pow_difficulty: 20,
+          )
+        owner: unhaunter
+        group: unhaunter
+      notify: Restart Services
+
+    - name: Template procman_config.ron
+      copy:
+        dest: "{{ install_dir }}/procman_config.ron"
+        content: |
+          (
+              hub_addr: "127.0.0.1:11000",
+              public_addr: "{{ inventory_hostname }}",
+              installation_id: "{{ procman_uuid }}",
+              ticket_hmac_secret: "{{ procman_uuid }}",
+              port_range: (12000, 12100),
+              idle_pool_size: 1,
+              game_binary_path: "./bin/unhaunter_dedicated",
+          )
+        owner: unhaunter
+        group: unhaunter
+      notify: Restart Services
+
+    # --- Caddy & Security ---
+    - name: Install prerequisite packages for Caddy
+      apt:
+        name:
+          - debian-keyring
+          - debian-archive-keyring
+          - apt-transport-https
+          - curl
+        state: present
+
+    - name: Add Caddy GPG key
+      shell:
+        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o
+        /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+    - name: Add Caddy repository
+      shell:
+        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee
+        /etc/apt/sources.list.d/caddy-stable.list
+      args:
+        creates: /etc/apt/sources.list.d/caddy-stable.list
+
+    - name: Install Caddy
+      apt:
+        name: caddy
+        state: present
+        update_cache: yes
+
+    - name: Configure Caddy (HTTPS & Reverse Proxy)
+      copy:
+        dest: /etc/caddy/Caddyfile
+        content: |
+          {{ caddy_domain }} {
+              reverse_proxy 127.0.0.1:3000
+          }
+      notify: Reload Caddy
+
+    # --- Setup Systemd ---
+    - name: Template Systemd services
+      copy:
+        dest: "/etc/systemd/system/{{ item.name }}.service"
+        content: |
+          [Unit]
+          Description=Unhaunter {{ item.name }}
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=unhaunter
+          WorkingDirectory={{ install_dir }}
+          ExecStart={{ install_dir }}/bin/{{ item.name }}
+          Restart=always
+          RestartSec=5
+          Environment=RUST_LOG=debug
+
+          [Install]
+          WantedBy=multi-user.target
+      loop:
+        - { name: "unhub" }
+        - { name: "unprocman" }
+      notify: Restart Services
+
+    - name: Enable and start systemd services
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      loop:
+        - unhub
+        - unprocman
+
+  handlers:
+    - name: Restart Services
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+        daemon_reload: yes
+      loop:
+        - unhub
+        - unprocman
+
+    - name: Reload Caddy
+      systemd:
+        name: caddy
+        state: reloaded

@@ -10,6 +10,7 @@ use axum::{
 };
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -23,10 +24,14 @@ async fn main() -> anyhow::Result<()> {
 
     let config_path = "hub_config.ron";
     let config = config::load_config(config_path).await?;
+
+    let api_bind = config.api_bind.clone();
+    let procman_bind = config.procman_bind.clone();
+
     let state = HubState::new(config);
 
     // Start ProcMan listener
-    let procman_addr: SocketAddr = "0.0.0.0:11000".parse()?;
+    let procman_addr: SocketAddr = procman_bind.parse()?;
     let procman_state = state.clone();
     tokio::spawn(async move {
         if let Err(e) = procman::run_procman_listener(procman_state, procman_addr).await {
@@ -47,12 +52,17 @@ async fn main() -> anyhow::Result<()> {
         .route("/v1/rooms/create", post(api::create_room))
         .route("/v1/rooms/join/{code}", post(api::join_room))
         .layer(cors)
+        .layer(TraceLayer::new_for_http())
         .with_state(state);
 
-    let api_addr: SocketAddr = "0.0.0.0:3000".parse()?;
+    let api_addr: SocketAddr = api_bind.parse()?;
     tracing::info!("Hub API listening on {}", api_addr);
     let listener = tokio::net::TcpListener::bind(api_addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await?;
 
     Ok(())
 }

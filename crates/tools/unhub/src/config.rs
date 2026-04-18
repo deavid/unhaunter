@@ -7,6 +7,8 @@ pub async fn load_config(path: impl AsRef<Path>) -> Result<HubConfig> {
     if !path.as_ref().exists() {
         let default_config = HubConfig {
             version: 1,
+            api_bind: "127.0.0.1:3000".to_string(),
+            procman_bind: "127.0.0.1:11000".to_string(),
             official_server_keys: Default::default(),
             banned_uuids: HashSet::new(),
             allowed_procman_uuids: HashSet::new(),

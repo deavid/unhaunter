@@ -1,22 +1,23 @@
 # Hosting an Unhaunter Multiplayer Hub
 
-This guide is for community members who want to run their own Unhaunter multiplayer infrastructure — a Hub, Process
-Manager, and Dedicated Game Servers — so that players can create and join rooms using short codes instead of sharing IP
-addresses.
+This guide is for community members and developers who want to run the Unhaunter multiplayer infrastructure on a Linux
+VPS. This stack allows players to create and join rooms using short codes instead of sharing their IP addresses.
 
-**Status: Early / Unstable.** This infrastructure was implemented recently and has not been battle-tested in production.
-Expect rough edges. If you run into problems, please report them on [GitHub](https://github.com/deavid/unhaunter/issues)
-or [Discord](https://discord.gg/Ux7CGfvVtV).
+**Status: Early / Unstable.** This infrastructure was implemented recently and keeps changing.
 
 ---
 
 ## What You're Deploying
 
-Three separate programs work together:
+Three separate programs work together in this stack:
 
 ```
-Players ──HTTPS/HTTP──► Hub (unhub)
+Players ──HTTPS/HTTP──► Caddy Reverse Proxy
                          │
+                         │  Local proxy (localhost:3000)
+                         ▼
+                       Hub (unhub)
+                         ▲
                          │  persistent TCP (ProcMan connects OUT to Hub)
                          │
                     ProcMan (unprocman)
@@ -30,399 +31,244 @@ Players ──HTTPS/HTTP──► Hub (unhub)
                     (after Hub gives them the address)
 ```
 
-| Program                   | What it does                                                                                                                                                                                                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`unhub`**               | The Hub. A lightweight HTTP API server. Players talk to it to create/join rooms. It never runs game code. It routes players to dedicated servers via room codes.                                                                                                          |
-| **`unprocman`**           | The Process Manager. Runs on the same machine as the game servers. Connects **outbound** to the Hub (no inbound ports needed for ProcMan itself). Spawns, monitors, and recycles `unhaunter_dedicated` processes. Maintains a pool of idle servers ready to accept rooms. |
-| **`unhaunter_dedicated`** | The actual game server. Headless Bevy — no GPU, no window, no audio. One process = one room = one TCP port. Players connect to it directly after the Hub tells them where it is.                                                                                          |
+| Program                   | What it does                                                                                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **`unhub`**               | The central API server. Players talk to it to create/join rooms. It never runs game code itself, but acts as a tracker, routing players to dedicated servers based on the room codes.                  |
+| **`unprocman`**           | The Process Manager. Connects outbound to the Hub over TCP. It manages a pool of idle `unhaunter_dedicated` game servers, assigning rooms to them, and terminating/restarting them as needed.          |
+| **`unhaunter_dedicated`** | The actual headless game server running Bevy (no GPU, no audio, just logic). Each game room is processed as its own OS process, securely bound to exactly one TCP port. Players directly connect here. |
 
-**Key architectural property:** ProcMan connects _outbound_ to the Hub. The Hub never initiates connections to ProcMan.
-This means ProcMan machines don't need special firewall rules for the Hub link — only the game port range needs to be
-open for player traffic.
+---
+
+## Deployment Strategy: Local Build + Ansible
+
+Because building a headless Bevy server requires compiling the entire Rust and Bevy codebase, it is incredibly
+resource-heavy (often locking up or using 100% of the CPU of smaller VPS nodes).
+
+To keep things **fast, easy to update, and highly automated**, our standard hosting strategy uses **Ansible**:
+
+1. You build the three core binaries locally on your development machine where you have a fast CPU.
+2. An Ansible playbook pushes the binaries and the `assets/` folder to your VPS.
+3. Ansible configures **Caddy** to automatically provision Let's Encrypt certificates and reverse-proxy traffic locally
+   to the `unhub` API.
+4. Ansible pre-configures and ties together the networking and authentication components, entirely bypassing any
+   "bootstrap dance".
 
 ---
 
 ## Prerequisites
 
-- A Linux machine (or VPS). The Hub is very lightweight (~10MB RAM for the Hub process itself). The dedicated servers
-  are heavier (Bevy's scheduler uses ~10% CPU per idle instance on a 2-vCore VPS — this is a known issue).
-- Rust toolchain. See [INSTALLING_DEPS.md](INSTALLING_DEPS.md) for Bevy's system dependencies.
+### On your Dev Machine (Local)
 
-> **TODO:** There is currently no release process for the Hub/ProcMan/Dedicated binaries. The [Justfile](Justfile) and
-> [RELEASING.md](RELEASING.md) only cover the game client (`unhaunter_game`). You must build from source. This needs to
-> be fixed — prebuilt binaries and/or container images should be provided. See also: the `assets/` directory must be
-> available to `unhaunter_dedicated` at runtime (it loads map data), but there is no packaging step that bundles assets
-> with the server binary.
+- You need this Git repository checked out.
+- The `rust` toolchain installed to compile the binaries.
+- Packages `ansible` and `rsync` installed for deployment.
 
----
+### On your Server (VPS)
 
-## Step 1: Build Everything
-
-From the repository root:
-
-```bash
-cargo build --release --bin unhub --bin unprocman --bin unhaunter_dedicated
-```
-
-This produces three binaries:
-
-- `target/release/unhub`
-- `target/release/unprocman`
-- `target/release/unhaunter_dedicated`
-
-> **TODO:** `--release` builds are slow (full Bevy compilation). There are no feature flags to produce a lighter
-> dedicated server build. The `unhaunter_dedicated` binary links against Bevy, which pulls in significant dependencies
-> even in headless mode.
+- A basic recent Linux distribution (Debian/Ubuntu recommended).
+- A public IPv4 address with SSH access.
+- A Domain Name pointing to the server's public IP (needed for Caddy to pull Let's Encrypt SSL certs).
+- Open Ports: Make sure `80` / `443` (HTTP/HTTPS) and `12000-12100` (Game Servers) are open and accessible on the VPS.
 
 ---
 
-## Step 2: Start the Hub (`unhub`)
+## Step 1: Build the Binaries Locally
 
-The Hub must be running first. Everything else connects to it.
-
-```bash
-cd /path/to/your/deployment/hub
-/path/to/unhub
-```
-
-On first run, it generates a default `hub_config.ron` in the current working directory.
-
-**Expected output on success:**
-
-```
-INFO unhub: Hub API listening on 0.0.0.0:3000
-INFO unhub::procman: ProcMan listener running on 0.0.0.0:11000
-```
-
-**If you see nothing or an error:** Check that ports 3000 and 11000 are not already in use. The Hub binds to
-`0.0.0.0:3000` (HTTP API for players) and `0.0.0.0:11000` (TCP for ProcMan connections). These ports are currently
-**hardcoded** in the source — there are no CLI flags or config options to change them.
-
-> **TODO:** The API port (3000) and ProcMan listener port (11000) are hardcoded in `crates/tools/unhub/src/main.rs`.
-> They should be configurable via `hub_config.ron` or CLI flags.
-
-### Verify the Hub is running
+From the root directory on your local development machine, fully compile the required release binaries using Cargo:
 
 ```bash
-curl http://localhost:3000/health
+cargo build --release -p unhub -p unprocman -p unhaunter --bin unhub --bin unprocman --bin unhaunter_dedicated
 ```
 
-Expected response:
+This may take some time. When complete, three binaries will exist in `target/release/`.
 
-```json
-{ "hub_version": "0.3.2", "uptime_seconds": 5 }
+---
+
+## Step 2: Deploy with Ansible
+
+We have provided a fully prepared playbook inside `deploy/multiplayer.yml`.
+
+By running this script, Ansible will remotely:
+
+- Create a dedicated standard `unhaunter` user on your server.
+- Copy your `assets/` and the newly built `target/release/` binaries to `/opt/unhaunter/`.
+- Generate custom `hub_config.ron` and `procman_config.ron` files, locking in a shared pre-generated UUID ensuring
+  immediate and safe internal auth.
+- Bind `unhub` internally to `127.0.0.1:3000` for API isolation, closing off direct internet access.
+- Install Caddy and mount it to your secure Domain Name.
+- Setup auto-restarting systemd daemons for the background services.
+
+### Running the Ansible Playbook
+
+Create an inventory file `hosts.ini` (optional) containing your VPS IP, or simply construct the command inline.
+
+Run the playbook from the root of the repository:
+
+```bash
+cd deploy/
+ansible-playbook multiplayer.yml -i "YOUR_VPS_IP," -u YOUR_SSH_USER -e "domain=hub.yourdomain.com"
 ```
 
-### `hub_config.ron` Reference
+_Notes:_
 
-Generated on first run. You **must edit this** before ProcMan can connect.
+- Replace `YOUR_VPS_IP` with the IP of your node. The trailing comma `,` is required for a dynamic host.
+- Replace `YOUR_SSH_USER` with the administrative username on your VPS (e.g., `debian`, `ubuntu`, or `root`). It must
+  have sudo privileges.
+- Replace `hub.yourdomain.com` with your pre-configured and A-record mapped domain.
+
+Once it completes successfully, **you are done**. The server is fully installed, certs are pulled, the Hub API is live
+over HTTPS via Caddy, and `unprocman` has loaded a game server.
+
+### Doing Updates
+
+For developers, rolling out an update means literally running two commands:
+
+1. `cargo build --release -p unhub -p unprocman -p unhaunter --bin unhub --bin unprocman --bin unhaunter_dedicated`
+2. Run the Ansible script again.
+
+Since Ansible is idempotent, it will skip all unchanged setup steps, instantly copy your new binaries and assets, and
+restart the daemons.
+
+---
+
+## How It Works (Deep Dive)
+
+### Config Files & UUID Bootstrapping
+
+If you check `/opt/unhaunter/hub_config.ron` on your VPS, you will see two key components:
 
 ```ron
 (
-    version: 1,
-    official_server_keys: {},
-    banned_uuids: [],
-    allowed_procman_uuids: [],
+    api_bind: "127.0.0.1:3000",
+    procman_bind: "127.0.0.1:11000",
+    allowed_procman_uuids: ["0ba7eb..."]
+    // ...
 )
 ```
 
-| Field                   | Type                    | Description                                                                                                                                                                                                                                                                 |
-| ----------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version`               | `u32`                   | Config schema version. Do not change manually.                                                                                                                                                                                                                              |
-| `official_server_keys`  | `HashMap<Uuid, String>` | UUIDs of servers authorized to host "official" games, mapped to human-readable names. Not currently used for anything in v1 — reserved for future ranking/trust features.                                                                                                   |
-| `banned_uuids`          | `HashSet<Uuid>`         | Player Installation UUIDs banned from Hub services (creating/joining rooms). Banned players can still play single-player and direct-IP multiplayer.                                                                                                                         |
-| `allowed_procman_uuids` | `HashSet<Uuid>`         | **Critical.** Only ProcMan instances whose `installation_id` appears in this set will be accepted. If this is empty, **no ProcMan can connect**, which means no rooms can be created. You must add your ProcMan's UUID here after its first run generates one (see Step 3). |
+The config locks both `unhub`'s APIs to `127.0.0.1`. Meaning outside traffic must hit the reverse proxy mapping to touch
+it. When `unprocman` starts, it expects its `installation_id` to be explicitly added to `allowed_procman_uuids`. The
+ansible playbook syncs these UUIDs upon the very first rollout to avoid any friction.
 
-### What happens if the Hub crashes or restarts
+### Caddy Reverse Proxy & HTTPS
 
-All room state is in-memory. If the Hub restarts, all active rooms are lost. ProcMan will detect the disconnect and
-attempt to reconnect every 5 seconds. Dedicated server processes keep running (players already connected stay
-connected), but no new rooms can be created or joined until the Hub is back and ProcMan reconnects.
+We use `caddy` precisely for its lightweight footprint and native Let's Encrypt support. Its mapping, written to
+`/etc/caddy/Caddyfile`, is automatically mapped simply like so:
 
-`hub_config.ron` is persisted to disk (via atomic write: write to `.tmp`, rename). Bans and allowed UUIDs survive
-restarts.
+```caddyfile
+hub.yourdomain.com {
+    reverse_proxy 127.0.0.1:3000
+}
+```
+
+### The Game Port Matrix
+
+**The `12000 - 12100` range is exposed.** When `unprocman` loads pool processes, it sequentially cycles through these
+ports. When clients obtain the matching port via the secure API URL call via `caddy (443/3000)`, their final link
+directly targets `YOUR_VPS_IP:12001`. That's why Caddy does not route these - performance routing happens over naked TCP
+straight into Bevy!
+
+### Diagnosing Issues & Logs
+
+System logs capture all output out of both tools. Since they are run securely as the low interaction `unhaunter` user
+via systemd, finding crashes uses native linux tools.
+
+By default, it is highly recommended to monitor both the Hub and the Process Manager (and its game servers)
+simultaneously:
+
+```bash
+# Follow logs for both services at once (Recommended)
+sudo journalctl -u unhub.service -u unprocman.service -f
+```
+
+You can also isolate them if needed:
+
+```bash
+# To follow error logs live for ONLY unhub
+sudo journalctl -u unhub.service -f
+
+# Looking exclusively at ONLY ProcMan server logs
+sudo journalctl -u unprocman.service -f
+```
+
+_(Note: Logs generated from the Bevy processes spawned within `unhaunter_dedicated` bubble directly up and are appended
+to the logs of `unprocman.service` inside of bracketed process tags)._
 
 ---
 
-## Step 3: Start the Process Manager (`unprocman`)
+## Testing Connectivity Setup
 
-ProcMan needs to find the `unhaunter_dedicated` binary. It looks at the path configured in `procman_config.ron`.
-
-```bash
-cd /path/to/your/deployment/procman
-/path/to/unprocman
-```
-
-On first run, it generates a default `procman_config.ron` with a new random `installation_id` (UUID).
-
-**First-run bootstrap problem:** ProcMan will immediately try to connect to the Hub, but the Hub will reject it because
-its UUID isn't in `allowed_procman_uuids` yet. You need to:
-
-1. Run `unprocman` once. Let it fail to connect. Note the `installation_id` it wrote to `procman_config.ron`.
-2. Add that UUID to `hub_config.ron`'s `allowed_procman_uuids` list.
-3. Restart the Hub (it reads config on startup, not dynamically).
-4. Restart ProcMan.
-
-> **TODO:** This bootstrap dance is painful. The Hub should either have a CLI command to add a ProcMan UUID, or should
-> reload config on SIGHUP, or ProcMan's first-run output should explicitly print "Add this UUID to your Hub config:
-> `<uuid>`" instead of just silently writing a config file.
-
-**Expected output on successful connection:**
-
-```
-INFO unprocman: Connecting to Hub at localhost:11000...
-INFO unprocman::hub_comm: Connected to Hub (version: 0.3.2)
-INFO unprocman::manager: Spawning new idle server on port 12000
-```
-
-**If you see `Auth rejected by Hub`:** Your ProcMan's `installation_id` is not in the Hub's `allowed_procman_uuids`.
-
-**If you see `Failed to connect to Hub: ... Retrying in 5s...`:** The Hub isn't running, or ProcMan's `hub_addr` is
-wrong, or port 11000 is firewalled.
-
-**If you see `No such file or directory` after "Spawning new idle server":** The `game_binary_path` in
-`procman_config.ron` doesn't point to a valid `unhaunter_dedicated` binary.
-
-### `procman_config.ron` Reference
-
-```ron
-(
-    hub_addr: "localhost:11000",
-    public_addr: "127.0.0.1",
-    installation_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    port_range: (12000, 12100),
-    idle_pool_size: 1,
-    game_binary_path: "./unhaunter_dedicated",
-)
-```
-
-| Field              | Type         | Description                                                                                                                                                                                                                                                                                                                                                       |
-| ------------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `hub_addr`         | `String`     | Address of the Hub's ProcMan TCP listener. For local dev: `"localhost:11000"`. For remote: `"hub.example.com:11000"`. This is the TCP port (not the HTTP API port).                                                                                                                                                                                               |
-| `public_addr`      | `String`     | **The IP or domain that players will use to connect to game servers on this machine.** This is what gets sent to players via the Hub. If this is wrong, players will get a server address they can't reach. For local dev: `"127.0.0.1"`. For production: your server's public IP or domain.                                                                      |
-| `installation_id`  | `Uuid`       | Auto-generated on first run. This must match an entry in the Hub's `allowed_procman_uuids`. Do not change it after registering it with the Hub.                                                                                                                                                                                                                   |
-| `port_range`       | `(u16, u16)` | Range of TCP ports to assign to dedicated server processes. Each server gets one port. The range must not overlap with the Hub's ProcMan listener port (default 11000). Default: `(12000, 12100)`, giving you up to 100 simultaneous rooms. **These ports must be open for inbound TCP traffic from the internet** — this is how players connect to game servers. |
-| `idle_pool_size`   | `usize`      | Number of pre-spawned idle `unhaunter_dedicated` processes to keep ready. When one gets assigned a room, ProcMan spawns a replacement. Higher values = faster room creation but more RAM/CPU used. Default: `1`. Each idle server costs ~50-100MB RAM and ~10% CPU on a 2-vCore machine (Bevy scheduler overhead).                                                |
-| `game_binary_path` | `String`     | Path to the `unhaunter_dedicated` executable. Relative to ProcMan's working directory. The binary must have the `assets/` directory available (ProcMan attempts to set `CARGO_MANIFEST_DIR` to the workspace root for dev builds, but this is fragile and won't work for deployed binaries).                                                                      |
-
-### Assets directory problem
-
-`unhaunter_dedicated` is a Bevy application that needs the `assets/` folder at runtime (it loads map files). In a dev
-build, Bevy finds assets via `CARGO_MANIFEST_DIR`. In a deployed build, Bevy looks for an `assets/` directory relative
-to the binary's working directory.
-
-ProcMan spawns the dedicated server as a child process. Its working directory is ProcMan's working directory, not the
-binary's location. So you must either:
-
-1. Run ProcMan from the repository root (where `assets/` exists), or
-2. Copy/symlink `assets/` next to wherever ProcMan runs from, or
-3. Copy/symlink `assets/` to the same directory as the `unhaunter_dedicated` binary and set `game_binary_path`
-   accordingly.
-
-> **TODO:** This is fragile and undocumented in the code. The dedicated server should accept an `--assets-dir` flag, or
-> ProcMan should set the working directory of spawned processes to the binary's parent directory, or the release
-> packaging should bundle assets with the server binary.
-
----
-
-## Step 4: Verify the Stack
-
-At this point you should have three processes running:
-
-1. `unhub` — listening on ports 3000 (HTTP) and 11000 (TCP)
-2. `unprocman` — connected to hub, managing dedicated servers
-3. At least one `unhaunter_dedicated` — spawned by ProcMan, idle, waiting for a room assignment
-
-### Check health
+To verify everything has launched properly, query your Hub endpoint publicly:
 
 ```bash
-curl http://localhost:3000/health
+curl https://hub.yourdomain.com/health
 ```
 
-### Create a test room
-
-```bash
-curl -X POST http://localhost:3000/v1/rooms/create \
-  -H "Content-Type: application/json" \
-  -d '{"player_uuid": "00000000-0000-0000-0000-000000000001", "game_version": "0.3.2-dev"}'
-```
-
-Expected response (if everything works):
+Expected Response:
 
 ```json
-{ "code": "K7WRP", "addr": "127.0.0.1:12000", "secret": "..." }
+{ "hub_version": "...", "uptime_seconds": ... }
 ```
-
-**If you get `{"error":"no_capacity","message":"No server capacity available for this game version."}`:**
-
-- ProcMan is not connected to the Hub (check ProcMan's `hub_addr` and the Hub's `allowed_procman_uuids`).
-- Or there are no idle servers (check ProcMan logs for spawn errors).
-- Or the `game_version` in the request doesn't match what ProcMan reports. The version is currently **hardcoded** as
-  `"0.3.2-dev"` in `crates/tools/unprocman/src/hub_comm.rs`. It must match the version the game client sends.
-
-> **TODO:** The game version string `"0.3.2-dev"` is hardcoded in ProcMan's hub communication code. This should come
-> from the Cargo package version or a config field. If clients and servers are built from different commits, version
-> mismatch silently prevents room creation with a misleading "no capacity" error.
-
-**If you get `{"error":"timeout","message":"Timed out waiting for server allocation."}`:**
-
-- ProcMan received the request but the dedicated server didn't start in time (5 seconds). Check ProcMan logs for errors
-  spawning the binary.
 
 ### Join with a game client
 
-```bash
-cargo run --bin unhaunter_game -- --hub-url http://localhost:3000
-```
-
-In the main menu, navigate to "Play Online", then "Create Room" or "Join Room".
-
-> **TODO:** The `--hub-url` flag overrides the default Hub URL. The default is configured in `assets/config/client.ron`
-> but this file may not exist in the repository yet. The behavior when neither the flag nor the config file is present
-> is unclear and may result in a silent failure to connect.
-
----
-
-## Step 5: Production Deployment
-
-### Network Requirements
-
-| Port                       | Protocol   | Who connects | Direction                        | Purpose                                         |
-| -------------------------- | ---------- | ------------ | -------------------------------- | ----------------------------------------------- |
-| 3000                       | TCP (HTTP) | Game clients | Inbound to Hub                   | REST API (create/join rooms, health checks)     |
-| 11000                      | TCP        | ProcMan      | **Outbound from ProcMan** to Hub | ProcMan ↔ Hub orchestration. ProcMan initiates. |
-| 12000–12100 (configurable) | TCP        | Game clients | Inbound to ProcMan machine       | Direct game traffic. Each room uses one port.   |
-
-- The Hub machine needs ports **3000** and **11000** open for inbound.
-- The ProcMan/game-server machine needs the game **port range** open for inbound. ProcMan itself needs no inbound ports
-  (it connects out to the Hub).
-- If Hub and ProcMan are on different machines, ProcMan needs outbound access to Hub's port 11000.
-- If Hub and ProcMan are on the **same** machine, the game port range must not include port 11000 (conflict with the
-  Hub's ProcMan listener). The default config uses 12000–12100, which avoids this.
-
-### TLS / HTTPS
-
-The Hub's HTTP API (port 3000) should be behind a reverse proxy (e.g., Nginx, Caddy) with TLS for production. WASM
-clients (future) will require HTTPS. The ProcMan TCP connection (port 11000) is **not encrypted** — it uses plaintext
-JSONL over TCP.
-
-> **TODO:** The ProcMan ↔ Hub connection has no encryption or authentication beyond UUID matching. On a public network,
-> this is a security concern. TLS for the ProcMan link, or at minimum a shared secret, should be added before any
-> serious production deployment.
-
-### Systemd
-
-> **TODO:** No systemd unit files are provided. Below is a rough template — it has not been tested.
-
-```ini
-# /etc/systemd/system/unhub.service
-[Unit]
-Description=Unhaunter Hub
-After=network.target
-
-[Service]
-Type=simple
-User=unhaunter
-WorkingDirectory=/opt/unhaunter/hub
-ExecStart=/opt/unhaunter/bin/unhub
-Restart=always
-RestartSec=5
-Environment=RUST_LOG=unhub=info
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```ini
-# /etc/systemd/system/unprocman.service
-[Unit]
-Description=Unhaunter Process Manager
-After=network.target unhub.service
-
-[Service]
-Type=simple
-User=unhaunter
-WorkingDirectory=/opt/unhaunter/procman
-ExecStart=/opt/unhaunter/bin/unprocman
-Restart=always
-RestartSec=5
-Environment=RUST_LOG=unprocman=info
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Note: `unhaunter_dedicated` is managed by ProcMan, not by systemd. Do not create a service for it.
-
-### Monitoring
-
-- **Health endpoint:** `GET /health` on port 3000 returns `{"hub_version":"...","uptime_seconds":...}`. Use this for
-  uptime monitoring.
-- **Logs:** Both `unhub` and `unprocman` log to stderr via `tracing`. Control verbosity with the `RUST_LOG` environment
-  variable (e.g., `RUST_LOG=unhub=debug` for verbose output).
-- **ProcMan child output:** ProcMan captures stdout/stderr from dedicated servers and re-logs them with a `[Port NNNNN]`
-  prefix, detecting log levels from Bevy's format.
-
-> **TODO:** There are no metrics, no Prometheus endpoint, no structured log output (JSON). For a production deployment
-> with multiple ProcMans, observability is effectively nonexistent beyond reading log lines.
-
-### Backup
-
-The only persistent state is `hub_config.ron` (bans, allowed ProcMans) and `procman_config.ron` (installation UUID). All
-room state is in-memory and ephemeral. Back up the `.ron` files.
-
-### Upgrades
-
-> **TODO:** There is no documented upgrade procedure. The Hub and ProcMan have no graceful shutdown signal handling.
-> Restarting the Hub drops all in-memory room state. Restarting ProcMan kills all dedicated server child processes. A
-> zero-downtime upgrade path (drain rooms, restart, re-register) does not exist.
-
----
-
-## Telling Players to Use Your Hub
-
-Players override the default Hub URL with a CLI flag:
+Run the game on your dev machine, routing directly to the custom URL we configured via Caddy:
 
 ```bash
-unhaunter_game --hub-url https://hub.your-community.example.com
+cargo run --bin unhaunter_game -- --hub-url https://hub.yourdomain.com
 ```
 
-> **TODO:** There is no in-game UI for entering a custom Hub URL. Players must use the CLI flag. The design proposal
-> mentions an `assets/config/client.ron` with a "Universe" concept, but the client-side implementation status of this is
-> unclear.
+In the main menu, navigate to **Play Online**, and it should securely connect via your HTTPS wrapper.
 
 ---
 
-## Common Problems
+## Manual Execution and Tweaking (Advanced)
 
-| Symptom                                                        | Likely cause                                                     | Fix                                                                |
-| -------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------ |
-| ProcMan logs `Auth rejected by Hub`                            | ProcMan's `installation_id` not in Hub's `allowed_procman_uuids` | Add the UUID to `hub_config.ron`, restart Hub                      |
-| ProcMan logs `Failed to connect to Hub: Connection refused`    | Hub isn't running, or `hub_addr` is wrong                        | Start the Hub, check the address and port                          |
-| ProcMan logs `No such file or directory` when spawning servers | `game_binary_path` is wrong                                      | Fix the path in `procman_config.ron`                               |
-| ProcMan logs `No free ports in range`                          | All ports in `port_range` are in use                             | Increase the range, or wait for rooms to close                     |
-| `create_room` returns `no_capacity`                            | No ProcMan connected, or no idle servers, or version mismatch    | Check ProcMan connection, check logs, check version string         |
-| `create_room` returns `timeout`                                | Dedicated server failed to start within 5s                       | Check ProcMan logs for spawn errors                                |
-| `join_room` returns `code_not_found`                           | Typo, or room timed out (5 min idle), or Hub restarted           | Verify room code, create a new room                                |
-| Players can't connect to game server                           | Game port range is firewalled                                    | Open the port range for inbound TCP                                |
-| Game client shows no Hub connection indicator                  |                                                                  | This is a known missing feature (see CUJ inspection)               |
-| Dedicated server crashes on startup                            | Missing `assets/` directory                                      | Ensure assets are available (see "Assets directory problem" above) |
+If you need to test the stack without Ansible, or tweak things manually on a node, here's how the inner configuration
+system natively behaves:
 
----
+### Config Variables (Manual Bootstrap)
 
-## Known Limitations
+Running `unhub` once by itself creates a `hub_config.ron`. Running `unprocman` creates `procman_config.ron`.
 
-This is an early implementation. Major gaps include:
+If you were doing this entirely manually (without the Ansible templates), you must deal with the **Bootstrap Dance**:
 
-- **No prebuilt binaries or containers.** You must build from source.
-- **Hardcoded ports.** Hub API (3000) and ProcMan listener (11000) are not configurable.
-- **Hardcoded game version.** ProcMan reports `"0.3.2-dev"` regardless of actual binary version.
-- **No encryption on ProcMan ↔ Hub link.**
-- **No graceful shutdown or drain.** Restarting any component disrupts active games.
-- **No room capacity limit enforcement at the Hub level.** The Hub doesn't check player count before directing a join —
-  the dedicated server rejects excess players, but the error message to the player is poor.
-- **No auto-reconnect for game clients.** If a player disconnects, they must manually rejoin.
-- **CPU overhead.** Each idle dedicated server consumes ~10% CPU on a 2-vCore machine due to Bevy's multithreaded
-  scheduler running even when idle.
-- **No player-facing error messages.** Hub errors (room not found, banned, etc.) are logged to the terminal but not
-  displayed in the game UI.
+1. Run `unprocman` once. Let it fail to connect. Note the random `installation_id` (a UUID) it wrote to
+   `procman_config.ron`.
+2. Add that UUID to `hub_config.ron`'s `allowed_procman_uuids` list.
+3. Restart both services (they do not hot-reload these configurations).
+
+`procman_config.ron` Reference:
+
+- `hub_addr`: Where procman looks for the hub. Must match the IP/port of the Hub's `procman_bind`.
+- `public_addr`: **CRITICAL.** This must be the public IP or domain of your machine. This string is what the Hub
+  physically returns to your players to connect to the dedicated server.
+- `port_range`: A tuple like `(12000, 12100)`. Every active game room securely grabs an exclusive port here.
+- `game_binary_path`: A string relative path mapped to the `unhaunter_dedicated` executable.
+- `idle_pool_size`: Number of ready-to-go headless servers. Default is 1. Bevy pulls ~10% CPU per idle instance.
+
+### System Failure Consequences
+
+All room association state inside `unhub` is currently held strictly in-memory. If `unhub` crashes or restarts, all
+active room mappings are lost. However, pre-existing games that have already loaded their players inside
+`unhaunter_dedicated` will **continue unharmed**, as those are direct TCP links bypassing the Hub. Players just won't be
+able to generate new rooms until the hub returns.
+
+## Other useful stuff
+
+Since we deployed the applications as `systemd` services using Ansible, all logs are automatically collected by
+`journald`.
+
+You can view the logs on your server using the `journalctl` command:
+
+**To view live logs for `unhub`:**
+
+```bash
+sudo journalctl -u unhub.service -f
+```
+
+**To view live logs for `unprocman` (which also includes output from the game servers):**
+
+```bash
+sudo journalctl -u unprocman.service -f
+```

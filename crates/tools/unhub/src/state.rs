@@ -22,12 +22,24 @@ pub struct HubState {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct HubConfig {
     pub version: u32,
+    #[serde(default = "default_api_bind")]
+    pub api_bind: String,
+    #[serde(default = "default_procman_bind")]
+    pub procman_bind: String,
     pub official_server_keys: std::collections::HashMap<Uuid, String>,
     pub banned_uuids: HashSet<Uuid>,
     pub allowed_procman_uuids: HashSet<Uuid>,
     pub max_rooms_per_ip: usize,
     pub trust_proxy_headers: bool,
     pub pow_difficulty: u32,
+}
+
+fn default_api_bind() -> String {
+    "127.0.0.1:3000".to_string()
+}
+
+fn default_procman_bind() -> String {
+    "127.0.0.1:11000".to_string()
 }
 
 pub struct NonceEntry {
