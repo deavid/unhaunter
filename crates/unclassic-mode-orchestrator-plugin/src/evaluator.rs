@@ -8,7 +8,7 @@ impl MissionEvaluator for ClassicEvaluator {
         // Calculate base score without difficulty multiplier
         let mut base_score = (250.0 * data.ghosts_unhaunted as f64)
             / (1.0 + data.repellent_used_amt as f64)
-            / (1.0 + (data.ghost_types.len() as u32 - data.ghosts_unhaunted) as f64);
+            / (1.0 + (data.ghost_types.len() as u32).saturating_sub(data.ghosts_unhaunted) as f64);
 
         // Sanity modifier
         base_score *= (data.average_sanity as f64 + 30.0) / 50.0;
