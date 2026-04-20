@@ -3389,7 +3389,7 @@ dependencies = [
 
 [[package]]
 name = "ghost_list"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "clap",
  "csv",
@@ -3402,7 +3402,7 @@ dependencies = [
 
 [[package]]
 name = "ghost_radio"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "rand 0.10.0",
  "rand_distr 0.6.0",
@@ -7153,14 +7153,14 @@ checksum = "f8c1ae7cc0fdb8b842d65d127cb981574b0d2b249b74d1c7a2986863dc134f71"
 
 [[package]]
 name = "unaudiobg-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
 ]
 
 [[package]]
 name = "unaudiobg-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7176,7 +7176,7 @@ dependencies = [
 
 [[package]]
 name = "unaudiospatial-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "unspatial-core",
@@ -7184,7 +7184,7 @@ dependencies = [
 
 [[package]]
 name = "unaudiospatial-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7197,7 +7197,7 @@ dependencies = [
 
 [[package]]
 name = "unbehavior"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -7207,7 +7207,7 @@ dependencies = [
 
 [[package]]
 name = "unbehavior-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "anyhow",
  "bevy",
@@ -7220,7 +7220,7 @@ dependencies = [
 
 [[package]]
 name = "unboard-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -7231,7 +7231,7 @@ dependencies = [
 
 [[package]]
 name = "unboard-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "unbehavior-core",
@@ -7244,7 +7244,7 @@ dependencies = [
 
 [[package]]
 name = "uncampaign-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7262,7 +7262,7 @@ dependencies = [
 
 [[package]]
 name = "uncareer-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "serde",
@@ -7271,7 +7271,7 @@ dependencies = [
 
 [[package]]
 name = "uncareer-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7288,14 +7288,14 @@ dependencies = [
 
 [[package]]
 name = "unclassic-mode-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
 ]
 
 [[package]]
 name = "unclassic-mode-gameplay-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -7319,7 +7319,7 @@ dependencies = [
 
 [[package]]
 name = "unclassic-mode-orchestrator-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -7340,7 +7340,7 @@ dependencies = [
 
 [[package]]
 name = "unclassic-mode-render-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7366,7 +7366,7 @@ dependencies = [
 
 [[package]]
 name = "unclassic-mode-ui-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7386,7 +7386,7 @@ dependencies = [
 
 [[package]]
 name = "uncommon-app-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy_platform",
  "rand 0.10.0",
@@ -7394,14 +7394,14 @@ dependencies = [
 
 [[package]]
 name = "uncommon-states-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
 ]
 
 [[package]]
 name = "undifficulty-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
@@ -7412,7 +7412,7 @@ dependencies = [
 
 [[package]]
 name = "undifficulty-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "undifficulty-core",
@@ -7420,7 +7420,7 @@ dependencies = [
 
 [[package]]
 name = "unfog-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -7430,7 +7430,7 @@ dependencies = [
 
 [[package]]
 name = "unfog-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7455,7 +7455,7 @@ dependencies = [
 
 [[package]]
 name = "unfps-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "unmetrics-core",
@@ -7463,7 +7463,7 @@ dependencies = [
 
 [[package]]
 name = "ungear-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -7478,7 +7478,7 @@ dependencies = [
 
 [[package]]
 name = "ungear-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -7503,7 +7503,7 @@ dependencies = [
 
 [[package]]
 name = "ungearitems-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
@@ -7516,7 +7516,7 @@ dependencies = [
 
 [[package]]
 name = "ungearitems-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7549,7 +7549,7 @@ dependencies = [
 
 [[package]]
 name = "unghost-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -7566,7 +7566,7 @@ dependencies = [
 
 [[package]]
 name = "unghost-logic"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_replicon",
@@ -7596,7 +7596,7 @@ dependencies = [
 
 [[package]]
 name = "unghost-presentation"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7622,7 +7622,7 @@ dependencies = [
 
 [[package]]
 name = "unhaunter"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "clap",
@@ -7688,7 +7688,7 @@ dependencies = [
 
 [[package]]
 name = "unhub"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "anyhow",
  "axum",
@@ -7711,7 +7711,7 @@ dependencies = [
 
 [[package]]
 name = "unhub-client"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "anyhow",
  "hmac",
@@ -7724,7 +7724,7 @@ dependencies = [
 
 [[package]]
 name = "unhub-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7784,7 +7784,7 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
 name = "uninput-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "unsettings-core",
@@ -7792,7 +7792,7 @@ dependencies = [
 
 [[package]]
 name = "uninput-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7809,7 +7809,7 @@ dependencies = [
 
 [[package]]
 name = "uninteraction-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "serde",
@@ -7818,7 +7818,7 @@ dependencies = [
 
 [[package]]
 name = "uninteraction-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_replicon",
@@ -7836,7 +7836,7 @@ dependencies = [
 
 [[package]]
 name = "uninventory-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "unaudiospatial-core",
@@ -7855,7 +7855,7 @@ dependencies = [
 
 [[package]]
 name = "uninvestigation-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -7875,7 +7875,7 @@ dependencies = [
 
 [[package]]
 name = "unlight-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -7887,7 +7887,7 @@ dependencies = [
 
 [[package]]
 name = "unlight-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -7906,7 +7906,7 @@ dependencies = [
 
 [[package]]
 name = "unlight-presentation"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7939,7 +7939,7 @@ dependencies = [
 
 [[package]]
 name = "unlobby-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "serde",
@@ -7947,7 +7947,7 @@ dependencies = [
 
 [[package]]
 name = "unlobby-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -7968,7 +7968,7 @@ dependencies = [
 
 [[package]]
 name = "unlocomotion-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "serde",
@@ -7977,7 +7977,7 @@ dependencies = [
 
 [[package]]
 name = "unlocomotion-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_replicon",
@@ -8001,7 +8001,7 @@ dependencies = [
 
 [[package]]
 name = "unmainmenu-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -8016,7 +8016,7 @@ dependencies = [
 
 [[package]]
 name = "unmanual-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8024,7 +8024,7 @@ dependencies = [
 
 [[package]]
 name = "unmanual-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8036,7 +8036,7 @@ dependencies = [
 
 [[package]]
 name = "unmaphub-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "serde",
@@ -8044,7 +8044,7 @@ dependencies = [
 
 [[package]]
 name = "unmaphub-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "uncommon-app-core",
@@ -8056,7 +8056,7 @@ dependencies = [
 
 [[package]]
 name = "unmapload-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8065,7 +8065,7 @@ dependencies = [
 
 [[package]]
 name = "unmapload-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8087,7 +8087,7 @@ dependencies = [
 
 [[package]]
 name = "unmenu-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8098,7 +8098,7 @@ dependencies = [
 
 [[package]]
 name = "unmenu-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8108,7 +8108,7 @@ dependencies = [
 
 [[package]]
 name = "unmenusettings-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -8121,7 +8121,7 @@ dependencies = [
 
 [[package]]
 name = "unmetrics-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -8129,7 +8129,7 @@ dependencies = [
 
 [[package]]
 name = "unmetrics-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "ordered-float",
@@ -8142,7 +8142,7 @@ dependencies = [
 
 [[package]]
 name = "unmission-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "serde",
@@ -8153,7 +8153,7 @@ dependencies = [
 
 [[package]]
 name = "unmission-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "uncommon-states-core",
@@ -8167,7 +8167,7 @@ dependencies = [
 
 [[package]]
 name = "unnavigation-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "unboard-core",
@@ -8176,7 +8176,7 @@ dependencies = [
 
 [[package]]
 name = "unnavigation-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "unbehavior-core",
@@ -8194,7 +8194,7 @@ dependencies = [
 
 [[package]]
 name = "unnoise-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "noise",
@@ -8202,14 +8202,14 @@ dependencies = [
 
 [[package]]
 name = "unnpc-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
 ]
 
 [[package]]
 name = "unnpc-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8228,7 +8228,7 @@ dependencies = [
 
 [[package]]
 name = "unpause-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8242,14 +8242,14 @@ dependencies = [
 
 [[package]]
 name = "unpicking-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
 ]
 
 [[package]]
 name = "unpicking-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_picking",
@@ -8259,7 +8259,7 @@ dependencies = [
 
 [[package]]
 name = "unplayer-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8271,7 +8271,7 @@ dependencies = [
 
 [[package]]
 name = "unplayer-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8296,7 +8296,7 @@ dependencies = [
 
 [[package]]
 name = "unprocman"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "anyhow",
  "futures",
@@ -8314,7 +8314,7 @@ dependencies = [
 
 [[package]]
 name = "unprofile-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -8327,7 +8327,7 @@ dependencies = [
 
 [[package]]
 name = "unprofile-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -8341,7 +8341,7 @@ dependencies = [
 
 [[package]]
 name = "unrender-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "image",
@@ -8360,7 +8360,7 @@ dependencies = [
 
 [[package]]
 name = "unrender-std"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
@@ -8369,7 +8369,7 @@ dependencies = [
 
 [[package]]
 name = "unreplicon-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_replicon",
@@ -8380,7 +8380,7 @@ dependencies = [
 
 [[package]]
 name = "unreplicon-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_renet",
@@ -8402,7 +8402,7 @@ dependencies = [
 
 [[package]]
 name = "unreplicon-transport"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "base64",
  "bevy",
@@ -8424,7 +8424,7 @@ checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "unsettings-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
@@ -8434,7 +8434,7 @@ dependencies = [
 
 [[package]]
 name = "unsettings-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -8445,7 +8445,7 @@ dependencies = [
 
 [[package]]
 name = "unsoundfield-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "unspatial-core",
@@ -8453,7 +8453,7 @@ dependencies = [
 
 [[package]]
 name = "unsoundfield-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "rand 0.10.0",
@@ -8468,7 +8468,7 @@ dependencies = [
 
 [[package]]
 name = "unspatial-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_math",
@@ -8478,7 +8478,7 @@ dependencies = [
 
 [[package]]
 name = "unspatial-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "unmetrics-core",
@@ -8488,7 +8488,7 @@ dependencies = [
 
 [[package]]
 name = "unsummary-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8509,7 +8509,7 @@ dependencies = [
 
 [[package]]
 name = "unthermal-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "ndarray",
@@ -8517,7 +8517,7 @@ dependencies = [
 
 [[package]]
 name = "unthermal-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -8538,7 +8538,7 @@ dependencies = [
 
 [[package]]
 name = "untmxmap-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "anyhow",
  "bevy",
@@ -8554,7 +8554,7 @@ dependencies = [
 
 [[package]]
 name = "untmxmap-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -8572,7 +8572,7 @@ dependencies = [
 
 [[package]]
 name = "untruck-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -8582,7 +8582,7 @@ dependencies = [
 
 [[package]]
 name = "untruck-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -8604,7 +8604,7 @@ dependencies = [
 
 [[package]]
 name = "untruckui-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -8638,7 +8638,7 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "unvitals-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "serde",
@@ -8647,7 +8647,7 @@ dependencies = [
 
 [[package]]
 name = "unvitals-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_replicon",
@@ -8668,7 +8668,7 @@ dependencies = [
 
 [[package]]
 name = "unwalkie-core"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
@@ -8684,7 +8684,7 @@ dependencies = [
 
 [[package]]
 name = "unwalkie-logic"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_replicon",
@@ -8694,7 +8694,7 @@ dependencies = [
 
 [[package]]
 name = "unwalkie-plugin"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -8731,7 +8731,7 @@ dependencies = [
 
 [[package]]
 name = "unwalkie-types"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "serde",
 ]
@@ -8830,7 +8830,7 @@ dependencies = [
 
 [[package]]
 name = "walkie_voice_generator"
-version = "0.3.2-dev"
+version = "0.4.0-dev"
 dependencies = [
  "anyhow",
  "clap",
