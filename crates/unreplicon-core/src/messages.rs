@@ -117,6 +117,48 @@ impl bevy::ecs::entity::MapEntities for OwnershipRevoked {
     }
 }
 
+/// Sent by a client to request that the server authorize local simulation.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
+#[reflect(Default)]
+pub struct RequestSimulationAuthority {
+    pub entity: Entity,
+}
+
+impl Default for RequestSimulationAuthority {
+    fn default() -> Self {
+        Self {
+            entity: Entity::PLACEHOLDER,
+        }
+    }
+}
+
+impl bevy::ecs::entity::MapEntities for RequestSimulationAuthority {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        self.entity = mapper.get_mapped(self.entity);
+    }
+}
+
+/// Sent by a client to request that the server revoke local simulation authority.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
+#[reflect(Default)]
+pub struct RelieveSimulationAuthority {
+    pub entity: Entity,
+}
+
+impl Default for RelieveSimulationAuthority {
+    fn default() -> Self {
+        Self {
+            entity: Entity::PLACEHOLDER,
+        }
+    }
+}
+
+impl bevy::ecs::entity::MapEntities for RelieveSimulationAuthority {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        self.entity = mapper.get_mapped(self.entity);
+    }
+}
+
 /// Message sent by a client to request picking up a gear entity.
 #[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]

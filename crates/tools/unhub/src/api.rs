@@ -71,7 +71,7 @@ pub async fn challenge(
     let now = std::time::Instant::now();
 
     for entry in state.nonces.iter() {
-        if now.duration_since(entry.issued_at).as_secs() > 120 {
+        if now.duration_since(entry.issued_at).as_secs() > 10 {
             expired_nonces.push(entry.key().clone());
             continue;
         }
@@ -171,7 +171,7 @@ pub async fn create_room(
         ));
     }
 
-    if entry.issued_at.elapsed().as_secs() > 120 {
+    if entry.issued_at.elapsed().as_secs() > 10 {
         return Err((
             StatusCode::BAD_REQUEST,
             Json(HubError {
