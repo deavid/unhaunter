@@ -13,8 +13,8 @@ use unreplicon_core::components::{
     LobbyInfo, LobbyPlayerInfo, RepliconPlayerSpawningActive, SimulationAuthorized,
 };
 use unreplicon_core::messages::{
-    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, OwnershipGranted, OwnershipRevoked,
-    RelieveSimulationAuthority, RequestJoinMission, RequestSimulationAuthority,
+    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, RelieveSimulationAuthority,
+    RequestJoinMission, RequestSimulationAuthority,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -77,13 +77,6 @@ pub(super) fn app_setup(app: &mut App) {
     // Register server → client messages
     app.add_server_message::<FloorGearSpawnBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearDespawnBroadcast>(Channel::Ordered);
-    // NOTE: OwnershipGranted is registered as a plain (non-mapped) server message.
-    // Using add_mapped_server_message would cause bevy_replicon to drop the message
-    // silently if the referenced entity is not yet in ServerEntityMap at deserialization
-    // time (which happens when the entity is initially hidden from the client).
-    // handle_ownership_granted performs the entity map lookup manually.
-    app.add_server_message::<OwnershipGranted>(Channel::Ordered);
-    app.add_server_message::<OwnershipRevoked>(Channel::Ordered);
     app.replicate::<SimulationAuthorized>();
 
     replication::app_setup(app);

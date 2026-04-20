@@ -74,49 +74,6 @@ pub struct ExportPlayerMarkersMessage {
     pub is_spectating: bool,
 }
 
-/// Message sent by the server to grant ownership of an entity to a client.
-#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
-#[reflect(Default)]
-pub struct OwnershipGranted {
-    pub entity: Entity,
-}
-
-impl Default for OwnershipGranted {
-    fn default() -> Self {
-        Self {
-            entity: Entity::PLACEHOLDER,
-        }
-    }
-}
-
-impl bevy::ecs::entity::MapEntities for OwnershipGranted {
-    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
-        self.entity = mapper.get_mapped(self.entity);
-    }
-}
-
-/// Message sent by the server to revoke ownership of an entity from a client.
-/// The receiving client must remove `LocallyOwned` from the entity.
-#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
-#[reflect(Default)]
-pub struct OwnershipRevoked {
-    pub entity: Entity,
-}
-
-impl Default for OwnershipRevoked {
-    fn default() -> Self {
-        Self {
-            entity: Entity::PLACEHOLDER,
-        }
-    }
-}
-
-impl bevy::ecs::entity::MapEntities for OwnershipRevoked {
-    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
-        self.entity = mapper.get_mapped(self.entity);
-    }
-}
-
 /// Sent by a client to request that the server authorize local simulation.
 #[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
 #[reflect(Default)]
