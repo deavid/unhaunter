@@ -89,7 +89,7 @@
               official_server_keys: {},
               banned_uuids: [],
               allowed_procman_uuids: ["{{ procman_uuid }}"],
-              max_rooms_per_ip: 2,
+              max_rooms_per_ip: 20,
               trust_proxy_headers: true,
               pow_difficulty: 20,
           )
