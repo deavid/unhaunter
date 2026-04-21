@@ -23,9 +23,12 @@ use untmxmap_plugin::plugin::UnhaunterTmxMapPlugin;
 
 // Domain Logic (Common for all modes)
 use ungear_plugin::plugin::{UnhaunterGearCorePlugin, UnhaunterGearPlugin};
-use ungearitems_plugin::plugin::{UnhaunterGearItemsCorePlugin, UnhaunterGearItemsPlugin};
+use ungearitems_plugin::plugin::{
+    UnhaunterGearItemsCorePlugin, UnhaunterGearItemsPresentationPlugin,
+};
 use unghost_logic::plugin::UnhaunterGhostLogicPlugin;
 use unghost_presentation::plugin::GhostPresentationPlugin;
+use unhaunter_gearitems_logic::plugin::UnhaunterGearItemsLogicPlugin;
 use uninventory_plugin::plugin::UnhaunterInventoryPlugin;
 use unlight_plugin::plugin::UnhaunterLightCorePlugin;
 use unlight_presentation::plugin::UnlightPresentationPlugin;
@@ -251,6 +254,7 @@ pub fn app_run(args: AppArgs) {
         UnhaunterInventoryPlugin,
         UnhaunterGearCorePlugin,
         UnhaunterGearItemsCorePlugin,
+        UnhaunterGearItemsLogicPlugin,
         UnhaunterGhostLogicPlugin,
         UnhaunterNPCCorePlugin,
         UnhaunterTruckCorePlugin,
@@ -301,7 +305,7 @@ pub fn app_run(args: AppArgs) {
             UnhaunterSpatialPlugin,
             UnhaunterRenderPlugin,
             UnhaunterGearPlugin,
-            UnhaunterGearItemsPlugin,
+            UnhaunterGearItemsPresentationPlugin,
         ));
 
         // Audio

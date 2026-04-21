@@ -7645,6 +7645,7 @@ dependencies = [
  "ungearitems-plugin",
  "unghost-logic",
  "unghost-presentation",
+ "unhaunter-gearitems-logic",
  "unhub-plugin",
  "uninput-plugin",
  "uninteraction-plugin",
@@ -7684,6 +7685,27 @@ dependencies = [
  "unwalkie-logic",
  "unwalkie-plugin",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "unhaunter-gearitems-logic"
+version = "0.4.0-dev"
+dependencies = [
+ "bevy",
+ "bevy_replicon",
+ "enum-iterator",
+ "rand 0.10.0",
+ "uncommon-app-core",
+ "uncommon-states-core",
+ "undifficulty-core",
+ "ungear-core",
+ "ungearitems-core",
+ "unghost-core",
+ "uninteraction-core",
+ "unmetrics-core",
+ "unplayer-core",
+ "unreplicon-core",
+ "unspatial-core",
 ]
 
 [[package]]

@@ -1,56 +1,21 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::Replicated;
 use rand::RngExt;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::entity::GameSprite;
 use uncommon_app_core::random_seed;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::salt::{
-    SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltPileArmed, SaltPileArmingTimer,
-    SaltyTrace, SaltyTraceTimer, UVReactive,
+    SaltData, SaltParticleTimer, SaltPile, SaltPileConsumed, SaltyTrace, SaltyTraceTimer,
+    UVReactive,
 };
-use unghost_core::components::logic::ghost_sprite::GhostSprite;
-use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use unreplicon_core::messages::SaltDroppedMessage;
-use unreplicon_core::ownership::LocallyOwned;
-use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
+use unreplicon_core::resources::LocalPlayerRole;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 
 use crate::metrics;
-
-const SALT_PILE_ARMING_DELAY_SECS: f32 = 0.10;
-
-pub(crate) fn update_salt_skeleton(
-    mut q_salt: Query<(Entity, &mut SaltData, &Position), With<LocallyOwned>>,
-    q_triggered: Query<&Triggered>,
-    mut gs_audio: AudioEmitter,
-    mut commands: Commands,
-    authority: Option<Res<AuthorityRole>>,
-    mut salt_drop_writer: MessageWriter<SaltDroppedMessage>,
-) {
-    for (entity, mut salt, pos) in q_salt.iter_mut() {
-        if q_triggered.get(entity).is_ok() && salt.charges > 0 {
-            salt.charges -= 1;
-            gs_audio.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
-            commands.entity(entity).remove::<Triggered>();
-
-            if authority.is_some() {
-                // Offline or PeerHost: authority spawns the replicated pile directly.
-                commands.spawn((SaltPile, *pos, Replicated));
-            } else {
-                // Pure join client: ask the authority to spawn the pile.
-                salt_drop_writer.write(SaltDroppedMessage {
-                    pos: [pos.x, pos.y, pos.z, pos.visual_priority],
-                });
-            }
-        }
-    }
-}
 
 /// Adds visual components to a newly arrived `SaltPile` entity.
 ///
@@ -119,43 +84,6 @@ fn hydrate_salty_trace_visuals(
     }
 }
 
-fn initialize_salt_pile_arming(
-    mut commands: Commands,
-    q_new: Query<
-        Entity,
-        (
-            Added<SaltPile>,
-            Without<SaltPileArmingTimer>,
-            Without<SaltPileArmed>,
-        ),
-    >,
-) {
-    for entity in q_new.iter() {
-        commands
-            .entity(entity)
-            .insert(SaltPileArmingTimer(Timer::from_seconds(
-                SALT_PILE_ARMING_DELAY_SECS,
-                TimerMode::Once,
-            )));
-    }
-}
-
-fn progress_salt_pile_arming(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut q_arming: Query<(Entity, &mut SaltPileArmingTimer), Without<SaltPileArmed>>,
-) {
-    for (entity, mut arming_timer) in q_arming.iter_mut() {
-        arming_timer.0.tick(time.delta());
-        if arming_timer.0.is_finished() {
-            commands
-                .entity(entity)
-                .remove::<SaltPileArmingTimer>()
-                .insert(SaltPileArmed);
-        }
-    }
-}
-
 pub(crate) fn update_salt_skin(mut q_salt: Query<(&SaltData, &mut StatusText, &mut GearSprite)>) {
     for (salt, mut status, mut sprite) in q_salt.iter_mut() {
         status.0 = format!("Charges: {}", salt.charges);
@@ -167,53 +95,6 @@ pub(crate) fn update_salt_skin(mut q_salt: Query<(&SaltData, &mut StatusText, &m
             _ => GearSpriteID::Salt0.to_visual_key(),
         };
     }
-}
-
-fn salt_pile_system(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut ghosts: Query<(&mut GhostSprite, &Position)>,
-    mut salt_piles: Query<(Entity, &Position), (With<SaltPile>, With<SaltPileArmed>)>,
-) {
-    let measure = metrics::SALT_PILE.time_measure();
-
-    for (mut ghost, ghost_position) in ghosts.iter_mut() {
-        for (salt_pile_entity, salt_pile_position) in salt_piles.iter_mut() {
-            if ghost_position.distance(salt_pile_position) < 2.0
-                && (120.0 - ghost.salty_effect_remaining_secs) > 1.0
-            {
-                ghost.rage += 10.0;
-                ghost.salty_effect_remaining_secs = 120.0;
-
-                for _ in 0..5 {
-                    let mut particle_position = *salt_pile_position;
-                    particle_position.x += random_seed::rng().random_range(-0.2..0.2);
-                    particle_position.y += random_seed::rng().random_range(-0.2..0.2);
-                    commands
-                        .spawn(Sprite {
-                            image: asset_server.load("img/salt_particle.png"),
-                            custom_size: Some(Vec2::new(4.0, 4.0)),
-                            ..default()
-                        })
-                        .insert(Transform::from_translation(perspective::to_screen_coord(
-                            particle_position,
-                        )))
-                        .insert(particle_position)
-                        .insert(GameSprite)
-                        .insert(SaltParticle)
-                        .insert(SaltParticleTimer(Timer::from_seconds(
-                            30.0,
-                            TimerMode::Once,
-                        )))
-                        .insert(SpriteLayer::default());
-                }
-
-                commands.entity(salt_pile_entity).despawn();
-            }
-        }
-    }
-
-    measure.end_ms();
 }
 
 fn salt_particle_system(
@@ -275,18 +156,6 @@ fn salty_trace_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_salt_skeleton);
-    app.add_systems(
-        Update,
-        (
-            salt_pile_system,
-            initialize_salt_pile_arming,
-            progress_salt_pile_arming,
-        )
-            .chain()
-            .after(update_salt_skeleton)
-            .run_if(resource_exists::<AuthorityRole>),
-    );
     app.add_systems(
         Update,
         (
@@ -296,7 +165,57 @@ pub(crate) fn app_setup(app: &mut App) {
             initialize_salty_trace_state,
             hydrate_salty_trace_visuals,
             hydrate_salt_pile_visuals,
+            hydrate_salt_pile_consumed,
+            play_salt_effects_audio,
         )
             .run_if(resource_exists::<LocalPlayerRole>),
     );
+}
+
+fn hydrate_salt_pile_consumed(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    q_new: Query<(Entity, &Position), Added<SaltPileConsumed>>,
+) {
+    for (entity, pos) in q_new.iter() {
+        for _ in 0..5 {
+            let mut p = *pos;
+            let mut rng = random_seed::rng();
+            p.x += rng.random_range(-0.2..0.2);
+            p.y += rng.random_range(-0.2..0.2);
+            p.z += rng.random_range(0.0..0.2);
+
+            commands
+                .spawn(Sprite {
+                    image: asset_server.load("img/salt_particle.png"),
+                    ..default()
+                })
+                .insert(
+                    Transform::from_translation(perspective::to_screen_coord(p))
+                        .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+                )
+                .insert(SaltParticleTimer(Timer::from_seconds(1.0, TimerMode::Once)))
+                .insert(GameSprite)
+                .insert(p)
+                .insert(SpriteLayer::default());
+        }
+        commands.entity(entity).insert(Sprite {
+            image: asset_server.load("img/salt_pile_empty.png"),
+            ..default()
+        });
+    }
+}
+
+fn play_salt_effects_audio(
+    q_salt: Query<(Entity, &SaltData, &Position), Changed<SaltData>>,
+    mut prev_charges: Local<std::collections::HashMap<Entity, u8>>,
+    mut gs_audio: unaudiospatial_core::emitter::AudioEmitter,
+) {
+    for (entity, salt, pos) in q_salt.iter() {
+        let prev = prev_charges.get(&entity).copied().unwrap_or(salt.charges);
+        if salt.charges < prev {
+            gs_audio.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
+        }
+        prev_charges.insert(entity, salt.charges);
+    }
 }

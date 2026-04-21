@@ -47,3 +47,12 @@ pub struct UVReactive(pub f32);
 /// Timer component to track the lifetime of a SaltyTrace entity.
 #[derive(Component)]
 pub struct SaltyTraceTimer(pub Timer);
+
+/// Marker component for a salt pile that was stepped on and consumed.
+#[derive(Component, Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
+pub struct SaltPileConsumed;
+
+/// Timer component to track the lifetime of a SaltPileConsumed entity.
+#[derive(Component, Debug, Serialize, Deserialize, Reflect)]
+pub struct SaltPileConsumedTimer(pub Timer);

@@ -9,21 +9,8 @@ pub(crate) use ungearitems_core::components::videocam::Videocam;
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::components::LightEmitter;
 use unmetrics_core::metrics::SendMetric;
-use unreplicon_core::ownership::LocallyOwned;
 
 use crate::metrics;
-
-pub(crate) fn update_videocam_skeleton(
-    mut q_videocam: Query<(&mut Toggleable, &mut Battery), With<LocallyOwned>>,
-) {
-    let measure = metrics::VIDEOCAM_UPDATE.time_measure();
-    for (toggle, mut battery) in q_videocam.iter_mut() {
-        // Update Battery Drain Rate (only for local authority)
-        battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
-    }
-
-    measure.end_ms();
-}
 
 pub(crate) fn update_videocam_skin(
     mut q_videocam: Query<(
@@ -105,11 +92,6 @@ pub(crate) fn update_videocam_skin(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        update_videocam_skeleton
-            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
-    );
     app.add_systems(
         Update,
         update_videocam_skin.run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),

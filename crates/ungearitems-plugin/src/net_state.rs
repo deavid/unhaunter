@@ -23,19 +23,16 @@ use ungearitems_core::components::quartz::QuartzStoneData;
 use ungearitems_core::components::redtorch::RedTorch;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use ungearitems_core::components::sage::SageBundleData;
-use ungearitems_core::components::salt::{SaltData, SaltPile};
+use ungearitems_core::components::salt::SaltData;
 use ungearitems_core::components::uvtorch::UVTorch;
 use ungearitems_core::events::RepellentHitNetMessage;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Toggleable;
 use unreplicon_core::client_export::ExportClientComponent;
-use unreplicon_core::messages::SaltDroppedMessage;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole, is_pure_client};
-use unspatial_core::position::Position;
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_client_message::<SaltDroppedMessage>(Channel::Ordered);
     app.add_client_message::<RepellentHitNetMessage>(Channel::Unreliable);
 
     // Register one ExportClientComponent<T> per gear component type.
@@ -72,7 +69,6 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            handle_salt_drop,
             handle_import_flashlight,
             handle_import_uvtorch,
             handle_import_redtorch,
@@ -108,25 +104,6 @@ fn from_owner_id(owner_id: OwnerId) -> ClientId {
     match owner_id {
         OwnerId::Server => ClientId::Server,
         OwnerId::Client(e) => ClientId::Client(e),
-    }
-}
-
-fn handle_salt_drop(
-    mut reader: MessageReader<FromClient<SaltDroppedMessage>>,
-    mut commands: Commands,
-) {
-    for msg in reader.read() {
-        let [x, y, z, visual_priority] = msg.message.pos;
-        commands.spawn((
-            SaltPile,
-            Position {
-                x,
-                y,
-                z,
-                visual_priority,
-            },
-            Replicated,
-        ));
     }
 }
 

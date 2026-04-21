@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use rand::RngExt;
-use unaudiospatial_core::emitter::AudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::entity::GameSprite;
 use uncommon_app_core::random_seed;
@@ -11,32 +10,14 @@ use ungearitems_core::components::sage::{
     SageBundleData, SageBundleSkin, SageSmokeParticle, SmokeParticleTimer,
 };
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
-use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::sprite_layer::SpriteLayer;
-use unreplicon_core::ownership::LocallyOwned;
 use unreplicon_core::resources::LocalPlayerRole;
 use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 
 use crate::metrics;
-
-pub(crate) fn update_sage_skeleton(
-    mut q_sage: Query<(Entity, &mut SageBundleData), With<LocallyOwned>>,
-    q_triggered: Query<&Triggered>,
-    mut commands: Commands,
-    mut gs_audio: AudioEmitter,
-) {
-    for (entity, mut sage) in q_sage.iter_mut() {
-        if q_triggered.get(entity).is_ok() && !sage.is_active && !sage.consumed {
-            sage.is_active = true;
-            commands.entity(entity).insert(SageBundleSkin::new());
-            gs_audio.play_audio_nopos("sounds/sage_activation.ogg".into(), 0.8);
-            commands.entity(entity).remove::<Triggered>();
-        }
-    }
-}
 
 pub(crate) fn update_sage_skin(
     mut commands: Commands,
@@ -87,7 +68,7 @@ pub(crate) fn update_sage_skin(
                                 dz: rng.random_range(-0.5..0.5),
                             })
                             .insert(MapColor {
-                                color: Color::srgba(1.0, 1.0, 1.0, 0.20),
+                                color: Color::srgba(1.0, 1.0, 1.0, 0.50),
                             })
                             .insert(SmokeParticleTimer(Timer::from_seconds(
                                 5.0,
@@ -144,7 +125,9 @@ fn sage_smoke_system(
         ),
         (Without<GhostSprite>, With<SageSmokeParticle>),
     >,
-    mut ghosts: Query<(&mut GhostSprite, &Position)>,
+    ghosts: Query<(&GhostSprite, &Position)>,
+    authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
+    mut ev_sage_hit: MessageWriter<ungearitems_core::events::SageHitNetMessage>,
 ) {
     let measure = metrics::SAGE_SMOKE.time_measure();
 
@@ -168,7 +151,9 @@ fn sage_smoke_system(
             .clamp(0.0, 1.0)
             .min((rem / 2.0 - 0.01).clamp(0.0, 1.0)))
         .powf(2.0);
-        map_color.color.set_alpha(a * 0.4);
+
+        // Increase Opacity per phase 3.3
+        map_color.color.set_alpha(a * 0.7);
 
         position.z += 0.3 * dt / (1.0 + elap.powi(2));
         position.x += dir.dx * dt;
@@ -176,18 +161,27 @@ fn sage_smoke_system(
         transform.scale.x += 0.1 * dt;
         transform.scale.y += 0.1 * dt;
 
-        for (mut ghost, ghost_position) in ghosts.iter_mut() {
+        let mut cumulative_calm = 0.0;
+        let mut cumulative_rage_reduction = 0.0;
+
+        for (_ghost, ghost_position) in ghosts.iter() {
             let dist = position.distance(ghost_position);
             if dist < 5.0 {
-                ghost.rage -= 30.0 * dt * a / (1.0 + dist);
-                if ghost.rage < 0.0 {
-                    ghost.rage = 0.0;
-                }
-                ghost.calm_time_secs += 10.0 * dt * a / (1.0 + dist);
-                if ghost.calm_time_secs > 30.0 {
-                    ghost.calm_time_secs = 30.0;
+                let calm = 10.0 * dt * a / (1.0 + dist);
+                let rage_reduction = 30.0 * dt * a / (1.0 + dist);
+
+                if authority.is_none() {
+                    cumulative_calm += calm;
+                    cumulative_rage_reduction += rage_reduction;
                 }
             }
+        }
+
+        if cumulative_calm > 0.0 || cumulative_rage_reduction > 0.0 {
+            ev_sage_hit.write(ungearitems_core::events::SageHitNetMessage {
+                calm_this_frame: cumulative_calm,
+                rage_reduction_this_frame: cumulative_rage_reduction,
+            });
         }
     }
 
@@ -204,9 +198,25 @@ pub(crate) fn hydrate_sage_skin(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, (update_sage_skeleton, hydrate_sage_skin));
     app.add_systems(
         Update,
-        (update_sage_skin, sage_smoke_system).run_if(resource_exists::<LocalPlayerRole>),
+        (
+            hydrate_sage_skin,
+            update_sage_skin,
+            sage_smoke_system,
+            play_sage_effects_audio,
+        )
+            .run_if(resource_exists::<LocalPlayerRole>),
     );
+}
+
+fn play_sage_effects_audio(
+    q_sage: Query<&SageBundleData, Added<SageBundleSkin>>,
+    mut gs_audio: unaudiospatial_core::emitter::AudioEmitter,
+) {
+    for sage in q_sage.iter() {
+        if sage.is_active && !sage.consumed {
+            gs_audio.play_audio_nopos("sounds/sage_activation.ogg".into(), 0.8);
+        }
+    }
 }

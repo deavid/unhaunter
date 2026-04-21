@@ -20,9 +20,25 @@ pub struct RepellentHitNetMessage {
     pub misses_this_frame: f32,
 }
 
+/// Sent from a pure join client to the dedicated server every frame that local
+/// sage smoke particles register hits against the ghost. The server applies
+/// the calming math to the authoritative `GhostSprite`.
+#[derive(Clone, Debug, Serialize, Deserialize, Message)]
+pub struct SageHitNetMessage {
+    pub calm_this_frame: f32,
+    pub rage_reduction_this_frame: f32,
+}
+
 /// Emitted locally on a player-bearing node when the repellent flask starts
 /// dispensing (i.e. a full flask begins its discharge). Used by the summary
 /// domain to count repellent uses without the gear domain importing presentation
 /// types.
 #[derive(Clone, Debug, Message)]
 pub struct RepellentUsedEvent;
+
+/// Emitted by the logic layer when a quartz stone absorbs enough ghost energy to crack.
+/// Presentation layer listens to this to play the `sounds/quartz_crack.ogg` audio.
+#[derive(Clone, Debug, Message)]
+pub struct QuartzCrackedEvent {
+    pub position: [f32; 4],
+}
