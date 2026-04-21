@@ -16,6 +16,8 @@ pub struct SageBundleSkin {
     pub burn_timer: Timer,
     /// Amount of particles of smoke produced. Used to pace the smoke production.
     pub smoke_produced: usize,
+    /// Fractional progress toward spawning the next smoke particle.
+    pub smoke_spawn_progress: f32,
 }
 
 impl SageBundleSkin {
@@ -23,6 +25,7 @@ impl SageBundleSkin {
         Self {
             burn_timer: Timer::from_seconds(8.0, TimerMode::Once),
             smoke_produced: 0,
+            smoke_spawn_progress: 0.0,
         }
     }
 }
