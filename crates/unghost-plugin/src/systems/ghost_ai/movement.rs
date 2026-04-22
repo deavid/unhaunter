@@ -166,7 +166,9 @@ pub(crate) fn ghost_movement(
             if ghost.warp < 0.0 {
                 ghost.warp = 0.0;
             }
-            if delta.distance() < 5.0 {
+            // Expand the braking zone dynamically based on warp speed
+            let braking_zone = 5.0 + (ghost.warp * 2.0);
+            if delta.distance() < braking_zone {
                 ghost.warp /= 1.2_f32.powf(dt);
             }
             let dlen = delta.distance() + 0.001;
@@ -269,8 +271,38 @@ pub(crate) fn ghost_movement(
                 if !player_pos_l.is_empty() {
                     let idx = rng.random_range(0..player_pos_l.len());
                     let (ppos, hiding) = player_pos_l[idx];
+
                     let search_radius = if hiding { 2.0 } else { 1.0 };
                     let mut old_target = ghost.target_point.unwrap_or(*pos);
+
+                    // --- THE CORRECTED FIX ---
+                    let mut abort_hunt = false;
+                    if ghost.hunt_target {
+                        // Measure how far the TARGET moved since 1 second ago.
+                        // A player can only run so far. If it's > 10 tiles, it swapped to Player B!
+                        // We ONLY penalize if we already had a target point (established chase),
+                        // not during initial acquisition.
+                        if let Some(actual_old_target) = ghost.target_point {
+                            let target_jump_dist = actual_old_target.distance(ppos);
+
+                            if target_jump_dist > 10.0 {
+                                // Only penalize the massive map-crossing jump
+                                let rage_penalty = target_jump_dist * 0.5;
+                                ghost.rage = (ghost.rage - rage_penalty).max(0.0);
+
+                                if ghost.rage < ghost.rage_limit {
+                                    abort_hunt = true;
+                                    ghost.hunting = 0.0;
+                                    info!(
+                                        "Ghost dropped hunt: target swapped/jumped ({:.1} tiles), rage drained.",
+                                        target_jump_dist
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    // -------------------------
+
                     old_target.x += rng.random_range(-search_radius..search_radius);
                     old_target.y += rng.random_range(-search_radius..search_radius);
                     old_target.z += rng.random_range(-search_radius / 2.0..search_radius / 2.0); // Add small Z randomization
@@ -288,7 +320,7 @@ pub(crate) fn ghost_movement(
                     target_point.x = ppos.x + random_offset.x;
                     target_point.y = ppos.y + random_offset.y;
                     target_point.z = ppos.z.round();
-                    hunt = true;
+                    hunt = !abort_hunt; // If we aborted, hunt is safely false!
                 }
             }
 
