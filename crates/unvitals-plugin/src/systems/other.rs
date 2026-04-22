@@ -11,7 +11,14 @@ use unvitals_core::events::PlayerDiedEvent;
 
 pub(crate) fn regenerate_health_over_time(
     time: Res<Time>,
-    mut qp: Query<&mut PlayerVitals, (Without<InTruck>, Without<PlayerSpectating>)>,
+    mut qp: Query<
+        &mut PlayerVitals,
+        (
+            With<LocallyOwned>,
+            Without<InTruck>,
+            Without<PlayerSpectating>,
+        ),
+    >,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let dt = time.delta_secs();

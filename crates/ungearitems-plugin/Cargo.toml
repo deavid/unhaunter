@@ -29,7 +29,6 @@ unaudiospatial-core = { workspace = true }
 unsoundfield-core = { workspace = true }
 unthermal-core = { workspace = true }
 unprofile-core = { workspace = true }
-unplayer-core = { workspace = true }
 
 uncommon-states-core = { workspace = true }
 unreplicon-core = { workspace = true }
@@ -38,5 +37,4 @@ bevy-persistent = { workspace = true }
 bevy_replicon = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }
-enum-iterator = { workspace = true }
 ungearitems-core = { workspace = true }
