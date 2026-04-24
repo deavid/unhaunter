@@ -27,6 +27,14 @@ pub struct LobbyInfo {
 #[reflect(Component, Default)]
 pub struct NetworkEntityReady;
 
+/// Replicated server-side permission allowing the owning client to simulate the entity.
+///
+/// The client combines this with its own local readiness state before inserting
+/// `LocallyOwned`, keeping local echo-suppression separate from authority approval.
+#[derive(Component, Debug, Default, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component, Default)]
+pub struct SimulationAuthorized;
+
 /// Local marker used by the server to track that an ownership grant message
 /// has already been emitted for this entity.
 #[derive(Component, Debug, Default, Clone)]

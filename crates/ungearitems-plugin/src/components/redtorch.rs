@@ -5,37 +5,10 @@ use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, S
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::redtorch::{RedTorch, RedTorchSkin};
-use uninteraction_core::interaction::Toggleable;
 use unlight_core::components::LightEmitter;
 use unmetrics_core::metrics::SendMetric;
-use unreplicon_core::ownership::LocallyOwned;
-use unspatial_core::position::Position;
 
 use crate::metrics;
-
-pub(crate) fn update_redtorch_skeleton(
-    mut q_redtorch: Query<
-        (
-            &mut RedTorch,
-            &mut Battery,
-            &Toggleable,
-            &Electronic,
-            &Position,
-        ),
-        With<LocallyOwned>,
-    >,
-) {
-    let measure = metrics::REDTORCH_UPDATE.time_measure();
-    for (mut redtorch, mut battery, toggle, _electronic, _pos) in q_redtorch.iter_mut() {
-        // Sync internal enabled with Toggleable
-        redtorch.enabled = toggle.is_on;
-
-        // Update Battery Drain Rate
-        battery.drain_rate = if redtorch.enabled { 0.0001 } else { 0.0 };
-    }
-
-    measure.end_ms();
-}
 
 pub(crate) fn update_redtorch_skin(
     mut q_redtorch: Query<(
@@ -132,12 +105,6 @@ fn hydrate_redtorch_skin(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        update_redtorch_skeleton
-            .before(ungearitems_core::GearStateExportSet)
-            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
-    );
     app.add_systems(
         Update,
         (hydrate_redtorch_skin, update_redtorch_skin)

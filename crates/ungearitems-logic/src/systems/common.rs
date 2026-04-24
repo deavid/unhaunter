@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
 use rand::prelude::*;
-use unaudiospatial_core::emitter::AudioEmitter;
 use uncommon_app_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic};
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
+use ungearitems_core::events::RepellentUsedEvent;
 use ungearitems_core::events::RequestCraftRepellent;
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
@@ -17,35 +17,29 @@ use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unspatial_core::position::Position;
 
-use crate::metrics;
-
 pub(crate) fn system_electronic_interference(
-    gs_audio: AudioEmitter,
     haunt_state: Res<HauntState>,
     mut q_electronic: Query<(&Position, &mut Electronic, &Toggleable)>,
+    time: Res<Time>,
 ) {
-    let measure = metrics::ELECTRONIC_INTERFERENCE.time_measure();
+    let measure = crate::metrics::ELECTRONIC_INTERFERENCE.time_measure();
     let mut rng = random_seed::rng();
-    let dt = gs_audio.time.delta_secs();
+    let dt = time.delta_secs();
 
     for (pos, mut electronic, toggle) in q_electronic.iter_mut() {
-        // Decrement glitch timer if active
         if electronic.glitch_timer > 0.0 {
             electronic.glitch_timer -= dt;
         }
 
-        // Apply EMI if warning is active and item is on
         if let Some(ghost_pos) = &haunt_state.ghost_warning_position {
             let distance2 = pos.distance2(ghost_pos);
             if haunt_state.ghost_warning_intensity > 0.0001 && toggle.is_on {
-                // Scale effect by distance and warning level
                 let effect_strength = haunt_state.ghost_warning_intensity
                     * (100.0 / distance2).min(1.0)
                     * electronic.sensitivity;
 
                 electronic.glitch_intensity = effect_strength;
 
-                // Random glitches
                 if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
                     electronic.glitch_timer = rng.random_range(0.2..0.6);
                 }
@@ -56,15 +50,48 @@ pub(crate) fn system_electronic_interference(
             electronic.glitch_intensity = 0.0;
         }
     }
-
     measure.end_ms();
+}
+
+pub(crate) fn update_repellentflask_skeleton(
+    mut q_repellent: Query<(Entity, &mut RepellentFlask), With<LocallyOwned>>,
+    q_triggered: Query<&uninteraction_core::interaction::Triggered>,
+    mut commands: Commands,
+    mut ev_repellent: MessageWriter<RepellentUsedEvent>,
+) {
+    for (entity, mut repellent) in q_repellent.iter_mut() {
+        if q_triggered.get(entity).is_ok()
+            && !repellent.active
+            && repellent.qty > 0
+            && repellent.liquid_content.is_some()
+        {
+            repellent.active = true;
+            commands
+                .entity(entity)
+                .remove::<uninteraction_core::interaction::Triggered>();
+        }
+
+        if repellent.active {
+            let mut rng = random_seed::rng();
+            if rng.random_range(0.0..1.0) <= 0.5 {
+                if repellent.qty == RepellentFlask::MAX_QTY {
+                    ev_repellent.write(RepellentUsedEvent);
+                }
+                repellent.qty -= 1;
+                if repellent.qty <= 0 {
+                    repellent.qty = 0;
+                    repellent.active = false;
+                }
+            }
+        }
+    }
 }
 
 pub(crate) fn system_battery_drain(
     time: Res<Time>,
     mut q_battery: Query<(&mut Battery, &mut Toggleable)>,
 ) {
-    let measure = metrics::BATTERY_DRAIN.time_measure();
+    let measure = crate::metrics::BATTERY_DRAIN.time_measure();
     let dt = time.delta_secs();
 
     for (mut battery, mut toggle) in q_battery.iter_mut() {
@@ -72,19 +99,13 @@ pub(crate) fn system_battery_drain(
             battery.level -= battery.drain_rate * dt;
             if battery.level <= 0.0 {
                 battery.level = 0.0;
-                toggle.is_on = false; // Auto-shutdown
+                toggle.is_on = false;
             }
         }
     }
-
     measure.end_ms();
 }
 
-/// Authority-side handler for `RequestCraftRepellent` emitted by `untruck-plugin`.
-///
-/// Finds or creates a `RepellentFlask` in the local player's gear and fills it with the
-/// requested ghost type's repellent. Mirrors the logic previously in
-/// `untruck-plugin::craft_repellent`.
 pub(crate) fn handle_craft_repellent_request(
     mut ev_craft: MessageReader<RequestCraftRepellent>,
     mut q_gear: Query<&mut PlayerGear, With<MainPlayer>>,

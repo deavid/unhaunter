@@ -98,12 +98,20 @@ pub(crate) fn track_repellent_use(
 pub(crate) fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
-    mut app_next_state: ResMut<NextState<UIContextState>>,
     qp: Query<(&PlayerSprite, &PlayerVitals)>,
     difficulty: Res<CurrentDifficulty>,
     board_topology: Option<Res<BoardTopology>>,
-    mut death_timer: Local<Option<f32>>,
+    q_phase: Query<&unreplicon_core::components::ServerGamePhase>,
 ) {
+    // Once the server is concluding the mission, player entities may start despawning.
+    // Freeze the snapshot so the summary screen doesn't overwrite with zeros.
+    if q_phase
+        .iter()
+        .any(|p| *p == unreplicon_core::components::ServerGamePhase::Concluding)
+    {
+        return;
+    }
+
     // SummaryData is local-only. This system maintains the local mission snapshot
     // used later by the summary screen and local reward calculation.
     sd.difficulty = *difficulty;
@@ -117,25 +125,10 @@ pub(crate) fn update_time(
     let player_count = qp.iter().count();
     let alive_count = qp.iter().filter(|(_, v)| v.health > 0.0).count();
 
-    // Only update player counts while no death has been detected yet.
-    // Once `death_timer` is Some, players may have started despawning —
-    // preserve the last valid snapshot instead of overwriting with zeros.
-    if death_timer.is_none() {
-        sd.player_count = player_count;
-        sd.alive_count = alive_count;
-        if player_count > 0 {
-            sd.average_sanity = total_sanity / player_count as f32;
-        }
-    }
-
-    if player_count > 0 && alive_count == 0 {
-        let now = time.elapsed_secs();
-        let start = death_timer.get_or_insert(now);
-        if now - *start > 1.0 {
-            app_next_state.set(UIContextState::Summary);
-        }
-    } else {
-        *death_timer = None;
+    sd.player_count = player_count;
+    sd.alive_count = alive_count;
+    if player_count > 0 {
+        sd.average_sanity = total_sanity / player_count as f32;
     }
 }
 

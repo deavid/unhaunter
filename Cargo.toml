@@ -70,6 +70,7 @@ members = [
     "crates/ungear-plugin",
     "crates/ungearitems-core",     # Concrete items: EMF reader, thermometer, etc.
     "crates/ungearitems-plugin",
+    "crates/ungearitems-logic",
     "crates/uninteraction-core",   # Entity toggling and triggering
     "crates/uninteraction-plugin",
     "crates/uninventory-plugin",   # Hand / pocket item management
@@ -322,26 +323,27 @@ unclassic-mode-core = { path = "crates/unclassic-mode-core" }   # Classic mode s
 
 # ── 1c: The Mechanics (Gameplay Verbs) ───────────────────────────────────
 # How actors interact with the world and each other.
-ungear-core = { path = "crates/ungear-core" }                   # Item framework: traits and slots
+ungear-core = { path = "crates/ungear-core" }                     # Item framework: traits and slots
 ungear-plugin = { path = "crates/ungear-plugin" }
-ungearitems-core = { path = "crates/ungearitems-core" }         # Concrete items: EMF, thermometer, etc.
+ungearitems-core = { path = "crates/ungearitems-core" }           # Concrete items: EMF, thermometer, etc.
 ungearitems-plugin = { path = "crates/ungearitems-plugin" }
-uninteraction-core = { path = "crates/uninteraction-core" }     # Entity toggling and triggering
+unhaunter-gearitems-logic = { path = "crates/ungearitems-logic" }
+uninteraction-core = { path = "crates/uninteraction-core" }       # Entity toggling and triggering
 uninteraction-plugin = { path = "crates/uninteraction-plugin" }
-uninventory-plugin = { path = "crates/uninventory-plugin" }     # Hand / pocket item management
-unvitals-core = { path = "crates/unvitals-core" }               # Player health and sanity state
-unvitals-plugin = { path = "crates/unvitals-plugin" }           # Health and sanity simulation
-undifficulty-core = { path = "crates/undifficulty-core" }       # Difficulty enum and math traits
+uninventory-plugin = { path = "crates/uninventory-plugin" }       # Hand / pocket item management
+unvitals-core = { path = "crates/unvitals-core" }                 # Player health and sanity state
+unvitals-plugin = { path = "crates/unvitals-plugin" }             # Health and sanity simulation
+undifficulty-core = { path = "crates/undifficulty-core" }         # Difficulty enum and math traits
 undifficulty-plugin = { path = "crates/undifficulty-plugin" }
-untruck-core = { path = "crates/untruck-core" }                 # Mission loadout and journal state
+untruck-core = { path = "crates/untruck-core" }                   # Mission loadout and journal state
 untruck-plugin = { path = "crates/untruck-plugin" }
-unwalkie-types = { path = "crates/unwalkie-types" }             # Walkie shared message types (not in workspace members)
-unwalkie-core = { path = "crates/unwalkie-core" }               # Walkie-talkie communication mechanics
+unwalkie-types = { path = "crates/unwalkie-types" }               # Walkie shared message types (not in workspace members)
+unwalkie-core = { path = "crates/unwalkie-core" }                 # Walkie-talkie communication mechanics
 unwalkie-logic = { path = "crates/unwalkie-logic" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
-uncareer-core = { path = "crates/uncareer-core" }               # Career progression state and events
-unprofile-core = { path = "crates/unprofile-core" }             # Player save-file data structures (gameplay progression)
-unmapload-core = { path = "crates/unmapload-core" }             # Map load protocol: LoadLevelEvent, LevelLoadedEvent, MapEntitiesReadyEvent
+uncareer-core = { path = "crates/uncareer-core" }                 # Career progression state and events
+unprofile-core = { path = "crates/unprofile-core" }               # Player save-file data structures (gameplay progression)
+unmapload-core = { path = "crates/unmapload-core" }               # Map load protocol: LoadLevelEvent, LevelLoadedEvent, MapEntitiesReadyEvent
 uncommon-states-core = { path = "crates/uncommon-states-core" }
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -457,6 +459,7 @@ unfog-plugin = { workspace = true }
 unfps-plugin = { workspace = true }
 ungear-plugin = { workspace = true }
 ungearitems-plugin = { workspace = true }
+unhaunter-gearitems-logic = { workspace = true }
 unghost-logic = { workspace = true }
 unghost-presentation = { workspace = true }
 unlight-plugin = { workspace = true }

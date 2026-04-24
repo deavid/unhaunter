@@ -2,21 +2,19 @@ mod replication;
 
 use bevy::prelude::*;
 use bevy_replicon::prelude::{
-    Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode, ServerMessageAppExt,
-    ToClients,
+    AppRuleExt, Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, ServerMessageAppExt,
 };
-use bevy_replicon::shared::server_entity_map::ServerEntityMap;
 use std::collections::HashMap;
 use unboard_core::components::spawning::PlayerSpawnPoint;
+use uncommon_states_core::UIContextState;
 use unmission_core::types::SimulationState;
 use unplayer_core::components::{PlayerSpawnRequest, PlayerSprite};
 use unreplicon_core::components::{
-    LobbyInfo, LobbyPlayerInfo, NetworkEntityReady, OwnershipSentMarker,
-    RepliconPlayerSpawningActive,
+    LobbyInfo, LobbyPlayerInfo, RepliconPlayerSpawningActive, SimulationAuthorized,
 };
 use unreplicon_core::messages::{
-    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, OwnershipGranted, OwnershipRevoked,
-    RequestJoinMission,
+    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, RelieveSimulationAuthority,
+    RequestJoinMission, RequestSimulationAuthority,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -26,15 +24,6 @@ use unreplicon_core::resources::{ClientUuidMap, LocalPlayer, LocalPlayerRole, is
 use unspatial_core::position::Position;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy)]
-struct PendingOwnershipGrant {
-    server_entity: Entity,
-    frames_waited: u16,
-}
-
-#[derive(Resource, Default)]
-struct PendingOwnershipGrantQueue(Vec<PendingOwnershipGrant>);
-
 // Periodic diagnostics for player spawn and ownership handoff state.
 #[allow(clippy::manual_is_multiple_of)]
 fn player_spawn_telemetry(
@@ -43,8 +32,7 @@ fn player_spawn_telemetry(
         Option<&PlayerSpawnRequest>,
         Option<&PlayerSprite>,
         Option<&Owner>,
-        Option<&NetworkEntityReady>,
-        Option<&OwnershipSentMarker>,
+        Option<&SimulationAuthorized>,
         Option<&LocallyOwned>,
     )>,
     authority: Option<Res<AuthorityRole>>,
@@ -66,16 +54,15 @@ fn player_spawn_telemetry(
         spawning_active.is_some(),
         state.map(|s| *s.get())
     );
-    for (e, req, spr, own, rdy, sent, locown) in q.iter() {
+    for (e, req, spr, own, sim_auth, locown) in q.iter() {
         if req.is_some() || spr.is_some() {
             trace!(
-                "player_spawn_telemetry: entity {:?} spawn_request={} player_sprite={} owner={:?} network_ready={} ownership_sent={} locally_owned={}",
+                "player_spawn_telemetry: entity {:?} spawn_request={} player_sprite={} owner={:?} simulation_authorized={} locally_owned={}",
                 e,
                 req.is_some(),
                 spr.is_some(),
                 own.map(|o| o.0),
-                rdy.is_some(),
-                sent.is_some(),
+                sim_auth.is_some(),
                 locown.is_some()
             );
         }
@@ -85,18 +72,12 @@ fn player_spawn_telemetry(
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
     app.add_client_message::<RequestJoinMission>(Channel::Ordered);
+    app.add_mapped_client_message::<RequestSimulationAuthority>(Channel::Ordered);
+    app.add_mapped_client_message::<RelieveSimulationAuthority>(Channel::Ordered);
     // Register server → client messages
     app.add_server_message::<FloorGearSpawnBroadcast>(Channel::Ordered);
     app.add_server_message::<FloorGearDespawnBroadcast>(Channel::Ordered);
-    // NOTE: OwnershipGranted is registered as a plain (non-mapped) server message.
-    // Using add_mapped_server_message would cause bevy_replicon to drop the message
-    // silently if the referenced entity is not yet in ServerEntityMap at deserialization
-    // time (which happens when the entity is initially hidden from the client).
-    // handle_ownership_granted performs the entity map lookup manually.
-    app.add_server_message::<OwnershipGranted>(Channel::Ordered);
-    app.add_server_message::<OwnershipRevoked>(Channel::Ordered);
-
-    app.init_resource::<PendingOwnershipGrantQueue>();
+    app.replicate::<SimulationAuthorized>();
 
     replication::app_setup(app);
 
@@ -115,8 +96,8 @@ pub(super) fn app_setup(app: &mut App) {
         Update,
         (
             handle_request_join_mission,
-            grant_ownership_when_ready,
-            warn_on_stuck_pending_handover,
+            handle_simulation_authority_requests,
+            handle_simulation_authority_release,
         )
             .run_if(resource_exists::<AuthorityRole>)
             .run_if(in_state(SimulationState::Spawning).or(in_state(SimulationState::Ready)))
@@ -125,12 +106,7 @@ pub(super) fn app_setup(app: &mut App) {
 
     app.add_systems(
         Update,
-        (
-            handle_ownership_granted,
-            handle_ownership_revoked,
-            process_pending_ownership_grants,
-        )
-            .run_if(is_pure_client),
+        client_avatar_reconciliation_loop.run_if(is_pure_client),
     );
 
     // Cleanup the spawning-active marker when leaving InGame.
@@ -140,10 +116,6 @@ pub(super) fn app_setup(app: &mut App) {
     );
 }
 
-fn player_ready_for_handover(has_ready_marker: bool) -> bool {
-    has_ready_marker
-}
-
 fn to_owner_id(client_id: ClientId) -> OwnerId {
     match client_id {
         ClientId::Server => OwnerId::Server,
@@ -151,11 +123,17 @@ fn to_owner_id(client_id: ClientId) -> OwnerId {
     }
 }
 
-/// Helper: convert OwnerId to Replicon ClientId.
-fn from_owner_id(owner_id: OwnerId) -> ClientId {
-    match owner_id {
-        OwnerId::Server => ClientId::Server,
-        OwnerId::Client(e) => ClientId::Client(e),
+fn throttle_ready(
+    entity: Entity,
+    elapsed_secs: f32,
+    last_sent_at: &mut Local<HashMap<Entity, f32>>,
+) -> bool {
+    let last = last_sent_at.entry(entity).or_insert(f32::NEG_INFINITY);
+    if elapsed_secs - *last >= 0.5 {
+        *last = elapsed_secs;
+        true
+    } else {
+        false
     }
 }
 
@@ -376,191 +354,116 @@ fn cleanup_player_spawning_flag(mut commands: Commands) {
     commands.remove_resource::<RepliconPlayerSpawningActive>();
 }
 
-/// Server: Watches for entities that have been stamped as fully hydrated by the domains.
-/// Once ready, it sends the OwnershipGranted packet so the client can safely take control
-/// without activating its `noop_write` shields too early.
-///
-/// Matches both `PlayerSprite` (host/offline, fully materialized) and `PlayerSpawnRequest`
-/// (dedicated server, where no player-plugin hydration runs).
-fn grant_ownership_when_ready(
-    q_ready: Query<
-        (Entity, &Owner, Has<NetworkEntityReady>),
-        (
-            Or<(With<PlayerSprite>, With<PlayerSpawnRequest>)>,
-            Without<OwnershipSentMarker>,
-        ),
-    >,
-    local_player: Option<Res<LocalPlayerRole>>,
-    mut commands: Commands,
-) {
-    let is_dedicated_server = local_player.is_none();
-    for (entity, owner, has_ready_marker) in q_ready.iter() {
-        if !is_dedicated_server && !player_ready_for_handover(has_ready_marker) {
-            continue;
-        }
-
-        // Mark that we've sent it so we don't spam the network
-        commands.entity(entity).insert(OwnershipSentMarker);
-
-        let client_id = from_owner_id(owner.0);
-        info!(
-            "grant_ownership_when_ready: evaluated entity {:?} with owner={:?} (client_id={:?})",
-            entity, owner.0, client_id
-        );
-
-        if client_id != bevy_replicon::prelude::ClientId::Server {
-            commands.write_message(ToClients {
-                mode: SendMode::Direct(client_id),
-                message: OwnershipGranted { entity },
-            });
-            info!(
-                "grant_ownership_when_ready: Entity {:?} is fully hydrated. Ownership handed to {:?}",
-                entity, owner.0
-            );
-        } else {
-            info!(
-                "grant_ownership_when_ready: skipping host-owned entity {:?}",
-                entity
-            );
-        }
-    }
-}
-
-/// Server: diagnostic watchdog for player entities that remain pending handover.
-/// Matches both `PlayerSprite` (host) and `PlayerSpawnRequest` (dedicated server).
-fn warn_on_stuck_pending_handover(
-    q_pending: Query<
-        (Entity, &Owner),
-        (
-            Or<(With<PlayerSprite>, With<PlayerSpawnRequest>)>,
-            Without<NetworkEntityReady>,
-            Without<OwnershipSentMarker>,
-        ),
-    >,
-    local_player: Option<Res<LocalPlayerRole>>,
-    mut wait_frames_by_entity: Local<HashMap<Entity, u16>>,
-) {
-    if local_player.is_none() {
-        return; // Dedicated servers don't use NetworkEntityReady
-    }
-    wait_frames_by_entity.retain(|entity, _| q_pending.get(*entity).is_ok());
-
-    for (entity, owner) in q_pending.iter() {
-        let entry = wait_frames_by_entity.entry(entity).or_insert(0);
-        *entry = entry.saturating_add(1);
-
-        if *entry == 120 || *entry == 600 {
-            warn!(
-                "warn_on_stuck_pending_handover: player {:?} still pending handover after {} frames (owner={:?})",
-                entity, *entry, owner.0
-            );
-        }
-    }
-}
-
-fn apply_local_ownership(client_entity: Entity, commands: &mut Commands) {
-    commands.entity(client_entity).insert(LocallyOwned);
-}
-
-/// Client: Handle ownership granted.
-fn handle_ownership_granted(
-    mut reader: MessageReader<OwnershipGranted>,
-    entity_map: Res<ServerEntityMap>,
-    mut commands: Commands,
-    mut pending_grants: ResMut<PendingOwnershipGrantQueue>,
-) {
-    for msg in reader.read() {
-        let server_entity = msg.entity;
-        info!(
-            "handle_ownership_granted: received OwnershipGranted for server entity {:?}",
-            server_entity
-        );
-
-        if let Some(client_entity) = entity_map.to_client().get(&server_entity).copied() {
-            info!(
-                "handle_ownership_granted: mapped server {:?} to client {:?}",
-                server_entity, client_entity
-            );
-            apply_local_ownership(client_entity, &mut commands);
-            continue;
-        }
-
-        let already_queued = pending_grants
-            .0
-            .iter()
-            .any(|pending| pending.server_entity == server_entity);
-        if already_queued {
-            debug!(
-                "handle_ownership_granted: server entity {:?} already queued for deferred mapping",
-                server_entity
-            );
-            continue;
-        }
-
-        warn!(
-            "handle_ownership_granted: no client mapping yet for server entity {:?}; deferring ownership",
-            server_entity
-        );
-        pending_grants.0.push(PendingOwnershipGrant {
-            server_entity,
-            frames_waited: 0,
-        });
-    }
-}
-
-/// Client: Handle ownership revocation — remove `LocallyOwned` from the entity.
-fn handle_ownership_revoked(
-    mut reader: MessageReader<OwnershipRevoked>,
-    entity_map: Res<ServerEntityMap>,
+fn handle_simulation_authority_requests(
+    mut reader: MessageReader<FromClient<RequestSimulationAuthority>>,
+    q_players: Query<&Owner, With<PlayerSprite>>,
     mut commands: Commands,
 ) {
     for msg in reader.read() {
-        let server_entity = msg.entity;
-        if let Some(client_entity) = entity_map.to_client().get(&server_entity).copied() {
-            info!(
-                "handle_ownership_revoked: removing LocallyOwned from client {:?} (server {:?})",
-                client_entity, server_entity
-            );
-            commands.entity(client_entity).remove::<LocallyOwned>();
-        } else {
+        let requester_owner = to_owner_id(msg.client_id);
+        let Ok(owner) = q_players.get(msg.message.entity) else {
             warn!(
-                "handle_ownership_revoked: no client mapping for server entity {:?}",
-                server_entity
+                "handle_simulation_authority_requests: requested entity {:?} is not a player sprite",
+                msg.message.entity
             );
+            continue;
+        };
+
+        if owner.0 != requester_owner {
+            warn!(
+                "handle_simulation_authority_requests: requester {:?} attempted to claim entity {:?} owned by {:?}",
+                requester_owner, msg.message.entity, owner.0
+            );
+            continue;
         }
+
+        commands
+            .entity(msg.message.entity)
+            .insert(SimulationAuthorized);
     }
 }
 
-/// Client: retries ownership grants that arrived before ServerEntityMap contained the entity.
-fn process_pending_ownership_grants(
-    entity_map: Res<ServerEntityMap>,
-    mut pending_grants: ResMut<PendingOwnershipGrantQueue>,
+fn handle_simulation_authority_release(
+    mut reader: MessageReader<FromClient<RelieveSimulationAuthority>>,
+    q_players: Query<&Owner, With<PlayerSprite>>,
     mut commands: Commands,
 ) {
-    if pending_grants.0.is_empty() {
+    for msg in reader.read() {
+        let requester_owner = to_owner_id(msg.client_id);
+        let Ok(owner) = q_players.get(msg.message.entity) else {
+            warn!(
+                "handle_simulation_authority_release: requested entity {:?} is not a player sprite",
+                msg.message.entity
+            );
+            continue;
+        };
+
+        if owner.0 != requester_owner {
+            warn!(
+                "handle_simulation_authority_release: requester {:?} attempted to release entity {:?} owned by {:?}",
+                requester_owner, msg.message.entity, owner.0
+            );
+            continue;
+        }
+
+        commands
+            .entity(msg.message.entity)
+            .remove::<SimulationAuthorized>();
+    }
+}
+
+fn client_avatar_reconciliation_loop(
+    q_owned_players: Query<
+        (
+            Entity,
+            &PlayerSprite,
+            &Owner,
+            Has<SimulationAuthorized>,
+            Has<LocallyOwned>,
+        ),
+        With<PlayerSprite>,
+    >,
+    local_player: Res<LocalPlayer>,
+    app_state: Res<State<UIContextState>>,
+    time: Res<Time>,
+    mut commands: Commands,
+    mut request_sim_authority: MessageWriter<RequestSimulationAuthority>,
+    mut relieve_sim_authority: MessageWriter<RelieveSimulationAuthority>,
+    mut last_sent_at: Local<HashMap<Entity, f32>>,
+) {
+    let Some(local_uuid) = local_player.0 else {
         return;
-    }
+    };
+    let ready_for_local_simulation = *app_state.get() == UIContextState::InGame;
+    let elapsed_secs = time.elapsed_secs();
 
-    let mut still_pending = Vec::new();
-    for mut pending in pending_grants.0.drain(..) {
-        if let Some(client_entity) = entity_map.to_client().get(&pending.server_entity).copied() {
-            info!(
-                "process_pending_ownership_grants: resolved server {:?} -> client {:?} after {} frames",
-                pending.server_entity, client_entity, pending.frames_waited
-            );
-            apply_local_ownership(client_entity, &mut commands);
+    last_sent_at.retain(|entity, _| q_owned_players.get(*entity).is_ok());
+
+    for (entity, player_sprite, owner, has_sim_authorized, has_locally_owned) in
+        q_owned_players.iter()
+    {
+        if player_sprite.id != local_uuid {
             continue;
         }
 
-        pending.frames_waited = pending.frames_waited.saturating_add(1);
-        if pending.frames_waited == 120 || pending.frames_waited == 600 {
-            warn!(
-                "process_pending_ownership_grants: still waiting for mapping of server entity {:?} ({} frames)",
-                pending.server_entity, pending.frames_waited
-            );
+        if !matches!(owner.0, OwnerId::Client(_)) {
+            continue;
         }
-        still_pending.push(pending);
-    }
 
-    pending_grants.0 = still_pending;
+        if ready_for_local_simulation {
+            if has_sim_authorized && !has_locally_owned {
+                commands.entity(entity).insert(LocallyOwned);
+            }
+            if !has_sim_authorized && throttle_ready(entity, elapsed_secs, &mut last_sent_at) {
+                request_sim_authority.write(RequestSimulationAuthority { entity });
+            }
+        } else {
+            if has_locally_owned {
+                commands.entity(entity).remove::<LocallyOwned>();
+            }
+            if has_sim_authorized && throttle_ready(entity, elapsed_secs, &mut last_sent_at) {
+                relieve_sim_authority.write(RelieveSimulationAuthority { entity });
+            }
+        }
+    }
 }

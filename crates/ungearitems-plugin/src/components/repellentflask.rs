@@ -10,14 +10,11 @@ use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::equipment::EquipmentPosition;
 use ungearitems_core::events::RepellentHitNetMessage;
-use ungearitems_core::events::RepellentUsedEvent;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::components::presentation::repellent_particle::RepellentParticle;
-use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::Emissive;
-use unreplicon_core::ownership::LocallyOwned;
 use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -34,40 +31,6 @@ const ELECTRIC_BLUE: Color = Color::srgba(0.0, 0.3, 1.0, 1.0);
 const BRIGHT_RED: Color = Color::srgba(1.0, 0.2, 0.0, 1.0);
 use std::collections::HashMap;
 use std::ops::{Add, Mul};
-
-pub(crate) fn update_repellentflask_skeleton(
-    mut q_repellent: Query<(Entity, &mut RepellentFlask), With<LocallyOwned>>,
-    q_triggered: Query<&Triggered>,
-    mut commands: Commands,
-    mut gs_audio: AudioEmitter,
-    mut ev_repellent: MessageWriter<RepellentUsedEvent>,
-) {
-    for (entity, mut repellent) in q_repellent.iter_mut() {
-        if q_triggered.get(entity).is_ok()
-            && !repellent.active
-            && repellent.qty > 0
-            && repellent.liquid_content.is_some()
-        {
-            repellent.active = true;
-            gs_audio.play_audio_nopos("sounds/spray.ogg".into(), 0.8);
-            commands.entity(entity).remove::<Triggered>();
-        }
-
-        if repellent.active {
-            let mut rng = random_seed::rng();
-            if rng.random_range(0.0..1.0) <= 0.5 {
-                if repellent.qty == RepellentFlask::MAX_QTY {
-                    ev_repellent.write(RepellentUsedEvent);
-                }
-                repellent.qty -= 1;
-                if repellent.qty <= 0 {
-                    repellent.qty = 0;
-                    repellent.active = false;
-                }
-            }
-        }
-    }
-}
 
 pub(crate) fn update_repellentflask_skin(
     mut q_repellent: Query<(
@@ -388,12 +351,23 @@ fn repellent_update(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_message::<RepellentUsedEvent>();
-    app.add_systems(Update, update_repellentflask_skeleton);
     app.add_systems(
         Update,
-        (update_repellentflask_skin, repellent_update)
+        (
+            update_repellentflask_skin,
+            repellent_update,
+            play_repellent_effects_audio,
+        )
             .run_if(in_state(UIContextState::InGame))
             .run_if(resource_exists::<LocalPlayerRole>),
     );
+}
+
+fn play_repellent_effects_audio(
+    mut ev_repellent: MessageReader<ungearitems_core::events::RepellentUsedEvent>,
+    mut gs_audio: AudioEmitter,
+) {
+    for _ in ev_repellent.read() {
+        gs_audio.play_audio_nopos("sounds/spray.ogg".into(), 0.8);
+    }
 }

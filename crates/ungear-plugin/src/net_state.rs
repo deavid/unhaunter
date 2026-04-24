@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::{
-    Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode, ToClients,
-};
+use bevy_replicon::prelude::{Channel, ClientId, ClientMessageAppExt, FromClient, Replicated};
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::components::FloorItemCollidable;
 use uncommon_app_core::random_seed;
@@ -20,12 +18,14 @@ use ungear_core::types::gear::kind::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unmission_core::types::SimulationState;
 use unplayer_core::components::{MainPlayer, PlayerDisconnected, PlayerSprite};
-use unreplicon_core::components::NetworkEntityReady;
+use unreplicon_core::components::{NetworkEntityReady, SimulationAuthorized};
 use unreplicon_core::events::{PlayerNetworkDisconnected, PlayerNetworkReconnected};
-use unreplicon_core::messages::{OwnershipGranted, OwnershipRevoked, RequestDrop, RequestGrab};
+use unreplicon_core::messages::{RequestDrop, RequestGrab};
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
-use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole, is_pure_client};
+use unreplicon_core::resources::{
+    AuthorityRole, ClientUuidMap, LocalPlayer, LocalPlayerRole, is_pure_client,
+};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
@@ -148,22 +148,18 @@ fn handle_request_grab(
 
         if let Ok((entity, old_owner, is_gear, is_furniture)) = q_items.get(item_entity) {
             // Revoke simulation authority from the old driver if different from the new grabber.
+            // The client reconciliation loop will see Owner changed and drop LocallyOwned organically.
             if let Some(old_owner) = old_owner {
                 let old_client_id = from_owner_id(old_owner.0);
-                if old_client_id != client_id {
-                    if old_client_id == ClientId::Server {
-                        commands.entity(entity).remove::<LocallyOwned>();
-                    } else {
-                        commands.write_message(ToClients {
-                            mode: SendMode::Direct(old_client_id),
-                            message: OwnershipRevoked { entity },
-                        });
-                    }
+                if old_client_id != client_id && old_client_id == ClientId::Server {
+                    commands.entity(entity).remove::<LocallyOwned>();
                 }
             }
 
             let owner_id = to_owner_id(client_id);
-            commands.entity(entity).insert(Owner(owner_id));
+            commands
+                .entity(entity)
+                .insert((Owner(owner_id), SimulationAuthorized));
             commands.entity(entity).remove::<FloorItemCollidable>();
             commands.entity(entity).remove::<DeployedGear>();
 
@@ -177,11 +173,6 @@ fn handle_request_grab(
 
             if client_id == ClientId::Server {
                 commands.entity(entity).insert(LocallyOwned);
-            } else {
-                commands.write_message(ToClients {
-                    mode: SendMode::Direct(client_id),
-                    message: OwnershipGranted { entity },
-                });
             }
         }
     }
@@ -277,17 +268,12 @@ fn handle_truck_loadout_message(
                 let rng_val = random_seed::heavy_rng_seed();
                 let net_id = NetworkId(rng_val.max(1000));
 
-                commands
-                    .entity(entity)
-                    .insert((Replicated, Owner(owner.0), net_id));
-
-                let client_id = from_owner_id(owner.0);
-                if client_id != ClientId::Server {
-                    commands.write_message(ToClients {
-                        mode: SendMode::Direct(client_id),
-                        message: OwnershipGranted { entity },
-                    });
-                }
+                commands.entity(entity).insert((
+                    Replicated,
+                    Owner(owner.0),
+                    net_id,
+                    SimulationAuthorized,
+                ));
 
                 if p_gear.left_hand.is_none() {
                     p_gear.left_hand = Some(entity);
@@ -401,17 +387,12 @@ fn handle_truck_loadout_message(
                         entity, net_id, sender_id
                     );
 
-                    commands
-                        .entity(entity)
-                        .insert((Replicated, Owner(owner.0), net_id));
-
-                    let client_id = from_owner_id(owner.0);
-                    if client_id != ClientId::Server {
-                        commands.write_message(ToClients {
-                            mode: SendMode::Direct(client_id),
-                            message: OwnershipGranted { entity },
-                        });
-                    }
+                    commands.entity(entity).insert((
+                        Replicated,
+                        Owner(owner.0),
+                        net_id,
+                        SimulationAuthorized,
+                    ));
 
                     if let Some(old_rh) = p_gear.right_hand.take() {
                         if p_gear.inventory.len() < 2 {
@@ -566,13 +547,9 @@ fn orphan_catcher(
                 continue;
             }
             owner.0 = survivor_owner;
+            commands.entity(entity).insert(SimulationAuthorized);
             if survivor_client_id == ClientId::Server {
                 commands.entity(entity).insert(LocallyOwned);
-            } else {
-                commands.write_message(ToClients {
-                    mode: SendMode::Direct(survivor_client_id),
-                    message: OwnershipGranted { entity },
-                });
             }
             info!(
                 "orphan_catcher: reassigned entity {:?} from {:?} to {:?}",
@@ -657,6 +634,7 @@ pub(crate) fn hydrate_player_gear(
                 NetworkId(gear_id_counter),
                 Replicated,
                 Owner(gear_owner_id),
+                SimulationAuthorized,
             ));
             gear_id_counter += 1;
         }
@@ -668,6 +646,7 @@ pub(crate) fn hydrate_player_gear(
                 NetworkId(gear_id_counter),
                 Replicated,
                 Owner(gear_owner_id),
+                SimulationAuthorized,
             ));
             gear_id_counter += 1;
         }
@@ -680,6 +659,7 @@ pub(crate) fn hydrate_player_gear(
                     NetworkId(gear_id_counter),
                     Replicated,
                     Owner(gear_owner_id),
+                    SimulationAuthorized,
                 ));
                 gear_id_counter += 1;
             }
@@ -743,9 +723,13 @@ pub(crate) fn handle_truck_loadout_request(
         let entity = gear_registry.spawn(&mut commands, ev.kind);
         let rng_val = random_seed::heavy_rng_seed();
         let net_id = NetworkId(rng_val.max(1000));
-        commands
-            .entity(entity)
-            .insert((net_id, Replicated, Owner(OwnerId::Server), LocallyOwned));
+        commands.entity(entity).insert((
+            net_id,
+            Replicated,
+            Owner(OwnerId::Server),
+            LocallyOwned,
+            SimulationAuthorized,
+        ));
 
         if p_gear.left_hand.is_none() {
             p_gear.left_hand = Some(entity);
@@ -934,7 +918,54 @@ pub(crate) fn app_setup(app: &mut App) {
             .run_if(is_pure_client),
     );
     app.add_systems(
+        Update,
+        client_gear_reconciliation_loop
+            .run_if(is_pure_client)
+            .run_if(in_state(UIContextState::InGame)),
+    );
+    app.add_systems(
         OnEnter(SimulationState::TearingDown),
         despawn_gear_on_teardown.run_if(resource_exists::<AuthorityRole>),
     );
+}
+
+fn client_gear_reconciliation_loop(
+    q_gear: Query<(Entity, &Owner, Has<SimulationAuthorized>, Has<LocallyOwned>), With<GearMarker>>,
+    local_player: Res<LocalPlayer>,
+    app_state: Res<State<UIContextState>>,
+    mut commands: Commands,
+    uuid_map: Res<ClientUuidMap>,
+) {
+    let ready = *app_state.get() == UIContextState::InGame;
+
+    let Some(my_uuid) = local_player.0 else {
+        return;
+    };
+    let my_owner_id = uuid_map
+        .0
+        .iter()
+        .find(|(_, uuid)| **uuid == my_uuid)
+        .map(|(&owner_id, _)| owner_id);
+
+    // If our UUID is not yet in the map, bail — do NOT strip LocallyOwned during startup/reconnect.
+    let Some(my_owner_id) = my_owner_id else {
+        return;
+    };
+
+    for (entity, owner, has_sim_auth, has_locally_owned) in q_gear.iter() {
+        let is_mine = owner.0 == my_owner_id;
+
+        if is_mine {
+            if ready {
+                if has_sim_auth && !has_locally_owned {
+                    commands.entity(entity).insert(LocallyOwned);
+                }
+            } else if has_locally_owned {
+                commands.entity(entity).remove::<LocallyOwned>();
+            }
+        } else if has_locally_owned {
+            // Not mine (or reassigned to another player). Drop local control instantly.
+            commands.entity(entity).remove::<LocallyOwned>();
+        }
+    }
 }

@@ -3,7 +3,6 @@ use uncommon_app_core::random_seed;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, StatusText, StatusTextRefreshTimer,
 };
-use uninteraction_core::interaction::{Toggleable, Triggered};
 use unlight_core::components::LightEmitter;
 use unmetrics_core::metrics::SendMetric;
 use unspatial_core::position::Position;
@@ -11,7 +10,6 @@ use unspatial_core::position::Position;
 use crate::metrics;
 
 use bevy::prelude::*;
-use enum_iterator::Sequence;
 use rand::RngExt;
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 pub(crate) use ungearitems_core::components::flashlight::{
@@ -63,44 +61,6 @@ impl FlashlightSkinExt for FlashlightSkin {
         let new_power = Self::calculate_output_power(status, battery_level, glitch_timer);
         self.output_power = (self.output_power * 2.0 + new_power) / 3.0;
     }
-}
-
-pub(crate) fn update_flashlight_skeleton(
-    mut commands: Commands,
-    mut q_flashlight: Query<
-        (
-            Entity,
-            &mut Flashlight,
-            &mut Toggleable,
-            &Battery,
-            &Electronic,
-            Option<&Triggered>,
-        ),
-        With<LocallyOwned>,
-    >,
-) {
-    let measure = metrics::FLASHLIGHT_UPDATE.time_measure();
-    for (entity, mut flashlight, mut toggle, battery, electronic, triggered) in
-        q_flashlight.iter_mut()
-    {
-        // Handle Trigger
-        if triggered.is_some() && electronic.glitch_timer <= 0.0 {
-            let next_status = flashlight.status.next().unwrap_or_default();
-            let is_battery_ok = battery.level > 0.0;
-            if next_status == FlashlightStatus::Off || is_battery_ok {
-                flashlight.status = next_status;
-            } else if flashlight.status != FlashlightStatus::Off {
-                flashlight.status = FlashlightStatus::Off;
-            }
-            // Remove Triggered now that we've processed it
-            commands.entity(entity).remove::<Triggered>();
-        }
-
-        // Sync Toggleable with FlashlightStatus
-        toggle.is_on = flashlight.status != FlashlightStatus::Off;
-    }
-
-    measure.end_ms();
 }
 
 pub(crate) fn update_flashlight_skin(
@@ -246,12 +206,6 @@ fn hydrate_flashlight_skin(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        update_flashlight_skeleton
-            .before(ungearitems_core::GearStateExportSet)
-            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
-    );
     app.add_systems(
         Update,
         (hydrate_flashlight_skin, update_flashlight_skin)

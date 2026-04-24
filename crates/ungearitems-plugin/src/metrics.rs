@@ -29,7 +29,6 @@ pub(crate) const MOTIONSENSOR_UPDATE: DP =
 pub(crate) const THERMALIMAGER_UPDATE: DP =
     DP::const_new("ungearitems/systems/thermalimager/update_thermalimager");
 pub(crate) const SALT_PARTICLE: DP = DP::const_new("ungearitems/systems/salt/salt_particle");
-pub(crate) const SALT_PILE: DP = DP::const_new("ungearitems/systems/salt/salt_pile");
 pub(crate) const SALTY_TRACE: DP = DP::const_new("ungearitems/systems/salt/salty_trace");
 pub(crate) const SAGE_SMOKE: DP = DP::const_new("ungearitems/systems/sage/sage_smoke");
 pub(crate) const TEMPERATURE_UPDATE: DP =
@@ -37,9 +36,6 @@ pub(crate) const TEMPERATURE_UPDATE: DP =
 pub(crate) const SOUND_UPDATE: DP = DP::const_new("ungearitems/systems/recorder/sound_update");
 pub(crate) const REPELLENT_UPDATE: DP =
     DP::const_new("ungearitems/systems/repellentflask/repellent_update");
-pub(crate) const ELECTRONIC_INTERFERENCE: DP =
-    DP::const_new("ungearitems/systems/electronic_interference");
-pub(crate) const BATTERY_DRAIN: DP = DP::const_new("ungearitems/systems/battery_drain");
 
 pub(crate) fn register_all(app: &mut App) {
     app.register_diagnostic(Diagnostic::new(UPDATE_QUARTZ_AND_GHOST).with_suffix("ms"))
@@ -57,12 +53,9 @@ pub(crate) fn register_all(app: &mut App) {
         .register_diagnostic(Diagnostic::new(MOTIONSENSOR_UPDATE).with_suffix("ms"))
         .register_diagnostic(Diagnostic::new(THERMALIMAGER_UPDATE).with_suffix("ms"))
         .register_diagnostic(Diagnostic::new(SALT_PARTICLE).with_suffix("ms"))
-        .register_diagnostic(Diagnostic::new(SALT_PILE).with_suffix("ms"))
         .register_diagnostic(Diagnostic::new(SALTY_TRACE).with_suffix("ms"))
         .register_diagnostic(Diagnostic::new(SAGE_SMOKE).with_suffix("ms"))
         .register_diagnostic(Diagnostic::new(TEMPERATURE_UPDATE).with_suffix("ms"))
         .register_diagnostic(Diagnostic::new(SOUND_UPDATE).with_suffix("ms"))
-        .register_diagnostic(Diagnostic::new(REPELLENT_UPDATE).with_suffix("ms"))
-        .register_diagnostic(Diagnostic::new(ELECTRONIC_INTERFERENCE).with_suffix("ms"))
-        .register_diagnostic(Diagnostic::new(BATTERY_DRAIN).with_suffix("ms"));
+        .register_diagnostic(Diagnostic::new(REPELLENT_UPDATE).with_suffix("ms"));
 }

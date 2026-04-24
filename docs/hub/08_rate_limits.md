@@ -88,9 +88,9 @@ request. The Hub verifies the solution (O(1), single hash) before proceeding.
 - Each nonce is bound to the `player_uuid` that requested it. A nonce issued to UUID A cannot be used by UUID B.
 - **Max 2 outstanding nonces per UUID** at any time. A third challenge request for the same UUID is rejected.
 - **Max 2 outstanding nonces per IP** at any time. A third challenge request from the same IP is rejected.
-- Nonces expire after 2 minutes. With max 2 outstanding, this effectively limits to ~1 new room per minute per IP/UUID
-  under sustained use.
-- Outstanding nonces are cleaned up periodically (remove expired entries every 30 seconds).
+- Nonces expire after 10 seconds. With max 2 outstanding, this effectively limits to ~12 new rooms per minute per
+  IP/UUID under sustained use.
+- Outstanding nonces are cleaned up periodically (on every `/v1/challenge` request).
 
 **Nonce storage:** In-memory `HashMap<String, NonceEntry>` where `NonceEntry` contains
 `{ player_uuid, client_ip, issued_at }`. Lightweight — even under heavy load, a few thousand entries × ~150 bytes =
@@ -368,8 +368,8 @@ technically 0% while waiting:
 - Room == Some:
   - Lobby, 0-1 players: We could use Tick rate = 1 Hz.
   - Lobby, 2+ players: We could use Tick rate = 5 Hz.
-  - Mission, 1 player:  We could use Tick rate = 15 Hz.
-  - Mission, 2+ players:  We could use Tick rate = 60 Hz.
+  - Mission, 1 player: We could use Tick rate = 15 Hz.
+  - Mission, 2+ players: We could use Tick rate = 60 Hz.
 
 But forget about all these tick rates, the most important thing is that we can have something like 5 servers idle in
 Room = None state, permanently. Then when someone wants to create a room, one of these gets the room code.
@@ -381,11 +381,11 @@ Also, with this, we could have all our capacity booted at the beginning if we wa
 dedicated max? we could ramp them up on boot. (Or a fraction, because it sounds expensive anyway, but the point is that
 they would now take 1/60 of the server's CPU on idle state). Then it's all about juggling the room codes fast enough.
 
------
+---
 
 Another thing, the ProcMan. If we don't reserve the room until the client is actually connected we can be much more
-aggressive with the timings. For this, ProcMan would need to tunnel the connections itself - so clients would be advertised
-to connect to ProcMan which would attempt to fake a dedicated server.
+aggressive with the timings. For this, ProcMan would need to tunnel the connections itself - so clients would be
+advertised to connect to ProcMan which would attempt to fake a dedicated server.
 
 Once the client is there, and knowing the room code, then ProcMan can send them to an available server for real - and
 tunnel / relay the connection.

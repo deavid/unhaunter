@@ -99,11 +99,16 @@ impl ServerManager {
                 .arg(port.to_string())
                 .arg("--procman-channel")
                 .arg("stdin")
+                .arg("-vv")
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .env("NO_COLOR", "1")
-                .env("TERM", "dumb");
+                .env("TERM", "dumb")
+                // Clear any inherited RUST_LOG so the game binary uses its own
+                // built-in log filter (build_log_filter), which correctly caps
+                // high-volume third-party crates like bevy_replicon.
+                .env_remove("RUST_LOG");
 
             if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
                 let path = std::path::Path::new(&manifest_dir);

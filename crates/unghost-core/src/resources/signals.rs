@@ -9,6 +9,7 @@ use unspatial_core::position::Position;
 pub struct GhostHuntPressure {
     pub position: Position,
     pub calm_time_secs: f32,
+    pub is_warping: bool,
 }
 
 /// Single-ghost mission snapshot exported for read-only consumers that need stable

@@ -18,10 +18,18 @@ pub(crate) fn compute_visibility(
     if pre_fill {
         vis_field.fill(-0.001);
     }
+    let exp_mult = visibility_exposure.unwrap_or(1.0).max(0.0);
     let mut queue = VecDeque::with_capacity(256);
     let start = pos_start.to_board_position();
     let map_size = collision_field.dim();
     let dir_vec = facing_direction.map(|d| d.to_vec3().truncate());
+
+    let (dir_factor, threshold) = if let Some(dv) = dir_vec {
+        let factor = (dv.length() / 200.0).clamp(0.0, 1.0);
+        (factor, 3.5 - 2.0 * factor)
+    } else {
+        (1.0, 2.0)
+    };
 
     if map_size.0 == 0 || map_size.1 == 0 || map_size.2 == 0 {
         return;
@@ -49,7 +57,6 @@ pub(crate) fn compute_visibility(
             let ncf = collision_field[np];
             let npds = npos.to_position().distance_zf(pos_start, Z_FACTOR);
             let npref = npos.distance(&pos2) / 2.0;
-            let threshold = 2.0;
             let f = if npds < threshold {
                 1.0
             } else {
@@ -66,20 +73,20 @@ pub(crate) fn compute_visibility(
                 let cone_threshold = 0.0;
                 let cone_intensity = ((npds - cone_threshold) * 2.0).clamp(0.0, 1.0);
 
-                // Apply exposure (vision width) logic dynamically.
-                let exp_mult = visibility_exposure.unwrap_or(1.0).max(0.0);
-
                 // Map exposure to a "cone power":
                 // exposure = 0.0 -> power = 16.0 (very narrow, ~30 degrees)
                 // exposure = 1.0 -> power = 3.0 (normal, ~90-120 degrees)
                 // We clamp the minimum power at 1.0 (which mathematically creates a 180 degree max cone).
-                let power = if exp_mult <= 1.0 {
+                let mut power = if exp_mult <= 1.0 {
                     // interpolate from 16 to 3
                     16.0 - (exp_mult * 13.0)
                 } else {
                     // interpolate from 3 to 1
                     (3.0 - (exp_mult - 1.0) * 2.0).max(1.0)
                 };
+
+                // Widen the angle smoothly towards 180 degrees (power = 1.0) as the mouse gets closer
+                power = 1.0 + (power - 1.0) * dir_factor;
 
                 // As exposure increases beyond 1.0, we want to expand beyond the 180-degree limit
                 // by reducing the absolute penalty applied to the back of the player.
@@ -100,7 +107,7 @@ pub(crate) fn compute_visibility(
             if dst_f < 0.00001 {
                 continue;
             }
-            let k = if let Some(room_topology) = room_topology.as_ref() {
+            let mut k = if let Some(room_topology) = room_topology.as_ref() {
                 match room_topology.room_tiles.get(&npos).is_some() {
                     // Decrease view range inside the location
                     true => 7.0,
@@ -110,6 +117,15 @@ pub(crate) fn compute_visibility(
                 // For deployed gear
                 7.0
             };
+
+            if dir_vec.is_some() {
+                // Determine how aggressively we crush the distance.
+                let crush = (dir_factor * dir_factor).max(0.01);
+                // If it's bright (exp_mult > 1.0), we remove that crush to let ambient light travel normally.
+                let exposure_protection = (exp_mult - 1.0).clamp(0.0, 1.0);
+                k *= crush + (1.0 - crush) * exposure_protection;
+            }
+
             dst_f /= 1.0 + ((npds - threshold) / k).clamp(0.0, 6.0);
             let vf_np = &mut vis_field[np];
             // Apply a visibility penalty to collision tiles that are in positive X or Y direction

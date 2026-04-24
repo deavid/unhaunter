@@ -11,7 +11,14 @@ use unvitals_core::events::PlayerDiedEvent;
 
 pub(crate) fn regenerate_health_over_time(
     time: Res<Time>,
-    mut qp: Query<&mut PlayerVitals, (Without<InTruck>, Without<PlayerSpectating>)>,
+    mut qp: Query<
+        &mut PlayerVitals,
+        (
+            With<LocallyOwned>,
+            Without<InTruck>,
+            Without<PlayerSpectating>,
+        ),
+    >,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let dt = time.delta_secs();
@@ -138,6 +145,11 @@ pub(crate) fn apply_ghost_proximity_damage(
     }
 
     for pressure in hunt_signals.pressures.iter() {
+        if pressure.is_warping {
+            *hunt_start = time.elapsed_secs(); // Reset timer silently
+            continue; // Skip damage entirely while mid-dash
+        }
+
         if *hunt_start == 0.0 {
             *hunt_start = time.elapsed_secs();
         }

@@ -5,11 +5,8 @@ use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, S
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::uvtorch::{UVTorch, UVTorchSkin};
-use uninteraction_core::interaction::Toggleable;
 use unlight_core::components::LightEmitter;
 use unmetrics_core::metrics::SendMetric;
-use unreplicon_core::ownership::LocallyOwned;
-use unspatial_core::position::Position;
 
 use crate::metrics;
 
@@ -37,30 +34,6 @@ impl UVTorchSkinExt for UVTorchSkin {
         let new_power = Self::calculate_output_power(enabled, battery_level, glitch_timer);
         self.output_power = (self.output_power * 10.0 + new_power) / 11.0;
     }
-}
-
-pub(crate) fn update_uvtorch_skeleton(
-    mut q_uvtorch: Query<
-        (
-            &mut UVTorch,
-            &mut Battery,
-            &Toggleable,
-            &Electronic,
-            &Position,
-        ),
-        With<LocallyOwned>,
-    >,
-) {
-    let measure = metrics::UVTORCH_UPDATE.time_measure();
-    for (mut uvtorch, mut battery, toggle, _electronic, _pos) in q_uvtorch.iter_mut() {
-        // Sync internal enabled with Toggleable
-        uvtorch.enabled = toggle.is_on;
-
-        // Update Battery Drain Rate
-        battery.drain_rate = if uvtorch.enabled { 0.0001 } else { 0.0 };
-    }
-
-    measure.end_ms();
 }
 
 pub(crate) fn update_uvtorch_skin(
@@ -149,12 +122,6 @@ fn hydrate_uvtorch_skin(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        update_uvtorch_skeleton
-            .before(ungearitems_core::GearStateExportSet)
-            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
-    );
     app.add_systems(
         Update,
         (hydrate_uvtorch_skin, update_uvtorch_skin)

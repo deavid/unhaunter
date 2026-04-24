@@ -3,7 +3,7 @@ use super::sanity;
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use unmission_core::types::SimulationState;
-use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
+use unreplicon_core::resources::LocalPlayerRole;
 use unvitals_core::components::{PlayerVitals, Stamina};
 use unvitals_core::events::PlayerDiedEvent;
 
@@ -16,7 +16,7 @@ pub(crate) fn app_setup(app: &mut App) {
             (
                 sanity::drain_sanity_from_environment.run_if(resource_exists::<LocalPlayerRole>),
                 other::recover_sanity_in_truck,
-                other::regenerate_health_over_time.run_if(resource_exists::<AuthorityRole>),
+                other::regenerate_health_over_time,
                 other::scale_stamina_rates_by_health,
                 other::apply_ghost_proximity_damage.run_if(resource_exists::<LocalPlayerRole>),
                 other::transition_to_spectator_on_death,

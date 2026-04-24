@@ -139,6 +139,7 @@ pub(crate) fn refresh_ghost_hunt_signals(
         signals.pressures.push(GhostHuntPressure {
             position: *position,
             calm_time_secs: ghost.calm_time_secs,
+            is_warping: ghost.warp > 0.1,
         });
     }
 }
