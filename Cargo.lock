@@ -7687,7 +7687,7 @@ dependencies = [
 
 [[package]]
 name = "unhaunter-gearitems-logic"
-version = "0.4.0-dev"
+version = "0.4.0-alpha"
 dependencies = [
  "bevy",
  "bevy_replicon",
