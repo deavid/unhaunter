@@ -10,8 +10,8 @@ pub struct ProcManConfig {
     pub public_addr: String,
     pub installation_id: Uuid,
     pub port_range: (u16, u16),
-    pub idle_pool_size: usize,
-    pub game_binary_path: String,
+    pub library_dir: String,
+    pub max_total_instances: usize,
     /// HMAC-SHA256 key (64 hex chars = 32 bytes) used to sign per-room JWT
     /// tickets. The Hub uses this to issue tickets; the dedicated server
     /// receives it via stdin and validates incoming connection tickets.
@@ -34,8 +34,8 @@ pub async fn load_config(path: impl AsRef<Path>) -> Result<ProcManConfig> {
             public_addr: "127.0.0.1".to_string(),
             installation_id: Uuid::new_v4(),
             port_range: (12000, 12100),
-            idle_pool_size: 1,
-            game_binary_path: "./unhaunter_dedicated".to_string(),
+            library_dir: "./library".to_string(),
+            max_total_instances: 8,
             ticket_hmac_secret: generate_hmac_secret(),
         };
         save_config(path, &default_config).await?;

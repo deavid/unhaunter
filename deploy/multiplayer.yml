@@ -492,8 +492,8 @@
               installation_id: "{{ procman_uuid }}",
               ticket_hmac_secret: "{{ procman_hmac_secret }}",
               port_range: (12000, 12100),
-              idle_pool_size: 1,
-              game_binary_path: "./bin/unhaunter_dedicated",
+              library_dir: "{{ install_dir }}/library",
+              max_total_instances: 8,
           )
         owner: unhaunter
         group: unhaunter

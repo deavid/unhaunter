@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
-use unhub_client::protocol::RoomSummary;
+use unhub_client::protocol::{LibraryEntry, RoomSummary};
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -50,7 +50,7 @@ pub struct NonceEntry {
 
 pub struct ProcManSession {
     pub tx: tokio::sync::mpsc::UnboundedSender<unhub_client::protocol::ProcManMessage>,
-    pub game_versions: Vec<String>,
+    pub library: Vec<LibraryEntry>,
     pub public_addr: String,
     pub idle_capacity: usize,
     pub last_heartbeat: std::time::Instant,

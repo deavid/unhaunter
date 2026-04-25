@@ -208,7 +208,12 @@ pub async fn create_room(
     let (tx, public_addr, pm_uuid, ticket_hmac_secret) = state
         .procmans
         .iter()
-        .find(|pm| pm.game_versions.contains(&payload.game_version) && pm.idle_capacity > 0)
+        .find(|pm| {
+            pm.library
+                .iter()
+                .any(|entry| entry.version == payload.game_version)
+                && pm.idle_capacity > 0
+        })
         .map(|pm| {
             (
                 pm.tx.clone(),

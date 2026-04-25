@@ -14,6 +14,12 @@ pub struct PingResponse {
     pub online_players_estimate: usize,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct LibraryEntry {
+    pub version: String,
+    pub protocol_hash: u64,
+}
+
 // --- Hub ↔ ProcMan Protocol ---
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -22,7 +28,7 @@ pub enum ProcManMessage {
     ProcManHello {
         uuid: Uuid,
         version: String,
-        game_versions: Vec<String>,
+        library: Vec<LibraryEntry>,
         port_range: (u16, u16),
         public_addr: String,
         idle_pool: std::collections::HashMap<String, usize>,
@@ -34,6 +40,7 @@ pub enum ProcManMessage {
     },
     Heartbeat {
         idle_capacity: usize,
+        library: Vec<LibraryEntry>,
         rooms: Vec<RoomSummary>,
     },
     RoomReady {
