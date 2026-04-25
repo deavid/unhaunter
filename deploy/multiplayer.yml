@@ -12,7 +12,10 @@
 #      `cargo build --release -p unhub -p unprocman -p unhaunter --bin unhub --bin unprocman --bin unhaunter_dedicated`
 #
 # HOW TO RUN:
-#   ansible-playbook deploy/multiplayer.yml -i "YOUR_VPS_IP," -u YOUR_SSH_USER -e "domain=hub.yourdomain.com"
+#   ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com"
+#
+# TO ROTATE THE HMAC SECRET (after a security incident, invalidates all active connection tickets):
+#   ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com rotate_hmac_secret=true"
 #
 # NOTES:
 # - Replace `YOUR_SSH_USER` with a user that has sudo privileges on your server (e.g., debian, ubuntu, or root).
@@ -29,6 +32,11 @@
 
     # Generate a consistent, idempotent UUID strictly tied to this server's hostname
     procman_uuid: "{{ inventory_hostname | to_uuid }}"
+
+    # Set to true to rotate the HMAC secret on the next deploy:
+    #   ansible-playbook deploy/multiplayer.yml ... -e rotate_hmac_secret=true
+    # This will invalidate all active connection tickets and force a service restart.
+    rotate_hmac_secret: false
 
     # Path to the locally compiled binaries and assets on your dev machine
     local_target: "../target/release"
@@ -77,6 +85,48 @@
       delegate_to: localhost
       become: no
 
+    # --- HMAC Secret Management ---
+    - name: Ensure secrets directory exists
+      file:
+        path: "{{ install_dir }}/secrets"
+        state: directory
+        owner: unhaunter
+        group: unhaunter
+        mode: "0700"
+
+    - name: Rotate HMAC secret (only when rotate_hmac_secret=true)
+      file:
+        path: "{{ install_dir }}/secrets/procman_hmac_secret"
+        state: absent
+      when: rotate_hmac_secret | bool
+      notify: Restart Services
+
+    - name: Check if HMAC secret file exists
+      stat:
+        path: "{{ install_dir }}/secrets/procman_hmac_secret"
+      register: hmac_secret_stat
+
+    - name: Generate HMAC secret (first deploy or after rotation)
+      shell: "openssl rand -hex 32 > {{ install_dir }}/secrets/procman_hmac_secret"
+      when: not hmac_secret_stat.stat.exists
+      notify: Restart Services
+
+    - name: Lock down HMAC secret file permissions
+      file:
+        path: "{{ install_dir }}/secrets/procman_hmac_secret"
+        owner: unhaunter
+        group: unhaunter
+        mode: "0600"
+
+    - name: Read HMAC secret into fact
+      slurp:
+        src: "{{ install_dir }}/secrets/procman_hmac_secret"
+      register: hmac_secret_slurp
+
+    - name: Set procman_hmac_secret fact
+      set_fact:
+        procman_hmac_secret: "{{ hmac_secret_slurp.content | b64decode | trim }}"
+
     # --- Bypass the Bootstrap Dance ---
     - name: Template hub_config.ron
       copy:
@@ -105,7 +155,7 @@
               hub_addr: "127.0.0.1:11000",
               public_addr: "{{ inventory_hostname }}",
               installation_id: "{{ procman_uuid }}",
-              ticket_hmac_secret: "{{ procman_uuid }}",
+              ticket_hmac_secret: "{{ procman_hmac_secret }}",
               port_range: (12000, 12100),
               idle_pool_size: 1,
               game_binary_path: "./bin/unhaunter_dedicated",

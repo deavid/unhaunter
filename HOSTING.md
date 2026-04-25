@@ -277,5 +277,16 @@ sudo journalctl -u unprocman.service -f
 
 ```bash
 cargo build --release -p unhub -p unprocman -p unhaunter --bin unhub --bin unprocman --bin unhaunter_dedicated && \
-  ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com
+  ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com"
 ```
+
+**To rotate the HMAC ticket secret** (invalidates all active connection tickets — use after a security incident or key
+compromise):
+
+```bash
+cargo build --release -p unhub -p unprocman -p unhaunter --bin unhub --bin unprocman --bin unhaunter_dedicated && \
+  ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com rotate_hmac_secret=true"
+```
+
+> The HMAC secret is stored in `/opt/unhaunter/secrets/procman_hmac_secret` on the VPS (mode 0600, owned by
+> `unhaunter`). Subsequent deploys without `rotate_hmac_secret=true` leave the existing secret untouched.
