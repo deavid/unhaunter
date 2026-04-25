@@ -18,16 +18,23 @@ jobs:
       - name: Update APT & Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
+          sudo apt-get install -y g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 mingw-w64 zip
+
+      - name: Install WASM deps
+        run: |
+          cargo install wasm-pack
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          target: x86_64-pc-windows-gnu,wasm32-unknown-unknown
 
       - name: Install just
         uses: extractions/setup-just@v3
 
-      - name: Build Server Package
-        run: just package-server
+      - name: Build and Package Artifacts
+        run: just package-all
 
       - name: Overwrite alpha-latest rolling release
         env:
@@ -39,5 +46,5 @@ jobs:
             --prerelease \
             --title "Alpha Latest (rolling)" \
             --notes "Latest alpha build from the alpha branch. Volatile. May break." \
-            releases/unhaunter-*-server-linux-x86_64.tar.gz
+            releases/unhaunter-*
           gh release edit alpha-latest --latest=false
