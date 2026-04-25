@@ -38,23 +38,15 @@ async fn handle_procman_connection(
         .ok_or_else(|| anyhow::anyhow!("Connection closed"))??;
     let hello = serde_json::from_str::<ProcManMessage>(&line)?;
 
-    let (uuid, public_addr, library, idle_pool, rooms, ticket_hmac_secret) = match hello {
+    let (uuid, public_addr, library, rooms, ticket_hmac_secret) = match hello {
         ProcManMessage::ProcManHello {
             uuid,
             public_addr,
             library,
-            idle_pool,
             rooms,
             ticket_hmac_secret,
             ..
-        } => (
-            uuid,
-            public_addr,
-            library,
-            idle_pool,
-            rooms,
-            ticket_hmac_secret,
-        ),
+        } => (uuid, public_addr, library, rooms, ticket_hmac_secret),
         _ => return Err(anyhow::anyhow!("Expected ProcManHello")),
     };
 
@@ -82,14 +74,12 @@ async fn handle_procman_connection(
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
 
     // Register ProcMan
-    let idle_capacity: usize = idle_pool.values().sum();
     state.procmans.insert(
         uuid,
         ProcManSession {
             tx,
             library,
             public_addr,
-            idle_capacity,
             last_heartbeat: std::time::Instant::now(),
             ticket_hmac_secret,
         },
@@ -156,13 +146,8 @@ async fn handle_message(
         pm.last_heartbeat = std::time::Instant::now();
     }
     match msg {
-        ProcManMessage::Heartbeat {
-            idle_capacity,
-            library,
-            rooms,
-        } => {
+        ProcManMessage::Heartbeat { library, rooms } => {
             if let Some(mut pm) = state.procmans.get_mut(&uuid) {
-                pm.idle_capacity = idle_capacity;
                 pm.library = library;
             }
             // Update rooms (could be more efficient)

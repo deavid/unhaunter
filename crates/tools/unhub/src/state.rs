@@ -52,7 +52,6 @@ pub struct ProcManSession {
     pub tx: tokio::sync::mpsc::UnboundedSender<unhub_client::protocol::ProcManMessage>,
     pub library: Vec<LibraryEntry>,
     pub public_addr: String,
-    pub idle_capacity: usize,
     pub last_heartbeat: std::time::Instant,
     /// HMAC-SHA256 key used to sign JWT connection tickets for this procman's
     /// dedicated servers. Sent during handshake and stored for ticket issuance.

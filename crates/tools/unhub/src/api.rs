@@ -8,10 +8,141 @@ use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 use sha2::Digest;
 use unhub_client::protocol::{
     CreateRoomRequest, CreateRoomResponse, HealthResponse, HubError, JoinRoomRequest,
-    JoinRoomResponse, PingRequest, PingResponse, ProcManMessage,
+    JoinRoomResponse, MultiplayerStatus, PingRequest, PingResponse, ProcManMessage,
 };
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unhub_client::{generate_room_code, generate_room_secret};
+
+fn infer_channel(version: &str) -> &'static str {
+    if version.contains("-beta") {
+        "beta"
+    } else if version.ends_with("-alpha") {
+        "alpha"
+    } else if version.ends_with("-dev") {
+        "dev"
+    } else {
+        "stable"
+    }
+}
+
+fn is_stable_version(version: &str) -> bool {
+    !version.contains('-')
+}
+
+fn entry_matches_client_pool(
+    entry_version: &str,
+    client_channel: &str,
+    client_version: &str,
+    client_hash: u64,
+    entry_hash: u64,
+) -> bool {
+    match client_channel {
+        "dev" | "alpha" => entry_version == client_version && entry_hash == client_hash,
+        "beta" => {
+            entry_hash == client_hash && matches!(infer_channel(entry_version), "beta" | "stable")
+        }
+        _ => entry_hash == client_hash && infer_channel(entry_version) == "stable",
+    }
+}
+
+fn parse_semver(version: &str) -> Option<semver::Version> {
+    let normalized = version.trim().trim_start_matches('v');
+    match semver::Version::parse(normalized) {
+        Ok(v) => Some(v),
+        Err(e) => {
+            tracing::warn!("Failed to parse semver '{}': {}", version, e);
+            None
+        }
+    }
+}
+
+fn evaluate_client_status(
+    state: &HubState,
+    client_version: &str,
+    client_hash: u64,
+) -> (MultiplayerStatus, Option<String>) {
+    let client_channel = infer_channel(client_version);
+    let client_semver = parse_semver(client_version);
+
+    let mut has_server = false;
+    let mut best_pool_match: Option<(String, semver::Version)> = None;
+    let mut best_stable: Option<(String, semver::Version)> = None;
+
+    for pm in state.procmans.iter() {
+        for entry in &pm.library {
+            if entry_matches_client_pool(
+                &entry.version,
+                client_channel,
+                client_version,
+                client_hash,
+                entry.protocol_hash,
+            ) {
+                has_server = true;
+                if let Some(v) = parse_semver(&entry.version) {
+                    let replace = best_pool_match
+                        .as_ref()
+                        .map(|(_, current)| v > *current)
+                        .unwrap_or(true);
+                    if replace {
+                        best_pool_match = Some((entry.version.clone(), v));
+                    }
+                }
+            }
+
+            if is_stable_version(&entry.version)
+                && let Some(v) = parse_semver(&entry.version)
+            {
+                let replace = best_stable
+                    .as_ref()
+                    .map(|(_, current)| v > *current)
+                    .unwrap_or(true);
+                if replace {
+                    best_stable = Some((entry.version.clone(), v));
+                }
+            }
+        }
+    }
+
+    if let Some(client_semver) = client_semver {
+        // 1. Newer version in the same compatible pool (same hash group).
+        if let Some((best_pool_version, best_pool_semver)) = &best_pool_match
+            && *best_pool_semver > client_semver
+        {
+            return (
+                MultiplayerStatus::UpdateAvailable,
+                Some(best_pool_version.clone()),
+            );
+        }
+
+        // 2. Newer stable version overall: recommend upgrade if old hash is
+        // still served; otherwise caller will get Unsupported below.
+        if let Some((best_stable_version, best_stable_semver)) = &best_stable
+            && *best_stable_semver > client_semver
+            && has_server
+        {
+            return (
+                MultiplayerStatus::UpdateRecommended,
+                Some(best_stable_version.clone()),
+            );
+        }
+
+        // 3. Stable and still served with no newer stable available.
+        if client_channel == "stable" && has_server {
+            return (MultiplayerStatus::UpToDate, None);
+        }
+    } else {
+        tracing::warn!(
+            "Client version '{}' is not semver-parseable; using degraded ping status logic",
+            client_version
+        );
+    }
+
+    if has_server {
+        (MultiplayerStatus::UpToDate, None)
+    } else {
+        (MultiplayerStatus::Unsupported, None)
+    }
+}
 
 pub async fn ping(
     State(state): State<HubState>,
@@ -20,9 +151,14 @@ pub async fn ping(
     state.active_players.insert(payload.installation_id, ());
     state.active_players.run_pending_tasks();
 
+    let (multiplayer_status, upgrade_version) =
+        evaluate_client_status(&state, &payload.version, payload.protocol_hash);
+
     Json(PingResponse {
         ok: true,
         online_players_estimate: state.active_players.entry_count() as usize,
+        multiplayer_status,
+        upgrade_version,
     })
 }
 
@@ -203,32 +339,84 @@ pub async fn create_room(
         ));
     }
 
-    // Select a ProcMan with capacity — extract what we need in a single lookup
-    // to avoid a second DashMap get that could race with disconnection.
-    let (tx, public_addr, pm_uuid, ticket_hmac_secret) = state
-        .procmans
-        .iter()
-        .find(|pm| {
-            pm.library
-                .iter()
-                .any(|entry| entry.version == payload.game_version)
-                && pm.idle_capacity > 0
-        })
-        .map(|pm| {
-            (
-                pm.tx.clone(),
-                pm.public_addr.clone(),
-                *pm.key(),
-                pm.ticket_hmac_secret.clone(),
-            )
-        })
-        .ok_or((
-            StatusCode::SERVICE_UNAVAILABLE,
-            Json(HubError {
-                error: "no_capacity".to_string(),
-                message: "No server capacity available for this game version.".to_string(),
-            }),
-        ))?;
+    // Select ProcMan by protocol hash, preferring the candidate that reports
+    // the highest semver among versions allowed by channel-boundary rules.
+    let client_channel = infer_channel(&payload.game_version);
+    let mut selected: Option<(
+        tokio::sync::mpsc::UnboundedSender<ProcManMessage>,
+        String,
+        uuid::Uuid,
+        String,
+        String,
+        Option<semver::Version>,
+    )> = None;
+
+    for pm in state.procmans.iter() {
+        let mut best_target_version: Option<String> = None;
+        let mut pm_best_semver: Option<semver::Version> = None;
+
+        for entry in &pm.library {
+            if !entry_matches_client_pool(
+                &entry.version,
+                client_channel,
+                &payload.game_version,
+                payload.protocol_hash,
+                entry.protocol_hash,
+            ) {
+                continue;
+            }
+
+            if let Some(v) = parse_semver(&entry.version) {
+                let replace = pm_best_semver
+                    .as_ref()
+                    .map(|current| v > *current)
+                    .unwrap_or(true);
+                if replace {
+                    pm_best_semver = Some(v);
+                    best_target_version = Some(entry.version.clone());
+                }
+            } else if best_target_version.is_none() {
+                best_target_version = Some(entry.version.clone());
+            }
+        }
+
+        let Some(target_version) = best_target_version else {
+            continue;
+        };
+
+        let candidate = (
+            pm.tx.clone(),
+            pm.public_addr.clone(),
+            *pm.key(),
+            pm.ticket_hmac_secret.clone(),
+            target_version,
+            pm_best_semver,
+        );
+
+        let should_replace = match &selected {
+            None => true,
+            Some((_, _, _, _, _, selected_semver)) => match (&candidate.5, selected_semver) {
+                (Some(candidate_v), Some(selected_v)) => candidate_v > selected_v,
+                (Some(_), None) => true,
+                _ => false,
+            },
+        };
+
+        if should_replace {
+            selected = Some(candidate);
+        }
+    }
+
+    let (tx, public_addr, pm_uuid, ticket_hmac_secret, target_version, _) = selected.ok_or((
+        StatusCode::SERVICE_UNAVAILABLE,
+        Json(HubError {
+            error: "no_capacity".to_string(),
+            message: format!(
+                "No compatible server available for client version {} (hash {}).",
+                payload.game_version, payload.protocol_hash
+            ),
+        }),
+    ))?;
 
     // Generate a unique room code, retrying on collision (bounded to avoid
     // infinite loops from bugs in the RNG or an overly full code space).
@@ -256,7 +444,7 @@ pub async fn create_room(
         .send(ProcManMessage::CreateRoom {
             room_code: room_code.clone(),
             secret: secret.clone(),
-            game_version: payload.game_version.clone(),
+            target_version,
         })
         .is_err()
     {

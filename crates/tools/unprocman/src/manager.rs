@@ -165,13 +165,6 @@ impl ServerManager {
             .collect()
     }
 
-    pub async fn idle_capacity(&self) -> usize {
-        let servers = self.servers.lock().await;
-        self.config
-            .max_total_instances
-            .saturating_sub(servers.len())
-    }
-
     pub async fn maintain_pool(self: &Arc<Self>) -> anyhow::Result<()> {
         let mut servers = self.servers.lock().await;
 
@@ -454,7 +447,7 @@ impl ServerManager {
         self: &Arc<Self>,
         room_code: String,
         secret: String,
-        game_version: String,
+        target_version: String,
     ) -> anyhow::Result<RoomSummary> {
         {
             let mut in_progress = self.spawn_in_progress.lock().await;
@@ -468,9 +461,12 @@ impl ServerManager {
         let result = async {
             let library = self.library.lock().await;
             let binary = self
-                .find_binary_for_version(&game_version, &library)
+                .find_binary_for_version(&target_version, &library)
                 .ok_or_else(|| {
-                    anyhow::anyhow!("No library bundle found for game version {}", game_version)
+                    anyhow::anyhow!(
+                        "No library bundle found for target version {}",
+                        target_version
+                    )
                 })?;
 
             let mut servers = self.servers.lock().await;
@@ -484,8 +480,8 @@ impl ServerManager {
 
             let port = self.find_free_port_locked(&servers)?;
             info!(
-                "Spawning on-demand server for version {} on port {} using {}",
-                game_version,
+                "Spawning on-demand server for target version {} on port {} using {}",
+                target_version,
                 port,
                 binary.binary_path.display()
             );
@@ -594,7 +590,7 @@ impl ServerManager {
             Ok(RoomSummary {
                 code: room_code,
                 port,
-                game_version,
+                game_version: target_version,
                 secret,
                 state: RoomState::Lobby,
                 player_count: 0,

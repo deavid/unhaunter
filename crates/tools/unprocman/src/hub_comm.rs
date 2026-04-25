@@ -34,12 +34,6 @@ async fn handle_hub_connection(
     let mut framed = Framed::new(stream, LinesCodec::new_with_max_length(65536));
 
     let library = manager.get_library_entries().await;
-    let idle_capacity = manager.idle_capacity().await;
-    let idle_pool = library
-        .iter()
-        .map(|entry| (entry.version.clone(), idle_capacity))
-        .collect::<std::collections::HashMap<_, _>>();
-
     let mut rooms_summary = Vec::new();
     {
         let servers = manager.servers.lock().await;
@@ -68,7 +62,6 @@ async fn handle_hub_connection(
         library,
         port_range: manager.config.port_range,
         public_addr: manager.config.public_addr.clone(),
-        idle_pool,
         rooms: rooms_summary,
         ticket_hmac_secret: manager.config.ticket_hmac_secret.clone(),
     };
@@ -106,7 +99,6 @@ async fn handle_hub_connection(
             }
             _ = heartbeat_interval.tick() => {
                 let servers = manager.servers.lock().await;
-                let idle_capacity = manager.config.max_total_instances.saturating_sub(servers.len());
                 let library = manager.get_library_entries().await;
                 let mut rooms = Vec::new();
                 for s in servers.values() {
@@ -123,7 +115,7 @@ async fn handle_hub_connection(
                         });
                     }
                 }
-                let hb = ProcManMessage::Heartbeat { idle_capacity, library, rooms };
+                let hb = ProcManMessage::Heartbeat { library, rooms };
                 framed.send(serde_json::to_string(&hb)?).await?;
             }
             result = framed.next() => {
@@ -151,11 +143,14 @@ async fn handle_hub_message(
         ProcManMessage::CreateRoom {
             room_code,
             secret,
-            game_version,
+            target_version,
         } => {
-            info!("Creating room {} for version {}", room_code, game_version);
+            info!(
+                "Creating room {} for target version {}",
+                room_code, target_version
+            );
             let room_code_for_error = room_code.clone();
-            match manager.assign_room(room_code, secret, game_version).await {
+            match manager.assign_room(room_code, secret, target_version).await {
                 Ok(room) => {
                     let resp = ProcManMessage::RoomReady { room };
                     framed.send(serde_json::to_string(&resp)?).await?;
