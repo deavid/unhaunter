@@ -142,7 +142,8 @@ procman_config.ron is templated with:
 1. hub_addr = 127.0.0.1:11000
 2. public_addr = inventory hostname
 3. installation_id = server-derived UUID
-4. ticket_hmac_secret = /opt/unhaunter/secrets/procman_hmac_secret
+4. ticket_hmac_secret = (64-char hex secret; Ansible reads /opt/unhaunter/secrets/procman_hmac_secret and inlines it
+   here)
 5. port_range = (12000, 12100)
 6. library_dir = /opt/unhaunter/library
 7. max_total_instances = 8
@@ -155,15 +156,15 @@ Legacy keys game_binary_path and idle_pool_size are obsolete and must not be use
 
 The playbook handles bootstrap automatically. If you run services manually:
 
-1. Create /opt/unhaunter/bin and /opt/unhaunter/library/<channel> directories.
+1. Create /opt/unhaunter/bin and /opt/unhaunter/library/[channel] directories.
 2. Place unhub and unprocman in /opt/unhaunter/bin.
 3. Place dedicated bundles in library directories.
 4. For each bundle/channel directory, generate metadata:
 
-```bash
-./unhaunter_dedicated --print-version > VERSION
-./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
-```
+   ```bash
+   ./unhaunter_dedicated --print-version > VERSION
+   ./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
+   ```
 
 5. Ensure hub_config.ron includes procman installation_id in allowed_procman_uuids.
 6. Ensure procman_config.ron points to library_dir, not a single binary path.
