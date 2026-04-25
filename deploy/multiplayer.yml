@@ -41,6 +41,7 @@
     # Path to the locally compiled binaries and assets on your dev machine
     local_target: "../target/release"
     local_assets: "../assets"
+    github_releases_api: "https://api.github.com/repos/deavid/unhaunter/releases"
 
   tasks:
     - name: Create unhaunter user
@@ -60,6 +61,11 @@
       loop:
         - "{{ install_dir }}"
         - "{{ install_dir }}/bin"
+        - "{{ install_dir }}/library"
+        - "{{ install_dir }}/library/stable"
+        - "{{ install_dir }}/library/beta"
+        - "{{ install_dir }}/library/alpha"
+        - "{{ install_dir }}/library/dev"
 
     - name: Copy binaries from dev machine to server
       copy:
@@ -71,19 +77,348 @@
       loop:
         - unhub
         - unprocman
-        - unhaunter_dedicated
       notify: Restart Services
 
-    - name: Sync assets directory
+    - name: Copy dev dedicated binary to library/dev
+      copy:
+        src: "{{ local_target }}/unhaunter_dedicated"
+        dest: "{{ install_dir }}/library/dev/unhaunter_dedicated"
+        owner: unhaunter
+        group: unhaunter
+        mode: "0755"
+
+    - name: Sync dev assets directory to library/dev
       synchronize:
         src: "{{ local_assets }}/"
-        dest: "{{ install_dir }}/assets/"
+        dest: "{{ install_dir }}/library/dev/assets/"
         delete: yes
         rsync_path: "sudo rsync"
         rsync_opts:
           - "--chown=unhaunter:unhaunter"
       delegate_to: localhost
       become: no
+
+    - name: Fetch GitHub releases metadata
+      uri:
+        url: "{{ github_releases_api }}"
+        return_content: yes
+      register: github_releases
+
+    - name: Select release candidates for stable, beta, and alpha
+      set_fact:
+        stable_release:
+          "{{ (github_releases.json | rejectattr('draft', 'equalto', true) | rejectattr('prerelease', 'equalto', true) |
+          list | first) | default({}) }}"
+        beta_release:
+          "{{ (github_releases.json | rejectattr('draft', 'equalto', true) | selectattr('prerelease', 'equalto', true) |
+          selectattr('tag_name', 'search', '-beta') | list | first) | default({}) }}"
+        alpha_release:
+          "{{ (github_releases.json | rejectattr('draft', 'equalto', true) | selectattr('tag_name', 'equalto',
+          'alpha-latest') | list | first) | default({}) }}"
+
+    - name: Select server assets for stable, beta, and alpha
+      set_fact:
+        stable_asset:
+          "{{ (stable_release.assets | default([]) | selectattr('name', 'match',
+          '^unhaunter-.*-server-linux-x86_64\\.tar\\.gz$') | list | first) | default({}) }}"
+        beta_asset:
+          "{{ (beta_release.assets | default([]) | selectattr('name', 'match',
+          '^unhaunter-.*-server-linux-x86_64\\.tar\\.gz$') | list | first) | default({}) }}"
+        alpha_asset:
+          "{{ (alpha_release.assets | default([]) | selectattr('name', 'match',
+          '^unhaunter-.*-server-linux-x86_64\\.tar\\.gz$') | list | first) | default({}) }}"
+
+    - name: Compute release versions and destination paths
+      set_fact:
+        stable_version: "{{ (stable_release.tag_name | default('') | regex_replace('^v', '')) }}"
+        beta_version: "{{ (beta_release.tag_name | default('') | regex_replace('^v', '')) }}"
+        stable_dir:
+          "{{ install_dir }}/library/stable/{{ (stable_release.tag_name | default('') | regex_replace('^v', '')) }}"
+        beta_dir: "{{ install_dir }}/library/beta/{{ (beta_release.tag_name | default('') | regex_replace('^v', '')) }}"
+        alpha_dir: "{{ install_dir }}/library/alpha"
+
+    - name: Check if stable version is already installed
+      stat:
+        path: "{{ stable_dir }}/VERSION"
+      register: stable_installed
+      when: stable_asset.browser_download_url is defined and stable_version | length > 0
+
+    - name: Check if beta version is already installed
+      stat:
+        path: "{{ beta_dir }}/VERSION"
+      register: beta_installed
+      when: beta_asset.browser_download_url is defined and beta_version | length > 0
+
+    - name: Download latest stable server bundle
+      get_url:
+        url: "{{ stable_asset.browser_download_url }}"
+        dest: "/tmp/unhaunter-stable-server.tar.gz"
+        mode: "0644"
+      when:
+        - stable_asset.browser_download_url is defined
+        - stable_version | length > 0
+        - not (stable_installed.stat.exists | default(false))
+
+    - name: Extract latest stable server bundle
+      unarchive:
+        src: "/tmp/unhaunter-stable-server.tar.gz"
+        dest: "{{ stable_dir }}"
+        remote_src: yes
+        owner: unhaunter
+        group: unhaunter
+      when:
+        - stable_asset.browser_download_url is defined
+        - stable_version | length > 0
+        - not (stable_installed.stat.exists | default(false))
+
+    - name: Download latest beta server bundle
+      get_url:
+        url: "{{ beta_asset.browser_download_url }}"
+        dest: "/tmp/unhaunter-beta-server.tar.gz"
+        mode: "0644"
+      when:
+        - beta_asset.browser_download_url is defined
+        - beta_version | length > 0
+        - not (beta_installed.stat.exists | default(false))
+
+    - name: Extract latest beta server bundle
+      unarchive:
+        src: "/tmp/unhaunter-beta-server.tar.gz"
+        dest: "{{ beta_dir }}"
+        remote_src: yes
+        owner: unhaunter
+        group: unhaunter
+      when:
+        - beta_asset.browser_download_url is defined
+        - beta_version | length > 0
+        - not (beta_installed.stat.exists | default(false))
+
+    - name: Remove old alpha bundle before overwrite
+      file:
+        path: "{{ alpha_dir }}"
+        state: absent
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Recreate alpha directory
+      file:
+        path: "{{ alpha_dir }}"
+        state: directory
+        owner: unhaunter
+        group: unhaunter
+        mode: "0755"
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Download rolling alpha server bundle
+      get_url:
+        url: "{{ alpha_asset.browser_download_url }}"
+        dest: "/tmp/unhaunter-alpha-server.tar.gz"
+        mode: "0644"
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Extract rolling alpha server bundle
+      unarchive:
+        src: "/tmp/unhaunter-alpha-server.tar.gz"
+        dest: "{{ alpha_dir }}"
+        remote_src: yes
+        owner: unhaunter
+        group: unhaunter
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Ensure stable metadata files
+      shell: |
+        set -euo pipefail
+        ./unhaunter_dedicated --print-version > VERSION
+        ./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
+      args:
+        chdir: "{{ stable_dir }}"
+      when:
+        - stable_version | length > 0
+        - stable_asset.browser_download_url is defined
+        - not (stable_installed.stat.exists | default(false))
+
+    - name: Ensure beta metadata files
+      shell: |
+        set -euo pipefail
+        ./unhaunter_dedicated --print-version > VERSION
+        ./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
+      args:
+        chdir: "{{ beta_dir }}"
+      when:
+        - beta_version | length > 0
+        - beta_asset.browser_download_url is defined
+        - not (beta_installed.stat.exists | default(false))
+
+    - name: Ensure alpha metadata files
+      shell: |
+        set -euo pipefail
+        ./unhaunter_dedicated --print-version > VERSION
+        ./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
+      args:
+        chdir: "{{ alpha_dir }}"
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Ensure dev metadata files
+      shell: |
+        set -euo pipefail
+        ./unhaunter_dedicated --print-version > VERSION
+        ./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
+      args:
+        chdir: "{{ install_dir }}/library/dev"
+
+    - name: Retention cleanup for stable channel
+      shell: |
+        set -euo pipefail
+        channel_dir="{{ install_dir }}/library/stable"
+        cd "$channel_dir"
+
+        mapfile -t versions < <(find . -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -V)
+        if [ "${#versions[@]}" -eq 0 ]; then
+          exit 0
+        fi
+
+        minor_of() {
+          local v="$1"
+          local major="${v%%.*}"
+          local rest="${v#*.}"
+          local minor="${rest%%.*}"
+          echo "${major}.${minor}"
+        }
+
+        latest="${versions[-1]}"
+        latest_minor="$(minor_of "$latest")"
+
+        declare -A keep=()
+        keep["$latest"]=1
+
+        declare -a running_versions=()
+        while IFS= read -r rv; do
+          [ -n "$rv" ] && running_versions+=("$rv")
+        done < <(
+          for exe in /proc/[0-9]*/exe; do
+            target="$(readlink -f "$exe" 2>/dev/null || true)"
+            case "$target" in
+              "{{ install_dir }}/library/stable/"*/unhaunter_dedicated)
+                ver="${target#{{ install_dir }}/library/stable/}"
+                ver="${ver%%/*}"
+                echo "$ver"
+                ;;
+            esac
+          done | sort -u
+        )
+
+        declare -a current_minor_versions=()
+        declare -a other_minor_versions=()
+        for v in "${versions[@]}"; do
+          if [ "$(minor_of "$v")" = "$latest_minor" ]; then
+            current_minor_versions+=("$v")
+          else
+            other_minor_versions+=("$v")
+          fi
+        done
+
+        if [ "${#current_minor_versions[@]}" -ge 2 ]; then
+          prev_patch="${current_minor_versions[-2]}"
+          latest_hash_file="$latest/PROTOCOL_HASH"
+          prev_hash_file="$prev_patch/PROTOCOL_HASH"
+          if [ -f "$latest_hash_file" ] && [ -f "$prev_hash_file" ]; then
+            latest_hash="$(cat "$latest_hash_file")"
+            prev_hash="$(cat "$prev_hash_file")"
+            if [ "$latest_hash" != "$prev_hash" ]; then
+              keep["$prev_patch"]=1
+            fi
+          fi
+        fi
+
+        if [ "${#other_minor_versions[@]}" -gt 0 ]; then
+          mapfile -t other_minors < <(for v in "${other_minor_versions[@]}"; do minor_of "$v"; done | sort -Vu)
+          prev_minor="${other_minors[-1]}"
+          declare -a prev_minor_versions=()
+          for v in "${other_minor_versions[@]}"; do
+            if [ "$(minor_of "$v")" = "$prev_minor" ]; then
+              prev_minor_versions+=("$v")
+            fi
+          done
+          if [ "${#prev_minor_versions[@]}" -gt 0 ]; then
+            keep["${prev_minor_versions[-1]}"]=1
+          fi
+        fi
+
+        for rv in "${running_versions[@]}"; do
+          keep["$rv"]=1
+        done
+
+        for v in "${versions[@]}"; do
+          if [ -z "${keep[$v]:-}" ]; then
+            rm -rf "$v"
+          fi
+        done
+      args:
+        executable: /bin/bash
+
+    - name: Retention cleanup for beta channel
+      shell: |
+        set -euo pipefail
+        channel_dir="{{ install_dir }}/library/beta"
+        cd "$channel_dir"
+
+        mapfile -t versions < <(find . -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -V)
+        if [ "${#versions[@]}" -eq 0 ]; then
+          exit 0
+        fi
+
+        declare -A keep=()
+        declare -A seen_hash=()
+
+        declare -a running_versions=()
+        while IFS= read -r rv; do
+          [ -n "$rv" ] && running_versions+=("$rv")
+        done < <(
+          for exe in /proc/[0-9]*/exe; do
+            target="$(readlink -f "$exe" 2>/dev/null || true)"
+            case "$target" in
+              "{{ install_dir }}/library/beta/"*/unhaunter_dedicated)
+                ver="${target#{{ install_dir }}/library/beta/}"
+                ver="${ver%%/*}"
+                echo "$ver"
+                ;;
+            esac
+          done | sort -u
+        )
+
+        for (( idx=${#versions[@]}-1; idx>=0; idx-- )); do
+          v="${versions[$idx]}"
+          hash_file="$v/PROTOCOL_HASH"
+          if [ ! -f "$hash_file" ]; then
+            continue
+          fi
+          hash="$(cat "$hash_file")"
+          if [ -z "${seen_hash[$hash]:-}" ] && [ "${#seen_hash[@]}" -lt 3 ]; then
+            keep["$v"]=1
+            seen_hash["$hash"]=1
+          fi
+        done
+
+        for rv in "${running_versions[@]}"; do
+          keep["$rv"]=1
+        done
+
+        for v in "${versions[@]}"; do
+          if [ -z "${keep[$v]:-}" ]; then
+            rm -rf "$v"
+          fi
+        done
+      args:
+        executable: /bin/bash
+
+    - name: Check if unprocman is active
+      shell: systemctl is-active unprocman
+      register: unprocman_is_active
+      changed_when: false
+      failed_when: false
+
+    - name: Signal unprocman to reload library (SIGHUP)
+      shell: systemctl kill -s HUP unprocman
+      when: unprocman_is_active.stdout == "active"
 
     # --- HMAC Secret Management ---
     - name: Ensure secrets directory exists

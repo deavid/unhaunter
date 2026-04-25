@@ -1,0 +1,43 @@
+name: Release Alpha (Rolling)
+
+on:
+  push:
+    branches:
+      - alpha
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update APT & Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install just
+        uses: extractions/setup-just@v3
+
+      - name: Build Server Package
+        run: just package-server
+
+      - name: Overwrite alpha-latest rolling release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete alpha-latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create alpha-latest \
+            --target ${{ github.sha }} \
+            --prerelease \
+            --title "Alpha Latest (rolling)" \
+            --notes "Latest alpha build from the alpha branch. Volatile. May break." \
+            releases/unhaunter-*-server-linux-x86_64.tar.gz
+          gh release edit alpha-latest --latest=false
