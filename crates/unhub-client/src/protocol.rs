@@ -6,12 +6,30 @@ use uuid::Uuid;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PingRequest {
     pub installation_id: Uuid,
+    pub version: String,
+    pub protocol_hash: u64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MultiplayerStatus {
+    UpToDate,
+    UpdateAvailable,
+    UpdateRecommended,
+    Unsupported,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PingResponse {
     pub ok: bool,
     pub online_players_estimate: usize,
+    pub multiplayer_status: MultiplayerStatus,
+    pub upgrade_version: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct LibraryEntry {
+    pub version: String,
+    pub protocol_hash: u64,
 }
 
 // --- Hub ↔ ProcMan Protocol ---
@@ -22,10 +40,9 @@ pub enum ProcManMessage {
     ProcManHello {
         uuid: Uuid,
         version: String,
-        game_versions: Vec<String>,
+        library: Vec<LibraryEntry>,
         port_range: (u16, u16),
         public_addr: String,
-        idle_pool: std::collections::HashMap<String, usize>,
         rooms: Vec<RoomSummary>,
         /// HMAC-SHA256 key (hex-encoded 32 bytes) used to sign per-room JWT
         /// tickets. The Hub uses this to create tickets for players; the
@@ -33,7 +50,7 @@ pub enum ProcManMessage {
         ticket_hmac_secret: String,
     },
     Heartbeat {
-        idle_capacity: usize,
+        library: Vec<LibraryEntry>,
         rooms: Vec<RoomSummary>,
     },
     RoomReady {
@@ -75,7 +92,7 @@ pub enum ProcManMessage {
     CreateRoom {
         room_code: String,
         secret: String,
-        game_version: String,
+        target_version: String,
     },
     KillRoom {
         room_code: String,
@@ -124,6 +141,7 @@ pub struct ChallengeResponse {
 pub struct CreateRoomRequest {
     pub player_uuid: Uuid,
     pub game_version: String,
+    pub protocol_hash: u64,
     pub nonce: String,
     pub solution: String,
 }

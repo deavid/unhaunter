@@ -81,7 +81,7 @@ use unprofile_plugin::plugin::UnhaunterProfilePlugin;
 use uncommon_states_core::{BootState, UIContextState};
 use unmission_core::types::SimulationState;
 
-pub fn app_run(args: AppArgs) {
+pub fn app_build(args: AppArgs) -> App {
     let AppArgs {
         verbose,
         mute,
@@ -330,6 +330,11 @@ pub fn app_run(args: AppArgs) {
         ));
     }
 
+    app
+}
+
+pub fn app_run(args: AppArgs) {
+    let mut app = app_build(args);
     app.run();
 }
 

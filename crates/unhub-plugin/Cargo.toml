@@ -14,6 +14,7 @@ unhub-client = { workspace = true }
 uncommon-app-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unmenu-core = { workspace = true }
+bevy_replicon = { workspace = true }
 
 unprofile-core = { workspace = true }
 reqwest = { workspace = true }
@@ -21,3 +22,4 @@ tokio = { workspace = true }
 crossbeam-channel = { workspace = true }
 uuid = { workspace = true }
 bevy-persistent = { workspace = true }
+serde_json = { workspace = true }

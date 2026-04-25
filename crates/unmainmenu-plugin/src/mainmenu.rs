@@ -47,11 +47,20 @@ impl std::fmt::Display for MenuID {
 #[derive(Component, Debug)]
 pub(crate) struct MenuUILayout;
 
+#[derive(Component, Debug)]
+#[allow(dead_code)]
+pub(crate) struct UpgradeNotificationBanner;
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(UIContextState::MainMenu), (setup, setup_ui))
         .add_systems(
             Update,
-            (menu_event, update_hub_button_availability).run_if(in_state(UIContextState::MainMenu)),
+            (
+                menu_event,
+                update_hub_button_availability,
+                update_upgrade_notification,
+            )
+                .run_if(in_state(UIContextState::MainMenu)),
         );
 }
 
@@ -140,6 +149,35 @@ pub(crate) fn setup_ui(
     commands.entity(root_entity).with_children(|parent| {
         templates::create_player_status_bar(parent, &menu_assets, &player_profile);
     });
+    // Add upgrade notification banner
+    commands.entity(root_entity).with_children(|parent| {
+        parent
+            .spawn((
+                Node {
+                    position_type: PositionType::Absolute,
+                    top: Val::Px(20.0 * uncommon_app_core::platform::plt::UI_SCALE),
+                    left: Val::Px(20.0 * uncommon_app_core::platform::plt::UI_SCALE),
+                    right: Val::Px(20.0 * uncommon_app_core::platform::plt::UI_SCALE),
+                    padding: UiRect::all(Val::Px(
+                        10.0 * uncommon_app_core::platform::plt::UI_SCALE,
+                    )),
+                    ..default()
+                },
+                UpgradeNotificationBanner,
+                Visibility::Hidden,
+            ))
+            .with_children(|parent| {
+                parent.spawn((
+                    Text::new(""),
+                    TextFont {
+                        font: menu_assets.font_kode_bold.clone(),
+                        font_size: 24.0 * uncommon_app_core::platform::plt::FONT_SCALE,
+                        ..default()
+                    },
+                    TextColor(Color::WHITE),
+                ));
+            });
+    });
 
     debug!("Main menu created with root entity: {:?}", root_entity);
 }
@@ -217,16 +255,80 @@ pub(crate) fn menu_event(
     }
 }
 
+pub(crate) fn update_upgrade_notification(
+    hub_connection_status: Res<unhub_plugin::hub_client::HubConnectionStatus>,
+    q_banner: Query<&Children, With<UpgradeNotificationBanner>>,
+    mut q_text: Query<&mut Text>,
+    mut q_visibility: Query<&mut Visibility, With<UpgradeNotificationBanner>>,
+) {
+    use unhub_client::protocol::MultiplayerStatus;
+
+    let mut banner_visible = false;
+    let mut banner_text = String::new();
+
+    if let Some(ref status) = hub_connection_status.status {
+        match status {
+            MultiplayerStatus::UpdateAvailable => {
+                if let Some(ref version) = hub_connection_status.upgrade_version {
+                    banner_text = format!("Update available: v{}", version);
+                    banner_visible = true;
+                }
+            }
+            MultiplayerStatus::UpdateRecommended => {
+                banner_text =
+                    "Major update available. Update to play with more players.".to_string();
+                banner_visible = true;
+            }
+            MultiplayerStatus::Unsupported => {
+                banner_text =
+                    "Version unsupported. Download the latest version to play online.".to_string();
+                banner_visible = true;
+            }
+            MultiplayerStatus::UpToDate => {
+                banner_visible = false;
+            }
+        }
+    }
+
+    // Update visibility
+    for mut vis in q_visibility.iter_mut() {
+        *vis = if banner_visible {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+    }
+
+    // Update text
+    for children in q_banner.iter() {
+        for child in children.iter() {
+            if let Ok(mut text) = q_text.get_mut(child) {
+                text.0 = banner_text.clone();
+            }
+        }
+    }
+}
+
 pub(crate) fn update_hub_button_availability(
     hub_status: Res<unhub_plugin::hub_client::HubStatus>,
+    hub_connection_status: Res<unhub_plugin::hub_client::HubConnectionStatus>,
     q_button: Query<(Entity, &MenuID, Option<&Button>, &Children), With<MenuItemInteractive>>,
     mut q_text: Query<&mut TextColor>,
     mut commands: Commands,
 ) {
+    use unhub_client::protocol::MultiplayerStatus;
+
     for (entity, menu_id, button_opt, children) in q_button.iter() {
         if *menu_id == MenuID::Hub {
-            if hub_status.is_online && button_opt.is_none() {
-                // Was offline, now online -> re-enable
+            let is_unsupported = hub_connection_status
+                .status
+                .map(|s| matches!(s, MultiplayerStatus::Unsupported))
+                .unwrap_or(false);
+
+            let should_be_enabled = hub_status.is_online && !is_unsupported;
+
+            if should_be_enabled && button_opt.is_none() {
+                // Was offline or unsupported, now online and supported -> re-enable
                 commands
                     .entity(entity)
                     .insert(Button)
@@ -237,19 +339,24 @@ pub(crate) fn update_hub_button_availability(
                         text_color.0 = unmenu_core::colors::MENU_ITEM_COLOR_OFF;
                     }
                 }
-            } else if !hub_status.is_online && button_opt.is_some() {
-                // Was online, now offline -> disable
+            } else if !should_be_enabled && button_opt.is_some() {
+                // Was enabled, now offline or unsupported -> disable
                 commands
                     .entity(entity)
                     .remove::<Button>()
                     .remove::<Interaction>();
             }
 
-            // Continuously force the color if it is offline so that unmenu-plugin's frame delay doesn't override it.
-            if !hub_status.is_online {
+            // Continuously force the color if it is offline or unsupported so that unmenu-plugin's frame delay doesn't override it.
+            if !should_be_enabled {
+                let color = if is_unsupported {
+                    unmenu_core::colors::MENU_ITEM_COLOR_OFF.with_alpha(0.5)
+                } else {
+                    unmenu_core::colors::MENU_ITEM_COLOR_OFF.with_alpha(0.3)
+                };
                 for child in children.iter() {
                     if let Ok(mut text_color) = q_text.get_mut(child) {
-                        text_color.0 = unmenu_core::colors::MENU_ITEM_COLOR_OFF.with_alpha(0.3);
+                        text_color.0 = color;
                     }
                 }
             }

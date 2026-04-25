@@ -48,6 +48,12 @@ build-wasm:
     wasm-pack build --release --target web
     echo "WASM build complete."
 
+# Build Dedicated Server Binary (Linux only)
+build-server:
+    echo "Building server release..."
+    cargo build --release --target x86_64-unknown-linux-gnu --bin unhaunter_dedicated
+    echo "Server build complete."
+
 # == Packaging Recipes ==
 
 package-common: ensure-dist-dir upscale-assets
@@ -93,6 +99,17 @@ package-wasm: build-wasm package-common
     cd ../../
     echo "WASM package created: {{_releases_dir}}/unhaunter-{{_version}}-wasm.zip"
 
+# Package Dedicated Server Artifacts into .tar.gz
+package-server: ensure-dist-dir build-server
+    echo "Packaging server artifact for {{_version}}..."
+    rm -rf {{_dist_dir}}/server
+    mkdir -p {{_dist_dir}}/server
+    cp {{_target_dir}}/x86_64-unknown-linux-gnu/release/unhaunter_dedicated {{_dist_dir}}/server/unhaunter_dedicated
+    cp -r {{_assets_dir}} {{_dist_dir}}/server/assets
+    unlink {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz || true
+    tar -czvf {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz -C {{_dist_dir}}/server .
+    echo "Server package created: {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz"
+
 
 # == Combined Recipes ==
 
@@ -100,4 +117,4 @@ package-wasm: build-wasm package-common
 build-all: build-linux build-windows build-wasm
 
 # Create all release packages
-package-all: package-linux package-windows package-wasm
+package-all: package-linux package-windows package-wasm package-server

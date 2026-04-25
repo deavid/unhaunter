@@ -1,4 +1,4 @@
-use crate::hub_client::{HubClient, HubRequest, HubResponse, HubStatus};
+use crate::hub_client::{ClientProtocolHash, HubClient, HubRequest, HubResponse, HubStatus};
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt;
@@ -122,6 +122,7 @@ pub fn hub_menu_event(
     menu_items: Query<(&HubMenuID, &MenuItemInteractive)>,
     hub_client: Res<HubClient>,
     mut hub_status: ResMut<HubStatus>,
+    protocol_hash: Res<ClientProtocolHash>,
     runtime_installation_id: Option<Res<unprofile_core::profile::RuntimeInstallationId>>,
     room_code_input: Res<RoomCodeInput>,
 ) {
@@ -153,6 +154,7 @@ pub fn hub_menu_event(
                     let _ = hub_client.tx.send(HubRequest::CreateRoom {
                         player_uuid,
                         game_version,
+                        protocol_hash: protocol_hash.0,
                     });
                     hub_status.is_pending = true;
                 }

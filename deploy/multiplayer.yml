@@ -12,7 +12,10 @@
 #      `cargo build --release -p unhub -p unprocman -p unhaunter --bin unhub --bin unprocman --bin unhaunter_dedicated`
 #
 # HOW TO RUN:
-#   ansible-playbook deploy/multiplayer.yml -i "YOUR_VPS_IP," -u YOUR_SSH_USER -e "domain=hub.yourdomain.com"
+#   ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com"
+#
+# TO ROTATE THE HMAC SECRET (after a security incident, invalidates all active connection tickets):
+#   ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com rotate_hmac_secret=true"
 #
 # NOTES:
 # - Replace `YOUR_SSH_USER` with a user that has sudo privileges on your server (e.g., debian, ubuntu, or root).
@@ -21,7 +24,7 @@
 
 - name: Deploy Unhaunter Multiplayer Stack
   hosts: all
-  become: yes
+  become: true
   vars:
     # Set to 'localhost' if testing locally, or pass '-e domain=YOUR_DOMAIN' when running the playbook.
     caddy_domain: "{{ domain | default('localhost') }}"
@@ -30,20 +33,26 @@
     # Generate a consistent, idempotent UUID strictly tied to this server's hostname
     procman_uuid: "{{ inventory_hostname | to_uuid }}"
 
+    # Set to true to rotate the HMAC secret on the next deploy:
+    #   ansible-playbook deploy/multiplayer.yml ... -e rotate_hmac_secret=true
+    # This will invalidate all active connection tickets and force a service restart.
+    rotate_hmac_secret: false
+
     # Path to the locally compiled binaries and assets on your dev machine
     local_target: "../target/release"
     local_assets: "../assets"
+    github_releases_api: "https://api.github.com/repos/deavid/unhaunter/releases"
 
   tasks:
     - name: Create unhaunter user
-      user:
+      ansible.builtin.user:
         name: unhaunter
-        system: yes
+        system: true
         home: "{{ install_dir }}"
         shell: /bin/false
 
     - name: Ensure target directories exist
-      file:
+      ansible.builtin.file:
         path: "{{ item }}"
         state: directory
         owner: unhaunter
@@ -52,9 +61,14 @@
       loop:
         - "{{ install_dir }}"
         - "{{ install_dir }}/bin"
+        - "{{ install_dir }}/library"
+        - "{{ install_dir }}/library/stable"
+        - "{{ install_dir }}/library/beta"
+        - "{{ install_dir }}/library/alpha"
+        - "{{ install_dir }}/library/dev"
 
     - name: Copy binaries from dev machine to server
-      copy:
+      ansible.builtin.copy:
         src: "{{ local_target }}/{{ item }}"
         dest: "{{ install_dir }}/bin/{{ item }}"
         owner: unhaunter
@@ -63,23 +77,410 @@
       loop:
         - unhub
         - unprocman
-        - unhaunter_dedicated
       notify: Restart Services
 
-    - name: Sync assets directory
-      synchronize:
+    - name: Copy dev dedicated binary to library/dev
+      ansible.builtin.copy:
+        src: "{{ local_target }}/unhaunter_dedicated"
+        dest: "{{ install_dir }}/library/dev/unhaunter_dedicated"
+        owner: unhaunter
+        group: unhaunter
+        mode: "0755"
+
+    - name: Sync dev assets directory to library/dev
+      ansible.posix.synchronize:
         src: "{{ local_assets }}/"
-        dest: "{{ install_dir }}/assets/"
-        delete: yes
+        dest: "{{ install_dir }}/library/dev/assets/"
+        delete: true
         rsync_path: "sudo rsync"
         rsync_opts:
           - "--chown=unhaunter:unhaunter"
       delegate_to: localhost
-      become: no
+      become: false
+
+    - name: Fetch GitHub releases metadata
+      ansible.builtin.uri:
+        url: "{{ github_releases_api }}"
+        return_content: true
+      register: github_releases
+
+    - name: Select release candidates for stable, beta, and alpha
+      ansible.builtin.set_fact:
+        stable_release:
+          "{{ (github_releases.json | rejectattr('draft', 'equalto', true) | rejectattr('prerelease', 'equalto', true) |
+          list | first) | default({}) }}"
+        beta_release:
+          "{{ (github_releases.json | rejectattr('draft', 'equalto', true) | selectattr('prerelease', 'equalto', true) |
+          selectattr('tag_name', 'search', '-beta') | list | first) | default({}) }}"
+        alpha_release:
+          "{{ (github_releases.json | rejectattr('draft', 'equalto', true) | selectattr('tag_name', 'equalto',
+          'alpha-latest') | list | first) | default({}) }}"
+
+    - name: Select server assets for stable, beta, and alpha
+      ansible.builtin.set_fact:
+        stable_asset:
+          "{{ (stable_release.assets | default([]) | selectattr('name', 'match',
+          '^unhaunter-.*-server-linux-x86_64\\.tar\\.gz$') | list | first) | default({}) }}"
+        beta_asset:
+          "{{ (beta_release.assets | default([]) | selectattr('name', 'match',
+          '^unhaunter-.*-server-linux-x86_64\\.tar\\.gz$') | list | first) | default({}) }}"
+        alpha_asset:
+          "{{ (alpha_release.assets | default([]) | selectattr('name', 'match',
+          '^unhaunter-.*-server-linux-x86_64\\.tar\\.gz$') | list | first) | default({}) }}"
+
+    - name: Compute release versions and destination paths
+      ansible.builtin.set_fact:
+        stable_version: "{{ (stable_release.tag_name | default('') | regex_replace('^v', '')) }}"
+        beta_version: "{{ (beta_release.tag_name | default('') | regex_replace('^v', '')) }}"
+        stable_dir:
+          "{{ install_dir }}/library/stable/{{ (stable_release.tag_name | default('') | regex_replace('^v', '')) }}"
+        beta_dir: "{{ install_dir }}/library/beta/{{ (beta_release.tag_name | default('') | regex_replace('^v', '')) }}"
+        alpha_dir: "{{ install_dir }}/library/alpha"
+
+    - name: Check if stable version is already installed
+      ansible.builtin.stat:
+        path: "{{ stable_dir }}/VERSION"
+      register: stable_installed
+      when: stable_asset.browser_download_url is defined and stable_version | length > 0
+
+    - name: Check if beta version is already installed
+      ansible.builtin.stat:
+        path: "{{ beta_dir }}/VERSION"
+      register: beta_installed
+      when: beta_asset.browser_download_url is defined and beta_version | length > 0
+
+    - name: Download latest stable server bundle
+      ansible.builtin.get_url:
+        url: "{{ stable_asset.browser_download_url }}"
+        dest: "/tmp/unhaunter-stable-server.tar.gz"
+        mode: "0644"
+      when:
+        - stable_asset.browser_download_url is defined
+        - stable_version | length > 0
+        - not (stable_installed.stat.exists | default(false))
+
+    - name: Extract latest stable server bundle
+      ansible.builtin.unarchive:
+        src: "/tmp/unhaunter-stable-server.tar.gz"
+        dest: "{{ stable_dir }}"
+        remote_src: true
+        owner: unhaunter
+        group: unhaunter
+      when:
+        - stable_asset.browser_download_url is defined
+        - stable_version | length > 0
+        - not (stable_installed.stat.exists | default(false))
+
+    - name: Download latest beta server bundle
+      ansible.builtin.get_url:
+        url: "{{ beta_asset.browser_download_url }}"
+        dest: "/tmp/unhaunter-beta-server.tar.gz"
+        mode: "0644"
+      when:
+        - beta_asset.browser_download_url is defined
+        - beta_version | length > 0
+        - not (beta_installed.stat.exists | default(false))
+
+    - name: Extract latest beta server bundle
+      ansible.builtin.unarchive:
+        src: "/tmp/unhaunter-beta-server.tar.gz"
+        dest: "{{ beta_dir }}"
+        remote_src: true
+        owner: unhaunter
+        group: unhaunter
+      when:
+        - beta_asset.browser_download_url is defined
+        - beta_version | length > 0
+        - not (beta_installed.stat.exists | default(false))
+
+    - name: Remove old alpha bundle before overwrite
+      ansible.builtin.file:
+        path: "{{ alpha_dir }}"
+        state: absent
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Recreate alpha directory
+      ansible.builtin.file:
+        path: "{{ alpha_dir }}"
+        state: directory
+        owner: unhaunter
+        group: unhaunter
+        mode: "0755"
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Download rolling alpha server bundle
+      ansible.builtin.get_url:
+        url: "{{ alpha_asset.browser_download_url }}"
+        dest: "/tmp/unhaunter-alpha-server.tar.gz"
+        mode: "0644"
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Extract rolling alpha server bundle
+      ansible.builtin.unarchive:
+        src: "/tmp/unhaunter-alpha-server.tar.gz"
+        dest: "{{ alpha_dir }}"
+        remote_src: true
+        owner: unhaunter
+        group: unhaunter
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Ensure stable metadata files
+      ansible.builtin.shell: |
+        set -euo pipefail
+        ./unhaunter_dedicated --print-version > VERSION
+        ./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
+      args:
+        chdir: "{{ stable_dir }}"
+      changed_when: true
+      when:
+        - stable_version | length > 0
+        - stable_asset.browser_download_url is defined
+        - not (stable_installed.stat.exists | default(false))
+
+    - name: Ensure beta metadata files
+      ansible.builtin.shell: |
+        set -euo pipefail
+        ./unhaunter_dedicated --print-version > VERSION
+        ./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
+      args:
+        chdir: "{{ beta_dir }}"
+      changed_when: true
+      when:
+        - beta_version | length > 0
+        - beta_asset.browser_download_url is defined
+        - not (beta_installed.stat.exists | default(false))
+
+    - name: Ensure alpha metadata files
+      ansible.builtin.shell: |
+        set -euo pipefail
+        ./unhaunter_dedicated --print-version > VERSION
+        ./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
+      args:
+        chdir: "{{ alpha_dir }}"
+      changed_when: true
+      when: alpha_asset.browser_download_url is defined
+
+    - name: Ensure dev metadata files
+      ansible.builtin.shell: |
+        set -euo pipefail
+        ./unhaunter_dedicated --print-version > VERSION
+        ./unhaunter_dedicated --print-protocol-hash > PROTOCOL_HASH
+      args:
+        chdir: "{{ install_dir }}/library/dev"
+      changed_when: true
+
+    - name: Retention cleanup for stable channel
+      ansible.builtin.shell:
+        cmd: |
+          {% raw %}
+          set -euo pipefail
+          channel_dir="${INSTALL_DIR}/library/stable"
+          cd "$channel_dir"
+
+          mapfile -t versions < <(find . -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -V)
+          if [ "${#versions[@]}" -eq 0 ]; then
+            exit 0
+          fi
+
+          minor_of() {
+            local v="$1"
+            local major="${v%%.*}"
+            local rest="${v#*.}"
+            local minor="${rest%%.*}"
+            echo "${major}.${minor}"
+          }
+
+          latest="${versions[-1]}"
+          latest_minor="$(minor_of "$latest")"
+
+          declare -A keep=()
+          keep["$latest"]=1
+
+          declare -a running_versions=()
+          while IFS= read -r rv; do
+            [ -n "$rv" ] && running_versions+=("$rv")
+          done < <(
+            for exe in /proc/[0-9]*/exe; do
+              target="$(readlink -f "$exe" 2>/dev/null || true)"
+              case "$target" in
+                ("${INSTALL_DIR}/library/stable/"*/unhaunter_dedicated)
+                  ver="${target#${INSTALL_DIR}/library/stable/}"
+                  ver="${ver%%/*}"
+                  echo "$ver"
+                  ;;
+              esac
+            done | sort -u
+          )
+
+          declare -a current_minor_versions=()
+          declare -a other_minor_versions=()
+          for v in "${versions[@]}"; do
+            if [ "$(minor_of "$v")" = "$latest_minor" ]; then
+              current_minor_versions+=("$v")
+            else
+              other_minor_versions+=("$v")
+            fi
+          done
+
+          if [ "${#current_minor_versions[@]}" -ge 2 ]; then
+            prev_patch="${current_minor_versions[-2]}"
+            latest_hash_file="$latest/PROTOCOL_HASH"
+            prev_hash_file="$prev_patch/PROTOCOL_HASH"
+            if [ -f "$latest_hash_file" ] && [ -f "$prev_hash_file" ]; then
+              latest_hash="$(cat "$latest_hash_file")"
+              prev_hash="$(cat "$prev_hash_file")"
+              if [ "$latest_hash" != "$prev_hash" ]; then
+                keep["$prev_patch"]=1
+              fi
+            fi
+          fi
+
+          if [ "${#other_minor_versions[@]}" -gt 0 ]; then
+            mapfile -t other_minors < <(for v in "${other_minor_versions[@]}"; do minor_of "$v"; done | sort -Vu)
+            prev_minor="${other_minors[-1]}"
+            declare -a prev_minor_versions=()
+            for v in "${other_minor_versions[@]}"; do
+              if [ "$(minor_of "$v")" = "$prev_minor" ]; then
+                prev_minor_versions+=("$v")
+              fi
+            done
+            if [ "${#prev_minor_versions[@]}" -gt 0 ]; then
+              keep["${prev_minor_versions[-1]}"]=1
+            fi
+          fi
+
+          for rv in "${running_versions[@]}"; do
+            keep["$rv"]=1
+          done
+
+          for v in "${versions[@]}"; do
+            if [ -z "${keep[$v]:-}" ]; then
+              rm -rf "$v"
+            fi
+          done
+          {% endraw %}
+      args:
+        executable: /bin/bash
+      changed_when: true
+      environment:
+        INSTALL_DIR: "{{ install_dir }}"
+
+    - name: Retention cleanup for beta channel
+      ansible.builtin.shell:
+        cmd: |
+          {% raw %}
+          set -euo pipefail
+          channel_dir="${INSTALL_DIR}/library/beta"
+          cd "$channel_dir"
+
+          mapfile -t versions < <(find . -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -V)
+          if [ "${#versions[@]}" -eq 0 ]; then
+            exit 0
+          fi
+
+          declare -A keep=()
+          declare -A seen_hash=()
+
+          declare -a running_versions=()
+          while IFS= read -r rv; do
+            [ -n "$rv" ] && running_versions+=("$rv")
+          done < <(
+            for exe in /proc/[0-9]*/exe; do
+              target="$(readlink -f "$exe" 2>/dev/null || true)"
+              case "$target" in
+                ("${INSTALL_DIR}/library/beta/"*/unhaunter_dedicated)
+                  ver="${target#${INSTALL_DIR}/library/beta/}"
+                  ver="${ver%%/*}"
+                  echo "$ver"
+                  ;;
+              esac
+            done | sort -u
+          )
+
+          for (( idx=${#versions[@]}-1; idx>=0; idx-- )); do
+            v="${versions[$idx]}"
+            hash_file="$v/PROTOCOL_HASH"
+            if [ ! -f "$hash_file" ]; then
+              continue
+            fi
+            hash="$(cat "$hash_file")"
+            if [ -z "${seen_hash[$hash]:-}" ] && [ "${#seen_hash[@]}" -lt 3 ]; then
+              keep["$v"]=1
+              seen_hash["$hash"]=1
+            fi
+          done
+
+          for rv in "${running_versions[@]}"; do
+            keep["$rv"]=1
+          done
+
+          for v in "${versions[@]}"; do
+            if [ -z "${keep[$v]:-}" ]; then
+              rm -rf "$v"
+            fi
+          done
+          {% endraw %}
+      args:
+        executable: /bin/bash
+      changed_when: true
+      environment:
+        INSTALL_DIR: "{{ install_dir }}"
+
+    - name: Gather service facts for unprocman reload check
+      ansible.builtin.service_facts:
+
+    - name: Signal unprocman to reload library
+      ansible.builtin.systemd:
+        name: unprocman
+        state: reloaded
+      when: "'unprocman.service' in ansible_facts.services and ansible_facts.services['unprocman.service'].state == 'running'"
+
+    # --- HMAC Secret Management ---
+    - name: Ensure secrets directory exists
+      ansible.builtin.file:
+        path: "{{ install_dir }}/secrets"
+        state: directory
+        owner: unhaunter
+        group: unhaunter
+        mode: "0700"
+
+    - name: Rotate HMAC secret (only when rotate_hmac_secret=true)
+      ansible.builtin.file:
+        path: "{{ install_dir }}/secrets/procman_hmac_secret"
+        state: absent
+      when: rotate_hmac_secret | bool
+      notify: Restart Services
+
+    - name: Check if HMAC secret file exists
+      ansible.builtin.stat:
+        path: "{{ install_dir }}/secrets/procman_hmac_secret"
+      register: hmac_secret_stat
+
+    - name: Generate HMAC secret (first deploy or after rotation)
+      ansible.builtin.shell: "openssl rand -hex 32 > {{ install_dir }}/secrets/procman_hmac_secret"
+      when: not hmac_secret_stat.stat.exists
+      changed_when: true
+      notify: Restart Services
+
+    - name: Lock down HMAC secret file permissions
+      ansible.builtin.file:
+        path: "{{ install_dir }}/secrets/procman_hmac_secret"
+        owner: unhaunter
+        group: unhaunter
+        mode: "0600"
+
+    - name: Read HMAC secret into fact
+      ansible.builtin.slurp:
+        src: "{{ install_dir }}/secrets/procman_hmac_secret"
+      register: hmac_secret_slurp
+
+    - name: Set procman_hmac_secret fact
+      ansible.builtin.set_fact:
+        procman_hmac_secret: "{{ hmac_secret_slurp.content | b64decode | trim }}"
 
     # --- Bypass the Bootstrap Dance ---
     - name: Template hub_config.ron
-      copy:
+      ansible.builtin.copy:
         dest: "{{ install_dir }}/hub_config.ron"
         content: |
           (
@@ -95,28 +496,30 @@
           )
         owner: unhaunter
         group: unhaunter
+        mode: "0640"
       notify: Restart Services
 
     - name: Template procman_config.ron
-      copy:
+      ansible.builtin.copy:
         dest: "{{ install_dir }}/procman_config.ron"
         content: |
           (
               hub_addr: "127.0.0.1:11000",
               public_addr: "{{ inventory_hostname }}",
               installation_id: "{{ procman_uuid }}",
-              ticket_hmac_secret: "{{ procman_uuid }}",
+              ticket_hmac_secret: "{{ procman_hmac_secret }}",
               port_range: (12000, 12100),
-              idle_pool_size: 1,
-              game_binary_path: "./bin/unhaunter_dedicated",
+              library_dir: "{{ install_dir }}/library",
+              max_total_instances: 8,
           )
         owner: unhaunter
         group: unhaunter
+        mode: "0640"
       notify: Restart Services
 
     # --- Caddy & Security ---
     - name: Install prerequisite packages for Caddy
-      apt:
+      ansible.builtin.apt:
         name:
           - debian-keyring
           - debian-archive-keyring
@@ -124,38 +527,43 @@
           - curl
         state: present
 
+    - name: Download Caddy GPG key
+      ansible.builtin.get_url:
+        url: 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key'
+        dest: /tmp/caddy-gpg.asc
+        mode: "0644"
+
     - name: Add Caddy GPG key
-      shell:
-        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o
-        /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-      args:
+      ansible.builtin.command:
+        cmd: gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg /tmp/caddy-gpg.asc
         creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+      changed_when: false
 
     - name: Add Caddy repository
-      shell:
-        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee
-        /etc/apt/sources.list.d/caddy-stable.list
-      args:
-        creates: /etc/apt/sources.list.d/caddy-stable.list
+      ansible.builtin.get_url:
+        url: 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt'
+        dest: /etc/apt/sources.list.d/caddy-stable.list
+        mode: "0644"
 
     - name: Install Caddy
-      apt:
+      ansible.builtin.apt:
         name: caddy
         state: present
-        update_cache: yes
+        update_cache: true
 
     - name: Configure Caddy (HTTPS & Reverse Proxy)
-      copy:
+      ansible.builtin.copy:
         dest: /etc/caddy/Caddyfile
         content: |
           {{ caddy_domain }} {
               reverse_proxy 127.0.0.1:3000
           }
+        mode: "0644"
       notify: Reload Caddy
 
     # --- Setup Systemd ---
     - name: Template Systemd services
-      copy:
+      ansible.builtin.copy:
         dest: "/etc/systemd/system/{{ item.name }}.service"
         content: |
           [Unit]
@@ -167,6 +575,7 @@
           User=unhaunter
           WorkingDirectory={{ install_dir }}
           ExecStart={{ install_dir }}/bin/{{ item.name }}
+          ExecReload=/bin/kill -HUP $MAINPID
           Restart=always
           RestartSec=5
           Environment=RUST_LOG=debug
@@ -174,32 +583,33 @@
 
           [Install]
           WantedBy=multi-user.target
+        mode: "0644"
       loop:
         - { name: "unhub" }
         - { name: "unprocman" }
       notify: Restart Services
 
     - name: Enable and start systemd services
-      systemd:
+      ansible.builtin.systemd:
         name: "{{ item }}"
-        enabled: yes
+        enabled: true
         state: started
-        daemon_reload: yes
+        daemon_reload: true
       loop:
         - unhub
         - unprocman
 
   handlers:
     - name: Restart Services
-      systemd:
+      ansible.builtin.systemd:
         name: "{{ item }}"
         state: restarted
-        daemon_reload: yes
+        daemon_reload: true
       loop:
         - unhub
         - unprocman
 
     - name: Reload Caddy
-      systemd:
+      ansible.builtin.systemd:
         name: caddy
         state: reloaded

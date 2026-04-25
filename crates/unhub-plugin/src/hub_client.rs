@@ -1,8 +1,9 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::ProtocolHash;
 use crossbeam_channel::{Receiver, Sender};
 use unhub_client::protocol::{
     ChallengeRequest, ChallengeResponse, CreateRoomRequest, CreateRoomResponse, JoinRoomRequest,
-    JoinRoomResponse, PingRequest, PingResponse,
+    JoinRoomResponse, MultiplayerStatus, PingRequest, PingResponse,
 };
 
 #[derive(Resource, Debug, Clone, Default)]
@@ -20,6 +21,7 @@ pub enum HubRequest {
     CreateRoom {
         player_uuid: uuid::Uuid,
         game_version: String,
+        protocol_hash: u64,
     },
     JoinRoom {
         code: String,
@@ -27,13 +29,20 @@ pub enum HubRequest {
     },
     Ping {
         installation_id: uuid::Uuid,
+        version: String,
+        protocol_hash: u64,
     },
 }
 
 pub enum HubResponse {
     RoomCreated(CreateRoomResponse),
     RoomJoined(JoinRoomResponse),
-    PingResult { ok: bool, online_players: usize },
+    PingResult {
+        ok: bool,
+        online_players: usize,
+        multiplayer_status: MultiplayerStatus,
+        upgrade_version: Option<String>,
+    },
     Error(String),
 }
 
@@ -53,6 +62,16 @@ pub struct HubStatus {
 
 #[derive(Resource)]
 pub struct HubPingTimer(pub Timer);
+
+#[derive(Resource, Default)]
+pub struct ClientProtocolHash(pub u64);
+
+#[derive(Resource, Default, Clone, Debug)]
+pub struct HubConnectionStatus {
+    pub status: Option<MultiplayerStatus>,
+    pub upgrade_version: Option<String>,
+    pub last_update: f32,
+}
 
 impl Default for HubPingTimer {
     fn default() -> Self {
@@ -91,6 +110,7 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
                     HubRequest::CreateRoom {
                         player_uuid,
                         game_version,
+                        protocol_hash,
                     } => {
                         // 1. Request Challenge
                         let challenge_res = client
@@ -117,6 +137,7 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
                                         .json(&CreateRoomRequest {
                                             player_uuid,
                                             game_version,
+                                            protocol_hash,
                                             nonce: challenge.nonce,
                                             solution,
                                         })
@@ -184,10 +205,18 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
                             }
                         }
                     }
-                    HubRequest::Ping { installation_id } => {
+                    HubRequest::Ping {
+                        installation_id,
+                        version,
+                        protocol_hash,
+                    } => {
                         let res = client
                             .post(format!("{}/v1/ping", worker_hub_url))
-                            .json(&PingRequest { installation_id })
+                            .json(&PingRequest {
+                                installation_id,
+                                version,
+                                protocol_hash,
+                            })
                             .timeout(std::time::Duration::from_secs(3))
                             .send()
                             .await;
@@ -197,11 +226,15 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
                                     let _ = tx_to_bevy.send(HubResponse::PingResult {
                                         ok: data.ok,
                                         online_players: data.online_players_estimate,
+                                        multiplayer_status: data.multiplayer_status,
+                                        upgrade_version: data.upgrade_version,
                                     });
                                 } else {
                                     let _ = tx_to_bevy.send(HubResponse::PingResult {
                                         ok: false,
                                         online_players: 0,
+                                        multiplayer_status: MultiplayerStatus::Unsupported,
+                                        upgrade_version: None,
                                     });
                                 }
                             }
@@ -209,6 +242,8 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
                                 let _ = tx_to_bevy.send(HubResponse::PingResult {
                                     ok: false,
                                     online_players: 0,
+                                    multiplayer_status: MultiplayerStatus::Unsupported,
+                                    upgrade_version: None,
                                 });
                             }
                         }
@@ -224,6 +259,8 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
     });
     commands.insert_resource(HubStatus::default());
     commands.insert_resource(HubPingTimer::default());
+    commands.insert_resource(ClientProtocolHash::default());
+    commands.insert_resource(HubConnectionStatus::default());
 }
 
 pub fn trigger_ping_system(mut timer: ResMut<HubPingTimer>) {
@@ -235,6 +272,7 @@ pub fn ping_hub_system(
     time: Res<Time>,
     mut timer: ResMut<HubPingTimer>,
     client: Res<HubClient>,
+    protocol_hash: Res<ClientProtocolHash>,
     profile: Option<Res<bevy_persistent::Persistent<unprofile_core::profile::PlayerProfileData>>>,
 ) {
     timer.0.tick(time.delta());
@@ -244,18 +282,53 @@ pub fn ping_hub_system(
     {
         let _ = client.tx.send(HubRequest::Ping {
             installation_id: profile.installation_id,
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            protocol_hash: protocol_hash.0,
         });
     }
 }
 
-pub fn update_hub_status(mut status: ResMut<HubStatus>, client: Res<HubClient>) {
+pub fn update_hub_status(
+    mut status: ResMut<HubStatus>,
+    mut hub_connection_status: ResMut<HubConnectionStatus>,
+    client: Res<HubClient>,
+) {
     while let Ok(resp) = client.rx.try_recv() {
-        if let HubResponse::PingResult { ok, online_players } = resp {
+        if let HubResponse::PingResult {
+            ok,
+            online_players,
+            multiplayer_status,
+            upgrade_version,
+        } = resp
+        {
             status.is_online = ok;
             status.online_players = online_players;
+            hub_connection_status.status = Some(multiplayer_status);
+            hub_connection_status.upgrade_version = upgrade_version;
+            hub_connection_status.last_update = 0.0;
         } else {
             status.last_response = Some(resp);
             status.is_pending = false;
         }
+    }
+}
+
+pub fn extract_protocol_hash(
+    bevy_replicon_hash: Res<ProtocolHash>,
+    mut client_hash: ResMut<ClientProtocolHash>,
+) {
+    // Deserialize ProtocolHash to get the numeric u64 value
+    if let Ok(hash_str) = serde_json::to_string(&*bevy_replicon_hash) {
+        if let Ok(hash_val) = hash_str.trim_matches('"').parse::<u64>() {
+            client_hash.0 = hash_val;
+            info!("Extracted protocol hash: {}", hash_val);
+        } else {
+            warn!(
+                "Failed to parse protocol hash from bevy_replicon: {}",
+                hash_str
+            );
+        }
+    } else {
+        warn!("Failed to serialize bevy_replicon ProtocolHash");
     }
 }

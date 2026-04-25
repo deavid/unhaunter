@@ -437,6 +437,8 @@ workspace = true
 clap = { workspace = true }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
+bevy_replicon = { workspace = true }
+serde_json = { workspace = true }
 
 uncommon-states-core = { workspace = true }
 undifficulty-core = { workspace = true }
