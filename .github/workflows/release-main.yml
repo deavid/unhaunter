@@ -24,7 +24,7 @@ jobs:
 
       - name: Install Linux Build Dependencies (if any)
         run: |
-          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
+          sudo apt-get install -y g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 imagemagick bc xbrzscale
 
       - name: Install Windows Cross-Compile Dependencies (mingw)
         run: |
