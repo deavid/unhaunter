@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::ProtocolHash;
 use crossbeam_channel::{Receiver, Sender};
 use unhub_client::protocol::{
     ChallengeRequest, ChallengeResponse, CreateRoomRequest, CreateRoomResponse, JoinRoomRequest,
@@ -64,6 +65,13 @@ pub struct HubPingTimer(pub Timer);
 
 #[derive(Resource, Default)]
 pub struct ClientProtocolHash(pub u64);
+
+#[derive(Resource, Default, Clone, Debug)]
+pub struct HubConnectionStatus {
+    pub status: Option<MultiplayerStatus>,
+    pub upgrade_version: Option<String>,
+    pub last_update: f32,
+}
 
 impl Default for HubPingTimer {
     fn default() -> Self {
@@ -252,6 +260,7 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
     commands.insert_resource(HubStatus::default());
     commands.insert_resource(HubPingTimer::default());
     commands.insert_resource(ClientProtocolHash::default());
+    commands.insert_resource(HubConnectionStatus::default());
 }
 
 pub fn trigger_ping_system(mut timer: ResMut<HubPingTimer>) {
@@ -279,17 +288,47 @@ pub fn ping_hub_system(
     }
 }
 
-pub fn update_hub_status(mut status: ResMut<HubStatus>, client: Res<HubClient>) {
+pub fn update_hub_status(
+    mut status: ResMut<HubStatus>,
+    mut hub_connection_status: ResMut<HubConnectionStatus>,
+    client: Res<HubClient>,
+) {
     while let Ok(resp) = client.rx.try_recv() {
         if let HubResponse::PingResult {
-            ok, online_players, ..
+            ok,
+            online_players,
+            multiplayer_status,
+            upgrade_version,
         } = resp
         {
             status.is_online = ok;
             status.online_players = online_players;
+            hub_connection_status.status = Some(multiplayer_status);
+            hub_connection_status.upgrade_version = upgrade_version;
+            hub_connection_status.last_update = 0.0;
         } else {
             status.last_response = Some(resp);
             status.is_pending = false;
         }
+    }
+}
+
+pub fn extract_protocol_hash(
+    bevy_replicon_hash: Res<ProtocolHash>,
+    mut client_hash: ResMut<ClientProtocolHash>,
+) {
+    // Deserialize ProtocolHash to get the numeric u64 value
+    if let Ok(hash_str) = serde_json::to_string(&*bevy_replicon_hash) {
+        if let Ok(hash_val) = hash_str.trim_matches('"').parse::<u64>() {
+            client_hash.0 = hash_val;
+            info!("Extracted protocol hash: {}", hash_val);
+        } else {
+            warn!(
+                "Failed to parse protocol hash from bevy_replicon: {}",
+                hash_str
+            );
+        }
+    } else {
+        warn!("Failed to serialize bevy_replicon ProtocolHash");
     }
 }
