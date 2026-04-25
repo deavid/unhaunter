@@ -1,3 +1,4 @@
+use bevy_replicon::prelude::ProtocolHash;
 use clap::Parser;
 use std::str::FromStr;
 use undifficulty_core::difficulty::Difficulty;
@@ -32,17 +33,16 @@ struct Args {
 
     #[clap(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
+
+    #[clap(long, action)]
+    print_version: bool,
+
+    #[clap(long, action)]
+    print_protocol_hash: bool,
 }
 
 fn main() {
     let args = Args::parse();
-
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        if let Err(e) = untmxmap_core::assets::index_updater::update_assetidx_files() {
-            eprintln!("Failed to update assetidx files: {}", e);
-        }
-    }
 
     let bind_addresses = args.bind.clone();
 
@@ -50,6 +50,40 @@ fn main() {
         port: args.host,
         bind_addresses,
     };
+
+    if args.print_version {
+        println!("{}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
+
+    if args.print_protocol_hash {
+        let mut app = unhaunter::app::app_build(AppArgs {
+            verbose: args.verbose,
+            mute: true,
+            include_draft_maps: args.draft_maps,
+            net_mode,
+            installation_id_file: args.installation_id_file,
+            dedicated: true,
+            procman_channel: args.procman_channel,
+            hub_url: args.hub_url,
+        });
+
+        app.finish();
+        app.cleanup();
+
+        let protocol_hash = serde_json::to_string(app.world().resource::<ProtocolHash>())
+            .expect("Error serializing protocol hash");
+
+        println!("{}", protocol_hash);
+        return;
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if let Err(e) = untmxmap_core::assets::index_updater::update_assetidx_files() {
+            eprintln!("Failed to update assetidx files: {}", e);
+        }
+    }
 
     println!(
         "Starting Unhaunter Dedicated Server on port {}...",
