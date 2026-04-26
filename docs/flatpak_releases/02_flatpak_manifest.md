@@ -68,11 +68,11 @@ modules:
       - install -Dm755 flatpak/unhaunter.sh /app/bin/unhaunter
 
       # 6. Install AppStream metadata.
-      - install -Dm644 io.github.deavid.unhaunter.metainfo.xml
+      - install -Dm644 flatpak/io.github.deavid.unhaunter.metainfo.xml
                        /app/share/metainfo/io.github.deavid.unhaunter.metainfo.xml
 
       # 7. Install desktop file.
-      - install -Dm644 io.github.deavid.unhaunter.desktop
+      - install -Dm644 flatpak/io.github.deavid.unhaunter.desktop
                        /app/share/applications/io.github.deavid.unhaunter.desktop
 
       # 8. Install icons (add more sizes as needed).

@@ -59,9 +59,12 @@ Delete the local key files after copying the values to GitHub.
   run: |
     # Write deploy key
     mkdir -p ~/.ssh
+    chmod 700 ~/.ssh
     echo "$FLATHUB_DEPLOY_KEY" > ~/.ssh/flathub_key
     chmod 600 ~/.ssh/flathub_key
-    export GIT_SSH_COMMAND="ssh -i ~/.ssh/flathub_key -o StrictHostKeyChecking=no"
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+    chmod 600 ~/.ssh/known_hosts
+    export GIT_SSH_COMMAND="ssh -i ~/.ssh/flathub_key"
 
     # Clone Flathub app repo
     git clone git@github.com:flathub/io.github.deavid.unhaunter.git flathub-app
