@@ -1,7 +1,9 @@
 use bevy::prelude::*;
+#[cfg(target_arch = "wasm32")]
 use bevy::tasks::AsyncComputeTaskPool;
 use bevy_replicon::prelude::ProtocolHash;
 use crossbeam_channel::{Receiver, Sender};
+use std::future::Future;
 use unhub_client::protocol::{
     ChallengeRequest, ChallengeResponse, CreateRoomRequest, CreateRoomResponse, JoinRoomRequest,
     JoinRoomResponse, MultiplayerStatus, PingRequest, PingResponse,
@@ -19,166 +21,186 @@ pub struct HubClient {
     pub rx: Receiver<HubResponse>,
 }
 
+#[cfg(target_arch = "wasm32")]
+fn spawn_hub_task<F>(future: F)
+where
+    F: Future<Output = ()> + 'static,
+{
+    AsyncComputeTaskPool::get().spawn(future).detach();
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn spawn_hub_task<F>(future: F)
+where
+    F: Future<Output = ()> + Send + 'static,
+{
+    static HUB_RUNTIME: std::sync::LazyLock<tokio::runtime::Runtime> =
+        std::sync::LazyLock::new(|| {
+            tokio::runtime::Builder::new_multi_thread()
+                .worker_threads(1)
+                .enable_all()
+                .build()
+                .expect("Failed to create Unhaunter Hub Runtime")
+        });
+
+    std::mem::drop(HUB_RUNTIME.spawn(future));
+}
+
 impl HubClient {
     pub fn create_room(&self, player_uuid: uuid::Uuid, game_version: String, protocol_hash: u64) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
-        AsyncComputeTaskPool::get()
-            .spawn(async move {
-                let client = reqwest::Client::new();
-                // 1. Request Challenge
-                let challenge_res = client
-                    .post(format!("{}/v1/challenge", hub_url))
-                    .json(&ChallengeRequest { player_uuid })
-                    .send()
-                    .await;
-                let resp = match challenge_res {
-                    Ok(r) => r,
-                    Err(e) => {
-                        let _ = tx.send(HubResponse::Error(format!("Failed to request challenge: {}", e)));
-                        return;
-                    }
-                };
-                if !resp.status().is_success() {
-                    let _ = tx.send(HubResponse::Error(format!("Challenge failed: {}", resp.status())));
+        spawn_hub_task(async move {
+            let client = reqwest::Client::new();
+            // 1. Request Challenge
+            let challenge_res = client
+                .post(format!("{}/v1/challenge", hub_url))
+                .json(&ChallengeRequest { player_uuid })
+                .send()
+                .await;
+            let resp = match challenge_res {
+                Ok(r) => r,
+                Err(e) => {
+                    let _ = tx.send(HubResponse::Error(format!(
+                        "Failed to request challenge: {}",
+                        e
+                    )));
                     return;
                 }
-                let Ok(challenge) = resp.json::<ChallengeResponse>().await else {
-                    let _ = tx.send(HubResponse::Error("Failed to parse challenge response".to_string()));
-                    return;
-                };
-                // 2. Solve PoW
-                #[cfg(target_arch = "wasm32")]
-                let solution = unhub_client::solve_pow_async(&challenge.nonce, challenge.difficulty).await;
-                #[cfg(not(target_arch = "wasm32"))]
-                let solution = unhub_client::solve_pow(&challenge.nonce, challenge.difficulty);
+            };
+            if !resp.status().is_success() {
+                let _ = tx.send(HubResponse::Error(format!(
+                    "Challenge failed: {}",
+                    resp.status()
+                )));
+                return;
+            }
+            let Ok(challenge) = resp.json::<ChallengeResponse>().await else {
+                let _ = tx.send(HubResponse::Error(
+                    "Failed to parse challenge response".to_string(),
+                ));
+                return;
+            };
+            // 2. Solve PoW
+            #[cfg(target_arch = "wasm32")]
+            let solution =
+                unhub_client::solve_pow_async(&challenge.nonce, challenge.difficulty).await;
+            #[cfg(not(target_arch = "wasm32"))]
+            let solution = unhub_client::solve_pow(&challenge.nonce, challenge.difficulty);
 
-                // 3. Create Room
-                match client
-                    .post(format!("{}/v1/rooms/create", hub_url))
-                    .json(&CreateRoomRequest {
-                        player_uuid,
-                        game_version,
-                        protocol_hash,
-                        nonce: challenge.nonce,
-                        solution,
-                    })
-                    .send()
-                    .await
-                {
-                    Ok(resp) if resp.status().is_success() => {
-                        let status = resp.status();
-                        match resp.text().await {
-                            Ok(body) => match serde_json::from_str::<CreateRoomResponse>(&body) {
-                                Ok(data) => {
-                                    let _ = tx.send(HubResponse::RoomCreated(data));
-                                }
-                                Err(e) => {
-                                    let _ = tx.send(HubResponse::Error(format!(
+            // 3. Create Room
+            match client
+                .post(format!("{}/v1/rooms/create", hub_url))
+                .json(&CreateRoomRequest {
+                    player_uuid,
+                    game_version,
+                    protocol_hash,
+                    nonce: challenge.nonce,
+                    solution,
+                })
+                .send()
+                .await
+            {
+                Ok(resp) if resp.status().is_success() => {
+                    let status = resp.status();
+                    match resp.text().await {
+                        Ok(body) => match serde_json::from_str::<CreateRoomResponse>(&body) {
+                            Ok(data) => {
+                                let _ = tx.send(HubResponse::RoomCreated(data));
+                            }
+                            Err(e) => {
+                                let _ = tx.send(HubResponse::Error(format!(
                                         "Failed to parse create room response (status: {}): {}; body: {}",
                                         status, e, body
                                     )));
-                                }
-                            },
-                            Err(e) => {
-                                let _ = tx.send(HubResponse::Error(format!(
-                                    "Failed to read create room response body (status: {}): {}",
-                                    status, e
-                                )));
                             }
+                        },
+                        Err(e) => {
+                            let _ = tx.send(HubResponse::Error(format!(
+                                "Failed to read create room response body (status: {}): {}",
+                                status, e
+                            )));
                         }
                     }
-                    Ok(resp) => {
-                        let _ = tx.send(HubResponse::Error(format!("Status: {}", resp.status())));
-                    }
-                    Err(e) => {
-                        let _ = tx.send(HubResponse::Error(e.to_string()));
-                    }
                 }
-            })
-            .detach();
+                Ok(resp) => {
+                    let _ = tx.send(HubResponse::Error(format!("Status: {}", resp.status())));
+                }
+                Err(e) => {
+                    let _ = tx.send(HubResponse::Error(e.to_string()));
+                }
+            }
+        });
     }
 
     pub fn join_room(&self, code: String, player_uuid: uuid::Uuid) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
-        AsyncComputeTaskPool::get()
-            .spawn(async move {
-                let client = reqwest::Client::new();
-                match client
-                    .post(format!("{}/v1/rooms/join/{}", hub_url, code))
-                    .json(&JoinRoomRequest { player_uuid })
-                    .send()
-                    .await
-                {
-                    Ok(resp) if resp.status().is_success() => {
-                        let status = resp.status();
-                        match resp.text().await {
-                            Ok(body) => match serde_json::from_str::<JoinRoomResponse>(&body) {
-                                Ok(data) => {
-                                    let _ = tx.send(HubResponse::RoomJoined(data));
-                                }
-                                Err(e) => {
-                                    let _ = tx.send(HubResponse::Error(format!(
-                                        "Failed to parse join room response (status: {}): {}; body: {}",
-                                        status, e, body
-                                    )));
-                                }
-                            },
+        spawn_hub_task(async move {
+            let client = reqwest::Client::new();
+            match client
+                .post(format!("{}/v1/rooms/join/{}", hub_url, code))
+                .json(&JoinRoomRequest { player_uuid })
+                .send()
+                .await
+            {
+                Ok(resp) if resp.status().is_success() => {
+                    let status = resp.status();
+                    match resp.text().await {
+                        Ok(body) => match serde_json::from_str::<JoinRoomResponse>(&body) {
+                            Ok(data) => {
+                                let _ = tx.send(HubResponse::RoomJoined(data));
+                            }
                             Err(e) => {
                                 let _ = tx.send(HubResponse::Error(format!(
-                                    "Failed to read join room response body (status: {}): {}",
-                                    status, e
+                                    "Failed to parse join room response (status: {}): {}; body: {}",
+                                    status, e, body
                                 )));
                             }
+                        },
+                        Err(e) => {
+                            let _ = tx.send(HubResponse::Error(format!(
+                                "Failed to read join room response body (status: {}): {}",
+                                status, e
+                            )));
                         }
                     }
-                    Ok(resp) => {
-                        let _ = tx.send(HubResponse::Error(format!("Status: {}", resp.status())));
-                    }
-                    Err(e) => {
-                        let _ = tx.send(HubResponse::Error(e.to_string()));
-                    }
                 }
-            })
-            .detach();
+                Ok(resp) => {
+                    let _ = tx.send(HubResponse::Error(format!("Status: {}", resp.status())));
+                }
+                Err(e) => {
+                    let _ = tx.send(HubResponse::Error(e.to_string()));
+                }
+            }
+        });
     }
 
     pub fn ping(&self, installation_id: uuid::Uuid, version: String, protocol_hash: u64) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
-        AsyncComputeTaskPool::get()
-            .spawn(async move {
-                let client = reqwest::Client::new();
-                match client
-                    .post(format!("{}/v1/ping", hub_url))
-                    .json(&PingRequest {
-                        installation_id,
-                        version,
-                        protocol_hash,
-                    })
-                    .timeout(std::time::Duration::from_secs(3))
-                    .send()
-                    .await
-                {
-                    Ok(resp) if resp.status().is_success() => {
-                        if let Ok(data) = resp.json::<PingResponse>().await {
-                            let _ = tx.send(HubResponse::PingResult {
-                                ok: data.ok,
-                                online_players: data.online_players_estimate,
-                                multiplayer_status: data.multiplayer_status,
-                                upgrade_version: data.upgrade_version,
-                            });
-                        } else {
-                            let _ = tx.send(HubResponse::PingResult {
-                                ok: false,
-                                online_players: 0,
-                                multiplayer_status: MultiplayerStatus::Unsupported,
-                                upgrade_version: None,
-                            });
-                        }
-                    }
-                    _ => {
+        spawn_hub_task(async move {
+            let client = reqwest::Client::new();
+            match client
+                .post(format!("{}/v1/ping", hub_url))
+                .json(&PingRequest {
+                    installation_id,
+                    version,
+                    protocol_hash,
+                })
+                .timeout(std::time::Duration::from_secs(3))
+                .send()
+                .await
+            {
+                Ok(resp) if resp.status().is_success() => {
+                    if let Ok(data) = resp.json::<PingResponse>().await {
+                        let _ = tx.send(HubResponse::PingResult {
+                            ok: data.ok,
+                            online_players: data.online_players_estimate,
+                            multiplayer_status: data.multiplayer_status,
+                            upgrade_version: data.upgrade_version,
+                        });
+                    } else {
                         let _ = tx.send(HubResponse::PingResult {
                             ok: false,
                             online_players: 0,
@@ -187,8 +209,16 @@ impl HubClient {
                         });
                     }
                 }
-            })
-            .detach();
+                _ => {
+                    let _ = tx.send(HubResponse::PingResult {
+                        ok: false,
+                        online_players: 0,
+                        multiplayer_status: MultiplayerStatus::Unsupported,
+                        upgrade_version: None,
+                    });
+                }
+            }
+        });
     }
 }
 

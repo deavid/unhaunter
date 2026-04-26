@@ -22,3 +22,6 @@ crossbeam-channel = { workspace = true }
 uuid = { workspace = true }
 bevy-persistent = { workspace = true }
 serde_json = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { workspace = true }

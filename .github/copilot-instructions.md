@@ -11,6 +11,16 @@ See the following migration summaries for up-to-date Bevy patterns and project-s
 - docs/bevy_0.17_migration_filtered.md
 - docs/bevy_0.18_migration_filtered.md
 
+When coding, refactoring, reviewing architecture, or writing design proposals, also read these core design documents
+first:
+
+- docs/DESIGN_PHILOSOPHY.md
+- docs/ECS_DOMAIN_MANIFESTO.md
+- docs/TOPOLOGY_BLEED_DOCTRINE.md
+
+These are required context documents for agent decisions on domain ownership, ECS boundaries, multiplayer-safe data
+flow, and design intent.
+
 Do not guess. If something feels off ask questions to the user.
 
 Unless the user asks specifically and directly, DO NOT CODE, DO NOT FIX. If the user asks to review, DO NOT CODE,

@@ -76,20 +76,21 @@ pub fn update_assetidx_files() -> Result<(), String> {
                 .collect::<Vec<&str>>()
                 .join("\n");
             expected_file_contents.push('\n');
-            
+
             if let Ok(mut file) = File::open(&asset_list_path) {
                 let mut buf = String::new();
                 if file.read_to_string(&mut buf).is_ok() && buf == expected_file_contents {
                     continue;
                 }
             }
-            
+
             if let Some(parent) = asset_list_path.parent() {
-                std::fs::create_dir_all(parent).map_err(|e| format!("Failed to create index directory: {}", e))?;
+                std::fs::create_dir_all(parent)
+                    .map_err(|e| format!("Failed to create index directory: {}", e))?;
             }
 
-            let mut asset_list_file =
-                File::create(&asset_list_path).map_err(|e| format!("Failed to create assetidx: {}", e))?;
+            let mut asset_list_file = File::create(&asset_list_path)
+                .map_err(|e| format!("Failed to create assetidx: {}", e))?;
 
             asset_list_file
                 .write_all(expected_file_contents.as_bytes())

@@ -145,7 +145,7 @@ package-windows: build-windows package-common
     echo "[timing] package-windows:prepare-files=$((SECONDS - step_start))s"
     step_start=$SECONDS
     unlink {{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip || true
-    cd {{_dist_dir}}/windows && zip -r ../../{{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip *
+    cd {{_dist_dir}}/windows && zip -rq ../../{{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip *
     cd ../../
     echo "[timing] package-windows:create-zip=$((SECONDS - step_start))s"
     echo "Windows package created: {{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip"
@@ -167,7 +167,7 @@ package-wasm: build-wasm package-common
     echo "[timing] package-wasm:prepare-files=$((SECONDS - step_start))s"
     step_start=$SECONDS
     unlink {{_releases_dir}}/unhaunter-{{_version}}-wasm.zip || true
-    cd {{_dist_dir}}/wasm && zip -r ../../{{_releases_dir}}/unhaunter-{{_version}}-wasm.zip *
+    cd {{_dist_dir}}/wasm && zip -rq ../../{{_releases_dir}}/unhaunter-{{_version}}-wasm.zip *
     cd ../../
     echo "[timing] package-wasm:create-zip=$((SECONDS - step_start))s"
     echo "WASM package created: {{_releases_dir}}/unhaunter-{{_version}}-wasm.zip"
