@@ -12,7 +12,6 @@ workspace = true
 
 [dependencies]
 undifficulty-core = { workspace = true }
-uncommon-app-core = { workspace = true }
 unboard-core = { workspace = true }
 
 bevy = { workspace = true }
@@ -20,5 +19,3 @@ bevy_platform = { workspace = true }
 tiled = { workspace = true }
 unrender-std = { workspace = true }
 thiserror = { workspace = true }
-anyhow = { workspace = true }
-walkdir = { workspace = true }

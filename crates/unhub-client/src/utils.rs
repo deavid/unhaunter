@@ -136,7 +136,10 @@ pub async fn solve_pow_async(nonce: &str, difficulty: u32) -> String {
     struct YieldNow(bool);
     impl std::future::Future for YieldNow {
         type Output = ();
-        fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        fn poll(
+            mut self: std::pin::Pin<&mut Self>,
+            cx: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<Self::Output> {
             if !self.0 {
                 self.0 = true;
                 cx.waker().wake_by_ref();
@@ -167,7 +170,7 @@ pub async fn solve_pow_async(nonce: &str, difficulty: u32) -> String {
             return i.to_string();
         }
         i += 1;
-        if i % 1000 == 0 {
+        if i.is_multiple_of(1000) {
             YieldNow(false).await;
         }
     }

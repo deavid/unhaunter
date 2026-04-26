@@ -477,7 +477,6 @@ uninventory-plugin = { workspace = true }
 unlocomotion-plugin = { workspace = true }
 unnavigation-plugin = { workspace = true }
 uninput-plugin = { workspace = true }
-untmxmap-core = { workspace = true }
 uncampaign-plugin = { workspace = true }
 unboard-plugin = { workspace = true }
 unaudiobg-plugin = { workspace = true }

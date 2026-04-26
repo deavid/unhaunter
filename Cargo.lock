@@ -7737,7 +7737,6 @@ dependencies = [
  "unspatial-plugin",
  "unsummary-plugin",
  "unthermal-plugin",
- "untmxmap-core",
  "untmxmap-plugin",
  "untruck-plugin",
  "untruckui-plugin",
@@ -8626,16 +8625,13 @@ dependencies = [
 name = "untmxmap-core"
 version = "0.4.0-dev"
 dependencies = [
- "anyhow",
  "bevy",
  "bevy_platform",
  "thiserror 2.0.18",
  "tiled",
  "unboard-core",
- "uncommon-app-core",
  "undifficulty-core",
  "unrender-std",
- "walkdir",
 ]
 
 [[package]]
