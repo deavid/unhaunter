@@ -106,6 +106,7 @@ pub(crate) fn generate_sample_ron() -> String {
 /// A `Result` containing the hex-encoded SHA256 hash string if successful,
 /// or an `anyhow::Error` if the file cannot be read or hashing fails.
 pub(crate) fn calculate_script_hash(script_path: &str) -> Result<String, anyhow::Error> {
+    use std::io::Read;
     let mut file = File::open(script_path).map_err(|e| {
         anyhow::anyhow!(
             "Failed to open script file {} for hashing: {}",
@@ -114,14 +115,20 @@ pub(crate) fn calculate_script_hash(script_path: &str) -> Result<String, anyhow:
         )
     })?;
     let mut hasher = Sha256::new();
-    std::io::copy(&mut file, &mut hasher).map_err(|e| {
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer).map_err(|e| {
         anyhow::anyhow!(
             "Failed to read script file {} for hashing: {}",
             script_path,
             e
         )
     })?;
-    Ok(format!("{:x}", hasher.finalize())) // Format hash as a hex string.
+    hasher.update(&buffer);
+    Ok(hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect()) // Format hash as a hex string.
 }
 
 /// Calculates a combined SHA256 signature for a voice line.
@@ -138,7 +145,11 @@ pub(crate) fn calculate_combined_signature(tts_text: &str, script_hash: &str) ->
     let mut hasher = Sha256::new();
     hasher.update(tts_text.as_bytes());
     hasher.update(script_hash.as_bytes());
-    format!("{:x}", hasher.finalize())
+    hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect()
 }
 
 /// Scans a directory for RON files (`.ron` extension).
