@@ -74,11 +74,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete alpha-latest --yes --cleanup-tag 2>/dev/null || true
+          gh release delete alpha-latest --repo ${{ github.repository }} --yes --cleanup-tag 2>/dev/null || true
           gh release create alpha-latest \
+            --repo ${{ github.repository }} \
             --target ${{ github.sha }} \
             --prerelease \
             --title "Alpha Latest (rolling)" \
             --notes "Latest alpha build from the alpha branch. Volatile. May break." \
             releases/unhaunter-*
-          gh release edit alpha-latest --latest=false
+          gh release edit alpha-latest --repo ${{ github.repository }} --latest=false
