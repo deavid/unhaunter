@@ -7,7 +7,27 @@ use unaudiospatial_core::listener::SpatialListener;
 use unmetrics_core::metrics::SendMetric;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::perspective;
+use unreplicon_core::messages::PlayPositionalSoundBroadcast;
 use unspatial_core::position::Position;
+
+pub fn handle_play_positional_sound(
+    mut reader: MessageReader<PlayPositionalSoundBroadcast>,
+    mut ev_sound: MessageWriter<SoundEvent>,
+) {
+    for msg in reader.read() {
+        let pos = unspatial_core::position::Position {
+            x: msg.position[0],
+            y: msg.position[1],
+            z: msg.position[2],
+            visual_priority: 0.0,
+        };
+        ev_sound.write(SoundEvent {
+            sound_file: msg.sound_path.clone(),
+            volume: msg.volume,
+            position: Some(pos),
+        });
+    }
+}
 
 pub fn spatial_audio_playback(
     mut sound_events: MessageReader<SoundEvent>,

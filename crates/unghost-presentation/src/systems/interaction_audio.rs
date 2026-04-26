@@ -51,8 +51,16 @@ fn play_vocalization_sounds(
         }
         // Skip stale vocalizations to avoid replaying old sounds on late-join
         if current_time - voc.triggered_at > 5.0 {
+            debug!(
+                "GHOST_VOCALIZATION: skipping stale vocalization {} (triggered_at={:.2}, current={:.2})",
+                voc.sound_file, voc.triggered_at, current_time
+            );
             continue;
         }
+        info!(
+            "GHOST_VOCALIZATION: playing {} at {:?} (vol={:.2})",
+            voc.sound_file, voc.position, voc.volume
+        );
         audio.play_audio(voc.sound_file.clone(), voc.volume, &voc.position);
     }
 }

@@ -728,7 +728,7 @@ pub(crate) fn record_death_to_summary(
             .find(|p| p.network_id == ev.id)
             .map(|p| p.id);
 
-        if local_player.0 == player_uuid && player_uuid.is_some() {
+        if local_player.uuid == player_uuid && player_uuid.is_some() {
             // It's us! Update summary with death-related information
             let map_path_str = board_topology.map_path.clone();
 

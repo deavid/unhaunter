@@ -43,7 +43,7 @@ fn walkie_talk(
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
-    let mut rng = random_seed::rng();
+    let mut rng = random_seed::rng_from_seed(walkie_play.current_seed);
     walkie_play.priority_bar /= 1.2;
 
     let Some(walkie_event) = walkie_play.event.clone() else {
@@ -169,6 +169,12 @@ fn walkie_talk(
         };
     }
 
+    if new_state != walkie_play.state {
+        debug!(
+            "WALKIE_PLAY: state transition {:?} -> {:?}",
+            walkie_play.state, new_state
+        );
+    }
     walkie_play.state = new_state.clone();
     if new_state.is_none() {
         // When walkie ends, send an OnScreenHintEvent with on_completion=true

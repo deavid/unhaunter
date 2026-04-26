@@ -79,7 +79,7 @@ fn insert_main_player_on_ownership(
     local_player: Res<LocalPlayer>,
     mut commands: Commands,
 ) {
-    let Some(local_uuid) = local_player.0 else {
+    let Some(local_uuid) = local_player.uuid else {
         return;
     };
     for (entity, sprite) in q.iter() {

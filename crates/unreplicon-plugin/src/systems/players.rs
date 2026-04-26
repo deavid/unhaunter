@@ -261,7 +261,7 @@ fn handle_request_join_mission(
             warn!("handle_request_join_mission: offline mode but LocalPlayer resource missing");
             return;
         };
-        let Some(player_uuid) = local_player.0 else {
+        let Some(player_uuid) = local_player.uuid else {
             warn!("handle_request_join_mission: offline mode but LocalPlayer UUID not set");
             return;
         };
@@ -431,7 +431,7 @@ fn client_avatar_reconciliation_loop(
     mut relieve_sim_authority: MessageWriter<RelieveSimulationAuthority>,
     mut last_sent_at: Local<HashMap<Entity, f32>>,
 ) {
-    let Some(local_uuid) = local_player.0 else {
+    let Some(local_uuid) = local_player.uuid else {
         return;
     };
     let ready_for_local_simulation = *app_state.get() == UIContextState::InGame;

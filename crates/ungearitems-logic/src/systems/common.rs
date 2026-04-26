@@ -288,7 +288,7 @@ pub(crate) fn handle_craft_repellent_request(
             });
         } else if let Ok(mut flask) = q_repellent.get_mut(entity) {
             debug!(
-                "REPELLENT: refilling existing flask entity {:?} with ghost_type={:?}",
+                "REPELLENT: refilling/swapping existing flask entity {:?} with ghost_type={:?}",
                 entity, ghost_type
             );
             flask.liquid_content = Some(ghost_type);

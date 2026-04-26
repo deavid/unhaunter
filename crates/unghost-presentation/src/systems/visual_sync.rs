@@ -57,7 +57,7 @@ pub(crate) fn ghost_clarity_sync(
         } else if dying_logic.is_some() {
             0.0
         } else {
-            dynamics.visual_alpha_multiplier
+            dynamics.visual_alpha_multiplier.max(0.1)
         };
     }
 }

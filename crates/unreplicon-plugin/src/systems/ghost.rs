@@ -6,17 +6,22 @@ use unmission_core::types::SimulationState;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
 };
-use unreplicon_core::messages::{GhostSoundFieldBroadcast, SpawnParticleNetEvent};
+use untruck_core::types::repellent_tracker::RepellentCraftTracker;
+use unreplicon_core::messages::{
+    GhostSoundFieldBroadcast, PlayPositionalSoundBroadcast, SpawnParticleNetEvent,
+};
 use unreplicon_core::resources::{AuthorityRole, is_pure_client};
 
 pub(super) fn app_setup(app: &mut App) {
     // Register Phase 2 replicated components.
     // GhostGuess remains the shared replicated mission whiteboard.
     app.replicate::<MissionGoalEntity>();
+    app.replicate::<RepellentCraftTracker>();
 
     // Register server → client messages.
     app.add_server_message::<SpawnParticleNetEvent>(Channel::Ordered);
     app.add_server_message::<GhostSoundFieldBroadcast>(Channel::Ordered);
+    app.add_server_message::<PlayPositionalSoundBroadcast>(Channel::Ordered);
 
     app.add_systems(
         OnEnter(SimulationState::Spawning),
@@ -34,7 +39,15 @@ pub(super) fn app_setup(app: &mut App) {
     );
     app.add_systems(
         Update,
+        sync_repellent_tracker_to_mission_goal.run_if(resource_exists::<AuthorityRole>),
+    );
+    app.add_systems(
+        Update,
         sync_mission_goal_to_ghost_guess.run_if(is_pure_client),
+    );
+    app.add_systems(
+        Update,
+        sync_mission_goal_to_repellent_tracker.run_if(is_pure_client),
     );
 
     // Server: mission lifecycle
@@ -55,21 +68,40 @@ pub(super) fn app_setup(app: &mut App) {
     );
 }
 
-fn setup_goal_entity(mut commands: Commands) {
+fn setup_goal_entity(
+    mut commands: Commands,
+    mut res: ResMut<GhostGuess>,
+    tracker: Res<RepellentCraftTracker>,
+) {
+    // Reset local resource to default
+    *res = GhostGuess::default();
     // Singleton entity for shared mission whiteboard replication.
-    commands.spawn((
-        bevy_replicon::prelude::Replicated,
-        MissionGoalEntity,
-        GhostGuess::default(),
-    ));
-    info!("setup_goal_entity: MissionGoalEntity spawned");
+    commands
+        .spawn((
+            bevy_replicon::prelude::Replicated,
+            MissionGoalEntity,
+            GhostGuess::default(),
+        ))
+        .insert(tracker.clone());
+    info!("setup_goal_entity: MissionGoalEntity spawned and GhostGuess reset");
 }
 
-fn cleanup_ghost_entities(q_goal: Query<Entity, With<MissionGoalEntity>>, mut commands: Commands) {
+fn cleanup_ghost_entities(
+    q_goal: Query<Entity, With<MissionGoalEntity>>,
+    q_salty: Query<Entity, With<ungearitems_core::components::salt::SaltyTrace>>,
+    mut commands: Commands,
+    mut res: ResMut<GhostGuess>,
+) {
+    // Reset local resource to default
+    *res = GhostGuess::default();
     commands.remove_resource::<RepliconGhostSpawningActive>();
     for entity in q_goal.iter() {
         commands.entity(entity).despawn();
     }
+    for entity in q_salty.iter() {
+        commands.entity(entity).despawn();
+    }
+    info!("cleanup_ghost_entities: MissionGoalEntity and SaltyTraces despawned, GhostGuess reset");
 }
 
 /// Bridge: Sync GhostGuess resource to singleton entity (Server).
@@ -108,6 +140,33 @@ fn sync_mission_goal_to_ghost_guess(
             "GHOST_GUESS_BRIDGE_CLIENT: applying replicated mission goal GhostGuess {:?}",
             *comp
         );
+        *res = comp.clone();
+    }
+}
+
+/// Bridge: Sync RepellentCraftTracker resource to singleton entity (Server).
+fn sync_repellent_tracker_to_mission_goal(
+    res: Res<RepellentCraftTracker>,
+    mut q_goal: Query<&mut RepellentCraftTracker, With<MissionGoalEntity>>,
+) {
+    if !res.is_changed() {
+        return;
+    }
+
+    for mut comp in q_goal.iter_mut() {
+        *comp = res.clone();
+    }
+}
+
+/// Bridge: Sync singleton entity to RepellentCraftTracker resource (Client).
+fn sync_mission_goal_to_repellent_tracker(
+    q_goal: Query<
+        &RepellentCraftTracker,
+        (With<MissionGoalEntity>, Changed<RepellentCraftTracker>),
+    >,
+    mut res: ResMut<RepellentCraftTracker>,
+) {
+    for comp in q_goal.iter() {
         *res = comp.clone();
     }
 }

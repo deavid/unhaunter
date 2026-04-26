@@ -187,8 +187,13 @@ pub(crate) fn queue_drop_request(
                 continue;
             };
 
-            // Intentionally retain LocallyOwned — the dropping player remains the Designated Driver
-            // and continues simulating the gear's internal state while it is on the floor.
+            // B13: Remove LocallyOwned when dropping an item. The player still remains
+            // the Designated Driver (retains Owner component) and continues simulating
+            // the gear's internal state while it is on the floor, but they are no longer
+            // the primary visual "possessor" in the inventory sense.
+            //
+            // Actually, wait - if we remove LocallyOwned, we stop driving.
+            // The instructions say: "When a player drops an item, they should remove LocallyOwned - but not Owner(id)".
             //
             // Because noop_write is registered for LocallyOwned on FloorItemCollidable and
             // DeployedGear, the server's replication of those components is suppressed for the
@@ -208,7 +213,8 @@ pub(crate) fn queue_drop_request(
             };
             commands
                 .entity(entity)
-                .insert((FloorItemCollidable, drop_pos, drop_direction));
+                .insert((FloorItemCollidable, drop_pos, drop_direction))
+                .remove::<LocallyOwned>();
             if dropped_gear {
                 commands.entity(entity).insert((
                     DeployedGear {

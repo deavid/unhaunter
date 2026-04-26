@@ -7285,6 +7285,7 @@ dependencies = [
  "unaudiospatial-core",
  "uncommon-states-core",
  "unmetrics-core",
+ "unreplicon-core",
  "unsettings-core",
  "unspatial-core",
 ]
@@ -8513,6 +8514,7 @@ dependencies = [
  "unboard-core",
  "uncommon-states-core",
  "undifficulty-core",
+ "ungearitems-core",
  "uninvestigation-core",
  "unmapload-core",
  "unmission-core",
@@ -8521,6 +8523,7 @@ dependencies = [
  "unreplicon-transport",
  "unspatial-core",
  "untmxmap-core",
+ "untruck-core",
  "uuid",
 ]
 
@@ -8708,7 +8711,9 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_asset_loader",
+ "bevy_replicon",
  "unbehavior-core",
+ "unboard-core",
  "uncommon-states-core",
  "undifficulty-core",
  "ungear-core",
@@ -8720,6 +8725,7 @@ dependencies = [
  "unplayer-core",
  "unreplicon-core",
  "unsettings-core",
+ "unspatial-core",
  "untruck-core",
 ]
 

@@ -68,6 +68,7 @@ fn setup_ui(
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     ui_assets: Res<PauseAssets>,
     host_gone: Res<HostGone>,
+    room_ident: Option<Res<unreplicon_core::resources::RoomIdentification>>,
 ) {
     let (p_text, p_sub_text) = if host_gone.0 {
         (
@@ -140,6 +141,23 @@ fn setup_ui(
                             ..default()
                         })
                         .insert(TextColor(PAUSEUI_TEXT_COLOR));
+
+                    if let Some(ri) = room_ident.as_ref()
+                        && let Some(code) = ri.code.as_ref()
+                    {
+                        mid_blk.spawn(Node {
+                            height: Val::Px(20.0 * UI_SCALE),
+                            ..default()
+                        });
+                        mid_blk
+                            .spawn(Text::new(format!("Room Code: {}", code)))
+                            .insert(TextFont {
+                                font: ui_assets.font_kode_bold.clone(),
+                                font_size: 32.0 * FONT_SCALE,
+                                ..default()
+                            })
+                            .insert(TextColor(Color::srgb(1.0, 0.5, 0.0)));
+                    }
                 });
         });
 }

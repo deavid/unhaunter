@@ -310,7 +310,7 @@ fn spawn_lobby_entity_if_missing(
 
     if local_player.is_some()
         && let Some(lp) = local_player_res
-        && let Some(uuid) = lp.0
+        && let Some(uuid) = lp.uuid
     {
         players.push(LobbyPlayerInfo {
             player_uuid: uuid,

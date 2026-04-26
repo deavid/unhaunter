@@ -2,7 +2,8 @@ use bevy::prelude::*;
 
 /// Tracks the number of repellent bottles crafted and returned during the current mission.
 /// This resource is used to enforce the per-mission craft limit based on difficulty.
-#[derive(Resource, Default, Debug, Clone)]
+#[derive(Resource, Component, Default, Debug, Clone, Reflect, PartialEq, serde::Serialize, serde::Deserialize)]
+#[reflect(Component, Resource, Default, PartialEq)]
 pub struct RepellentCraftTracker {
     pub crafted_count: u32,
     pub max_crafts: u32,

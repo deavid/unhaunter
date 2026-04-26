@@ -138,7 +138,7 @@ fn handle_request_grab(
     mut reader: MessageReader<FromClient<RequestGrab>>,
     mut commands: Commands,
     q_items: Query<
-        (Entity, Option<&Owner>, Has<GearKind>, Has<Behavior>),
+        (Entity, &Owner, Has<GearKind>, Has<Behavior>),
         With<FloorItemCollidable>,
     >,
 ) {
@@ -147,15 +147,7 @@ fn handle_request_grab(
         let item_entity = msg.message.entity;
 
         if let Ok((entity, old_owner, is_gear, is_furniture)) = q_items.get(item_entity) {
-            // Revoke simulation authority from the old driver if different from the new grabber.
-            // The client reconciliation loop will see Owner changed and drop LocallyOwned organically.
-            if let Some(old_owner) = old_owner {
-                let old_client_id = from_owner_id(old_owner.0);
-                if old_client_id != client_id && old_client_id == ClientId::Server {
-                    commands.entity(entity).remove::<LocallyOwned>();
-                }
-            }
-
+            // Force Owner transfer.
             let owner_id = to_owner_id(client_id);
             commands
                 .entity(entity)
@@ -171,8 +163,17 @@ fn handle_request_grab(
                 // Furniture keeps its visuals while carried.
             }
 
+            // If the server/host is the grabber, we must manually re-add LocallyOwned.
+            // For remote clients, Replicon will replicate the Owner change, and the
+            // client_gear_reconciliation_loop will add LocallyOwned on their end.
             if client_id == ClientId::Server {
                 commands.entity(entity).insert(LocallyOwned);
+            } else {
+                // If it was already LocallyOwned by the server/host but now grabbed by a client,
+                // we must remove LocallyOwned immediately on the server.
+                if old_owner.0 == OwnerId::Server {
+                    commands.entity(entity).remove::<LocallyOwned>();
+                }
             }
         }
     }
@@ -943,7 +944,7 @@ fn client_gear_reconciliation_loop(
 ) {
     let ready = *app_state.get() == UIContextState::InGame;
 
-    let Some(my_uuid) = local_player.0 else {
+    let Some(my_uuid) = local_player.uuid else {
         return;
     };
     let my_owner_id = uuid_map

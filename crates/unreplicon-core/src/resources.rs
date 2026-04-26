@@ -43,7 +43,19 @@ pub struct ClientUuidMap(pub HashMap<crate::ownership::OwnerId, Uuid>);
 /// `None` means the local player has not yet been assigned (e.g. in offline play
 /// before a session starts, or in a dedicated server where there is no local player).
 #[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct LocalPlayer(pub Option<Uuid>);
+pub struct LocalPlayer {
+    pub uuid: Option<Uuid>,
+    pub owner_id: Option<crate::ownership::OwnerId>,
+}
+
+impl LocalPlayer {
+    pub fn new(uuid: Uuid) -> Self {
+        Self {
+            uuid: Some(uuid),
+            owner_id: None,
+        }
+    }
+}
 
 /// Set to `true` when the host has disconnected from the game.
 ///

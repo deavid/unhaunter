@@ -20,6 +20,9 @@ unreplicon-core = { workspace = true }
 unplayer-core = { workspace = true }
 unbehavior-core = { workspace = true }
 ungear-core = { workspace = true }
+unspatial-core = { workspace = true }
+unboard-core = { workspace = true }
+bevy_replicon = { workspace = true }
 ungearitems-core = { workspace = true }
 unsettings-core = { workspace = true }
 uninvestigation-core = { workspace = true }

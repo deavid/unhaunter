@@ -84,7 +84,7 @@ pub(crate) fn setup_ui(
         return;
     }
     let lobby_info = q_lobby.single().ok();
-    let is_room_owner = match (local_player.0, lobby_info) {
+    let is_room_owner = match (local_player.uuid, lobby_info) {
         (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
         (Some(_), None) => authority_role.is_some() && local_player_role.is_some(),
         _ => false,
@@ -313,7 +313,7 @@ pub(crate) fn handle_clicks(
     mut ev_load: MessageWriter<LoadLevelEvent>,
 ) {
     let lobby_info = q_lobby.single().ok();
-    let is_room_owner = match (local_player.0, lobby_info) {
+    let is_room_owner = match (local_player.uuid, lobby_info) {
         (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
         _ => false,
     };
@@ -441,13 +441,13 @@ pub(crate) fn update_display(
     };
     // Guard: if LocalPlayer identity is not yet resolved, skip rendering this frame to
     // avoid displaying the player list without the correct "You" highlight.
-    if local_player.0.is_none() {
+    if local_player.uuid.is_none() {
         warn!("update_display: LocalPlayer identity not yet resolved; skipping frame.");
         return;
     }
 
     let lobby_info = q_lobby.single().ok();
-    let is_room_owner = match (local_player.0, lobby_info.as_deref()) {
+    let is_room_owner = match (local_player.uuid, lobby_info.as_deref()) {
         (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
         (Some(_), None) => authority_role.is_some() && local_player_role.is_some(),
         _ => false,
@@ -567,11 +567,16 @@ pub(crate) fn update_display(
                 .as_deref()
                 .map(|li| li.players.as_slice())
                 .unwrap_or_default();
-            for (idx, player) in players.iter().enumerate() {
-                let is_local = local_player.0 == Some(player.player_uuid);
+            for player in players.iter() {
+                let is_local = local_player.uuid == Some(player.player_uuid);
+                let is_leader = lobby_info
+                    .as_ref()
+                    .map(|li| li.leader_uuid == Some(player.player_uuid))
+                    .unwrap_or(false);
+
                 let name = if is_local {
                     "You".to_string()
-                } else if idx == 0 {
+                } else if is_leader {
                     "Leader".to_string()
                 } else {
                     format!("Player {}", &player.player_uuid.to_string()[..8])
@@ -610,10 +615,14 @@ pub(crate) fn update_display(
                 .as_deref()
                 .map(|li| li.players.clone())
                 .unwrap_or_default();
-            for (player_idx, player) in players.iter().enumerate() {
-                let is_local = local_player.0 == Some(player.player_uuid);
+            for player in players.iter() {
+                let is_local = local_player.uuid == Some(player.player_uuid);
                 let prefix = if is_local { "\u{25BA} " } else { "" }; // ►
-                let leader_suffix = if player_idx == 0 { " (Leader)" } else { "" };
+                let is_leader = lobby_info
+                    .as_ref()
+                    .map(|li| li.leader_uuid == Some(player.player_uuid))
+                    .unwrap_or(false);
+                let leader_suffix = if is_leader { " (Leader)" } else { "" };
 
                 p.spawn(Node {
                     flex_direction: FlexDirection::Row,

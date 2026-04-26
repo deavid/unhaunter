@@ -265,3 +265,11 @@ pub struct HubConnectionRequested {
     pub address: String,
     pub ticket: Option<String>,
 }
+
+/// Message sent by the server to all clients to play a positional sound effect.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct PlayPositionalSoundBroadcast {
+    pub sound_path: String,
+    pub position: [f32; 3],
+    pub volume: f32,
+}

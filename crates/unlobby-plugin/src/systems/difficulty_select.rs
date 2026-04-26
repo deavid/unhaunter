@@ -128,7 +128,7 @@ pub(crate) fn handle_input(
     mut ev_send_diff: MessageWriter<RequestSelectDifficulty>,
 ) {
     let lobby_info = q_lobby.single().ok();
-    let is_room_owner = match (local_player.0, lobby_info) {
+    let is_room_owner = match (local_player.uuid, lobby_info) {
         (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
         (Some(_), None) => authority_role.is_some() && local_player_role.is_some(),
         _ => false,

@@ -92,3 +92,8 @@ pub fn rng() -> rand::rngs::SmallRng {
     let seed: u64 = RNG.with(|rng| rng.borrow_mut().rng().next_u64());
     rand::rngs::SmallRng::seed_from_u64(seed)
 }
+
+/// Initializes a `SmallRng` instance with a specific seed.
+pub fn rng_from_seed(seed: u64) -> rand::rngs::SmallRng {
+    rand::rngs::SmallRng::seed_from_u64(seed)
+}

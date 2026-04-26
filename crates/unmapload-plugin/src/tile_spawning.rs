@@ -217,6 +217,10 @@ pub(crate) fn process_and_spawn_tile(
         // Only the Authority (server / offline host) adds Replicated.
         if p.authority.is_some() {
             entity_commands.insert_if_new(Replicated);
+            entity_commands.insert_if_new(unreplicon_core::ownership::Owner(
+                unreplicon_core::ownership::OwnerId::Server,
+            ));
+            entity_commands.insert_if_new(unreplicon_core::ownership::LocallyOwned);
         }
     }
 

@@ -28,3 +28,5 @@ unspatial-core = { workspace = true }
 unplayer-core = { workspace = true }
 unboard-core = { workspace = true }
 uninvestigation-core = { workspace = true }
+untruck-core = { workspace = true }
+ungearitems-core = { workspace = true }

@@ -58,12 +58,12 @@ pub(crate) fn hydrate_players_system(
     for (entity, player_sprite, pos) in q_added.iter() {
         let spawn_pos = *pos;
         let is_local = local_player
-            .0
+            .uuid
             .map(|uuid| uuid == player_sprite.id)
             .unwrap_or(false);
         debug!(
             "hydrate_players_system: processing entity {:?} uuid={} is_local={} local_player={:?}",
-            entity, player_sprite.id, is_local, local_player.0
+            entity, player_sprite.id, is_local, local_player.uuid
         );
 
         // --- Resolve asset handles and resolution factor ---
