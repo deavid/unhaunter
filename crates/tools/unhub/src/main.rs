@@ -41,12 +41,8 @@ async fn main() -> anyhow::Result<()> {
     if let Some(path) = stats_log_path.clone() {
         let stats_state = state.clone();
         tokio::spawn(async move {
-            // First tick fires immediately; skip it so we don't log twice on boot.
-            let mut interval =
-                tokio::time::interval(std::time::Duration::from_secs(3600));
-            interval.tick().await;
             loop {
-                interval.tick().await;
+                tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
                 stats::write_stats("hourly", &stats_state, &path);
             }
         });
