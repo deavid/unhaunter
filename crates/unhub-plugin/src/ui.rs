@@ -1,4 +1,4 @@
-use crate::hub_client::{ClientProtocolHash, HubClient, HubRequest, HubResponse, HubStatus};
+use crate::hub_client::{ClientProtocolHash, HubClient, HubResponse, HubStatus};
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt;
@@ -151,11 +151,7 @@ pub fn hub_menu_event(
                         .map(|x| x.0)
                         .unwrap_or_default();
                     let game_version = env!("CARGO_PKG_VERSION").to_string();
-                    let _ = hub_client.tx.send(HubRequest::CreateRoom {
-                        player_uuid,
-                        game_version,
-                        protocol_hash: protocol_hash.0,
-                    });
+                    hub_client.create_room(player_uuid, game_version, protocol_hash.0);
                     hub_status.is_pending = true;
                 }
                 HubMenuID::JoinRoom => {
@@ -165,9 +161,7 @@ pub fn hub_menu_event(
                             .as_ref()
                             .map(|x| x.0)
                             .unwrap_or_default();
-                        let _ = hub_client
-                            .tx
-                            .send(HubRequest::JoinRoom { code, player_uuid });
+                        hub_client.join_room(code, player_uuid);
                         hub_status.is_pending = true;
                     }
                 }
@@ -217,9 +211,7 @@ pub fn update_code_input(
                     .as_ref()
                     .map(|x| x.0)
                     .unwrap_or_default();
-                let _ = hub_client
-                    .tx
-                    .send(HubRequest::JoinRoom { code, player_uuid });
+                hub_client.join_room(code, player_uuid);
                 hub_status.is_pending = true;
             }
         } else {

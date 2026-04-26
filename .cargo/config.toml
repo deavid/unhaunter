@@ -1,5 +1,7 @@
 [target.wasm32-unknown-unknown]
 runner = "wasm-server-runner"
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
+
 
 [target.'cfg(any(target_arch = "x86", target_arch = "x86_64"))']
 rustflags = ["-C", "target-feature=+sse2,+sse3,+sse4.1,+ssse3,+avx,+avx2"]

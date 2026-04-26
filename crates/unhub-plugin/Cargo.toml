@@ -18,7 +18,6 @@ bevy_replicon = { workspace = true }
 
 unprofile-core = { workspace = true }
 reqwest = { workspace = true }
-tokio = { workspace = true }
 crossbeam-channel = { workspace = true }
 uuid = { workspace = true }
 bevy-persistent = { workspace = true }
