@@ -180,6 +180,20 @@ rand = { version = "0.10", default-features = false, features = [
     "thread_rng",
 ] }
 rand_distr = "0.6"
+getrandom = { version = "0.4", default-features = false, features = [
+    "wasm_js",
+] }
+getrandom_03 = { package = "getrandom", version = "0.3", default-features = false, features = [
+    "wasm_js",
+] }
+getrandom_02 = { package = "getrandom", version = "0.2", default-features = false, features = [
+    "js",
+] }
+uuid = { version = "1.23", default-features = false, features = [
+    "v4",
+    "serde",
+    "js",
+] }
 enum-iterator = "2.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -217,27 +231,26 @@ bevy = { version = "0.18", features = ["jpeg", "serialize", "debug"] }
 #     "ui_api",
 #     "ui_bevy_render",
 # ] }
-bevy_asset_loader = { version = "0.25", features = ["2d"] }
+bevy_asset_loader = { version = "0.26", features = ["2d"] }
 bevy_math = "0.18"
 bevy-persistent = { version = "0.10", features = ["all"] }
 bevy_platform = "0.18"
 bevy_dylib = "0.18"
 bevy_picking = "0.18"
 ndarray = "0.17"
-sha2 = "0.10"
+sha2 = "0.11"
 rayon = "1.11"
 crossbeam-channel = "0.5"
-uuid = { version = "1.23", features = ["v4", "serde"] }
 bevy_replicon = "0.39"
 bevy_replicon_renet = "0.15"
 bevy_renet = { version = "4.0", features = ["netcode"] }
 renet = "2.0"
 renet_netcode = "2.0"
 postcard = { version = "1.1", features = ["alloc"] }
-hmac = "0.12"
+hmac = "0.13"
 reqwest = { version = "0.13", features = ["json"] }
 axum = "0.8"
-tokio = { version = "1.50", features = ["full"] }
+tokio = { version = "1.52", features = ["full"] }
 dashmap = "6.1"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 tracing = "0.1"
@@ -247,6 +260,10 @@ futures = "0.3"
 tokio-util = { version = "0.7", features = ["codec"] }
 base64 = "0.22"
 moka = { version = "0.12.15", features = ["sync"] }
+semver = "1"
+
+# winit is not for WASM, and needs to be in sync with bevy version
+winit = "0.30"
 
 
 # ── Tools ────────────────────────────────────────────────────────────────────
@@ -417,9 +434,6 @@ untruckui-plugin = { path = "crates/untruckui-plugin" }
 unclassic-mode-render-plugin = { path = "crates/unclassic-mode-render-plugin" } # Game-mode-specific visual overrides
 unclassic-mode-ui-plugin = { path = "crates/unclassic-mode-ui-plugin" }         # HUD and in-game UI
 
-# winit is not for WASM, and needs to be in sync with bevy version
-winit = "0.30"
-
 [package]
 name = "unhaunter"
 default-run = "unhaunter_game"
@@ -433,12 +447,22 @@ authors.workspace = true
 [lints]
 workspace = true
 
+[package.metadata.cargo-machete]
+ignored = ["getrandom", "getrandom_02", "getrandom_03"]
+
 [dependencies]
 clap = { workspace = true }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }
 serde_json = { workspace = true }
+
+# getrandom is not used directly, but WASM builds require its `wasm_js` feature to be active. Since no other
+# crate in the workspace declares it as a direct dependency, it only appears transitively (via `rand`, `uuid`,
+# etc.) without the feature — causing link errors on wasm32-unknown-unknown. This entry forces the feature on.
+getrandom = { workspace = true }
+getrandom_03 = { workspace = true }
+getrandom_02 = { workspace = true }
 
 uncommon-states-core = { workspace = true }
 undifficulty-core = { workspace = true }

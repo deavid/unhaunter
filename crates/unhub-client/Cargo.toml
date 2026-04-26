@@ -8,8 +8,8 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-serde = { workspace = true, features = ["derive"] }
-uuid = { workspace = true, features = ["v4", "serde"] }
+serde = { workspace = true }
+uuid = { workspace = true }
 rand = { workspace = true }
 sha2 = { workspace = true }
 postcard = { workspace = true }
