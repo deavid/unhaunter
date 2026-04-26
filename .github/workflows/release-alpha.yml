@@ -9,8 +9,21 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build_and_package:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: linux
+            just_target: package-linux
+          - id: windows
+            just_target: package-windows
+          - id: wasm
+            just_target: package-wasm
+          - id: server
+            just_target: package-server
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,17 +49,26 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v3
 
-      - name: Build and Package Linux
-        run: just package-linux
+      - name: Build and Package
+        run: just ${{ matrix.just_target }}
 
-      - name: Build and Package Windows
-        run: just package-windows
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpha-${{ matrix.id }}
+          path: releases/unhaunter-*
+          if-no-files-found: error
 
-      - name: Build and Package WASM
-        run: just package-wasm
-
-      - name: Build and Package Server
-        run: just package-server
+  publish:
+    runs-on: ubuntu-latest
+    needs: [build_and_package]
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: alpha-*
+          merge-multiple: true
+          path: releases
 
       - name: Overwrite alpha-latest rolling release
         env:
