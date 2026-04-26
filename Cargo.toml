@@ -7,6 +7,7 @@ members = [
     "crates/tools/unhub",
     "crates/tools/unprocman",
     "crates/tools/text_to_speech/walkie_voice_generator",
+    "crates/tools/assetidx_updater",
 
     # ── Portable Libraries ─────────────────────────────────────────────────
     # Game-agnostic Bevy plugins. Zero Unhaunter-specific knowledge.
@@ -20,6 +21,7 @@ members = [
     # Zero internal game dependencies. Dependency arrow points here.
     # ════════════════════════════════════════════════════════════════════════
     "crates/uncommon-app-core",    # Base platform utilities and basic types
+    "crates/unassetidx-updater",   # Asset index file generator
     "crates/uncommon-states-core",
     "crates/unspatial-core",       # Coordinate math (isometric, Position, Direction)
     "crates/unnoise-core",         # Procedural noise math (Perlin)
@@ -286,6 +288,7 @@ unfps-plugin = { path = "crates/unfps-plugin" } # Frame-rate limiter via std::th
 # Zero internal game dependencies. Dependency arrow points here.
 # ════════════════════════════════════════════════════════════════════════════
 uncommon-app-core = { path = "crates/uncommon-app-core" }       # Binary-level base tools
+unassetidx-updater = { path = "crates/unassetidx-updater" }     # Asset index updater
 unspatial-core = { path = "crates/unspatial-core" }             # Coordinate math (isometric)
 unnoise-core = { path = "crates/unnoise-core" }                 # Procedural noise math (Perlin)
 unmetrics-core = { path = "crates/unmetrics-core" }             # Performance diagnostic data
@@ -467,6 +470,7 @@ getrandom_02 = { workspace = true }
 uncommon-states-core = { workspace = true }
 undifficulty-core = { workspace = true }
 uncommon-app-core = { workspace = true }
+unassetidx-updater = { workspace = true }
 unmission-core = { workspace = true }
 unvitals-plugin = { workspace = true }
 uninventory-plugin = { workspace = true }

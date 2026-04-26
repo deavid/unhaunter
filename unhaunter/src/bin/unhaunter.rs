@@ -42,7 +42,7 @@ fn main() {
 
     #[cfg(not(target_arch = "wasm32"))]
     {
-        if let Err(e) = untmxmap_core::assets::index_updater::update_assetidx_files() {
+        if let Err(e) = unassetidx_updater::update_assetidx_files() {
             eprintln!("Failed to update assetidx files: {}", e);
         }
     }

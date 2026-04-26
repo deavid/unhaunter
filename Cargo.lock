@@ -328,6 +328,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "assetidx_updater"
+version = "0.1.0"
+dependencies = [
+ "unassetidx-updater",
+]
+
+[[package]]
 name = "async-broadcast"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7194,6 +7201,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "214ca0b2191785cbc06209b9ca1861e048e39b5ba33574b3cedd58363d5bb5f6"
 
 [[package]]
+name = "unassetidx-updater"
+version = "0.1.0"
+dependencies = [
+ "walkdir",
+]
+
+[[package]]
 name = "unaudiobg-core"
 version = "0.4.0-dev"
 dependencies = [
@@ -7671,6 +7685,7 @@ dependencies = [
  "getrandom 0.3.4",
  "getrandom 0.4.2",
  "serde_json",
+ "unassetidx-updater",
  "unaudiobg-plugin",
  "unaudiospatial-plugin",
  "unboard-plugin",

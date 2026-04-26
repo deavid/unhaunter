@@ -62,8 +62,20 @@ jobs:
           echo "RELEASE_NOTES=$NOTES" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Build and Package Artifacts (justfile)
-        run: just package-all
+      - name: Restore Cargo cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build and Package Linux
+        run: just package-linux
+
+      - name: Build and Package Windows
+        run: just package-windows
+
+      - name: Build and Package WASM
+        run: just package-wasm
+
+      - name: Build and Package Server
+        run: just package-server
 
       - name: Create GitHub Release and Upload Artifacts
         env:

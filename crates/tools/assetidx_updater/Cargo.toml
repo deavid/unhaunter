@@ -1,0 +1,8 @@
+[package]
+name = "assetidx_updater"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+unassetidx-updater = { workspace = true }
