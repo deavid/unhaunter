@@ -208,7 +208,7 @@ pub(crate) fn queue_drop_request(
             };
             commands
                 .entity(entity)
-                .insert((FloorItemCollidable, drop_pos));
+                .insert((FloorItemCollidable, drop_pos, drop_direction));
             if dropped_gear {
                 commands.entity(entity).insert((
                     DeployedGear {

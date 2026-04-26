@@ -213,6 +213,11 @@ fn handle_request_drop(
 
             if is_furniture {
                 // Furniture visuals are preserved while carried; no extra components needed.
+                commands.entity(entity).insert(Direction {
+                    dx: msg.message.direction[0],
+                    dy: msg.message.direction[1],
+                    dz: msg.message.direction[2],
+                });
             }
         }
     }
