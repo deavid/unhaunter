@@ -149,7 +149,15 @@ pub async fn ping(
     Json(payload): Json<PingRequest>,
 ) -> Json<PingResponse> {
     state.active_players.insert(payload.installation_id, ());
+    state
+        .players_1h
+        .insert(payload.installation_id, payload.version.clone());
+    state
+        .players_24h
+        .insert(payload.installation_id, payload.version.clone());
     state.active_players.run_pending_tasks();
+    state.players_1h.run_pending_tasks();
+    state.players_24h.run_pending_tasks();
 
     let (multiplayer_status, upgrade_version) =
         evaluate_client_status(&state, &payload.version, payload.protocol_hash);

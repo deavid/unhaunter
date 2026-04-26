@@ -2,6 +2,7 @@ mod api;
 mod config;
 mod procman;
 mod state;
+mod stats;
 
 use crate::state::HubState;
 use axum::{
@@ -27,8 +28,29 @@ async fn main() -> anyhow::Result<()> {
 
     let api_bind = config.api_bind.clone();
     let procman_bind = config.procman_bind.clone();
+    let stats_log_path = config.stats_log_path.clone().map(std::path::PathBuf::from);
 
     let state = HubState::new(config);
+
+    // Write a boot line to the stats log immediately.
+    if let Some(ref path) = stats_log_path {
+        stats::write_stats("boot", &state, path);
+    }
+
+    // Spawn hourly stats task.
+    if let Some(path) = stats_log_path.clone() {
+        let stats_state = state.clone();
+        tokio::spawn(async move {
+            // First tick fires immediately; skip it so we don't log twice on boot.
+            let mut interval =
+                tokio::time::interval(std::time::Duration::from_secs(3600));
+            interval.tick().await;
+            loop {
+                interval.tick().await;
+                stats::write_stats("hourly", &stats_state, &path);
+            }
+        });
+    }
 
     // Start ProcMan listener
     let procman_addr: SocketAddr = procman_bind.parse()?;

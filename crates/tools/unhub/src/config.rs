@@ -15,6 +15,7 @@ pub async fn load_config(path: impl AsRef<Path>) -> Result<HubConfig> {
             max_rooms_per_ip: 2,
             trust_proxy_headers: false,
             pow_difficulty: 20,
+            stats_log_path: None,
         };
         save_config(path, &default_config).await?;
         return Ok(default_config);
