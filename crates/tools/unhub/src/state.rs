@@ -17,6 +17,10 @@ pub struct HubState {
     pub room_to_ip: Arc<DashMap<String, std::net::IpAddr>>,
     pub nonces: Arc<DashMap<String, NonceEntry>>,
     pub active_players: Cache<Uuid, ()>,
+    /// Rolling 1-hour window: installation_id → version string (never written to disk).
+    pub players_1h: Cache<Uuid, String>,
+    /// Rolling 24-hour window: installation_id → version string (never written to disk).
+    pub players_24h: Cache<Uuid, String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -32,6 +36,10 @@ pub struct HubConfig {
     pub max_rooms_per_ip: usize,
     pub trust_proxy_headers: bool,
     pub pow_difficulty: u32,
+    /// Path to the append-only hourly stats log file.
+    /// If absent, stats logging is disabled.
+    #[serde(default)]
+    pub stats_log_path: Option<String>,
 }
 
 fn default_api_bind() -> String {
@@ -71,6 +79,14 @@ impl HubState {
             active_players: Cache::builder()
                 .max_capacity(100_000)
                 .time_to_live(Duration::from_secs(7200))
+                .build(),
+            players_1h: Cache::builder()
+                .max_capacity(100_000)
+                .time_to_live(Duration::from_secs(3600))
+                .build(),
+            players_24h: Cache::builder()
+                .max_capacity(100_000)
+                .time_to_live(Duration::from_secs(86400))
                 .build(),
         }
     }
