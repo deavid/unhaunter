@@ -25,8 +25,21 @@ ensure-dist-dir:
 
 # Upscale assets for release
 upscale-assets:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "${SKIP_UPSCALE:-0}" = "1" ]; then
+        echo "::group::upscale-assets"
+        echo "Skipping upscale-assets due to SKIP_UPSCALE=1"
+        echo "::endgroup::"
+        exit 0
+    fi
+    echo "::group::upscale-assets"
     echo "Ensuring upscaled assets are up to date..."
+    step_start=$SECONDS
     ./upscale_assets.sh auto
+    cargo run -p assetidx_updater --release
+    echo "[timing] upscale-assets=$((SECONDS - step_start))s"
+    echo "::endgroup::"
 
 # Build Linux Release Binary
 build-linux:
@@ -96,9 +109,6 @@ package-common: ensure-dist-dir upscale-assets
     recipe_start=$SECONDS
     echo "::group::package-common"
     echo "Packaging Common artifacts for {{_version}}..."
-    step_start=$SECONDS
-    cargo run -p assetidx_updater --release
-    echo "[timing] package-common:update-assetidx=$((SECONDS - step_start))s"
     step_start=$SECONDS
     rm -rf {{_dist_dir}}/common/*
     cp -r {{_assets_dir}} {{_dist_dir}}/common/assets
