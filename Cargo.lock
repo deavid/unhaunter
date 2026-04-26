@@ -7800,7 +7800,6 @@ dependencies = [
  "crossbeam-channel",
  "reqwest",
  "serde_json",
- "tokio",
  "uncommon-app-core",
  "uncommon-states-core",
  "unhub-client",

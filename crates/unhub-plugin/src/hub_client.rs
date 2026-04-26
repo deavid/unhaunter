@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::tasks::AsyncComputeTaskPool;
 use bevy_replicon::prelude::ProtocolHash;
 use crossbeam_channel::{Receiver, Sender};
 use unhub_client::protocol::{
@@ -13,25 +14,141 @@ pub struct HubConfig {
 
 #[derive(Resource)]
 pub struct HubClient {
-    pub tx: Sender<HubRequest>,
+    hub_url: String,
+    tx: Sender<HubResponse>,
     pub rx: Receiver<HubResponse>,
 }
 
-pub enum HubRequest {
-    CreateRoom {
-        player_uuid: uuid::Uuid,
-        game_version: String,
-        protocol_hash: u64,
-    },
-    JoinRoom {
-        code: String,
-        player_uuid: uuid::Uuid,
-    },
-    Ping {
-        installation_id: uuid::Uuid,
-        version: String,
-        protocol_hash: u64,
-    },
+impl HubClient {
+    pub fn create_room(&self, player_uuid: uuid::Uuid, game_version: String, protocol_hash: u64) {
+        let hub_url = self.hub_url.clone();
+        let tx = self.tx.clone();
+        AsyncComputeTaskPool::get()
+            .spawn(async move {
+                let client = reqwest::Client::new();
+                // 1. Request Challenge
+                let challenge_res = client
+                    .post(format!("{}/v1/challenge", hub_url))
+                    .json(&ChallengeRequest { player_uuid })
+                    .send()
+                    .await;
+                let Ok(resp) = challenge_res else {
+                    let _ = tx.send(HubResponse::Error("Failed to request challenge".to_string()));
+                    return;
+                };
+                if !resp.status().is_success() {
+                    let _ = tx.send(HubResponse::Error(format!("Challenge failed: {}", resp.status())));
+                    return;
+                }
+                let Ok(challenge) = resp.json::<ChallengeResponse>().await else {
+                    let _ = tx.send(HubResponse::Error("Failed to parse challenge response".to_string()));
+                    return;
+                };
+                // 2. Solve PoW (runs synchronously; brief block acceptable for hub call frequency)
+                let solution = unhub_client::solve_pow(&challenge.nonce, challenge.difficulty);
+                // 3. Create Room
+                match client
+                    .post(format!("{}/v1/rooms/create", hub_url))
+                    .json(&CreateRoomRequest {
+                        player_uuid,
+                        game_version,
+                        protocol_hash,
+                        nonce: challenge.nonce,
+                        solution,
+                    })
+                    .send()
+                    .await
+                {
+                    Ok(resp) if resp.status().is_success() => {
+                        if let Ok(data) = resp.json::<CreateRoomResponse>().await {
+                            let _ = tx.send(HubResponse::RoomCreated(data));
+                        }
+                    }
+                    Ok(resp) => {
+                        let _ = tx.send(HubResponse::Error(format!("Status: {}", resp.status())));
+                    }
+                    Err(e) => {
+                        let _ = tx.send(HubResponse::Error(e.to_string()));
+                    }
+                }
+            })
+            .detach();
+    }
+
+    pub fn join_room(&self, code: String, player_uuid: uuid::Uuid) {
+        let hub_url = self.hub_url.clone();
+        let tx = self.tx.clone();
+        AsyncComputeTaskPool::get()
+            .spawn(async move {
+                let client = reqwest::Client::new();
+                match client
+                    .post(format!("{}/v1/rooms/join/{}", hub_url, code))
+                    .json(&JoinRoomRequest { player_uuid })
+                    .send()
+                    .await
+                {
+                    Ok(resp) if resp.status().is_success() => {
+                        if let Ok(data) = resp.json::<JoinRoomResponse>().await {
+                            let _ = tx.send(HubResponse::RoomJoined(data));
+                        }
+                    }
+                    Ok(resp) => {
+                        let _ = tx.send(HubResponse::Error(format!("Status: {}", resp.status())));
+                    }
+                    Err(e) => {
+                        let _ = tx.send(HubResponse::Error(e.to_string()));
+                    }
+                }
+            })
+            .detach();
+    }
+
+    pub fn ping(&self, installation_id: uuid::Uuid, version: String, protocol_hash: u64) {
+        let hub_url = self.hub_url.clone();
+        let tx = self.tx.clone();
+        AsyncComputeTaskPool::get()
+            .spawn(async move {
+                let client = reqwest::Client::new();
+                match client
+                    .post(format!("{}/v1/ping", hub_url))
+                    .json(&PingRequest {
+                        installation_id,
+                        version,
+                        protocol_hash,
+                    })
+                    .timeout(std::time::Duration::from_secs(3))
+                    .send()
+                    .await
+                {
+                    Ok(resp) if resp.status().is_success() => {
+                        if let Ok(data) = resp.json::<PingResponse>().await {
+                            let _ = tx.send(HubResponse::PingResult {
+                                ok: data.ok,
+                                online_players: data.online_players_estimate,
+                                multiplayer_status: data.multiplayer_status,
+                                upgrade_version: data.upgrade_version,
+                            });
+                        } else {
+                            let _ = tx.send(HubResponse::PingResult {
+                                ok: false,
+                                online_players: 0,
+                                multiplayer_status: MultiplayerStatus::Unsupported,
+                                upgrade_version: None,
+                            });
+                        }
+                    }
+                    _ => {
+                        let _ = tx.send(HubResponse::PingResult {
+                            ok: false,
+                            online_players: 0,
+                            multiplayer_status: MultiplayerStatus::Unsupported,
+                            upgrade_version: None,
+                        });
+                    }
+                }
+            })
+            .detach();
+    }
 }
 
 pub enum HubResponse {
@@ -83,7 +200,6 @@ impl Default for HubPingTimer {
 }
 
 pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
-    let (tx_to_worker, rx_from_bevy) = crossbeam_channel::unbounded::<HubRequest>();
     let (tx_to_bevy, rx_from_worker) = crossbeam_channel::unbounded::<HubResponse>();
 
     let hub_url = if let Some(url) = &hub_config.hub_url {
@@ -93,168 +209,9 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
         "https://hub.unhaunter.com".to_string()
     };
 
-    let worker_hub_url = hub_url.clone();
-    std::thread::spawn(move || {
-        // Intentionally single-threaded: Hub requests are sequential (one at a
-        // time) and low-frequency. Multi-threading would add complexity and CPU
-        // overhead for no practical gain in this use case.
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-
-        rt.block_on(async {
-            let client = reqwest::Client::new();
-            while let Ok(req) = rx_from_bevy.recv() {
-                match req {
-                    HubRequest::CreateRoom {
-                        player_uuid,
-                        game_version,
-                        protocol_hash,
-                    } => {
-                        // 1. Request Challenge
-                        let challenge_res = client
-                            .post(format!("{}/v1/challenge", worker_hub_url))
-                            .json(&ChallengeRequest { player_uuid })
-                            .send()
-                            .await;
-
-                        if let Ok(resp) = challenge_res {
-                            if resp.status().is_success() {
-                                if let Ok(challenge) = resp.json::<ChallengeResponse>().await {
-                                    // 2. Solve PoW
-                                    let nonce = challenge.nonce.clone();
-                                    let difficulty = challenge.difficulty;
-                                    let solution = tokio::task::spawn_blocking(move || {
-                                        unhub_client::solve_pow(&nonce, difficulty)
-                                    })
-                                    .await
-                                    .unwrap_or_default();
-
-                                    // 3. Create Room
-                                    let create_res = client
-                                        .post(format!("{}/v1/rooms/create", worker_hub_url))
-                                        .json(&CreateRoomRequest {
-                                            player_uuid,
-                                            game_version,
-                                            protocol_hash,
-                                            nonce: challenge.nonce,
-                                            solution,
-                                        })
-                                        .send()
-                                        .await;
-
-                                    match create_res {
-                                        Ok(resp) => {
-                                            if resp.status().is_success() {
-                                                if let Ok(data) =
-                                                    resp.json::<CreateRoomResponse>().await
-                                                {
-                                                    let _ = tx_to_bevy
-                                                        .send(HubResponse::RoomCreated(data));
-                                                }
-                                            } else {
-                                                let _ = tx_to_bevy.send(HubResponse::Error(
-                                                    format!("Status: {}", resp.status()),
-                                                ));
-                                            }
-                                        }
-                                        Err(e) => {
-                                            let _ =
-                                                tx_to_bevy.send(HubResponse::Error(e.to_string()));
-                                        }
-                                    }
-                                } else {
-                                    let _ = tx_to_bevy.send(HubResponse::Error(
-                                        "Failed to parse challenge response".to_string(),
-                                    ));
-                                }
-                            } else {
-                                let _ = tx_to_bevy.send(HubResponse::Error(format!(
-                                    "Challenge failed: {}",
-                                    resp.status()
-                                )));
-                            }
-                        } else {
-                            let _ = tx_to_bevy.send(HubResponse::Error(
-                                "Failed to request challenge".to_string(),
-                            ));
-                        }
-                    }
-                    HubRequest::JoinRoom { code, player_uuid } => {
-                        let res = client
-                            .post(format!("{}/v1/rooms/join/{}", worker_hub_url, code))
-                            .json(&JoinRoomRequest { player_uuid })
-                            .send()
-                            .await;
-                        match res {
-                            Ok(resp) => {
-                                if resp.status().is_success() {
-                                    if let Ok(data) = resp.json::<JoinRoomResponse>().await {
-                                        let _ = tx_to_bevy.send(HubResponse::RoomJoined(data));
-                                    }
-                                } else {
-                                    let _ = tx_to_bevy.send(HubResponse::Error(format!(
-                                        "Status: {}",
-                                        resp.status()
-                                    )));
-                                }
-                            }
-                            Err(e) => {
-                                let _ = tx_to_bevy.send(HubResponse::Error(e.to_string()));
-                            }
-                        }
-                    }
-                    HubRequest::Ping {
-                        installation_id,
-                        version,
-                        protocol_hash,
-                    } => {
-                        let res = client
-                            .post(format!("{}/v1/ping", worker_hub_url))
-                            .json(&PingRequest {
-                                installation_id,
-                                version,
-                                protocol_hash,
-                            })
-                            .timeout(std::time::Duration::from_secs(3))
-                            .send()
-                            .await;
-                        match res {
-                            Ok(resp) if resp.status().is_success() => {
-                                if let Ok(data) = resp.json::<PingResponse>().await {
-                                    let _ = tx_to_bevy.send(HubResponse::PingResult {
-                                        ok: data.ok,
-                                        online_players: data.online_players_estimate,
-                                        multiplayer_status: data.multiplayer_status,
-                                        upgrade_version: data.upgrade_version,
-                                    });
-                                } else {
-                                    let _ = tx_to_bevy.send(HubResponse::PingResult {
-                                        ok: false,
-                                        online_players: 0,
-                                        multiplayer_status: MultiplayerStatus::Unsupported,
-                                        upgrade_version: None,
-                                    });
-                                }
-                            }
-                            _ => {
-                                let _ = tx_to_bevy.send(HubResponse::PingResult {
-                                    ok: false,
-                                    online_players: 0,
-                                    multiplayer_status: MultiplayerStatus::Unsupported,
-                                    upgrade_version: None,
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
-
     commands.insert_resource(HubClient {
-        tx: tx_to_worker,
+        hub_url,
+        tx: tx_to_bevy,
         rx: rx_from_worker,
     });
     commands.insert_resource(HubStatus::default());
@@ -280,11 +237,11 @@ pub fn ping_hub_system(
     if timer.0.just_finished()
         && let Some(profile) = &profile
     {
-        let _ = client.tx.send(HubRequest::Ping {
-            installation_id: profile.installation_id,
-            version: env!("CARGO_PKG_VERSION").to_string(),
-            protocol_hash: protocol_hash.0,
-        });
+        client.ping(
+            profile.installation_id,
+            env!("CARGO_PKG_VERSION").to_string(),
+            protocol_hash.0,
+        );
     }
 }
 
