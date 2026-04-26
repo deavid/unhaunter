@@ -30,11 +30,23 @@ jobs:
           toolchain: stable
           target: x86_64-pc-windows-gnu,wasm32-unknown-unknown
 
+      - name: Restore Cargo cache
+        uses: Swatinem/rust-cache@v2
+
       - name: Install just
         uses: extractions/setup-just@v3
 
-      - name: Build and Package Artifacts
-        run: just package-all
+      - name: Build and Package Linux
+        run: just package-linux
+
+      - name: Build and Package Windows
+        run: just package-windows
+
+      - name: Build and Package WASM
+        run: just package-wasm
+
+      - name: Build and Package Server
+        run: just package-server
 
       - name: Overwrite alpha-latest rolling release
         env:

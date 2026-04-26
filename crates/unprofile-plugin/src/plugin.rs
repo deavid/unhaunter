@@ -81,6 +81,9 @@ fn initialize_installation_id(
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     profile_config: Res<unprofile_core::config::ProfileConfig>,
 ) {
+    #[cfg(target_arch = "wasm32")]
+    let _ = profile_config;
+
     let mut installation_id = None;
 
     #[cfg(not(target_arch = "wasm32"))]

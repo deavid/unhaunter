@@ -131,3 +131,44 @@ pub fn solve_pow(nonce: &str, difficulty: u32) -> String {
         i += 1;
     }
 }
+
+pub async fn solve_pow_async(nonce: &str, difficulty: u32) -> String {
+    struct YieldNow(bool);
+    impl std::future::Future for YieldNow {
+        type Output = ();
+        fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+            if !self.0 {
+                self.0 = true;
+                cx.waker().wake_by_ref();
+                std::task::Poll::Pending
+            } else {
+                std::task::Poll::Ready(())
+            }
+        }
+    }
+
+    let mut i = 0u64;
+    loop {
+        let candidate = format!("{}:{}", nonce, i);
+        let hash = Sha256::digest(candidate.as_bytes());
+
+        // Check leading zero bits
+        let mut zero_bits = 0;
+        for byte in hash {
+            if byte == 0 {
+                zero_bits += 8;
+            } else {
+                zero_bits += byte.leading_zeros();
+                break;
+            }
+        }
+
+        if zero_bits >= difficulty {
+            return i.to_string();
+        }
+        i += 1;
+        if i % 1000 == 0 {
+            YieldNow(false).await;
+        }
+    }
+}

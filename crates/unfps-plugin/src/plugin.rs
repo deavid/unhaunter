@@ -9,6 +9,7 @@ impl Plugin for UnhaunterFpsPlugin {
         app.init_resource::<FpsLimitRemaining>();
         app.init_resource::<FpsLimitUsage>();
         crate::metrics::register_all(app);
+        #[cfg(not(target_arch = "wasm32"))]
         crate::systems::app_setup(app);
     }
 }

@@ -32,9 +32,12 @@ impl HubClient {
                     .json(&ChallengeRequest { player_uuid })
                     .send()
                     .await;
-                let Ok(resp) = challenge_res else {
-                    let _ = tx.send(HubResponse::Error("Failed to request challenge".to_string()));
-                    return;
+                let resp = match challenge_res {
+                    Ok(r) => r,
+                    Err(e) => {
+                        let _ = tx.send(HubResponse::Error(format!("Failed to request challenge: {}", e)));
+                        return;
+                    }
                 };
                 if !resp.status().is_success() {
                     let _ = tx.send(HubResponse::Error(format!("Challenge failed: {}", resp.status())));
@@ -44,8 +47,12 @@ impl HubClient {
                     let _ = tx.send(HubResponse::Error("Failed to parse challenge response".to_string()));
                     return;
                 };
-                // 2. Solve PoW (runs synchronously; brief block acceptable for hub call frequency)
+                // 2. Solve PoW
+                #[cfg(target_arch = "wasm32")]
+                let solution = unhub_client::solve_pow_async(&challenge.nonce, challenge.difficulty).await;
+                #[cfg(not(target_arch = "wasm32"))]
                 let solution = unhub_client::solve_pow(&challenge.nonce, challenge.difficulty);
+
                 // 3. Create Room
                 match client
                     .post(format!("{}/v1/rooms/create", hub_url))
@@ -60,8 +67,25 @@ impl HubClient {
                     .await
                 {
                     Ok(resp) if resp.status().is_success() => {
-                        if let Ok(data) = resp.json::<CreateRoomResponse>().await {
-                            let _ = tx.send(HubResponse::RoomCreated(data));
+                        let status = resp.status();
+                        match resp.text().await {
+                            Ok(body) => match serde_json::from_str::<CreateRoomResponse>(&body) {
+                                Ok(data) => {
+                                    let _ = tx.send(HubResponse::RoomCreated(data));
+                                }
+                                Err(e) => {
+                                    let _ = tx.send(HubResponse::Error(format!(
+                                        "Failed to parse create room response (status: {}): {}; body: {}",
+                                        status, e, body
+                                    )));
+                                }
+                            },
+                            Err(e) => {
+                                let _ = tx.send(HubResponse::Error(format!(
+                                    "Failed to read create room response body (status: {}): {}",
+                                    status, e
+                                )));
+                            }
                         }
                     }
                     Ok(resp) => {
@@ -88,8 +112,25 @@ impl HubClient {
                     .await
                 {
                     Ok(resp) if resp.status().is_success() => {
-                        if let Ok(data) = resp.json::<JoinRoomResponse>().await {
-                            let _ = tx.send(HubResponse::RoomJoined(data));
+                        let status = resp.status();
+                        match resp.text().await {
+                            Ok(body) => match serde_json::from_str::<JoinRoomResponse>(&body) {
+                                Ok(data) => {
+                                    let _ = tx.send(HubResponse::RoomJoined(data));
+                                }
+                                Err(e) => {
+                                    let _ = tx.send(HubResponse::Error(format!(
+                                        "Failed to parse join room response (status: {}): {}; body: {}",
+                                        status, e, body
+                                    )));
+                                }
+                            },
+                            Err(e) => {
+                                let _ = tx.send(HubResponse::Error(format!(
+                                    "Failed to read join room response body (status: {}): {}",
+                                    status, e
+                                )));
+                            }
                         }
                     }
                     Ok(resp) => {
