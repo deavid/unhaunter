@@ -6,7 +6,7 @@ use uncommon_app_core::random_seed;
 use uncommon_states_core::UIContextState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::deployedgear::DeployedGear;
-use ungear_core::components::playergear::PlayerGear;
+use ungear_core::components::playergear::{HeldObject, PlayerGear};
 use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::events::{
     RequestEquipGearFromVan, RequestUnequipHand, RequestUnequipInventorySlot,
@@ -23,9 +23,7 @@ use unreplicon_core::events::{PlayerNetworkDisconnected, PlayerNetworkReconnecte
 use unreplicon_core::messages::{RequestDrop, RequestGrab};
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
-use unreplicon_core::resources::{
-    AuthorityRole, ClientUuidMap, LocalPlayer, LocalPlayerRole, is_pure_client,
-};
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole, is_pure_client};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
@@ -141,14 +139,26 @@ fn handle_request_grab(
         (Entity, Option<&Owner>, Has<GearKind>, Has<Behavior>),
         With<FloorItemCollidable>,
     >,
+    mut q_players: Query<(&Owner, &mut PlayerGear)>,
 ) {
     for msg in reader.read() {
         let client_id = msg.client_id;
         let item_entity = msg.message.entity;
 
         if let Ok((entity, old_owner, is_gear, is_furniture)) = q_items.get(item_entity) {
+            // Find the PlayerGear component belonging to the client who sent the request.
+            let Some((_owner, mut player_gear)) = q_players
+                .iter_mut()
+                .find(|(o, _)| from_owner_id(o.0) == client_id)
+            else {
+                warn!(
+                    "handle_request_grab: could not find PlayerGear for client {:?}",
+                    client_id
+                );
+                continue;
+            };
+
             // Revoke simulation authority from the old driver if different from the new grabber.
-            // The client reconciliation loop will see Owner changed and drop LocallyOwned organically.
             if let Some(old_owner) = old_owner {
                 let old_client_id = from_owner_id(old_owner.0);
                 if old_client_id != client_id && old_client_id == ClientId::Server {
@@ -164,15 +174,31 @@ fn handle_request_grab(
             commands.entity(entity).remove::<DeployedGear>();
 
             if is_gear {
-                // Gear visual cleanup is handled reactively on clients.
+                if player_gear.left_hand.is_none() {
+                    player_gear.left_hand = Some(entity);
+                } else if player_gear.right_hand.is_none() {
+                    player_gear.right_hand = Some(entity);
+                } else if player_gear.inventory.len() < 2 {
+                    player_gear.inventory.push(entity);
+                } else {
+                    warn!(
+                        "handle_request_grab: gear {:?} grab failed; all slots full for {:?}",
+                        entity, client_id
+                    );
+                    continue;
+                }
             }
 
             if is_furniture {
-                // Furniture keeps its visuals while carried.
-            }
-
-            if client_id == ClientId::Server {
-                commands.entity(entity).insert(LocallyOwned);
+                if player_gear.held_item.is_none() {
+                    player_gear.held_item = Some(HeldObject { entity });
+                } else {
+                    warn!(
+                        "handle_request_grab: furniture {:?} grab failed; held_item occupied for {:?}",
+                        entity, client_id
+                    );
+                    continue;
+                }
             }
         }
     }
@@ -182,6 +208,7 @@ fn handle_request_drop(
     mut reader: MessageReader<FromClient<RequestDrop>>,
     mut commands: Commands,
     q_items: Query<(Entity, &Owner, Has<GearKind>, Has<Behavior>)>,
+    mut q_players: Query<(&Owner, &mut PlayerGear)>,
 ) {
     for msg in reader.read() {
         let client_id = msg.client_id;
@@ -190,6 +217,22 @@ fn handle_request_drop(
         if let Ok((entity, owner, is_gear, is_furniture)) = q_items.get(item_entity)
             && from_owner_id(owner.0) == client_id
         {
+            // Ensure the item is removed from the dropping player's PlayerGear component on the server side.
+            if let Some((_owner, mut player_gear)) = q_players
+                .iter_mut()
+                .find(|(o, _)| from_owner_id(o.0) == client_id)
+            {
+                if player_gear.left_hand == Some(entity) {
+                    player_gear.left_hand = None;
+                } else if player_gear.right_hand == Some(entity) {
+                    player_gear.right_hand = None;
+                } else if let Some(pos) = player_gear.inventory.iter().position(|&e| e == entity) {
+                    player_gear.inventory.remove(pos);
+                } else if player_gear.held_item.as_ref().map(|h| h.entity) == Some(entity) {
+                    player_gear.held_item = None;
+                }
+            }
+
             // Owner is intentionally retained — the dropping player remains the Designated Driver
             // and continues simulating the gear's internal state while it is on the floor.
             commands.entity(entity).insert(FloorItemCollidable);
@@ -923,52 +966,7 @@ pub(crate) fn app_setup(app: &mut App) {
             .run_if(is_pure_client),
     );
     app.add_systems(
-        Update,
-        client_gear_reconciliation_loop
-            .run_if(is_pure_client)
-            .run_if(in_state(UIContextState::InGame)),
-    );
-    app.add_systems(
         OnEnter(SimulationState::TearingDown),
         despawn_gear_on_teardown.run_if(resource_exists::<AuthorityRole>),
     );
-}
-
-fn client_gear_reconciliation_loop(
-    q_gear: Query<(Entity, &Owner, Has<SimulationAuthorized>, Has<LocallyOwned>), With<GearMarker>>,
-    local_player: Res<LocalPlayer>,
-    app_state: Res<State<UIContextState>>,
-    mut commands: Commands,
-    uuid_map: Res<ClientUuidMap>,
-) {
-    let ready = *app_state.get() == UIContextState::InGame;
-
-    let my_uuid = local_player.uuid;
-    let my_owner_id = uuid_map
-        .0
-        .iter()
-        .find(|(_, uuid)| **uuid == my_uuid)
-        .map(|(&owner_id, _)| owner_id);
-
-    // If our UUID is not yet in the map, bail — do NOT strip LocallyOwned during startup/reconnect.
-    let Some(my_owner_id) = my_owner_id else {
-        return;
-    };
-
-    for (entity, owner, has_sim_auth, has_locally_owned) in q_gear.iter() {
-        let is_mine = owner.0 == my_owner_id;
-
-        if is_mine {
-            if ready {
-                if has_sim_auth && !has_locally_owned {
-                    commands.entity(entity).insert(LocallyOwned);
-                }
-            } else if has_locally_owned {
-                commands.entity(entity).remove::<LocallyOwned>();
-            }
-        } else if has_locally_owned {
-            // Not mine (or reassigned to another player). Drop local control instantly.
-            commands.entity(entity).remove::<LocallyOwned>();
-        }
-    }
 }
