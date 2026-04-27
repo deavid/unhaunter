@@ -155,7 +155,7 @@ fn initialize_local_player_identity(
     // TODO: Remove LocalPlayer once installation identity can be read from a lower-tier
     // resource directly. For now unprofile-plugin writes the T2 wrapper so unreplicon no
     // longer needs a dedicated bridge system just to copy RuntimeInstallationId.
-    commands.insert_resource(LocalPlayer(Some(runtime_id.0)));
+    commands.insert_resource(LocalPlayer::new(runtime_id.0));
     info!("LocalPlayer identity set to UUID: {}", runtime_id.0);
 }
 

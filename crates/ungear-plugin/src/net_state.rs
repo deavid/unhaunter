@@ -943,9 +943,7 @@ fn client_gear_reconciliation_loop(
 ) {
     let ready = *app_state.get() == UIContextState::InGame;
 
-    let Some(my_uuid) = local_player.0 else {
-        return;
-    };
+    let my_uuid = local_player.uuid;
     let my_owner_id = uuid_map
         .0
         .iter()

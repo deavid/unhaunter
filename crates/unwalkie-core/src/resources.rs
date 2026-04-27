@@ -20,6 +20,7 @@ pub struct WalkiePlay {
     pub other_mission_event_count: HashMap<WalkieEvent, u32>,
     pub state: Option<WalkieSoundState>,
     pub current_voice_line: Option<VoiceLineData>,
+    pub current_seed: u64,
     pub last_message_time: f64,
     pub last_proposed_time: HashMap<WalkieEvent, f64>,
     pub truck_accessed: bool,
@@ -35,6 +36,7 @@ impl Default for WalkiePlay {
             played_events: Default::default(),
             state: Default::default(),
             current_voice_line: Default::default(),
+            current_seed: 0,
             last_message_time: -100.0,
             last_proposed_time: Default::default(),
             truck_accessed: Default::default(),
@@ -128,6 +130,7 @@ impl WalkiePlay {
             "WalkiePlay: {:?} - play dice: {}/{} (threshold: {})",
             event, dice, max_dice_value, dice_threshold
         );
+        info!("WALKIE_PLAY: queuing event {:?}", event);
         self.event = Some(event.clone());
         self.played_events.insert(
             event,
@@ -140,6 +143,7 @@ impl WalkiePlay {
         self.state = None;
         // Ensure this is reset:
         self.current_voice_line = None;
+        self.current_seed = random_seed::heavy_rng_seed();
         true
     }
 
@@ -236,7 +240,7 @@ impl WalkiePlay {
 
     /// Force-queue an event for local audio playback (called when the server broadcasts a
     /// `BroadcastWalkieEvent`). Bypasses all cooldown checks.
-    pub fn set_forced(&mut self, event: WalkieEvent, time: f64) {
+    pub fn set_forced(&mut self, event: WalkieEvent, time: f64, seed: u64) {
         let count = self
             .played_events
             .get(&event)
@@ -250,9 +254,11 @@ impl WalkiePlay {
                 last_played: time,
             },
         );
+        info!("WALKIE_PLAY: force-queuing event {:?}", event);
         self.event = Some(event);
         self.state = None;
         self.current_voice_line = None;
+        self.current_seed = seed;
         // last_message_time is updated when playback ends in walkie_play.rs
     }
 }

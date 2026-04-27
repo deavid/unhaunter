@@ -5,7 +5,6 @@ use uncommon_states_core::UIContextState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
-use unghost_core::difficulty_ext::DifficultyGhostExt;
 use unghost_core::resources::haunt_state::HauntState;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
@@ -124,9 +123,6 @@ fn trigger_journal_conflicting_evidence_system(
         return;
     }
 
-    // Get all ghosts available in the current difficulty
-    let available_ghosts = difficulty_info.ghost_set().as_vec();
-
     // 2. Check for Any Conflicting Evidence
     // Only trigger if NO ghost in the current difficulty matches the selected evidence
     let mut current_conflict_exists = false;
@@ -137,15 +133,8 @@ fn trigger_journal_conflicting_evidence_system(
 
             // Check if evidence is marked as found but is incorrect for the real ghost
             if button_data.status == TruckButtonState::Pressed && !actual_ghost_has_this_evidence {
-                // Additional check: Only conflict if NO ghost in difficulty has this evidence
-                let any_difficulty_ghost_has_evidence = available_ghosts
-                    .iter()
-                    .any(|&ghost| ghost.evidences().contains(&marked_evidence_type));
-
-                if !any_difficulty_ghost_has_evidence {
-                    current_conflict_exists = true;
-                    break;
-                }
+                current_conflict_exists = true;
+                break;
             }
 
             // Check if evidence is discarded but is correct for the real ghost

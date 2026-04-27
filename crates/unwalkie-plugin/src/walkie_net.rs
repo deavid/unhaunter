@@ -58,7 +58,10 @@ fn server_broadcast_on_event_set(
             debug!("WALKIE_NET: broadcasting {:?} to all clients", event);
             ev_broadcast.write(ToClients {
                 mode: SendMode::Broadcast,
-                message: BroadcastWalkieEvent { event },
+                message: BroadcastWalkieEvent {
+                    event,
+                    seed: walkie_play.current_seed,
+                },
             });
         }
     }
@@ -82,6 +85,6 @@ fn receive_walkie_broadcast(
             "WALKIE_NET: received broadcast {:?}, force-playing",
             msg.event
         );
-        walkie_play.set_forced(msg.event.clone(), time.elapsed_secs_f64());
+        walkie_play.set_forced(msg.event.clone(), time.elapsed_secs_f64(), msg.seed);
     }
 }
