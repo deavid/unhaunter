@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
 use rand::prelude::*;
+use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::roomdb::RoomTopology;
 use uncommon_app_core::random_seed;
@@ -600,5 +601,10 @@ fn calculate_movement_penalties(
 
 /// Spawns a shared salty-trace skeleton at the given tile.
 pub(crate) fn spawn_salty_trace(commands: &mut Commands, tile_position: BoardPosition) {
-    commands.spawn((SaltyTrace, tile_position.to_position(), Replicated));
+    commands.spawn((
+        SaltyTrace,
+        tile_position.to_position(),
+        Replicated,
+        GameSprite,
+    ));
 }

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{Channel, ClientMessageAppExt, FromClient};
+use unboard_core::entity::GameSprite;
 use ungearitems_core::events::SageHitNetMessage;
 use unreplicon_core::resources::AuthorityRole;
 
@@ -48,6 +49,7 @@ pub(crate) fn handle_salt_drop_requests(
                 visual_priority: pos[3],
             },
             bevy_replicon::prelude::Replicated,
+            GameSprite,
         ));
     }
 }

@@ -7792,6 +7792,7 @@ dependencies = [
  "bevy_replicon",
  "enum-iterator",
  "rand 0.10.1",
+ "unboard-core",
  "uncommon-app-core",
  "uncommon-states-core",
  "undifficulty-core",
