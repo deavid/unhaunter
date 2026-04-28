@@ -1,8 +1,8 @@
 use bevy::prelude::*;
+use unboard_core::entity::GameSprite;
 use ungearitems_core::components::salt::{
     SaltData, SaltPile, SaltPileArmed, SaltPileArmingTimer, SaltPileConsumed, SaltPileConsumedTimer,
 };
-use unboard_core::entity::GameSprite;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unreplicon_core::resources::AuthorityRole;
 use unspatial_core::position::Position;

@@ -24,6 +24,5 @@ uninteraction-core = { workspace = true }
 unmetrics-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unspatial-core = { workspace = true }
-unplayer-core = { workspace = true }
 rand = { workspace = true }
 enum-iterator = { workspace = true }

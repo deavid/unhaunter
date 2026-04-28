@@ -14,6 +14,7 @@ use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
+use unreplicon_core::repellent_tracker::RepellentCraftTracker;
 use unspatial_core::position::Position;
 
 pub(crate) fn system_electronic_interference(
@@ -109,13 +110,17 @@ pub(crate) fn handle_craft_repellent_request(
     mut ev_craft: MessageReader<RequestCraftRepellent>,
     mut q_gear: Query<(&mut PlayerGear, &Owner)>,
     gear_registry: Res<GearSpawnerRegistry>,
-    q_gearkind: Query<&GearKind>,
+    q_repellent: Query<&RepellentFlask>,
+    mut q_crafttracker: Query<&mut RepellentCraftTracker>,
     mut commands: Commands,
 ) {
     let events: Vec<RequestCraftRepellent> = ev_craft.read().cloned().collect();
     if events.is_empty() {
         return;
     }
+    let Ok(mut craft_tracker) = q_crafttracker.single_mut() else {
+        return;
+    };
 
     debug!(
         "REPELLENT: authority craft handler received {} request(s)",
@@ -144,30 +149,39 @@ pub(crate) fn handle_craft_repellent_request(
             Right,
             Inv(usize),
         }
-        let mut old_flask: Option<(Entity, FlaskSlot)> = None;
+        let mut old_flask: Option<(Entity, FlaskSlot, RepellentFlask)> = None;
 
         if let Some(e) = p_gear.right_hand
-            && let Ok(kind) = q_gearkind.get(e)
-            && *kind == GearKind::RepellentFlask
+            && let Ok(repellent) = q_repellent.get(e)
         {
-            old_flask = Some((e, FlaskSlot::Right));
+            old_flask = Some((e, FlaskSlot::Right, repellent.clone()));
         }
         if old_flask.is_none()
             && let Some(e) = p_gear.left_hand
-            && let Ok(kind) = q_gearkind.get(e)
-            && *kind == GearKind::RepellentFlask
+            && let Ok(repellent) = q_repellent.get(e)
         {
-            old_flask = Some((e, FlaskSlot::Left));
+            old_flask = Some((e, FlaskSlot::Left, repellent.clone()));
         }
         if old_flask.is_none() {
             for (idx, &e) in p_gear.inventory.iter().enumerate() {
-                if let Ok(kind) = q_gearkind.get(e)
-                    && *kind == GearKind::RepellentFlask
-                {
-                    old_flask = Some((e, FlaskSlot::Inv(idx)));
+                if let Ok(repellent) = q_repellent.get(e) {
+                    old_flask = Some((e, FlaskSlot::Inv(idx), repellent.clone()));
                     break;
                 }
             }
+        }
+        let is_full_old_repellent = {
+            if let Some((_, _, repellent)) = &old_flask {
+                !repellent.active
+                    && repellent.liquid_content.is_some()
+                    && repellent.qty == RepellentFlask::MAX_QTY
+            } else {
+                false
+            }
+        };
+        if !is_full_old_repellent && !craft_tracker.can_craft() {
+            warn!("REPELLENT: Can't craft - missing compatible flask");
+            return;
         }
 
         let new_entity = gear_registry.spawn(&mut commands, GearKind::RepellentFlask);
@@ -192,7 +206,7 @@ pub(crate) fn handle_craft_repellent_request(
             active: false,
         });
 
-        if let Some((old_e, slot)) = old_flask {
+        if let Some((old_e, slot, _)) = old_flask {
             match slot {
                 FlaskSlot::Left => p_gear.left_hand = Some(new_entity),
                 FlaskSlot::Right => p_gear.right_hand = Some(new_entity),
@@ -209,7 +223,10 @@ pub(crate) fn handle_craft_repellent_request(
             }
             p_gear.right_hand = Some(new_entity);
         }
-
+        if !is_full_old_repellent {
+            // If we had an old repellent was a full bottle of something, we do not charge craft. Swap is for free.
+            craft_tracker.craft();
+        }
         debug!(
             "REPELLENT: finished craft request ghost_type={:?} resulting gear state left={:?} right={:?} inventory={:?}",
             ghost_type, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
