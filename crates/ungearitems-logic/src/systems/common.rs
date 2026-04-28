@@ -12,7 +12,6 @@ use ungearitems_core::events::RequestCraftRepellent;
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::MainPlayer;
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unspatial_core::position::Position;
@@ -108,10 +107,8 @@ pub(crate) fn system_battery_drain(
 
 pub(crate) fn handle_craft_repellent_request(
     mut ev_craft: MessageReader<RequestCraftRepellent>,
-    mut q_gear: Query<&mut PlayerGear, With<MainPlayer>>,
-    q_player_gear_entities: Query<(Entity, Has<MainPlayer>, Option<&Owner>), With<PlayerGear>>,
+    mut q_gear: Query<(&mut PlayerGear, &Owner)>,
     gear_registry: Res<GearSpawnerRegistry>,
-    mut q_repellent: Query<&mut RepellentFlask>,
     q_gearkind: Query<&GearKind>,
     mut commands: Commands,
 ) {
@@ -125,180 +122,92 @@ pub(crate) fn handle_craft_repellent_request(
         events.len()
     );
 
-    let Ok(mut p_gear) = q_gear.single_mut() else {
-        let candidates: Vec<(Entity, bool, Option<OwnerId>)> = q_player_gear_entities
-            .iter()
-            .map(|(entity, is_main_player, owner)| {
-                (entity, is_main_player, owner.map(|owner| owner.0))
-            })
-            .collect();
-        warn!(
-            "REPELLENT: craft handler received {} request(s) but could not resolve a unique MainPlayer PlayerGear; candidates={:?}",
-            events.len(),
-            candidates
-        );
-        return;
-    };
-
     for ev in events {
         let ghost_type = ev.ghost_type;
 
-        debug!(
-            "REPELLENT: processing craft request ghost_type={:?} with gear state left={:?} right={:?} inventory={:?}",
-            ghost_type, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
-        );
-
-        // 1) Find an existing RepellentFlask in any slot.
-        let mut flask_entity: Option<Entity> = None;
-
-        if let Some(e) = p_gear.right_hand {
-            match q_gearkind.get(e) {
-                Ok(kind) if *kind == GearKind::RepellentFlask => {
-                    debug!(
-                        "REPELLENT: found existing flask in right hand entity {:?}",
-                        e
-                    );
-                    flask_entity = Some(e);
-                }
-                Ok(kind) => {
-                    debug!(
-                        "REPELLENT: right hand entity {:?} is {:?}, not RepellentFlask",
-                        e, kind
-                    );
-                }
-                Err(err) => {
-                    warn!(
-                        "REPELLENT: failed to read GearKind for right hand entity {:?}: {}",
-                        e, err
-                    );
-                }
-            }
-        }
-
-        if flask_entity.is_none()
-            && let Some(e) = p_gear.left_hand
-        {
-            match q_gearkind.get(e) {
-                Ok(kind) if *kind == GearKind::RepellentFlask => {
-                    debug!(
-                        "REPELLENT: found existing flask in left hand entity {:?}",
-                        e
-                    );
-                    flask_entity = Some(e);
-                }
-                Ok(kind) => {
-                    debug!(
-                        "REPELLENT: left hand entity {:?} is {:?}, not RepellentFlask",
-                        e, kind
-                    );
-                }
-                Err(err) => {
-                    warn!(
-                        "REPELLENT: failed to read GearKind for left hand entity {:?}: {}",
-                        e, err
-                    );
-                }
-            }
-        }
-
-        if flask_entity.is_none() {
-            for &e in &p_gear.inventory {
-                match q_gearkind.get(e) {
-                    Ok(kind) if *kind == GearKind::RepellentFlask => {
-                        debug!(
-                            "REPELLENT: found existing flask in inventory entity {:?}",
-                            e
-                        );
-                        flask_entity = Some(e);
-                        break;
-                    }
-                    Ok(kind) => {
-                        debug!(
-                            "REPELLENT: inventory entity {:?} is {:?}, not RepellentFlask",
-                            e, kind
-                        );
-                    }
-                    Err(err) => {
-                        warn!(
-                            "REPELLENT: failed to read GearKind for inventory entity {:?}: {}",
-                            e, err
-                        );
-                    }
-                }
-            }
-        }
-
-        // 2) If none found, spawn a new flask and place it in the right hand.
-        let is_new = flask_entity.is_none();
-        if is_new {
-            let entity = gear_registry.spawn(&mut commands, GearKind::RepellentFlask);
-            let rng_val = random_seed::heavy_rng_seed();
-            let net_id = NetworkId(rng_val.max(1000));
-
-            debug!(
-                "REPELLENT: spawning new RepellentFlask entity {:?} net_id={:?}",
-                entity, net_id
-            );
-
-            commands.entity(entity).insert((
-                net_id,
-                Replicated,
-                Owner(OwnerId::Server),
-                LocallyOwned,
-            ));
-
-            // Put in right hand, moving old item to inventory or despawning if full.
-            if let Some(old_rh) = p_gear.right_hand.take() {
-                if p_gear.inventory.len() < 2 {
-                    debug!(
-                        "REPELLENT: moving existing right hand entity {:?} into inventory to make room for new flask",
-                        old_rh
-                    );
-                    p_gear.inventory.push(old_rh);
-                } else {
-                    warn!(
-                        "REPELLENT: inventory full while crafting; despawning previous right hand entity {:?} to make room for new flask",
-                        old_rh
-                    );
-                    commands.entity(old_rh).despawn();
-                }
-            }
-            p_gear.right_hand = Some(entity);
-            flask_entity = Some(entity);
-        }
-
-        // 3) Fill the flask.
-        let Some(entity) = flask_entity else {
-            error!(
-                "handle_craft_repellent_request: flask_entity is None after search and spawn — should be unreachable"
+        let Ok((mut p_gear, player_owner)) = q_gear.get_mut(ev.player_entity) else {
+            warn!(
+                "REPELLENT: craft handler received request for entity {:?} but could not find its PlayerGear",
+                ev.player_entity
             );
             continue;
         };
 
-        if is_new {
-            // Insert the desired state directly; the entity is too new for the query.
-            debug!(
-                "REPELLENT: inserting freshly crafted flask state on new entity {:?} ghost_type={:?}",
-                entity, ghost_type
-            );
-            commands.entity(entity).insert(RepellentFlask {
-                liquid_content: Some(ghost_type),
-                qty: RepellentFlask::MAX_QTY,
-                active: false,
-            });
-        } else if let Ok(mut flask) = q_repellent.get_mut(entity) {
-            debug!(
-                "REPELLENT: refilling existing flask entity {:?} with ghost_type={:?}",
-                entity, ghost_type
-            );
-            flask.liquid_content = Some(ghost_type);
-            flask.qty = RepellentFlask::MAX_QTY;
-            flask.active = false;
+        debug!(
+            "REPELLENT: processing craft request ghost_type={:?} for player {:?} with gear state left={:?} right={:?} inventory={:?}",
+            ghost_type, ev.player_entity, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
+        );
+
+        // 1) Find an existing RepellentFlask in any slot.
+        enum FlaskSlot {
+            Left,
+            Right,
+            Inv(usize),
+        }
+        let mut old_flask: Option<(Entity, FlaskSlot)> = None;
+
+        if let Some(e) = p_gear.right_hand
+            && let Ok(kind) = q_gearkind.get(e)
+            && *kind == GearKind::RepellentFlask
+        {
+            old_flask = Some((e, FlaskSlot::Right));
+        }
+        if old_flask.is_none()
+            && let Some(e) = p_gear.left_hand
+            && let Ok(kind) = q_gearkind.get(e)
+            && *kind == GearKind::RepellentFlask
+        {
+            old_flask = Some((e, FlaskSlot::Left));
+        }
+        if old_flask.is_none() {
+            for (idx, &e) in p_gear.inventory.iter().enumerate() {
+                if let Ok(kind) = q_gearkind.get(e)
+                    && *kind == GearKind::RepellentFlask
+                {
+                    old_flask = Some((e, FlaskSlot::Inv(idx)));
+                    break;
+                }
+            }
+        }
+
+        let new_entity = gear_registry.spawn(&mut commands, GearKind::RepellentFlask);
+        let rng_val = random_seed::heavy_rng_seed();
+        let net_id = NetworkId(rng_val.max(1000));
+
+        let mut ec = commands.entity(new_entity);
+        ec.insert((
+            net_id,
+            Replicated,
+            Owner(player_owner.0),
+            unreplicon_core::components::SimulationAuthorized,
+        ));
+
+        if player_owner.0 == OwnerId::Server {
+            ec.insert(LocallyOwned);
+        }
+
+        ec.insert(RepellentFlask {
+            liquid_content: Some(ghost_type),
+            qty: RepellentFlask::MAX_QTY,
+            active: false,
+        });
+
+        if let Some((old_e, slot)) = old_flask {
+            match slot {
+                FlaskSlot::Left => p_gear.left_hand = Some(new_entity),
+                FlaskSlot::Right => p_gear.right_hand = Some(new_entity),
+                FlaskSlot::Inv(idx) => p_gear.inventory[idx] = new_entity,
+            }
+            commands.entity(old_e).despawn();
         } else {
-            error!(
-                "handle_craft_repellent_request: Failed to get RepellentFlask on entity {:?}",
-                entity
-            );
+            if let Some(old_rh) = p_gear.right_hand.take() {
+                if p_gear.inventory.len() < 2 {
+                    p_gear.inventory.push(old_rh);
+                } else {
+                    commands.entity(old_rh).despawn();
+                }
+            }
+            p_gear.right_hand = Some(new_entity);
         }
 
         debug!(

@@ -8,6 +8,7 @@ use uninvestigation_core::ghost::GhostType;
 #[derive(Clone, Debug, Message)]
 pub struct RequestCraftRepellent {
     pub ghost_type: GhostType,
+    pub player_entity: Entity,
 }
 
 /// Sent from a pure join client to the dedicated server every frame that local

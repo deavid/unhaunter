@@ -15,7 +15,7 @@ use ungear_core::messages::{ExportPlayerGearMessage, TruckLoadoutAction, TruckLo
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
 use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
-use ungearitems_core::components::repellentflask::RepellentFlask;
+use ungearitems_core::events::RequestCraftRepellent;
 use unmission_core::types::SimulationState;
 use unplayer_core::components::{MainPlayer, PlayerDisconnected, PlayerSprite};
 use unreplicon_core::components::{NetworkEntityReady, SimulationAuthorized};
@@ -268,11 +268,11 @@ fn handle_request_drop(
 
 fn handle_truck_loadout_message(
     mut reader: MessageReader<FromClient<TruckLoadoutMessage>>,
-    mut q_players: Query<(&Owner, &mut PlayerGear)>,
+    mut q_players: Query<(Entity, &Owner, &mut PlayerGear)>,
     gear_registry: Res<GearSpawnerRegistry>,
-    q_gearkind: Query<&GearKind>,
-    mut q_repellent: Query<&mut RepellentFlask>,
+    _q_gearkind: Query<&GearKind>,
     mut commands: Commands,
+    mut ev_craft_req: MessageWriter<RequestCraftRepellent>,
 ) {
     for msg in reader.read() {
         let sender_id = msg.client_id;
@@ -281,13 +281,15 @@ fn handle_truck_loadout_message(
             msg.message.action, sender_id
         );
 
-        let Some((owner, mut p_gear)) = q_players.iter_mut().find_map(|(owner, gear)| {
-            if from_owner_id(owner.0) == sender_id {
-                Some((owner, gear))
-            } else {
-                None
-            }
-        }) else {
+        let Some((player_entity, owner, mut p_gear)) =
+            q_players.iter_mut().find_map(|(entity, owner, gear)| {
+                if from_owner_id(owner.0) == sender_id {
+                    Some((entity, owner, gear))
+                } else {
+                    None
+                }
+            })
+        else {
             warn!(
                 "TRUCK_NET_FAIL: Could not find PlayerGear component for client {:?}",
                 sender_id
@@ -340,166 +342,13 @@ fn handle_truck_loadout_message(
                 );
             }
             TruckLoadoutAction::CraftRepellent(ghost_type) => {
-                debug!(
-                    "REPELLENT: Received CraftRepellent({:?}) from client {:?}",
-                    ghost_type, sender_id
-                );
-
-                let mut flask_entity: Option<Entity> = None;
-
-                if let Some(entity) = p_gear.right_hand {
-                    match q_gearkind.get(entity) {
-                        Ok(kind) if *kind == GearKind::RepellentFlask => {
-                            debug!(
-                                "REPELLENT: found existing server-side flask in right hand entity {:?}",
-                                entity
-                            );
-                            flask_entity = Some(entity);
-                        }
-                        Ok(kind) => {
-                            debug!(
-                                "REPELLENT: server right hand entity {:?} is {:?}, not RepellentFlask",
-                                entity, kind
-                            );
-                        }
-                        Err(err) => {
-                            warn!(
-                                "REPELLENT: failed to read GearKind for server right hand entity {:?}: {}",
-                                entity, err
-                            );
-                        }
-                    }
-                }
-
-                if flask_entity.is_none()
-                    && let Some(entity) = p_gear.left_hand
-                {
-                    match q_gearkind.get(entity) {
-                        Ok(kind) if *kind == GearKind::RepellentFlask => {
-                            debug!(
-                                "REPELLENT: found existing server-side flask in left hand entity {:?}",
-                                entity
-                            );
-                            flask_entity = Some(entity);
-                        }
-                        Ok(kind) => {
-                            debug!(
-                                "REPELLENT: server left hand entity {:?} is {:?}, not RepellentFlask",
-                                entity, kind
-                            );
-                        }
-                        Err(err) => {
-                            warn!(
-                                "REPELLENT: failed to read GearKind for server left hand entity {:?}: {}",
-                                entity, err
-                            );
-                        }
-                    }
-                }
-
-                if flask_entity.is_none() {
-                    for &entity in &p_gear.inventory {
-                        match q_gearkind.get(entity) {
-                            Ok(kind) if *kind == GearKind::RepellentFlask => {
-                                debug!(
-                                    "REPELLENT: found existing server-side flask in inventory entity {:?}",
-                                    entity
-                                );
-                                flask_entity = Some(entity);
-                                break;
-                            }
-                            Ok(kind) => {
-                                debug!(
-                                    "REPELLENT: server inventory entity {:?} is {:?}, not RepellentFlask",
-                                    entity, kind
-                                );
-                            }
-                            Err(err) => {
-                                warn!(
-                                    "REPELLENT: failed to read GearKind for server inventory entity {:?}: {}",
-                                    entity, err
-                                );
-                            }
-                        }
-                    }
-                }
-
-                let is_new = flask_entity.is_none();
-                if is_new {
-                    let entity = gear_registry.spawn(&mut commands, GearKind::RepellentFlask);
-                    let rng_val = uncommon_app_core::random_seed::heavy_rng_seed();
-                    let net_id = NetworkId(rng_val.max(1000));
-
-                    debug!(
-                        "REPELLENT: spawning server-side RepellentFlask entity {:?} net_id={:?} for client {:?}",
-                        entity, net_id, sender_id
-                    );
-
-                    commands.entity(entity).insert((
-                        Replicated,
-                        Owner(owner.0),
-                        net_id,
-                        SimulationAuthorized,
-                    ));
-
-                    if let Some(old_rh) = p_gear.right_hand.take() {
-                        if p_gear.inventory.len() < 2 {
-                            debug!(
-                                "REPELLENT: moving previous server right hand entity {:?} into inventory for client {:?}",
-                                old_rh, sender_id
-                            );
-                            p_gear.inventory.push(old_rh);
-                        } else {
-                            warn!(
-                                "REPELLENT: inventory full while crafting for client {:?}; despawning previous right hand entity {:?}",
-                                sender_id, old_rh
-                            );
-                            commands.entity(old_rh).despawn();
-                        }
-                    }
-
-                    p_gear.right_hand = Some(entity);
-                    flask_entity = Some(entity);
-                }
-
-                let Some(entity) = flask_entity else {
-                    error!(
-                        "REPELLENT: flask_entity is None after search and spawn for client {:?}",
-                        sender_id
-                    );
-                    continue;
-                };
-
-                if is_new {
-                    debug!(
-                        "REPELLENT: inserting crafted flask state on new entity {:?} ghost_type={:?} for client {:?}",
-                        entity, ghost_type, sender_id
-                    );
-                    commands.entity(entity).insert(RepellentFlask {
-                        liquid_content: Some(ghost_type),
-                        qty: RepellentFlask::MAX_QTY,
-                        active: false,
-                    });
-                } else if let Ok(mut flask) = q_repellent.get_mut(entity) {
-                    debug!(
-                        "REPELLENT: refilling existing server-side flask entity {:?} with ghost_type={:?} for client {:?}",
-                        entity, ghost_type, sender_id
-                    );
-                    flask.liquid_content = Some(ghost_type);
-                    flask.qty = RepellentFlask::MAX_QTY;
-                    flask.active = false;
-                } else {
-                    error!(
-                        "REPELLENT: failed to get RepellentFlask on entity {:?} for client {:?}",
-                        entity, sender_id
-                    );
-                    continue;
-                }
-
                 info!(
-                    "REPELLENT: crafted/refilled repellent for client {:?}; left={:?} right={:?} inv={:?}",
-                    sender_id, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
+                    "TRUCK_NET: Translating CraftRepellent intent to RequestCraftRepellent event"
                 );
+                ev_craft_req.write(RequestCraftRepellent {
+                    ghost_type,
+                    player_entity,
+                });
             }
             TruckLoadoutAction::ClearHand(hand) => {
                 let entity = match hand {

@@ -99,12 +99,19 @@ fn truckui_event_handle(
                         ev_loadout.write(TruckLoadoutMessage {
                             action: TruckLoadoutAction::CraftRepellent(ghost_type),
                         });
-                    } else {
+                    } else if let Some(player_entity) = in_truck_main_players.first().copied() {
                         debug!(
                             "REPELLENT: Craft repellent requested on authority node; writing local RequestCraftRepellent for ghost_type={:?}",
                             ghost_type
                         );
-                        ev_craft_req.write(RequestCraftRepellent { ghost_type });
+                        ev_craft_req.write(RequestCraftRepellent {
+                            ghost_type,
+                            player_entity,
+                        });
+                    } else {
+                        warn!(
+                            "REPELLENT: Craft repellent requested on authority node, but no MainPlayer found in truck!"
+                        );
                     }
                     craft_tracker.craft();
 

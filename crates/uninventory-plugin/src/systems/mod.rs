@@ -315,9 +315,11 @@ pub(crate) fn despawn_gear_on_player_death(
 }
 
 fn client_sync_inventory_state(
-    q_player: Query<&PlayerGear, With<LocallyOwned>>,
+    q_player: Query<&PlayerGear, (With<LocallyOwned>, Changed<PlayerGear>)>,
     mut commands: Commands,
 ) {
+    // NOTE: we filter by "Changed" because otherwise we would be constantly rewritting and on top of that if we want
+    // to despawn the entities here it would have been receiving commands constantly.
     for gear in q_player.iter() {
         if let Some(e) = gear.left_hand {
             commands.entity(e).insert((
