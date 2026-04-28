@@ -8737,6 +8737,7 @@ dependencies = [
  "uncommon-states-core",
  "undifficulty-core",
  "ungear-core",
+ "ungearitems-core",
  "unghost-core",
  "uninput-core",
  "uninvestigation-core",

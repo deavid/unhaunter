@@ -130,15 +130,6 @@ fn truckui_event_handle(
                             spatial_scale: None,
                             ..Default::default()
                         });
-
-                    // Automatically exit the truck after crafting repellent
-                    for entity in in_truck_main_players {
-                        debug!(
-                            "REPELLENT: Removing InTruck from MainPlayer entity {:?} after craft request",
-                            entity
-                        );
-                        commands.entity(entity).remove::<InTruck>();
-                    }
                 } else {
                     warn!(
                         "REPELLENT: CraftRepellent requested but no ghost type selected in journal"
