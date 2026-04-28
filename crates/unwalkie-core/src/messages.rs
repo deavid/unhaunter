@@ -18,4 +18,6 @@ pub struct ProposeWalkieEvent {
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct BroadcastWalkieEvent {
     pub event: WalkieEvent,
+    /// Seed for deterministic voice line selection.
+    pub seed: u64,
 }

@@ -1,6 +1,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use bevy_replicon::prelude::Remote;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
@@ -10,24 +11,30 @@ use uninvestigation_core::resources::ghost_guess::GhostGuess;
 use unmission_core::resources::MissionEndRequested;
 use unmission_core::types::MissionEvent;
 use unplayer_core::components::MainPlayer;
+use unreplicon_core::components::MissionGoalEntity;
 use unreplicon_core::messages::{MissionEndReason, RequestEndMission};
+use unreplicon_core::repellent_tracker::RepellentCraftTracker;
 use unreplicon_core::resources::{AuthorityRole, LobbyPresenceRole, LocalPlayerRole};
 use unsettings_core::audio::AudioSettings;
 use untruck_core::components::in_truck::InTruck;
 use untruck_core::events::truck::TruckUIEvent;
-use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 
 // Initialize the repellent craft tracker when entering a mission
 pub(crate) fn init_repellent_tracker(
-    mut craft_tracker: ResMut<RepellentCraftTracker>,
+    q_missiongoal: Query<Entity, (Added<MissionGoalEntity>, Without<Remote>)>,
     difficulty: Res<CurrentDifficulty>,
+    mut commands: Commands,
 ) {
-    craft_tracker.reset(difficulty.0.repellent_craft_limit());
-}
-
-// Reset the repellent craft tracker when leaving the game
-pub(crate) fn reset_repellent_tracker(mut craft_tracker: ResMut<RepellentCraftTracker>) {
-    craft_tracker.reset(0);
+    for e in q_missiongoal {
+        let craft_limit = difficulty.0.repellent_craft_limit();
+        info!(
+            "Setting MissionGoal RepellentCraftTracker to {craft_limit} from {:?}",
+            difficulty.0
+        );
+        commands
+            .entity(e)
+            .insert(RepellentCraftTracker::new(craft_limit));
+    }
 }
 
 #[derive(SystemParam)]
@@ -41,7 +48,6 @@ fn truckui_event_handle(
     mut ev_truckui: MessageReader<TruckUIEvent>,
     gg: Res<GhostGuess>,
     audio_settings: Res<Persistent<AudioSettings>>,
-    mut craft_tracker: ResMut<RepellentCraftTracker>,
     mut ev_craft_req: MessageWriter<RequestCraftRepellent>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
     mut ev_end_mission: MessageWriter<RequestEndMission>,
@@ -80,15 +86,13 @@ fn truckui_event_handle(
             TruckUIEvent::CraftRepellent => {
                 if let Some(ghost_type) = gg.ghost_type {
                     let in_truck_main_players: Vec<Entity> = q_player.iter().collect();
-                    let before_remaining = craft_tracker.remaining_crafts();
 
                     debug!(
-                        "REPELLENT: TruckUIEvent::CraftRepellent received authority={} local_player_role={} main_players_in_truck={:?} ghost_type={:?} remaining_before={}",
+                        "REPELLENT: TruckUIEvent::CraftRepellent received authority={} local_player_role={} main_players_in_truck={:?} ghost_type={:?}",
                         authority.is_some(),
                         local_player_role.is_some(),
                         in_truck_main_players,
                         ghost_type,
-                        before_remaining
                     );
 
                     if authority.is_none() {
@@ -99,20 +103,20 @@ fn truckui_event_handle(
                         ev_loadout.write(TruckLoadoutMessage {
                             action: TruckLoadoutAction::CraftRepellent(ghost_type),
                         });
-                    } else {
+                    } else if let Some(player_entity) = in_truck_main_players.first().copied() {
                         debug!(
                             "REPELLENT: Craft repellent requested on authority node; writing local RequestCraftRepellent for ghost_type={:?}",
                             ghost_type
                         );
-                        ev_craft_req.write(RequestCraftRepellent { ghost_type });
+                        ev_craft_req.write(RequestCraftRepellent {
+                            ghost_type,
+                            player_entity,
+                        });
+                    } else {
+                        warn!(
+                            "REPELLENT: Craft repellent requested on authority node, but no MainPlayer found in truck!"
+                        );
                     }
-                    craft_tracker.craft();
-
-                    debug!(
-                        "REPELLENT: Craft request dispatched for ghost_type={:?}; remaining_after={}",
-                        ghost_type,
-                        craft_tracker.remaining_crafts()
-                    );
 
                     commands
                         .spawn(AudioPlayer::new(
@@ -130,15 +134,6 @@ fn truckui_event_handle(
                             spatial_scale: None,
                             ..Default::default()
                         });
-
-                    // Automatically exit the truck after crafting repellent
-                    for entity in in_truck_main_players {
-                        debug!(
-                            "REPELLENT: Removing InTruck from MainPlayer entity {:?} after craft request",
-                            entity
-                        );
-                        commands.entity(entity).remove::<InTruck>();
-                    }
                 } else {
                     warn!(
                         "REPELLENT: CraftRepellent requested but no ghost type selected in journal"

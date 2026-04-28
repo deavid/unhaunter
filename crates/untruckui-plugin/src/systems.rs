@@ -2,11 +2,12 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncommon_states_core::UIContextState;
 use uninput_core::states::InGameUiState;
+use unreplicon_core::components::MissionGoalEntity;
+use unreplicon_core::repellent_tracker::RepellentCraftTracker;
 use unsettings_core::audio::AudioSettings;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::components::truck_ui_markers::TruckUI;
 use untruck_core::events::truck::TruckUIEvent;
-use untruck_core::types::repellent_tracker::RepellentCraftTracker;
 use untruck_core::types::truck_button::TruckButtonType;
 
 // Component to mark the progress bar for hold buttons
@@ -53,8 +54,12 @@ fn hold_button_system(
     progress_query: Query<(Entity, &ChildOf), With<ProgressIndicator>>,
     mut ev_truckui: MessageWriter<TruckUIEvent>,
     mut hold_sound: Local<Option<Entity>>,
-    craft_tracker: Res<RepellentCraftTracker>,
+    q_craft_tracker: Query<&RepellentCraftTracker, With<MissionGoalEntity>>,
 ) {
+    let Ok(craft_tracker) = q_craft_tracker.single() else {
+        warn_once!("Craft Tracker component not found");
+        return;
+    };
     // Track which buttons are currently being held
     let mut active_buttons = Vec::new();
 
@@ -229,10 +234,15 @@ fn hold_button_system(
 }
 
 fn update_craft_button_text(
-    craft_tracker: Res<RepellentCraftTracker>,
     mut q_button: Query<(&mut TruckUIButton, &Children), With<Button>>,
     mut q_text: Query<&mut Text>,
+    q_craft_tracker: Query<Ref<RepellentCraftTracker>, With<MissionGoalEntity>>,
 ) {
+    let Ok(craft_tracker) = q_craft_tracker.single() else {
+        warn_once!("Craft Tracker component not found");
+        return;
+    };
+
     // Only update when the resource has changed
     if !craft_tracker.is_changed() {
         return;

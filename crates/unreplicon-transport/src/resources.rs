@@ -26,7 +26,6 @@ pub struct ProcManConfig {
 pub struct ProcManChannel {
     /// Sender for outgoing messages to procman (player events, state sync).
     /// Used in Phase 2+ systems that report game state back to procman.
-    #[allow(dead_code)]
     pub tx: Sender<DedicatedToProcMan>,
     pub rx: Receiver<ProcManToDedicated>,
 }

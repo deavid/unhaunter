@@ -32,6 +32,14 @@ pub(crate) struct JournalButtonParams<'w, 's> {
         With<Button>,
     >,
     pub q_textcolor: Query<'w, 's, &'static mut TextColor>,
+    pub q_gear: Query<
+        'w,
+        's,
+        &'static ungear_core::components::playergear::PlayerGear,
+        With<unplayer_core::components::MainPlayer>,
+    >,
+    pub q_flask:
+        Query<'w, 's, &'static ungearitems_core::components::repellentflask::RepellentFlask>,
     pub gg: ResMut<'w, GhostGuess>,
     pub ev_truckui: MessageWriter<'w, TruckUIEvent>,
     pub walkie_play: ResMut<'w, WalkiePlay>,
@@ -237,8 +245,31 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
                 }
             }
             TruckButtonType::CraftRepellent => {
-                tui_button.disabled = p.gg.ghost_type.is_none();
-                // Ensure status is Off unless it was somehow changed (not by this system)
+                if let Some(target_ghost) = p.gg.ghost_type {
+                    let mut already_has_flask = false;
+                    if let Ok(player_gear) = p.q_gear.single() {
+                        let slots = player_gear
+                            .left_hand
+                            .into_iter()
+                            .chain(player_gear.right_hand)
+                            .chain(player_gear.inventory.iter().copied());
+
+                        for entity in slots {
+                            if let Ok(flask) = p.q_flask.get(entity)
+                                && flask.liquid_content == Some(target_ghost)
+                                && flask.qty
+                                    == ungearitems_core::components::repellentflask::RepellentFlask::MAX_QTY
+                                && !flask.active
+                            {
+                                already_has_flask = true;
+                                break;
+                            }
+                        }
+                    }
+                    tui_button.disabled = already_has_flask;
+                } else {
+                    tui_button.disabled = true;
+                }
             }
             _ => {}
         }

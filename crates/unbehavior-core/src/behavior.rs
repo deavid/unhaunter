@@ -558,7 +558,7 @@ impl SpriteConfig {
             p.light.color = color;
         }
 
-        if p.object.movable {
+        if p.object.movable || p.object.pickable {
             p.is_replicated = true;
         }
     }

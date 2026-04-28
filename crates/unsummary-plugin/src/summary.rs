@@ -723,12 +723,11 @@ pub(crate) fn record_death_to_summary(
     board_topology: Res<BoardTopology>,
 ) {
     for ev in ev_death.read() {
-        let player_uuid = q_players
+        let is_local_death = q_players
             .iter()
-            .find(|p| p.network_id == ev.id)
-            .map(|p| p.id);
+            .any(|p| p.network_id == ev.id && p.id == local_player.uuid);
 
-        if local_player.0 == player_uuid && player_uuid.is_some() {
+        if is_local_death {
             // It's us! Update summary with death-related information
             let map_path_str = board_topology.map_path.clone();
 

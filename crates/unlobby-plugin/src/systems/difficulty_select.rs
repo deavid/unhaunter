@@ -128,10 +128,9 @@ pub(crate) fn handle_input(
     mut ev_send_diff: MessageWriter<RequestSelectDifficulty>,
 ) {
     let lobby_info = q_lobby.single().ok();
-    let is_room_owner = match (local_player.0, lobby_info) {
-        (Some(lp), Some(li)) => li.leader_uuid == Some(lp),
-        (Some(_), None) => authority_role.is_some() && local_player_role.is_some(),
-        _ => false,
+    let is_room_owner = match (local_player.uuid, lobby_info) {
+        (lp, Some(li)) => li.leader_uuid == Some(lp),
+        (_, None) => authority_role.is_some() && local_player_role.is_some(),
     };
 
     // 0.1s guard to avoid "state bounce" from the previous screen's click event

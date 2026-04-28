@@ -5,13 +5,14 @@ use unbehavior_core::components::FloorItemCollidable;
 use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use ungear_core::components::deployedgear::DeployedGear;
-use ungear_core::components::playergear::{HeldObject, PlayerGear};
+use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
 use uninput_core::components::PlayerInput;
 use unlocomotion_core::components::PlayerLocomotionState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unreplicon_core::components::SimulationAuthorized;
 use unreplicon_core::messages::{RequestDrop, RequestGrab};
 use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::direction::Direction;
@@ -53,90 +54,50 @@ pub(crate) fn sync_held_object_position_to_holder(
 }
 
 pub(crate) fn queue_pickup_request(
-    mut players: Query<(&mut PlayerGear, &Position, &mut PlayerInput), With<MainPlayer>>,
+    mut players: Query<(&PlayerGear, &Position, &mut PlayerInput), With<MainPlayer>>,
     pickables: Query<
-        (
-            Entity,
-            &Position,
-            Option<&GearKind>,
-            Option<&Behavior>,
-            Has<LocallyOwned>,
-        ),
+        (Entity, &Position, Option<&GearKind>, Option<&Behavior>),
         (Without<PlayerSprite>, With<FloorItemCollidable>),
     >,
     mut writer_grab: MessageWriter<RequestGrab>,
-    mut commands: Commands,
     mut ev_sound: MessageWriter<SoundEvent>,
 ) {
-    for (mut player_gear, player_pos, mut player_input) in players.iter_mut() {
+    for (player_gear, player_pos, mut player_input) in players.iter_mut() {
         if player_input.grab {
             player_input.grab = false;
             let mut closest = None;
             let mut min_dist = 1.0;
 
-            for (entity, pos, gear_kind, behavior, already_owned) in pickables.iter() {
+            for (entity, pos, gear_kind, behavior) in pickables.iter() {
                 let dist = player_pos.distance(pos);
                 if dist < min_dist {
                     min_dist = dist;
-                    closest = Some((entity, pos, gear_kind, behavior, already_owned));
+                    closest = Some((entity, pos, gear_kind, behavior));
                 }
             }
 
-            if let Some((entity, _pos, gear_kind, behavior, already_locally_owned)) = closest {
+            if let Some((entity, _pos, gear_kind, behavior)) = closest {
                 if gear_kind.is_some() {
                     let can_grab_gear =
                         player_gear.right_hand.is_none() || player_gear.inventory.len() < 2;
                     if can_grab_gear {
                         writer_grab.write(RequestGrab { entity });
-                        // If we are already the driver (LocallyOwned was retained from drop),
-                        // Added<LocallyOwned> will not fire on OwnershipGranted, so assign
-                        // inventory slot immediately instead of waiting for the round-trip.
-                        if already_locally_owned {
-                            // Remove floor-state components we inserted locally on drop.
-                            // The server's removal is blocked by noop_remove for LocallyOwned
-                            // entities, so we must clean up here.
-                            commands
-                                .entity(entity)
-                                .remove::<FloorItemCollidable>()
-                                .remove::<DeployedGear>();
-                            if player_gear.left_hand.is_none() {
-                                player_gear.left_hand = Some(entity);
-                                commands
-                                    .entity(entity)
-                                    .insert(EquipmentPosition::Hand(Hand::Left));
-                            } else if player_gear.right_hand.is_none() {
-                                player_gear.right_hand = Some(entity);
-                                commands
-                                    .entity(entity)
-                                    .insert(EquipmentPosition::Hand(Hand::Right));
-                            } else {
-                                player_gear.inventory.push(entity);
-                                commands.entity(entity).insert(EquipmentPosition::Stowed);
-                            }
-                            ev_sound.write(SoundEvent {
-                                sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
-                                volume: 1.0,
-                                position: Some(*player_pos),
-                            });
-                        }
-                    }
-                } else if let Some(behavior) = behavior
-                    && behavior.p.object.pickable
-                    && player_gear.held_item.is_none()
-                {
-                    writer_grab.write(RequestGrab { entity });
-                    // If we are the owner retaining LocallyOwned from a prior drop, the server's
-                    // OwnershipGranted won't trigger Added<LocallyOwned>, so we must assign
-                    // held_item and clear floor state locally.
-                    if already_locally_owned {
-                        player_gear.held_item = Some(HeldObject { entity });
-                        commands.entity(entity).remove::<FloorItemCollidable>();
                         ev_sound.write(SoundEvent {
                             sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
                             volume: 1.0,
                             position: Some(*player_pos),
                         });
                     }
+                } else if let Some(behavior) = behavior
+                    && behavior.p.object.pickable
+                    && player_gear.held_item.is_none()
+                {
+                    writer_grab.write(RequestGrab { entity });
+                    ev_sound.write(SoundEvent {
+                        sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
+                        volume: 1.0,
+                        position: Some(*player_pos),
+                    });
                 }
             }
         }
@@ -187,13 +148,9 @@ pub(crate) fn queue_drop_request(
                 continue;
             };
 
-            // Intentionally retain LocallyOwned — the dropping player remains the Designated Driver
-            // and continues simulating the gear's internal state while it is on the floor.
-            //
-            // Because noop_write is registered for LocallyOwned on FloorItemCollidable and
-            // DeployedGear, the server's replication of those components is suppressed for the
-            // owning client. We must apply them locally here so the dropper can see and pick up
-            // the item again.
+            // Remove LocallyOwned - the server dictates inventory slots.
+            commands.entity(entity).remove::<LocallyOwned>();
+
             let drop_direction = Direction {
                 dx: player_loco.movement.dx,
                 dy: player_loco.movement.dy,
@@ -208,7 +165,7 @@ pub(crate) fn queue_drop_request(
             };
             commands
                 .entity(entity)
-                .insert((FloorItemCollidable, drop_pos));
+                .insert((FloorItemCollidable, drop_pos, drop_direction));
             if dropped_gear {
                 commands.entity(entity).insert((
                     DeployedGear {
@@ -240,72 +197,6 @@ pub(crate) fn queue_drop_request(
                     .insert(EquipmentPosition::Hand(Hand::Right));
             }
         }
-    }
-}
-
-pub(crate) fn assign_received_item_to_slot(
-    mut commands: Commands,
-    q_new_items: Query<(Entity, Has<GearKind>, Has<Behavior>), Added<LocallyOwned>>,
-    mut q_player_gear: Query<(&mut PlayerGear, &Position), With<MainPlayer>>,
-    mut ev_sound: MessageWriter<SoundEvent>,
-) {
-    let Some((mut player_gear, player_pos)) = q_player_gear.iter_mut().next() else {
-        return;
-    };
-
-    for (entity, is_gear, is_furniture) in q_new_items.iter() {
-        if player_gear.left_hand == Some(entity)
-            || player_gear.right_hand == Some(entity)
-            || player_gear.inventory.contains(&entity)
-            || player_gear
-                .held_item
-                .as_ref()
-                .map(|held| held.entity == entity)
-                .unwrap_or(false)
-        {
-            continue;
-        }
-
-        if is_gear {
-            if player_gear.left_hand.is_none() {
-                player_gear.left_hand = Some(entity);
-                commands
-                    .entity(entity)
-                    .insert(EquipmentPosition::Hand(Hand::Left));
-            } else if player_gear.right_hand.is_none() {
-                player_gear.right_hand = Some(entity);
-                commands
-                    .entity(entity)
-                    .insert(EquipmentPosition::Hand(Hand::Right));
-            } else if player_gear.inventory.len() < 2 {
-                player_gear.inventory.push(entity);
-                commands.entity(entity).insert(EquipmentPosition::Stowed);
-            } else {
-                warn!(
-                    "auto_equip_replicated_item: received gear {:?} but all slots are full",
-                    entity
-                );
-                continue;
-            }
-        } else if is_furniture {
-            if player_gear.held_item.is_none() {
-                player_gear.held_item = Some(HeldObject { entity });
-            } else {
-                warn!(
-                    "auto_equip_replicated_item: received furniture {:?} but held_item is occupied",
-                    entity
-                );
-                continue;
-            }
-        } else {
-            continue;
-        }
-
-        ev_sound.write(SoundEvent {
-            sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
-            volume: 1.0,
-            position: Some(*player_pos),
-        });
     }
 }
 
@@ -423,6 +314,72 @@ pub(crate) fn despawn_gear_on_player_death(
     }
 }
 
+fn client_sync_inventory_state(
+    q_player: Query<&PlayerGear, (With<LocallyOwned>, Changed<PlayerGear>)>,
+    mut commands: Commands,
+) {
+    // NOTE: we filter by "Changed" because otherwise we would be constantly rewritting and on top of that if we want
+    // to despawn the entities here it would have been receiving commands constantly.
+    for gear in q_player.iter() {
+        if let Some(e) = gear.left_hand {
+            commands.entity(e).insert((
+                EquipmentPosition::Hand(Hand::Left),
+                LocallyOwned,
+                SimulationAuthorized,
+            ));
+        }
+        if let Some(e) = gear.right_hand {
+            commands.entity(e).insert((
+                EquipmentPosition::Hand(Hand::Right),
+                LocallyOwned,
+                SimulationAuthorized,
+            ));
+        }
+        for &e in &gear.inventory {
+            commands.entity(e).insert((
+                EquipmentPosition::Stowed,
+                LocallyOwned,
+                SimulationAuthorized,
+            ));
+        }
+        if let Some(held) = &gear.held_item {
+            commands
+                .entity(held.entity)
+                .insert((LocallyOwned, SimulationAuthorized));
+        }
+    }
+}
+
+fn client_cleanup_orphaned_shields(
+    q_shielded: Query<Entity, (With<LocallyOwned>, Or<(With<GearMarker>, With<Behavior>)>)>,
+    q_player: Query<&PlayerGear, With<LocallyOwned>>,
+    mut commands: Commands,
+) {
+    let Ok(gear) = q_player.single() else {
+        return;
+    };
+
+    // Build a list of everything actually in our pockets
+    let mut in_pockets = vec![];
+    if let Some(e) = gear.left_hand {
+        in_pockets.push(e);
+    }
+    if let Some(e) = gear.right_hand {
+        in_pockets.push(e);
+    }
+    in_pockets.extend(gear.inventory.iter());
+    if let Some(held) = &gear.held_item {
+        in_pockets.push(held.entity);
+    }
+
+    // If an item has our shield but isn't in our pockets, strip the shield
+    for entity in q_shielded.iter() {
+        if !in_pockets.contains(&entity) {
+            commands.entity(entity).remove::<LocallyOwned>();
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     use uncommon_states_core::UIContextState;
     app.add_systems(
@@ -447,7 +404,8 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            assign_received_item_to_slot,
+            client_sync_inventory_state,
+            client_cleanup_orphaned_shields,
             strip_visuals_from_grabbed_gear,
             despawn_gear_on_player_death,
         )

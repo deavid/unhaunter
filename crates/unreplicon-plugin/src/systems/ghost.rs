@@ -7,12 +7,14 @@ use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
 };
 use unreplicon_core::messages::{GhostSoundFieldBroadcast, SpawnParticleNetEvent};
+use unreplicon_core::repellent_tracker::RepellentCraftTracker;
 use unreplicon_core::resources::{AuthorityRole, is_pure_client};
 
 pub(super) fn app_setup(app: &mut App) {
     // Register Phase 2 replicated components.
     // GhostGuess remains the shared replicated mission whiteboard.
     app.replicate::<MissionGoalEntity>();
+    app.replicate::<RepellentCraftTracker>();
 
     // Register server → client messages.
     app.add_server_message::<SpawnParticleNetEvent>(Channel::Ordered);
@@ -69,6 +71,7 @@ fn cleanup_ghost_entities(q_goal: Query<Entity, With<MissionGoalEntity>>, mut co
     commands.remove_resource::<RepliconGhostSpawningActive>();
     for entity in q_goal.iter() {
         commands.entity(entity).despawn();
+        info!("MissionGoalEntity despawned");
     }
 }
 

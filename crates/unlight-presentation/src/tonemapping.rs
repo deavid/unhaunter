@@ -87,7 +87,6 @@ pub fn calc_gamma(lux: f32, tc: f32, params: &TonemappingParams) -> f32 {
 ///
 /// `lux` is the already-tonemapped perceived brightness.
 /// Applies blue night-vision tint in dark areas, neutral/white in bright areas.
-#[allow(clippy::too_many_arguments)]
 pub fn calc_rgba(
     lux: f32,
     visibility: f32,

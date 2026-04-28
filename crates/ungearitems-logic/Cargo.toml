@@ -13,6 +13,7 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }
+unboard-core = { workspace = true }
 uncommon-states-core = { workspace = true }
 undifficulty-core = { workspace = true }
 uncommon-app-core = { workspace = true }
@@ -23,6 +24,5 @@ uninteraction-core = { workspace = true }
 unmetrics-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unspatial-core = { workspace = true }
-unplayer-core = { workspace = true }
 rand = { workspace = true }
 enum-iterator = { workspace = true }

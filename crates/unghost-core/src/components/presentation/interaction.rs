@@ -66,7 +66,6 @@ pub struct InteractionParticle {
 }
 
 /// Different types of visual particles for ghost interactions.
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum InteractionParticleType {
     Dust,

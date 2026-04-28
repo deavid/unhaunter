@@ -28,3 +28,4 @@ unmapload-core = { workspace = true }
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
 bevy-persistent = { workspace = true }
+bevy_replicon = { workspace = true }

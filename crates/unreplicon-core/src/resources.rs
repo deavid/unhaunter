@@ -39,11 +39,16 @@ pub struct DisconnectRequest;
 pub struct ClientUuidMap(pub HashMap<crate::ownership::OwnerId, Uuid>);
 
 /// Identifies which player is the local (owning) player on this game instance.
-///
-/// `None` means the local player has not yet been assigned (e.g. in offline play
-/// before a session starts, or in a dedicated server where there is no local player).
-#[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct LocalPlayer(pub Option<Uuid>);
+#[derive(Resource, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LocalPlayer {
+    pub uuid: Uuid,
+}
+
+impl LocalPlayer {
+    pub fn new(uuid: Uuid) -> Self {
+        Self { uuid }
+    }
+}
 
 /// Set to `true` when the host has disconnected from the game.
 ///

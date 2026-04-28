@@ -56,6 +56,16 @@ fn parse_semver(version: &str) -> Option<semver::Version> {
     }
 }
 
+fn is_valid_version_string(version: &str) -> bool {
+    if version.is_empty() || version.len() > 128 {
+        return false;
+    }
+
+    version
+        .chars()
+        .all(|c| matches!(c, 'A'..='Z' | 'a'..='z' | '0'..='9' | '-' | '/' | '_' | ':' | '.'))
+}
+
 fn evaluate_client_status(
     state: &HubState,
     client_version: &str,
@@ -148,8 +158,25 @@ pub async fn ping(
     State(state): State<HubState>,
     Json(payload): Json<PingRequest>,
 ) -> Json<PingResponse> {
+    if payload.installation_id.is_nil() || !is_valid_version_string(&payload.version) {
+        return Json(PingResponse {
+            ok: false,
+            online_players_estimate: state.active_players.entry_count() as usize,
+            multiplayer_status: MultiplayerStatus::Unsupported,
+            upgrade_version: None,
+        });
+    }
+
     state.active_players.insert(payload.installation_id, ());
+    state
+        .players_1h
+        .insert(payload.installation_id, payload.version.clone());
+    state
+        .players_24h
+        .insert(payload.installation_id, payload.version.clone());
     state.active_players.run_pending_tasks();
+    state.players_1h.run_pending_tasks();
+    state.players_24h.run_pending_tasks();
 
     let (multiplayer_status, upgrade_version) =
         evaluate_client_status(&state, &payload.version, payload.protocol_hash);

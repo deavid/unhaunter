@@ -20,6 +20,7 @@ pub struct WalkiePlay {
     pub other_mission_event_count: HashMap<WalkieEvent, u32>,
     pub state: Option<WalkieSoundState>,
     pub current_voice_line: Option<VoiceLineData>,
+    pub current_seed: u64,
     pub last_message_time: f64,
     pub last_proposed_time: HashMap<WalkieEvent, f64>,
     pub truck_accessed: bool,
@@ -35,6 +36,7 @@ impl Default for WalkiePlay {
             played_events: Default::default(),
             state: Default::default(),
             current_voice_line: Default::default(),
+            current_seed: 0,
             last_message_time: -100.0,
             last_proposed_time: Default::default(),
             truck_accessed: Default::default(),
@@ -60,7 +62,12 @@ impl WalkiePlay {
         let effective_priority = event.effective_priority(saved_count);
 
         if self.priority_bar > effective_priority.value() {
-            // dbg!(&self.priority_bar, event);
+            debug!(
+                "WalkiePlay: rejected {:?}: priority_bar ({}) > event priority ({})",
+                event,
+                self.priority_bar,
+                effective_priority.value()
+            );
             return false;
         }
         self.urgent_pending = false;
@@ -69,7 +76,12 @@ impl WalkiePlay {
             count = event_stats.count + event_stats.other_count;
             let next_time_to_play = event.time_to_play(count);
             if time - event_stats.last_played < next_time_to_play {
-                // Wait for the next time to play
+                debug!(
+                    "WalkiePlay: rejected {:?}: too soon since last play (elapsed: {}, need: {})",
+                    event,
+                    time - event_stats.last_played,
+                    next_time_to_play
+                );
                 return false;
             }
         }
@@ -77,12 +89,16 @@ impl WalkiePlay {
         let repeat_behavior = event.repeat_behavior();
         let timing_mult = repeat_behavior.timing_multiplier();
 
-        if time - self.last_message_time
-            < (20.0 + count as f64 * 30.0 + saved_count as f64 * 10.0)
-                * min_delay_mult
-                * timing_mult
-        {
-            // Wait between messages
+        let inter_message_limit =
+            (20.0 + count as f64 * 30.0 + saved_count as f64 * 10.0) * min_delay_mult * timing_mult;
+
+        if time - self.last_message_time < inter_message_limit {
+            debug!(
+                "WalkiePlay: rejected {:?}: inter-message delay (elapsed: {}, need: {})",
+                event,
+                time - self.last_message_time,
+                inter_message_limit
+            );
             return false;
         }
 
@@ -121,6 +137,10 @@ impl WalkiePlay {
             {
                 self.urgent_pending = true;
             }
+            debug!(
+                "WalkiePlay: rejected {:?}: already playing {:?}",
+                event, in_event
+            );
             return false;
         }
 
@@ -128,6 +148,7 @@ impl WalkiePlay {
             "WalkiePlay: {:?} - play dice: {}/{} (threshold: {})",
             event, dice, max_dice_value, dice_threshold
         );
+        info!("WALKIE_PLAY: queuing event {:?}", event);
         self.event = Some(event.clone());
         self.played_events.insert(
             event,
@@ -140,6 +161,7 @@ impl WalkiePlay {
         self.state = None;
         // Ensure this is reset:
         self.current_voice_line = None;
+        self.current_seed = random_seed::heavy_rng_seed();
         true
     }
 
@@ -180,10 +202,46 @@ impl WalkiePlay {
             .unwrap_or(false)
     }
 
+    /// Progress the walkie state machine.
+    /// Returns true if the state changed.
+    pub fn tick_state(&mut self) -> bool {
+        let mut rng = random_seed::rng_from_seed(self.current_seed);
+
+        let Some(walkie_event) = self.event.clone() else {
+            return false;
+        };
+
+        let new_state = match &self.state {
+            None => Some(WalkieSoundState::Intro),
+            Some(WalkieSoundState::Intro) => {
+                let voice_lines = walkie_event.sound_file_list();
+                if let Some(chosen_line) = voice_lines.choose(&mut rng).cloned() {
+                    self.current_voice_line = Some(chosen_line);
+                } else {
+                    self.current_voice_line = Some(VoiceLineData {
+                        ogg_path: "sounds/radio-on-zzt.ogg".to_string(),
+                        subtitle_text: "[NO SUBTITLE AVAILABLE]".to_string(),
+                        tags: vec![],
+                        length_seconds: 2,
+                    });
+                }
+                Some(WalkieSoundState::Talking)
+            }
+            Some(WalkieSoundState::Talking) => Some(WalkieSoundState::Outro),
+            Some(WalkieSoundState::Outro) => Some(WalkieSoundState::Outro),
+        };
+
+        if new_state != self.state {
+            self.state = new_state;
+            true
+        } else {
+            false
+        }
+    }
+
     /// For client use: runs the same cooldown checks as `set()` but does **not** queue the
     /// event for local audio. Returns `true` if the checks passed and a `ProposeWalkieEvent`
     /// should be sent to the server. Updates `played_events.last_played` to prevent proposal spam.
-    #[allow(dead_code)]
     pub fn set_client_propose(&mut self, event: WalkieEvent, time: f64) -> bool {
         // Don't propose while the walkie is currently playing something.
         if self.event.is_some() {
@@ -236,7 +294,7 @@ impl WalkiePlay {
 
     /// Force-queue an event for local audio playback (called when the server broadcasts a
     /// `BroadcastWalkieEvent`). Bypasses all cooldown checks.
-    pub fn set_forced(&mut self, event: WalkieEvent, time: f64) {
+    pub fn set_forced(&mut self, event: WalkieEvent, time: f64, seed: u64) {
         let count = self
             .played_events
             .get(&event)
@@ -250,9 +308,11 @@ impl WalkiePlay {
                 last_played: time,
             },
         );
+        info!("WALKIE_PLAY: force-queuing event {:?}", event);
         self.event = Some(event);
         self.state = None;
         self.current_voice_line = None;
+        self.current_seed = seed;
         // last_message_time is updated when playback ends in walkie_play.rs
     }
 }

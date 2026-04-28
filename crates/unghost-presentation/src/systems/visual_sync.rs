@@ -57,7 +57,8 @@ pub(crate) fn ghost_clarity_sync(
         } else if dying_logic.is_some() {
             0.0
         } else {
-            dynamics.visual_alpha_multiplier
+            // FIXME: Shouldn't the "MAX" be on the  visual_alpha_multiplier itself? this looks like a hack.
+            dynamics.visual_alpha_multiplier.max(0.1)
         };
     }
 }

@@ -45,10 +45,6 @@ impl DamageBackground {
 }
 
 #[derive(Component, Debug)]
-#[allow(dead_code)]
-struct HeldObjectUI;
-
-#[derive(Component, Debug)]
 struct RightSideGearUI;
 
 #[derive(Component, Debug, Default)]

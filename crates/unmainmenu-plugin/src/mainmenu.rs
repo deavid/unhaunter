@@ -48,7 +48,6 @@ impl std::fmt::Display for MenuID {
 pub(crate) struct MenuUILayout;
 
 #[derive(Component, Debug)]
-#[allow(dead_code)]
 pub(crate) struct UpgradeNotificationBanner;
 
 pub(crate) fn app_setup(app: &mut App) {
@@ -156,7 +155,7 @@ pub(crate) fn setup_ui(
                 Node {
                     position_type: PositionType::Absolute,
                     top: Val::Px(20.0 * uncommon_app_core::platform::plt::UI_SCALE),
-                    left: Val::Px(20.0 * uncommon_app_core::platform::plt::UI_SCALE),
+                    left: Val::Px(600.0 * uncommon_app_core::platform::plt::UI_SCALE),
                     right: Val::Px(20.0 * uncommon_app_core::platform::plt::UI_SCALE),
                     padding: UiRect::all(Val::Px(
                         10.0 * uncommon_app_core::platform::plt::UI_SCALE,
@@ -171,7 +170,7 @@ pub(crate) fn setup_ui(
                     Text::new(""),
                     TextFont {
                         font: menu_assets.font_kode_bold.clone(),
-                        font_size: 24.0 * uncommon_app_core::platform::plt::FONT_SCALE,
+                        font_size: 18.0 * uncommon_app_core::platform::plt::FONT_SCALE,
                         ..default()
                     },
                     TextColor(Color::WHITE),
@@ -259,6 +258,7 @@ pub(crate) fn update_upgrade_notification(
     hub_connection_status: Res<unhub_plugin::hub_client::HubConnectionStatus>,
     q_banner: Query<&Children, With<UpgradeNotificationBanner>>,
     mut q_text: Query<&mut Text>,
+    mut q_text_color: Query<&mut TextColor>,
     mut q_visibility: Query<&mut Visibility, With<UpgradeNotificationBanner>>,
 ) {
     use unhub_client::protocol::MultiplayerStatus;
@@ -299,11 +299,14 @@ pub(crate) fn update_upgrade_notification(
         };
     }
 
-    // Update text
+    // Update text and color
     for children in q_banner.iter() {
         for child in children.iter() {
             if let Ok(mut text) = q_text.get_mut(child) {
                 text.0 = banner_text.clone();
+            }
+            if let Ok(mut text_color) = q_text_color.get_mut(child) {
+                text_color.0 = Color::srgb(1.0, 0.5, 0.0); // Orange
             }
         }
     }

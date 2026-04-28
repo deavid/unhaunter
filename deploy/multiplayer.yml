@@ -66,6 +66,7 @@
         - "{{ install_dir }}/library/beta"
         - "{{ install_dir }}/library/alpha"
         - "{{ install_dir }}/library/dev"
+        - "{{ install_dir }}/logs"
 
     - name: Copy binaries from dev machine to server
       ansible.builtin.copy:
@@ -493,6 +494,7 @@
               max_rooms_per_ip: 20,
               trust_proxy_headers: true,
               pow_difficulty: 20,
+              stats_log_path: Some("{{ install_dir }}/logs/hub_stats.log"),
           )
         owner: unhaunter
         group: unhaunter

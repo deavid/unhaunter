@@ -25,7 +25,6 @@ use unspatial_core::position::Position;
 use uuid::Uuid;
 
 // Periodic diagnostics for player spawn and ownership handoff state.
-#[allow(clippy::manual_is_multiple_of)]
 fn player_spawn_telemetry(
     q: Query<(
         Entity,
@@ -42,7 +41,7 @@ fn player_spawn_telemetry(
     mut frames: Local<u32>,
 ) {
     *frames += 1;
-    if *frames % 60 != 0 {
+    if !(*frames).is_multiple_of(60) {
         return;
     }
 
@@ -261,10 +260,7 @@ fn handle_request_join_mission(
             warn!("handle_request_join_mission: offline mode but LocalPlayer resource missing");
             return;
         };
-        let Some(player_uuid) = local_player.0 else {
-            warn!("handle_request_join_mission: offline mode but LocalPlayer UUID not set");
-            return;
-        };
+        let player_uuid = local_player.uuid;
         if q_existing_sprites.iter().any(|s| s.id == player_uuid)
             || q_pending_spawn.iter().any(|r| r.player_uuid == player_uuid)
         {
@@ -431,13 +427,11 @@ fn client_avatar_reconciliation_loop(
     mut relieve_sim_authority: MessageWriter<RelieveSimulationAuthority>,
     mut last_sent_at: Local<HashMap<Entity, f32>>,
 ) {
-    let Some(local_uuid) = local_player.0 else {
-        return;
-    };
+    last_sent_at.retain(|entity, _| q_owned_players.get(*entity).is_ok());
+
+    let local_uuid = local_player.uuid;
     let ready_for_local_simulation = *app_state.get() == UIContextState::InGame;
     let elapsed_secs = time.elapsed_secs();
-
-    last_sent_at.retain(|entity, _| q_owned_players.get(*entity).is_ok());
 
     for (entity, player_sprite, owner, has_sim_authorized, has_locally_owned) in
         q_owned_players.iter()

@@ -45,7 +45,6 @@ pub(super) fn app_setup(app: &mut App) {
 
     // Initialize resources that are referenced by lobby UI systems.
     app.init_resource::<ClientUuidMap>();
-    app.init_resource::<LocalPlayer>();
     app.init_resource::<CurrentMapSeed>();
     app.init_resource::<unreplicon_core::resources::MissionAutoJoinArmed>();
     app.init_resource::<unreplicon_core::resources::MissionAutoJoinDelay>();
@@ -310,14 +309,14 @@ fn spawn_lobby_entity_if_missing(
 
     if local_player.is_some()
         && let Some(lp) = local_player_res
-        && let Some(uuid) = lp.0
     {
+        let uuid = lp.uuid;
         players.push(LobbyPlayerInfo {
             player_uuid: uuid,
             current_socket: None, // Local host player
             tint_color_index: 0,
             connected: true,
-            nickname: None,
+            nickname: Some(unreplicon_core::identity::generate_deterministic_name(uuid)),
         });
         leader_uuid = Some(uuid);
         uuid_map.0.insert(OwnerId::Server, uuid);
@@ -449,7 +448,7 @@ fn process_newly_connected_clients(
                     current_socket: Some(owner_id),
                     tint_color_index: color_index,
                     connected: true,
-                    nickname: None,
+                    nickname: Some(unreplicon_core::identity::generate_deterministic_name(uuid)),
                 });
                 info!(
                     "Player {} joined lobby (socket={:?}, tint={})",

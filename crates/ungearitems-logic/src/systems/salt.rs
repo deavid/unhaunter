@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use unboard_core::entity::GameSprite;
 use ungearitems_core::components::salt::{
     SaltData, SaltPile, SaltPileArmed, SaltPileArmingTimer, SaltPileConsumed, SaltPileConsumedTimer,
 };
@@ -35,6 +36,7 @@ pub(crate) fn update_salt_skeleton(
                     )),
                     *pos,
                     bevy_replicon::prelude::Replicated,
+                    GameSprite,
                 ));
             } else {
                 // Pure Client: Ask server to spawn

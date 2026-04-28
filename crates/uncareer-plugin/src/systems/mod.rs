@@ -20,7 +20,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (reward::store_deposit_stake, reward::record_career_death)
-            .run_if(in_state(UIContextState::InGame)),
+            .run_if(in_state(UIContextState::InGame).and(resource_exists::<LocalPlayerRole>)),
     );
 
     // Persist career outcomes to PlayerProfileData (no-op on server: profile is None)
@@ -29,7 +29,8 @@ pub(crate) fn app_setup(app: &mut App) {
         (
             profile_update::apply_career_reward_to_profile,
             profile_update::apply_career_death_to_profile,
-        ),
+        )
+            .run_if(resource_exists::<LocalPlayerRole>),
     );
 
     // Summary is local-only and is built on player-bearing nodes when the

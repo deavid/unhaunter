@@ -21,6 +21,7 @@ unplayer-core = { workspace = true }
 unvitals-core = { workspace = true }
 unrender-std = { workspace = true }
 ungear-core = { workspace = true }
+ungearitems-core = { workspace = true }
 uninput-core = { workspace = true }
 unsettings-core = { workspace = true }
 unprofile-core = { workspace = true }

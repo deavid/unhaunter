@@ -123,7 +123,7 @@ pub(crate) fn record_career_death(
             .find(|p| p.network_id == ev.id)
             .map(|p| p.id);
 
-        if local_player.0 == player_uuid && player_uuid.is_some() {
+        if player_uuid == Some(local_player.uuid) {
             // Local player died! Mark for failed payout at summary time.
             commands.insert_resource(LocalPlayerDiedThisMission);
 
