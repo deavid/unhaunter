@@ -571,7 +571,7 @@ pub(crate) fn update_display(
                 } else if is_leader {
                     "Leader".to_string()
                 } else {
-                    format!("Player {}", &player.player_uuid.to_string()[..8])
+                    unreplicon_core::identity::generate_deterministic_name(player.player_uuid)
                 };
                 status_lines.push(format!("- {}", name));
             }
@@ -642,7 +642,7 @@ pub(crate) fn update_display(
 
                     // Player label
                     let name = player.nickname.clone().unwrap_or_else(|| {
-                        format!("Player {}", &player.player_uuid.to_string()[..8])
+                        unreplicon_core::identity::generate_deterministic_name(player.player_uuid)
                     });
                     row.spawn((
                         Text::new(format!("{}{}{}", prefix, name, leader_suffix)),

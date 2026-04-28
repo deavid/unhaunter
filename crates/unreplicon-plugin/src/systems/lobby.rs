@@ -316,7 +316,7 @@ fn spawn_lobby_entity_if_missing(
             current_socket: None, // Local host player
             tint_color_index: 0,
             connected: true,
-            nickname: None,
+            nickname: Some(unreplicon_core::identity::generate_deterministic_name(uuid)),
         });
         leader_uuid = Some(uuid);
         uuid_map.0.insert(OwnerId::Server, uuid);
@@ -448,7 +448,7 @@ fn process_newly_connected_clients(
                     current_socket: Some(owner_id),
                     tint_color_index: color_index,
                     connected: true,
-                    nickname: None,
+                    nickname: Some(unreplicon_core::identity::generate_deterministic_name(uuid)),
                 });
                 info!(
                     "Player {} joined lobby (socket={:?}, tint={})",
