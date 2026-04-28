@@ -1,8 +1,9 @@
+use crate::identity_data::{NICKNAMES, SURNAMES};
 use uuid::Uuid;
-use crate::identity_data::{SURNAMES, NICKNAMES};
 
 const CONSONANTS: &[char] = &[
-    'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z',
+    'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X',
+    'Y', 'Z',
 ];
 
 /// Generates a deterministic name from a UUID.
@@ -60,7 +61,10 @@ mod tests {
         assert!(name.contains('('));
         assert!(name.contains(')'));
 
-        let parts: Vec<&str> = name.split(|c| c == '.' || c == '-' || c == ' ' || c == '(' || c == ')').filter(|s| !s.is_empty()).collect();
+        let parts: Vec<&str> = name
+            .split(['.', '-', ' ', '(', ')'])
+            .filter(|s| !s.is_empty())
+            .collect();
         assert_eq!(parts.len(), 5, "Name was: {}", name);
     }
 }
