@@ -7,7 +7,7 @@ use crate::resources::{ProcManChannel, ProcManConfig, RoomAuth};
 pub(super) fn app_setup(app: &mut App) {
     app.init_resource::<RoomAuth>();
     app.add_systems(Startup, setup_procman_system);
-    app.add_systems(Update, update_procman_system);
+    app.add_systems(Update, (update_procman_system, idle_timeout_system));
 }
 
 fn setup_procman_system(mut commands: Commands, procman_config: Res<ProcManConfig>) {
@@ -87,5 +87,33 @@ fn update_procman_system(
                 exit.write(bevy::app::AppExit::Success);
             }
         }
+    }
+}
+
+/// Automatically shut down the dedicated server if it's empty and was created via unhub.
+fn idle_timeout_system(
+    time: Res<Time>,
+    procman: Option<Res<ProcManChannel>>,
+    room_auth: Res<RoomAuth>,
+    server: Option<Res<bevy_renet::RenetServer>>,
+    mut idle_timer: Local<f32>,
+    mut exit: MessageWriter<bevy::app::AppExit>,
+) {
+    // Only apply to unhub-managed servers (those with a procman channel and an assigned room).
+    if procman.is_none() || room_auth.room_code.is_none() {
+        *idle_timer = 0.0;
+        return;
+    }
+
+    let client_count = server.map(|s| s.clients_id().len()).unwrap_or(0);
+
+    if client_count == 0 {
+        *idle_timer += time.delta_secs();
+        if *idle_timer >= 5.0 {
+            info!("Dedicated server is empty and idle for 5s; shutting down.");
+            exit.write(bevy::app::AppExit::Success);
+        }
+    } else {
+        *idle_timer = 0.0;
     }
 }
