@@ -1,6 +1,5 @@
 use bevy::{audio::Volume, prelude::*, time::Stopwatch};
 use bevy_persistent::Persistent;
-use rand::seq::IndexedRandom;
 use uncommon_app_core::random_seed;
 use unmission_core::events::LevelReadyEvent;
 use unplayer_core::components::MainPlayer;
@@ -10,7 +9,6 @@ use unwalkie_core::components::WalkieText;
 use unwalkie_core::events::hint::OnScreenHintEvent;
 use unwalkie_core::events::walkie_types::WalkieTalkingEvent;
 use unwalkie_core::resources::{WalkiePlay, WalkieSoundState};
-use unwalkie_types::types::VoiceLineData;
 
 fn on_game_load(
     mut ev_level_ready: MessageReader<LevelReadyEvent>,
@@ -43,13 +41,13 @@ fn walkie_talk(
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
-    let mut rng = random_seed::rng_from_seed(walkie_play.current_seed);
     walkie_play.priority_bar /= 1.2;
 
     let Some(walkie_event) = walkie_play.event.clone() else {
         stopwatch.reset();
         return;
     };
+
     if q_sound_state.iter().count() > 0 {
         // Already playing a sound
         if walkie_play.urgent_pending {
@@ -89,31 +87,17 @@ fn walkie_talk(
         }
         return;
     }
+
     let mut walkie_volume = 1.0;
+    let state_changed = walkie_play.tick_state();
 
-    let new_state = match walkie_play.state {
-        None => Some(WalkieSoundState::Intro),
-        Some(WalkieSoundState::Intro) => {
-            let voice_lines: Vec<VoiceLineData> = walkie_event.sound_file_list();
-            if let Some(chosen_line) = voice_lines.choose(&mut rng).cloned() {
-                walkie_play.current_voice_line = Some(chosen_line);
-            } else {
-                walkie_play.current_voice_line = Some(VoiceLineData {
-                    ogg_path: "sounds/radio-on-zzt.ogg".to_string(),
-                    subtitle_text: "[NO SUBTITLE AVAILABLE]".to_string(),
-                    tags: vec![],
-                    length_seconds: 2,
-                });
-            }
-
+    if state_changed {
+        if let Some(WalkieSoundState::Talking) = &walkie_play.state {
             // Fire WalkieTalkingEvent when transitioning to the Talking state
             walkie_talking_writer.write(WalkieTalkingEvent {
                 event: walkie_event.clone(),
             });
 
-            Some(WalkieSoundState::Talking)
-        }
-        Some(WalkieSoundState::Talking) => {
             let hint_text = walkie_event.get_on_screen_actionable_hint_text();
             if !hint_text.is_empty() {
                 let saved_count = walkie_play
@@ -136,17 +120,24 @@ fn walkie_talk(
                     });
                 }
             }
+        }
+    } else if let Some(WalkieSoundState::Outro) = &walkie_play.state {
+        stopwatch.tick(time.delta());
+        if stopwatch.elapsed().as_secs_f32() > 2.0 {
+            walkie_play.event = None;
+            walkie_play.state = None;
+            walkie_play.current_voice_line = None;
+            walkie_play.last_message_time = time.elapsed_secs_f64();
+            return;
+        }
+        return; // Still waiting for Outro to finish
+    }
 
-            Some(WalkieSoundState::Outro)
-        }
-        Some(WalkieSoundState::Outro) => {
-            stopwatch.tick(time.delta());
-            if stopwatch.elapsed().as_secs_f32() < 2.0 {
-                return;
-            }
-            None
-        }
-    };
+    if !state_changed {
+        return; // Wait until sounds finish before doing anything else
+    }
+
+    let new_state = walkie_play.state.clone();
     stopwatch.reset();
 
     for (mut text, mut vis) in qt.iter_mut() {

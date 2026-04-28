@@ -202,6 +202,43 @@ impl WalkiePlay {
             .unwrap_or(false)
     }
 
+    /// Progress the walkie state machine.
+    /// Returns true if the state changed.
+    pub fn tick_state(&mut self) -> bool {
+        let mut rng = random_seed::rng_from_seed(self.current_seed);
+
+        let Some(walkie_event) = self.event.clone() else {
+            return false;
+        };
+
+        let new_state = match &self.state {
+            None => Some(WalkieSoundState::Intro),
+            Some(WalkieSoundState::Intro) => {
+                let voice_lines = walkie_event.sound_file_list();
+                if let Some(chosen_line) = voice_lines.choose(&mut rng).cloned() {
+                    self.current_voice_line = Some(chosen_line);
+                } else {
+                    self.current_voice_line = Some(VoiceLineData {
+                        ogg_path: "sounds/radio-on-zzt.ogg".to_string(),
+                        subtitle_text: "[NO SUBTITLE AVAILABLE]".to_string(),
+                        tags: vec![],
+                        length_seconds: 2,
+                    });
+                }
+                Some(WalkieSoundState::Talking)
+            }
+            Some(WalkieSoundState::Talking) => Some(WalkieSoundState::Outro),
+            Some(WalkieSoundState::Outro) => Some(WalkieSoundState::Outro),
+        };
+
+        if new_state != self.state {
+            self.state = new_state;
+            true
+        } else {
+            false
+        }
+    }
+
     /// For client use: runs the same cooldown checks as `set()` but does **not** queue the
     /// event for local audio. Returns `true` if the checks passed and a `ProposeWalkieEvent`
     /// should be sent to the server. Updates `played_events.last_played` to prevent proposal spam.
