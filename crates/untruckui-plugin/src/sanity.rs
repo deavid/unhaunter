@@ -3,7 +3,7 @@ use crate::colors;
 use bevy::prelude::*;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use uninput_core::states::InGameUiState;
-use unplayer_core::components::MainPlayer;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unvitals_core::components::PlayerVitals;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
@@ -59,12 +59,13 @@ pub(crate) fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &TruckUiAss
 }
 
 fn update_sanity(
-    qp: Query<&PlayerVitals, With<MainPlayer>>,
+    qp: Query<(&PlayerVitals, &PlayerSprite), With<MainPlayer>>,
     mut qst: Query<&mut Text, With<SanityText>>,
 ) {
-    for player in &qp {
+    for (player, sprite) in &qp {
+        let name = unreplicon_core::identity::generate_deterministic_name(sprite.id);
         for mut text in &mut qst {
-            let new_sanity_text = format!("Player 1:\n  {:.0}% Sanity", player.sanity);
+            let new_sanity_text = format!("{}:\n  {:.0}% Sanity", name, player.sanity);
             if new_sanity_text != text.0 {
                 text.0 = new_sanity_text;
             }
