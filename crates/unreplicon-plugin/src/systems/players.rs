@@ -25,7 +25,6 @@ use unspatial_core::position::Position;
 use uuid::Uuid;
 
 // Periodic diagnostics for player spawn and ownership handoff state.
-#[allow(clippy::manual_is_multiple_of)]
 fn player_spawn_telemetry(
     q: Query<(
         Entity,
@@ -42,7 +41,7 @@ fn player_spawn_telemetry(
     mut frames: Local<u32>,
 ) {
     *frames += 1;
-    if *frames % 60 != 0 {
+    if !(*frames).is_multiple_of(60) {
         return;
     }
 

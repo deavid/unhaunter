@@ -9,17 +9,6 @@ use uninteraction_core::events::InteractionExecutionType;
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unspatial_core::position::Position;
 
-/// Cooldown timer to prevent rapid re-tripping of the breaker
-#[derive(Resource)]
-#[allow(dead_code)]
-struct FuseBoxCooldownTimer(Timer);
-
-impl Default for FuseBoxCooldownTimer {
-    fn default() -> Self {
-        Self(Timer::from_seconds(10.0, TimerMode::Once))
-    }
-}
-
 /// System that monitors electrical load and trips the breaker when too many lights are on
 ///
 /// This system implements an environmental mechanic where the electrical system
@@ -111,11 +100,6 @@ fn fuse_box_overload_system(
     }
 }
 
-/// Helper system to initialize the fuse box overload timer resource
-fn initialize_fuse_box_system(mut commands: Commands) {
-    commands.insert_resource(FuseBoxCooldownTimer::default());
-}
-
 /// System that ensures all breakers in the level share the same state.
 ///
 /// If one breaker is flipped (by player or ghost), all other breakers
@@ -155,5 +139,4 @@ pub(crate) fn app_setup(app: &mut App) {
             .run_if(in_state(unmission_core::types::SimulationState::Ready))
             .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
     );
-    app.add_systems(Startup, initialize_fuse_box_system);
 }

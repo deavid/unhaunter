@@ -139,10 +139,9 @@ pub(crate) fn ghost_enrage(
             ghost.rage_limit_multiplier /= 1.01_f32.powf(dt);
         }
 
-        #[allow(clippy::explicit_auto_deref)]
         execute_roar_decision(
             &roar_decision,
-            &mut *last_roar,
+            &mut last_roar,
             ghost_entity,
             ghost_position,
             time.elapsed_secs_f64(),

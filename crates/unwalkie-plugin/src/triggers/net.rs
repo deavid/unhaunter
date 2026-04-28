@@ -9,7 +9,6 @@ use unwalkie_core::resources::WalkiePlay;
 /// the server. The server gates it and, if accepted, broadcasts back via `BroadcastWalkieEvent`.
 ///
 /// Returns `true` if a proposal was sent locally without immediately hitting a cooldown limit.
-#[allow(dead_code)]
 pub(crate) fn walkie_set_or_propose(
     event: WalkieEvent,
     time: f64,

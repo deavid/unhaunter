@@ -187,7 +187,6 @@ impl WalkiePlay {
     /// For client use: runs the same cooldown checks as `set()` but does **not** queue the
     /// event for local audio. Returns `true` if the checks passed and a `ProposeWalkieEvent`
     /// should be sent to the server. Updates `played_events.last_played` to prevent proposal spam.
-    #[allow(dead_code)]
     pub fn set_client_propose(&mut self, event: WalkieEvent, time: f64) -> bool {
         // Don't propose while the walkie is currently playing something.
         if self.event.is_some() {

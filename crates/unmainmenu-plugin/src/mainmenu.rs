@@ -48,7 +48,6 @@ impl std::fmt::Display for MenuID {
 pub(crate) struct MenuUILayout;
 
 #[derive(Component, Debug)]
-#[allow(dead_code)]
 pub(crate) struct UpgradeNotificationBanner;
 
 pub(crate) fn app_setup(app: &mut App) {
