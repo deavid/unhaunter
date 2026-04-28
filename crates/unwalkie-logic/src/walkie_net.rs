@@ -37,6 +37,11 @@ fn receive_walkie_proposals(
                 "WALKIE_NET: accepted proposal {:?} from client {:?}",
                 event, msg.client_id
             );
+        } else {
+            warn!(
+                "WALKIE_NET: rejected proposal {:?} from client {:?} (likely priority/cooldown)",
+                event, msg.client_id
+            );
         }
     }
 }

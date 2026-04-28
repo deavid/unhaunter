@@ -62,7 +62,12 @@ impl WalkiePlay {
         let effective_priority = event.effective_priority(saved_count);
 
         if self.priority_bar > effective_priority.value() {
-            // dbg!(&self.priority_bar, event);
+            debug!(
+                "WalkiePlay: rejected {:?}: priority_bar ({}) > event priority ({})",
+                event,
+                self.priority_bar,
+                effective_priority.value()
+            );
             return false;
         }
         self.urgent_pending = false;
@@ -71,7 +76,12 @@ impl WalkiePlay {
             count = event_stats.count + event_stats.other_count;
             let next_time_to_play = event.time_to_play(count);
             if time - event_stats.last_played < next_time_to_play {
-                // Wait for the next time to play
+                debug!(
+                    "WalkiePlay: rejected {:?}: too soon since last play (elapsed: {}, need: {})",
+                    event,
+                    time - event_stats.last_played,
+                    next_time_to_play
+                );
                 return false;
             }
         }
@@ -79,12 +89,16 @@ impl WalkiePlay {
         let repeat_behavior = event.repeat_behavior();
         let timing_mult = repeat_behavior.timing_multiplier();
 
-        if time - self.last_message_time
-            < (20.0 + count as f64 * 30.0 + saved_count as f64 * 10.0)
-                * min_delay_mult
-                * timing_mult
-        {
-            // Wait between messages
+        let inter_message_limit =
+            (20.0 + count as f64 * 30.0 + saved_count as f64 * 10.0) * min_delay_mult * timing_mult;
+
+        if time - self.last_message_time < inter_message_limit {
+            debug!(
+                "WalkiePlay: rejected {:?}: inter-message delay (elapsed: {}, need: {})",
+                event,
+                time - self.last_message_time,
+                inter_message_limit
+            );
             return false;
         }
 
@@ -123,6 +137,10 @@ impl WalkiePlay {
             {
                 self.urgent_pending = true;
             }
+            debug!(
+                "WalkiePlay: rejected {:?}: already playing {:?}",
+                event, in_event
+            );
             return false;
         }
 
