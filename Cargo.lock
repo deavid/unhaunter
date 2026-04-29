@@ -8752,6 +8752,7 @@ dependencies = [
  "untruck-core",
  "unvitals-core",
  "unwalkie-core",
+ "uuid",
 ]
 
 [[package]]
