@@ -56,7 +56,6 @@ pub(crate) fn app_setup(app: &mut App) {
             Update,
             (
                 watch_connection_state,
-                apply_deferred,
                 setup_ui.run_if(menu_ui_is_missing),
                 menu_event,
                 update_hub_button_availability,
