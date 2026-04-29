@@ -51,16 +51,44 @@ pub(crate) struct MenuUILayout;
 pub(crate) struct UpgradeNotificationBanner;
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(UIContextState::MainMenu), (setup, setup_ui))
+    app.add_systems(OnEnter(UIContextState::MainMenu), setup)
         .add_systems(
             Update,
             (
+                watch_connection_state,
+                apply_deferred,
+                setup_ui.run_if(menu_ui_is_missing),
                 menu_event,
                 update_hub_button_availability,
                 update_upgrade_notification,
             )
+                .chain()
                 .run_if(in_state(UIContextState::MainMenu)),
         );
+}
+
+fn menu_ui_is_missing(q_ui: Query<(), With<MenuUI>>) -> bool {
+    q_ui.is_empty()
+}
+
+fn watch_connection_state(
+    lobby_presence: Option<Res<LobbyPresenceRole>>,
+    authority: Option<Res<AuthorityRole>>,
+    mut last_state: Local<Option<(bool, bool)>>,
+    q_ui: Query<Entity, With<MenuUI>>,
+    mut commands: Commands,
+) {
+    let current_state = (lobby_presence.is_some(), authority.is_some());
+    if last_state.is_none() {
+        *last_state = Some(current_state);
+        return;
+    }
+    if Some(current_state) != *last_state {
+        for entity in q_ui.iter() {
+            commands.entity(entity).despawn();
+        }
+        *last_state = Some(current_state);
+    }
 }
 
 pub(crate) fn setup(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
