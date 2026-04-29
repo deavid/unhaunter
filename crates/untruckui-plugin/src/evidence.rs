@@ -10,8 +10,9 @@ use ungear_core::ui::{EvidenceClickTarget, EvidenceUI};
 use uninput_core::components::PlayerInputMapping;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::messages::RequestJournalEvidenceToggle;
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unreplicon_core::components::MissionGoalEntity;
 use untruck_core::types::truck_button::TruckButtonState;
 
 fn toggle_evidence(
@@ -31,10 +32,13 @@ pub(crate) fn update_evidence_ui(
     q_gear: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
     q_sensor: Query<&EvidenceSensor>,
     mut qs: Query<Entity, With<EvidenceUI>>,
-    gg: Res<GhostGuess>,
+    q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
     mut writer: TextUiWriter,
     looking_gear: Res<LookingGear>,
 ) {
+    let Ok(gg) = q_gg.single() else {
+        return;
+    };
     for (_ps, playergear) in q_gear.iter() {
         for txt_entity in qs.iter_mut() {
             let hand_entity = match looking_gear.hand() {
@@ -85,8 +89,12 @@ pub(crate) fn keyboard_evidence(
     q_sensor: Query<&EvidenceSensor>,
     looking_gear: Res<LookingGear>,
     mut ev_evidence_toggle: MessageWriter<RequestJournalEvidenceToggle>,
-    gg: Res<GhostGuess>,
+    q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
 ) {
+    let Ok(gg) = q_gg.single() else {
+        error!("Evidence: keyboard_evidence running but MissionGoalEntity is missing!");
+        return;
+    };
     for (input_mapping, playergear) in &players {
         let hand_entity = match looking_gear.hand() {
             Hand::Left => playergear.left_hand,
@@ -100,7 +108,7 @@ pub(crate) fn keyboard_evidence(
         };
 
         if keyboard_input.just_pressed(input_mapping.controls.change_evidence) {
-            toggle_evidence(evidence, &mut ev_evidence_toggle, &gg);
+            toggle_evidence(evidence, &mut ev_evidence_toggle, gg);
         }
     }
 }
@@ -114,8 +122,12 @@ pub(crate) fn click_evidence(
     q_parent: Query<&ChildOf>,
     looking_gear: Res<LookingGear>,
     mut ev_evidence_toggle: MessageWriter<RequestJournalEvidenceToggle>,
-    gg: Res<GhostGuess>,
+    q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
 ) {
+    let Ok(gg) = q_gg.single() else {
+        error!("Evidence: click_evidence running but MissionGoalEntity is missing!");
+        return;
+    };
     let Ok(playergear) = players.single() else {
         return;
     };
@@ -153,7 +165,7 @@ pub(crate) fn click_evidence(
         }
 
         if is_target {
-            toggle_evidence(evidence, &mut ev_evidence_toggle, &gg);
+            toggle_evidence(evidence, &mut ev_evidence_toggle, gg);
         }
     }
 }

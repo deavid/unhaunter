@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{AppRuleExt, Channel, ServerMessageAppExt};
 use uncommon_states_core::UIContextState;
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
 use unmission_core::types::SimulationState;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
@@ -29,15 +29,6 @@ pub(super) fn app_setup(app: &mut App) {
         cleanup_ghost_entities.run_if(resource_exists::<AuthorityRole>),
     );
 
-    // Resource Bridges (singleton mission-goal entity <-> local GhostGuess resource)
-    app.add_systems(
-        Update,
-        sync_ghost_guess_to_mission_goal.run_if(resource_exists::<AuthorityRole>),
-    );
-    app.add_systems(
-        Update,
-        sync_mission_goal_to_ghost_guess.run_if(is_pure_client),
-    );
 
     // Server: mission lifecycle
     app.add_systems(
@@ -75,45 +66,6 @@ fn cleanup_ghost_entities(q_goal: Query<Entity, With<MissionGoalEntity>>, mut co
     }
 }
 
-/// Bridge: Sync GhostGuess resource to singleton entity (Server).
-fn sync_ghost_guess_to_mission_goal(
-    res: Res<GhostGuess>,
-    mut q_goal: Query<&mut GhostGuess, With<MissionGoalEntity>>,
-) {
-    if !res.is_changed() {
-        return;
-    }
-
-    if q_goal.is_empty() {
-        warn!(
-            "sync_ghost_guess_to_mission_goal: GhostGuess changed but MissionGoalEntity is missing; state={:?}",
-            *res
-        );
-        return;
-    }
-
-    for mut comp in q_goal.iter_mut() {
-        info!(
-            "GHOST_GUESS_BRIDGE_SERVER: syncing resource to mission goal entity: {:?}",
-            *res
-        );
-        *comp = res.clone();
-    }
-}
-
-/// Bridge: Sync singleton entity to GhostGuess resource (Client).
-fn sync_mission_goal_to_ghost_guess(
-    q_goal: Query<&GhostGuess, (With<MissionGoalEntity>, Changed<GhostGuess>)>,
-    mut res: ResMut<GhostGuess>,
-) {
-    for comp in q_goal.iter() {
-        info!(
-            "GHOST_GUESS_BRIDGE_CLIENT: applying replicated mission goal GhostGuess {:?}",
-            *comp
-        );
-        *res = comp.clone();
-    }
-}
 
 fn server_teardown_grace_period(
     mut timer: Local<Option<Timer>>,

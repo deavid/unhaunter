@@ -7,15 +7,16 @@ use ungear_core::types::gear::kind::GearKind;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
 use unplayer_core::components::MainPlayer;
+use unreplicon_core::components::MissionGoalEntity;
 use unwalkie_core::messages::ProposeWalkieEvent;
 use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 
 fn trigger_almost_ready_to_craft_repellent_system(
     player_query: Query<&PlayerGear, With<MainPlayer>>,
     current_evidence_readings: Res<CurrentEvidenceReadings>,
-    ghost_guess: Res<GhostGuess>,
+    q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
     app_state: Res<State<UIContextState>>,
     difficulty: Res<CurrentDifficulty>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -32,6 +33,9 @@ fn trigger_almost_ready_to_craft_repellent_system(
         *first_ready_time = None;
         return;
     }
+    let Ok(ghost_guess) = q_gg.single() else {
+        return;
+    };
     if *repellent_crafted {
         *first_ready_time = None;
         return;

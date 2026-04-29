@@ -4,9 +4,10 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unghost_core::difficulty_ext::DifficultyGhostExt;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
 use uninvestigation_core::resources::potential_id_timer::{PotentialIDData, PotentialIDTimer};
 use unprofile_core::profile::PlayerProfileData;
+use unreplicon_core::components::MissionGoalEntity;
 use unwalkie_core::messages::ProposeWalkieEvent;
 use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 
@@ -15,7 +16,7 @@ use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
 fn potential_id_prompt_system(
     mut timer: ResMut<PotentialIDTimer>,
     current_evidence_readings: Res<CurrentEvidenceReadings>,
-    ghost_guess: Res<GhostGuess>,
+    q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
     player_profile: Res<Persistent<PlayerProfileData>>,
     difficulty: Res<CurrentDifficulty>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -26,6 +27,9 @@ fn potential_id_prompt_system(
     if !difficulty_info.is_tutorial_difficulty() {
         return;
     }
+    let Ok(ghost_guess) = q_gg.single() else {
+        return;
+    };
 
     const HIGH_CLARITY_THRESHOLD: f32 = 0.75;
     const PROMPT_DELAY_SECONDS: f32 = 20.0;

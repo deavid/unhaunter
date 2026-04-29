@@ -8,9 +8,10 @@ use unghost_core::difficulty_ext::DifficultyGhostExt;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::ghost::GhostType;
 use uninvestigation_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhostToggle};
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
 use uninvestigation_core::resources::potential_id_timer::PotentialIDTimer;
 use unprofile_core::profile::PlayerProfileData;
+use unreplicon_core::components::MissionGoalEntity;
 use unreplicon_core::resources::AuthorityRole;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::events::truck::TruckUIEvent;
@@ -40,7 +41,7 @@ pub(crate) struct JournalButtonParams<'w, 's> {
     >,
     pub q_flask:
         Query<'w, 's, &'static ungearitems_core::components::repellentflask::RepellentFlask>,
-    pub gg: ResMut<'w, GhostGuess>,
+    pub q_gg: Query<'w, 's, &'static mut GhostGuess, With<MissionGoalEntity>>,
     pub ev_truckui: MessageWriter<'w, TruckUIEvent>,
     pub walkie_play: ResMut<'w, WalkiePlay>,
     pub profile_data: ResMut<'w, Persistent<PlayerProfileData>>,
@@ -53,6 +54,11 @@ pub(crate) struct JournalButtonParams<'w, 's> {
 }
 
 pub(crate) fn button_system(mut p: JournalButtonParams) {
+    let Ok(mut gg) = p.q_gg.single_mut() else {
+        error!("Journal: button_system running but MissionGoalEntity (GhostGuess) is missing!");
+        return;
+    };
+
     let mut clicked_ghost_type: Option<(GhostType, bool)> = None;
     let mut clicked_evidence_type: Option<(Evidence, bool)> = None;
 
@@ -93,47 +99,47 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
     if p.authority.is_some() {
         if let Some((ev, discard)) = clicked_evidence_type {
             if discard {
-                if p.gg.evidences_missing.contains(&ev) {
-                    p.gg.evidences_missing.remove(&ev);
+                if gg.evidences_missing.contains(&ev) {
+                    gg.evidences_missing.remove(&ev);
                 } else {
-                    p.gg.evidences_missing.insert(ev);
-                    p.gg.evidences_found.remove(&ev);
+                    gg.evidences_missing.insert(ev);
+                    gg.evidences_found.remove(&ev);
                 }
-            } else if p.gg.evidences_found.contains(&ev) {
-                p.gg.evidences_found.remove(&ev);
+            } else if gg.evidences_found.contains(&ev) {
+                gg.evidences_found.remove(&ev);
             } else {
-                p.gg.evidences_found.insert(ev);
-                p.gg.evidences_missing.remove(&ev);
+                gg.evidences_found.insert(ev);
+                gg.evidences_missing.remove(&ev);
             }
         }
         if let Some((gh, discard)) = clicked_ghost_type {
             if discard {
-                if p.gg.ghosts_discarded.contains(&gh) {
-                    p.gg.ghosts_discarded.remove(&gh);
+                if gg.ghosts_discarded.contains(&gh) {
+                    gg.ghosts_discarded.remove(&gh);
                 } else {
-                    p.gg.ghosts_discarded.insert(gh);
-                    if p.gg.ghost_type == Some(gh) {
-                        p.gg.ghost_type = None;
+                    gg.ghosts_discarded.insert(gh);
+                    if gg.ghost_type == Some(gh) {
+                        gg.ghost_type = None;
                     }
                 }
-            } else if p.gg.ghost_type == Some(gh) {
-                p.gg.ghost_type = None;
+            } else if gg.ghost_type == Some(gh) {
+                gg.ghost_type = None;
             } else {
-                p.gg.ghost_type = Some(gh);
+                gg.ghost_type = Some(gh);
             }
         }
     } else {
         if let Some((evidence, discard)) = clicked_evidence_type {
-            let mark_as_found = !discard && !p.gg.evidences_found.contains(&evidence);
+            let mark_as_found = !discard && !gg.evidences_found.contains(&evidence);
             info!(
                 "JOURNAL_UI_CLIENT: sending evidence toggle evidence={:?} discard={} mark_as_found={} local_guess ghost={:?} found={:?} missing={:?} discarded={:?}",
                 evidence,
                 discard,
                 mark_as_found,
-                p.gg.ghost_type,
-                p.gg.evidences_found,
-                p.gg.evidences_missing,
-                p.gg.ghosts_discarded
+                gg.ghost_type,
+                gg.evidences_found,
+                gg.evidences_missing,
+                gg.ghosts_discarded
             );
             p.ev_evidence_toggle.write(RequestJournalEvidenceToggle {
                 evidence,
@@ -144,7 +150,7 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
         if let Some((ghost_type, discard)) = clicked_ghost_type {
             let new_guess = if discard {
                 Some(ghost_type)
-            } else if p.gg.ghost_type == Some(ghost_type) {
+            } else if gg.ghost_type == Some(ghost_type) {
                 None
             } else {
                 Some(ghost_type)
@@ -154,9 +160,9 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
                 ghost_type,
                 discard,
                 new_guess,
-                p.gg.evidences_found,
-                p.gg.evidences_missing,
-                p.gg.ghosts_discarded
+                gg.evidences_found,
+                gg.evidences_missing,
+                gg.ghosts_discarded
             );
             p.ev_ghost_toggle.write(RequestJournalGhostToggle {
                 discard,
@@ -174,26 +180,26 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
         .into_iter()
         .filter(|ghost_type: &GhostType| {
             let ghost_ev = ghost_type.evidences();
-            let is_discarded = p.gg.ghosts_discarded.contains(ghost_type);
+            let is_discarded = gg.ghosts_discarded.contains(ghost_type);
 
             !is_discarded
-                && ghost_ev.is_superset(&p.gg.evidences_found)
-                && ghost_ev.is_disjoint(&p.gg.evidences_missing)
+                && ghost_ev.is_superset(&gg.evidences_found)
+                && ghost_ev.is_disjoint(&gg.evidences_missing)
         })
         .collect();
 
     // Host-exclusive: auto-select/deselect logic
     if p.authority.is_some() {
         // a) Auto-deselect if the currently selected ghost becomes invalid
-        if let Some(selected_ghost) = p.gg.ghost_type
+        if let Some(selected_ghost) = gg.ghost_type
             && !possible_ghosts.contains(&selected_ghost)
         {
-            p.gg.ghost_type = None;
+            gg.ghost_type = None;
         }
 
         // b) Auto-select if only one ghost is possible and nothing is selected
-        if possible_ghosts.len() == 1 && p.gg.ghost_type.is_none() {
-            p.gg.ghost_type = Some(possible_ghosts[0]);
+        if possible_ghosts.len() == 1 && gg.ghost_type.is_none() {
+            gg.ghost_type = Some(possible_ghosts[0]);
         }
     }
 
@@ -205,12 +211,12 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
 
         match tui_button.class {
             TruckButtonType::Ghost(gh) => {
-                if p.gg.ghosts_discarded.contains(&gh) {
+                if gg.ghosts_discarded.contains(&gh) {
                     tui_button.status = TruckButtonState::Discard;
                     tui_button.disabled = false;
                 } else {
                     tui_button.disabled = !possible_ghosts.contains(&gh);
-                    if p.gg.ghost_type == Some(gh) {
+                    if gg.ghost_type == Some(gh) {
                         tui_button.status = TruckButtonState::Pressed;
                     } else {
                         tui_button.status = TruckButtonState::Off;
@@ -229,10 +235,10 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
 
                 if !gear_available {
                     tui_button.disabled = true;
-                } else if p.gg.evidences_found.contains(&ev) {
+                } else if gg.evidences_found.contains(&ev) {
                     tui_button.status = TruckButtonState::Pressed;
                     tui_button.disabled = false;
-                } else if p.gg.evidences_missing.contains(&ev) {
+                } else if gg.evidences_missing.contains(&ev) {
                     tui_button.status = TruckButtonState::Discard;
                     tui_button.disabled = false;
                 } else {
@@ -245,7 +251,7 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
                 }
             }
             TruckButtonType::CraftRepellent => {
-                if let Some(target_ghost) = p.gg.ghost_type {
+                if let Some(target_ghost) = gg.ghost_type {
                     let mut already_has_flask = false;
                     if let Ok(player_gear) = p.q_gear.single() {
                         let slots = player_gear
@@ -375,7 +381,7 @@ pub(crate) fn button_system(mut p: JournalButtonParams) {
     // Acknowledge hints (Evidence buttons)
     for (_, _, _, _, mut tui_button) in &mut p.interaction_query {
         if let TruckButtonType::Evidence(ev) = tui_button.class
-            && p.gg.evidences_found.contains(&ev)
+            && gg.evidences_found.contains(&ev)
         {
             tui_button.blinking_hint_active = false;
 
