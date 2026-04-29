@@ -44,7 +44,10 @@ pub(crate) fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &TruckUiAss
 
     p.spawn((
         Node {
-            margin: TEXT_MARGIN,
+            margin: UiRect {
+                top: Val::Px(10.0 * UI_SCALE),
+                ..TEXT_MARGIN
+            },
             flex_direction: FlexDirection::Column,
             ..default()
         },
@@ -91,7 +94,15 @@ fn update_sanity(
         }
         // Then by connection state (Active > Inactive > Disconnected)
         // a.3=disc, a.4=inact. We want disc last, then inact.
-        let state_score = |disc, inact| if disc { 2 } else if inact { 1 } else { 0 };
+        let state_score = |disc, inact| {
+            if disc {
+                2
+            } else if inact {
+                1
+            } else {
+                0
+            }
+        };
         let score_a = state_score(a.3, a.4);
         let score_b = state_score(b.3, b.4);
         if score_a != score_b {
@@ -154,6 +165,7 @@ fn update_sanity(
                         flex_direction: FlexDirection::Row,
                         align_items: AlignItems::Center,
                         column_gap: Val::Px(5.0 * UI_SCALE),
+                        margin: UiRect::top(Val::Px(5.0 * UI_SCALE)),
                         ..default()
                     })
                     .with_children(|row| {
@@ -167,7 +179,8 @@ fn update_sanity(
                             BackgroundColor(player_tint),
                         ));
                         // Status text
-                        let name = unreplicon_core::identity::generate_deterministic_name(sprite.id);
+                        let name =
+                            unreplicon_core::identity::generate_deterministic_name(sprite.id);
                         let status_text = format!(
                             "{}:\n  {:.0}% Sanity, {:.0}% Health",
                             name, vitals.sanity, vitals.health
@@ -192,16 +205,16 @@ fn update_sanity(
 
     // Update text content every frame
     for (vitals, sprite, _, _, _, _) in players {
-        if let Some(&text_entity) = text_map.get(&sprite.id) {
-            if let Ok(mut text) = q_text.get_mut(text_entity) {
-                let name = unreplicon_core::identity::generate_deterministic_name(sprite.id);
-                let new_content = format!(
-                    "{}:\n  {:.0}% Sanity, {:.0}% Health",
-                    name, vitals.sanity, vitals.health
-                );
-                if text.0 != new_content {
-                    text.0 = new_content;
-                }
+        if let Some(&text_entity) = text_map.get(&sprite.id)
+            && let Ok(mut text) = q_text.get_mut(text_entity)
+        {
+            let name = unreplicon_core::identity::generate_deterministic_name(sprite.id);
+            let new_content = format!(
+                "{}:\n  {:.0}% Sanity, {:.0}% Health",
+                name, vitals.sanity, vitals.health
+            );
+            if text.0 != new_content {
+                text.0 = new_content;
             }
         }
     }
