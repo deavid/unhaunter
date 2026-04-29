@@ -115,7 +115,7 @@ pub fn setup_hub_ui(mut commands: Commands, ui_assets: Res<MenuAssets>) {
             Node {
                 position_type: PositionType::Absolute,
                 right: Val::Px(50.0 * plt::UI_SCALE),
-                top: Val::Px(160.0 * plt::UI_SCALE),
+                top: Val::Px(260.0 * plt::UI_SCALE),
                 ..default()
             },
             HubStatusLabel,
@@ -262,15 +262,14 @@ pub fn update_code_input(
         }
     }
 
-    if code_input.0.len() == 5 && *last_len < 5 {
-        if let Some((_, item)) = q_menu_items
+    if code_input.0.len() == 5
+        && *last_len < 5
+        && let Some((_, item)) = q_menu_items
             .iter()
             .find(|(id, _)| **id == HubMenuID::JoinRoom)
-        {
-            if let Ok(mut menu_root) = q_menu_root.get_single_mut() {
-                menu_root.selected_item = item.identifier;
-            }
-        }
+        && let Ok(mut menu_root) = q_menu_root.single_mut()
+    {
+        menu_root.selected_item = item.identifier;
     }
     *last_len = code_input.0.len();
 
