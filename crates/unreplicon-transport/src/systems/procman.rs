@@ -97,6 +97,7 @@ fn idle_timeout_system(
     room_auth: Res<RoomAuth>,
     server: Option<Res<bevy_renet::RenetServer>>,
     mut idle_timer: Local<f32>,
+    mut exit_sent: Local<bool>,
     mut exit: MessageWriter<bevy::app::AppExit>,
 ) {
     // Only apply to unhub-managed servers (those with a procman channel and an assigned room).
@@ -114,9 +115,10 @@ fn idle_timeout_system(
 
     if client_count == 0 {
         *idle_timer += time.delta_secs();
-        if *idle_timer >= 5.0 {
+        if *idle_timer >= 5.0 && !*exit_sent {
             info!("Dedicated server is empty and idle for 5s; shutting down.");
             exit.write(bevy::app::AppExit::Success);
+            *exit_sent = true;
         }
     } else {
         *idle_timer = 0.0;
