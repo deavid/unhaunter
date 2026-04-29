@@ -105,7 +105,12 @@ fn idle_timeout_system(
         return;
     }
 
-    let client_count = server.map(|s| s.clients_id().len()).unwrap_or(0);
+    let Some(server) = server else {
+        *idle_timer = 0.0;
+        return;
+    };
+
+    let client_count = server.clients_id().len();
 
     if client_count == 0 {
         *idle_timer += time.delta_secs();
