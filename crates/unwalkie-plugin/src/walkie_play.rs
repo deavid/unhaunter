@@ -128,6 +128,10 @@ fn walkie_talk(
             walkie_play.state = None;
             walkie_play.current_voice_line = None;
             walkie_play.last_message_time = time.elapsed_secs_f64();
+            for (mut text, mut vis) in qt.iter_mut() {
+                text.0 = "".to_string();
+                *vis = Visibility::Hidden;
+            }
             return;
         }
         return; // Still waiting for Outro to finish

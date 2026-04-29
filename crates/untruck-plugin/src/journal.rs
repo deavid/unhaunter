@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use uninput_core::states::InGameUiState;
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
+use unreplicon_core::components::MissionGoalEntity;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::components::truck_ui_markers::TruckUIGhostGuess;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
@@ -10,8 +11,15 @@ use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 fn force_discard_evidence_system(
     mut interaction_query: Query<&mut TruckUIButton, With<Button>>,
     mut ev_force_discard: MessageReader<ForceDiscardEvidenceEvent>,
-    mut gg: ResMut<GhostGuess>,
+    mut q_gg: Query<&mut GhostGuess, With<MissionGoalEntity>>,
 ) {
+    if ev_force_discard.is_empty() {
+        return;
+    }
+    let Ok(mut gg) = q_gg.single_mut() else {
+        error!("Journal: Received ForceDiscardEvidenceEvent but MissionGoalEntity (GhostGuess) is missing!");
+        return;
+    };
     for event in ev_force_discard.read() {
         debug!(
             "Journal: Received ForceDiscardEvidenceEvent for {:?}",
@@ -38,9 +46,6 @@ fn force_discard_evidence_system(
             // Update the model to reflect the discarded state
             gg.evidences_found.remove(&event.0);
             gg.evidences_missing.insert(event.0);
-
-            // Force mark the GhostGuess as changed to trigger update systems
-            gg.set_changed();
             debug!(
                 "Journal: ForceDiscardEvidenceEvent processed for {:?}",
                 event.0
@@ -51,16 +56,19 @@ fn force_discard_evidence_system(
     }
 }
 
-fn ghost_guess_system(gg: Res<GhostGuess>, mut q_gg: Query<&mut Text, With<TruckUIGhostGuess>>) {
-    if !gg.is_changed() {
+fn ghost_guess_system(
+    q_gg_res: Query<&GhostGuess, (With<MissionGoalEntity>, Changed<GhostGuess>)>,
+    mut q_gg_text: Query<&mut Text, With<TruckUIGhostGuess>>,
+) {
+    let Ok(gg) = q_gg_res.single() else {
         return;
-    }
+    };
     let ghost_name = gg
         .ghost_type
         .map(|g| g.name().to_string())
         .unwrap_or_else(|| "-- Unknown --".to_string());
 
-    for mut text in q_gg.iter_mut() {
+    for mut text in q_gg_text.iter_mut() {
         if text.0 != ghost_name {
             text.0 = ghost_name.clone();
         }

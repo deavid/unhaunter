@@ -15,8 +15,10 @@ pub struct HubState {
     pub start_time: std::time::Instant,
     pub rooms_by_ip: Arc<DashMap<std::net::IpAddr, Vec<String>>>,
     pub room_to_ip: Arc<DashMap<String, std::net::IpAddr>>,
+    pub player_to_room: Arc<DashMap<Uuid, String>>,
     pub nonces: Arc<DashMap<String, NonceEntry>>,
     pub active_players: Cache<Uuid, ()>,
+    pub active_sessions: Cache<Uuid, u16>,
     /// Rolling 1-hour window: installation_id → version string (never written to disk).
     pub players_1h: Cache<Uuid, String>,
     /// Rolling 24-hour window: installation_id → version string (never written to disk).
@@ -75,10 +77,15 @@ impl HubState {
             start_time: std::time::Instant::now(),
             rooms_by_ip: Arc::new(DashMap::new()),
             room_to_ip: Arc::new(DashMap::new()),
+            player_to_room: Arc::new(DashMap::new()),
             nonces: Arc::new(DashMap::new()),
             active_players: Cache::builder()
                 .max_capacity(100_000)
                 .time_to_live(Duration::from_secs(7200))
+                .build(),
+            active_sessions: Cache::builder()
+                .max_capacity(100_000)
+                .time_to_live(Duration::from_secs(600))
                 .build(),
             players_1h: Cache::builder()
                 .max_capacity(100_000)

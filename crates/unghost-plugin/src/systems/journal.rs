@@ -2,8 +2,9 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::{Channel, ClientMessageAppExt, FromClient};
 use unghost_core::events::{JournalEvidenceToggled, JournalGhostToggled};
 use uninvestigation_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhostToggle};
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
 use unmission_core::types::SimulationState;
+use unreplicon_core::components::MissionGoalEntity;
 use unreplicon_core::resources::AuthorityRole;
 
 pub(crate) fn app_setup(app: &mut App) {
@@ -58,10 +59,10 @@ fn handle_journal_ghost_toggle(
 
 pub(crate) fn apply_journal_evidence_toggle(
     mut reader: MessageReader<JournalEvidenceToggled>,
-    mut ghost_guess: Option<ResMut<GhostGuess>>,
+    mut q_gg: Query<&mut GhostGuess, With<MissionGoalEntity>>,
 ) {
-    let Some(ref mut ghost_guess) = ghost_guess else {
-        warn!("apply_journal_evidence_toggle: GhostGuess resource missing");
+    let Ok(mut ghost_guess) = q_gg.single_mut() else {
+        error!("apply_journal_evidence_toggle: MissionGoalEntity (GhostGuess) missing or multiple");
         return;
     };
     for msg in reader.read() {
@@ -90,10 +91,10 @@ pub(crate) fn apply_journal_evidence_toggle(
 
 pub(crate) fn apply_journal_ghost_toggle(
     mut reader: MessageReader<JournalGhostToggled>,
-    mut ghost_guess: Option<ResMut<GhostGuess>>,
+    mut q_gg: Query<&mut GhostGuess, With<MissionGoalEntity>>,
 ) {
-    let Some(ref mut ghost_guess) = ghost_guess else {
-        warn!("apply_journal_ghost_toggle: GhostGuess resource missing");
+    let Ok(mut ghost_guess) = q_gg.single_mut() else {
+        error!("apply_journal_ghost_toggle: MissionGoalEntity (GhostGuess) missing or multiple");
         return;
     };
     for msg in reader.read() {

@@ -23,9 +23,10 @@ pub fn generate_deterministic_name(uuid: Uuid) -> String {
     let s2 = SURNAMES[(val % SURNAMES.len() as u128) as usize];
     val /= SURNAMES.len() as u128;
 
-    let nickname = NICKNAMES[(val % NICKNAMES.len() as u128) as usize];
+    // TODO: Refactor a bit the nicknames
+    let _nickname = NICKNAMES[(val % NICKNAMES.len() as u128) as usize];
 
-    format!("{c1}.{c2}.{s1}-{s2} ({nickname})")
+    format!("{c1}.{c2}.{s1}-{s2}")
 }
 
 #[cfg(test)]

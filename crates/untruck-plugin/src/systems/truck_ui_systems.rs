@@ -7,7 +7,7 @@ use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
 use ungearitems_core::events::RequestCraftRepellent;
 use uninput_core::states::InGameUiState;
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
 use unmission_core::resources::MissionEndRequested;
 use unmission_core::types::MissionEvent;
 use unplayer_core::components::MainPlayer;
@@ -46,7 +46,7 @@ fn truckui_event_handle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ev_truckui: MessageReader<TruckUIEvent>,
-    gg: Res<GhostGuess>,
+    q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
     audio_settings: Res<Persistent<AudioSettings>>,
     mut ev_craft_req: MessageWriter<RequestCraftRepellent>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
@@ -58,6 +58,14 @@ fn truckui_event_handle(
     lobby_presence: Option<Res<LobbyPresenceRole>>,
     q_player: Query<Entity, (With<MainPlayer>, With<InTruck>)>,
 ) {
+    if ev_truckui.is_empty() {
+        return;
+    }
+    let Ok(gg) = q_gg.single() else {
+        error!("TruckUI: truckui_event_handle running but MissionGoalEntity is missing!");
+        return;
+    };
+
     for ev in ev_truckui.read() {
         match ev {
             TruckUIEvent::EndMission => {

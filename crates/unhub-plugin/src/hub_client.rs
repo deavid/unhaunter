@@ -19,6 +19,7 @@ pub struct HubClient {
     hub_url: String,
     tx: Sender<HubResponse>,
     pub rx: Receiver<HubResponse>,
+    pub session_id: u16,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -176,7 +177,13 @@ impl HubClient {
         });
     }
 
-    pub fn ping(&self, installation_id: uuid::Uuid, version: String, protocol_hash: u64) {
+    pub fn ping(
+        &self,
+        installation_id: uuid::Uuid,
+        session_id: u16,
+        version: String,
+        protocol_hash: u64,
+    ) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
         spawn_hub_task(async move {
@@ -185,6 +192,7 @@ impl HubClient {
                 .post(format!("{}/v1/ping", hub_url))
                 .json(&PingRequest {
                     installation_id,
+                    session_id,
                     version,
                     protocol_hash,
                 })
@@ -280,10 +288,12 @@ pub fn setup_hub_client(mut commands: Commands, hub_config: Res<HubConfig>) {
         "https://hub.unhaunter.com".to_string()
     };
 
+    let session_id = rand::random::<u16>();
     commands.insert_resource(HubClient {
         hub_url,
         tx: tx_to_bevy,
         rx: rx_from_worker,
+        session_id,
     });
     commands.insert_resource(HubStatus::default());
     commands.insert_resource(HubPingTimer::default());
@@ -301,15 +311,16 @@ pub fn ping_hub_system(
     mut timer: ResMut<HubPingTimer>,
     client: Res<HubClient>,
     protocol_hash: Res<ClientProtocolHash>,
-    profile: Option<Res<bevy_persistent::Persistent<unprofile_core::profile::PlayerProfileData>>>,
+    runtime_id: Option<Res<unprofile_core::profile::RuntimeInstallationId>>,
 ) {
     timer.0.tick(time.delta());
 
     if timer.0.just_finished()
-        && let Some(profile) = &profile
+        && let Some(runtime_id) = runtime_id
     {
         client.ping(
-            profile.installation_id,
+            runtime_id.0,
+            client.session_id,
             env!("CARGO_PKG_VERSION").to_string(),
             protocol_hash.0,
         );

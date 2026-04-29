@@ -6,7 +6,8 @@ use unghost_core::resources::signals::GhostHuntSignals;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::ghost::GhostType;
 use uninvestigation_core::messages::RequestJournalEvidenceToggle;
-use uninvestigation_core::resources::ghost_guess::GhostGuess;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
+use unreplicon_core::components::MissionGoalEntity;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use unwalkie_core::messages::ProposeWalkieEvent;
 use unwalkie_core::{events::walkie_types::WalkieEvent, resources::WalkiePlay};
@@ -27,7 +28,7 @@ fn repellent_feedback_trigger_system(
     time: Res<Time>,
     hunt_signals: Res<GhostHuntSignals>,
     repellent_particle_query: Query<&RepellentParticle>,
-    ghost_guess: Res<GhostGuess>,
+    q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut ev_propose: MessageWriter<ProposeWalkieEvent>,
     mut ev_force_discard: MessageWriter<ForceDiscardEvidenceEvent>,
@@ -44,6 +45,9 @@ fn repellent_feedback_trigger_system(
         }
         return;
     }
+    let Ok(ghost_guess) = q_gg.single() else {
+        return;
+    };
 
     // Count incorrect particles and total particles by repellent type
     let mut incorrect_particle_counts: HashMap<GhostType, usize> = HashMap::new();

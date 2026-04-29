@@ -6,6 +6,7 @@ use uuid::Uuid;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PingRequest {
     pub installation_id: Uuid,
+    pub session_id: u16,
     pub version: String,
     pub protocol_hash: u64,
 }
@@ -16,6 +17,7 @@ pub enum MultiplayerStatus {
     UpdateAvailable,
     UpdateRecommended,
     Unsupported,
+    Conflict,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

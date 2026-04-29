@@ -51,16 +51,43 @@ pub(crate) struct MenuUILayout;
 pub(crate) struct UpgradeNotificationBanner;
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(UIContextState::MainMenu), (setup, setup_ui))
+    app.add_systems(OnEnter(UIContextState::MainMenu), setup)
         .add_systems(
             Update,
             (
+                watch_connection_state,
+                setup_ui.run_if(menu_ui_is_missing),
                 menu_event,
                 update_hub_button_availability,
                 update_upgrade_notification,
             )
+                .chain()
                 .run_if(in_state(UIContextState::MainMenu)),
         );
+}
+
+fn menu_ui_is_missing(q_ui: Query<(), With<MenuUI>>) -> bool {
+    q_ui.is_empty()
+}
+
+fn watch_connection_state(
+    lobby_presence: Option<Res<LobbyPresenceRole>>,
+    authority: Option<Res<AuthorityRole>>,
+    mut last_state: Local<Option<(bool, bool)>>,
+    q_ui: Query<Entity, With<MenuUI>>,
+    mut commands: Commands,
+) {
+    let current_state = (lobby_presence.is_some(), authority.is_some());
+    if last_state.is_none() {
+        *last_state = Some(current_state);
+        return;
+    }
+    if Some(current_state) != *last_state {
+        for entity in q_ui.iter() {
+            commands.entity(entity).despawn();
+        }
+        *last_state = Some(current_state);
+    }
 }
 
 pub(crate) fn setup(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
@@ -284,6 +311,10 @@ pub(crate) fn update_upgrade_notification(
                     "Version unsupported. Download the latest version to play online.".to_string();
                 banner_visible = true;
             }
+            MultiplayerStatus::Conflict => {
+                banner_text = "UUID Conflict: Another instance is running. Re-launch the game if this persists.".to_string();
+                banner_visible = true;
+            }
             MultiplayerStatus::UpToDate => {
                 banner_visible = false;
             }
@@ -323,12 +354,12 @@ pub(crate) fn update_hub_button_availability(
 
     for (entity, menu_id, button_opt, children) in q_button.iter() {
         if *menu_id == MenuID::Hub {
-            let is_unsupported = hub_connection_status
+            let is_disabled = hub_connection_status
                 .status
-                .map(|s| matches!(s, MultiplayerStatus::Unsupported))
+                .map(|s| matches!(s, MultiplayerStatus::Unsupported | MultiplayerStatus::Conflict))
                 .unwrap_or(false);
 
-            let should_be_enabled = hub_status.is_online && !is_unsupported;
+            let should_be_enabled = hub_status.is_online && !is_disabled;
 
             if should_be_enabled && button_opt.is_none() {
                 // Was offline or unsupported, now online and supported -> re-enable
@@ -352,7 +383,7 @@ pub(crate) fn update_hub_button_availability(
 
             // Continuously force the color if it is offline or unsupported so that unmenu-plugin's frame delay doesn't override it.
             if !should_be_enabled {
-                let color = if is_unsupported {
+                let color = if is_disabled {
                     unmenu_core::colors::MENU_ITEM_COLOR_OFF.with_alpha(0.5)
                 } else {
                     unmenu_core::colors::MENU_ITEM_COLOR_OFF.with_alpha(0.3)

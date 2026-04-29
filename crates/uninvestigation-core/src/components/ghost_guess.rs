@@ -5,9 +5,9 @@ use serde::{Deserialize, Serialize};
 use crate::{evidence::Evidence, ghost::GhostType};
 
 #[derive(
-    Debug, Resource, Component, Default, Clone, Serialize, Deserialize, Reflect, PartialEq,
+    Debug, Component, Default, Clone, Serialize, Deserialize, Reflect, PartialEq,
 )]
-#[reflect(Component, Resource, Default, PartialEq)]
+#[reflect(Component, Default, PartialEq)]
 pub struct GhostGuess {
     pub ghost_type: Option<GhostType>,
     pub evidences_found: HashSet<Evidence>,

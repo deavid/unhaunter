@@ -7851,6 +7851,7 @@ dependencies = [
  "bevy-persistent",
  "bevy_replicon",
  "crossbeam-channel",
+ "rand 0.10.1",
  "reqwest",
  "serde_json",
  "tokio",
@@ -8497,6 +8498,7 @@ version = "0.4.0-alpha"
 dependencies = [
  "bevy",
  "bevy_replicon",
+ "once_cell",
  "serde",
  "ungear-core",
  "uuid",
@@ -8751,6 +8753,7 @@ dependencies = [
  "untruck-core",
  "unvitals-core",
  "unwalkie-core",
+ "uuid",
 ]
 
 [[package]]

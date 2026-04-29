@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use uncommon_app_core::platform::plt;
 use uncommon_states_core::UIContextState;
 use unmenu_core::assets::MenuAssets;
-use unmenu_core::components::{MCamera, MenuItemInteractive, MenuUI};
+use unmenu_core::components::{MCamera, MenuItemInteractive, MenuRoot, MenuUI};
 use unmenu_core::events::{MenuEscapeEvent, MenuItemClicked};
 use unmenu_core::templates;
 use unreplicon_core::components::LobbyInfo;
@@ -26,6 +26,9 @@ pub struct HubMenuMarker;
 
 #[derive(Component)]
 pub struct HubCodeDisplay;
+
+#[derive(Component)]
+pub struct HubCodeText;
 
 #[derive(Component)]
 pub struct HubStatusLabel;
@@ -79,6 +82,8 @@ pub fn setup_hub_ui(mut commands: Commands, ui_assets: Res<MenuAssets>) {
                     position_type: PositionType::Absolute,
                     right: Val::Px(50.0 * plt::UI_SCALE),
                     top: Val::Px(100.0 * plt::UI_SCALE),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::FlexEnd,
                     ..default()
                 },
                 HubCodeDisplay,
@@ -92,6 +97,16 @@ pub fn setup_hub_ui(mut commands: Commands, ui_assets: Res<MenuAssets>) {
                         ..default()
                     },
                     TextColor(Color::WHITE),
+                    HubCodeText,
+                ));
+                node.spawn((
+                    Text::new("Type code using your keyboard"),
+                    TextFont {
+                        font: ui_assets.font_titillium_light.clone(),
+                        font_size: 20.0 * plt::FONT_SCALE,
+                        ..default()
+                    },
+                    TextColor(Color::srgba(1.0, 1.0, 1.0, 0.5)),
                 ));
             });
 
@@ -100,7 +115,7 @@ pub fn setup_hub_ui(mut commands: Commands, ui_assets: Res<MenuAssets>) {
             Node {
                 position_type: PositionType::Absolute,
                 right: Val::Px(50.0 * plt::UI_SCALE),
-                top: Val::Px(160.0 * plt::UI_SCALE),
+                top: Val::Px(260.0 * plt::UI_SCALE),
                 ..default()
             },
             HubStatusLabel,
@@ -189,11 +204,14 @@ pub fn despawn_hub_ui(
 pub fn update_code_input(
     mut evr_char: MessageReader<KeyboardInput>,
     mut code_input: ResMut<RoomCodeInput>,
-    q_display: Query<&Children, With<HubCodeDisplay>>,
-    mut q_text: Query<&mut Text>,
+    mut q_text: Query<&mut Text, With<HubCodeText>>,
     hub_client: Res<HubClient>,
     mut hub_status: ResMut<HubStatus>,
     runtime_installation_id: Option<Res<unprofile_core::profile::RuntimeInstallationId>>,
+    time: Res<Time>,
+    mut q_menu_root: Query<&mut MenuRoot>,
+    mut last_len: Local<usize>,
+    q_menu_items: Query<(&HubMenuID, &MenuItemInteractive)>,
 ) {
     for ev in evr_char.read() {
         if ev.state == bevy::input::ButtonState::Released {
@@ -244,16 +262,29 @@ pub fn update_code_input(
         }
     }
 
-    for children in &q_display {
-        for child in children.iter() {
-            if let Ok(mut text) = q_text.get_mut(child.to_owned()) {
-                let mut display = code_input.0.clone();
-                while display.len() < 5 {
-                    display.push('_');
-                }
-                text.0 = format!("CODE: {}", display);
+    if code_input.0.len() == 5
+        && *last_len < 5
+        && let Some((_, item)) = q_menu_items
+            .iter()
+            .find(|(id, _)| **id == HubMenuID::JoinRoom)
+        && let Ok(mut menu_root) = q_menu_root.single_mut()
+    {
+        menu_root.selected_item = item.identifier;
+    }
+    *last_len = code_input.0.len();
+
+    let show_cursor = (time.elapsed_secs() * 2.0) as i32 % 2 == 0;
+
+    for mut text in &mut q_text {
+        let mut display = code_input.0.clone();
+        if display.len() < 5 {
+            let cursor = if show_cursor { '_' } else { ' ' };
+            display.push(cursor);
+            while display.len() < 5 {
+                display.push('_');
             }
         }
+        text.0 = format!("CODE: {}", display);
     }
 }
 
