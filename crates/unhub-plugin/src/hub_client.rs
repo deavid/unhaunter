@@ -311,15 +311,15 @@ pub fn ping_hub_system(
     mut timer: ResMut<HubPingTimer>,
     client: Res<HubClient>,
     protocol_hash: Res<ClientProtocolHash>,
-    profile: Option<Res<bevy_persistent::Persistent<unprofile_core::profile::PlayerProfileData>>>,
+    runtime_id: Option<Res<unprofile_core::profile::RuntimeInstallationId>>,
 ) {
     timer.0.tick(time.delta());
 
     if timer.0.just_finished()
-        && let Some(profile) = &profile
+        && let Some(runtime_id) = runtime_id
     {
         client.ping(
-            profile.installation_id,
+            runtime_id.0,
             client.session_id,
             env!("CARGO_PKG_VERSION").to_string(),
             protocol_hash.0,
