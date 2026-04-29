@@ -16,3 +16,4 @@ bevy_replicon = { workspace = true }
 serde = { workspace = true }
 uuid = { workspace = true }
 ungear-core = { workspace = true }
+once_cell = { workspace = true }

@@ -8497,6 +8497,7 @@ version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_replicon",
+ "once_cell",
  "serde",
  "ungear-core",
  "uuid",
