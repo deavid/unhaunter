@@ -39,7 +39,7 @@ pub(crate) fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &TruckUiAss
         Text::new("Loading player data..."),
         TextFont {
             font: handles.font_chakra_light.clone(),
-            font_size: 25.0 * FONT_SCALE,
+            font_size: 18.0 * FONT_SCALE,
             ..default()
         },
         TextColor(colors::TRUCKUI_TEXT_COLOR),
