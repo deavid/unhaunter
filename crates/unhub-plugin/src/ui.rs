@@ -77,14 +77,17 @@ pub fn setup_hub_ui(mut commands: Commands, ui_assets: Res<MenuAssets>) {
 
     commands.entity(root_entity).with_children(|parent| {
         parent
-            .spawn(Node {
-                position_type: PositionType::Absolute,
-                right: Val::Px(50.0 * plt::UI_SCALE),
-                top: Val::Px(100.0 * plt::UI_SCALE),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::FlexEnd,
-                ..default()
-            })
+            .spawn((
+                Node {
+                    position_type: PositionType::Absolute,
+                    right: Val::Px(50.0 * plt::UI_SCALE),
+                    top: Val::Px(100.0 * plt::UI_SCALE),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::FlexEnd,
+                    ..default()
+                },
+                HubCodeDisplay,
+            ))
             .with_children(|node| {
                 node.spawn((
                     Text::new("CODE: _____"),
@@ -208,6 +211,7 @@ pub fn update_code_input(
     time: Res<Time>,
     mut q_menu_root: Query<&mut MenuRoot>,
     mut last_len: Local<usize>,
+    q_menu_items: Query<(&HubMenuID, &MenuItemInteractive)>,
 ) {
     for ev in evr_char.read() {
         if ev.state == bevy::input::ButtonState::Released {
@@ -259,8 +263,13 @@ pub fn update_code_input(
     }
 
     if code_input.0.len() == 5 && *last_len < 5 {
-        if let Ok(mut menu_root) = q_menu_root.get_single_mut() {
-            menu_root.selected_item = 1; // HubMenuID::JoinRoom index
+        if let Some((_, item)) = q_menu_items
+            .iter()
+            .find(|(id, _)| **id == HubMenuID::JoinRoom)
+        {
+            if let Ok(mut menu_root) = q_menu_root.get_single_mut() {
+                menu_root.selected_item = item.identifier;
+            }
         }
     }
     *last_len = code_input.0.len();
