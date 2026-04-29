@@ -36,7 +36,7 @@ pub(crate) fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &TruckUiAss
     })
     .insert(BorderColor::all(colors::TRUCKUI_ACCENT_COLOR));
     let p1_sanity = (
-        Text::new("Player 1: 90% Sanity"),
+        Text::new("Loading player data..."),
         TextFont {
             font: handles.font_chakra_light.clone(),
             font_size: 25.0 * FONT_SCALE,
@@ -59,16 +59,37 @@ pub(crate) fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &TruckUiAss
 }
 
 fn update_sanity(
-    qp: Query<(&PlayerVitals, &PlayerSprite), With<MainPlayer>>,
+    qp: Query<(&PlayerVitals, &PlayerSprite, Has<MainPlayer>)>,
     mut qst: Query<&mut Text, With<SanityText>>,
 ) {
-    for (player, sprite) in &qp {
+    let mut players: Vec<_> = qp.iter().collect();
+    players.sort_by(|a, b| {
+        // Sort MainPlayer first
+        if a.2 != b.2 {
+            return b.2.cmp(&a.2);
+        }
+        // Then by network_id
+        a.1.network_id.0.cmp(&b.1.network_id.0)
+    });
+
+    let mut lines = Vec::new();
+    for (vitals, sprite, _is_main) in players {
         let name = unreplicon_core::identity::generate_deterministic_name(sprite.id);
-        for mut text in &mut qst {
-            let new_sanity_text = format!("{}:\n  {:.0}% Sanity", name, player.sanity);
-            if new_sanity_text != text.0 {
-                text.0 = new_sanity_text;
-            }
+        lines.push(format!(
+            "{}:\n  {:.0}% Sanity, {:.0}% Health",
+            name, vitals.sanity, vitals.health
+        ));
+    }
+
+    let new_text = if lines.is_empty() {
+        "No player data available".to_string()
+    } else {
+        lines.join("\n")
+    };
+
+    for mut text in &mut qst {
+        if text.0 != new_text {
+            text.0 = new_text.clone();
         }
     }
 }
