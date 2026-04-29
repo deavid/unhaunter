@@ -311,6 +311,10 @@ pub(crate) fn update_upgrade_notification(
                     "Version unsupported. Download the latest version to play online.".to_string();
                 banner_visible = true;
             }
+            MultiplayerStatus::Conflict => {
+                banner_text = "UUID Conflict: Another instance is running. Re-launch the game if this persists.".to_string();
+                banner_visible = true;
+            }
             MultiplayerStatus::UpToDate => {
                 banner_visible = false;
             }
@@ -350,12 +354,12 @@ pub(crate) fn update_hub_button_availability(
 
     for (entity, menu_id, button_opt, children) in q_button.iter() {
         if *menu_id == MenuID::Hub {
-            let is_unsupported = hub_connection_status
+            let is_disabled = hub_connection_status
                 .status
-                .map(|s| matches!(s, MultiplayerStatus::Unsupported))
+                .map(|s| matches!(s, MultiplayerStatus::Unsupported | MultiplayerStatus::Conflict))
                 .unwrap_or(false);
 
-            let should_be_enabled = hub_status.is_online && !is_unsupported;
+            let should_be_enabled = hub_status.is_online && !is_disabled;
 
             if should_be_enabled && button_opt.is_none() {
                 // Was offline or unsupported, now online and supported -> re-enable
@@ -379,7 +383,7 @@ pub(crate) fn update_hub_button_availability(
 
             // Continuously force the color if it is offline or unsupported so that unmenu-plugin's frame delay doesn't override it.
             if !should_be_enabled {
-                let color = if is_unsupported {
+                let color = if is_disabled {
                     unmenu_core::colors::MENU_ITEM_COLOR_OFF.with_alpha(0.5)
                 } else {
                     unmenu_core::colors::MENU_ITEM_COLOR_OFF.with_alpha(0.3)

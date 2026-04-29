@@ -167,7 +167,22 @@ pub async fn ping(
         });
     }
 
+    if let Some(existing_session) = state.active_sessions.get(&payload.installation_id)
+        && existing_session != payload.session_id
+        && state.player_to_room.contains_key(&payload.installation_id)
+    {
+        return Json(PingResponse {
+            ok: true,
+            online_players_estimate: state.active_players.entry_count() as usize,
+            multiplayer_status: MultiplayerStatus::Conflict,
+            upgrade_version: None,
+        });
+    }
+
     state.active_players.insert(payload.installation_id, ());
+    state
+        .active_sessions
+        .insert(payload.installation_id, payload.session_id);
     state
         .players_1h
         .insert(payload.installation_id, payload.version.clone());
@@ -283,6 +298,15 @@ pub async fn create_room(
     Json(payload): Json<CreateRoomRequest>,
 ) -> Result<Json<CreateRoomResponse>, (StatusCode, Json<HubError>)> {
     let config = state.config.read().await;
+    if state.player_to_room.contains_key(&payload.player_uuid) {
+        return Err((
+            StatusCode::CONFLICT,
+            Json(HubError {
+                error: "already_in_room".to_string(),
+                message: "You are already in an active room.".to_string(),
+            }),
+        ));
+    }
     if config.banned_uuids.contains(&payload.player_uuid) {
         return Err((
             StatusCode::FORBIDDEN,
@@ -556,6 +580,15 @@ pub async fn join_room(
     Json(payload): Json<JoinRoomRequest>,
 ) -> Result<Json<JoinRoomResponse>, (StatusCode, Json<HubError>)> {
     let config = state.config.read().await;
+    if state.player_to_room.contains_key(&payload.player_uuid) {
+        return Err((
+            StatusCode::CONFLICT,
+            Json(HubError {
+                error: "already_in_room".to_string(),
+                message: "You are already in an active room.".to_string(),
+            }),
+        ));
+    }
     if config.banned_uuids.contains(&payload.player_uuid) {
         return Err((
             StatusCode::FORBIDDEN,

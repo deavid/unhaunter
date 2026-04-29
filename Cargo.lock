@@ -7851,6 +7851,7 @@ dependencies = [
  "bevy-persistent",
  "bevy_replicon",
  "crossbeam-channel",
+ "rand 0.10.1",
  "reqwest",
  "serde_json",
  "tokio",
