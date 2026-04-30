@@ -451,8 +451,8 @@ pub(crate) fn update_display(
     for (action, mut vis, children) in q_menu_items.iter_mut() {
         match action {
             LobbyMenuAction::StartMission => {
-                let should_show_auto_join = host_in_mission && auto_join_armed.is_some_and(|r| r.0);
-                if should_show_auto_join {
+                let is_auto_joining = host_in_mission && auto_join_armed.is_some_and(|r| r.0);
+                if is_auto_joining {
                     *vis = Visibility::Hidden;
                 } else if host_in_mission {
                     // Server has confirmed the mission; everyone (including the owner) sees "Join Mission".
