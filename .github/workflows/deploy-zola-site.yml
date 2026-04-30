@@ -79,6 +79,24 @@ jobs:
         if: steps.latest_beta_release.outputs.BETA_TAG != 'none' && steps.latest_beta_release.outputs.BETA_TAG != 'null'
         run: rm -rf wasm-beta-temp beta-wasm-release.zip
 
+      # === WASM ALPHA GAME FETCHING STEPS ===
+      - name: Download Latest Alpha WASM Game
+        run: |
+          # Fetch the rolling alpha-latest release from the main repo
+          gh release download "alpha-latest" --repo deavid/unhaunter --pattern "unhaunter-*wasm.zip" -O alpha-wasm-release.zip || echo "Alpha release not found, skipping."
+          
+          if [ -f alpha-wasm-release.zip ]; then
+            unzip alpha-wasm-release.zip -d wasm-alpha-temp
+            mkdir -p static/wasm/alpha/
+            cp -Rv wasm-alpha-temp/* static/wasm/alpha/
+            rm -rf wasm-alpha-temp alpha-wasm-release.zip
+            echo "Latest alpha WASM game downloaded and extracted to static/wasm/alpha/"
+          else
+            echo "No alpha WASM found to download."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # === BUILD SITE AND UPLOAD ====
       - name: Build Zola site
         run: zola build

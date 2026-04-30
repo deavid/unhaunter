@@ -4,10 +4,8 @@
     <h1>{{ page.title }}</h1>
 
     <div class="container-image">
-        <img
-            src="{{ get_url(path='beta-screenshot.webp') }}"
-            alt="Unhaunter {{ page.extra.beta_version }} Beta Screenshot"
-        />
+        <img src="{{ get_url(path='beta-screenshot.webp') }}"
+            alt="Unhaunter {{ page.extra.beta_version }} Beta Screenshot" />
     </div>
     <div class="prose">
         <p>Sometimes we release beta versions to test and showcase new features for early feedback.</p>
@@ -16,15 +14,13 @@
         <p>And we currently have the Beta {{ page.extra.beta_version }} to test!</p>
 
         <p>
-            <a href="https://github.com/deavid/unhaunter/releases/tag/{{ page.extra.beta_version }}"
-                >Click here to download Unhaunter {{ page.extra.beta_version }} for Linux+Windows</a
-            >
+            <a href="https://github.com/deavid/unhaunter/releases/tag/{{ page.extra.beta_version }}">Click here to
+                download Unhaunter {{ page.extra.beta_version }} for Linux+Windows</a>
         </p>
 
         <p>
-            <a href="{{ get_url(path='wasm/beta/') }}" target="_blank" rel="noopener"
-                >Click here to play {{ page.extra.beta_version }} in the browser</a
-            >
+            <a href="{{ get_url(path='wasm/beta/') }}" target="_blank" rel="noopener">Click here to play {{
+                page.extra.beta_version }} in the browser</a>
         </p>
 
         {{ page.content | safe }} {% else %}
@@ -34,12 +30,25 @@
         </p>
 
         <p>
-            <a href="{{ get_url(path='wasm/main/') }}" target="_blank" rel="noopener"
-                >Click here to play the stable version in the browser</a
-            >
+            <a href="{{ get_url(path='wasm/main/') }}" target="_blank" rel="noopener">Click here to play the stable
+                version in the browser</a>
         </p>
         {% endif %}
+        <div class="alpha-note">
+            <p>
+                <strong>Experimental Alpha:</strong> For the truly adventurous, we also have a rolling <em>Alpha</em>
+                build.
+                This is updated automatically whenever we push code to the development branch.
+                <strong>We don't know what's in it</strong>—it might have new features, it might be totally broken, or
+                it might just crash.
+            </p>
+            <p>
+                <a href="{{ get_url(path='wasm/alpha/') }}" target="_blank" rel="noopener">Play Alpha Build (Rolling)
+                    &rarr;</a>
+            </p>
+        </div>
     </div>
+
 </section>
 
 {% endblock main %}
