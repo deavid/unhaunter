@@ -39,32 +39,70 @@ pub fn spatial_audio_playback(
             .position
             .map(|pos| player_position.distance(&pos))
             .unwrap_or(0.0);
-        let mut adjusted_volume = (sound_event.volume * (1.0 + dist * 0.2)).clamp(0.0, 1.0);
+
+        let base_vol = sound_event.volume
+            * audio_settings.volume_effects.as_f32()
+            * audio_settings.volume_master.as_f32();
+
+        // Dry Volume: Pure natural decay (no compensation)
+        let dry_fade = (1.0 - (dist / 15.0).powi(2)).max(0.0);
+        let mut dry_vol = (base_vol * dry_fade).clamp(0.0, 1.0);
+
+        // Reverb Volume: Stronger compensation to counteract Bevy and 'bloom' over distance
+        let rev_fade = 0.6 / (1.0 + dist * 0.05);
+        let rev_compensation = 1.0 + dist * 0.4;
+        let rev_proximity_fade = ((dist - 2.0) / 10.0).clamp(0.0, 1.0);
+        let mut rev_vol =
+            (base_vol * rev_fade * rev_compensation * rev_proximity_fade).clamp(0.0, 1.0);
+
         if audio_settings.sound_output == SoundOutput::Mono {
-            adjusted_volume /= 1.0 + dist * 0.4;
+            let mono_div = 1.0 + dist * 0.4;
+            dry_vol /= mono_div;
+            rev_vol /= mono_div;
         }
 
-        let mut sound = commands.spawn(AudioPlayer::<AudioSource>(
-            asset_server.load(sound_event.sound_file.clone()),
-        ));
-        sound.insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Despawn,
-            volume: bevy::audio::Volume::Linear(
-                adjusted_volume
-                    * audio_settings.volume_effects.as_f32()
-                    * audio_settings.volume_master.as_f32(),
-            ),
-            speed: 1.0,
-            paused: false,
-            spatial: sound_event.position.is_some()
-                && audio_settings.sound_output != SoundOutput::Mono,
-            spatial_scale: Some(SpatialScale::new(0.005)),
-            ..default()
-        });
+        // --- DRY LAYER ---
+        let dry_id = commands
+            .spawn((
+                AudioPlayer::<AudioSource>(asset_server.load(sound_event.sound_file.clone())),
+                PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Despawn,
+                    volume: bevy::audio::Volume::Linear(dry_vol),
+                    speed: 1.0,
+                    paused: false,
+                    spatial: sound_event.position.is_some()
+                        && audio_settings.sound_output != SoundOutput::Mono,
+                    spatial_scale: Some(SpatialScale::new(0.005)),
+                    ..default()
+                },
+            ))
+            .id();
+
+        // --- REVERB LAYER ---
+        let reverb_file = sound_event.sound_file.replace("sounds/", "reverbs/");
+        let rev_id = commands
+            .spawn((
+                AudioPlayer::<AudioSource>(asset_server.load(reverb_file)),
+                PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Despawn,
+                    volume: bevy::audio::Volume::Linear(rev_vol),
+                    speed: 1.0,
+                    paused: false,
+                    spatial: sound_event.position.is_some()
+                        && audio_settings.sound_output != SoundOutput::Mono,
+                    // Smaller scale makes the reverb feel "wider" and less like a point source
+                    spatial_scale: Some(SpatialScale::new(0.001)),
+                    ..default()
+                },
+            ))
+            .id();
+
         if let Some(position) = sound_event.position {
             let mut spos_vec = perspective::to_screen_coord(position);
             spos_vec.z -= 10.0 / audio_settings.sound_output.to_ear_offset();
-            sound.insert(Transform::from_translation(spos_vec));
+            let transform = Transform::from_translation(spos_vec);
+            commands.entity(dry_id).insert(transform);
+            commands.entity(rev_id).insert(transform);
         }
     }
     measure.end_ms();
