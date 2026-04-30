@@ -616,6 +616,45 @@ pub async fn join_room(
         }),
     ))?;
 
+    // Verify protocol hash
+    let mut version_found = false;
+    for entry in &pm.library {
+        if entry.version == room.game_version {
+            version_found = true;
+            if entry.protocol_hash != payload.protocol_hash {
+                return Err((
+                    StatusCode::CONFLICT,
+                    Json(HubError {
+                        error: "protocol_mismatch".to_string(),
+                        message: format!(
+                            "Protocol hash mismatch for room {}. Client has {}, but room requires {}.",
+                            code, payload.protocol_hash, entry.protocol_hash
+                        ),
+                    }),
+                ));
+            }
+            break;
+        }
+    }
+
+    if !version_found {
+        tracing::error!(
+            "Room {} uses version {}, but it's not in the hosting ProcMan's library",
+            code,
+            room.game_version
+        );
+        return Err((
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(HubError {
+                error: "room_version_unavailable".to_string(),
+                message: format!(
+                    "The room requires game version {}, but the hosting server cannot currently verify its protocol. Please try again later.",
+                    room.game_version
+                ),
+            }),
+        ));
+    }
+
     let exp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()

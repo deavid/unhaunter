@@ -52,6 +52,9 @@ pub(crate) struct DeploymentStatusText;
 #[derive(Component)]
 pub(crate) struct MissionLaunchControl;
 
+#[derive(Component)]
+pub(crate) struct LobbyVersionWarning;
+
 #[derive(Clone, Copy, Component, Debug, PartialEq, Eq)]
 pub(crate) enum LobbyMenuAction {
     SelectMap,
@@ -138,20 +141,14 @@ pub(crate) fn setup_ui(
 
             let mut menu_idx = 0;
             for (action, label) in items {
-                // Always create StartMission and AbortMission for everyone (visibility controlled in update_display)
-                if is_room_owner
-                    || action == LobbyMenuAction::ExitLobby
-                    || action == LobbyMenuAction::StartMission
-                    || action == LobbyMenuAction::AbortMission
-                {
-                    let mut menu_item =
-                        templates::create_menu_item(s, label, menu_idx, false, &menu_assets);
-                    menu_item.insert(action);
-                    if action == LobbyMenuAction::StartMission {
-                        menu_item.insert(MissionLaunchControl);
-                    }
-                    menu_idx += 1;
+                // Always create all menu items for everyone (visibility controlled in update_display)
+                let mut menu_item =
+                    templates::create_menu_item(s, label, menu_idx, false, &menu_assets);
+                menu_item.insert(action);
+                if action == LobbyMenuAction::StartMission {
+                    menu_item.insert(MissionLaunchControl);
                 }
+                menu_idx += 1;
             }
 
             s.spawn((
@@ -259,6 +256,8 @@ pub(crate) fn setup_ui(
                     position_type: PositionType::Absolute,
                     right: Val::Px(40.0 * UI_SCALE),
                     top: Val::Px(40.0 * UI_SCALE),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::FlexEnd,
                     ..default()
                 },
                 LobbyRoomCode,
@@ -272,6 +271,17 @@ pub(crate) fn setup_ui(
                         ..default()
                     },
                     TextColor(colors::MENU_ITEM_COLOR_ON),
+                ));
+
+                parent.spawn((
+                    LobbyVersionWarning,
+                    Text::new(""),
+                    TextFont {
+                        font: menu_assets.font_titillium_regular.clone(),
+                        font_size: 16.0 * FONT_SCALE,
+                        ..default()
+                    },
+                    TextColor(Color::srgb(1.0, 0.5, 0.0)), // Orange
                 ));
             });
         }
@@ -428,19 +438,21 @@ pub(crate) struct LobbyUpdateParams<'w, 's> {
     pub q_lobby: Query<'w, 's, Ref<'static, LobbyInfo>>,
     pub q_selected_mission: Query<'w, 's, Entity, With<SelectedMission>>,
     pub auto_join_armed: Option<Res<'w, MissionAutoJoinArmed>>,
+    pub hub_conn_status: Option<Res<'w, unhub_plugin::hub_client::HubConnectionStatus>>,
 }
 
 pub(crate) fn update_display(
     params: LobbyUpdateParams,
     menu_assets: Option<Res<MenuAssets>>,
     mut q_preview: Query<&mut ImageNode, With<LobbyMapPreview>>,
-    mut q_map_info: Query<&mut Text, (With<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
-    mut q_diff_info: Query<&mut Text, (With<LobbyDifficultyInfo>, Without<LobbyMapInfo>)>,
+    mut q_map_info: Query<&mut Text, (With<LobbyMapInfo>, Without<LobbyDifficultyInfo>, Without<LobbyVersionWarning>)>,
+    mut q_diff_info: Query<&mut Text, (With<LobbyDifficultyInfo>, Without<LobbyMapInfo>, Without<LobbyVersionWarning>)>,
     q_player_list: Query<Entity, With<LobbyPlayerList>>,
     q_children: Query<&Children>,
     mut commands: Commands,
     mut q_menu_items: Query<(&LobbyMenuAction, &mut Visibility, &Children)>,
-    mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
+    mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>, Without<LobbyVersionWarning>)>,
+    mut q_warning: Query<&mut Text, With<LobbyVersionWarning>>,
 ) {
     let Some(ui_assets) = menu_assets else {
         return;
@@ -506,7 +518,7 @@ pub(crate) fn update_display(
                 }
             }
             LobbyMenuAction::SelectMap | LobbyMenuAction::SelectDifficulty => {
-                if host_in_mission {
+                if host_in_mission || !is_room_owner {
                     *vis = Visibility::Hidden;
                 } else {
                     *vis = Visibility::Inherited;
@@ -516,12 +528,39 @@ pub(crate) fn update_display(
         }
     }
 
+    // Update Version Warning
+    if let Ok(mut warning_text) = q_warning.single_mut() {
+        let warning = if let Some(hub_status) = params.hub_conn_status.as_ref() {
+            match hub_status.status {
+                Some(unhub_client::protocol::MultiplayerStatus::UpdateAvailable) => {
+                    "Warning: Update available".to_string()
+                }
+                Some(unhub_client::protocol::MultiplayerStatus::UpdateRecommended) => {
+                    "Warning: Update recommended for compatibility".to_string()
+                }
+                Some(unhub_client::protocol::MultiplayerStatus::Unsupported) => {
+                    "CRITICAL: Version incompatible".to_string()
+                }
+                Some(unhub_client::protocol::MultiplayerStatus::Conflict) => {
+                    "CRITICAL: Another instance or profile conflict detected".to_string()
+                }
+                _ => "".to_string(),
+            }
+        } else {
+            "".to_string()
+        };
+        if warning_text.0 != warning {
+            warning_text.0 = warning;
+        }
+    }
+
     if lobby_info
         .as_ref()
         .map(|li| !li.is_changed())
         .unwrap_or(true)
         && !params.maps.is_changed()
         && !params.local_player.is_changed()
+        && !params.hub_conn_status.is_some_and(|s| s.is_changed())
     {
         return;
     }

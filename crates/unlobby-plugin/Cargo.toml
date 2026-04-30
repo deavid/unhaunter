@@ -26,3 +26,5 @@ unrender-std = { workspace = true }
 bevy-persistent = { workspace = true }
 unlobby-core = { workspace = true }
 unplayer-core = { workspace = true }
+unhub-plugin = { workspace = true }
+unhub-client = { workspace = true }

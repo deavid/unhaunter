@@ -151,6 +151,7 @@ pub struct CreateRoomRequest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JoinRoomRequest {
     pub player_uuid: Uuid,
+    pub protocol_hash: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
