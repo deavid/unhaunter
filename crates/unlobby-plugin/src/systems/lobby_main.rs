@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncommon_app_core::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -417,14 +418,21 @@ pub(crate) fn handle_clicks(
     }
 }
 
+#[derive(SystemParam)]
+pub(crate) struct LobbyUpdateParams<'w, 's> {
+    pub maps: Res<'w, Maps>,
+    pub asset_server: Res<'w, AssetServer>,
+    pub local_player: Res<'w, LocalPlayer>,
+    pub authority_role: Option<Res<'w, AuthorityRole>>,
+    pub local_player_role: Option<Res<'w, LocalPlayerRole>>,
+    pub q_lobby: Query<'w, 's, Ref<'static, LobbyInfo>>,
+    pub q_selected_mission: Query<'w, 's, Entity, With<SelectedMission>>,
+    pub auto_join_armed: Option<Res<'w, MissionAutoJoinArmed>>,
+}
+
 pub(crate) fn update_display(
-    q_lobby: Query<Ref<LobbyInfo>>,
-    maps: Res<Maps>,
+    params: LobbyUpdateParams,
     menu_assets: Option<Res<MenuAssets>>,
-    asset_server: Res<AssetServer>,
-    local_player: Res<LocalPlayer>,
-    authority_role: Option<Res<AuthorityRole>>,
-    local_player_role: Option<Res<LocalPlayerRole>>,
     mut q_preview: Query<&mut ImageNode, With<LobbyMapPreview>>,
     mut q_map_info: Query<&mut Text, (With<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
     mut q_diff_info: Query<&mut Text, (With<LobbyDifficultyInfo>, Without<LobbyMapInfo>)>,
@@ -433,25 +441,24 @@ pub(crate) fn update_display(
     mut commands: Commands,
     mut q_menu_items: Query<(&LobbyMenuAction, &mut Visibility, &Children)>,
     mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
-    q_selected_mission: Query<Entity, With<SelectedMission>>,
-    auto_join_armed: Option<Res<MissionAutoJoinArmed>>,
 ) {
     let Some(ui_assets) = menu_assets else {
         return;
     };
 
-    let lobby_info = q_lobby.single().ok();
-    let is_room_owner = match (local_player.uuid, lobby_info.as_deref()) {
+    let lobby_info = params.q_lobby.single().ok();
+    let is_room_owner = match (params.local_player.uuid, lobby_info.as_deref()) {
         (lp, Some(li)) => li.leader_uuid == Some(lp),
-        (_, None) => authority_role.is_some() && local_player_role.is_some(),
+        (_, None) => params.authority_role.is_some() && params.local_player_role.is_some(),
     };
-    let host_in_mission = !q_selected_mission.is_empty();
+    let host_in_mission = !params.q_selected_mission.is_empty();
 
     // Update Menu Items (Start/Join Mission)
     for (action, mut vis, children) in q_menu_items.iter_mut() {
         match action {
             LobbyMenuAction::StartMission => {
-                let is_auto_joining = host_in_mission && auto_join_armed.is_some_and(|r| r.0);
+                let is_auto_joining =
+                    host_in_mission && params.auto_join_armed.as_ref().is_some_and(|r| r.0);
                 if is_auto_joining {
                     *vis = Visibility::Hidden;
                 } else if host_in_mission {
@@ -513,8 +520,8 @@ pub(crate) fn update_display(
         .as_ref()
         .map(|li| !li.is_changed())
         .unwrap_or(true)
-        && !maps.is_changed()
-        && !local_player.is_changed()
+        && !params.maps.is_changed()
+        && !params.local_player.is_changed()
     {
         return;
     }
@@ -524,7 +531,9 @@ pub(crate) fn update_display(
         .as_deref()
         .and_then(|li| li.selected_map.as_ref())
         .and_then(|path| {
-            maps.maps
+            params
+                .maps
+                .maps
                 .iter()
                 .find(|m| &m.path == path)
                 .map(|m| &m.mission_data)
@@ -535,7 +544,7 @@ pub(crate) fn update_display(
             .map(|m| m.preview_image_path.clone())
             .filter(|p| !p.is_empty())
             .unwrap_or_else(|| "img/placeholder_mission.png".to_string());
-        img.image = asset_server.load(path);
+        img.image = params.asset_server.load(path);
     }
 
     if let Ok(mut text) = q_map_info.single_mut() {
@@ -564,7 +573,7 @@ pub(crate) fn update_display(
                 .map(|li| li.players.as_slice())
                 .unwrap_or_default();
             for player in players.iter() {
-                let is_local = local_player.uuid == player.player_uuid;
+                let is_local = params.local_player.uuid == player.player_uuid;
                 let is_leader = lobby_info
                     .as_ref()
                     .map(|li| li.leader_uuid == Some(player.player_uuid))
@@ -612,7 +621,7 @@ pub(crate) fn update_display(
                 .map(|li| li.players.clone())
                 .unwrap_or_default();
             for player in players.iter() {
-                let is_local = local_player.uuid == player.player_uuid;
+                let is_local = params.local_player.uuid == player.player_uuid;
                 let prefix = if is_local { "\u{25BA} " } else { "" }; // ►
                 let is_leader = lobby_info
                     .as_ref()
