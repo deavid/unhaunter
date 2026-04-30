@@ -154,12 +154,13 @@ jobs:
           RELEASE_NOTES: ${{ steps.extract_changelog.outputs.RELEASE_NOTES }}
         run: |
           gh release create $TAG_NAME \
+            --repo ${{ github.repository }} \
             --latest \
             --title "Unhaunter ${{ steps.get_version.outputs.VERSION }}" \
             --notes "$RELEASE_NOTES" \
             releases/unhaunter-*
 
       - name: Trigger Website Deployment
-        run: gh workflow run deploy-zola-site.yml --ref website
+        run: gh workflow run deploy-zola-site.yml --repo ${{ github.repository }} --ref website
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
