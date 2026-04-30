@@ -434,6 +434,7 @@ pub(crate) fn update_display(
     mut q_menu_items: Query<(&LobbyMenuAction, &mut Visibility, &Children)>,
     mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>)>,
     q_selected_mission: Query<Entity, With<SelectedMission>>,
+    auto_join_armed: Option<Res<MissionAutoJoinArmed>>,
 ) {
     let Some(ui_assets) = menu_assets else {
         return;
@@ -450,7 +451,10 @@ pub(crate) fn update_display(
     for (action, mut vis, children) in q_menu_items.iter_mut() {
         match action {
             LobbyMenuAction::StartMission => {
-                if host_in_mission {
+                let should_show_auto_join = host_in_mission && auto_join_armed.is_some_and(|r| r.0);
+                if should_show_auto_join {
+                    *vis = Visibility::Hidden;
+                } else if host_in_mission {
                     // Server has confirmed the mission; everyone (including the owner) sees "Join Mission".
                     *vis = Visibility::Inherited;
                     for child in children {
@@ -665,10 +669,6 @@ pub(crate) fn update_display(
 
 pub(crate) fn update_deployment_status_ui(
     q_mission: Query<&SelectedMission>,
-    mut q_buttons: Query<
-        &mut Visibility,
-        (With<MissionLaunchControl>, Without<DeploymentStatusText>),
-    >,
     mut q_status: Query<
         (&mut Visibility, &mut Text, &mut TextColor, &AlphaModulator),
         (With<DeploymentStatusText>, Without<MissionLaunchControl>),
@@ -680,18 +680,11 @@ pub(crate) fn update_deployment_status_ui(
 ) {
     let should_show_status = !q_mission.is_empty() && auto_join_armed.is_some_and(|r| r.0);
     if !should_show_status {
-        for mut visibility in q_buttons.iter_mut() {
-            *visibility = Visibility::Inherited;
-        }
         for (mut visibility, _, mut text_color, _) in q_status.iter_mut() {
             *visibility = Visibility::Hidden;
             text_color.0.set_alpha(1.0);
         }
         return;
-    }
-
-    for mut visibility in q_buttons.iter_mut() {
-        *visibility = Visibility::Hidden;
     }
 
     let counting_down = auto_join_delay.is_some_and(|d| d.0.is_some());
