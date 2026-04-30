@@ -542,7 +542,7 @@ pub(crate) fn update_display(
                     "CRITICAL: Version incompatible".to_string()
                 }
                 Some(unhub_client::protocol::MultiplayerStatus::Conflict) => {
-                    "CRITICAL: Version conflict detected".to_string()
+                    "CRITICAL: Another instance or profile conflict detected".to_string()
                 }
                 _ => "".to_string(),
             }
