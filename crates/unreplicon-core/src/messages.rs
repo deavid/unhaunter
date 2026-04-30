@@ -265,3 +265,12 @@ pub struct HubConnectionRequested {
     pub address: String,
     pub ticket: Option<String>,
 }
+
+/// Sent by a client immediately after connection to provide their Hub ticket.
+///
+/// This is part of the post-connection handshake required because Quinnet
+/// does not support a connection payload (like Renet's user_data).
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct ConnectionTicketMessage {
+    pub ticket: String,
+}

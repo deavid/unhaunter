@@ -491,8 +491,19 @@ impl ServerManager {
                 .arg("--host")
                 .arg(port.to_string())
                 .arg("--procman-channel")
-                .arg("stdin")
-                .arg("-vv")
+                .arg("stdin");
+
+            if let Some(cert) = &self.config.cert_file {
+                cmd.arg("--cert").arg(cert);
+            }
+            if let Some(key) = &self.config.key_file {
+                cmd.arg("--key").arg(key);
+            }
+            if self.config.skip_ssl_verification {
+                cmd.arg("--skip-ssl-verification");
+            }
+
+            cmd.arg("-vv")
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())

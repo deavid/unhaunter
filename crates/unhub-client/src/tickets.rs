@@ -62,3 +62,18 @@ pub fn decode_ticket(
 
     Ok(ticket)
 }
+
+/// Decodes a base64 encoded ticket string.
+pub fn decode_ticket_string(
+    ticket_str: &str,
+    hmac_secret: &str,
+) -> anyhow::Result<ConnectionTicket> {
+    use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
+    let decoded = B64.decode(ticket_str.as_bytes())?;
+    if decoded.len() != TICKET_SIZE {
+        return Err(anyhow::anyhow!("Invalid ticket length"));
+    }
+    let mut data = [0u8; TICKET_SIZE];
+    data.copy_from_slice(&decoded);
+    decode_ticket(&data, hmac_secret)
+}

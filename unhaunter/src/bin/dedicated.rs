@@ -31,6 +31,15 @@ struct Args {
 
     #[clap(long, action)]
     print_protocol_hash: bool,
+
+    #[clap(long)]
+    cert: Option<String>,
+
+    #[clap(long)]
+    key: Option<String>,
+
+    #[clap(long, action)]
+    skip_ssl_verification: bool,
 }
 
 fn main() {
@@ -56,8 +65,11 @@ fn main() {
             net_mode,
             installation_id_file: args.installation_id_file,
             dedicated: true,
-            procman_channel: args.procman_channel,
-            hub_url: args.hub_url,
+            procman_channel: args.procman_channel.clone(),
+            hub_url: args.hub_url.clone(),
+            cert_file: args.cert.clone(),
+            key_file: args.key.clone(),
+            skip_ssl_verification: args.skip_ssl_verification,
         });
 
         app.finish();
@@ -91,5 +103,8 @@ fn main() {
         dedicated: true,
         procman_channel: args.procman_channel,
         hub_url: args.hub_url,
+        cert_file: args.cert,
+        key_file: args.key,
+        skip_ssl_verification: args.skip_ssl_verification,
     });
 }

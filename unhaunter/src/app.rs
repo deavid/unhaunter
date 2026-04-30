@@ -91,6 +91,9 @@ pub fn app_build(args: AppArgs) -> App {
         dedicated,
         procman_channel,
         hub_url,
+        cert_file,
+        key_file,
+        skip_ssl_verification,
     } = args;
     let mut app = App::new();
 
@@ -222,9 +225,16 @@ pub fn app_build(args: AppArgs) -> App {
                 } => unreplicon_transport::resources::TransportConfig::PeerHost {
                     port,
                     bind_addresses,
+                    cert_file: cert_file.clone(),
+                    key_file: key_file.clone(),
+                    skip_ssl_verification,
                 },
                 crate::app_args::CliNetMode::Join { address, ticket } => {
-                    unreplicon_transport::resources::TransportConfig::Join { address, ticket }
+                    unreplicon_transport::resources::TransportConfig::Join {
+                        address,
+                        ticket,
+                        skip_ssl_verification,
+                    }
                 }
             },
             procman_config: unreplicon_transport::resources::ProcManConfig {
@@ -233,6 +243,9 @@ pub fn app_build(args: AppArgs) -> App {
                     crate::app_args::CliNetMode::PeerHost { port, .. } => *port,
                     _ => 0,
                 },
+                cert_file: cert_file.clone(),
+                key_file: key_file.clone(),
+                skip_ssl_verification,
             },
         },
         UnhaunterLobbyPlugin,

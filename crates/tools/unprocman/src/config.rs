@@ -12,6 +12,9 @@ pub struct ProcManConfig {
     pub port_range: (u16, u16),
     pub library_dir: String,
     pub max_total_instances: usize,
+    pub cert_file: Option<String>,
+    pub key_file: Option<String>,
+    pub skip_ssl_verification: bool,
     /// HMAC-SHA256 key (64 hex chars = 32 bytes) used to sign per-room JWT
     /// tickets. The Hub uses this to issue tickets; the dedicated server
     /// receives it via stdin and validates incoming connection tickets.
@@ -36,6 +39,9 @@ pub async fn load_config(path: impl AsRef<Path>) -> Result<ProcManConfig> {
             port_range: (12000, 12100),
             library_dir: "./library".to_string(),
             max_total_instances: 8,
+            cert_file: None,
+            key_file: None,
+            skip_ssl_verification: false,
             ticket_hmac_secret: generate_hmac_secret(),
         };
         save_config(path, &default_config).await?;

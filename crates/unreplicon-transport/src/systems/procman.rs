@@ -95,7 +95,7 @@ fn idle_timeout_system(
     time: Res<Time>,
     procman: Option<Res<ProcManChannel>>,
     room_auth: Res<RoomAuth>,
-    server: Option<Res<bevy_renet::RenetServer>>,
+    server: Option<Res<bevy_quinnet::server::QuinnetServer>>,
     mut idle_timer: Local<f32>,
     mut exit_sent: Local<bool>,
     mut exit: MessageWriter<bevy::app::AppExit>,
@@ -111,7 +111,10 @@ fn idle_timeout_system(
         return;
     };
 
-    let client_count = server.clients_id().len();
+    let client_count = server
+        .get_endpoint()
+        .map(|e| e.clients().len())
+        .unwrap_or(0);
 
     if client_count == 0 {
         *idle_timer += time.delta_secs();

@@ -8,10 +8,14 @@ pub enum TransportConfig {
     PeerHost {
         port: u16,
         bind_addresses: Vec<String>,
+        cert_file: Option<String>,
+        key_file: Option<String>,
+        skip_ssl_verification: bool,
     },
     Join {
         address: String,
         ticket: Option<String>,
+        skip_ssl_verification: bool,
     },
 }
 
@@ -19,6 +23,9 @@ pub enum TransportConfig {
 pub struct ProcManConfig {
     pub procman_channel: Option<String>,
     pub port: u16,
+    pub cert_file: Option<String>,
+    pub key_file: Option<String>,
+    pub skip_ssl_verification: bool,
 }
 
 /// Bidirectional channel to the process manager over stdin/stdout.

@@ -1,134 +1,127 @@
 use bevy::prelude::*;
-use bevy_renet::RenetServer;
-use bevy_renet::netcode::NetcodeServerTransport;
-use bevy_replicon::prelude::ConnectedClient;
+use bevy_quinnet::server::QuinnetServer;
+use bevy_replicon::prelude::{FromClient, ConnectedClient};
 use bevy_replicon::shared::backend::connected_client::NetworkId;
 use unhub_client::protocol::DedicatedToProcMan;
 use unreplicon_core::ownership::OwnerId;
 use unreplicon_core::resources::ClientUuidMap;
+use unreplicon_core::messages::ConnectionTicketMessage;
 
 use crate::resources::{ProcManChannel, RoomAuth};
 
 pub(super) fn app_setup(app: &mut App) {
-    // Observe Add<ConnectedClient> — fires after bevy_replicon_renet has already spawned the
-    // client entity with both ConnectedClient and NetworkId, so we can safely retrieve the
-    // renet ClientId and map it to a UUID.
-    app.add_observer(validate_new_connection_observer);
+    app.add_systems(Update, validate_new_connection_ticket);
     app.add_observer(on_client_disconnected_observer);
 }
 
-/// Observes each newly connected client entity (after ConnectedClient + NetworkId are
-/// already present) to validate the JWT ticket and populate the UUID map.
-fn validate_new_connection_observer(
-    trigger: On<Add, ConnectedClient>,
-    mut server: ResMut<RenetServer>,
-    transport: Option<Res<NetcodeServerTransport>>,
+/// System that listens for ConnectionTicketMessage from clients to validate them.
+fn validate_new_connection_ticket(
+    mut events: MessageReader<FromClient<ConnectionTicketMessage>>,
+    mut server: ResMut<QuinnetServer>,
     room_auth: Res<RoomAuth>,
     procman: Option<Res<ProcManChannel>>,
     mut uuid_map: ResMut<ClientUuidMap>,
-    q_network_id: Query<&NetworkId>,
+    q_connected: Query<&NetworkId, With<ConnectedClient>>,
 ) {
-    info!(
-        "validate_new_connection_observer: fired for entity {:?} (procman={}, room_assigned={})",
-        trigger.entity,
-        procman.is_some(),
-        room_auth.room_code.is_some(),
-    );
-    let entity = trigger.entity;
-    let client_id = match q_network_id.get(entity) {
-        Ok(net_id) => net_id.get(),
-        Err(_) => {
-            warn!(
-                "validate_new_connection_observer: no NetworkId on client entity {:?}",
-                entity
-            );
-            return;
-        }
-    };
-    let owner_id = OwnerId::Client(entity);
+    for req in events.read() {
+        let client_id = req.client_id;
+        let client_entity = match client_id {
+            bevy_replicon::prelude::ClientId::Client(e) => e,
+            bevy_replicon::prelude::ClientId::Server => continue, // Should not happen for this message
+        };
+        let ticket_str = &req.message.ticket;
 
-    let user_data_bytes = transport
-        .as_ref()
-        .and_then(|t| t.user_data(client_id))
-        .filter(|data| data.len() == bevy_renet::netcode::NETCODE_USER_DATA_BYTES);
-
-    let Some(user_data) = user_data_bytes else {
-        error!(
-            "Rejecting client {:?}: Missing or invalid length user_data.",
-            client_id
+        info!(
+            "validate_new_connection_ticket: received ticket for entity {:?} (procman={}, room_assigned={})",
+            client_entity,
+            procman.is_some(),
+            room_auth.room_code.is_some(),
         );
-        server.disconnect(client_id);
-        return;
-    };
 
-    let (expected_secret, expected_room) = if procman.is_some() {
-        let secret = room_auth.ticket_hmac_secret.as_deref().unwrap_or_default();
-        let room = room_auth.room_code.as_deref().unwrap_or_default();
+        // Security check: if the entity is not even a connected client anymore, ignore.
+        let Ok(network_id) = q_connected.get(client_entity) else {
+            warn!("Received ticket for non-existent client entity {:?}", client_entity);
+            continue;
+        };
 
-        if secret.is_empty() || room.is_empty() {
+        let (expected_secret, expected_room) = if procman.is_some() {
+            let secret = room_auth.ticket_hmac_secret.as_deref().unwrap_or_default();
+            let room = room_auth.room_code.as_deref().unwrap_or_default();
+
+            if secret.is_empty() || room.is_empty() {
+                error!(
+                    "Rejecting client {:?}: Server is idle/unassigned.",
+                    client_entity
+                );
+                if let Some(endpoint) = server.get_endpoint_mut() {
+                    endpoint.try_disconnect_client(network_id.get());
+                }
+                continue;
+            }
+            (secret, room)
+        } else {
+            ("", ":DIRECT")
+        };
+
+        let ticket = match unhub_client::tickets::decode_ticket_string(ticket_str, expected_secret) {
+            Ok(t) => t,
+            Err(e) => {
+                error!(
+                    "Rejecting client {:?}: Ticket validation failed: {}",
+                    client_entity, e
+                );
+                if let Some(endpoint) = server.get_endpoint_mut() {
+                    endpoint.try_disconnect_client(network_id.get());
+                }
+                continue;
+            }
+        };
+
+        if ticket.room_code != expected_room {
             error!(
-                "Rejecting client {:?}: Server is idle/unassigned.",
-                client_id
+                "Rejecting client {:?} (room mismatch): expected '{}', got '{}'",
+                client_entity, expected_room, ticket.room_code
             );
-            server.disconnect(client_id);
-            return;
+            if let Some(endpoint) = server.get_endpoint_mut() {
+                endpoint.try_disconnect_client(network_id.get());
+            }
+            continue;
         }
-        (secret, room)
-    } else {
-        ("", ":DIRECT")
-    };
 
-    let ticket = match unhub_client::tickets::decode_ticket(&user_data, expected_secret) {
-        Ok(t) => t,
-        Err(e) => {
-            error!(
-                "Rejecting client {:?}: Ticket validation failed: {}",
-                client_id, e
-            );
-            server.disconnect(client_id);
-            return;
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        if ticket.exp < now {
+            error!("Rejecting client {:?}: Ticket expired", client_entity);
+            if let Some(endpoint) = server.get_endpoint_mut() {
+                endpoint.try_disconnect_client(network_id.get());
+            }
+            continue;
         }
-    };
 
-    if ticket.room_code != expected_room {
-        error!(
-            "Rejecting client {:?} (room mismatch): expected '{}', got '{}'",
-            client_id, expected_room, ticket.room_code
+        let owner_id = OwnerId::Client(client_entity);
+        uuid_map.0.insert(owner_id, ticket.player_uuid);
+        info!(
+            "Client {:?} authenticated successfully for Player: {}",
+            client_entity, ticket.player_uuid
         );
-        server.disconnect(client_id);
-        return;
-    }
 
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    if ticket.exp < now {
-        error!("Rejecting client {:?}: Ticket expired", client_id);
-        server.disconnect(client_id);
-        return;
-    }
-
-    uuid_map.0.insert(owner_id, ticket.player_uuid);
-    info!(
-        "Client {:?} authenticated successfully for Player: {}",
-        client_id, ticket.player_uuid
-    );
-
-    // Notify procman so it can track player count and extend the room's lifetime.
-    if let Some(procman) = procman.as_ref() {
-        let _ = procman.tx.send(DedicatedToProcMan::PlayerJoined {
-            player_uuid: ticket.player_uuid,
-        });
+        // Notify procman so it can track player count and extend the room's lifetime.
+        if let Some(procman) = procman.as_ref() {
+            let _ = procman.tx.send(DedicatedToProcMan::PlayerJoined {
+                player_uuid: ticket.player_uuid,
+            });
+        }
     }
 }
 
 /// Observes each disconnecting client entity to notify procman of the updated player count.
 fn on_client_disconnected_observer(
-    trigger: On<Remove, ConnectedClient>,
+    trigger: On<Remove, bevy_replicon::prelude::ConnectedClient>,
     procman: Option<Res<ProcManChannel>>,
     mut uuid_map: ResMut<ClientUuidMap>,
-    q_connected: Query<(), With<ConnectedClient>>,
+    q_connected: Query<(), With<bevy_replicon::prelude::ConnectedClient>>,
 ) {
     let entity = trigger.entity;
     let owner_id = OwnerId::Client(entity);

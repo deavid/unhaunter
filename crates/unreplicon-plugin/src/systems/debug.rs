@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-use bevy_renet::{RenetClient, RenetServer};
+use bevy_quinnet::client::QuinnetClient;
+use bevy_quinnet::server::QuinnetServer;
 use bevy_replicon::prelude::*;
 use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 
@@ -15,8 +16,8 @@ pub(super) fn app_setup(app: &mut App) {
 fn debug_connection_status(
     time: Res<Time>,
     mut timer: ResMut<ConnectionDebugTimer>,
-    client: Option<Res<RenetClient>>,
-    server: Option<Res<RenetServer>>,
+    client: Option<Res<QuinnetClient>>,
+    server: Option<Res<QuinnetServer>>,
     authority: Option<Res<AuthorityRole>>,
     local: Option<Res<LocalPlayerRole>>,
     q_connected_clients: Query<&ConnectedClient>,
@@ -44,10 +45,8 @@ fn debug_connection_status(
         let client_status = if let Some(client) = client {
             if client.is_connected() {
                 "CONNECTED".to_string()
-            } else if client.is_connecting() {
-                "CONNECTING".to_string()
             } else {
-                format!("DISCONNECTED ({:?})", client.disconnect_reason())
+                "NOT_CONNECTED".to_string()
             }
         } else {
             "NOT_FOUND".to_string()

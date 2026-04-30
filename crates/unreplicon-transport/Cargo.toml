@@ -13,8 +13,8 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }
-bevy_replicon_renet = { workspace = true }
-bevy_renet = { workspace = true }
+bevy_replicon_quinnet = { workspace = true }
+bevy_quinnet = { workspace = true }
 serde_json = { workspace = true }
 crossbeam-channel = { workspace = true }
 unhub-client = { workspace = true }

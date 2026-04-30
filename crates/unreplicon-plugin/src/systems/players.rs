@@ -13,8 +13,8 @@ use unreplicon_core::components::{
     LobbyInfo, LobbyPlayerInfo, RepliconPlayerSpawningActive, SimulationAuthorized,
 };
 use unreplicon_core::messages::{
-    FloorGearDespawnBroadcast, FloorGearSpawnBroadcast, RelieveSimulationAuthority,
-    RequestJoinMission, RequestSimulationAuthority,
+    ConnectionTicketMessage, FloorGearDespawnBroadcast, FloorGearSpawnBroadcast,
+    RelieveSimulationAuthority, RequestJoinMission, RequestSimulationAuthority,
 };
 use unreplicon_core::network_id::NetworkId;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
@@ -70,6 +70,7 @@ fn player_spawn_telemetry(
 
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
+    app.add_client_message::<ConnectionTicketMessage>(Channel::Ordered);
     app.add_client_message::<RequestJoinMission>(Channel::Ordered);
     app.add_mapped_client_message::<RequestSimulationAuthority>(Channel::Ordered);
     app.add_mapped_client_message::<RelieveSimulationAuthority>(Channel::Ordered);

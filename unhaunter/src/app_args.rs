@@ -11,8 +11,8 @@ pub enum CliNetMode {
     Join {
         address: String,
         /// Base64 encoded connection ticket (postcard + HMAC-SHA256) issued by
-        /// the Hub after PoW challenge. When present the Renet transport embeds
-        /// it in the connection `user_data` so the dedicated server can validate
+        /// the Hub after PoW challenge. When present the transport embeds
+        /// it in the connection body so the dedicated server can validate
         /// the connection. `None` in singleplayer / direct-connect scenarios
         /// (no auth enforced).
         ticket: Option<String>,
@@ -39,6 +39,9 @@ pub struct AppArgs {
     pub dedicated: bool,
     pub procman_channel: Option<String>,
     pub hub_url: Option<String>,
+    pub cert_file: Option<String>,
+    pub key_file: Option<String>,
+    pub skip_ssl_verification: bool,
 }
 
 impl AppArgs {
@@ -52,6 +55,9 @@ impl AppArgs {
             dedicated: false,
             procman_channel: None,
             hub_url: None,
+            cert_file: None,
+            key_file: None,
+            skip_ssl_verification: false,
         }
     }
 }

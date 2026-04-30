@@ -100,10 +100,8 @@ const UNHAUNTER_CRATES: &[&str] = &[
 /// Capped at `debug` because their `trace` output is extremely high-volume.
 const NETWORKING_CRATES: &[&str] = &[
     "bevy_replicon",
-    "bevy_replicon_renet",
-    "bevy_renet",
-    "renet",
-    "renet_netcode",
+    "bevy_replicon_quinnet",
+    "bevy_quinnet",
 ];
 
 pub fn build_log_filter(verbose: u8) -> String {

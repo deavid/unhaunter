@@ -35,6 +35,15 @@ struct Args {
 
     #[clap(long)]
     hub_url: Option<String>,
+
+    #[clap(long)]
+    cert: Option<String>,
+
+    #[clap(long)]
+    key: Option<String>,
+
+    #[clap(long, action)]
+    skip_ssl_verification: bool,
 }
 
 fn main() {
@@ -83,5 +92,8 @@ fn main() {
         dedicated: false,
         procman_channel: None,
         hub_url: args.hub_url,
+        cert_file: args.cert,
+        key_file: args.key,
+        skip_ssl_verification: args.skip_ssl_verification,
     });
 }

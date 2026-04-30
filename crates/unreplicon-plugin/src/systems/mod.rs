@@ -6,7 +6,7 @@ pub mod roles;
 
 use bevy::prelude::*;
 use bevy_replicon::prelude::RepliconPlugins;
-use bevy_replicon_renet::RepliconRenetPlugins;
+use bevy_replicon_quinnet::RepliconQuinnetPlugins;
 use uncommon_states_core::UIContextState;
 use unreplicon_core::export_ext::RepliconExportSet;
 
@@ -22,7 +22,7 @@ pub(crate) fn app_setup(app: &mut App) {
 
     app.add_plugins((
         RepliconPlugins,
-        RepliconRenetPlugins,
+        RepliconQuinnetPlugins,
         unreplicon_transport::plugin::UnrepliconTransportPlugin {
             transport_config,
             procman_config,

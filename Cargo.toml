@@ -245,10 +245,8 @@ sha2 = "0.11"
 rayon = "1.11"
 crossbeam-channel = "0.5"
 bevy_replicon = "0.39"
-bevy_replicon_renet = "0.15"
-bevy_renet = { version = "4.0", features = ["netcode"] }
-renet = "2.0"
-renet_netcode = "2.0"
+bevy_replicon_quinnet = "0.18"
+bevy_quinnet = "0.20"
 postcard = { version = "1.1", features = ["alloc"] }
 hmac = "0.13"
 reqwest = { version = "0.13", features = ["json"] }
