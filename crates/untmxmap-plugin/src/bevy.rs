@@ -144,11 +144,10 @@ pub(crate) fn bevy_load_map(
 
         // Store the tileset in memory in case we need to do anything with it later on.
         if tilesetdb.db.insert(tileset.name.to_string(), mts).is_some() {
-            eprintln!(
-                "ERROR: Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice",
+            debug!(
+                "Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice",
                 tileset.name.to_string()
             );
-            // panic!();
         }
     }
     let map_layers = load_tile_layer_iter(map.layers());

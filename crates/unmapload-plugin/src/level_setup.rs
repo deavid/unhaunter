@@ -335,27 +335,10 @@ fn teardown_map_entities(
     debug!("Map entities torn down and topological resources reset.");
 }
 
-/// Logs how many local GameSprite entities are still alive when InGame is exited.
-/// On a dedicated server, ClassicModeRenderPlugin is absent so its cleanup_game system
-/// never runs. This log proves whether entities survive into the next mission.
-fn observe_cleanup_gap(qgs: Query<Entity, (With<GameSprite>, Without<Remote>)>) {
-    let count = qgs.iter().count();
-    if count > 0 {
-        warn!(
-            "INGAGE_EXIT_CLEANUP_GAP: {} local GameSprite entities still alive at OnExit(InGame). No cleanup_game system is registered here — these will become zombie entities for the next mission load.",
-            count
-        );
-    } else {
-        debug!(
-            "INGAGE_EXIT_CLEANUP_GAP: 0 local GameSprite entities at OnExit(InGame) — entities were already cleaned up."
-        );
-    }
-}
-
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         OnExit(UIContextState::InGame),
-        (observe_cleanup_gap, reset_level_resources).chain(),
+        reset_level_resources,
     );
     app.add_systems(OnEnter(SimulationState::Unloaded), teardown_map_entities);
     app.add_systems(
