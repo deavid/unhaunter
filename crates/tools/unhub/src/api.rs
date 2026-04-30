@@ -638,11 +638,21 @@ pub async fn join_room(
     }
 
     if !version_found {
-        tracing::warn!(
+        tracing::error!(
             "Room {} uses version {}, but it's not in the hosting ProcMan's library",
             code,
             room.game_version
         );
+        return Err((
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(HubError {
+                error: "room_version_unavailable".to_string(),
+                message: format!(
+                    "The room requires game version {}, but the hosting server cannot currently verify its protocol. Please try again later.",
+                    room.game_version
+                ),
+            }),
+        ));
     }
 
     let exp = std::time::SystemTime::now()
