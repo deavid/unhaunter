@@ -4,7 +4,6 @@ use bevy_replicon::prelude::{
     ServerState,
 };
 use std::str::FromStr;
-use std::time::{SystemTime, UNIX_EPOCH};
 use uncommon_states_core::{BootState, UIContextState};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty::Difficulty;
@@ -193,13 +192,6 @@ fn process_auto_join(
         });
         next_ui_state.set(UIContextState::MissionLoading);
     }
-}
-
-fn current_unix_time_secs() -> Option<f64> {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .ok()
-        .map(|d| d.as_secs_f64())
 }
 
 fn parse_difficulty_id(context: &str, difficulty_id: &str) -> Option<Difficulty> {
@@ -724,7 +716,6 @@ fn handle_request_start_mission(
                     map_path: map_filepath.clone(),
                     map_seed: msg.message.map_seed,
                     difficulty_id: selected_difficulty.to_string(),
-                    started_at_unix_secs: current_unix_time_secs().unwrap_or(0.0),
                 },
             ));
         }

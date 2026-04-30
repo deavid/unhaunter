@@ -1,5 +1,4 @@
 use std::net::{SocketAddr, ToSocketAddrs, UdpSocket};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::resources::TransportConfig;
 use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
@@ -72,6 +71,7 @@ fn handle_hub_connection_request(
     mut commands: Commands,
     channels: Res<RepliconChannels>,
     installation_id: Option<Res<RuntimeInstallationId>>,
+    time: Res<Time>,
 ) {
     let Some(req) = ev.read().last() else {
         return;
@@ -82,10 +82,7 @@ fn handle_hub_connection_request(
         req.address
     );
 
-    let Ok(current_time) = SystemTime::now().duration_since(UNIX_EPOCH) else {
-        error!("System clock is before UNIX epoch; cannot initialize network transport.");
-        return;
-    };
+    let current_time = time.elapsed();
 
     let connection_config = ConnectionConfig {
         server_channels_config: channels.server_configs(),
@@ -176,15 +173,13 @@ fn startup_transport_system(
     channels: Res<RepliconChannels>,
     installation_id: Option<Res<RuntimeInstallationId>>,
     mut commands: Commands,
+    time: Res<Time>,
 ) {
     info!(
         "startup_transport_system: initializing transport (config={:?})",
         transport_config
     );
-    let Ok(current_time) = SystemTime::now().duration_since(UNIX_EPOCH) else {
-        error!("System clock is before UNIX epoch; cannot initialize network transport.");
-        return;
-    };
+    let current_time = time.elapsed();
 
     let connection_config = ConnectionConfig {
         server_channels_config: channels.server_configs(),
