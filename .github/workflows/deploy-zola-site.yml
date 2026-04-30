@@ -57,9 +57,10 @@ jobs:
       - name: Get Latest Beta Release Tag
         id: latest_beta_release
         run: |
-          # Get the latest release tag (including pre-releases)
-          BETA_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || echo "none")
-          echo "Latest Release Tag: $BETA_TAG"
+          # Get the latest release tag that contains "-beta"
+          BETA_TAG=$(gh release list --limit 50 --json tagName --jq '.[] | select(.tagName | contains("-beta")) | .tagName' | head -n 1)
+          if [ -z "$BETA_TAG" ]; then BETA_TAG="none"; fi
+          echo "Latest Beta Release Tag: $BETA_TAG"
           echo "BETA_TAG=$BETA_TAG" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
