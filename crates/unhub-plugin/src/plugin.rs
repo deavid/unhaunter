@@ -40,7 +40,11 @@ impl Plugin for UnhaunterHubPlugin {
         );
         app.add_systems(
             Update,
-            (hub_client::update_hub_status, hub_client::ping_hub_system),
+            (
+                hub_client::update_hub_status,
+                hub_client::ping_hub_system,
+                hub_client::hub_error_tick_system,
+            ),
         );
 
         // UI systems

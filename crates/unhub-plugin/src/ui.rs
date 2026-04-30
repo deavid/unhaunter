@@ -176,7 +176,7 @@ pub fn hub_menu_event(
                             .as_ref()
                             .map(|x| x.0)
                             .unwrap_or_default();
-                        hub_client.join_room(code, player_uuid);
+                        hub_client.join_room(code, player_uuid, protocol_hash.0);
                         hub_status.is_pending = true;
                     }
                 }
@@ -207,6 +207,7 @@ pub fn update_code_input(
     mut q_text: Query<&mut Text, With<HubCodeText>>,
     hub_client: Res<HubClient>,
     mut hub_status: ResMut<HubStatus>,
+    protocol_hash: Res<ClientProtocolHash>,
     runtime_installation_id: Option<Res<unprofile_core::profile::RuntimeInstallationId>>,
     time: Res<Time>,
     mut q_menu_root: Query<&mut MenuRoot>,
@@ -229,7 +230,7 @@ pub fn update_code_input(
                     .as_ref()
                     .map(|x| x.0)
                     .unwrap_or_default();
-                hub_client.join_room(code, player_uuid);
+                hub_client.join_room(code, player_uuid, protocol_hash.0);
                 hub_status.is_pending = true;
             }
         } else {
@@ -360,20 +361,26 @@ pub fn await_lobby_then_transition(
 /// Updates the Hub screen status label to give connecting feedback.
 pub fn update_hub_status_label(
     hub_status: Res<HubStatus>,
-    mut q_label: Query<&mut Text, With<HubStatusLabel>>,
+    mut q_label: Query<(&mut Text, &mut TextColor), With<HubStatusLabel>>,
 ) {
     if !hub_status.is_changed() {
         return;
     }
-    for mut text in &mut q_label {
-        text.0 = if hub_status.lobby_ready_timer.is_some() {
-            "Ready! Entering lobby…".to_string()
-        } else if hub_status.is_connecting {
-            "CONNECTING… please wait".to_string()
-        } else if hub_status.is_pending {
-            "Contacting Hub…".to_string()
+    for (mut text, mut color) in &mut q_label {
+        if let Some(error) = &hub_status.error_message {
+            text.0 = format!("ERROR: {}", error);
+            color.0 = Color::srgb(1.0, 0.5, 0.0); // Orange
         } else {
-            "".to_string()
-        };
+            color.0 = Color::srgb(1.0, 0.85, 0.2); // Default yellowish-orange
+            text.0 = if hub_status.lobby_ready_timer.is_some() {
+                "Ready! Entering lobby…".to_string()
+            } else if hub_status.is_connecting {
+                "CONNECTING… please wait".to_string()
+            } else if hub_status.is_pending {
+                "Contacting Hub…".to_string()
+            } else {
+                "".to_string()
+            };
+        }
     }
 }

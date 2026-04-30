@@ -128,12 +128,13 @@ jobs:
           TAG_NAME: ${{ github.ref_name }}
         run: |
           gh release create $TAG_NAME \
+            --repo ${{ github.repository }} \
             --prerelease \
             --title "Pre-release Unhaunter Beta $TAG_NAME" \
             --notes "Beta release build based on tag $TAG_NAME" \
             releases/unhaunter-*
 
       - name: Trigger Website Deployment
-        run: gh workflow run deploy-zola-site.yml --ref website
+        run: gh workflow run deploy-zola-site.yml --repo ${{ github.repository }} --ref website
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

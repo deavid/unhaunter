@@ -137,6 +137,6 @@ jobs:
           gh release edit alpha-latest --repo ${{ github.repository }} --latest=false
 
       - name: Trigger Website Deployment
-        run: gh workflow run deploy-zola-site.yml --ref website
+        run: gh workflow run deploy-zola-site.yml --repo ${{ github.repository }} --ref website
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
