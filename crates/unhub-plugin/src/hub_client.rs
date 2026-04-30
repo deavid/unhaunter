@@ -134,14 +134,17 @@ impl HubClient {
         });
     }
 
-    pub fn join_room(&self, code: String, player_uuid: uuid::Uuid) {
+    pub fn join_room(&self, code: String, player_uuid: uuid::Uuid, protocol_hash: u64) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
         spawn_hub_task(async move {
             let client = reqwest::Client::new();
             match client
                 .post(format!("{}/v1/rooms/join/{}", hub_url, code))
-                .json(&JoinRoomRequest { player_uuid })
+                .json(&JoinRoomRequest {
+                    player_uuid,
+                    protocol_hash,
+                })
                 .send()
                 .await
             {
@@ -254,6 +257,8 @@ pub struct HubStatus {
     pub lobby_ready_timer: Option<f32>,
     pub is_online: bool,
     pub online_players: usize,
+    pub error_message: Option<String>,
+    pub error_timer: f32,
 }
 
 #[derive(Resource)]
@@ -333,21 +338,37 @@ pub fn update_hub_status(
     client: Res<HubClient>,
 ) {
     while let Ok(resp) = client.rx.try_recv() {
-        if let HubResponse::PingResult {
-            ok,
-            online_players,
-            multiplayer_status,
-            upgrade_version,
-        } = resp
-        {
-            status.is_online = ok;
-            status.online_players = online_players;
-            hub_connection_status.status = Some(multiplayer_status);
-            hub_connection_status.upgrade_version = upgrade_version;
-            hub_connection_status.last_update = 0.0;
-        } else {
-            status.last_response = Some(resp);
-            status.is_pending = false;
+        if let HubResponse::Error(ref e) = resp {
+            status.error_message = Some(e.clone());
+            status.error_timer = 10.0;
+        }
+
+        match resp {
+            HubResponse::PingResult {
+                ok,
+                online_players,
+                multiplayer_status,
+                upgrade_version,
+            } => {
+                status.is_online = ok;
+                status.online_players = online_players;
+                hub_connection_status.status = Some(multiplayer_status);
+                hub_connection_status.upgrade_version = upgrade_version;
+                hub_connection_status.last_update = 0.0;
+            }
+            _ => {
+                status.last_response = Some(resp);
+                status.is_pending = false;
+            }
+        }
+    }
+}
+
+pub fn hub_error_tick_system(time: Res<Time>, mut status: ResMut<HubStatus>) {
+    if status.error_timer > 0.0 {
+        status.error_timer -= time.delta_secs();
+        if status.error_timer <= 0.0 {
+            status.error_message = None;
         }
     }
 }
