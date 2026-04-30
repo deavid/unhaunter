@@ -139,8 +139,7 @@ pub(crate) fn setup_ui(
                 (LobbyMenuAction::ExitLobby, "Exit Lobby"),
             ];
 
-            let mut menu_idx = 0;
-            for (action, label) in items {
+            for (menu_idx, (action, label)) in items.into_iter().enumerate() {
                 // Always create all menu items for everyone (visibility controlled in update_display)
                 let mut menu_item =
                     templates::create_menu_item(s, label, menu_idx, false, &menu_assets);
@@ -148,7 +147,6 @@ pub(crate) fn setup_ui(
                 if action == LobbyMenuAction::StartMission {
                     menu_item.insert(MissionLaunchControl);
                 }
-                menu_idx += 1;
             }
 
             s.spawn((
