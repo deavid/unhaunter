@@ -17,7 +17,9 @@ fn force_discard_evidence_system(
         return;
     }
     let Ok(mut gg) = q_gg.single_mut() else {
-        error!("Journal: Received ForceDiscardEvidenceEvent but MissionGoalEntity (GhostGuess) is missing!");
+        error!(
+            "Journal: Received ForceDiscardEvidenceEvent but MissionGoalEntity (GhostGuess) is missing!"
+        );
         return;
     };
     for event in ev_force_discard.read() {

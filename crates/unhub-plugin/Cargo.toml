@@ -20,7 +20,6 @@ unprofile-core = { workspace = true }
 reqwest = { workspace = true }
 crossbeam-channel = { workspace = true }
 uuid = { workspace = true }
-bevy-persistent = { workspace = true }
 serde_json = { workspace = true }
 rand = { workspace = true }
 

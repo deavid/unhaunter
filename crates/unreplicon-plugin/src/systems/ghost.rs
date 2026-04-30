@@ -29,7 +29,6 @@ pub(super) fn app_setup(app: &mut App) {
         cleanup_ghost_entities.run_if(resource_exists::<AuthorityRole>),
     );
 
-
     // Server: mission lifecycle
     app.add_systems(
         Update,
@@ -65,7 +64,6 @@ fn cleanup_ghost_entities(q_goal: Query<Entity, With<MissionGoalEntity>>, mut co
         info!("MissionGoalEntity despawned");
     }
 }
-
 
 fn server_teardown_grace_period(
     mut timer: Local<Option<Timer>>,

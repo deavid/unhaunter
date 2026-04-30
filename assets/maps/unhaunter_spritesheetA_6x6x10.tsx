@@ -279,7 +279,7 @@
  <tile id="18" type="Appliance">
   <properties>
    <property name="sprite:orientation" value="None"/>
-   <property name="sprite:state" value="None"/>
+   <property name="sprite:state" value="Off"/>
    <property name="sprite:variant" value="TV"/>
   </properties>
   <objectgroup draworder="index" id="2">
@@ -348,7 +348,7 @@
  <tile id="22" type="Appliance">
   <properties>
    <property name="sprite:orientation" value="None"/>
-   <property name="sprite:state" value="None"/>
+   <property name="sprite:state" value="Off"/>
    <property name="sprite:variant" value="WashingMachine"/>
   </properties>
   <objectgroup draworder="index" id="2">
@@ -363,7 +363,7 @@
  <tile id="23" type="Appliance">
   <properties>
    <property name="sprite:orientation" value="None"/>
-   <property name="sprite:state" value="None"/>
+   <property name="sprite:state" value="Off"/>
    <property name="sprite:variant" value="Fridge"/>
   </properties>
   <objectgroup draworder="index" id="2">
@@ -454,7 +454,7 @@
  <tile id="28" type="Appliance">
   <properties>
    <property name="sprite:orientation" value="None"/>
-   <property name="sprite:state" value="None"/>
+   <property name="sprite:state" value="Off"/>
    <property name="sprite:variant" value="Stove"/>
   </properties>
   <objectgroup draworder="index" id="2">
@@ -542,7 +542,7 @@
  <tile id="36" type="Appliance">
   <properties>
    <property name="sprite:orientation" value="None"/>
-   <property name="sprite:state" value="None"/>
+   <property name="sprite:state" value="Off"/>
    <property name="sprite:variant" value="TVBack"/>
   </properties>
  </tile>

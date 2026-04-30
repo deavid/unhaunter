@@ -8,9 +8,10 @@ use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::types::gear::equipment::Hand;
 use ungear_core::ui::{EvidenceClickTarget, EvidenceUI};
 use uninput_core::components::PlayerInputMapping;
+use uninvestigation_core::components::ghost_guess::GhostGuess;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::messages::RequestJournalEvidenceToggle;
-use uninvestigation_core::components::ghost_guess::GhostGuess;
+use unmission_core::types::SimulationState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unreplicon_core::components::MissionGoalEntity;
 use untruck_core::types::truck_button::TruckButtonState;
@@ -173,10 +174,14 @@ pub(crate) fn click_evidence(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         FixedUpdate,
-        update_evidence_ui.run_if(in_state(UIContextState::InGame)),
+        update_evidence_ui
+            .run_if(in_state(UIContextState::InGame))
+            .run_if(in_state(SimulationState::Ready)),
     )
     .add_systems(
         Update,
-        (keyboard_evidence, click_evidence).run_if(in_state(UIContextState::InGame)),
+        (keyboard_evidence, click_evidence)
+            .run_if(in_state(UIContextState::InGame))
+            .run_if(in_state(SimulationState::Ready)),
     );
 }
