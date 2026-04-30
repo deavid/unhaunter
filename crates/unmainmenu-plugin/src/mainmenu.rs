@@ -356,7 +356,12 @@ pub(crate) fn update_hub_button_availability(
         if *menu_id == MenuID::Hub {
             let is_disabled = hub_connection_status
                 .status
-                .map(|s| matches!(s, MultiplayerStatus::Unsupported | MultiplayerStatus::Conflict))
+                .map(|s| {
+                    matches!(
+                        s,
+                        MultiplayerStatus::Unsupported | MultiplayerStatus::Conflict
+                    )
+                })
                 .unwrap_or(false);
 
             let should_be_enabled = hub_status.is_online && !is_disabled;

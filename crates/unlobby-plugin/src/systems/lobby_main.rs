@@ -443,13 +443,34 @@ pub(crate) fn update_display(
     params: LobbyUpdateParams,
     menu_assets: Option<Res<MenuAssets>>,
     mut q_preview: Query<&mut ImageNode, With<LobbyMapPreview>>,
-    mut q_map_info: Query<&mut Text, (With<LobbyMapInfo>, Without<LobbyDifficultyInfo>, Without<LobbyVersionWarning>)>,
-    mut q_diff_info: Query<&mut Text, (With<LobbyDifficultyInfo>, Without<LobbyMapInfo>, Without<LobbyVersionWarning>)>,
+    mut q_map_info: Query<
+        &mut Text,
+        (
+            With<LobbyMapInfo>,
+            Without<LobbyDifficultyInfo>,
+            Without<LobbyVersionWarning>,
+        ),
+    >,
+    mut q_diff_info: Query<
+        &mut Text,
+        (
+            With<LobbyDifficultyInfo>,
+            Without<LobbyMapInfo>,
+            Without<LobbyVersionWarning>,
+        ),
+    >,
     q_player_list: Query<Entity, With<LobbyPlayerList>>,
     q_children: Query<&Children>,
     mut commands: Commands,
     mut q_menu_items: Query<(&LobbyMenuAction, &mut Visibility, &Children)>,
-    mut q_text: Query<&mut Text, (Without<LobbyMapInfo>, Without<LobbyDifficultyInfo>, Without<LobbyVersionWarning>)>,
+    mut q_text: Query<
+        &mut Text,
+        (
+            Without<LobbyMapInfo>,
+            Without<LobbyDifficultyInfo>,
+            Without<LobbyVersionWarning>,
+        ),
+    >,
     mut q_warning: Query<&mut Text, With<LobbyVersionWarning>>,
 ) {
     let Some(ui_assets) = menu_assets else {

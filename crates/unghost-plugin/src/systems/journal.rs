@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{Channel, ClientMessageAppExt, FromClient};
 use unghost_core::events::{JournalEvidenceToggled, JournalGhostToggled};
-use uninvestigation_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhostToggle};
 use uninvestigation_core::components::ghost_guess::GhostGuess;
+use uninvestigation_core::messages::{RequestJournalEvidenceToggle, RequestJournalGhostToggle};
 use unmission_core::types::SimulationState;
 use unreplicon_core::components::MissionGoalEntity;
 use unreplicon_core::resources::AuthorityRole;

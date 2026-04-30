@@ -158,13 +158,21 @@ async fn handle_message(
         ProcManMessage::RoomReady { room } => {
             state.rooms.insert(room.code.clone(), room);
         }
-        ProcManMessage::PlayerJoined { room_code, player_uuid, .. } => {
+        ProcManMessage::PlayerJoined {
+            room_code,
+            player_uuid,
+            ..
+        } => {
             if let Some(mut room) = state.rooms.get_mut(&room_code) {
                 room.player_count += 1;
             }
             state.player_to_room.insert(player_uuid, room_code);
         }
-        ProcManMessage::PlayerLeft { room_code, player_uuid, .. } => {
+        ProcManMessage::PlayerLeft {
+            room_code,
+            player_uuid,
+            ..
+        } => {
             if let Some(mut room) = state.rooms.get_mut(&room_code) {
                 room.player_count = room.player_count.saturating_sub(1);
             }

@@ -24,7 +24,6 @@ unlight-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
 unsettings-core = { workspace = true }
-unwalkie-types = { workspace = true }
 unwalkie-core = { workspace = true }
 unprofile-core = { workspace = true }
 unlocomotion-core = { workspace = true }

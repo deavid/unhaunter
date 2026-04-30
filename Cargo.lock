@@ -7848,7 +7848,6 @@ name = "unhub-plugin"
 version = "0.4.0-dev"
 dependencies = [
  "bevy",
- "bevy-persistent",
  "bevy_replicon",
  "crossbeam-channel",
  "rand 0.10.1",
@@ -8854,7 +8853,6 @@ dependencies = [
  "untruck-core",
  "unvitals-core",
  "unwalkie-core",
- "unwalkie-types",
 ]
 
 [[package]]
