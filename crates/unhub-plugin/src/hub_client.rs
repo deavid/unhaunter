@@ -368,6 +368,7 @@ pub fn hub_error_tick_system(time: Res<Time>, mut status: ResMut<HubStatus>) {
     if status.error_timer > 0.0 {
         status.error_timer -= time.delta_secs();
         if status.error_timer <= 0.0 {
+            status.error_timer = 0.0;
             status.error_message = None;
         }
     }
