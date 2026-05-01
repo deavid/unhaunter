@@ -5,16 +5,12 @@ use bevy::prelude::*;
 use bevy_quinnet::client::{QuinnetClient, ClientConnectionConfiguration, certificate::CertificateVerificationMode, connection::ClientAddrConfiguration, client_connected, client_connecting};
 use bevy_quinnet::server::{QuinnetServer, ServerEndpointConfiguration, EndpointAddrConfiguration, certificate::CertificateRetrievalMode, server_listening};
 use bevy_replicon_quinnet::ChannelsConfigurationExt;
-use bevy_replicon::prelude::{RepliconChannels, FromClient, ClientId};
+use bevy_replicon::prelude::{RepliconChannels, ProtocolHash};
 use unprofile_core::profile::RuntimeInstallationId;
 use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LobbyPresenceRole};
 use unreplicon_core::messages::ConnectionTicketMessage;
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
-
-/// Unique identifier for this game's protocol version.
-/// Clients and servers with different values cannot connect to each other.
-const PROTOCOL_VERSION: &str = "0.4.0-dev";
 
 pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
@@ -78,6 +74,9 @@ fn handle_hub_connection_request(
         req.address
     );
 
+    // Close any existing connection before opening a new one.
+    client.close_all_connections();
+
     let skip_ssl = if let TransportConfig::Join { skip_ssl_verification, .. } = *transport_config {
         skip_ssl_verification
     } else {
@@ -90,17 +89,13 @@ fn handle_hub_connection_request(
         CertificateVerificationMode::SignedByCertificateAuthority
     };
 
-    let addr_config = ClientAddrConfiguration::from_strings(
-        &req.address,
-        "0.0.0.0:0"
-    ).unwrap_or_else(|e| {
-        error!("Failed to parse address {}: {}", req.address, e);
-        ClientAddrConfiguration {
-            server_addr: "127.0.0.1:0".parse().unwrap(),
-            server_hostname: "localhost".to_string(),
-            local_bind_addr: "0.0.0.0:0".parse().unwrap(),
+    let addr_config = match ClientAddrConfiguration::from_strings(&req.address, "0.0.0.0:0") {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            error!("Failed to parse address {}: {}", req.address, e);
+            return;
         }
-    });
+    };
 
     let config = ClientConnectionConfiguration {
         addr_config,
@@ -181,24 +176,24 @@ fn startup_transport_system(
             }
             info!("Replicon transport: listening on UDP port {port} (Quinnet)");
         }
-        TransportConfig::Join { address, ticket: _, skip_ssl_verification } => {
+        TransportConfig::Join {
+            address,
+            ticket: _,
+            skip_ssl_verification,
+        } => {
             let cert_mode = if *skip_ssl_verification {
                 CertificateVerificationMode::SkipVerification
             } else {
                 CertificateVerificationMode::SignedByCertificateAuthority
             };
 
-            let addr_config = ClientAddrConfiguration::from_strings(
-                address,
-                "0.0.0.0:0"
-            ).unwrap_or_else(|e| {
-                error!("Failed to parse address {}: {}", address, e);
-                ClientAddrConfiguration {
-                    server_addr: "127.0.0.1:0".parse().unwrap(),
-                    server_hostname: "localhost".to_string(),
-                    local_bind_addr: "0.0.0.0:0".parse().unwrap(),
+            let addr_config = match ClientAddrConfiguration::from_strings(address, "0.0.0.0:0") {
+                Ok(cfg) => cfg,
+                Err(e) => {
+                    error!("Failed to parse address {}: {}", address, e);
+                    return;
                 }
-            });
+            };
 
             let config = ClientConnectionConfiguration {
                 addr_config,
@@ -255,7 +250,8 @@ fn send_ticket_on_connection(
     mut events: MessageReader<bevy_quinnet::client::connection::ConnectionEvent>,
     transport_config: Res<TransportConfig>,
     installation_id: Option<Res<RuntimeInstallationId>>,
-    mut writer: MessageWriter<FromClient<ConnectionTicketMessage>>,
+    protocol_hash: Res<ProtocolHash>,
+    mut writer: MessageWriter<ConnectionTicketMessage>,
 ) {
     for _ in events.read() {
         let ticket = match &*transport_config {
@@ -277,12 +273,19 @@ fn send_ticket_on_connection(
             B64.encode(bytes)
         };
 
-        writer.write(FromClient {
-            client_id: ClientId::Server,
-            message: ConnectionTicketMessage {
-                ticket: ticket_str,
-                protocol_version: PROTOCOL_VERSION.to_string(),
-            },
+        let Ok(hash_val) = (|| -> Result<u64, Box<dyn std::error::Error>> {
+            let s = serde_json::to_string(&*protocol_hash)?;
+            let val = s.trim_matches('"').parse::<u64>()?;
+            Ok(val)
+        })()
+        else {
+            error!("Failed to serialize server protocol hash");
+            continue;
+        };
+
+        writer.write(ConnectionTicketMessage {
+            ticket: ticket_str,
+            protocol_hash: hash_val,
         });
         info!("Sent ConnectionTicketMessage to server");
     }

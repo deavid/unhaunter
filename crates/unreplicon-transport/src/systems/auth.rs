@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_quinnet::server::QuinnetServer;
-use bevy_replicon::prelude::{FromClient, ConnectedClient};
+use bevy_replicon::prelude::{
+    AuthorizedClient, Channel, ClientMessageAppExt, ConnectedClient, FromClient, ProtocolHash,
+};
 use bevy_replicon::shared::backend::connected_client::NetworkId;
 use unhub_client::protocol::DedicatedToProcMan;
 use unreplicon_core::ownership::OwnerId;
@@ -10,6 +12,7 @@ use unreplicon_core::messages::ConnectionTicketMessage;
 use crate::resources::{ProcManChannel, RoomAuth};
 
 pub(super) fn app_setup(app: &mut App) {
+    app.add_client_message::<ConnectionTicketMessage>(Channel::Ordered);
     app.add_systems(Update, validate_new_connection_ticket);
     app.add_observer(on_client_disconnected_observer);
 }
@@ -19,9 +22,11 @@ fn validate_new_connection_ticket(
     mut events: MessageReader<FromClient<ConnectionTicketMessage>>,
     mut server: ResMut<QuinnetServer>,
     room_auth: Res<RoomAuth>,
+    protocol_hash: Res<ProtocolHash>,
     procman: Option<Res<ProcManChannel>>,
     mut uuid_map: ResMut<ClientUuidMap>,
     q_connected: Query<&NetworkId, With<ConnectedClient>>,
+    mut commands: Commands,
 ) {
     for req in events.read() {
         let client_id = req.client_id;
@@ -30,7 +35,7 @@ fn validate_new_connection_ticket(
             bevy_replicon::prelude::ClientId::Server => continue, // Should not happen for this message
         };
         let ticket_str = &req.message.ticket;
-        let protocol_version = &req.message.protocol_version;
+        let client_protocol_hash = req.message.protocol_hash;
 
         // Security check: if the entity is not even a connected client anymore, ignore.
         let Ok(network_id) = q_connected.get(client_entity) else {
@@ -41,10 +46,20 @@ fn validate_new_connection_ticket(
             continue;
         };
 
-        if protocol_version != "0.4.0-dev" {
+        let Ok(expected_hash) = (|| -> Result<u64, Box<dyn std::error::Error>> {
+            let s = serde_json::to_string(&*protocol_hash)?;
+            let val = s.trim_matches('"').parse::<u64>()?;
+            Ok(val)
+        })()
+        else {
+            error!("Failed to parse server protocol hash");
+            continue;
+        };
+
+        if client_protocol_hash != expected_hash {
             error!(
-                "Rejecting client {:?}: Protocol version mismatch (expected '0.4.0-dev', got '{}')",
-                client_entity, protocol_version
+                "Rejecting client {:?}: Protocol hash mismatch (expected {}, got {})",
+                client_entity, expected_hash, client_protocol_hash
             );
             if let Some(endpoint) = server.get_endpoint_mut() {
                 endpoint.try_disconnect_client(network_id.get());
@@ -117,6 +132,10 @@ fn validate_new_connection_ticket(
 
         let owner_id = OwnerId::Client(client_entity);
         uuid_map.0.insert(owner_id, ticket.player_uuid);
+
+        // Mark the client as authorized to enable replication.
+        commands.entity(client_entity).insert(AuthorizedClient);
+
         info!(
             "Client {:?} authenticated successfully for Player: {}",
             client_entity, ticket.player_uuid

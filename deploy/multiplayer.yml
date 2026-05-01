@@ -50,6 +50,8 @@
         system: true
         home: "{{ install_dir }}"
         shell: /bin/false
+        groups: caddy
+        append: true
 
     - name: Ensure target directories exist
       ansible.builtin.file:
@@ -513,6 +515,9 @@
               port_range: (12000, 12100),
               library_dir: "{{ install_dir }}/library",
               max_total_instances: 8,
+              cert_file: Some("/var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org/{{ caddy_domain }}/{{ caddy_domain }}.crt"),
+              key_file: Some("/var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org/{{ caddy_domain }}/{{ caddy_domain }}.key"),
+              skip_ssl_verification: false,
           )
         owner: unhaunter
         group: unhaunter
