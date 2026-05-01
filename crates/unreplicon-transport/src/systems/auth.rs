@@ -30,6 +30,27 @@ fn validate_new_connection_ticket(
             bevy_replicon::prelude::ClientId::Server => continue, // Should not happen for this message
         };
         let ticket_str = &req.message.ticket;
+        let protocol_version = &req.message.protocol_version;
+
+        // Security check: if the entity is not even a connected client anymore, ignore.
+        let Ok(network_id) = q_connected.get(client_entity) else {
+            warn!(
+                "Received ticket for non-existent client entity {:?}",
+                client_entity
+            );
+            continue;
+        };
+
+        if protocol_version != "0.4.0-dev" {
+            error!(
+                "Rejecting client {:?}: Protocol version mismatch (expected '0.4.0-dev', got '{}')",
+                client_entity, protocol_version
+            );
+            if let Some(endpoint) = server.get_endpoint_mut() {
+                endpoint.try_disconnect_client(network_id.get());
+            }
+            continue;
+        }
 
         info!(
             "validate_new_connection_ticket: received ticket for entity {:?} (procman={}, room_assigned={})",
@@ -37,12 +58,6 @@ fn validate_new_connection_ticket(
             procman.is_some(),
             room_auth.room_code.is_some(),
         );
-
-        // Security check: if the entity is not even a connected client anymore, ignore.
-        let Ok(network_id) = q_connected.get(client_entity) else {
-            warn!("Received ticket for non-existent client entity {:?}", client_entity);
-            continue;
-        };
 
         let (expected_secret, expected_room) = if procman.is_some() {
             let secret = room_auth.ticket_hmac_secret.as_deref().unwrap_or_default();

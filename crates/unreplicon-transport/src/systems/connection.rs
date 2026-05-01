@@ -2,8 +2,8 @@ use std::net::Ipv4Addr;
 
 use crate::resources::TransportConfig;
 use bevy::prelude::*;
-use bevy_quinnet::client::{QuinnetClient, ClientConnectionConfiguration, certificate::CertificateVerificationMode, connection::ClientAddrConfiguration};
-use bevy_quinnet::server::{QuinnetServer, ServerEndpointConfiguration, EndpointAddrConfiguration, certificate::CertificateRetrievalMode};
+use bevy_quinnet::client::{QuinnetClient, ClientConnectionConfiguration, certificate::CertificateVerificationMode, connection::ClientAddrConfiguration, client_connected, client_connecting};
+use bevy_quinnet::server::{QuinnetServer, ServerEndpointConfiguration, EndpointAddrConfiguration, certificate::CertificateRetrievalMode, server_listening};
 use bevy_replicon_quinnet::ChannelsConfigurationExt;
 use bevy_replicon::prelude::{RepliconChannels, FromClient, ClientId};
 use unprofile_core::profile::RuntimeInstallationId;
@@ -12,13 +12,17 @@ use unreplicon_core::messages::ConnectionTicketMessage;
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 
+/// Unique identifier for this game's protocol version.
+/// Clients and servers with different values cannot connect to each other.
+const PROTOCOL_VERSION: &str = "0.4.0-dev";
+
 pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         startup_transport_system.run_if(
             (resource_exists::<RuntimeInstallationId>.or(resource_exists::<AuthorityRole>))
-                .and(not(resource_exists::<QuinnetClient>))
-                .and(not(resource_exists::<QuinnetServer>))
+                .and(not(server_listening))
+                .and(not(client_connecting.or(client_connected)))
                 .and(|config: Res<TransportConfig>| !matches!(*config, TransportConfig::Offline)),
         ),
     );
@@ -275,7 +279,10 @@ fn send_ticket_on_connection(
 
         writer.write(FromClient {
             client_id: ClientId::Server,
-            message: ConnectionTicketMessage { ticket: ticket_str },
+            message: ConnectionTicketMessage {
+                ticket: ticket_str,
+                protocol_version: PROTOCOL_VERSION.to_string(),
+            },
         });
         info!("Sent ConnectionTicketMessage to server");
     }

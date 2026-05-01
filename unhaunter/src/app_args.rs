@@ -11,10 +11,10 @@ pub enum CliNetMode {
     Join {
         address: String,
         /// Base64 encoded connection ticket (postcard + HMAC-SHA256) issued by
-        /// the Hub after PoW challenge. When present the transport embeds
-        /// it in the connection body so the dedicated server can validate
-        /// the connection. `None` in singleplayer / direct-connect scenarios
-        /// (no auth enforced).
+        /// the Hub after PoW challenge. When present the transport sends it
+        /// in a post-connection handshake message so the dedicated server
+        /// can validate the connection. `None` in singleplayer / direct-connect
+        /// scenarios (no auth enforced).
         ticket: Option<String>,
     },
 }

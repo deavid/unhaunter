@@ -273,4 +273,5 @@ pub struct HubConnectionRequested {
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct ConnectionTicketMessage {
     pub ticket: String,
+    pub protocol_version: String,
 }
