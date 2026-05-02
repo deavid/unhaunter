@@ -12,8 +12,6 @@ struct Args {
     #[clap(long)]
     peer_host: Option<u16>,
 
-    #[clap(long)]
-    bind: Vec<String>,
 
     #[clap(long)]
     join: Option<String>,
@@ -57,10 +55,8 @@ fn main() {
     }
 
     let net_mode = if let Some(port) = args.peer_host {
-        let bind_addresses = args.bind.clone();
         unhaunter::app_args::CliNetMode::PeerHost {
             port,
-            bind_addresses,
         }
     } else if let Some(address) = args.join {
         unhaunter::app_args::CliNetMode::Join {

@@ -16,7 +16,7 @@ pub struct BinaryInfo {
     pub bundle_dir: PathBuf,
     pub binary_path: PathBuf,
     pub version: String,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
 }
 
 enum ServerControl {
@@ -120,7 +120,7 @@ impl ServerManager {
             let protocol_hash = match tokio::fs::read_to_string(&hash_file)
                 .await
                 .ok()
-                .and_then(|s| s.trim().parse::<u64>().ok())
+                .map(|s| s.trim().to_string())
             {
                 Some(h) => h,
                 None => {

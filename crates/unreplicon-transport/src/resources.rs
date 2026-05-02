@@ -7,7 +7,6 @@ pub enum TransportConfig {
     Offline,
     PeerHost {
         port: u16,
-        bind_addresses: Vec<String>,
         cert_file: Option<String>,
         key_file: Option<String>,
         skip_ssl_verification: bool,

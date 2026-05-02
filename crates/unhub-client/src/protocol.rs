@@ -8,7 +8,7 @@ pub struct PingRequest {
     pub installation_id: Uuid,
     pub session_id: u16,
     pub version: String,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,7 +31,7 @@ pub struct PingResponse {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LibraryEntry {
     pub version: String,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
 }
 
 // --- Hub ↔ ProcMan Protocol ---
@@ -143,7 +143,7 @@ pub struct ChallengeResponse {
 pub struct CreateRoomRequest {
     pub player_uuid: Uuid,
     pub game_version: String,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
     pub nonce: String,
     pub solution: String,
 }
@@ -151,7 +151,7 @@ pub struct CreateRoomRequest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JoinRoomRequest {
     pub player_uuid: Uuid,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

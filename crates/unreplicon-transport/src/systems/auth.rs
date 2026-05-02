@@ -13,8 +13,35 @@ use crate::resources::{ProcManChannel, RoomAuth};
 
 pub(super) fn app_setup(app: &mut App) {
     app.add_client_message::<ConnectionTicketMessage>(Channel::Ordered);
-    app.add_systems(Update, validate_new_connection_ticket);
+    app.add_systems(Update, (validate_new_connection_ticket, insert_auth_timeout, enforce_auth_timeout));
     app.add_observer(on_client_disconnected_observer);
+}
+
+#[derive(Component)]
+struct AuthTimeout(Timer);
+
+fn insert_auth_timeout(
+    q: Query<Entity, (With<ConnectedClient>, Without<AuthTimeout>, Without<AuthorizedClient>)>,
+    mut commands: Commands,
+) {
+    for entity in q.iter() {
+        commands.entity(entity).insert(AuthTimeout(Timer::from_seconds(2.0, TimerMode::Once)));
+    }
+}
+
+fn enforce_auth_timeout(
+    mut q: Query<(Entity, &mut AuthTimeout, &NetworkId), Without<AuthorizedClient>>,
+    time: Res<Time>,
+    mut server: ResMut<QuinnetServer>,
+) {
+    for (entity, mut timeout, network_id) in q.iter_mut() {
+        if timeout.0.tick(time.delta()).just_finished() {
+            warn!("Client {:?} failed to authenticate within 2 seconds, kicking.", entity);
+            if let Some(endpoint) = server.get_endpoint_mut() {
+                endpoint.try_disconnect_client(network_id.get());
+            }
+        }
+    }
 }
 
 /// System that listens for ConnectionTicketMessage from clients to validate them.
@@ -35,7 +62,7 @@ fn validate_new_connection_ticket(
             bevy_replicon::prelude::ClientId::Server => continue, // Should not happen for this message
         };
         let ticket_str = &req.message.ticket;
-        let client_protocol_hash = req.message.protocol_hash;
+        let client_protocol_hash = &req.message.protocol_hash;
 
         // Security check: if the entity is not even a connected client anymore, ignore.
         let Ok(network_id) = q_connected.get(client_entity) else {
@@ -46,17 +73,15 @@ fn validate_new_connection_ticket(
             continue;
         };
 
-        let Ok(expected_hash) = (|| -> Result<u64, Box<dyn std::error::Error>> {
-            let s = serde_json::to_string(&*protocol_hash)?;
-            let val = s.trim_matches('"').parse::<u64>()?;
-            Ok(val)
-        })()
-        else {
-            error!("Failed to parse server protocol hash");
-            continue;
+        let expected_hash = match serde_json::to_string(&*protocol_hash) {
+            Ok(h) => h,
+            Err(e) => {
+                error!("Failed to serialize server protocol hash: {}", e);
+                continue;
+            }
         };
 
-        if client_protocol_hash != expected_hash {
+        if *client_protocol_hash != expected_hash {
             error!(
                 "Rejecting client {:?}: Protocol hash mismatch (expected {}, got {})",
                 client_entity, expected_hash, client_protocol_hash

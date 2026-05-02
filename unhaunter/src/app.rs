@@ -221,10 +221,8 @@ pub fn app_build(args: AppArgs) -> App {
                 }
                 crate::app_args::CliNetMode::PeerHost {
                     port,
-                    bind_addresses,
                 } => unreplicon_transport::resources::TransportConfig::PeerHost {
                     port,
-                    bind_addresses,
                     cert_file: cert_file.clone(),
                     key_file: key_file.clone(),
                     skip_ssl_verification,

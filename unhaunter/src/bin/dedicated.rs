@@ -17,8 +17,6 @@ struct Args {
     #[clap(long)]
     hub_url: Option<String>,
 
-    #[clap(long)]
-    bind: Vec<String>,
 
     #[clap(long)]
     installation_id_file: Option<String>,
@@ -45,11 +43,8 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let bind_addresses = args.bind.clone();
-
     let net_mode = unhaunter::app_args::CliNetMode::PeerHost {
         port: args.host,
-        bind_addresses,
     };
 
     if args.print_version {

@@ -48,7 +48,7 @@ where
 }
 
 impl HubClient {
-    pub fn create_room(&self, player_uuid: uuid::Uuid, game_version: String, protocol_hash: u64) {
+    pub fn create_room(&self, player_uuid: uuid::Uuid, game_version: String, protocol_hash: String) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
         spawn_hub_task(async move {
@@ -134,7 +134,7 @@ impl HubClient {
         });
     }
 
-    pub fn join_room(&self, code: String, player_uuid: uuid::Uuid, protocol_hash: u64) {
+    pub fn join_room(&self, code: String, player_uuid: uuid::Uuid, protocol_hash: String) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
         spawn_hub_task(async move {
@@ -185,7 +185,7 @@ impl HubClient {
         installation_id: uuid::Uuid,
         session_id: u16,
         version: String,
-        protocol_hash: u64,
+        protocol_hash: String,
     ) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
@@ -265,7 +265,7 @@ pub struct HubStatus {
 pub struct HubPingTimer(pub Timer);
 
 #[derive(Resource, Default)]
-pub struct ClientProtocolHash(pub u64);
+pub struct ClientProtocolHash(pub String);
 
 #[derive(Resource, Default, Clone, Debug)]
 pub struct HubConnectionStatus {
@@ -327,7 +327,7 @@ pub fn ping_hub_system(
             runtime_id.0,
             client.session_id,
             env!("CARGO_PKG_VERSION").to_string(),
-            protocol_hash.0,
+            protocol_hash.0.clone(),
         );
     }
 }
@@ -378,17 +378,9 @@ pub fn extract_protocol_hash(
     bevy_replicon_hash: Res<ProtocolHash>,
     mut client_hash: ResMut<ClientProtocolHash>,
 ) {
-    // Deserialize ProtocolHash to get the numeric u64 value
     if let Ok(hash_str) = serde_json::to_string(&*bevy_replicon_hash) {
-        if let Ok(hash_val) = hash_str.trim_matches('"').parse::<u64>() {
-            client_hash.0 = hash_val;
-            info!("Extracted protocol hash: {}", hash_val);
-        } else {
-            warn!(
-                "Failed to parse protocol hash from bevy_replicon: {}",
-                hash_str
-            );
-        }
+        client_hash.0 = hash_str.clone();
+        info!("Extracted protocol hash: {}", hash_str);
     } else {
         warn!("Failed to serialize bevy_replicon ProtocolHash");
     }

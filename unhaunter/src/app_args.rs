@@ -6,7 +6,6 @@ pub enum CliNetMode {
     Offline,
     PeerHost {
         port: u16,
-        bind_addresses: Vec<String>,
     },
     Join {
         address: String,

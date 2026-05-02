@@ -61,9 +61,8 @@ fn handle_hub_connection_request(
     mut ev: MessageReader<unreplicon_core::messages::HubConnectionRequested>,
     mut commands: Commands,
     replicon_channels: Res<RepliconChannels>,
-    _installation_id: Option<Res<RuntimeInstallationId>>,
     mut client: ResMut<QuinnetClient>,
-    transport_config: Res<TransportConfig>,
+    mut transport_config: ResMut<TransportConfig>,
 ) {
     let Some(req) = ev.read().last() else {
         return;
@@ -81,6 +80,12 @@ fn handle_hub_connection_request(
         skip_ssl_verification
     } else {
         false
+    };
+
+    *transport_config = TransportConfig::Join {
+        address: req.address.clone(),
+        ticket: req.ticket.clone(),
+        skip_ssl_verification: skip_ssl,
     };
 
     let cert_mode = if skip_ssl {
@@ -127,7 +132,6 @@ fn handle_hub_connection_request(
 fn startup_transport_system(
     transport_config: Res<TransportConfig>,
     replicon_channels: Res<RepliconChannels>,
-    _installation_id: Option<Res<RuntimeInstallationId>>,
     mut commands: Commands,
     mut server: ResMut<QuinnetServer>,
     mut _client: ResMut<QuinnetClient>,
@@ -141,7 +145,6 @@ fn startup_transport_system(
         TransportConfig::Offline => {}
         TransportConfig::PeerHost {
             port,
-            bind_addresses: _,
             cert_file,
             key_file,
             skip_ssl_verification,
@@ -155,7 +158,7 @@ fn startup_transport_system(
                         key_file: k.clone(),
                     },
                     _ => {
-                        error!("Server started in PeerHost mode without certificates and skip_ssl_verification is false. Use --skip-ssl-verification to run without SSL (LAN only).");
+                        error!("Server started in PeerHost mode without certificates and skip_ssl_verification is false. Use --skip-ssl-verification to run with self-signed certs / disable certificate verification for LAN/dev only.");
                         return;
                     }
                 }
@@ -273,12 +276,7 @@ fn send_ticket_on_connection(
             B64.encode(bytes)
         };
 
-        let Ok(hash_val) = (|| -> Result<u64, Box<dyn std::error::Error>> {
-            let s = serde_json::to_string(&*protocol_hash)?;
-            let val = s.trim_matches('"').parse::<u64>()?;
-            Ok(val)
-        })()
-        else {
+        let Ok(hash_val) = serde_json::to_string(&*protocol_hash) else {
             error!("Failed to serialize server protocol hash");
             continue;
         };
