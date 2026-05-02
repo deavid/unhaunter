@@ -160,7 +160,7 @@ impl ServerManager {
         lib.iter()
             .map(|b| LibraryEntry {
                 version: b.version.clone(),
-                protocol_hash: b.protocol_hash,
+                protocol_hash: b.protocol_hash.clone(),
             })
             .collect()
     }
