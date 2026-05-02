@@ -45,6 +45,15 @@ pub(super) fn app_setup(app: &mut App) {
             .run_if(is_pure_client)
             .run_if(in_state(UIContextState::InGame)),
     );
+
+    // Client: mirror ServerGamePhase into SimulationState so that systems gated
+    // on SimulationState::Ready stop ticking when the mission is ending.
+    app.add_systems(
+        Update,
+        sync_sim_state_from_server_phase
+            .run_if(is_pure_client)
+            .run_if(in_state(UIContextState::InGame)),
+    );
 }
 
 fn setup_goal_entity(mut commands: Commands) {
@@ -129,6 +138,34 @@ fn on_server_phase_lobby(
             info!("ServerGamePhase::Lobby observed while InGame — returning to lobby");
             next_sim_state.set(SimulationState::Unloaded);
             next_app_state.set(UIContextState::Lobby);
+        }
+    }
+}
+
+/// Client-only: mirrors the replicated `ServerGamePhase` into the local
+/// `SimulationState` so that systems gated on `SimulationState::Ready` stop
+/// ticking when the mission ends on the server.
+fn sync_sim_state_from_server_phase(
+    q_phase: Query<
+        &ServerGamePhase,
+        (
+            Changed<ServerGamePhase>,
+            With<unreplicon_core::components::LobbyInfo>,
+        ),
+    >,
+    mut next_sim_state: ResMut<NextState<SimulationState>>,
+) {
+    for phase in q_phase.iter() {
+        match phase {
+            ServerGamePhase::InProgress => {
+                next_sim_state.set(SimulationState::Ready);
+            }
+            ServerGamePhase::Concluding | ServerGamePhase::Ended => {
+                next_sim_state.set(SimulationState::TearingDown);
+            }
+            ServerGamePhase::Lobby => {
+                next_sim_state.set(SimulationState::Unloaded);
+            }
         }
     }
 }

@@ -25,6 +25,10 @@ pub struct TruckUIButton {
     pub frame_counter: u32,
     /// Whether the button is locked computer side, meaning it has a value already that cannot be changed anymore.
     pub computer_locked: bool,
+    /// Cooldown timer in seconds after activation
+    pub cooldown_timer: f32,
+    /// Whether the button requires a release before it can be pressed again
+    pub require_release: bool,
 }
 
 impl TruckUIButton {
@@ -72,6 +76,8 @@ impl From<TruckButtonType> for TruckUIButton {
             blinking_hint_active: false,
             frame_counter: 0,
             computer_locked: false,
+            cooldown_timer: 0.0,
+            require_release: false,
         }
     }
 }
