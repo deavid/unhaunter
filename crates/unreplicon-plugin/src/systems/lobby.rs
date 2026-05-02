@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{
-    AppRuleExt, Channel, ClientId, ClientMessageAppExt, ConnectedClient, FromClient, Replicated,
-    ServerState,
+    AppRuleExt, AuthorizedClient, Channel, ClientId, ClientMessageAppExt, ConnectedClient, FromClient,
+    Replicated, ServerState,
 };
 use std::str::FromStr;
 use uncommon_states_core::{BootState, UIContextState};
@@ -384,7 +384,7 @@ fn set_server_state_ingame(mut q: Query<(&mut ServerGamePhase, &mut LobbyInfo)>)
 /// System: triggered every frame on the server to handle clients that have connected
 /// but haven't been added to the lobby yet (e.g. waiting for authentication).
 fn process_newly_connected_clients(
-    q_clients: Query<Entity, With<ConnectedClient>>,
+    q_clients: Query<Entity, (With<ConnectedClient>, With<AuthorizedClient>)>,
     mut q_lobby: Query<&mut LobbyInfo>,
     uuid_map: Res<ClientUuidMap>,
 ) {

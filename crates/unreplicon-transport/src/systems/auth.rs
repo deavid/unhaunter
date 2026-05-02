@@ -1,94 +1,103 @@
 use bevy::prelude::*;
 use bevy_quinnet::server::QuinnetServer;
-use bevy_replicon::prelude::{
-    AuthorizedClient, Channel, ClientMessageAppExt, ConnectedClient, FromClient, ProtocolHash,
-};
+use bevy_replicon::prelude::*;
 use bevy_replicon::shared::backend::connected_client::NetworkId;
 use unhub_client::protocol::DedicatedToProcMan;
+use unreplicon_core::messages::ConnectionTicketMessage;
 use unreplicon_core::ownership::OwnerId;
 use unreplicon_core::resources::ClientUuidMap;
-use unreplicon_core::messages::ConnectionTicketMessage;
 
 use crate::resources::{ProcManChannel, RoomAuth};
-
-pub(super) fn app_setup(app: &mut App) {
-    app.add_client_message::<ConnectionTicketMessage>(Channel::Ordered);
-    app.add_systems(Update, (validate_new_connection_ticket, insert_auth_timeout, enforce_auth_timeout));
-    app.add_observer(on_client_disconnected_observer);
-}
 
 #[derive(Component)]
 struct AuthTimeout(Timer);
 
+pub(super) fn app_setup(app: &mut App) {
+    // 1. Register the message
+    app.add_client_message::<ConnectionTicketMessage>(Channel::Ordered);
+    app.add_server_message::<ConnectionTicketMessage>(Channel::Ordered);
+
+    // 2. MARK AS INDEPENDENT: This allows the message to arrive BEFORE AuthorizedClient is present.
+    app.make_message_independent::<ConnectionTicketMessage>();
+
+    app.add_systems(
+        Update,
+        (
+            process_bouncer_handshake,
+            insert_auth_timeout,
+            enforce_auth_timeout,
+        ),
+    );
+    app.add_observer(on_client_disconnected_observer);
+}
+
 fn insert_auth_timeout(
-    q: Query<Entity, (With<ConnectedClient>, Without<AuthTimeout>, Without<AuthorizedClient>)>,
     mut commands: Commands,
+    q_new_clients: Query<
+        Entity,
+        (
+            With<ConnectedClient>,
+            Without<AuthorizedClient>,
+            Without<AuthTimeout>,
+        ),
+    >,
 ) {
-    for entity in q.iter() {
-        commands.entity(entity).insert(AuthTimeout(Timer::from_seconds(2.0, TimerMode::Once)));
+    for e in q_new_clients.iter() {
+        commands
+            .entity(e)
+            .insert(AuthTimeout(Timer::from_seconds(0.5, TimerMode::Once)));
     }
 }
 
 fn enforce_auth_timeout(
-    mut q: Query<(Entity, &mut AuthTimeout, &NetworkId), Without<AuthorizedClient>>,
+    mut commands: Commands,
+    mut q_timeouts: Query<(Entity, &NetworkId, &mut AuthTimeout), Without<AuthorizedClient>>,
     time: Res<Time>,
     mut server: ResMut<QuinnetServer>,
 ) {
-    for (entity, mut timeout, network_id) in q.iter_mut() {
-        if timeout.0.tick(time.delta()).just_finished() {
-            warn!("Client {:?} failed to authenticate within 2 seconds, kicking.", entity);
+    for (entity, network_id, mut timeout) in q_timeouts.iter_mut() {
+        timeout.0.tick(time.delta());
+        if timeout.0.is_finished() {
+            error!("Client {:?} auth timeout! Double Tap engaged.", entity);
             if let Some(endpoint) = server.get_endpoint_mut() {
                 endpoint.try_disconnect_client(network_id.get());
             }
+            commands.entity(entity).despawn();
         }
     }
 }
 
-/// System that listens for ConnectionTicketMessage from clients to validate them.
-fn validate_new_connection_ticket(
+/// System that listens for ConnectionTicketMessage from clients via standard Replicon MessageReader.
+fn process_bouncer_handshake(
     mut events: MessageReader<FromClient<ConnectionTicketMessage>>,
-    mut server: ResMut<QuinnetServer>,
-    room_auth: Res<RoomAuth>,
     protocol_hash: Res<ProtocolHash>,
+    room_auth: Res<RoomAuth>,
     procman: Option<Res<ProcManChannel>>,
     mut uuid_map: ResMut<ClientUuidMap>,
-    q_connected: Query<&NetworkId, With<ConnectedClient>>,
     mut commands: Commands,
+    mut server: ResMut<QuinnetServer>,
+    q_network_ids: Query<&NetworkId>,
 ) {
-    for req in events.read() {
-        let client_id = req.client_id;
-        let client_entity = match client_id {
-            bevy_replicon::prelude::ClientId::Client(e) => e,
-            bevy_replicon::prelude::ClientId::Server => continue, // Should not happen for this message
-        };
-        let ticket_str = &req.message.ticket;
-        let client_protocol_hash = &req.message.protocol_hash;
-
-        // Security check: if the entity is not even a connected client anymore, ignore.
-        let Ok(network_id) = q_connected.get(client_entity) else {
-            warn!(
-                "Received ticket for non-existent client entity {:?}",
-                client_entity
-            );
+    for FromClient { client_id, message } in events.read() {
+        let ClientId::Client(client_entity) = client_id else {
             continue;
         };
 
-        let expected_hash = match serde_json::to_string(&*protocol_hash) {
-            Ok(h) => h,
-            Err(e) => {
-                error!("Failed to serialize server protocol hash: {}", e);
-                continue;
-            }
-        };
+        let ticket_str = &message.ticket;
+        let req_hash = &message.protocol_hash;
 
-        if *client_protocol_hash != expected_hash {
+        let expected_hash = serde_json::to_string(&*protocol_hash).unwrap_or_default();
+        if req_hash != &expected_hash {
             error!(
-                "Rejecting client {:?}: Protocol hash mismatch (expected {}, got {})",
-                client_entity, expected_hash, client_protocol_hash
+                "Rejecting client {:?}: Protocol version hash mismatch (expected {}, got {})",
+                client_entity, expected_hash, req_hash
             );
-            if let Some(endpoint) = server.get_endpoint_mut() {
+            if let Ok(network_id) = q_network_ids.get(*client_entity)
+                && let Some(endpoint) = server.get_endpoint_mut()
+            {
                 endpoint.try_disconnect_client(network_id.get());
             }
+            commands.entity(*client_entity).despawn();
             continue;
         }
 
@@ -108,9 +117,12 @@ fn validate_new_connection_ticket(
                     "Rejecting client {:?}: Server is idle/unassigned.",
                     client_entity
                 );
-                if let Some(endpoint) = server.get_endpoint_mut() {
+                if let Ok(network_id) = q_network_ids.get(*client_entity)
+                    && let Some(endpoint) = server.get_endpoint_mut()
+                {
                     endpoint.try_disconnect_client(network_id.get());
                 }
+                commands.entity(*client_entity).despawn();
                 continue;
             }
             (secret, room)
@@ -118,16 +130,20 @@ fn validate_new_connection_ticket(
             ("", ":DIRECT")
         };
 
-        let ticket = match unhub_client::tickets::decode_ticket_string(ticket_str, expected_secret) {
+        let ticket = match unhub_client::tickets::decode_ticket_string(ticket_str, expected_secret)
+        {
             Ok(t) => t,
             Err(e) => {
                 error!(
                     "Rejecting client {:?}: Ticket validation failed: {}",
                     client_entity, e
                 );
-                if let Some(endpoint) = server.get_endpoint_mut() {
+                if let Ok(network_id) = q_network_ids.get(*client_entity)
+                    && let Some(endpoint) = server.get_endpoint_mut()
+                {
                     endpoint.try_disconnect_client(network_id.get());
                 }
+                commands.entity(*client_entity).despawn();
                 continue;
             }
         };
@@ -137,9 +153,12 @@ fn validate_new_connection_ticket(
                 "Rejecting client {:?} (room mismatch): expected '{}', got '{}'",
                 client_entity, expected_room, ticket.room_code
             );
-            if let Some(endpoint) = server.get_endpoint_mut() {
+            if let Ok(network_id) = q_network_ids.get(*client_entity)
+                && let Some(endpoint) = server.get_endpoint_mut()
+            {
                 endpoint.try_disconnect_client(network_id.get());
             }
+            commands.entity(*client_entity).despawn();
             continue;
         }
 
@@ -149,25 +168,26 @@ fn validate_new_connection_ticket(
             .as_secs();
         if ticket.exp < now {
             error!("Rejecting client {:?}: Ticket expired", client_entity);
-            if let Some(endpoint) = server.get_endpoint_mut() {
+            if let Ok(network_id) = q_network_ids.get(*client_entity)
+                && let Some(endpoint) = server.get_endpoint_mut()
+            {
                 endpoint.try_disconnect_client(network_id.get());
             }
+            commands.entity(*client_entity).despawn();
             continue;
         }
 
-        let owner_id = OwnerId::Client(client_entity);
+        let owner_id = OwnerId::Client(*client_entity);
         uuid_map.0.insert(owner_id, ticket.player_uuid);
-
-        // Mark the client as authorized to enable replication.
-        commands.entity(client_entity).insert(AuthorizedClient);
-
         info!(
             "Client {:?} authenticated successfully for Player: {}",
             client_entity, ticket.player_uuid
         );
 
+        commands.entity(*client_entity).insert(AuthorizedClient);
+
         // Notify procman so it can track player count and extend the room's lifetime.
-        if let Some(procman) = procman.as_ref() {
+        if let Some(ref procman) = procman {
             let _ = procman.tx.send(DedicatedToProcMan::PlayerJoined {
                 player_uuid: ticket.player_uuid,
             });

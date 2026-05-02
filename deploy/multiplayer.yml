@@ -29,6 +29,8 @@
     # Set to 'localhost' if testing locally, or pass '-e domain=YOUR_DOMAIN' when running the playbook.
     caddy_domain: "{{ domain | default('localhost') }}"
     install_dir: "/opt/unhaunter"
+    caddy_cert_dir: >-
+      /var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory
 
     # Generate a consistent, idempotent UUID strictly tied to this server's hostname
     procman_uuid: "{{ inventory_hostname | to_uuid }}"
@@ -515,8 +517,8 @@
               port_range: (12000, 12100),
               library_dir: "{{ install_dir }}/library",
               max_total_instances: 8,
-              cert_file: Some("/var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org/{{ caddy_domain }}/{{ caddy_domain }}.crt"),
-              key_file: Some("/var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org/{{ caddy_domain }}/{{ caddy_domain }}.key"),
+              cert_file: Some("{{ caddy_cert_dir }}/{{ caddy_domain }}/{{ caddy_domain }}.crt"),
+              key_file: Some("{{ caddy_cert_dir }}/{{ caddy_domain }}/{{ caddy_domain }}.key"),
               skip_ssl_verification: false,
           )
         owner: unhaunter
@@ -525,6 +527,86 @@
       notify: Restart Services
 
     # --- Caddy & Security ---
+    # Grant the caddy group traversal on all parent directories up to the
+    # per-domain cert folder, then make cert/key files group-readable.
+    # This is idempotent: file module only changes what differs.
+    - name: Ensure Caddy cert parent directories are group-traversable
+      ansible.builtin.file:
+        path: "{{ item }}"
+        group: caddy
+        mode: "g+x"
+      loop:
+        - /var/lib/caddy
+        - /var/lib/caddy/.local
+        - /var/lib/caddy/.local/share
+        - /var/lib/caddy/.local/share/caddy
+        - /var/lib/caddy/.local/share/caddy/certificates
+        - "{{ caddy_cert_dir }}"
+        - "{{ caddy_cert_dir }}/{{ caddy_domain }}"
+      # Dirs may not exist until after Caddy first runs; ignore on first deploy.
+      failed_when: false
+
+    # A systemd path unit watches for cert renewals (Caddy writes new files
+    # atomically) and immediately re-applies group-readable permissions so the
+    # dedicated server never loses access after a renewal.
+    - name: Install caddy-cert-perms.service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/caddy-cert-perms.service
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=Fix Caddy certificate permissions for unhaunter group
+          After=caddy.service
+
+          [Service]
+          Type=oneshot
+          # Use a shell so we can tolerate missing directories gracefully
+          # (Caddy may not have obtained certs yet on first deploy).
+          ExecStart=/bin/bash -c '\
+            chmod g+x \
+              /var/lib/caddy \
+              /var/lib/caddy/.local \
+              /var/lib/caddy/.local/share \
+              /var/lib/caddy/.local/share/caddy \
+              /var/lib/caddy/.local/share/caddy/certificates \
+              {{ caddy_cert_dir }} \
+              {{ caddy_cert_dir }}/{{ caddy_domain }} \
+              2>/dev/null || true; \
+            chmod g+r \
+              {{ caddy_cert_dir }}/{{ caddy_domain }}/{{ caddy_domain }}.crt \
+              {{ caddy_cert_dir }}/{{ caddy_domain }}/{{ caddy_domain }}.key \
+              2>/dev/null || true'
+      notify: Reload caddy-cert-perms
+
+    - name: Install caddy-cert-perms.path
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/caddy-cert-perms.path
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=Watch Caddy certificate directory for renewals
+          After=caddy.service
+
+          [Path]
+          PathChanged={{ caddy_cert_dir }}/{{ caddy_domain }}
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: Reload caddy-cert-perms
+
+    - name: Enable and start caddy-cert-perms path unit
+      ansible.builtin.systemd:
+        name: caddy-cert-perms.path
+        enabled: true
+        state: started
+        daemon_reload: true
+
+    - name: Run caddy-cert-perms once immediately (idempotent, tolerates missing dirs)
+      ansible.builtin.systemd:
+        name: caddy-cert-perms.service
+        state: started
+        daemon_reload: true
+
     - name: Install prerequisite packages for Caddy
       ansible.builtin.apt:
         name:
@@ -620,3 +702,9 @@
       ansible.builtin.systemd:
         name: caddy
         state: reloaded
+
+    - name: Reload caddy-cert-perms
+      ansible.builtin.systemd:
+        name: caddy-cert-perms.service
+        state: restarted
+        daemon_reload: true

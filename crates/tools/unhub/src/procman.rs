@@ -65,6 +65,47 @@ async fn handle_procman_connection(
 
     info!("ProcMan {} connected from {}", uuid, peer_addr);
 
+    // Keep the original hostname for TLS SNI (clients connect via raw IP but
+    // must present the hostname to the TLS stack for cert validation).
+    let public_hostname = public_addr.clone();
+
+    // Resolve the public_addr hostname to all IPs once at handshake time so
+    // that clients always receive raw IP:port addresses (Quinnet / QUIC cannot
+    // resolve DNS). IPv4 addresses are sorted first.
+    let public_addrs: Vec<String> =
+        match tokio::net::lookup_host(format!("{}:0", &public_addr)).await {
+            Ok(addrs) => {
+                let mut ipv4: Vec<String> = Vec::new();
+                let mut ipv6: Vec<String> = Vec::new();
+                for sa in addrs {
+                    let ip = sa.ip().to_string();
+                    if sa.is_ipv4() {
+                        ipv4.push(ip);
+                    } else {
+                        ipv6.push(ip);
+                    }
+                }
+                let all: Vec<String> = ipv4.into_iter().chain(ipv6).collect();
+                if all.is_empty() {
+                    warn!(
+                        "ProcMan {}: DNS lookup for '{}' returned no addresses; using as-is",
+                        uuid, public_addr
+                    );
+                    vec![public_addr]
+                } else {
+                    info!("ProcMan {}: resolved '{}' → {:?}", uuid, public_addr, all);
+                    all
+                }
+            }
+            Err(e) => {
+                warn!(
+                    "ProcMan {}: failed to resolve public_addr '{}': {}; using as-is",
+                    uuid, public_addr, e
+                );
+                vec![public_addr]
+            }
+        };
+
     // Accept ProcMan
     let accept = ProcManMessage::ProcManAccepted {
         hub_version: env!("CARGO_PKG_VERSION").to_string(),
@@ -79,7 +120,8 @@ async fn handle_procman_connection(
         ProcManSession {
             tx,
             library,
-            public_addr,
+            public_hostname,
+            public_addrs,
             last_heartbeat: std::time::Instant::now(),
             ticket_hmac_secret,
         },

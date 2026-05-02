@@ -13,6 +13,17 @@ use unhub_client::protocol::{
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unhub_client::{generate_room_code, generate_room_secret};
 
+/// Format a raw IP string and port into the `IP:port` / `[IPv6]:port` form
+/// expected by Quinnet's `ClientAddrConfiguration::from_strings`.
+fn format_addr_with_port(ip: &str, port: u16) -> String {
+    if ip.contains(':') {
+        // IPv6 – must be bracket-wrapped
+        format!("[{}]:{}", ip, port)
+    } else {
+        format!("{}:{}", ip, port)
+    }
+}
+
 fn infer_channel(version: &str) -> &'static str {
     if version.contains("-beta") {
         "beta"
@@ -395,6 +406,7 @@ pub async fn create_room(
     let client_channel = infer_channel(&payload.game_version);
     let mut selected: Option<(
         tokio::sync::mpsc::UnboundedSender<ProcManMessage>,
+        Vec<String>,
         String,
         uuid::Uuid,
         String,
@@ -437,7 +449,8 @@ pub async fn create_room(
 
         let candidate = (
             pm.tx.clone(),
-            pm.public_addr.clone(),
+            pm.public_addrs.clone(),
+            pm.public_hostname.clone(),
             *pm.key(),
             pm.ticket_hmac_secret.clone(),
             target_version,
@@ -446,7 +459,7 @@ pub async fn create_room(
 
         let should_replace = match &selected {
             None => true,
-            Some((_, _, _, _, _, selected_semver)) => match (&candidate.5, selected_semver) {
+            Some((_, _, _, _, _, _, selected_semver)) => match (&candidate.6, selected_semver) {
                 (Some(candidate_v), Some(selected_v)) => candidate_v > selected_v,
                 (Some(_), None) => true,
                 _ => false,
@@ -458,16 +471,17 @@ pub async fn create_room(
         }
     }
 
-    let (tx, public_addr, pm_uuid, ticket_hmac_secret, target_version, _) = selected.ok_or((
-        StatusCode::SERVICE_UNAVAILABLE,
-        Json(HubError {
-            error: "no_capacity".to_string(),
-            message: format!(
-                "No compatible server available for client version {} (hash {}).",
-                payload.game_version, payload.protocol_hash
-            ),
-        }),
-    ))?;
+    let (tx, public_addr, public_hostname, pm_uuid, ticket_hmac_secret, target_version, _) =
+        selected.ok_or((
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(HubError {
+                error: "no_capacity".to_string(),
+                message: format!(
+                    "No compatible server available for client version {} (hash {}).",
+                    payload.game_version, payload.protocol_hash
+                ),
+            }),
+        ))?;
 
     // Generate a unique room code, retrying on collision (bounded to avoid
     // infinite loops from bugs in the RNG or an overly full code space).
@@ -545,9 +559,14 @@ pub async fn create_room(
             })?;
 
             let ticket = B64.encode(raw_ticket);
+            let addrs = public_addr
+                .iter()
+                .map(|ip| format_addr_with_port(ip, room.port))
+                .collect();
             return Ok(Json(CreateRoomResponse {
                 code: room_code,
-                addr: format!("{}:{}", public_addr, room.port),
+                addrs,
+                server_hostname: public_hostname.clone(),
                 secret: room.secret.clone(),
                 ticket,
             }));
@@ -680,9 +699,15 @@ pub async fn join_room(
 
     let ticket = B64.encode(raw_ticket);
 
+    let addrs = pm
+        .public_addrs
+        .iter()
+        .map(|ip| format_addr_with_port(ip, room.port))
+        .collect();
     Ok(Json(JoinRoomResponse {
         code,
-        addr: format!("{}:{}", pm.public_addr, room.port),
+        addrs,
+        server_hostname: pm.public_hostname.clone(),
         secret: room.secret.clone(),
         ticket,
     }))

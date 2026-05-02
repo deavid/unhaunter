@@ -219,17 +219,18 @@ pub fn app_build(args: AppArgs) -> App {
                 crate::app_args::CliNetMode::Offline => {
                     unreplicon_transport::resources::TransportConfig::Offline
                 }
-                crate::app_args::CliNetMode::PeerHost {
-                    port,
-                } => unreplicon_transport::resources::TransportConfig::PeerHost {
-                    port,
-                    cert_file: cert_file.clone(),
-                    key_file: key_file.clone(),
-                    skip_ssl_verification,
-                },
+                crate::app_args::CliNetMode::PeerHost { port } => {
+                    unreplicon_transport::resources::TransportConfig::PeerHost {
+                        port,
+                        cert_file: cert_file.clone(),
+                        key_file: key_file.clone(),
+                        skip_ssl_verification,
+                    }
+                }
                 crate::app_args::CliNetMode::Join { address, ticket } => {
                     unreplicon_transport::resources::TransportConfig::Join {
                         address,
+                        server_hostname: None,
                         ticket,
                         skip_ssl_verification,
                     }

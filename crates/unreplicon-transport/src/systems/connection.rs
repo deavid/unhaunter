@@ -1,16 +1,23 @@
 use std::net::Ipv4Addr;
+use std::time::{Duration, Instant};
 
 use crate::resources::TransportConfig;
-use bevy::prelude::*;
-use bevy_quinnet::client::{QuinnetClient, ClientConnectionConfiguration, certificate::CertificateVerificationMode, connection::ClientAddrConfiguration, client_connected, client_connecting};
-use bevy_quinnet::server::{QuinnetServer, ServerEndpointConfiguration, EndpointAddrConfiguration, certificate::CertificateRetrievalMode, server_listening};
-use bevy_replicon_quinnet::ChannelsConfigurationExt;
-use bevy_replicon::prelude::{RepliconChannels, ProtocolHash};
-use unprofile_core::profile::RuntimeInstallationId;
-use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LobbyPresenceRole};
-use unreplicon_core::messages::ConnectionTicketMessage;
-use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
+use bevy::prelude::*;
+use bevy_quinnet::client::{
+    ClientConnectionConfiguration, QuinnetClient, certificate::CertificateVerificationMode,
+    client_connected, client_connecting, connection::ClientAddrConfiguration,
+};
+use bevy_quinnet::server::{
+    EndpointAddrConfiguration, QuinnetServer, ServerEndpointConfiguration,
+    certificate::CertificateRetrievalMode, server_listening,
+};
+use bevy_replicon::prelude::{ProtocolHash, RepliconChannels};
+use bevy_replicon_quinnet::ChannelsConfigurationExt;
+use unhub_client::tickets::{ConnectionTicket, encode_ticket};
+use unprofile_core::profile::RuntimeInstallationId;
+use unreplicon_core::messages::ConnectionTicketMessage;
+use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LobbyPresenceRole};
 
 pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
@@ -76,7 +83,11 @@ fn handle_hub_connection_request(
     // Close any existing connection before opening a new one.
     client.close_all_connections();
 
-    let skip_ssl = if let TransportConfig::Join { skip_ssl_verification, .. } = *transport_config {
+    let skip_ssl = if let TransportConfig::Join {
+        skip_ssl_verification,
+        ..
+    } = *transport_config
+    {
         skip_ssl_verification
     } else {
         false
@@ -84,6 +95,7 @@ fn handle_hub_connection_request(
 
     *transport_config = TransportConfig::Join {
         address: req.address.clone(),
+        server_hostname: req.server_hostname.clone(),
         ticket: req.ticket.clone(),
         skip_ssl_verification: skip_ssl,
     };
@@ -94,7 +106,15 @@ fn handle_hub_connection_request(
         CertificateVerificationMode::SignedByCertificateAuthority
     };
 
-    let addr_config = match ClientAddrConfiguration::from_strings(&req.address, "0.0.0.0:0") {
+    let addr_config = match &req.server_hostname {
+        Some(hostname) => ClientAddrConfiguration::from_strings_with_name(
+            &req.address,
+            hostname.clone(),
+            "0.0.0.0:0",
+        ),
+        None => ClientAddrConfiguration::from_strings(&req.address, "0.0.0.0:0"),
+    };
+    let addr_config = match addr_config {
         Ok(cfg) => cfg,
         Err(e) => {
             error!("Failed to parse address {}: {}", req.address, e);
@@ -133,9 +153,20 @@ fn startup_transport_system(
     transport_config: Res<TransportConfig>,
     replicon_channels: Res<RepliconChannels>,
     mut commands: Commands,
+    mut last_attempt: Local<Option<Instant>>,
     mut server: ResMut<QuinnetServer>,
     mut _client: ResMut<QuinnetClient>,
 ) {
+    const RETRY_COOLDOWN: Duration = Duration::from_secs(2);
+
+    let now = Instant::now();
+    if let Some(last) = *last_attempt
+        && now.duration_since(last) < RETRY_COOLDOWN
+    {
+        return;
+    }
+    *last_attempt = Some(now);
+
     info!(
         "startup_transport_system: initializing transport (config={:?})",
         transport_config
@@ -150,15 +181,35 @@ fn startup_transport_system(
             skip_ssl_verification,
         } => {
             let cert_mode = if *skip_ssl_verification {
-                CertificateRetrievalMode::GenerateSelfSigned { server_hostname: "localhost".to_string() }
+                CertificateRetrievalMode::GenerateSelfSigned {
+                    server_hostname: "localhost".to_string(),
+                }
             } else {
                 match (cert_file, key_file) {
-                    (Some(c), Some(k)) => CertificateRetrievalMode::LoadFromFile {
-                        cert_file: c.clone(),
-                        key_file: k.clone(),
-                    },
+                    (Some(c), Some(k)) => {
+                        // Pre-flight: check both files are readable before handing them to
+                        // bevy_quinnet, so the error message names the exact file and cause
+                        // rather than the opaque "Certificate error" string.
+                        for (label, path) in [("cert", c.as_str()), ("key", k.as_str())] {
+                            if let Err(e) = std::fs::File::open(path) {
+                                error!(
+                                    "Cannot read {label} file '{}': {e} — check that this \
+                                     process has read permission (e.g. `chmod o+r {path}` or \
+                                     run as a user with access to Caddy's certificate store)",
+                                    path
+                                );
+                                return;
+                            }
+                        }
+                        CertificateRetrievalMode::LoadFromFile {
+                            cert_file: c.clone(),
+                            key_file: k.clone(),
+                        }
+                    }
                     _ => {
-                        error!("Server started in PeerHost mode without certificates and skip_ssl_verification is false. Use --skip-ssl-verification to run with self-signed certs / disable certificate verification for LAN/dev only.");
+                        error!(
+                            "Server started in PeerHost mode without certificates and skip_ssl_verification is false. Use --skip-ssl-verification to run with self-signed certs / disable certificate verification for LAN/dev only."
+                        );
                         return;
                     }
                 }
@@ -174,13 +225,24 @@ fn startup_transport_system(
             };
 
             if let Err(e) = server.start_endpoint(server_config) {
-                error!("Failed to start Quinnet server: {e}");
+                // Walk the full error source chain — bevy_quinnet wraps the root
+                // cause (e.g. "Permission denied") inside "Certificate error",
+                // which is opaque on its own.
+                use std::error::Error as StdError;
+                let mut msg = e.to_string();
+                let mut src: Option<&dyn StdError> = e.source();
+                while let Some(s) = src {
+                    msg.push_str(&format!(": {s}"));
+                    src = s.source();
+                }
+                error!("Failed to start Quinnet server: {msg}");
                 return;
             }
             info!("Replicon transport: listening on UDP port {port} (Quinnet)");
         }
         TransportConfig::Join {
             address,
+            server_hostname,
             ticket: _,
             skip_ssl_verification,
         } => {
@@ -190,7 +252,15 @@ fn startup_transport_system(
                 CertificateVerificationMode::SignedByCertificateAuthority
             };
 
-            let addr_config = match ClientAddrConfiguration::from_strings(address, "0.0.0.0:0") {
+            let addr_config = match server_hostname {
+                Some(hostname) => ClientAddrConfiguration::from_strings_with_name(
+                    address,
+                    hostname.clone(),
+                    "0.0.0.0:0",
+                ),
+                None => ClientAddrConfiguration::from_strings(address, "0.0.0.0:0"),
+            };
+            let addr_config = match addr_config {
                 Ok(cfg) => cfg,
                 Err(e) => {
                     error!("Failed to parse address {}: {}", address, e);
@@ -250,41 +320,53 @@ fn monitor_quinnet_server_clients(server: Res<QuinnetServer>, mut last_count: Lo
 }
 
 fn send_ticket_on_connection(
-    mut events: MessageReader<bevy_quinnet::client::connection::ConnectionEvent>,
     transport_config: Res<TransportConfig>,
     installation_id: Option<Res<RuntimeInstallationId>>,
     protocol_hash: Res<ProtocolHash>,
     mut writer: MessageWriter<ConnectionTicketMessage>,
+    client: If<Res<QuinnetClient>>,
+    mut ticket_sent: Local<bool>,
 ) {
-    for _ in events.read() {
-        let ticket = match &*transport_config {
-            TransportConfig::Join { ticket, .. } => ticket.clone(),
-            _ => None,
-        };
-
-        let ticket_str = if let Some(t) = ticket {
-            t
-        } else {
-            let id = installation_id.as_ref().map(|i| i.0).unwrap_or_default();
-            let ticket = ConnectionTicket {
-                room_code: ":DIRECT".to_string(),
-                installation_id: id,
-                player_uuid: id,
-                exp: u64::MAX,
-            };
-            let bytes = encode_ticket(&ticket, "").unwrap_or([0u8; 256]);
-            B64.encode(bytes)
-        };
-
-        let Ok(hash_val) = serde_json::to_string(&*protocol_hash) else {
-            error!("Failed to serialize server protocol hash");
-            continue;
-        };
-
-        writer.write(ConnectionTicketMessage {
-            ticket: ticket_str,
-            protocol_hash: hash_val,
-        });
-        info!("Sent ConnectionTicketMessage to server");
+    // If we are disconnected, reset the flag so we can send again on next reconnect
+    if !client.is_connected() {
+        *ticket_sent = false;
+        return;
     }
+
+    // If we are connected and already sent it, do nothing
+    if *ticket_sent {
+        return;
+    }
+
+    let ticket = match &*transport_config {
+        TransportConfig::Join { ticket, .. } => ticket.clone(),
+        _ => None,
+    };
+
+    let ticket_str = if let Some(t) = ticket {
+        t
+    } else {
+        let id = installation_id.as_ref().map(|i| i.0).unwrap_or_default();
+        let ticket = ConnectionTicket {
+            room_code: ":DIRECT".to_string(),
+            installation_id: id,
+            player_uuid: id,
+            exp: u64::MAX,
+        };
+        let bytes = encode_ticket(&ticket, "").unwrap_or([0u8; 256]);
+        B64.encode(bytes)
+    };
+
+    let Ok(hash_val) = serde_json::to_string(&*protocol_hash) else {
+        error!("Failed to serialize server protocol hash");
+        return;
+    };
+
+    writer.write(ConnectionTicketMessage {
+        ticket: ticket_str,
+        protocol_hash: hash_val,
+    });
+
+    *ticket_sent = true;
+    info!("Sent ConnectionTicketMessage via Replicon MessageWriter (Independent)");
 }

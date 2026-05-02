@@ -13,6 +13,10 @@ pub enum TransportConfig {
     },
     Join {
         address: String,
+        /// TLS SNI hostname to present during the QUIC handshake. When set,
+        /// Quinnet validates the server certificate against this name instead
+        /// of the raw IP in `address`.
+        server_hostname: Option<String>,
         ticket: Option<String>,
         skip_ssl_verification: bool,
     },

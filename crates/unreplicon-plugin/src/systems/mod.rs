@@ -5,7 +5,7 @@ pub mod players;
 pub mod roles;
 
 use bevy::prelude::*;
-use bevy_replicon::prelude::RepliconPlugins;
+use bevy_replicon::prelude::{AuthMethod, RepliconPlugins, RepliconSharedPlugin};
 use bevy_replicon_quinnet::RepliconQuinnetPlugins;
 use uncommon_states_core::UIContextState;
 use unreplicon_core::export_ext::RepliconExportSet;
@@ -21,7 +21,9 @@ pub(crate) fn app_setup(app: &mut App) {
         .clone();
 
     app.add_plugins((
-        RepliconPlugins,
+        RepliconPlugins.set(RepliconSharedPlugin {
+            auth_method: AuthMethod::Custom,
+        }),
         RepliconQuinnetPlugins,
         unreplicon_transport::plugin::UnrepliconTransportPlugin {
             transport_config,
