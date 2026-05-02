@@ -11,6 +11,7 @@ use uninput_core::components::PlayerInputMapping;
 use uninvestigation_core::components::ghost_guess::GhostGuess;
 use uninvestigation_core::evidence::Evidence;
 use uninvestigation_core::messages::RequestJournalEvidenceToggle;
+use unmission_core::resources::MissionConcludingCinematic;
 use unmission_core::types::SimulationState;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unreplicon_core::components::MissionGoalEntity;
@@ -93,7 +94,7 @@ pub(crate) fn keyboard_evidence(
     q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
 ) {
     let Ok(gg) = q_gg.single() else {
-        error!("Evidence: keyboard_evidence running but MissionGoalEntity is missing!");
+        warn!("Evidence: keyboard_evidence running but MissionGoalEntity is missing!");
         return;
     };
     for (input_mapping, playergear) in &players {
@@ -126,7 +127,7 @@ pub(crate) fn click_evidence(
     q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
 ) {
     let Ok(gg) = q_gg.single() else {
-        error!("Evidence: click_evidence running but MissionGoalEntity is missing!");
+        warn!("Evidence: click_evidence running but MissionGoalEntity is missing!");
         return;
     };
     let Ok(playergear) = players.single() else {
@@ -176,12 +177,14 @@ pub(crate) fn app_setup(app: &mut App) {
         FixedUpdate,
         update_evidence_ui
             .run_if(in_state(UIContextState::InGame))
-            .run_if(in_state(SimulationState::Ready)),
+            .run_if(in_state(SimulationState::Ready))
+            .run_if(not(resource_exists::<MissionConcludingCinematic>)),
     )
     .add_systems(
         Update,
         (keyboard_evidence, click_evidence)
             .run_if(in_state(UIContextState::InGame))
-            .run_if(in_state(SimulationState::Ready)),
+            .run_if(in_state(SimulationState::Ready))
+            .run_if(not(resource_exists::<MissionConcludingCinematic>)),
     );
 }

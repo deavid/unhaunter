@@ -41,6 +41,14 @@ fn keyboard(
     }
 }
 
+fn truck_button_cooldown_system(time: Res<Time>, mut q_button: Query<&mut TruckUIButton>) {
+    for mut button in &mut q_button {
+        if button.cooldown_timer > 0.0 {
+            button.cooldown_timer = (button.cooldown_timer - time.delta_secs()).max(0.0);
+        }
+    }
+}
+
 fn hold_button_system(
     mut commands: Commands,
     time: Res<Time>,
@@ -70,6 +78,11 @@ fn hold_button_system(
             continue;
         }
 
+        // Gating: reset require_release when button is not pressed
+        if *interaction != Interaction::Pressed {
+            button.require_release = false;
+        }
+
         // Skip disabled buttons
         if button.disabled {
             continue;
@@ -92,6 +105,20 @@ fn hold_button_system(
 
         match *interaction {
             Interaction::Pressed => {
+                // Cooldown and gating check
+                if button.cooldown_timer > 0.0 || button.require_release {
+                    if button.holding {
+                        button.holding = false;
+                        button.hold_timer = None;
+                        if let Some(entity) = hold_sound.take() {
+                            if let Ok(mut cmd_e) = commands.get_entity(entity) {
+                                cmd_e.despawn();
+                            }
+                        }
+                    }
+                    continue;
+                }
+
                 if !button.holding {
                     // Start holding
                     button.holding = true;
@@ -191,6 +218,17 @@ fn hold_button_system(
                             _ => {}
                         }
 
+                        // Activate cooldown and require release
+                        button.cooldown_timer = 1.0;
+                        button.require_release = true;
+
+                        // Stop sound
+                        if let Some(entity) = hold_sound.take() {
+                            if let Ok(mut cmd_e) = commands.get_entity(entity) {
+                                cmd_e.despawn();
+                            }
+                        }
+
                         // Reset button state
                         button.holding = false;
                         button.hold_timer = None;
@@ -205,10 +243,10 @@ fn hold_button_system(
                     button.hold_timer = None;
 
                     // Stop sound
-                    if let Some(entity) = hold_sound.take()
-                        && let Ok(mut cmd_e) = commands.get_entity(entity)
-                    {
-                        cmd_e.despawn();
+                    if let Some(entity) = hold_sound.take() {
+                        if let Ok(mut cmd_e) = commands.get_entity(entity) {
+                            cmd_e.despawn();
+                        }
                     }
                 }
             }
@@ -294,6 +332,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
+            truck_button_cooldown_system,
             hold_button_system,
             update_craft_button_text,
             update_end_mission_button_status,
