@@ -12,7 +12,7 @@ use bevy_quinnet::server::{
     EndpointAddrConfiguration, QuinnetServer, ServerEndpointConfiguration,
     certificate::CertificateRetrievalMode, server_listening,
 };
-use bevy_replicon::prelude::{ProtocolHash, RepliconChannels};
+use bevy_replicon::prelude::*;
 use bevy_replicon_quinnet::ChannelsConfigurationExt;
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unprofile_core::profile::RuntimeInstallationId;
@@ -323,9 +323,11 @@ fn send_ticket_on_connection(
     transport_config: Res<TransportConfig>,
     installation_id: Option<Res<RuntimeInstallationId>>,
     protocol_hash: Res<ProtocolHash>,
-    mut writer: MessageWriter<ConnectionTicketMessage>,
+    mut commands: Commands,
     client: If<Res<QuinnetClient>>,
     mut ticket_sent: Local<bool>,
+    mut throttle: Local<i32>,
+    mut req_id: Local<i32>,
 ) {
     // If we are disconnected, reset the flag so we can send again on next reconnect
     if !client.is_connected() {
@@ -337,7 +339,11 @@ fn send_ticket_on_connection(
     if *ticket_sent {
         return;
     }
-
+    *throttle += 1;
+    if *throttle < 5 {
+        return;
+    }
+    *throttle = 0;
     let ticket = match &*transport_config {
         TransportConfig::Join { ticket, .. } => ticket.clone(),
         _ => None,
@@ -361,12 +367,13 @@ fn send_ticket_on_connection(
         error!("Failed to serialize server protocol hash");
         return;
     };
-
-    writer.write(ConnectionTicketMessage {
+    *req_id += 1;
+    commands.client_trigger(ConnectionTicketMessage {
+        id: *req_id,
         ticket: ticket_str,
         protocol_hash: hash_val,
     });
 
-    *ticket_sent = true;
-    info!("Sent ConnectionTicketMessage via Replicon MessageWriter (Independent)");
+    // *ticket_sent = true;
+    info!("Sent ConnectionTicketMessage via client_trigger (Observer Event)");
 }

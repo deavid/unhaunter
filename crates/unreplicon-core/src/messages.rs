@@ -273,8 +273,9 @@ pub struct HubConnectionRequested {
 ///
 /// This is part of the post-connection handshake required because Quinnet
 /// does not support a connection payload (like Renet's user_data).
-#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+#[derive(Event, Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionTicketMessage {
+    pub id: i32,
     pub ticket: String,
     pub protocol_hash: String,
 }

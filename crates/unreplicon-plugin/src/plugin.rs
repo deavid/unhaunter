@@ -6,15 +6,11 @@ use crate::systems;
 
 pub struct UnrepliconPlugin {
     pub role_config: crate::systems::roles::RoleConfig,
-    pub transport_config: unreplicon_transport::resources::TransportConfig,
-    pub procman_config: unreplicon_transport::resources::ProcManConfig,
 }
 
 impl Plugin for UnrepliconPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(self.role_config.clone());
-        app.insert_resource(self.transport_config.clone());
-        app.insert_resource(self.procman_config.clone());
         systems::app_setup(app);
     }
 

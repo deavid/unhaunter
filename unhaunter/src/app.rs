@@ -5,6 +5,7 @@ use bevy::window::WindowResolution;
 use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
 use std::time::Duration;
 use uncommon_app_core::platform::plt;
+use unreplicon_transport::plugin::NetworkRole;
 
 // Core & Logic Plugins
 use unboard_plugin::plugin::UnhaunterBoardPlugin;
@@ -98,7 +99,6 @@ pub fn app_build(args: AppArgs) -> App {
     let mut app = App::new();
 
     let filter = crate::log_filter::build_log_filter(verbose);
-
     if dedicated {
         app.add_plugins((
             MinimalPlugins
@@ -215,37 +215,6 @@ pub fn app_build(args: AppArgs) -> App {
                     }
                 },
             },
-            transport_config: match net_mode.clone() {
-                crate::app_args::CliNetMode::Offline => {
-                    unreplicon_transport::resources::TransportConfig::Offline
-                }
-                crate::app_args::CliNetMode::PeerHost { port } => {
-                    unreplicon_transport::resources::TransportConfig::PeerHost {
-                        port,
-                        cert_file: cert_file.clone(),
-                        key_file: key_file.clone(),
-                        skip_ssl_verification,
-                    }
-                }
-                crate::app_args::CliNetMode::Join { address, ticket } => {
-                    unreplicon_transport::resources::TransportConfig::Join {
-                        address,
-                        server_hostname: None,
-                        ticket,
-                        skip_ssl_verification,
-                    }
-                }
-            },
-            procman_config: unreplicon_transport::resources::ProcManConfig {
-                procman_channel: procman_channel.clone(),
-                port: match &net_mode {
-                    crate::app_args::CliNetMode::PeerHost { port, .. } => *port,
-                    _ => 0,
-                },
-                cert_file: cert_file.clone(),
-                key_file: key_file.clone(),
-                skip_ssl_verification,
-            },
         },
         UnhaunterLobbyPlugin,
         UnhaunterTmxMapPlugin { include_draft_maps },
@@ -256,6 +225,48 @@ pub fn app_build(args: AppArgs) -> App {
         UnhaunterMetricsPlugin,
         UnhaunterSummaryCorePlugin,
     ));
+    let transport_config = match net_mode.clone() {
+        crate::app_args::CliNetMode::Offline => {
+            unreplicon_transport::resources::TransportConfig::Offline
+        }
+        crate::app_args::CliNetMode::PeerHost { port } => {
+            unreplicon_transport::resources::TransportConfig::PeerHost {
+                port,
+                cert_file: cert_file.clone(),
+                key_file: key_file.clone(),
+                skip_ssl_verification,
+            }
+        }
+        crate::app_args::CliNetMode::Join { address, ticket } => {
+            unreplicon_transport::resources::TransportConfig::Join {
+                address,
+                server_hostname: None,
+                ticket,
+                skip_ssl_verification,
+            }
+        }
+    };
+    let procman_config = unreplicon_transport::resources::ProcManConfig {
+        procman_channel: procman_channel.clone(),
+        port: match &net_mode {
+            crate::app_args::CliNetMode::PeerHost { port, .. } => *port,
+            _ => 0,
+        },
+        cert_file: cert_file.clone(),
+        key_file: key_file.clone(),
+        skip_ssl_verification,
+    };
+    let network_role = if dedicated {
+        NetworkRole::Server
+    } else {
+        NetworkRole::Client
+    };
+
+    app.add_plugins(unreplicon_transport::plugin::UnrepliconTransportPlugin {
+        transport_config,
+        procman_config,
+        network_role,
+    });
 
     // == DOMAIN LOGIC (Part 1: Player & Movement) ==
     app.add_plugins((

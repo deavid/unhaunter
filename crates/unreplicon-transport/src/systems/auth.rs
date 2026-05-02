@@ -12,22 +12,13 @@ use crate::resources::{ProcManChannel, RoomAuth};
 #[derive(Component)]
 struct AuthTimeout(Timer);
 
-pub(super) fn app_setup(app: &mut App) {
-    // 1. Register the message
-    app.add_client_message::<ConnectionTicketMessage>(Channel::Ordered);
-    app.add_server_message::<ConnectionTicketMessage>(Channel::Ordered);
+use crate::plugin::NetworkRole;
 
-    // 2. MARK AS INDEPENDENT: This allows the message to arrive BEFORE AuthorizedClient is present.
-    app.make_message_independent::<ConnectionTicketMessage>();
+pub(super) fn app_setup(app: &mut App, _network_role: NetworkRole) {
+    app.add_client_event::<ConnectionTicketMessage>(Channel::Ordered);
 
-    app.add_systems(
-        Update,
-        (
-            process_bouncer_handshake,
-            insert_auth_timeout,
-            enforce_auth_timeout,
-        ),
-    );
+    app.add_systems(Update, (insert_auth_timeout, enforce_auth_timeout));
+    app.add_observer(process_bouncer_handshake);
     app.add_observer(on_client_disconnected_observer);
 }
 
@@ -45,7 +36,7 @@ fn insert_auth_timeout(
     for e in q_new_clients.iter() {
         commands
             .entity(e)
-            .insert(AuthTimeout(Timer::from_seconds(0.5, TimerMode::Once)));
+            .insert(AuthTimeout(Timer::from_seconds(10.0, TimerMode::Once)));
     }
 }
 
@@ -69,7 +60,7 @@ fn enforce_auth_timeout(
 
 /// System that listens for ConnectionTicketMessage from clients via standard Replicon MessageReader.
 fn process_bouncer_handshake(
-    mut events: MessageReader<FromClient<ConnectionTicketMessage>>,
+    trigger: On<FromClient<ConnectionTicketMessage>>,
     protocol_hash: Res<ProtocolHash>,
     room_auth: Res<RoomAuth>,
     procman: Option<Res<ProcManChannel>>,
@@ -78,120 +69,120 @@ fn process_bouncer_handshake(
     mut server: ResMut<QuinnetServer>,
     q_network_ids: Query<&NetworkId>,
 ) {
-    for FromClient { client_id, message } in events.read() {
-        let ClientId::Client(client_entity) = client_id else {
-            continue;
-        };
+    let FromClient { client_id, message } = trigger.event();
+    debug!("process_bouncer_handshake: event: {client_id:?}, {message:?}");
+    let ClientId::Client(client_entity) = client_id else {
+        return;
+    };
+    let client_entity = *client_entity;
 
-        let ticket_str = &message.ticket;
-        let req_hash = &message.protocol_hash;
+    let ticket_str = &message.ticket;
+    let req_hash = &message.protocol_hash;
 
-        let expected_hash = serde_json::to_string(&*protocol_hash).unwrap_or_default();
-        if req_hash != &expected_hash {
-            error!(
-                "Rejecting client {:?}: Protocol version hash mismatch (expected {}, got {})",
-                client_entity, expected_hash, req_hash
-            );
-            if let Ok(network_id) = q_network_ids.get(*client_entity)
-                && let Some(endpoint) = server.get_endpoint_mut()
-            {
-                endpoint.try_disconnect_client(network_id.get());
-            }
-            commands.entity(*client_entity).despawn();
-            continue;
-        }
-
-        info!(
-            "validate_new_connection_ticket: received ticket for entity {:?} (procman={}, room_assigned={})",
-            client_entity,
-            procman.is_some(),
-            room_auth.room_code.is_some(),
+    let expected_hash = serde_json::to_string(&*protocol_hash).unwrap_or_default();
+    if req_hash != &expected_hash {
+        error!(
+            "Rejecting client {:?}: Protocol version hash mismatch (expected {}, got {})",
+            client_entity, expected_hash, req_hash
         );
-
-        let (expected_secret, expected_room) = if procman.is_some() {
-            let secret = room_auth.ticket_hmac_secret.as_deref().unwrap_or_default();
-            let room = room_auth.room_code.as_deref().unwrap_or_default();
-
-            if secret.is_empty() || room.is_empty() {
-                error!(
-                    "Rejecting client {:?}: Server is idle/unassigned.",
-                    client_entity
-                );
-                if let Ok(network_id) = q_network_ids.get(*client_entity)
-                    && let Some(endpoint) = server.get_endpoint_mut()
-                {
-                    endpoint.try_disconnect_client(network_id.get());
-                }
-                commands.entity(*client_entity).despawn();
-                continue;
-            }
-            (secret, room)
-        } else {
-            ("", ":DIRECT")
-        };
-
-        let ticket = match unhub_client::tickets::decode_ticket_string(ticket_str, expected_secret)
+        if let Ok(network_id) = q_network_ids.get(client_entity)
+            && let Some(endpoint) = server.get_endpoint_mut()
         {
-            Ok(t) => t,
-            Err(e) => {
-                error!(
-                    "Rejecting client {:?}: Ticket validation failed: {}",
-                    client_entity, e
-                );
-                if let Ok(network_id) = q_network_ids.get(*client_entity)
-                    && let Some(endpoint) = server.get_endpoint_mut()
-                {
-                    endpoint.try_disconnect_client(network_id.get());
-                }
-                commands.entity(*client_entity).despawn();
-                continue;
-            }
-        };
+            endpoint.try_disconnect_client(network_id.get());
+        }
+        commands.entity(client_entity).despawn();
+        return;
+    }
 
-        if ticket.room_code != expected_room {
+    info!(
+        "validate_new_connection_ticket: received ticket for entity {:?} (procman={}, room_assigned={})",
+        client_entity,
+        procman.is_some(),
+        room_auth.room_code.is_some(),
+    );
+
+    let (expected_secret, expected_room) = if procman.is_some() {
+        let secret = room_auth.ticket_hmac_secret.as_deref().unwrap_or_default();
+        let room = room_auth.room_code.as_deref().unwrap_or_default();
+
+        if secret.is_empty() || room.is_empty() {
             error!(
-                "Rejecting client {:?} (room mismatch): expected '{}', got '{}'",
-                client_entity, expected_room, ticket.room_code
+                "Rejecting client {:?}: Server is idle/unassigned.",
+                client_entity
             );
-            if let Ok(network_id) = q_network_ids.get(*client_entity)
+            if let Ok(network_id) = q_network_ids.get(client_entity)
                 && let Some(endpoint) = server.get_endpoint_mut()
             {
                 endpoint.try_disconnect_client(network_id.get());
             }
-            commands.entity(*client_entity).despawn();
-            continue;
+            commands.entity(client_entity).despawn();
+            return;
         }
+        (secret, room)
+    } else {
+        ("", ":DIRECT")
+    };
 
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        if ticket.exp < now {
-            error!("Rejecting client {:?}: Ticket expired", client_entity);
-            if let Ok(network_id) = q_network_ids.get(*client_entity)
+    let ticket = match unhub_client::tickets::decode_ticket_string(ticket_str, expected_secret) {
+        Ok(t) => t,
+        Err(e) => {
+            error!(
+                "Rejecting client {:?}: Ticket validation failed: {}",
+                client_entity, e
+            );
+            if let Ok(network_id) = q_network_ids.get(client_entity)
                 && let Some(endpoint) = server.get_endpoint_mut()
             {
                 endpoint.try_disconnect_client(network_id.get());
             }
-            commands.entity(*client_entity).despawn();
-            continue;
+            commands.entity(client_entity).despawn();
+            return;
         }
+    };
 
-        let owner_id = OwnerId::Client(*client_entity);
-        uuid_map.0.insert(owner_id, ticket.player_uuid);
-        info!(
-            "Client {:?} authenticated successfully for Player: {}",
-            client_entity, ticket.player_uuid
+    if ticket.room_code != expected_room {
+        error!(
+            "Rejecting client {:?} (room mismatch): expected '{}', got '{}'",
+            client_entity, expected_room, ticket.room_code
         );
-
-        commands.entity(*client_entity).insert(AuthorizedClient);
-
-        // Notify procman so it can track player count and extend the room's lifetime.
-        if let Some(ref procman) = procman {
-            let _ = procman.tx.send(DedicatedToProcMan::PlayerJoined {
-                player_uuid: ticket.player_uuid,
-            });
+        if let Ok(network_id) = q_network_ids.get(client_entity)
+            && let Some(endpoint) = server.get_endpoint_mut()
+        {
+            endpoint.try_disconnect_client(network_id.get());
         }
+        commands.entity(client_entity).despawn();
+        return;
+    }
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    if ticket.exp < now {
+        error!("Rejecting client {:?}: Ticket expired", client_entity);
+        if let Ok(network_id) = q_network_ids.get(client_entity)
+            && let Some(endpoint) = server.get_endpoint_mut()
+        {
+            endpoint.try_disconnect_client(network_id.get());
+        }
+        commands.entity(client_entity).despawn();
+        return;
+    }
+
+    let owner_id = OwnerId::Client(client_entity);
+    uuid_map.0.insert(owner_id, ticket.player_uuid);
+    info!(
+        "Client {:?} authenticated successfully for Player: {}",
+        client_entity, ticket.player_uuid
+    );
+
+    commands.entity(client_entity).insert(AuthorizedClient);
+
+    // Notify procman so it can track player count and extend the room's lifetime.
+    if let Some(ref procman) = procman {
+        let _ = procman.tx.send(DedicatedToProcMan::PlayerJoined {
+            player_uuid: ticket.player_uuid,
+        });
     }
 }
 
