@@ -13,6 +13,15 @@ use unhub_client::protocol::{
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unhub_client::{generate_room_code, generate_room_secret};
 
+/// Format a raw IP string and port into the `IP:port` / `[IPv6]:port` form.
+fn format_addr_with_port(ip: &str, port: u16) -> String {
+    if ip.contains(':') {
+        format!("[{}]:{}", ip, port)
+    } else {
+        format!("{}:{}", ip, port)
+    }
+}
+
 fn infer_channel(version: &str) -> &'static str {
     if version.contains("-beta") {
         "beta"
@@ -33,8 +42,8 @@ fn entry_matches_client_pool(
     entry_version: &str,
     client_channel: &str,
     client_version: &str,
-    client_hash: u64,
-    entry_hash: u64,
+    client_hash: &str,
+    entry_hash: &str,
 ) -> bool {
     match client_channel {
         "dev" | "alpha" => entry_version == client_version && entry_hash == client_hash,
@@ -69,7 +78,7 @@ fn is_valid_version_string(version: &str) -> bool {
 fn evaluate_client_status(
     state: &HubState,
     client_version: &str,
-    client_hash: u64,
+    client_hash: &str,
 ) -> (MultiplayerStatus, Option<String>) {
     let client_channel = infer_channel(client_version);
     let client_semver = parse_semver(client_version);
@@ -85,7 +94,7 @@ fn evaluate_client_status(
                 client_channel,
                 client_version,
                 client_hash,
-                entry.protocol_hash,
+                &entry.protocol_hash,
             ) {
                 has_server = true;
                 if let Some(v) = parse_semver(&entry.version) {
@@ -194,7 +203,7 @@ pub async fn ping(
     state.players_24h.run_pending_tasks();
 
     let (multiplayer_status, upgrade_version) =
-        evaluate_client_status(&state, &payload.version, payload.protocol_hash);
+        evaluate_client_status(&state, &payload.version, &payload.protocol_hash);
 
     Json(PingResponse {
         ok: true,
@@ -395,7 +404,7 @@ pub async fn create_room(
     let client_channel = infer_channel(&payload.game_version);
     let mut selected: Option<(
         tokio::sync::mpsc::UnboundedSender<ProcManMessage>,
-        String,
+        Vec<String>,
         uuid::Uuid,
         String,
         String,
@@ -411,8 +420,8 @@ pub async fn create_room(
                 &entry.version,
                 client_channel,
                 &payload.game_version,
-                payload.protocol_hash,
-                entry.protocol_hash,
+                &payload.protocol_hash,
+                &entry.protocol_hash,
             ) {
                 continue;
             }
@@ -437,7 +446,7 @@ pub async fn create_room(
 
         let candidate = (
             pm.tx.clone(),
-            pm.public_addr.clone(),
+            pm.public_addrs.clone(),
             *pm.key(),
             pm.ticket_hmac_secret.clone(),
             target_version,
@@ -458,7 +467,7 @@ pub async fn create_room(
         }
     }
 
-    let (tx, public_addr, pm_uuid, ticket_hmac_secret, target_version, _) = selected.ok_or((
+    let (tx, public_addrs, pm_uuid, ticket_hmac_secret, target_version, _) = selected.ok_or((
         StatusCode::SERVICE_UNAVAILABLE,
         Json(HubError {
             error: "no_capacity".to_string(),
@@ -545,9 +554,13 @@ pub async fn create_room(
             })?;
 
             let ticket = B64.encode(raw_ticket);
+            let addrs = public_addrs
+                .iter()
+                .map(|ip| format_addr_with_port(ip, room.port))
+                .collect();
             return Ok(Json(CreateRoomResponse {
                 code: room_code,
-                addr: format!("{}:{}", public_addr, room.port),
+                addrs,
                 secret: room.secret.clone(),
                 ticket,
             }));
@@ -680,9 +693,14 @@ pub async fn join_room(
 
     let ticket = B64.encode(raw_ticket);
 
+    let addrs = pm
+        .public_addrs
+        .iter()
+        .map(|ip| format_addr_with_port(ip, room.port))
+        .collect();
     Ok(Json(JoinRoomResponse {
         code,
-        addr: format!("{}:{}", pm.public_addr, room.port),
+        addrs,
         secret: room.secret.clone(),
         ticket,
     }))
