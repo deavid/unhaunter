@@ -67,7 +67,6 @@ fn handle_disconnect_request(
 fn handle_hub_connection_request(
     mut ev: MessageReader<unreplicon_core::messages::HubConnectionRequested>,
     mut commands: Commands,
-    replicon_channels: Res<RepliconChannels>,
     mut client: ResMut<QuinnetClient>,
     mut transport_config: ResMut<TransportConfig>,
 ) {
@@ -83,63 +82,13 @@ fn handle_hub_connection_request(
     // Close any existing connection before opening a new one.
     client.close_all_connections();
 
-    let skip_ssl = if let TransportConfig::Join {
-        skip_ssl_verification,
-        ..
-    } = *transport_config
-    {
-        skip_ssl_verification
-    } else {
-        false
-    };
-
+    // UPDATE CONFIG ONLY! Do not call client.open_connection here!
     *transport_config = TransportConfig::Join {
         address: req.address.clone(),
         server_hostname: req.server_hostname.clone(),
         ticket: req.ticket.clone(),
-        skip_ssl_verification: skip_ssl,
+        skip_ssl_verification: false,
     };
-
-    let cert_mode = if skip_ssl {
-        CertificateVerificationMode::SkipVerification
-    } else {
-        CertificateVerificationMode::SignedByCertificateAuthority
-    };
-
-    let addr_config = match &req.server_hostname {
-        Some(hostname) => ClientAddrConfiguration::from_strings_with_name(
-            &req.address,
-            hostname.clone(),
-            "0.0.0.0:0",
-        ),
-        None => ClientAddrConfiguration::from_strings(&req.address, "0.0.0.0:0"),
-    };
-    let addr_config = match addr_config {
-        Ok(cfg) => cfg,
-        Err(e) => {
-            error!("Failed to parse address {}: {}", req.address, e);
-            return;
-        }
-    };
-
-    let config = ClientConnectionConfiguration {
-        addr_config,
-        cert_mode,
-        defaultables: bevy_quinnet::client::ClientConnectionConfigurationDefaultables {
-            send_channels_cfg: replicon_channels.client_configs(),
-            ..Default::default()
-        },
-    };
-
-    match client.open_connection(config) {
-        Ok(_) => {
-            info!("Quinnet: opening connection to {}", req.address);
-        }
-        Err(e) => {
-            error!("Failed to open quinnet connection: {e}");
-            return;
-        }
-    }
 
     // Transition roles: we are now a pure client connected to a dedicated server.
     commands.remove_resource::<AuthorityRole>();
@@ -155,7 +104,7 @@ fn startup_transport_system(
     mut commands: Commands,
     mut last_attempt: Local<Option<Instant>>,
     mut server: ResMut<QuinnetServer>,
-    mut _client: ResMut<QuinnetClient>,
+    mut client: ResMut<QuinnetClient>,
 ) {
     const RETRY_COOLDOWN: Duration = Duration::from_secs(2);
 
@@ -277,7 +226,7 @@ fn startup_transport_system(
                 },
             };
 
-            match _client.open_connection(config) {
+            match client.open_connection(config) {
                 Ok(_) => {
                     info!("Replicon transport: connecting to {address} (Quinnet)");
                 }
@@ -324,13 +273,13 @@ fn send_ticket_on_connection(
     installation_id: Option<Res<RuntimeInstallationId>>,
     protocol_hash: Res<ProtocolHash>,
     mut commands: Commands,
-    client: If<Res<QuinnetClient>>,
+    client_state: Res<State<ClientState>>,
     mut ticket_sent: Local<bool>,
     mut throttle: Local<i32>,
     mut req_id: Local<i32>,
 ) {
     // If we are disconnected, reset the flag so we can send again on next reconnect
-    if !client.is_connected() {
+    if *client_state.get() != ClientState::Connected {
         *ticket_sent = false;
         return;
     }
