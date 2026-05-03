@@ -508,8 +508,13 @@ impl ServerManager {
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .env("NO_COLOR", "1")
-                .env("TERM", "dumb")
-                .env_remove("RUST_LOG");
+                .env("TERM", "dumb");
+
+            if self.config.debug_children {
+                cmd.env("RUST_LOG", "debug");
+            } else {
+                cmd.env_remove("RUST_LOG");
+            }
 
             let mut child = cmd.spawn()?;
             let stdin = child

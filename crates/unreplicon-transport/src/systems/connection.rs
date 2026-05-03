@@ -174,6 +174,8 @@ fn startup_transport_system(
                 },
             };
 
+            debug!("quinnet server_config: {:?}", server_config);
+
             if let Err(e) = server.start_endpoint(server_config) {
                 // Walk the full error source chain — bevy_quinnet wraps the root
                 // cause (e.g. "Permission denied") inside "Certificate error",
@@ -218,7 +220,7 @@ fn startup_transport_system(
                 }
             };
 
-            let config = ClientConnectionConfiguration {
+            let client_config = ClientConnectionConfiguration {
                 addr_config,
                 cert_mode,
                 defaultables: bevy_quinnet::client::ClientConnectionConfigurationDefaultables {
@@ -226,8 +228,9 @@ fn startup_transport_system(
                     ..Default::default()
                 },
             };
+            debug!("quinnet client_config: {:?}", client_config);
 
-            match client.open_connection(config) {
+            match client.open_connection(client_config) {
                 Ok(_) => {
                     info!("Replicon transport: connecting to {address} (Quinnet)");
                 }

@@ -34,9 +34,11 @@ fn insert_auth_timeout(
     >,
 ) {
     for e in q_new_clients.iter() {
-        commands
-            .entity(e)
-            .insert(AuthTimeout(Timer::from_seconds(10.0, TimerMode::Once)));
+        // FIXME: Bypassing for now  the AUTH to see if at least we can receive SOMETHING.
+        commands.entity(e).insert(AuthorizedClient);
+        // commands
+        //     .entity(e)
+        //     .insert(AuthTimeout(Timer::from_seconds(10.0, TimerMode::Once)));
     }
 }
 

@@ -15,6 +15,8 @@ pub struct ProcManConfig {
     pub cert_file: Option<String>,
     pub key_file: Option<String>,
     pub skip_ssl_verification: bool,
+    /// If true, the spawned dedicated server will have RUST_LOG=debug set.
+    pub debug_children: bool,
     /// HMAC-SHA256 key (64 hex chars = 32 bytes) used to sign per-room JWT
     /// tickets. The Hub uses this to issue tickets; the dedicated server
     /// receives it via stdin and validates incoming connection tickets.
@@ -42,6 +44,7 @@ pub async fn load_config(path: impl AsRef<Path>) -> Result<ProcManConfig> {
             cert_file: None,
             key_file: None,
             skip_ssl_verification: false,
+            debug_children: false,
             ticket_hmac_secret: generate_hmac_secret(),
         };
         save_config(path, &default_config).await?;

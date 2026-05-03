@@ -71,7 +71,6 @@ fn player_spawn_telemetry(
 pub(super) fn app_setup(app: &mut App) {
     // Register client → server messages
     // NOTE: ConnectionTicketMessage is registered in unreplicon-transport/systems/auth.rs
-    app.add_client_message::<RequestJoinMission>(Channel::Ordered);
     app.add_mapped_client_message::<RequestSimulationAuthority>(Channel::Ordered);
     app.add_mapped_client_message::<RelieveSimulationAuthority>(Channel::Ordered);
     // Register server → client messages

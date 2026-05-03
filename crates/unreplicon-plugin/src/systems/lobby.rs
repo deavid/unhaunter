@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{
-    AppRuleExt, AuthorizedClient, Channel, ClientId, ClientMessageAppExt, ConnectedClient, FromClient,
-    Replicated, ServerState,
+    AppRuleExt, AuthorizedClient, Channel, ClientId, ClientMessageAppExt, ConnectedClient,
+    FromClient, Replicated, ServerState,
 };
 use std::str::FromStr;
 use uncommon_states_core::{BootState, UIContextState};
@@ -403,7 +403,7 @@ fn process_newly_connected_clients(
     for entity in q_clients.iter() {
         let client_id = ClientId::Client(entity);
         let Some(uuid) = client_uuid(client_id, &uuid_map) else {
-            debug!(
+            debug_once!(
                 "Still waiting for authentication/mapping: (socket={:?})",
                 client_id
             );
