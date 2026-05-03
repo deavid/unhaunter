@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_renet::RenetServer;
-use bevy_renet::netcode::NetcodeServerTransport;
+use bevy_renet2::netcode::NetcodeServerTransport;
+use bevy_renet2::prelude::RenetServer;
 use bevy_replicon::prelude::ConnectedClient;
 use bevy_replicon::shared::backend::connected_client::NetworkId;
 use unhub_client::protocol::DedicatedToProcMan;
@@ -10,7 +10,7 @@ use unreplicon_core::resources::ClientUuidMap;
 use crate::resources::{ProcManChannel, RoomAuth};
 
 pub(super) fn app_setup(app: &mut App) {
-    // Observe Add<ConnectedClient> — fires after bevy_replicon_renet has already spawned the
+    // Observe Add<ConnectedClient> — fires after bevy_replicon_renet2 has already spawned the
     // client entity with both ConnectedClient and NetworkId, so we can safely retrieve the
     // renet ClientId and map it to a UUID.
     app.add_observer(validate_new_connection_observer);
@@ -49,8 +49,8 @@ fn validate_new_connection_observer(
 
     let user_data_bytes = transport
         .as_ref()
-        .and_then(|t| t.user_data(client_id))
-        .filter(|data| data.len() == bevy_renet::netcode::NETCODE_USER_DATA_BYTES);
+        .and_then(|t: &Res<NetcodeServerTransport>| t.user_data(client_id))
+        .filter(|data: &[u8; 256]| data.len() == bevy_renet2::netcode::NETCODE_USER_DATA_BYTES);
 
     let Some(user_data) = user_data_bytes else {
         error!(

@@ -95,7 +95,7 @@ fn idle_timeout_system(
     time: Res<Time>,
     procman: Option<Res<ProcManChannel>>,
     room_auth: Res<RoomAuth>,
-    server: Option<Res<bevy_renet::RenetServer>>,
+    server: Option<Res<bevy_renet2::prelude::RenetServer>>,
     mut idle_timer: Local<f32>,
     mut exit_sent: Local<bool>,
     mut exit: MessageWriter<bevy::app::AppExit>,

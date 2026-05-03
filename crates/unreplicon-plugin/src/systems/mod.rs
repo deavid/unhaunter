@@ -6,7 +6,7 @@ pub mod roles;
 
 use bevy::prelude::*;
 use bevy_replicon::prelude::RepliconPlugins;
-use bevy_replicon_renet::RepliconRenetPlugins;
+use bevy_replicon_renet2::RepliconRenetPlugins;
 use uncommon_states_core::UIContextState;
 use unreplicon_core::export_ext::RepliconExportSet;
 

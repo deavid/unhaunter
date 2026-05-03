@@ -3,14 +3,14 @@ use std::net::{SocketAddr, ToSocketAddrs, UdpSocket};
 use crate::resources::TransportConfig;
 use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 use bevy::prelude::*;
-use bevy_renet::netcode::{
-    ClientAuthentication, NetcodeClientTransport, NetcodeServerTransport, ServerAuthentication,
-    ServerConfig,
+use bevy_renet2::netcode::{
+    ClientAuthentication, NativeSocket, NetcodeClientTransport, NetcodeServerTransport,
+    ServerAuthentication, ServerSetupConfig,
 };
-use bevy_renet::renet::ConnectionConfig;
-use bevy_renet::{RenetClient, RenetServer};
+use bevy_renet2::prelude::{RenetClient, RenetServer};
 use bevy_replicon::prelude::RepliconChannels;
-use bevy_replicon_renet::RenetChannelsExt;
+use bevy_replicon_renet2::renet2::ConnectionConfig;
+use bevy_replicon_renet2::RenetChannelsExt;
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unprofile_core::profile::RuntimeInstallationId;
 use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LobbyPresenceRole};
@@ -84,11 +84,10 @@ fn handle_hub_connection_request(
 
     let current_time = time.elapsed();
 
-    let connection_config = ConnectionConfig {
-        server_channels_config: channels.server_configs(),
-        client_channels_config: channels.client_configs(),
-        ..Default::default()
-    };
+    let connection_config = ConnectionConfig::from_channels(
+        channels.server_configs(),
+        channels.client_configs(),
+    );
 
     let server_addr: SocketAddr = match req.address.to_socket_addrs() {
         Ok(mut addrs) => match addrs.find(|a| a.is_ipv4()) {
@@ -112,7 +111,7 @@ fn handle_hub_connection_request(
     let client_id = installation_id.0.as_u128() as u64;
 
     let user_data = if let Some(t_str) = req.ticket.as_ref() {
-        let mut data = [0u8; bevy_renet::netcode::NETCODE_USER_DATA_BYTES];
+        let mut data = [0u8; bevy_renet2::netcode::NETCODE_USER_DATA_BYTES];
         if let Ok(decoded) = B64.decode(t_str.as_bytes()) {
             if decoded.len() == data.len() {
                 data.copy_from_slice(&decoded);
@@ -141,6 +140,7 @@ fn handle_hub_connection_request(
         client_id,
         server_addr,
         user_data,
+        socket_id: 0,
     };
     let socket = match UdpSocket::bind("0.0.0.0:0") {
         Ok(s) => s,
@@ -149,7 +149,11 @@ fn handle_hub_connection_request(
             return;
         }
     };
-    let transport = match NetcodeClientTransport::new(current_time, authentication, socket) {
+    let transport = match NetcodeClientTransport::new(
+        current_time,
+        authentication,
+        NativeSocket::new(socket).unwrap(),
+    ) {
         Ok(t) => t,
         Err(e) => {
             error!("Failed to create netcode client transport: {e}");
@@ -157,7 +161,7 @@ fn handle_hub_connection_request(
         }
     };
 
-    commands.insert_resource(RenetClient::new(connection_config));
+    commands.insert_resource(RenetClient::new(connection_config, false));
     commands.insert_resource(transport);
 
     // Transition roles: we are now a pure client connected to a dedicated server.
@@ -181,11 +185,10 @@ fn startup_transport_system(
     );
     let current_time = time.elapsed();
 
-    let connection_config = ConnectionConfig {
-        server_channels_config: channels.server_configs(),
-        client_channels_config: channels.client_configs(),
-        ..Default::default()
-    };
+    let connection_config = ConnectionConfig::from_channels(
+        channels.server_configs(),
+        channels.client_configs(),
+    );
 
     match &*transport_config {
         TransportConfig::Offline => {}
@@ -213,11 +216,11 @@ fn startup_transport_system(
                 }
             }
 
-            let server_config = ServerConfig {
+            let server_config = ServerSetupConfig {
                 current_time,
                 max_clients: MAX_CLIENTS,
                 protocol_id: PROTOCOL_ID,
-                public_addresses,
+                socket_addresses: vec![public_addresses],
                 authentication: ServerAuthentication::Unsecure,
             };
             let socket = match UdpSocket::bind(("[::]", port))
@@ -229,7 +232,10 @@ fn startup_transport_system(
                     return;
                 }
             };
-            let transport = match NetcodeServerTransport::new(server_config, socket) {
+            let transport = match NetcodeServerTransport::new(
+                server_config,
+                NativeSocket::new(socket).unwrap(),
+            ) {
                 Ok(t) => t,
                 Err(e) => {
                     error!("Failed to create netcode server transport: {e}");
@@ -260,7 +266,7 @@ fn startup_transport_system(
             let client_id = installation_id.0.as_u128() as u64;
 
             let user_data = if let Some(t_str) = ticket {
-                let mut data = [0u8; bevy_renet::netcode::NETCODE_USER_DATA_BYTES];
+                let mut data = [0u8; bevy_renet2::netcode::NETCODE_USER_DATA_BYTES];
                 if let Ok(decoded) = B64.decode(t_str.as_bytes()) {
                     if decoded.len() == data.len() {
                         data.copy_from_slice(&decoded);
@@ -289,6 +295,7 @@ fn startup_transport_system(
                 client_id,
                 server_addr,
                 user_data,
+                socket_id: 0,
             };
             let socket = match UdpSocket::bind("0.0.0.0:0") {
                 Ok(s) => s,
@@ -297,15 +304,18 @@ fn startup_transport_system(
                     return;
                 }
             };
-            let transport = match NetcodeClientTransport::new(current_time, authentication, socket)
-            {
+            let transport = match NetcodeClientTransport::new(
+                current_time,
+                authentication,
+                NativeSocket::new(socket).unwrap(),
+            ) {
                 Ok(t) => t,
                 Err(e) => {
                     error!("Failed to create netcode client transport: {e}");
                     return;
                 }
             };
-            commands.insert_resource(RenetClient::new(connection_config));
+            commands.insert_resource(RenetClient::new(connection_config, false));
             commands.insert_resource(transport);
             info!("Replicon transport: connecting to {address} as client_id {client_id}");
         }
@@ -313,9 +323,9 @@ fn startup_transport_system(
 }
 
 fn monitor_renet_client_status(client: Option<Res<RenetClient>>, mut last_state: Local<u8>) {
-    let state: u8 = match client.as_ref() {
+    let state: u8 = match client {
         None => 0,
-        Some(client) => {
+        Some(ref client) => {
             if client.is_connected() {
                 2
             } else if client.is_disconnected() {

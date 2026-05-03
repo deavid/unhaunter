@@ -1587,17 +1587,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_renet"
-version = "4.0.1"
+name = "bevy_renet2"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1adf4d4212a12a4fb789bc7870bbbb82a474a32ace8e5e39a25de67c23f8ee13"
+checksum = "149927aa2d7709910e964bd19c96d06a2b7b9fb3b5de6e8b995a4bddc287c551"
 dependencies = [
  "bevy_app",
- "bevy_derive",
  "bevy_ecs",
  "bevy_time",
- "renet",
- "renet_netcode",
+ "renet2",
+ "renet2_netcode",
 ]
 
 [[package]]
@@ -1622,13 +1621,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_replicon_renet"
+name = "bevy_replicon_renet2"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d98680a12d9506c014031194679c3b483c7dcadaf1189b9f6f62eb0a40ffe1a0"
+checksum = "2f838a1e860673421215afd3d14d8f2fbfabe8e53cb87ad0049565306c212e1b"
 dependencies = [
  "bevy",
- "bevy_renet",
+ "bevy_renet2",
  "bevy_replicon",
 ]
 
@@ -3841,6 +3840,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hmac-sha256"
+version = "1.1.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec9d92d097f4749b64e8cc33d924d9f40a2d4eb91402b458014b781f5733d60f"
+
+[[package]]
 name = "http"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5974,32 +5979,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 
 [[package]]
-name = "renet"
-version = "2.0.0"
+name = "renet2"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8535f2f4b5afe5e31fc37be4b8a1f167e61177f356b1c6ee8456b7045d6c74c0"
+checksum = "b7cd34c115420d365a14e3315c75da4175aea1f1553860717c96d424cdb5569f"
 dependencies = [
+ "bevy_ecs",
  "bytes",
  "log",
  "octets",
 ]
 
 [[package]]
-name = "renet_netcode"
-version = "2.0.0"
+name = "renet2_netcode"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9479f1355a92d5aa04a0339ad341878fa572492cb9be09db7b34954bdb13a30"
+checksum = "b5eb54a49bb7b1890aeb2e1df1418bb236de24a73cca5410588a0ad260e78f5e"
 dependencies = [
+ "bevy_ecs",
+ "bytes",
+ "hmac-sha256",
  "log",
- "renet",
- "renetcode",
+ "octets",
+ "renet2",
+ "renetcode2",
+ "serde",
+ "url",
 ]
 
 [[package]]
-name = "renetcode"
-version = "2.0.0"
+name = "renetcode2"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76bed9d6d190d20804b5645511932fef803145520ef4eb76d5e4b5a841980eac"
+checksum = "de1406df1fdfc595462e26dc35c764be6a6e12743d93375bee3af25137fdb4d4"
 dependencies = [
  "chacha20poly1305",
  "log",
@@ -8510,9 +8522,9 @@ name = "unreplicon-plugin"
 version = "0.4.0-dev"
 dependencies = [
  "bevy",
- "bevy_renet",
+ "bevy_renet2",
  "bevy_replicon",
- "bevy_replicon_renet",
+ "bevy_replicon_renet2",
  "unboard-core",
  "uncommon-states-core",
  "undifficulty-core",
@@ -8533,10 +8545,11 @@ version = "0.4.0-dev"
 dependencies = [
  "base64",
  "bevy",
- "bevy_renet",
+ "bevy_renet2",
  "bevy_replicon",
- "bevy_replicon_renet",
+ "bevy_replicon_renet2",
  "crossbeam-channel",
+ "renet2_netcode",
  "serde_json",
  "unhub-client",
  "unprofile-core",
@@ -8872,6 +8885,7 @@ dependencies = [
  "idna",
  "percent-encoding",
  "serde",
+ "serde_derive",
 ]
 
 [[package]]
