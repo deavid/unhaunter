@@ -265,3 +265,13 @@ pub struct HubConnectionRequested {
     pub address: String,
     pub ticket: Option<String>,
 }
+
+/// Sent by a client immediately after connection to provide their Hub ticket.
+///
+/// This is part of the post-connection handshake required because some
+/// transports (like WebTransport) do not support a native connection payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Event)]
+pub struct ConnectionTicketMessage {
+    pub ticket: String,
+    pub protocol_hash: String,
+}
