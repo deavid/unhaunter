@@ -48,7 +48,12 @@ where
 }
 
 impl HubClient {
-    pub fn create_room(&self, player_uuid: uuid::Uuid, game_version: String, protocol_hash: String) {
+    pub fn create_room(
+        &self,
+        player_uuid: uuid::Uuid,
+        game_version: String,
+        protocol_hash: String,
+    ) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
         spawn_hub_task(async move {
@@ -324,8 +329,9 @@ pub fn ping_hub_system(
         && let Some(runtime_id) = runtime_id
     {
         if protocol_hash.0.is_empty() {
-            warn!("ping_hub_system: protocol hash not yet available — skipping ping (will retry next interval)");
-            // Reset the timer so we retry promptly rather than waiting the full interval.
+            warn!(
+                "ping_hub_system: protocol hash not yet available — skipping ping (will retry next interval)"
+            );
             timer.0.reset();
             return;
         }
@@ -387,13 +393,13 @@ pub fn update_hub_status(
                         );
                     }
                     unhub_client::protocol::MultiplayerStatus::UpdateRecommended => {
-                        info!(
-                            "Hub ping: update recommended — {:?}",
-                            upgrade_version
-                        );
+                        info!("Hub ping: update recommended — {:?}", upgrade_version);
                     }
                     unhub_client::protocol::MultiplayerStatus::UpToDate => {
-                        info!("Hub ping: version up-to-date (ok={}, players={})", ok, online_players);
+                        info!(
+                            "Hub ping: version up-to-date (ok={}, players={})",
+                            ok, online_players
+                        );
                     }
                 }
 

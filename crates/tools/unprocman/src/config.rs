@@ -16,6 +16,7 @@ pub struct ProcManConfig {
     pub key_file: Option<String>,
     pub skip_ssl_verification: bool,
     /// If true, the spawned dedicated server will have RUST_LOG=debug set.
+    #[serde(default)]
     pub debug_children: bool,
     /// HMAC-SHA256 key (64 hex chars = 32 bytes) used to sign per-room JWT
     /// tickets. The Hub uses this to issue tickets; the dedicated server

@@ -17,7 +17,6 @@ struct Args {
     #[clap(long)]
     hub_url: Option<String>,
 
-
     #[clap(long)]
     installation_id_file: Option<String>,
 
@@ -43,9 +42,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let net_mode = unhaunter::app_args::CliNetMode::PeerHost {
-        port: args.host,
-    };
+    let net_mode = unhaunter::app_args::CliNetMode::PeerHost { port: args.host };
 
     if args.print_version {
         println!("{}", env!("CARGO_PKG_VERSION"));

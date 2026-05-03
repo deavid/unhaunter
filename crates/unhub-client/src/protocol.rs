@@ -167,8 +167,6 @@ pub struct CreateRoomResponse {
     /// validation.
     pub server_hostname: String,
     pub secret: String,
-    /// JWT ticket signed by the Hub; must be included as `user_data` in the
-    /// Renet connection request for the dedicated server to accept it.
     pub ticket: String,
 }
 
@@ -185,8 +183,6 @@ pub struct JoinRoomResponse {
     /// validation.
     pub server_hostname: String,
     pub secret: String,
-    /// JWT ticket signed by the Hub; must be included as `user_data` in the
-    /// Renet connection request for the dedicated server to accept it.
     pub ticket: String,
 }
 

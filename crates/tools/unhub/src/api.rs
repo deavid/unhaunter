@@ -13,11 +13,9 @@ use unhub_client::protocol::{
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unhub_client::{generate_room_code, generate_room_secret};
 
-/// Format a raw IP string and port into the `IP:port` / `[IPv6]:port` form
-/// expected by Quinnet's `ClientAddrConfiguration::from_strings`.
+/// Format a raw IP string and port into the `IP:port` / `[IPv6]:port` form.
 fn format_addr_with_port(ip: &str, port: u16) -> String {
     if ip.contains(':') {
-        // IPv6 – must be bracket-wrapped
         format!("[{}]:{}", ip, port)
     } else {
         format!("{}:{}", ip, port)
@@ -471,7 +469,7 @@ pub async fn create_room(
         }
     }
 
-    let (tx, public_addr, public_hostname, pm_uuid, ticket_hmac_secret, target_version, _) =
+    let (tx, public_addrs, public_hostname, pm_uuid, ticket_hmac_secret, target_version, _) =
         selected.ok_or((
             StatusCode::SERVICE_UNAVAILABLE,
             Json(HubError {
@@ -559,7 +557,7 @@ pub async fn create_room(
             })?;
 
             let ticket = B64.encode(raw_ticket);
-            let addrs = public_addr
+            let addrs = public_addrs
                 .iter()
                 .map(|ip| format_addr_with_port(ip, room.port))
                 .collect();

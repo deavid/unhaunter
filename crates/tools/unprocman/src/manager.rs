@@ -503,7 +503,7 @@ impl ServerManager {
                 cmd.arg("--skip-ssl-verification");
             }
 
-            cmd.arg("-vv")
+            cmd.arg("-vvvv")
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())

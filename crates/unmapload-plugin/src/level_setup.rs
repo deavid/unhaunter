@@ -336,10 +336,7 @@ fn teardown_map_entities(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        OnExit(UIContextState::InGame),
-        reset_level_resources,
-    );
+    app.add_systems(OnExit(UIContextState::InGame), reset_level_resources);
     app.add_systems(OnEnter(SimulationState::Unloaded), teardown_map_entities);
     app.add_systems(
         PostUpdate,

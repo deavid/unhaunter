@@ -291,8 +291,7 @@ pub fn update_code_input(
 
 /// Pick the best address from the hub-provided list: prefer IPv4 (no `[`)
 /// for widest compatibility, fall back to the first IPv6 entry if no IPv4 is
-/// available. Returns an empty string if `addrs` is empty (will surface as a
-/// connection error downstream).
+/// available. Returns an empty string if `addrs` is empty.
 fn pick_best_addr(addrs: &[String]) -> String {
     addrs
         .iter()

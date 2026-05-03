@@ -98,11 +98,7 @@ const UNHAUNTER_CRATES: &[&str] = &[
 
 /// Third-party networking crates that are worth watching when debugging multiplayer.
 /// Capped at `debug` because their `trace` output is extremely high-volume.
-const NETWORKING_CRATES: &[&str] = &[
-    "bevy_replicon",
-    "bevy_replicon_quinnet",
-    "bevy_quinnet",
-];
+const NETWORKING_CRATES: &[&str] = &["bevy_replicon", "bevy_replicon_quinnet", "bevy_quinnet"];
 
 pub fn build_log_filter(verbose: u8) -> String {
     let level = match verbose {
