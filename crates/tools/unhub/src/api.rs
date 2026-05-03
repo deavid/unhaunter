@@ -564,7 +564,7 @@ pub async fn create_room(
             return Ok(Json(CreateRoomResponse {
                 code: room_code,
                 addrs,
-                server_hostname: public_hostname.clone(),
+                server_hostname: public_hostname,
                 secret: room.secret.clone(),
                 ticket,
             }));

@@ -62,8 +62,6 @@ pub struct ProcManSession {
     pub tx: tokio::sync::mpsc::UnboundedSender<unhub_client::protocol::ProcManMessage>,
     pub library: Vec<LibraryEntry>,
     /// Original hostname (or IP) from the ProcMan config's `public_addr` field.
-    /// Used as the TLS SNI name when the client connects so that certificate
-    /// validation succeeds even though the actual socket address is a raw IP.
     pub public_hostname: String,
     /// Resolved IP addresses (no port) from the ProcMan's `public_addr`
     /// hostname. IPv4 entries come before IPv6. Never contains hostnames.

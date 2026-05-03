@@ -263,8 +263,7 @@ pub struct GhostSoundFieldBroadcast {
 #[derive(Debug, Clone, Message)]
 pub struct HubConnectionRequested {
     pub address: String,
-    /// TLS SNI hostname to use when connecting. If present, Quinnet uses this
-    /// for certificate validation instead of the raw IP in `address`.
+    /// The public hostname of the server, provided by the Hub API.
     pub server_hostname: Option<String>,
     pub ticket: Option<String>,
 }
