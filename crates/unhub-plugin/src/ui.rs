@@ -318,6 +318,7 @@ pub fn handle_hub_responses(
                 room_ident.secret = Some(data.secret);
                 hub_conn_events.write(HubConnectionRequested {
                     address: addr,
+                    server_hostname: Some(data.server_hostname),
                     ticket: Some(data.ticket),
                 });
                 // Stay on the Hub screen; await_lobby_then_transition will move us to
@@ -332,6 +333,7 @@ pub fn handle_hub_responses(
                 room_ident.secret = Some(data.secret);
                 hub_conn_events.write(HubConnectionRequested {
                     address: addr,
+                    server_hostname: Some(data.server_hostname),
                     ticket: Some(data.ticket),
                 });
                 // Same: stay on Hub, wait for LobbyInfo replication before going to Lobby.

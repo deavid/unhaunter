@@ -65,6 +65,9 @@ async fn handle_procman_connection(
 
     info!("ProcMan {} connected from {}", uuid, peer_addr);
 
+    // Keep the original hostname for the client
+    let public_hostname = public_addr.clone();
+
     // Resolve the public_addr hostname to all IPs once at handshake time so
     // that clients always receive raw IP:port addresses. IPv4 addresses are sorted first.
     let public_addrs: Vec<String> =
@@ -115,6 +118,7 @@ async fn handle_procman_connection(
         ProcManSession {
             tx,
             library,
+            public_hostname,
             public_addrs,
             last_heartbeat: std::time::Instant::now(),
             ticket_hmac_secret,

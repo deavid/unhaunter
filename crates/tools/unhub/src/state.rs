@@ -61,6 +61,8 @@ pub struct NonceEntry {
 pub struct ProcManSession {
     pub tx: tokio::sync::mpsc::UnboundedSender<unhub_client::protocol::ProcManMessage>,
     pub library: Vec<LibraryEntry>,
+    /// Original hostname (or IP) from the ProcMan config's `public_addr` field.
+    pub public_hostname: String,
     /// Resolved IP addresses (no port) from the ProcMan's `public_addr`
     /// hostname. IPv4 entries come before IPv6. Never contains hostnames.
     pub public_addrs: Vec<String>,

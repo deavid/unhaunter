@@ -263,5 +263,7 @@ pub struct GhostSoundFieldBroadcast {
 #[derive(Debug, Clone, Message)]
 pub struct HubConnectionRequested {
     pub address: String,
+    /// The public hostname of the server, provided by the Hub API.
+    pub server_hostname: Option<String>,
     pub ticket: Option<String>,
 }

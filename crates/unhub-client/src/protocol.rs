@@ -161,6 +161,8 @@ pub struct CreateRoomResponse {
     /// (IPv6 addresses are bracket-wrapped: `[::1]:port`). Ordered
     /// IPv4-first. Clients should try each in order until one succeeds.
     pub addrs: Vec<String>,
+    /// Original hostname from the ProcMan config's `public_addr`.
+    pub server_hostname: String,
     pub secret: String,
     pub ticket: String,
 }
@@ -172,6 +174,8 @@ pub struct JoinRoomResponse {
     /// (IPv6 addresses are bracket-wrapped: `[::1]:port`). Ordered
     /// IPv4-first. Clients should try each in order until one succeeds.
     pub addrs: Vec<String>,
+    /// Original hostname from the ProcMan config's `public_addr`.
+    pub server_hostname: String,
     pub secret: String,
     pub ticket: String,
 }
