@@ -69,6 +69,7 @@ fn handle_hub_connection_request(
     mut commands: Commands,
     mut client: ResMut<QuinnetClient>,
     mut transport_config: ResMut<TransportConfig>,
+    procman_config: Res<crate::resources::ProcManConfig>,
 ) {
     let Some(req) = ev.read().last() else {
         return;
@@ -87,7 +88,7 @@ fn handle_hub_connection_request(
         address: req.address.clone(),
         server_hostname: req.server_hostname.clone(),
         ticket: req.ticket.clone(),
-        skip_ssl_verification: false,
+        skip_ssl_verification: procman_config.skip_ssl_verification,
     };
 
     // Transition roles: we are now a pure client connected to a dedicated server.

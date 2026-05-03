@@ -90,7 +90,6 @@ fn process_bouncer_handshake(
         {
             endpoint.try_disconnect_client(network_id.get());
         }
-        commands.entity(client_entity).despawn();
         return;
     }
 
@@ -176,7 +175,10 @@ fn process_bouncer_handshake(
         client_entity, ticket.player_uuid
     );
 
-    commands.entity(client_entity).insert(AuthorizedClient);
+    commands
+        .entity(client_entity)
+        .insert(AuthorizedClient)
+        .remove::<AuthTimeout>();
 
     // Notify procman so it can track player count and extend the room's lifetime.
     if let Some(ref procman) = procman {
