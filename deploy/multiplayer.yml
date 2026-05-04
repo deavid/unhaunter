@@ -43,6 +43,9 @@
     local_assets: "../assets"
     github_releases_api: "https://api.github.com/repos/deavid/unhaunter/releases"
 
+    # SSH Multiplexing for faster deployment
+    ansible_ssh_common_args: "-o ControlMaster=auto -o ControlPersist=60s"
+
   tasks:
     - name: Create unhaunter user
       ansible.builtin.user:
@@ -513,6 +516,7 @@
               port_range: (12000, 12100),
               library_dir: "{{ install_dir }}/library",
               max_total_instances: 8,
+              debug_children: {{ debug_children | default(false) | lower }},
           )
         owner: unhaunter
         group: unhaunter

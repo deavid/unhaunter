@@ -158,10 +158,13 @@ pub struct JoinRoomRequest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateRoomResponse {
     pub code: String,
-    pub addr: String,
+    /// All resolved socket addresses for the dedicated server in `IP:port` form
+    /// (IPv6 addresses are bracket-wrapped: `[::1]:port`). Ordered
+    /// IPv4-first. Clients should try each in order until one succeeds.
+    pub addrs: Vec<String>,
+    /// Original hostname from the ProcMan config's `public_addr`.
+    pub server_hostname: String,
     pub secret: String,
-    /// JWT ticket signed by the Hub; must be included as `user_data` in the
-    /// Renet connection request for the dedicated server to accept it.
     pub ticket: String,
     pub cert_hash: Option<String>,
 }
@@ -169,10 +172,13 @@ pub struct CreateRoomResponse {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JoinRoomResponse {
     pub code: String,
-    pub addr: String,
+    /// All resolved socket addresses for the dedicated server in `IP:port` form
+    /// (IPv6 addresses are bracket-wrapped: `[::1]:port`). Ordered
+    /// IPv4-first. Clients should try each in order until one succeeds.
+    pub addrs: Vec<String>,
+    /// Original hostname from the ProcMan config's `public_addr`.
+    pub server_hostname: String,
     pub secret: String,
-    /// JWT ticket signed by the Hub; must be included as `user_data` in the
-    /// Renet connection request for the dedicated server to accept it.
     pub ticket: String,
     pub cert_hash: Option<String>,
 }
