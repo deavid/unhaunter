@@ -248,17 +248,10 @@ bevy_replicon = "0.39"
 bevy_replicon_renet2 = "0.15"
 bevy_renet2 = { version = "0.14", features = [
     "netcode",
-    "native_transport",
     "wt_client_transport",
-    "wt_server_transport",
-    "ws_server_transport",
     "ws_client_transport",
 ] }
-renet2 = { version = "0.14", features = [
-    "netcode",
-    "webtransport",
-    "websocket",
-] }
+renet2 = { version = "0.14" }
 renet2_netcode = { package = "renet2_netcode", version = "0.14" }
 postcard = { version = "1.1", features = ["alloc"] }
 hmac = "0.13"
