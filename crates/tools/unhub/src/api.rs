@@ -33,8 +33,8 @@ fn entry_matches_client_pool(
     entry_version: &str,
     client_channel: &str,
     client_version: &str,
-    client_hash: u64,
-    entry_hash: u64,
+    client_hash: &str,
+    entry_hash: &str,
 ) -> bool {
     match client_channel {
         "dev" | "alpha" => entry_version == client_version && entry_hash == client_hash,
@@ -69,7 +69,7 @@ fn is_valid_version_string(version: &str) -> bool {
 fn evaluate_client_status(
     state: &HubState,
     client_version: &str,
-    client_hash: u64,
+    client_hash: &str,
 ) -> (MultiplayerStatus, Option<String>) {
     let client_channel = infer_channel(client_version);
     let client_semver = parse_semver(client_version);
@@ -85,7 +85,7 @@ fn evaluate_client_status(
                 client_channel,
                 client_version,
                 client_hash,
-                entry.protocol_hash,
+                &entry.protocol_hash,
             ) {
                 has_server = true;
                 if let Some(v) = parse_semver(&entry.version) {
@@ -194,7 +194,7 @@ pub async fn ping(
     state.players_24h.run_pending_tasks();
 
     let (multiplayer_status, upgrade_version) =
-        evaluate_client_status(&state, &payload.version, payload.protocol_hash);
+        evaluate_client_status(&state, &payload.version, &payload.protocol_hash);
 
     Json(PingResponse {
         ok: true,
@@ -411,8 +411,8 @@ pub async fn create_room(
                 &entry.version,
                 client_channel,
                 &payload.game_version,
-                payload.protocol_hash,
-                entry.protocol_hash,
+                &payload.protocol_hash,
+                &entry.protocol_hash,
             ) {
                 continue;
             }
@@ -550,6 +550,7 @@ pub async fn create_room(
                 addr: format!("{}:{}", public_addr, room.port),
                 secret: room.secret.clone(),
                 ticket,
+                cert_hash: room.cert_hash.clone(),
             }));
         }
     }
@@ -685,5 +686,6 @@ pub async fn join_room(
         addr: format!("{}:{}", pm.public_addr, room.port),
         secret: room.secret.clone(),
         ticket,
+        cert_hash: room.cert_hash.clone(),
     }))
 }

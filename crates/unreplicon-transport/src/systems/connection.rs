@@ -13,8 +13,7 @@ use bevy_renet2::prelude::{RenetClient, RenetServer};
 use bevy_replicon::prelude::{ClientTriggerExt, ProtocolHash, RepliconChannels};
 use bevy_replicon_renet2::RenetChannelsExt;
 use bevy_replicon_renet2::renet2::ConnectionConfig;
-#[cfg(not(target_arch = "wasm32"))]
-use renet2_netcode::{WebTransportServer, WebTransportServerConfig};
+
 use unhub_client::tickets::{ConnectionTicket, encode_ticket};
 use unprofile_core::profile::RuntimeInstallationId;
 use unreplicon_core::messages::ConnectionTicketMessage;
@@ -26,10 +25,6 @@ const PROTOCOL_ID: u64 = 0x556e_6861_756e_7465;
 
 /// Maximum simultaneous connections a server will accept.
 const MAX_CLIENTS: usize = 4;
-
-/// Constant to switch between UDP and WebTransport for testing.
-/// Set to `true` to use WebTransport, `false` for UDP.
-const USE_WEB_TRANSPORT: bool = false;
 
 pub(super) fn app_setup(app: &mut App) {
     app.add_systems(
@@ -144,32 +139,16 @@ fn handle_hub_connection_request(
         Some(encode_ticket(&ticket, "").unwrap_or([0u8; 256]))
     };
 
-    let authentication = ClientAuthentication::Unsecure {
-        protocol_id: PROTOCOL_ID,
-        client_id,
-        server_addr,
-        user_data,
-        socket_id: 0,
-    };
+    #[cfg(not(target_arch = "wasm32"))]
+    let transport = {
+        let authentication = ClientAuthentication::Unsecure {
+            protocol_id: PROTOCOL_ID,
+            client_id,
+            server_addr,
+            user_data,
+            socket_id: 0,
+        };
 
-    let transport = if USE_WEB_TRANSPORT {
-        #[cfg(target_arch = "wasm32")]
-        {
-            // FIXME: Simple address parsing for now. WebTransport uses URLs.
-            // TODO: Use real SSL certificates and fingerprint validation in the future.
-            let server_url = format!("https://{}", req.address);
-            let config = WebTransportClientConfig::new(
-                url::Url::parse(&server_url).expect("Failed to parse WebTransport URL"),
-            );
-            let socket = WebTransportClient::new(config);
-            NetcodeClientTransport::new(current_time, authentication, socket)
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            error!("WebTransport client is only supported on WASM in this implementation.");
-            return;
-        }
-    } else {
         let socket = match UdpSocket::bind("0.0.0.0:0") {
             Ok(s) => s,
             Err(e) => {
@@ -182,6 +161,70 @@ fn handle_hub_connection_request(
             authentication,
             NativeSocket::new(socket).unwrap(),
         )
+    };
+
+    #[cfg(target_arch = "wasm32")]
+    let transport = {
+        use bevy_renet2::netcode::{
+            WebSocketClient, WebSocketClientConfig, WebTransportClient, WebTransportClientConfig,
+            webtransport_is_available_with_cert_hashes,
+        };
+        let ip_addr = server_addr.ip();
+        let base_port = server_addr.port();
+
+        if webtransport_is_available_with_cert_hashes() {
+            let wt_port = base_port + 1;
+            let wt_addr = SocketAddr::new(ip_addr, wt_port);
+            let authentication = ClientAuthentication::Unsecure {
+                protocol_id: PROTOCOL_ID,
+                client_id,
+                server_addr: wt_addr,
+                user_data,
+                socket_id: 1,
+            };
+
+            let mut server_cert_hashes = vec![];
+            if let Some(hash) = &req.cert_hash {
+                if let Ok(hash_bytes) = (0..hash.len())
+                    .step_by(2)
+                    .map(|i| u8::from_str_radix(&hash[i..i + 2], 16))
+                    .collect::<Result<Vec<u8>, std::num::ParseIntError>>()
+                {
+                    let mut hash_arr = [0u8; 32];
+                    if hash_bytes.len() == 32 {
+                        hash_arr.copy_from_slice(&hash_bytes);
+                        server_cert_hashes
+                            .push(bevy_renet2::netcode::ServerCertHash { hash: hash_arr });
+                    }
+                }
+            }
+
+            // Fallback generic hash logic here? Wait, `req.cert_hash` is better.
+            let config = WebTransportClientConfig {
+                server_dest: wt_addr.into(),
+                congestion_control: Default::default(),
+                server_cert_hashes,
+            };
+            let socket = WebTransportClient::new(config);
+            NetcodeClientTransport::new(current_time, authentication, socket)
+        } else {
+            let ws_port = base_port + 2;
+            let ws_addr = SocketAddr::new(ip_addr, ws_port);
+            let authentication = ClientAuthentication::Unsecure {
+                protocol_id: PROTOCOL_ID,
+                client_id,
+                server_addr: ws_addr,
+                user_data,
+                socket_id: 2,
+            };
+
+            let server_url = format!("ws://{}:{}", ip_addr, ws_port);
+            let config = WebSocketClientConfig {
+                server_url: url::Url::parse(&server_url).unwrap(),
+            };
+            let socket = WebSocketClient::new(config).unwrap();
+            NetcodeClientTransport::new(current_time, authentication, socket)
+        }
     };
 
     let transport = match transport {
@@ -197,6 +240,7 @@ fn handle_hub_connection_request(
     commands.insert_resource(TransportConfig::Join {
         address: req.address.clone(),
         ticket: req.ticket.clone(),
+        cert_hash: req.cert_hash.clone(),
     });
     // Transition roles: we are now a pure client connected to a dedicated server.
     commands.remove_resource::<AuthorityRole>();
@@ -230,17 +274,28 @@ fn startup_transport_system(
         } => {
             let port = *port;
 
-            let mut public_addresses = vec![
+            let wt_port = port + 1; // WebTransport port
+            let ws_port = port + 2; // WebSocket port
+
+            let mut native_public_addrs = vec![
                 SocketAddr::from(([0, 0, 0, 0], port)),
                 SocketAddr::from(([0, 0, 0, 0, 0, 0, 0, 0], port)),
             ];
+            let mut wt_public_addrs = vec![SocketAddr::from(([0, 0, 0, 0], wt_port))];
+            let mut ws_public_addrs = vec![SocketAddr::from(([0, 0, 0, 0], ws_port))];
 
             for addr_str in bind_addresses {
                 match addr_str.parse::<SocketAddr>() {
-                    Ok(addr) => public_addresses.push(addr),
+                    Ok(addr) => {
+                        native_public_addrs.push(addr);
+                        wt_public_addrs.push(SocketAddr::new(addr.ip(), addr.port() + 1));
+                        ws_public_addrs.push(SocketAddr::new(addr.ip(), addr.port() + 2));
+                    }
                     Err(_) => {
                         if let Ok(ip) = addr_str.parse::<std::net::IpAddr>() {
-                            public_addresses.push(SocketAddr::new(ip, port));
+                            native_public_addrs.push(SocketAddr::new(ip, port));
+                            wt_public_addrs.push(SocketAddr::new(ip, wt_port));
+                            ws_public_addrs.push(SocketAddr::new(ip, ws_port));
                         } else {
                             warn!("Invalid bind address: {}", addr_str);
                         }
@@ -252,44 +307,52 @@ fn startup_transport_system(
                 current_time,
                 max_clients: MAX_CLIENTS,
                 protocol_id: PROTOCOL_ID,
-                socket_addresses: vec![public_addresses],
+                socket_addresses: vec![native_public_addrs, wt_public_addrs, ws_public_addrs],
                 authentication: ServerAuthentication::Unsecure,
             };
-            let socket = match UdpSocket::bind(("[::]", port))
-                .or_else(|_| UdpSocket::bind(("0.0.0.0", port)))
-            {
-                Ok(s) => s,
-                Err(e) => {
-                    error!("Failed to bind UDP socket on port {port}: {e}");
-                    return;
-                }
-            };
-            let transport = if USE_WEB_TRANSPORT {
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    // FIXME: Simple self-signed cert for now.
-                    // TODO: Load real SSL certificates from filesystem (e.g. Caddy/Let'sEncrypt).
-                    // FIXME: IPv4 only — original UDP code bound to [::] for dual-stack support.
-                    let (config, _hash) = WebTransportServerConfig::new_selfsigned(
-                        SocketAddr::from(([0, 0, 0, 0], port)),
-                        MAX_CLIENTS,
-                    )
-                    .expect("Failed to create self-signed WebTransport config");
-                    // FIXME: _hash is discarded — clients need the certificate fingerprint
-                    // to trust the self-signed cert. Distribute it out-of-band or switch
-                    // to CA-signed certs (Caddy/Let'sEncrypt).
-                    let socket =
-                        WebTransportServer::new(config, tokio::runtime::Handle::current()).unwrap();
-                    NetcodeServerTransport::new(server_config, socket)
-                }
-                #[cfg(target_arch = "wasm32")]
-                {
-                    error!("WebTransport server is not supported on WASM.");
-                    return;
-                }
-            } else {
-                NetcodeServerTransport::new(server_config, NativeSocket::new(socket).unwrap())
-            };
+
+            let native_addr = SocketAddr::from(([0, 0, 0, 0], port));
+            let native_socket =
+                UdpSocket::bind(native_addr).expect("Failed to bind UDP socket for server");
+            let native_socket = bevy_renet2::netcode::NativeSocket::new(native_socket).unwrap();
+
+            static SERVER_RUNTIME: std::sync::LazyLock<tokio::runtime::Runtime> =
+                std::sync::LazyLock::new(|| {
+                    tokio::runtime::Builder::new_multi_thread()
+                        .worker_threads(2)
+                        .enable_all()
+                        .build()
+                        .expect("Failed to create Transport Tokio Runtime")
+                });
+            let tokio_handle = SERVER_RUNTIME.handle().clone();
+
+            let wt_addr = SocketAddr::from(([0, 0, 0, 0], wt_port));
+            let (wt_config, cert_hash) =
+                renet2_netcode::WebTransportServerConfig::new_selfsigned(wt_addr, MAX_CLIENTS)
+                    .unwrap();
+            let wt_socket =
+                renet2_netcode::WebTransportServer::new(wt_config, tokio_handle.clone()).unwrap();
+
+            let ws_addr = SocketAddr::from(([0, 0, 0, 0], ws_port));
+            let ws_config = renet2_netcode::WebSocketServerConfig::new(ws_addr, MAX_CLIENTS);
+            let ws_socket = renet2_netcode::WebSocketServer::new(ws_config, tokio_handle).unwrap();
+
+            let transport = NetcodeServerTransport::new_with_sockets(
+                server_config,
+                vec![
+                    bevy_renet2::netcode::BoxedSocket::new(native_socket),
+                    bevy_renet2::netcode::BoxedSocket::new(wt_socket),
+                    bevy_renet2::netcode::BoxedSocket::new(ws_socket),
+                ],
+            );
+
+            // Store the generated hash so ProcMan can read it
+            let hash_hex = cert_hash
+                .hash
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>();
+            commands.insert_resource(crate::resources::ServerCertHashString(hash_hex));
 
             let transport = match transport {
                 Ok(t) => t,
@@ -302,7 +365,11 @@ fn startup_transport_system(
             commands.insert_resource(transport);
             info!("Replicon transport: listening on UDP port {port}");
         }
-        TransportConfig::Join { address, ticket } => {
+        TransportConfig::Join {
+            address,
+            ticket,
+            cert_hash: _cert_hash,
+        } => {
             let server_addr: SocketAddr = match address.to_socket_addrs() {
                 Ok(mut addrs) => match addrs.find(|a| a.is_ipv4()) {
                     Some(a) => a,
@@ -346,32 +413,16 @@ fn startup_transport_system(
                 Some(encode_ticket(&ticket, "").unwrap_or([0u8; 256]))
             };
 
-            let authentication = ClientAuthentication::Unsecure {
-                protocol_id: PROTOCOL_ID,
-                client_id,
-                server_addr,
-                user_data,
-                socket_id: 0,
-            };
+            #[cfg(not(target_arch = "wasm32"))]
+            let transport = {
+                let authentication = ClientAuthentication::Unsecure {
+                    protocol_id: PROTOCOL_ID,
+                    client_id,
+                    server_addr,
+                    user_data,
+                    socket_id: 0,
+                };
 
-            let transport = if USE_WEB_TRANSPORT {
-                #[cfg(target_arch = "wasm32")]
-                {
-                    // FIXME: Simple address parsing for now. WebTransport uses URLs.
-                    // TODO: Use real SSL certificates and fingerprint validation in the future.
-                    let server_url = format!("https://{}", address);
-                    let config = WebTransportClientConfig::new(
-                        url::Url::parse(&server_url).expect("Failed to parse WebTransport URL"),
-                    );
-                    let socket = WebTransportClient::new(config);
-                    NetcodeClientTransport::new(current_time, authentication, socket)
-                }
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    error!("WebTransport client is only supported on WASM in this implementation.");
-                    return;
-                }
-            } else {
                 let socket = match UdpSocket::bind("0.0.0.0:0") {
                     Ok(s) => s,
                     Err(e) => {
@@ -384,6 +435,69 @@ fn startup_transport_system(
                     authentication,
                     NativeSocket::new(socket).unwrap(),
                 )
+            };
+
+            #[cfg(target_arch = "wasm32")]
+            let transport = {
+                use bevy_renet2::netcode::{
+                    WebSocketClient, WebSocketClientConfig, WebTransportClient,
+                    WebTransportClientConfig, webtransport_is_available_with_cert_hashes,
+                };
+                let ip_addr = server_addr.ip();
+                let base_port = server_addr.port();
+
+                if webtransport_is_available_with_cert_hashes() {
+                    let wt_port = base_port + 1;
+                    let wt_addr = SocketAddr::new(ip_addr, wt_port);
+                    let authentication = ClientAuthentication::Unsecure {
+                        protocol_id: PROTOCOL_ID,
+                        client_id,
+                        server_addr: wt_addr,
+                        user_data,
+                        socket_id: 1,
+                    };
+
+                    let mut server_cert_hashes = vec![];
+                    if let Some(hash) = _cert_hash {
+                        if let Ok(hash_bytes) = (0..hash.len())
+                            .step_by(2)
+                            .map(|i| u8::from_str_radix(&hash[i..i + 2], 16))
+                            .collect::<Result<Vec<u8>, std::num::ParseIntError>>()
+                        {
+                            let mut hash_arr = [0u8; 32];
+                            if hash_bytes.len() == 32 {
+                                hash_arr.copy_from_slice(&hash_bytes);
+                                server_cert_hashes
+                                    .push(bevy_renet2::netcode::ServerCertHash { hash: hash_arr });
+                            }
+                        }
+                    }
+
+                    let config = WebTransportClientConfig {
+                        server_dest: wt_addr.into(),
+                        congestion_control: Default::default(),
+                        server_cert_hashes,
+                    };
+                    let socket = WebTransportClient::new(config);
+                    NetcodeClientTransport::new(current_time, authentication, socket)
+                } else {
+                    let ws_port = base_port + 2;
+                    let ws_addr = SocketAddr::new(ip_addr, ws_port);
+                    let authentication = ClientAuthentication::Unsecure {
+                        protocol_id: PROTOCOL_ID,
+                        client_id,
+                        server_addr: ws_addr,
+                        user_data,
+                        socket_id: 2,
+                    };
+
+                    let server_url = format!("ws://{}:{}", ip_addr, ws_port);
+                    let config = WebSocketClientConfig {
+                        server_url: url::Url::parse(&server_url).unwrap(),
+                    };
+                    let socket = WebSocketClient::new(config).unwrap();
+                    NetcodeClientTransport::new(current_time, authentication, socket)
+                }
             };
 
             let transport = match transport {

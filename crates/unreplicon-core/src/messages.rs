@@ -264,6 +264,7 @@ pub struct GhostSoundFieldBroadcast {
 pub struct HubConnectionRequested {
     pub address: String,
     pub ticket: Option<String>,
+    pub cert_hash: Option<String>,
 }
 
 /// Sent by a client immediately after connection to provide their Hub ticket.

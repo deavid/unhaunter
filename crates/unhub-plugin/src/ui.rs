@@ -166,7 +166,7 @@ pub fn hub_menu_event(
                         .map(|x| x.0)
                         .unwrap_or_default();
                     let game_version = env!("CARGO_PKG_VERSION").to_string();
-                    hub_client.create_room(player_uuid, game_version, protocol_hash.0);
+                    hub_client.create_room(player_uuid, game_version, protocol_hash.0.clone());
                     hub_status.is_pending = true;
                 }
                 HubMenuID::JoinRoom => {
@@ -176,7 +176,7 @@ pub fn hub_menu_event(
                             .as_ref()
                             .map(|x| x.0)
                             .unwrap_or_default();
-                        hub_client.join_room(code, player_uuid, protocol_hash.0);
+                        hub_client.join_room(code, player_uuid, protocol_hash.0.clone());
                         hub_status.is_pending = true;
                     }
                 }
@@ -230,7 +230,7 @@ pub fn update_code_input(
                     .as_ref()
                     .map(|x| x.0)
                     .unwrap_or_default();
-                hub_client.join_room(code, player_uuid, protocol_hash.0);
+                hub_client.join_room(code, player_uuid, protocol_hash.0.clone());
                 hub_status.is_pending = true;
             }
         } else {
@@ -303,6 +303,7 @@ pub fn handle_hub_responses(
                 hub_conn_events.write(HubConnectionRequested {
                     address: data.addr,
                     ticket: Some(data.ticket),
+                    cert_hash: data.cert_hash,
                 });
                 // Stay on the Hub screen; await_lobby_then_transition will move us to
                 // Lobby once the server's LobbyInfo arrives via replication.
@@ -316,6 +317,7 @@ pub fn handle_hub_responses(
                 hub_conn_events.write(HubConnectionRequested {
                     address: data.addr,
                     ticket: Some(data.ticket),
+                    cert_hash: data.cert_hash,
                 });
                 // Same: stay on Hub, wait for LobbyInfo replication before going to Lobby.
                 hub_status.is_pending = false;
