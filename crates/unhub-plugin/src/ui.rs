@@ -320,6 +320,7 @@ pub fn handle_hub_responses(
                     address: addr,
                     server_hostname: Some(data.server_hostname),
                     ticket: Some(data.ticket),
+                    cert_hash: data.cert_hash,
                 });
                 // Stay on the Hub screen; await_lobby_then_transition will move us to
                 // Lobby once the server's LobbyInfo arrives via replication.
@@ -335,6 +336,7 @@ pub fn handle_hub_responses(
                     address: addr,
                     server_hostname: Some(data.server_hostname),
                     ticket: Some(data.ticket),
+                    cert_hash: data.cert_hash,
                 });
                 // Same: stay on Hub, wait for LobbyInfo replication before going to Lobby.
                 hub_status.is_pending = false;

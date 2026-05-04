@@ -5,12 +5,24 @@ pub mod players;
 pub mod roles;
 
 use bevy::prelude::*;
+use bevy_replicon::prelude::AuthMethod;
 use bevy_replicon::prelude::RepliconPlugins;
-use bevy_replicon_renet::RepliconRenetPlugins;
+use bevy_replicon::prelude::RepliconSharedPlugin;
+use bevy_replicon_renet2::RepliconRenetPlugins;
 use uncommon_states_core::UIContextState;
 use unreplicon_core::export_ext::RepliconExportSet;
 
+const USE_CUSTOM_AUTH: bool = true;
+
 pub(crate) fn app_setup(app: &mut App) {
+    let auth_method = if USE_CUSTOM_AUTH {
+        AuthMethod::Custom
+    } else {
+        AuthMethod::ProtocolCheck
+    };
+
+    app.add_plugins((RepliconPlugins.set(RepliconSharedPlugin { auth_method }),));
+
     let transport_config = app
         .world()
         .resource::<unreplicon_transport::resources::TransportConfig>()
@@ -21,7 +33,6 @@ pub(crate) fn app_setup(app: &mut App) {
         .clone();
 
     app.add_plugins((
-        RepliconPlugins,
         RepliconRenetPlugins,
         unreplicon_transport::plugin::UnrepliconTransportPlugin {
             transport_config,

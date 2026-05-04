@@ -567,6 +567,7 @@ pub async fn create_room(
                 server_hostname: public_hostname,
                 secret: room.secret.clone(),
                 ticket,
+                cert_hash: room.cert_hash.clone(),
             }));
         }
     }
@@ -708,5 +709,6 @@ pub async fn join_room(
         server_hostname: pm.public_hostname.clone(),
         secret: room.secret.clone(),
         ticket,
+        cert_hash: room.cert_hash.clone(),
     }))
 }

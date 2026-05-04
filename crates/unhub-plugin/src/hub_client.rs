@@ -429,9 +429,10 @@ pub fn extract_protocol_hash(
     bevy_replicon_hash: Res<ProtocolHash>,
     mut client_hash: ResMut<ClientProtocolHash>,
 ) {
+    // Deserialize ProtocolHash to get the numeric u64 value
     if let Ok(hash_str) = serde_json::to_string(&*bevy_replicon_hash) {
-        client_hash.0 = hash_str.clone();
-        info!("Extracted protocol hash: {}", hash_str);
+        info!("Extracted protocol hash: {:?}", hash_str);
+        client_hash.0 = hash_str;
     } else {
         warn!("Failed to serialize bevy_replicon ProtocolHash");
     }

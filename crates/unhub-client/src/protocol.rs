@@ -124,6 +124,7 @@ pub struct RoomSummary {
     pub player_count: u8,
     pub metadata: RoomMetadata,
     pub server_id: Uuid,
+    pub cert_hash: Option<String>,
 }
 
 // --- Player ↔ Hub REST API ---
@@ -165,6 +166,7 @@ pub struct CreateRoomResponse {
     pub server_hostname: String,
     pub secret: String,
     pub ticket: String,
+    pub cert_hash: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -178,6 +180,7 @@ pub struct JoinRoomResponse {
     pub server_hostname: String,
     pub secret: String,
     pub ticket: String,
+    pub cert_hash: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -222,6 +225,7 @@ pub enum ProcManToDedicated {
 pub enum DedicatedToProcMan {
     Ready {
         port: u16,
+        cert_hash: Option<String>,
     },
     PlayerJoined {
         player_uuid: Uuid,

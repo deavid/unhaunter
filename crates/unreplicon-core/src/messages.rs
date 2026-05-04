@@ -266,4 +266,15 @@ pub struct HubConnectionRequested {
     /// The public hostname of the server, provided by the Hub API.
     pub server_hostname: Option<String>,
     pub ticket: Option<String>,
+    pub cert_hash: Option<String>,
+}
+
+/// Sent by a client immediately after connection to provide their Hub ticket.
+///
+/// This is part of the post-connection handshake required because some
+/// transports (like WebTransport) do not support a native connection payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Event)]
+pub struct ConnectionTicketMessage {
+    pub ticket: String,
+    pub protocol_hash: String,
 }

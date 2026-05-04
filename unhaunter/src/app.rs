@@ -224,7 +224,11 @@ pub fn app_build(args: AppArgs) -> App {
                     bind_addresses,
                 },
                 crate::app_args::CliNetMode::Join { address, ticket } => {
-                    unreplicon_transport::resources::TransportConfig::Join { address, ticket }
+                    unreplicon_transport::resources::TransportConfig::Join {
+                        address,
+                        ticket,
+                        cert_hash: None,
+                    }
                 }
             },
             procman_config: unreplicon_transport::resources::ProcManConfig {

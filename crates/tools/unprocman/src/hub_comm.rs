@@ -51,6 +51,7 @@ async fn handle_hub_connection(
                         difficulty: "".into(),
                     },
                     server_id: manager.config.installation_id,
+                    cert_hash: s.cert_hash.clone(),
                 });
             }
         }
@@ -112,6 +113,7 @@ async fn handle_hub_connection(
                             player_count: s.player_count,
                             metadata: unhub_client::protocol::RoomMetadata { map: "".into(), difficulty: "".into() },
                             server_id: manager.config.installation_id,
+                            cert_hash: s.cert_hash.clone(),
                         });
                     }
                 }

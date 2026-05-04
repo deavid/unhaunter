@@ -12,8 +12,12 @@ pub enum TransportConfig {
     Join {
         address: String,
         ticket: Option<String>,
+        cert_hash: Option<String>,
     },
 }
+
+#[derive(Resource, Debug, Clone)]
+pub struct ServerCertHashString(pub String);
 
 #[derive(Resource, Debug, Clone, Default)]
 pub struct ProcManConfig {
