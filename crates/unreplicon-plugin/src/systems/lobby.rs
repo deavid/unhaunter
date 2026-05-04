@@ -387,7 +387,12 @@ fn process_newly_connected_clients(
     q_clients: Query<Entity, With<ConnectedClient>>,
     mut q_lobby: Query<&mut LobbyInfo>,
     uuid_map: Res<ClientUuidMap>,
+    mut log_throttler: Local<u32>,
 ) {
+    *log_throttler += 1;
+    if *log_throttler > 300 {
+        *log_throttler = 0;
+    }
     let client_count = q_clients.iter().count();
     if q_lobby.is_empty() {
         // Log only when clients are present so we notice if the lobby entity never spawns.
@@ -403,10 +408,12 @@ fn process_newly_connected_clients(
     for entity in q_clients.iter() {
         let client_id = ClientId::Client(entity);
         let Some(uuid) = client_uuid(client_id, &uuid_map) else {
-            debug!(
-                "Still waiting for authentication/mapping: (socket={:?})",
-                client_id
-            );
+            if *log_throttler == 0 {
+                debug!(
+                    "Still waiting for authentication/mapping: (socket={:?})",
+                    client_id
+                );
+            }
 
             continue;
         };

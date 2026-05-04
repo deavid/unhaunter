@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-use bevy_renet::{RenetClient, RenetServer};
+use bevy_renet2::prelude::{RenetClient, RenetServer};
 use bevy_replicon::prelude::*;
 use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 

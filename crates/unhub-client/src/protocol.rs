@@ -8,7 +8,7 @@ pub struct PingRequest {
     pub installation_id: Uuid,
     pub session_id: u16,
     pub version: String,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,7 +31,7 @@ pub struct PingResponse {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LibraryEntry {
     pub version: String,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
 }
 
 // --- Hub ↔ ProcMan Protocol ---
@@ -124,6 +124,7 @@ pub struct RoomSummary {
     pub player_count: u8,
     pub metadata: RoomMetadata,
     pub server_id: Uuid,
+    pub cert_hash: Option<String>,
 }
 
 // --- Player ↔ Hub REST API ---
@@ -143,7 +144,7 @@ pub struct ChallengeResponse {
 pub struct CreateRoomRequest {
     pub player_uuid: Uuid,
     pub game_version: String,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
     pub nonce: String,
     pub solution: String,
 }
@@ -151,27 +152,35 @@ pub struct CreateRoomRequest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JoinRoomRequest {
     pub player_uuid: Uuid,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateRoomResponse {
     pub code: String,
-    pub addr: String,
+    /// All resolved socket addresses for the dedicated server in `IP:port` form
+    /// (IPv6 addresses are bracket-wrapped: `[::1]:port`). Ordered
+    /// IPv4-first. Clients should try each in order until one succeeds.
+    pub addrs: Vec<String>,
+    /// Original hostname from the ProcMan config's `public_addr`.
+    pub server_hostname: String,
     pub secret: String,
-    /// JWT ticket signed by the Hub; must be included as `user_data` in the
-    /// Renet connection request for the dedicated server to accept it.
     pub ticket: String,
+    pub cert_hash: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JoinRoomResponse {
     pub code: String,
-    pub addr: String,
+    /// All resolved socket addresses for the dedicated server in `IP:port` form
+    /// (IPv6 addresses are bracket-wrapped: `[::1]:port`). Ordered
+    /// IPv4-first. Clients should try each in order until one succeeds.
+    pub addrs: Vec<String>,
+    /// Original hostname from the ProcMan config's `public_addr`.
+    pub server_hostname: String,
     pub secret: String,
-    /// JWT ticket signed by the Hub; must be included as `user_data` in the
-    /// Renet connection request for the dedicated server to accept it.
     pub ticket: String,
+    pub cert_hash: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -216,6 +225,7 @@ pub enum ProcManToDedicated {
 pub enum DedicatedToProcMan {
     Ready {
         port: u16,
+        cert_hash: Option<String>,
     },
     PlayerJoined {
         player_uuid: Uuid,

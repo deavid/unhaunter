@@ -16,7 +16,7 @@ pub struct BinaryInfo {
     pub bundle_dir: PathBuf,
     pub binary_path: PathBuf,
     pub version: String,
-    pub protocol_hash: u64,
+    pub protocol_hash: String,
 }
 
 enum ServerControl {
@@ -33,6 +33,7 @@ pub struct ServerProcess {
     pub spawned_at: std::time::Instant,
     pub has_been_joined: bool,
     pub ready: bool,
+    pub cert_hash: Option<String>,
     pub stdin_tx: tokio::sync::mpsc::UnboundedSender<ProcManToDedicated>,
     control_tx: tokio::sync::mpsc::UnboundedSender<ServerControl>,
 }
@@ -120,7 +121,7 @@ impl ServerManager {
             let protocol_hash = match tokio::fs::read_to_string(&hash_file)
                 .await
                 .ok()
-                .and_then(|s| s.trim().parse::<u64>().ok())
+                .map(|s| s.trim().to_string())
             {
                 Some(h) => h,
                 None => {
@@ -160,7 +161,7 @@ impl ServerManager {
         lib.iter()
             .map(|b| LibraryEntry {
                 version: b.version.clone(),
-                protocol_hash: b.protocol_hash,
+                protocol_hash: b.protocol_hash.clone(),
             })
             .collect()
     }
@@ -362,11 +363,14 @@ impl ServerManager {
         let msg: DedicatedToProcMan = serde_json::from_str(line)?;
 
         match msg {
-            DedicatedToProcMan::Ready { .. } => {
+            DedicatedToProcMan::Ready { port: _, cert_hash } => {
                 info!("Server on port {} is ready", port);
                 let mut servers = self.servers.lock().await;
                 if let Some(s) = servers.get_mut(&port) {
                     s.ready = true;
+                    if let Some(ch) = cert_hash {
+                        s.cert_hash = Some(ch);
+                    }
                 } else {
                     warn!("Received Ready for missing server on port {}", port);
                 }
@@ -491,14 +495,20 @@ impl ServerManager {
                 .arg("--host")
                 .arg(port.to_string())
                 .arg("--procman-channel")
-                .arg("stdin")
-                .arg("-vv")
+                .arg("stdin");
+
+            cmd.arg("-vvvv")
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .env("NO_COLOR", "1")
-                .env("TERM", "dumb")
-                .env_remove("RUST_LOG");
+                .env("TERM", "dumb");
+
+            if self.config.debug_children {
+                cmd.env("RUST_LOG", "debug");
+            } else {
+                cmd.env_remove("RUST_LOG");
+            }
 
             let mut child = cmd.spawn()?;
             let stdin = child
@@ -530,6 +540,7 @@ impl ServerManager {
                     spawned_at: std::time::Instant::now(),
                     has_been_joined: false,
                     ready: false,
+                    cert_hash: None,
                     stdin_tx: stdin_tx.clone(),
                     control_tx: control_tx.clone(),
                 },
@@ -587,6 +598,11 @@ impl ServerManager {
                 }
             }
 
+            // Retrieve the cert_hash from the server that just became ready
+            let servers = self.servers.lock().await;
+            let cert_hash = servers.get(&port).and_then(|s| s.cert_hash.clone());
+            drop(servers);
+
             Ok(RoomSummary {
                 code: room_code,
                 port,
@@ -599,6 +615,7 @@ impl ServerManager {
                     difficulty: "".into(),
                 },
                 server_id: self.config.installation_id,
+                cert_hash,
             })
         }
         .await;

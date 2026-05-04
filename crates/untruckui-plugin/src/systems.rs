@@ -110,10 +110,10 @@ fn hold_button_system(
                     if button.holding {
                         button.holding = false;
                         button.hold_timer = None;
-                        if let Some(entity) = hold_sound.take() {
-                            if let Ok(mut cmd_e) = commands.get_entity(entity) {
-                                cmd_e.despawn();
-                            }
+                        if let Some(entity) = hold_sound.take()
+                            && let Ok(mut cmd_e) = commands.get_entity(entity)
+                        {
+                            cmd_e.despawn();
                         }
                     }
                     continue;
@@ -223,10 +223,10 @@ fn hold_button_system(
                         button.require_release = true;
 
                         // Stop sound
-                        if let Some(entity) = hold_sound.take() {
-                            if let Ok(mut cmd_e) = commands.get_entity(entity) {
-                                cmd_e.despawn();
-                            }
+                        if let Some(entity) = hold_sound.take()
+                            && let Ok(mut cmd_e) = commands.get_entity(entity)
+                        {
+                            cmd_e.despawn();
                         }
 
                         // Reset button state
@@ -243,10 +243,10 @@ fn hold_button_system(
                     button.hold_timer = None;
 
                     // Stop sound
-                    if let Some(entity) = hold_sound.take() {
-                        if let Ok(mut cmd_e) = commands.get_entity(entity) {
-                            cmd_e.despawn();
-                        }
+                    if let Some(entity) = hold_sound.take()
+                        && let Ok(mut cmd_e) = commands.get_entity(entity)
+                    {
+                        cmd_e.despawn();
                     }
                 }
             }

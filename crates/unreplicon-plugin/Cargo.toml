@@ -13,8 +13,8 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }
-bevy_replicon_renet = { workspace = true }
-bevy_renet = { workspace = true }
+bevy_replicon_renet2 = { workspace = true }
+bevy_renet2 = { workspace = true }
 uuid = { workspace = true }
 
 uncommon-states-core = { workspace = true }

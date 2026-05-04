@@ -166,7 +166,7 @@ pub fn hub_menu_event(
                         .map(|x| x.0)
                         .unwrap_or_default();
                     let game_version = env!("CARGO_PKG_VERSION").to_string();
-                    hub_client.create_room(player_uuid, game_version, protocol_hash.0);
+                    hub_client.create_room(player_uuid, game_version, protocol_hash.0.clone());
                     hub_status.is_pending = true;
                 }
                 HubMenuID::JoinRoom => {
@@ -176,7 +176,7 @@ pub fn hub_menu_event(
                             .as_ref()
                             .map(|x| x.0)
                             .unwrap_or_default();
-                        hub_client.join_room(code, player_uuid, protocol_hash.0);
+                        hub_client.join_room(code, player_uuid, protocol_hash.0.clone());
                         hub_status.is_pending = true;
                     }
                 }
@@ -230,7 +230,7 @@ pub fn update_code_input(
                     .as_ref()
                     .map(|x| x.0)
                     .unwrap_or_default();
-                hub_client.join_room(code, player_uuid, protocol_hash.0);
+                hub_client.join_room(code, player_uuid, protocol_hash.0.clone());
                 hub_status.is_pending = true;
             }
         } else {
@@ -289,6 +289,21 @@ pub fn update_code_input(
     }
 }
 
+/// Pick the best address from the hub-provided list: prefer IPv4 (no `[`)
+/// for widest compatibility, fall back to the first IPv6 entry if no IPv4 is
+/// available. Returns an empty string if `addrs` is empty.
+fn pick_best_addr(addrs: &[String]) -> String {
+    addrs
+        .iter()
+        .find(|a| !a.starts_with('['))
+        .or_else(|| addrs.first())
+        .cloned()
+        .unwrap_or_else(|| {
+            warn!("Hub returned an empty address list; connection will fail");
+            String::new()
+        })
+}
+
 pub fn handle_hub_responses(
     mut hub_status: ResMut<HubStatus>,
     mut room_ident: ResMut<RoomIdentification>,
@@ -297,12 +312,15 @@ pub fn handle_hub_responses(
     if let Some(resp) = hub_status.last_response.take() {
         match resp {
             HubResponse::RoomCreated(data) => {
-                info!("Hub: Room created: {} at {}", data.code, data.addr);
+                let addr = pick_best_addr(&data.addrs);
+                info!("Hub: Room created: {} at {}", data.code, addr);
                 room_ident.code = Some(data.code);
                 room_ident.secret = Some(data.secret);
                 hub_conn_events.write(HubConnectionRequested {
-                    address: data.addr,
+                    address: addr,
+                    server_hostname: Some(data.server_hostname),
                     ticket: Some(data.ticket),
+                    cert_hash: data.cert_hash,
                 });
                 // Stay on the Hub screen; await_lobby_then_transition will move us to
                 // Lobby once the server's LobbyInfo arrives via replication.
@@ -310,12 +328,15 @@ pub fn handle_hub_responses(
                 hub_status.is_connecting = true;
             }
             HubResponse::RoomJoined(data) => {
-                info!("Hub: Room joined: {} at {}", data.code, data.addr);
+                let addr = pick_best_addr(&data.addrs);
+                info!("Hub: Room joined: {} at {}", data.code, addr);
                 room_ident.code = Some(data.code);
                 room_ident.secret = Some(data.secret);
                 hub_conn_events.write(HubConnectionRequested {
-                    address: data.addr,
+                    address: addr,
+                    server_hostname: Some(data.server_hostname),
                     ticket: Some(data.ticket),
+                    cert_hash: data.cert_hash,
                 });
                 // Same: stay on Hub, wait for LobbyInfo replication before going to Lobby.
                 hub_status.is_pending = false;

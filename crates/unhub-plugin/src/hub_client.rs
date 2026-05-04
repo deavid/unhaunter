@@ -48,7 +48,12 @@ where
 }
 
 impl HubClient {
-    pub fn create_room(&self, player_uuid: uuid::Uuid, game_version: String, protocol_hash: u64) {
+    pub fn create_room(
+        &self,
+        player_uuid: uuid::Uuid,
+        game_version: String,
+        protocol_hash: String,
+    ) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
         spawn_hub_task(async move {
@@ -134,7 +139,7 @@ impl HubClient {
         });
     }
 
-    pub fn join_room(&self, code: String, player_uuid: uuid::Uuid, protocol_hash: u64) {
+    pub fn join_room(&self, code: String, player_uuid: uuid::Uuid, protocol_hash: String) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
         spawn_hub_task(async move {
@@ -185,7 +190,7 @@ impl HubClient {
         installation_id: uuid::Uuid,
         session_id: u16,
         version: String,
-        protocol_hash: u64,
+        protocol_hash: String,
     ) {
         let hub_url = self.hub_url.clone();
         let tx = self.tx.clone();
@@ -265,7 +270,7 @@ pub struct HubStatus {
 pub struct HubPingTimer(pub Timer);
 
 #[derive(Resource, Default)]
-pub struct ClientProtocolHash(pub u64);
+pub struct ClientProtocolHash(pub String);
 
 #[derive(Resource, Default, Clone, Debug)]
 pub struct HubConnectionStatus {
@@ -323,11 +328,23 @@ pub fn ping_hub_system(
     if timer.0.just_finished()
         && let Some(runtime_id) = runtime_id
     {
+        if protocol_hash.0.is_empty() {
+            warn!(
+                "ping_hub_system: protocol hash not yet available — skipping ping (will retry next interval)"
+            );
+            timer.0.reset();
+            return;
+        }
+        info!(
+            "ping_hub_system: pinging Hub (version={}, protocol_hash={})",
+            env!("CARGO_PKG_VERSION"),
+            protocol_hash.0
+        );
         client.ping(
             runtime_id.0,
             client.session_id,
             env!("CARGO_PKG_VERSION").to_string(),
-            protocol_hash.0,
+            protocol_hash.0.clone(),
         );
     }
 }
@@ -352,6 +369,40 @@ pub fn update_hub_status(
             } => {
                 status.is_online = ok;
                 status.online_players = online_players;
+
+                match &multiplayer_status {
+                    unhub_client::protocol::MultiplayerStatus::Unsupported => {
+                        warn!(
+                            "Hub ping: version UNSUPPORTED (ok={}, players={}, upgrade={:?}). \
+                             This client's version/protocol_hash is not recognized by any \
+                             registered ProcMan on the Hub.",
+                            ok, online_players, upgrade_version
+                        );
+                    }
+                    unhub_client::protocol::MultiplayerStatus::Conflict => {
+                        warn!(
+                            "Hub ping: UUID CONFLICT detected \
+                             (ok={}, players={}) — another session is using this installation_id.",
+                            ok, online_players
+                        );
+                    }
+                    unhub_client::protocol::MultiplayerStatus::UpdateAvailable => {
+                        info!(
+                            "Hub ping: update available — upgrade to {:?}",
+                            upgrade_version
+                        );
+                    }
+                    unhub_client::protocol::MultiplayerStatus::UpdateRecommended => {
+                        info!("Hub ping: update recommended — {:?}", upgrade_version);
+                    }
+                    unhub_client::protocol::MultiplayerStatus::UpToDate => {
+                        info!(
+                            "Hub ping: version up-to-date (ok={}, players={})",
+                            ok, online_players
+                        );
+                    }
+                }
+
                 hub_connection_status.status = Some(multiplayer_status);
                 hub_connection_status.upgrade_version = upgrade_version;
                 hub_connection_status.last_update = 0.0;
@@ -380,15 +431,8 @@ pub fn extract_protocol_hash(
 ) {
     // Deserialize ProtocolHash to get the numeric u64 value
     if let Ok(hash_str) = serde_json::to_string(&*bevy_replicon_hash) {
-        if let Ok(hash_val) = hash_str.trim_matches('"').parse::<u64>() {
-            client_hash.0 = hash_val;
-            info!("Extracted protocol hash: {}", hash_val);
-        } else {
-            warn!(
-                "Failed to parse protocol hash from bevy_replicon: {}",
-                hash_str
-            );
-        }
+        info!("Extracted protocol hash: {:?}", hash_str);
+        client_hash.0 = hash_str;
     } else {
         warn!("Failed to serialize bevy_replicon ProtocolHash");
     }

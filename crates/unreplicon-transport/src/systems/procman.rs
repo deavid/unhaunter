@@ -7,7 +7,33 @@ use crate::resources::{ProcManChannel, ProcManConfig, RoomAuth};
 pub(super) fn app_setup(app: &mut App) {
     app.init_resource::<RoomAuth>();
     app.add_systems(Startup, setup_procman_system);
-    app.add_systems(Update, (update_procman_system, idle_timeout_system));
+    app.add_systems(
+        Update,
+        (
+            update_procman_system,
+            idle_timeout_system,
+            send_ready_when_transport_up,
+        ),
+    );
+}
+
+fn send_ready_when_transport_up(
+    procman: Option<Res<ProcManChannel>>,
+    cert_hash: Option<Res<crate::resources::ServerCertHashString>>,
+    config: Option<Res<ProcManConfig>>,
+    mut sent: Local<bool>,
+) {
+    if *sent {
+        return;
+    }
+    let (Some(pm), Some(ch), Some(cfg)) = (procman, cert_hash, config) else {
+        return;
+    };
+    let _ = pm.tx.send(DedicatedToProcMan::Ready {
+        port: cfg.port,
+        cert_hash: Some(ch.0.clone()),
+    });
+    *sent = true;
 }
 
 fn setup_procman_system(mut commands: Commands, procman_config: Res<ProcManConfig>) {
@@ -37,9 +63,8 @@ fn setup_procman_system(mut commands: Commands, procman_config: Res<ProcManConfi
         }
     });
 
-    let _ = tx_to_procman.send(DedicatedToProcMan::Ready {
-        port: procman_config.port,
-    });
+    // We don't send Ready here anymore. We wait until the transport is fully up.
+    // Let's add a system to do it.
 
     commands.insert_resource(ProcManChannel {
         tx: tx_to_procman,
@@ -95,7 +120,7 @@ fn idle_timeout_system(
     time: Res<Time>,
     procman: Option<Res<ProcManChannel>>,
     room_auth: Res<RoomAuth>,
-    server: Option<Res<bevy_renet::RenetServer>>,
+    server: Option<Res<bevy_renet2::prelude::RenetServer>>,
     mut idle_timer: Local<f32>,
     mut exit_sent: Local<bool>,
     mut exit: MessageWriter<bevy::app::AppExit>,
