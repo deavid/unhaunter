@@ -132,6 +132,10 @@ pub struct Hiding {
     pub hiding_spot: Option<Entity>,
 }
 
+/// Marker for the entity that displays the player's name label.
+#[derive(Component, Debug, Clone, Default)]
+pub struct PlayerNameLabel;
+
 impl bevy::ecs::entity::MapEntities for Hiding {
     fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
         if let Some(ref mut h) = self.hiding_spot {
