@@ -1,7 +1,9 @@
 use crate::metrics;
 use bevy::audio::SpatialScale;
+use bevy::audio::Volume;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use unaudiospatial_core::components::{SpatialAudioFadeOut, SpatialAudioInstance};
 use unaudiospatial_core::events::SoundEvent;
 use unaudiospatial_core::listener::SpatialListener;
 use unmetrics_core::metrics::SendMetric;
@@ -17,9 +19,11 @@ pub fn spatial_audio_playback(
     audio_settings: Res<Persistent<AudioSettings>>,
     time: Res<Time>,
     mut last_error_log: Local<f32>,
+    q_instances: Query<(Entity, &SpatialAudioInstance), Without<SpatialAudioFadeOut>>,
 ) {
     let measure = metrics::SOUND_PLAYBACK.time_measure();
     let now = time.elapsed_secs();
+    let cur_frame = (now * 60.0) as u32; // Fallback to time-based pseudo-frames
     let mut can_log = now - *last_error_log > 1.0;
     let Ok(player_position) = qp.single() else {
         if can_log {
@@ -35,6 +39,34 @@ pub fn spatial_audio_playback(
             *last_error_log = now;
             can_log = false;
         }
+
+        // Deduplication & Spam Detection
+        let mut is_spam = false;
+        let reverb_file = sound_event.sound_file.replace("sounds/", "reverbs/");
+
+        for (entity, instance) in q_instances.iter() {
+            if instance.sound_file == sound_event.sound_file || instance.sound_file == reverb_file {
+                let frame_diff = cur_frame.saturating_sub(instance.spawn_frame);
+                if !instance.is_reverb && frame_diff < 5 {
+                    warn!(
+                        "AUDIO SPAM: Sound '{}' triggered too rapidly ({} frames). Skipping.",
+                        sound_event.sound_file, frame_diff
+                    );
+                    is_spam = true;
+                    break;
+                } else {
+                    // Not spam, but older instance: trigger fade out
+                    commands
+                        .entity(entity)
+                        .insert(SpatialAudioFadeOut::new(0.3));
+                }
+            }
+        }
+
+        if is_spam {
+            continue;
+        }
+
         let dist = sound_event
             .position
             .map(|pos| player_position.distance(&pos))
@@ -64,6 +96,13 @@ pub fn spatial_audio_playback(
         // --- DRY LAYER ---
         let dry_id = commands
             .spawn((
+                SpatialAudioInstance {
+                    sound_file: sound_event.sound_file.clone(),
+                    is_reverb: false,
+                    initial_volume: dry_vol,
+                    spawn_time: now,
+                    spawn_frame: cur_frame,
+                },
                 AudioPlayer::<AudioSource>(asset_server.load(sound_event.sound_file.clone())),
                 PlaybackSettings {
                     mode: bevy::audio::PlaybackMode::Despawn,
@@ -79,9 +118,15 @@ pub fn spatial_audio_playback(
             .id();
 
         // --- REVERB LAYER ---
-        let reverb_file = sound_event.sound_file.replace("sounds/", "reverbs/");
         let rev_id = commands
             .spawn((
+                SpatialAudioInstance {
+                    sound_file: reverb_file.clone(),
+                    is_reverb: true,
+                    initial_volume: rev_vol,
+                    spawn_time: now,
+                    spawn_frame: cur_frame,
+                },
                 AudioPlayer::<AudioSource>(asset_server.load(reverb_file)),
                 PlaybackSettings {
                     mode: bevy::audio::PlaybackMode::Despawn,
@@ -108,6 +153,27 @@ pub fn spatial_audio_playback(
     measure.end_ms();
 }
 
+pub fn process_audio_fadeouts(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut q_fadeouts: Query<(
+        Entity,
+        &mut SpatialAudioFadeOut,
+        &SpatialAudioInstance,
+        Option<&mut AudioSink>,
+    )>,
+) {
+    for (entity, mut fadeout, instance, sink) in q_fadeouts.iter_mut() {
+        fadeout.timer.tick(time.delta());
+        if fadeout.timer.just_finished() {
+            commands.entity(entity).despawn();
+        } else if let Some(mut sink) = sink {
+            let volume = instance.initial_volume * (1.0 - fadeout.timer.fraction());
+            sink.set_volume(Volume::Linear(volume));
+        }
+    }
+}
+
 pub fn monitor_audio_pileup(
     q_audio_players: Query<&AudioPlayer<AudioSource>>,
     time: Res<Time>,
@@ -126,7 +192,7 @@ pub fn monitor_audio_pileup(
                 .unwrap_or_else(|| "unknown".to_string());
             *counts.entry(path).or_insert(0) += 1;
         }
-        let mut details: Vec<_> = counts.into_iter().collect();
+        let mut details: Vec<_> = counts.into_iter().filter(|(_, c)| *c > 1).collect();
         details.sort_by(|a, b| b.1.cmp(&a.1));
 
         warn!(
