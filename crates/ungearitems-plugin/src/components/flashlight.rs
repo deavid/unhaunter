@@ -125,7 +125,13 @@ pub(crate) fn update_flashlight_skin(
                 if locally_owned.is_some() {
                     flashlight.status = FlashlightStatus::Off;
                 }
-                ga.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
+                if !skin.overheat_sound_played {
+                    ga.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
+                    skin.overheat_sound_played = true;
+                }
+            }
+            if skin.inner_temp < 0.95 || flashlight.status == FlashlightStatus::Off {
+                skin.overheat_sound_played = false;
             }
         }
 
