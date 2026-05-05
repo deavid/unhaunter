@@ -46,6 +46,8 @@ pub struct FlashlightSkin {
     pub frame_counter: u8,
     pub rand: u8,
     pub output_power: f32,
+    /// Local flag to ensure the overheat sound only plays once per overheat event.
+    pub overheat_sound_played: bool,
 }
 
 impl Default for FlashlightSkin {
@@ -56,6 +58,7 @@ impl Default for FlashlightSkin {
             frame_counter: Default::default(),
             rand: Default::default(),
             output_power: 0.0,
+            overheat_sound_played: false,
         }
     }
 }
