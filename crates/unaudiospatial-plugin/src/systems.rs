@@ -111,14 +111,27 @@ pub fn spatial_audio_playback(
 pub fn monitor_audio_pileup(
     q_audio_players: Query<&AudioPlayer<AudioSource>>,
     time: Res<Time>,
+    asset_server: Res<AssetServer>,
     mut last_warn: Local<f32>,
 ) {
     let count = q_audio_players.iter().count();
     let now = time.elapsed_secs();
-    if count > 100 && now - *last_warn > 1.0 {
+    if count > 20 && now - *last_warn > 1.0 {
+        let mut counts: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::default();
+        for player in q_audio_players.iter() {
+            let path = asset_server
+                .get_path(&player.0)
+                .map(|p| p.to_string())
+                .unwrap_or_else(|| "unknown".to_string());
+            *counts.entry(path).or_insert(0) += 1;
+        }
+        let mut details: Vec<_> = counts.into_iter().collect();
+        details.sort_by(|a, b| b.1.cmp(&a.1));
+
         warn!(
-            "AUDIO PILEUP: {} active AudioPlayer entities detected!",
-            count
+            "AUDIO PILEUP: {} active AudioPlayer entities detected! Details: {:?}",
+            count, details
         );
         *last_warn = now;
     }
