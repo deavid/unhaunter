@@ -17,7 +17,8 @@ impl Plugin for UnhaunterSpatialAudioPlugin {
         if self.enable {
             app.add_systems(
                 Update,
-                spatial_audio_playback.run_if(in_state(UIContextState::InGame)),
+                (spatial_audio_playback, monitor_audio_pileup)
+                    .run_if(in_state(UIContextState::InGame)),
             );
         }
 

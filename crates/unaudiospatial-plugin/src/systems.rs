@@ -107,3 +107,19 @@ pub fn spatial_audio_playback(
     }
     measure.end_ms();
 }
+
+pub fn monitor_audio_pileup(
+    q_audio_players: Query<&AudioPlayer<AudioSource>>,
+    time: Res<Time>,
+    mut last_warn: Local<f32>,
+) {
+    let count = q_audio_players.iter().count();
+    let now = time.elapsed_secs();
+    if count > 100 && now - *last_warn > 1.0 {
+        warn!(
+            "AUDIO PILEUP: {} active AudioPlayer entities detected!",
+            count
+        );
+        *last_warn = now;
+    }
+}
