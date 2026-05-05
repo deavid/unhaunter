@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::sprite::Text2dShadow;
 use uninput_core::components::PlayerInput;
 use unplayer_core::colors;
 use unplayer_core::components::{MainPlayer, PlayerNameLabel, PlayerSprite};
@@ -12,12 +13,38 @@ struct PlayerNameLabelHydrated;
 
 fn hydrate_player_name_system(
     mut commands: Commands,
-    q_players: Query<(Entity, &PlayerSprite), Without<PlayerNameLabelHydrated>>,
+    q_players: Query<(Entity, &PlayerSprite, &Transform), Without<PlayerNameLabelHydrated>>,
     asset_server: Res<AssetServer>,
 ) {
-    for (entity, player_sprite) in q_players.iter() {
+    for (entity, player_sprite, player_transform) in q_players.iter() {
         let name = generate_deterministic_name(player_sprite.id);
         let font_handle = asset_server.load("fonts/overlock/Overlock-Regular.ttf");
+
+        // Player visuals are scaled during hydration (typically by 1.0 / player_rf).
+        // Compensate here so label size/offset stay stable regardless of parent scale.
+        let inverse_parent_scale = Vec3::new(
+            if player_transform.scale.x.abs() > f32::EPSILON {
+                1.0 / player_transform.scale.x
+            } else {
+                1.0
+            },
+            if player_transform.scale.y.abs() > f32::EPSILON {
+                1.0 / player_transform.scale.y
+            } else {
+                1.0
+            },
+            if player_transform.scale.z.abs() > f32::EPSILON {
+                1.0 / player_transform.scale.z
+            } else {
+                1.0
+            },
+        );
+        let label_offset = Vec3::new(0.0, -2.0, 0.01);
+        let compensated_offset = Vec3::new(
+            label_offset.x * inverse_parent_scale.x,
+            label_offset.y * inverse_parent_scale.y,
+            label_offset.z * inverse_parent_scale.z,
+        );
 
         commands.entity(entity).with_children(|parent| {
             parent
@@ -25,15 +52,23 @@ fn hydrate_player_name_system(
                     Text2d::new(name),
                     TextFont {
                         font: font_handle,
-                        font_size: 16.0,
+                        font_size: 21.0,
                         ..default()
                     },
-                    TextColor(Color::WHITE),
+                    TextColor(Color::WHITE.with_alpha(0.5)),
+                    Text2dShadow {
+                        color: Color::BLACK.with_alpha(0.5),
+                        offset: Vec2::new(1.5, -1.5),
+                    },
                     PlayerNameLabel,
                     // Position it below the character's feet.
                     // The character anchor is roughly (0.0, -0.4) in normalized sprite coords.
                     // In screen pixels it depends on rf, but (0, -18, 0.01) is a decent start.
-                    Transform::from_xyz(0.0, -18.0, 0.01),
+                    Transform {
+                        translation: compensated_offset,
+                        scale: inverse_parent_scale / 6.0,
+                        ..default()
+                    },
                     Visibility::Hidden,
                 ))
                 .insert(bevy::sprite::Anchor(Vec2::new(0.0, 0.5))); // TopCenter
@@ -127,7 +162,10 @@ fn update_player_name_visibility_system(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (hydrate_player_name_system, update_player_name_visibility_system)
+        (
+            hydrate_player_name_system,
+            update_player_name_visibility_system,
+        )
             .run_if(in_state(uncommon_states_core::UIContextState::InGame)),
     );
 }
