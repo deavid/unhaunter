@@ -3,6 +3,7 @@ use bevy::sprite::Text2dShadow;
 use uninput_core::components::PlayerInput;
 use unplayer_core::colors;
 use unplayer_core::components::{MainPlayer, PlayerNameLabel, PlayerSprite};
+use unrender_std::custom_material1::CustomMaterial1;
 use unreplicon_core::components::LobbyInfo;
 use unreplicon_core::identity::generate_deterministic_name;
 use unspatial_core::position::Position;
@@ -79,10 +80,19 @@ fn hydrate_player_name_system(
 
 fn update_player_name_visibility_system(
     q_main_player: Query<(Entity, &Position, &PlayerInput), With<MainPlayer>>,
-    q_other_players: Query<(Entity, &Position, &PlayerSprite), Without<MainPlayer>>,
+    q_other_players: Query<
+        (
+            Entity,
+            &Position,
+            &PlayerSprite,
+            &MeshMaterial2d<CustomMaterial1>,
+        ),
+        Without<MainPlayer>,
+    >,
     mut q_labels: Query<(&ChildOf, &mut Visibility, &mut TextColor), With<PlayerNameLabel>>,
     q_all_players: Query<&PlayerSprite>,
     q_lobby: Query<&LobbyInfo>,
+    materials1: Res<Assets<CustomMaterial1>>,
 ) {
     let Ok((main_entity, main_pos, main_input)) = q_main_player.single() else {
         return;
@@ -93,7 +103,14 @@ fn update_player_name_visibility_system(
 
     let mut best_target: Option<(Entity, f32)> = None;
 
-    for (entity, pos, _sprite) in q_other_players.iter() {
+    for (entity, pos, _sprite, mat_handle) in q_other_players.iter() {
+        if let Some(mat) = materials1.get(mat_handle) {
+            if mat.data.color.alpha < 0.9 {
+                continue;
+            }
+        } else {
+            continue;
+        }
         let delta = pos.delta(*main_pos);
         let dist = delta.distance();
         if dist > 8.0 {
