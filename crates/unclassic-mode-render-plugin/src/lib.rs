@@ -6,5 +6,6 @@
 pub(crate) mod camera;
 pub(crate) mod cleanup;
 pub(crate) mod hydration;
+pub(crate) mod player_names;
 
 pub mod plugin;
