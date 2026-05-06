@@ -9,7 +9,8 @@ use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 
-pub fn spatial_audio_playback(
+/// Minimum frame gap between two plays of the same sound to not be considered spam.
+const AUDIO_SPAM_FRAME_THRESHOLD: u32 = 5;
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
     qp: Query<&Position, With<SpatialListener2D>>,
@@ -21,7 +22,7 @@ pub fn spatial_audio_playback(
 ) {
     let measure = metrics::SOUND_PLAYBACK.time_measure();
     let now = time.elapsed_secs();
-    let cur_frame = (now * 60.0) as u32; // Fallback to time-based pseudo-frames
+    let cur_frame = (now * 60.0) as u32; // Time-based pseudo-frame counter
     let mut can_log = now - *last_error_log > 1.0;
     let Ok(player_position) = qp.single() else {
         if can_log {
@@ -45,7 +46,7 @@ pub fn spatial_audio_playback(
         for (entity, instance) in q_instances.iter() {
             if instance.sound_file == sound_event.sound_file || instance.sound_file == reverb_file {
                 let frame_diff = cur_frame.saturating_sub(instance.spawn_frame);
-                if !instance.is_reverb && frame_diff < 5 {
+                if !instance.is_reverb && frame_diff < AUDIO_SPAM_FRAME_THRESHOLD {
                     warn!(
                         "AUDIO SPAM: Sound '{}' triggered too rapidly ({} frames). Skipping.",
                         sound_event.sound_file, frame_diff
@@ -180,7 +181,7 @@ pub fn monitor_audio_pileup(
     let now = time.elapsed_secs();
     if count > 20 && now - *last_warn > 1.0 {
         let mut counts: std::collections::HashMap<String, usize> =
-            std::collections::HashMap::default();
+            std::collections::HashMap::new();
         for player in q_audio_players.iter() {
             let path = asset_server
                 .get_path(&player.sample)
