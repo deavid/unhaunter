@@ -34,7 +34,7 @@ pub(crate) fn compute_visibility(
     if map_size.0 == 0 || map_size.1 == 0 || map_size.2 == 0 {
         return;
     }
-    const Z_FACTOR: f32 = 2.0;
+    const Z_FACTOR: f32 = 6.0;
     queue.push_front((start.clone(), start.clone()));
     vis_field[start.ndidx()] = 1.0;
     while let Some((pos, pos2)) = queue.pop_back() {
@@ -57,13 +57,13 @@ pub(crate) fn compute_visibility(
             let ncf = collision_field[np];
             let npds = npos.to_position().distance_zf(pos_start, Z_FACTOR);
             let npref = npos.distance(&pos2) / 2.0;
-            let f = if npds < threshold {
+            let f = if npds < threshold && npos.z == start.z {
                 1.0
             } else {
                 ((npds - pds) / npref).clamp(0.0, 1.0).powf(1.0)
             };
             let mut cone_factor = 1.0;
-            if let (Some(dir_vec), true) = (dir_vec, npds > threshold) {
+            if let (Some(dir_vec), true) = (dir_vec, npds > threshold || npos.z != start.z) {
                 let displacement = (npos.to_position().to_vec3().truncate()
                     - pos_start.to_vec3().truncate())
                 .normalize_or_zero();
