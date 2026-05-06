@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use bevy_seedling::prelude::*;
 use ndarray::s;
 use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::resources::visibility_data::VisibilityData;
@@ -94,7 +95,7 @@ fn calculate_ambient_sound_volumes(
 /// 6. Applies mute effects from the ambient mute controller
 /// 7. Updates the actual AudioSink volumes for GameSound entities
 pub(crate) fn update_ambient_sound_volumes(
-    mut game_sound_query: Query<(&GameSound, &mut AudioSink)>,
+    mut game_sound_query: Query<(&GameSound, &mut VolumeNode)>,
     player_query: Query<
         (
             &Position,
@@ -107,7 +108,6 @@ pub(crate) fn update_ambient_sound_volumes(
     room_topology: Res<RoomTopology>,
     audio_settings: Res<Persistent<AudioSettings>>,
     ambient_mute_controller: Res<AmbientMuteController>,
-    global_volume: Res<bevy::audio::GlobalVolume>,
     time: Res<Time>,
 ) {
     // Get player position and viewer data
@@ -153,13 +153,13 @@ pub(crate) fn update_ambient_sound_volumes(
 
     // Volume scaling factors
     let volume_factor =
-        2.0 * master_volume_setting * ambient_volume_setting * global_volume.volume.to_linear();
+        2.0 * master_volume_setting * ambient_volume_setting;
 
     // Unified perceptual smoothing: 2.0 perceptual units per second (0 to 1 in 500ms) for most sounds
     let dt_secs = time.delta_secs();
 
     // Update each ambient sound entity
-    for (game_sound, mut audio_sink) in &mut game_sound_query {
+    for (game_sound, mut volume_node) in &mut game_sound_query {
         let (base_volume, speed) = match game_sound.class {
             SoundType::BackgroundHouse => (house_volume, 0.4), // 5x slower (2.5s)
             SoundType::BackgroundStreet => (street_volume, 0.4), // 5x slower (2.5s)
@@ -171,11 +171,11 @@ pub(crate) fn update_ambient_sound_volumes(
         let calculated_volume = base_volume * mute_multiplier;
 
         // Apply cubic-based smoothing for all tracks
-        let current_linear = audio_sink.volume().to_linear();
+        let current_linear = volume_node.volume.linear();
         let target_linear = calculated_volume * volume_factor;
         let new_volume = smooth_volume(current_linear, target_linear, speed, dt_secs);
 
-        // Apply to audio sink
-        audio_sink.set_volume(bevy::audio::Volume::Linear(new_volume.clamp(0.00001, 10.0)));
+        // Apply to volume node
+        volume_node.volume = Volume::Linear(new_volume.clamp(0.00001, 10.0));
     }
 }

@@ -1,6 +1,7 @@
 use crate::app_args::AppArgs;
 use bevy::ecs::schedule::ExecutorKind;
 use bevy::prelude::*;
+use bevy_seedling::prelude::*;
 use bevy::window::WindowResolution;
 use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
 use std::time::Duration;
@@ -152,7 +153,7 @@ pub fn app_build(args: AppArgs) -> App {
             schedule.set_executor_kind(ExecutorKind::SingleThreaded);
         });
     } else {
-        let mut default_plugins = DefaultPlugins.set(WindowPlugin {
+        let default_plugins = DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: format!("Unhaunter {}", plt::VERSION),
                 resolution: default_resolution(),
@@ -162,26 +163,26 @@ pub fn app_build(args: AppArgs) -> App {
             ..default()
         });
 
-        if mute {
-            info!("Audio muted via command line flag.");
-            default_plugins = default_plugins.set(bevy::audio::AudioPlugin {
-                global_volume: bevy::audio::GlobalVolume {
-                    volume: bevy::audio::Volume::Linear(0.0),
-                },
-                ..default()
-            });
-        }
-
         app.add_plugins(default_plugins.set(bevy::log::LogPlugin {
             level: bevy::log::Level::TRACE,
             filter,
             ..default()
         }));
 
+        let seedling_plugin = SeedlingPlugin::default();
+
         app.add_plugins((
             FrameTimeDiagnosticsPlugin::new(1024),
             CustomSpritePickingPlugin,
+            seedling_plugin,
         ));
+
+        if mute {
+            info!("Audio muted via command line flag.");
+            app.add_systems(PostStartup, |mut main_bus: Single<&mut VolumeNode, With<MainBus>>| {
+                main_bus.volume = Volume::Linear(0.0);
+            });
+        }
     }
 
     app.insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))

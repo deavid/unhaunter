@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use bevy_seedling::prelude::*;
 use uncommon_states_core::UIContextState;
 use uninput_core::states::InGameUiState;
 use unreplicon_core::components::MissionGoalEntity;
@@ -160,17 +161,17 @@ fn hold_button_system(
 
                     // Play sound
                     let sound_entity = commands
-                        .spawn(AudioPlayer::new(
-                            asset_server.load("sounds/fadein-progress-1000ms.ogg"),
+                        .spawn((
+                            SamplePlayer::new(asset_server.load("sounds/fadein-progress-1000ms.ogg")),
+                            sample_effects![VolumeNode {
+                                volume: Volume::Linear(
+                                    1.0 * audio_settings.volume_master.as_f32()
+                                        * audio_settings.volume_effects.as_f32(),
+                                ),
+                                ..default()
+                            }],
+                            SoundEffectsBus,
                         ))
-                        .insert(PlaybackSettings {
-                            mode: bevy::audio::PlaybackMode::Despawn,
-                            volume: bevy::audio::Volume::Linear(
-                                1.0 * audio_settings.volume_master.as_f32()
-                                    * audio_settings.volume_effects.as_f32(),
-                            ),
-                            ..default()
-                        })
                         .id();
 
                     // Store sound entity to stop it later

@@ -12,3 +12,4 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+bevy_seedling = { workspace = true }

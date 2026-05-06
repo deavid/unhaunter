@@ -12,5 +12,6 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+bevy_seedling = { workspace = true }
 bevy_asset_loader = { workspace = true }
 unbehavior-core = { workspace = true }

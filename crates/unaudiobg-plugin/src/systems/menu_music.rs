@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use bevy_seedling::prelude::*;
 use uncommon_states_core::UIContextState;
 use unsettings_core::audio::AudioSettings;
 
@@ -22,7 +23,6 @@ pub(crate) fn manage_title_song(
     mut q_sound: Query<&mut MenuSound>,
     app_state: Res<State<UIContextState>>,
     audio_settings: Res<Persistent<AudioSettings>>,
-    global_volume: Res<bevy::audio::GlobalVolume>,
 ) {
     let should_play_song = !matches!(app_state.get(), UIContextState::InGame);
 
@@ -35,23 +35,17 @@ pub(crate) fn manage_title_song(
     } else if should_play_song {
         // Only spawn the song if the volume is greater than 0
         let desired_volume = audio_settings.volume_music.as_f32()
-            * audio_settings.volume_master.as_f32()
-            * global_volume.volume.to_linear();
+            * audio_settings.volume_master.as_f32();
         if desired_volume > 0.0 {
-            commands
-                .spawn(MenuSound::default())
-                .insert(AudioPlayer::<AudioSource>(
-                    asset_server.load("music/unhaunter_intro.ogg"),
-                ))
-                .insert(PlaybackSettings {
-                    mode: bevy::audio::PlaybackMode::Loop,
-                    volume: bevy::audio::Volume::Linear(desired_volume),
-                    speed: 1.0,
-                    paused: false,
-                    spatial: false,
-                    spatial_scale: None,
+            commands.spawn((
+                MenuSound::default(),
+                SamplePlayer::new(asset_server.load("music/unhaunter_intro.ogg")).looping(),
+                sample_effects![VolumeNode {
+                    volume: Volume::Linear(desired_volume),
                     ..default()
-                });
+                }],
+                MusicPool,
+            ));
         }
     }
 }
@@ -60,20 +54,18 @@ pub(crate) fn manage_title_song(
 /// Fades out when MenuSound.despawn is true, fades in otherwise.
 pub(crate) fn despawn_sound(
     mut commands: Commands,
-    mut qs: Query<(Entity, &mut AudioSink, &MenuSound)>,
+    mut qs: Query<(Entity, &mut VolumeNode, &MenuSound)>,
     audio_settings: Res<Persistent<AudioSettings>>,
-    global_volume: Res<bevy::audio::GlobalVolume>,
     time: Res<Time>,
 ) {
-    for (entity, mut sink, menusound) in &mut qs {
-        let current_linear = sink.volume().to_linear();
+    for (entity, mut volume_node, menusound) in &mut qs {
+        let current_linear = volume_node.volume.linear();
 
         let target_linear = if menusound.despawn {
             0.0
         } else {
             audio_settings.volume_music.as_f32()
                 * audio_settings.volume_master.as_f32()
-                * global_volume.volume.to_linear()
         };
 
         let new_volume = smooth_volume(
@@ -83,7 +75,7 @@ pub(crate) fn despawn_sound(
             time.delta_secs(),
         );
 
-        sink.set_volume(bevy::audio::Volume::Linear(new_volume));
+        volume_node.volume = Volume::Linear(new_volume);
 
         if new_volume < 0.001 && menusound.despawn {
             commands.entity(entity).despawn();

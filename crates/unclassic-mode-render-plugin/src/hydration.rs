@@ -13,6 +13,7 @@ use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::ShadowCaster;
 use unrender_std::custom_material1::CustomMaterial1;
 use unrender_std::utils::quadcc::QuadCC;
+use unaudiospatial_core::listener::SpatialListener;
 use unreplicon_core::resources::LocalPlayer;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::perspective;
@@ -159,10 +160,8 @@ pub(crate) fn hydrate_players_system(
                 });
             }
             ec.insert(VisibilityData::default());
-            if let Some(audio_settings) = &p.audio_settings {
-                ec.insert(SpatialListener::new(
-                    -audio_settings.sound_output.to_ear_offset(),
-                ));
+            if p.audio_settings.is_some() {
+                ec.insert(SpatialListener::default());
             }
         } else {
             // Remote player visible on this screen — no input mapping, use null keys.

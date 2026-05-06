@@ -1,5 +1,6 @@
-use bevy::{audio::Volume, prelude::*, time::Stopwatch};
+use bevy::{prelude::*, time::Stopwatch};
 use bevy_persistent::Persistent;
+use bevy_seedling::prelude::*;
 use uncommon_app_core::random_seed;
 use unmission_core::events::LevelReadyEvent;
 use unplayer_core::components::MainPlayer;
@@ -194,25 +195,20 @@ fn walkie_talk(
         WalkieSoundState::Outro => "sounds/radio-off-zzt.ogg".to_string(),
     };
 
-    // For Bevy 0.15, we need to use AudioPlayer with the audio source asset
-    let audio_source = asset_server.load(&sound_file);
-
     commands
-        .spawn(AudioPlayer::new(audio_source)) // Use AudioPlayer constructor with Handle<AudioSource>
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Despawn,
-            volume: Volume::Linear(
-                walkie_volume
-                    * audio_settings.volume_voice_chat.as_f32()
-                    * audio_settings.volume_master.as_f32(),
-            ),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(new_state_unwrapped);
+        .spawn((
+            SamplePlayer::new(asset_server.load(&sound_file)),
+            sample_effects![VolumeNode {
+                volume: Volume::Linear(
+                    walkie_volume
+                        * audio_settings.volume_voice_chat.as_f32()
+                        * audio_settings.volume_master.as_f32(),
+                ),
+                ..default()
+            }],
+            new_state_unwrapped,
+            DefaultPool,
+        ));
 }
 
 pub(crate) fn app_setup(app: &mut App) {

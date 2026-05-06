@@ -1,9 +1,8 @@
 use crate::metrics;
-use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use bevy_seedling::prelude::*;
 use unaudiospatial_core::events::SoundEvent;
-use unaudiospatial_core::listener::SpatialListener;
 use unmetrics_core::metrics::SendMetric;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::perspective;
@@ -12,7 +11,7 @@ use unspatial_core::position::Position;
 pub fn spatial_audio_playback(
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
-    qp: Query<&Position, With<SpatialListener>>,
+    qp: Query<&Position, With<SpatialListener2D>>,
     mut commands: Commands,
     audio_settings: Res<Persistent<AudioSettings>>,
     time: Res<Time>,
@@ -51,6 +50,7 @@ pub fn spatial_audio_playback(
         // Reverb Volume: Stronger compensation to counteract Bevy and 'bloom' over distance
         let rev_fade = 0.6 / (1.0 + dist * 0.05);
         let rev_compensation = 1.0 + dist * 0.4;
+        let rev_compensation = rev_compensation.clamp(1.0, 4.0);
         let rev_proximity_fade = ((dist - 2.0) / 10.0).clamp(0.0, 1.0);
         let mut rev_vol =
             (base_vol * rev_fade * rev_compensation * rev_proximity_fade).clamp(0.0, 1.0);
@@ -61,48 +61,53 @@ pub fn spatial_audio_playback(
             rev_vol /= mono_div;
         }
 
-        // --- DRY LAYER ---
-        let dry_id = commands
-            .spawn((
-                AudioPlayer::<AudioSource>(asset_server.load(sound_event.sound_file.clone())),
-                PlaybackSettings {
-                    mode: bevy::audio::PlaybackMode::Despawn,
-                    volume: bevy::audio::Volume::Linear(dry_vol),
-                    speed: 1.0,
-                    paused: false,
-                    spatial: sound_event.position.is_some()
-                        && audio_settings.sound_output != SoundOutput::Mono,
-                    spatial_scale: Some(SpatialScale::new(0.005)),
-                    ..default()
-                },
-            ))
-            .id();
+        let is_spatial = sound_event.position.is_some()
+            && audio_settings.sound_output != SoundOutput::Mono;
 
-        // --- REVERB LAYER ---
-        let reverb_file = sound_event.sound_file.replace("sounds/", "reverbs/");
-        let rev_id = commands
-            .spawn((
-                AudioPlayer::<AudioSource>(asset_server.load(reverb_file)),
-                PlaybackSettings {
-                    mode: bevy::audio::PlaybackMode::Despawn,
-                    volume: bevy::audio::Volume::Linear(rev_vol),
-                    speed: 1.0,
-                    paused: false,
-                    spatial: sound_event.position.is_some()
-                        && audio_settings.sound_output != SoundOutput::Mono,
-                    // Smaller scale makes the reverb feel "wider" and less like a point source
-                    spatial_scale: Some(SpatialScale::new(0.001)),
-                    ..default()
-                },
-            ))
-            .id();
-
+        let mut transform = None;
         if let Some(position) = sound_event.position {
             let mut spos_vec = perspective::to_screen_coord(position);
             spos_vec.z -= 10.0 / audio_settings.sound_output.to_ear_offset();
-            let transform = Transform::from_translation(spos_vec);
-            commands.entity(dry_id).insert(transform);
-            commands.entity(rev_id).insert(transform);
+            transform = Some(Transform::from_translation(spos_vec));
+        }
+
+        // --- DRY LAYER ---
+        let mut dry_cmd = commands.spawn((
+            SamplePlayer::new(asset_server.load(sound_event.sound_file.clone())),
+            sample_effects![
+                VolumeNode {
+                    volume: Volume::Linear(dry_vol),
+                    ..default()
+                },
+                SpatialBasicNode::default()
+            ],
+            SpatialPool,
+        ));
+
+        if is_spatial {
+            if let Some(t) = transform {
+                dry_cmd.insert(t);
+            }
+        }
+
+        // --- REVERB LAYER ---
+        let reverb_file = sound_event.sound_file.replace("sounds/", "reverbs/");
+        let mut rev_cmd = commands.spawn((
+            SamplePlayer::new(asset_server.load(reverb_file)),
+            sample_effects![
+                VolumeNode {
+                    volume: Volume::Linear(rev_vol),
+                    ..default()
+                },
+                SpatialBasicNode::default()
+            ],
+            SpatialPool,
+        ));
+
+        if is_spatial {
+            if let Some(t) = transform {
+                rev_cmd.insert(t);
+            }
         }
     }
     measure.end_ms();

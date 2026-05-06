@@ -1,6 +1,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use bevy_seedling::prelude::*;
 use bevy_replicon::prelude::Remote;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
@@ -126,22 +127,17 @@ fn truckui_event_handle(
                         );
                     }
 
-                    commands
-                        .spawn(AudioPlayer::new(
-                            asset_server.load("sounds/effects-dingdingding.ogg"),
-                        ))
-                        .insert(PlaybackSettings {
-                            mode: bevy::audio::PlaybackMode::Despawn,
-                            volume: bevy::audio::Volume::Linear(
+                    commands.spawn((
+                        SamplePlayer::new(asset_server.load("sounds/effects-dingdingding.ogg")),
+                        sample_effects![VolumeNode {
+                            volume: Volume::Linear(
                                 1.0 * audio_settings.volume_master.as_f32()
                                     * audio_settings.volume_effects.as_f32(),
                             ),
-                            speed: 1.0,
-                            paused: false,
-                            spatial: false,
-                            spatial_scale: None,
-                            ..Default::default()
-                        });
+                            ..default()
+                        }],
+                        SoundEffectsBus,
+                    ));
                 } else {
                     warn!(
                         "REPELLENT: CraftRepellent requested but no ghost type selected in journal"

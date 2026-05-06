@@ -38,6 +38,7 @@ unmetrics-core = { workspace = true }
 unmission-core = { workspace = true }
 
 bevy = { workspace = true }
+bevy_seedling = { workspace = true }
 bevy_replicon = { workspace = true }
 bevy_platform = { workspace = true }
 rand = { workspace = true }

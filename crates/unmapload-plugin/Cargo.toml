@@ -26,6 +26,7 @@ unmapload-core = { workspace = true }
 unmission-core = { workspace = true }
 
 bevy = { workspace = true }
+bevy_seedling = { workspace = true }
 bevy_asset_loader = { workspace = true }
 bevy_platform = { workspace = true }
 ndarray = { workspace = true }
