@@ -11,6 +11,8 @@ use unspatial_core::position::Position;
 
 /// Minimum frame gap between two plays of the same sound to not be considered spam.
 const AUDIO_SPAM_FRAME_THRESHOLD: u32 = 5;
+
+pub fn spatial_audio_playback(
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
     qp: Query<&Position, With<SpatialListener2D>>,
@@ -93,8 +95,8 @@ const AUDIO_SPAM_FRAME_THRESHOLD: u32 = 5;
             rev_vol /= mono_div;
         }
 
-        let is_spatial = sound_event.position.is_some()
-            && audio_settings.sound_output != SoundOutput::Mono;
+        let is_spatial =
+            sound_event.position.is_some() && audio_settings.sound_output != SoundOutput::Mono;
 
         let mut transform = None;
         if let Some(position) = sound_event.position {
@@ -123,10 +125,8 @@ const AUDIO_SPAM_FRAME_THRESHOLD: u32 = 5;
             SpatialPool,
         ));
 
-        if is_spatial {
-            if let Some(t) = transform {
-                dry_cmd.insert(t);
-            }
+        if is_spatial && let Some(t) = transform {
+            dry_cmd.insert(t);
         }
 
         // --- REVERB LAYER ---
@@ -149,10 +149,8 @@ const AUDIO_SPAM_FRAME_THRESHOLD: u32 = 5;
             SpatialPool,
         ));
 
-        if is_spatial {
-            if let Some(t) = transform {
-                rev_cmd.insert(t);
-            }
+        if is_spatial && let Some(t) = transform {
+            rev_cmd.insert(t);
         }
     }
     measure.end_ms();
@@ -180,8 +178,7 @@ pub fn monitor_audio_pileup(
     let count = q_audio_players.iter().count();
     let now = time.elapsed_secs();
     if count > 20 && now - *last_warn > 1.0 {
-        let mut counts: std::collections::HashMap<String, usize> =
-            std::collections::HashMap::new();
+        let mut counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
         for player in q_audio_players.iter() {
             let path = asset_server
                 .get_path(&player.sample)

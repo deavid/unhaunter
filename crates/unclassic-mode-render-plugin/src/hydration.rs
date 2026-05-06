@@ -1,6 +1,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use unaudiospatial_core::listener::SpatialListener;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::entity::{GameSprite, MapTileSprite, ResolutionFactor};
 use unboard_core::resources::visibility_data::VisibilityData;
@@ -13,7 +14,6 @@ use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::ShadowCaster;
 use unrender_std::custom_material1::CustomMaterial1;
 use unrender_std::utils::quadcc::QuadCC;
-use unaudiospatial_core::listener::SpatialListener;
 use unreplicon_core::resources::LocalPlayer;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::perspective;
@@ -161,7 +161,7 @@ pub(crate) fn hydrate_players_system(
             }
             ec.insert(VisibilityData::default());
             if p.audio_settings.is_some() {
-                ec.insert(SpatialListener::default());
+                ec.insert(SpatialListener);
             }
         } else {
             // Remote player visible on this screen — no input mapping, use null keys.
