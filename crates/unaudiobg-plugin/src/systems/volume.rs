@@ -95,7 +95,8 @@ fn calculate_ambient_sound_volumes(
 /// 6. Applies mute effects from the ambient mute controller
 /// 7. Updates the actual AudioSink volumes for GameSound entities
 pub(crate) fn update_ambient_sound_volumes(
-    mut game_sound_query: Query<(&GameSound, &mut VolumeNode)>,
+    game_sound_query: Query<(&GameSound, &SampleEffects)>,
+    mut q_volume: Query<&mut VolumeNode>,
     player_query: Query<
         (
             &Position,
@@ -152,30 +153,31 @@ pub(crate) fn update_ambient_sound_volumes(
     let mute_multiplier = ambient_mute_controller.current_multiplier();
 
     // Volume scaling factors
-    let volume_factor =
-        2.0 * master_volume_setting * ambient_volume_setting;
+    let volume_factor = 2.0 * master_volume_setting * ambient_volume_setting;
 
     // Unified perceptual smoothing: 2.0 perceptual units per second (0 to 1 in 500ms) for most sounds
     let dt_secs = time.delta_secs();
 
     // Update each ambient sound entity
-    for (game_sound, mut volume_node) in &mut game_sound_query {
-        let (base_volume, speed) = match game_sound.class {
-            SoundType::BackgroundHouse => (house_volume, 0.4), // 5x slower (2.5s)
-            SoundType::BackgroundStreet => (street_volume, 0.4), // 5x slower (2.5s)
-            SoundType::HeartBeat => (heartbeat_volume, 2.0),
-            SoundType::Insane => (insane_volume, 2.0),
-        };
+    for (game_sound, effects) in &game_sound_query {
+        if let Ok(mut volume_node) = q_volume.get_effect_mut(effects) {
+            let (base_volume, speed) = match game_sound.class {
+                SoundType::BackgroundHouse => (house_volume, 0.4), // 5x slower (2.5s)
+                SoundType::BackgroundStreet => (street_volume, 0.4), // 5x slower (2.5s)
+                SoundType::HeartBeat => (heartbeat_volume, 2.0),
+                SoundType::Insane => (insane_volume, 2.0),
+            };
 
-        // Calculate target volume: base * mute (settings are applied in volume_factor)
-        let calculated_volume = base_volume * mute_multiplier;
+            // Calculate target volume: base * mute (settings are applied in volume_factor)
+            let calculated_volume = base_volume * mute_multiplier;
 
-        // Apply cubic-based smoothing for all tracks
-        let current_linear = volume_node.volume.linear();
-        let target_linear = calculated_volume * volume_factor;
-        let new_volume = smooth_volume(current_linear, target_linear, speed, dt_secs);
+            // Apply cubic-based smoothing for all tracks
+            let current_linear = volume_node.volume.linear();
+            let target_linear = calculated_volume * volume_factor;
+            let new_volume = smooth_volume(current_linear, target_linear, speed, dt_secs);
 
-        // Apply to volume node
-        volume_node.volume = Volume::Linear(new_volume.clamp(0.00001, 10.0));
+            // Apply to volume node
+            volume_node.volume = Volume::Linear(new_volume.clamp(0.00001, 10.0));
+        }
     }
 }

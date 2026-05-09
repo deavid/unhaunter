@@ -1,8 +1,8 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use bevy_seedling::prelude::*;
 use bevy_replicon::prelude::Remote;
+use bevy_seedling::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
@@ -136,7 +136,7 @@ fn truckui_event_handle(
                             ),
                             ..default()
                         }],
-                        SoundEffectsBus,
+                        DefaultPool,
                     ));
                 } else {
                     warn!(

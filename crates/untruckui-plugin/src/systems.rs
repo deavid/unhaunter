@@ -162,7 +162,9 @@ fn hold_button_system(
                     // Play sound
                     let sound_entity = commands
                         .spawn((
-                            SamplePlayer::new(asset_server.load("sounds/fadein-progress-1000ms.ogg")),
+                            SamplePlayer::new(
+                                asset_server.load("sounds/fadein-progress-1000ms.ogg"),
+                            ),
                             sample_effects![VolumeNode {
                                 volume: Volume::Linear(
                                     1.0 * audio_settings.volume_master.as_f32()
@@ -170,7 +172,7 @@ fn hold_button_system(
                                 ),
                                 ..default()
                             }],
-                            SoundEffectsBus,
+                            DefaultPool,
                         ))
                         .id();
 

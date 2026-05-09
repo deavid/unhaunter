@@ -4,4 +4,5 @@
 //! Manages spawning, volume calculations, muting effects, and lifecycle.
 
 pub mod plugin;
+pub(crate) mod pools;
 pub(crate) mod systems;

@@ -1,9 +1,9 @@
 use crate::app_args::AppArgs;
 use bevy::ecs::schedule::ExecutorKind;
 use bevy::prelude::*;
-use bevy_seedling::prelude::*;
 use bevy::window::WindowResolution;
 use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
+use bevy_seedling::prelude::*;
 use std::time::Duration;
 use uncommon_app_core::platform::plt;
 
@@ -169,19 +169,20 @@ pub fn app_build(args: AppArgs) -> App {
             ..default()
         }));
 
-        let seedling_plugin = SeedlingPlugin::default();
-
         app.add_plugins((
             FrameTimeDiagnosticsPlugin::new(1024),
             CustomSpritePickingPlugin,
-            seedling_plugin,
+            SeedlingPlugin::default(),
         ));
 
         if mute {
             info!("Audio muted via command line flag.");
-            app.add_systems(PostStartup, |mut main_bus: Single<&mut VolumeNode, With<MainBus>>| {
-                main_bus.volume = Volume::Linear(0.0);
-            });
+            app.add_systems(
+                PostStartup,
+                |mut main_bus: Single<&mut VolumeNode, With<MainBus>>| {
+                    main_bus.volume = Volume::Linear(0.0);
+                },
+            );
         }
     }
 
