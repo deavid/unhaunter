@@ -1,12 +1,16 @@
 use crate::metrics;
+use crate::plugin::UnSpatialPool;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use bevy_seedling::firewheel::dsp::distance_attenuation::DistanceAttenuation;
+use bevy_seedling::nodes::itd::{ItdConfig, ItdNode};
 use bevy_seedling::prelude::*;
 use unaudiospatial_core::components::{SpatialAudioFadeOut, SpatialAudioInstance};
 use unaudiospatial_core::events::SoundEvent;
+use unaudiospatial_core::listener::SpatialListener;
 use unmetrics_core::metrics::SendMetric;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
-use unspatial_core::perspective;
+use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
 /// Minimum frame gap between two plays of the same sound to not be considered spam.
@@ -15,7 +19,7 @@ const AUDIO_SPAM_FRAME_THRESHOLD: u32 = 5;
 pub fn spatial_audio_playback(
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
-    qp: Query<&Position, With<SpatialListener2D>>,
+    qp: Query<(&Position, &Direction), With<SpatialListener>>,
     mut commands: Commands,
     audio_settings: Res<Persistent<AudioSettings>>,
     time: Res<Time>,
@@ -26,7 +30,7 @@ pub fn spatial_audio_playback(
     let now = time.elapsed_secs();
     let cur_frame = (now * 60.0) as u32; // Time-based pseudo-frame counter
     let mut can_log = now - *last_error_log > 1.0;
-    let Ok(player_position) = qp.single() else {
+    let Ok((player_position, player_dir)) = qp.single() else {
         if can_log {
             warn!("player not found!");
             *last_error_log = now;
@@ -34,6 +38,12 @@ pub fn spatial_audio_playback(
         measure.end_ms();
         return;
     };
+
+    let aim = Vec2::new(player_dir.dx, player_dir.dy);
+    let fwd = aim.normalize_or_zero();
+    let fwd = if fwd == Vec2::ZERO { Vec2::Y } else { fwd };
+    let right = Vec2::new(fwd.y, -fwd.x);
+
     for sound_event in sound_events.read() {
         if !player_position.is_finite() && can_log {
             error!("Player position is not finite: {player_position:?}");
@@ -70,24 +80,66 @@ pub fn spatial_audio_playback(
 
         let dist = sound_event
             .position
-            .map(|pos| player_position.distance(&pos))
+            .map(|pos| player_position.distance_zf(&pos, 12.5))
             .unwrap_or(0.0);
+
+        let pos_val = sound_event.position.unwrap_or(*player_position);
+        let delta = pos_val.delta(*player_position);
+        let local_x = delta.dx * right.x + delta.dy * right.y;
+        let local_y = delta.dx * fwd.x + delta.dy * fwd.y;
+        let local_z = delta.dz * 12.5;
+
+        // normalize direction for ITD
+        let length = (local_x * local_x + local_y * local_y + local_z * local_z)
+            .sqrt()
+            .max(0.0001);
+        let direction = Vec3::new(local_x / length, local_y / length, local_z / length);
 
         let base_vol = sound_event.volume
             * audio_settings.volume_effects.as_f32()
             * audio_settings.volume_master.as_f32();
 
-        // Dry Volume: Pure natural decay (no compensation)
-        let dry_fade = (1.0 - (dist / 15.0).powi(2)).max(0.0);
-        let mut dry_vol = (base_vol * dry_fade).clamp(0.0, 1.0);
+        // Dry Volume: We let Firewheel's spatializer apply distance attenuation natively via offset.
+        let mut dry_vol = base_vol.clamp(0.0, 1.0);
 
-        // Reverb Volume: Stronger compensation to counteract Bevy and 'bloom' over distance
-        let rev_fade = 0.6 / (1.0 + dist * 0.05);
-        let rev_compensation = 1.0 + dist * 0.4;
-        let rev_compensation = rev_compensation.clamp(1.0, 4.0);
-        let rev_proximity_fade = ((dist - 2.0) / 10.0).clamp(0.0, 1.0);
-        let mut rev_vol =
-            (base_vol * rev_fade * rev_compensation * rev_proximity_fade).clamp(0.0, 1.0);
+        // Reverb Volume: Ramps up to a maximum multiplier over 20 tiles (bloom),
+        // and relies on Firewheel's spatializer for the actual distance falloff.
+        let rev_max_ratio = 2.0; // Boosted so it can be heard
+        let rev_ramp = (dist / 20.0).clamp(0.0, 1.0);
+        let mut rev_vol = (base_vol * rev_max_ratio * rev_ramp).clamp(0.0, 1.0);
+
+        // --- MUFFLING CALCULATION (Parallel resistance formula) ---
+        // We use 1/M_total = 1/M_dist + 1/M_behind + 1/M_floor.
+        // This ensures the heaviest muffle always dominates, but they combined naturally.
+
+        // 1. Distance Muffle Component
+        let dist_ratio = (dist / 200.0).clamp(0.0, 1.0);
+        let base_rev_muffle_hz = (9.9034f32 - (5.9914f32 * dist_ratio)).exp();
+
+        let dry_dist_ratio = (dist / 100.0).clamp(0.0, 1.0); // Dry muffles twice as fast
+        let base_dry_muffle_hz = (9.9034f32 - (5.9914f32 * dry_dist_ratio)).exp();
+
+        // 2. Behind Player Component (Only applies to Dry signal, Reverb is ambient)
+        let inv_behind = if direction.y < 0.0 {
+            let behind_factor = -direction.y; // 0.0 at sides, 1.0 directly behind
+            let penalty_curve = behind_factor * behind_factor;
+            penalty_curve / 800.0 // At 180 degrees, pulls constraint down precisely towards ~800Hz
+        } else {
+            0.0
+        };
+
+        // 3. Different Floor Component (Applies to both Dry and Reverb)
+        let inv_floor = if delta.dz.abs() > 0.8 {
+            let z_factor = ((delta.dz.abs() - 0.8) / 0.7).clamp(0.0, 1.0); // Full penalty by 1.5 tiles up/down
+            z_factor / 400.0 // Floors muffle extremely heavily (towards ~400Hz max)
+        } else {
+            0.0
+        };
+
+        // Complete combinations!
+        let rev_muffle_hz = (1.0 / ((1.0 / base_rev_muffle_hz) + inv_floor)).clamp(20.0, 20_480.0);
+        let dry_muffle_hz =
+            (1.0 / ((1.0 / base_dry_muffle_hz) + inv_behind + inv_floor)).clamp(20.0, 20_480.0);
 
         if audio_settings.sound_output == SoundOutput::Mono {
             let mono_div = 1.0 + dist * 0.4;
@@ -98,15 +150,14 @@ pub fn spatial_audio_playback(
         let is_spatial =
             sound_event.position.is_some() && audio_settings.sound_output != SoundOutput::Mono;
 
-        let mut transform = None;
-        if let Some(position) = sound_event.position {
-            let mut spos_vec = perspective::to_screen_coord(position);
-            spos_vec.z -= 10.0 / audio_settings.sound_output.to_ear_offset();
-            transform = Some(Transform::from_translation(spos_vec));
-        }
+        let offset = if is_spatial {
+            bevy_seedling::firewheel::vector::Vec3::new(local_x, local_y, local_z)
+        } else {
+            bevy_seedling::firewheel::vector::Vec3::new(0.0, 0.0, 0.0)
+        };
 
         // --- DRY LAYER ---
-        let mut dry_cmd = commands.spawn((
+        commands.spawn((
             SpatialAudioInstance {
                 sound_file: sound_event.sound_file.clone(),
                 is_reverb: false,
@@ -120,17 +171,28 @@ pub fn spatial_audio_playback(
                     volume: Volume::Linear(dry_vol),
                     ..default()
                 },
-                SpatialBasicNode::default()
+                SpatialBasicNode {
+                    offset,
+                    muffle_cutoff_hz: dry_muffle_hz,
+                    smooth_seconds: 0.0005,
+                    downmix: false,
+                    panning_threshold: 0.3,
+                    ..default()
+                },
+                (
+                    ItdNode { direction },
+                    ItdConfig {
+                        inter_ear_distance: 0.1715,
+                        ..default()
+                    }
+                )
             ],
-            SpatialPool,
+            UnSpatialPool,
         ));
 
-        if is_spatial && let Some(t) = transform {
-            dry_cmd.insert(t);
-        }
-
         // --- REVERB LAYER ---
-        let mut rev_cmd = commands.spawn((
+
+        commands.spawn((
             SpatialAudioInstance {
                 sound_file: reverb_file.clone(),
                 is_reverb: true,
@@ -144,14 +206,28 @@ pub fn spatial_audio_playback(
                     volume: Volume::Linear(rev_vol),
                     ..default()
                 },
-                SpatialBasicNode::default()
+                SpatialBasicNode {
+                    offset,
+                    muffle_cutoff_hz: rev_muffle_hz,
+                    distance_attenuation: DistanceAttenuation {
+                        distance_gain_factor: 0.25,
+                        ..default()
+                    },
+                    smooth_seconds: 0.0005,
+                    downmix: false,
+                    panning_threshold: 0.3,
+                    ..default()
+                },
+                (
+                    ItdNode { direction },
+                    ItdConfig {
+                        inter_ear_distance: 0.1715,
+                        ..default()
+                    }
+                )
             ],
-            SpatialPool,
+            UnSpatialPool,
         ));
-
-        if is_spatial && let Some(t) = transform {
-            rev_cmd.insert(t);
-        }
     }
     measure.end_ms();
 }

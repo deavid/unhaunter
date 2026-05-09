@@ -1,6 +1,8 @@
 use crate::metrics;
 use crate::systems::*;
 use bevy::prelude::*;
+use bevy_seedling::nodes::itd::ItdNode;
+use bevy_seedling::prelude::*;
 use unaudiospatial_core::events::SoundEvent;
 use unaudiospatial_core::listener::SpatialListener;
 use uncommon_states_core::UIContextState;
@@ -9,12 +11,30 @@ pub struct UnhaunterSpatialAudioPlugin {
     pub enable: bool,
 }
 
+#[derive(PoolLabel, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct UnSpatialPool;
+
+fn setup_unspatial_pool(mut commands: Commands) {
+    commands
+        .spawn((
+            SamplerPool(UnSpatialPool),
+            Name::new("UnHaunter Spatial Pool"),
+            sample_effects![
+                VolumeNode::default(),
+                SpatialBasicNode::default(),
+                ItdNode::default()
+            ],
+        ))
+        .connect(SoundEffectsBus);
+}
+
 impl Plugin for UnhaunterSpatialAudioPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SpatialListener>();
         app.add_message::<SoundEvent>();
 
         if self.enable {
+            app.add_systems(Startup, setup_unspatial_pool);
             app.add_systems(
                 Update,
                 (
