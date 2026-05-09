@@ -25,6 +25,7 @@ use unreplicon_core::resources::{AuthorityRole, DisconnectRequest, LobbyPresence
 const PROTOCOL_ID: u64 = 0x556e_6861_756e_7465;
 
 /// Maximum simultaneous connections a server will accept.
+#[cfg(not(target_arch = "wasm32"))]
 const MAX_CLIENTS: usize = 12;
 
 pub(super) fn app_setup(app: &mut App) {

@@ -3,6 +3,7 @@ use bevy::ecs::schedule::ExecutorKind;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use bevy::{app::ScheduleRunnerPlugin, diagnostic::FrameTimeDiagnosticsPlugin};
+use bevy_seedling::firewheel::cpal::CpalConfig;
 use bevy_seedling::prelude::*;
 use std::time::Duration;
 use uncommon_app_core::platform::plt;
@@ -168,11 +169,31 @@ pub fn app_build(args: AppArgs) -> App {
             filter,
             ..default()
         }));
+        // For WASM we set a bigger audio buffer hint to prevent crackling
+        #[cfg(target_arch = "wasm32")]
+        let cpal_config = CpalConfig {
+            output: bevy_seedling::firewheel::cpal::CpalOutputConfig {
+                desired_block_frames: Some(4096),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        #[cfg(not(target_arch = "wasm32"))]
+        let cpal_config = CpalConfig {
+            output: bevy_seedling::firewheel::cpal::CpalOutputConfig {
+                desired_block_frames: None,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
 
         app.add_plugins((
             FrameTimeDiagnosticsPlugin::new(1024),
             CustomSpritePickingPlugin,
-            SeedlingPlugin::default(),
+            SeedlingPlugin {
+                stream_config: cpal_config,
+                ..Default::default()
+            },
         ));
 
         if mute {
