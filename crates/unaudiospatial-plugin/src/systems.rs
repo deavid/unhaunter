@@ -87,9 +87,18 @@ pub fn spatial_audio_playback(
 
         let pos_val = sound_event.position.unwrap_or(*player_position);
         let delta = pos_val.delta(*player_position);
-        let local_x = delta.dx * right.x + delta.dy * right.y;
-        let local_y = delta.dx * fwd.x + delta.dy * fwd.y;
-        let local_z = delta.dz * 12.5;
+
+        // Apply spatial dampening for close sounds so they don't pan extremely.
+        // Front-back needs ~0.25 units to be highly noticeable, left-right ~2.0 units.
+        let damp_lr = (dist / 2.0).clamp(0.0, 1.0);
+        let damp_fb = (dist / 0.25).clamp(0.0, 1.0);
+
+        let o_local_x = delta.dx * right.x + delta.dy * right.y;
+        let o_local_y = delta.dx * fwd.x + delta.dy * fwd.y;
+
+        let local_x = o_local_x * damp_lr;
+        let local_y = o_local_y * damp_fb;
+        let local_z = delta.dz * 12.5 * damp_lr;
 
         // normalize direction for ITD
         let length = (local_x * local_x + local_y * local_y + local_z * local_z)
