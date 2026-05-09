@@ -195,20 +195,19 @@ fn walkie_talk(
         WalkieSoundState::Outro => "sounds/radio-off-zzt.ogg".to_string(),
     };
 
-    commands
-        .spawn((
-            SamplePlayer::new(asset_server.load(&sound_file)),
-            sample_effects![VolumeNode {
-                volume: Volume::Linear(
-                    walkie_volume
-                        * audio_settings.volume_voice_chat.as_f32()
-                        * audio_settings.volume_master.as_f32(),
-                ),
-                ..default()
-            }],
-            new_state_unwrapped,
-            DefaultPool,
-        ));
+    commands.spawn((
+        SamplePlayer::new(asset_server.load(&sound_file)),
+        sample_effects![VolumeNode {
+            volume: Volume::Linear(
+                walkie_volume
+                    * audio_settings.volume_voice_chat.as_f32()
+                    * audio_settings.volume_master.as_f32(),
+            ),
+            ..default()
+        }],
+        new_state_unwrapped,
+        DefaultPool,
+    ));
 }
 
 pub(crate) fn app_setup(app: &mut App) {

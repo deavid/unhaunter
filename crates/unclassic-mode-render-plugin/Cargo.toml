@@ -30,6 +30,5 @@ unspatial-core = { workspace = true }
 unaudiospatial-core = { workspace = true }
 untmxmap-core = { workspace = true }
 bevy = { workspace = true }
-bevy_seedling = { workspace = true }
 bevy-persistent = { workspace = true }
 bevy_replicon = { workspace = true }

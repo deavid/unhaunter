@@ -1,6 +1,5 @@
 use bevy::asset::AssetEvent;
 use bevy::prelude::*;
-use bevy_seedling::prelude::*;
 use untmxmap_core::assets::index::AssetIdx;
 use untmxmap_core::assets::tmxmap::TmxMap;
 use untmxmap_core::assets::tsxsheet::TsxSheet;
@@ -44,7 +43,6 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         (
             log_asset_events::<Image>,
-            log_asset_events::<AudioSample>,
             log_asset_events::<Font>,
             log_asset_events::<TextureAtlasLayout>,
             log_asset_events::<Mesh>,

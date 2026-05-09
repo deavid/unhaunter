@@ -7920,7 +7920,6 @@ name = "unaudiobg-core"
 version = "0.4.0-dev"
 dependencies = [
  "bevy",
- "bevy_seedling",
 ]
 
 [[package]]
@@ -7945,7 +7944,6 @@ name = "unaudiospatial-core"
 version = "0.4.0-dev"
 dependencies = [
  "bevy",
- "bevy_seedling",
  "unspatial-core",
 ]
 
@@ -8113,7 +8111,6 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_replicon",
- "bevy_seedling",
  "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
@@ -8875,7 +8872,6 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_platform",
  "bevy_replicon",
- "bevy_seedling",
  "ndarray",
  "unbehavior",
  "unbehavior-core",
