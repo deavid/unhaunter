@@ -1,11 +1,9 @@
 use bevy::prelude::*;
-use bevy_persistent::Persistent;
-use bevy_seedling::prelude::*;
+use unaudiospatial_core::components::{AudioCategory, FlatAudio};
 use uncommon_states_core::UIContextState;
 use uninput_core::states::InGameUiState;
 use unreplicon_core::components::MissionGoalEntity;
 use unreplicon_core::repellent_tracker::RepellentCraftTracker;
-use unsettings_core::audio::AudioSettings;
 use untruck_core::components::truck_ui_button::TruckUIButton;
 use untruck_core::components::truck_ui_markers::TruckUI;
 use untruck_core::events::truck::TruckUIEvent;
@@ -53,8 +51,6 @@ fn truck_button_cooldown_system(time: Res<Time>, mut q_button: Query<&mut TruckU
 fn hold_button_system(
     mut commands: Commands,
     time: Res<Time>,
-    asset_server: Res<AssetServer>,
-    audio_settings: Res<Persistent<AudioSettings>>,
     mut interaction_query: Query<
         (&Interaction, &mut TruckUIButton, &Children, Entity),
         With<Button>,
@@ -161,19 +157,11 @@ fn hold_button_system(
 
                     // Play sound
                     let sound_entity = commands
-                        .spawn((
-                            SamplePlayer::new(
-                                asset_server.load("sounds/fadein-progress-1000ms.ogg"),
-                            ),
-                            sample_effects![VolumeNode {
-                                volume: Volume::Linear(
-                                    1.0 * audio_settings.volume_master.as_f32()
-                                        * audio_settings.volume_effects.as_f32(),
-                                ),
-                                ..default()
-                            }],
-                            DefaultPool,
-                        ))
+                        .spawn((FlatAudio {
+                            sound_file: "sounds/fadein-progress-1000ms.ogg".to_string(),
+                            volume_multiplier: 1.0,
+                            category: AudioCategory::Effects,
+                        },))
                         .id();
 
                     // Store sound entity to stop it later

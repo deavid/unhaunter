@@ -1,8 +1,10 @@
 use crate::metrics;
 use crate::systems::*;
 use bevy::prelude::*;
+use bevy_asset_loader::prelude::*;
 use bevy_seedling::nodes::itd::ItdNode;
 use bevy_seedling::prelude::*;
+use unaudiospatial_core::assets::MissionAssets;
 use unaudiospatial_core::events::SoundEvent;
 use unaudiospatial_core::listener::SpatialListener;
 use uncommon_states_core::UIContextState;
@@ -33,8 +35,13 @@ impl Plugin for UnhaunterSpatialAudioPlugin {
         app.register_type::<SpatialListener>();
         app.add_message::<SoundEvent>();
 
+        app.add_loading_state(
+            LoadingState::new(UIContextState::EngineBoot).load_collection::<MissionAssets>(),
+        );
+
         if self.enable {
             app.add_systems(Startup, setup_unspatial_pool);
+            app.add_systems(Update, attach_flat_audio);
             app.add_systems(
                 Update,
                 (

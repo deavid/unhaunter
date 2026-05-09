@@ -5,7 +5,9 @@ use bevy_persistent::Persistent;
 use bevy_seedling::firewheel::dsp::distance_attenuation::DistanceAttenuation;
 use bevy_seedling::nodes::itd::{ItdConfig, ItdNode};
 use bevy_seedling::prelude::*;
-use unaudiospatial_core::components::{SpatialAudioFadeOut, SpatialAudioInstance};
+use unaudiospatial_core::components::{
+    AudioCategory, FlatAudio, SpatialAudioFadeOut, SpatialAudioInstance,
+};
 use unaudiospatial_core::events::SoundEvent;
 use unaudiospatial_core::listener::SpatialListener;
 use unmetrics_core::metrics::SendMetric;
@@ -270,5 +272,30 @@ pub fn monitor_audio_pileup(
             count, details
         );
         *last_warn = now;
+    }
+}
+
+pub(crate) fn attach_flat_audio(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    audio_settings: Res<Persistent<AudioSettings>>,
+    q_flat: Query<(Entity, &FlatAudio), Added<FlatAudio>>,
+) {
+    for (entity, flat) in q_flat.iter() {
+        let base_vol = audio_settings.volume_master.as_f32() * flat.volume_multiplier;
+        let final_vol = match flat.category {
+            AudioCategory::Effects => base_vol * audio_settings.volume_effects.as_f32(),
+            AudioCategory::VoiceChat => base_vol * audio_settings.volume_voice_chat.as_f32(),
+            AudioCategory::Master => base_vol,
+        };
+
+        commands.entity(entity).insert((
+            SamplePlayer::new(asset_server.load(&flat.sound_file)),
+            sample_effects![VolumeNode {
+                volume: Volume::Linear(final_vol),
+                ..default()
+            }],
+            DefaultPool,
+        ));
     }
 }

@@ -1,10 +1,8 @@
 use bevy::{prelude::*, time::Stopwatch};
-use bevy_persistent::Persistent;
-use bevy_seedling::prelude::*;
+use unaudiospatial_core::components::{AudioCategory, FlatAudio};
 use uncommon_app_core::random_seed;
 use unmission_core::events::LevelReadyEvent;
 use unplayer_core::components::MainPlayer;
-use unsettings_core::audio::AudioSettings;
 use untruck_core::components::in_truck::InTruck;
 use unwalkie_core::components::WalkieText;
 use unwalkie_core::events::hint::OnScreenHintEvent;
@@ -32,8 +30,6 @@ fn state_tracking(
 
 fn walkie_talk(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    audio_settings: Res<Persistent<AudioSettings>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut hint_event_writer: MessageWriter<OnScreenHintEvent>,
     mut walkie_talking_writer: MessageWriter<WalkieTalkingEvent>,
@@ -196,17 +192,12 @@ fn walkie_talk(
     };
 
     commands.spawn((
-        SamplePlayer::new(asset_server.load(&sound_file)),
-        sample_effects![VolumeNode {
-            volume: Volume::Linear(
-                walkie_volume
-                    * audio_settings.volume_voice_chat.as_f32()
-                    * audio_settings.volume_master.as_f32(),
-            ),
-            ..default()
-        }],
+        FlatAudio {
+            sound_file,
+            volume_multiplier: walkie_volume,
+            category: AudioCategory::VoiceChat,
+        },
         new_state_unwrapped,
-        DefaultPool,
     ));
 }
 

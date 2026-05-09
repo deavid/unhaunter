@@ -7944,6 +7944,8 @@ name = "unaudiospatial-core"
 version = "0.4.0-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
+ "bevy_seedling",
  "unspatial-core",
 ]
 
@@ -7953,6 +7955,7 @@ version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_asset_loader",
  "bevy_seedling",
  "unaudiospatial-core",
  "uncommon-states-core",
@@ -8860,7 +8863,6 @@ version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
- "bevy_seedling",
  "unbehavior-core",
 ]
 
@@ -9388,10 +9390,9 @@ name = "untruck-plugin"
 version = "0.4.0-dev"
 dependencies = [
  "bevy",
- "bevy-persistent",
  "bevy_asset_loader",
  "bevy_replicon",
- "bevy_seedling",
+ "unaudiospatial-core",
  "unbehavior-core",
  "uncommon-states-core",
  "undifficulty-core",
@@ -9403,7 +9404,6 @@ dependencies = [
  "unmission-core",
  "unplayer-core",
  "unreplicon-core",
- "unsettings-core",
  "untruck-core",
 ]
 
@@ -9415,7 +9415,7 @@ dependencies = [
  "bevy-persistent",
  "bevy_asset_loader",
  "bevy_platform",
- "bevy_seedling",
+ "unaudiospatial-core",
  "unclassic-mode-core",
  "uncommon-app-core",
  "uncommon-states-core",
@@ -9431,7 +9431,6 @@ dependencies = [
  "unprofile-core",
  "unrender-std",
  "unreplicon-core",
- "unsettings-core",
  "untruck-core",
  "unvitals-core",
  "unwalkie-core",
@@ -9508,9 +9507,9 @@ dependencies = [
  "bevy-persistent",
  "bevy_platform",
  "bevy_replicon",
- "bevy_seedling",
  "enum-iterator",
  "rand 0.10.1",
+ "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
  "uncommon-app-core",
@@ -9530,7 +9529,6 @@ dependencies = [
  "unprofile-core",
  "unrender-std",
  "unreplicon-core",
- "unsettings-core",
  "unspatial-core",
  "untruck-core",
  "unvitals-core",
