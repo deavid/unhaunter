@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use unspatial_core::position::Position;
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum InteractionExecutionType {
@@ -42,6 +43,15 @@ pub struct InteractionRequestMessage {
     pub ietype: InteractionExecutionType,
     /// If `Some`, force the interaction to transition to this specific tile UID.
     pub force_tuid: Option<u32>,
+}
+
+/// Sent by the authoritative interaction domain when an environmental interaction
+/// should produce a sound effect on all players.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct PlayInteractionAudioMessage {
+    pub sound_file: String,
+    pub volume: f32,
+    pub position: Position,
 }
 
 impl RoomChangedEvent {

@@ -1,11 +1,10 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::AppRuleExt;
+use bevy_replicon::prelude::{AppRuleExt, Channel, ServerMessageAppExt};
 use unghost_core::components::logic::ghost_breach::GhostBreach;
 use unghost_core::components::logic::ghost_death::GhostDeathSignal;
 use unghost_core::components::logic::ghost_influence::GhostInfluence;
 use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::components::logic::interaction::{InteractionMotion, Locked};
-use unghost_core::components::logic::interaction_sound::GhostInteractionSoundCue;
 use unghost_core::components::logic::red_light_charge::GhostRedLightCharge;
 use unghost_core::components::logic::vocalization::GhostVocalization;
 use unghost_core::components::presentation::spectral::SpectralClarity;
@@ -14,8 +13,8 @@ use uninvestigation_core::components::ghost_guess::GhostGuess;
 use uninvestigation_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 
 use unghost_core::events::{
-    EvidenceClarityThresholdCrossed, GhostActualTypeChanged, GhostBreakerSparkRequest,
-    GhostInteractionEvent, JournalEvidenceToggled, JournalGhostToggled,
+    EvidenceClarityThresholdCrossed, GhostActualTypeChanged, GhostAudioMessage,
+    GhostBreakerSparkRequest, GhostInteractionEvent, JournalEvidenceToggled, JournalGhostToggled,
 };
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
@@ -28,6 +27,7 @@ pub struct UnhaunterGhostLogicPlugin;
 impl Plugin for UnhaunterGhostLogicPlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<GhostInteractionEvent>();
+        app.add_server_message::<GhostAudioMessage>(Channel::Ordered);
         app.add_message::<JournalEvidenceToggled>();
         app.add_message::<JournalGhostToggled>();
         app.add_message::<EvidenceClarityThresholdCrossed>();
@@ -44,7 +44,6 @@ impl Plugin for UnhaunterGhostLogicPlugin {
         app.replicate::<InteractionMotion>();
         app.replicate::<Locked>();
         app.replicate::<SpectralClarity>();
-        app.replicate::<GhostInteractionSoundCue>();
         app.replicate::<GhostVocalization>();
         crate::systems::hydration::app_setup(app);
         crate::systems::evidence_decay::app_setup(app);

@@ -3,12 +3,20 @@ use unbehavior_core::components::RoomStateDelta;
 use unboard_core::resources::roomdb::RoomState;
 use unboard_core::resources::roomdb::{RoomStateMap, RoomTopology};
 use uninteraction_core::events::InteractionExecutionType;
+use uninteraction_core::events::PlayInteractionAudioMessage;
 use unmapload_core::resources::SpriteDB;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use unbehavior_core::behavior::Interactive;
+
+#[derive(Debug, Clone, Default)]
+pub struct InteractionUpdateOutcome {
+    pub changed: bool,
+    pub audio: Option<PlayInteractionAudioMessage>,
+}
 
 /// The `InteractiveStuff` system handles interactions between the player and
 /// interactive objects in the game world, such as doors, switches, lamps, and the
@@ -36,6 +44,24 @@ pub struct InteractiveStuff<'w, 's> {
 }
 
 impl InteractiveStuff<'_, '_> {
+    fn build_audio_message(
+        interactive: Option<&Interactive>,
+        next_behavior: &Behavior,
+        item_pos: &Position,
+    ) -> Option<PlayInteractionAudioMessage> {
+        let interactive = interactive?;
+        let sound_file = interactive.sound_for_moving_into_state(next_behavior);
+        if sound_file.is_empty() {
+            return None;
+        }
+
+        Some(PlayInteractionAudioMessage {
+            sound_file,
+            volume: 1.0,
+            position: *item_pos,
+        })
+    }
+
     /// Internal helper to update the Behavior component of an entity to match a specific
     /// tile identifier. Visual updates are handled reactively by the Renderer system.
     fn apply_behavior_update(
@@ -78,8 +104,9 @@ impl InteractiveStuff<'_, '_> {
         entity: Entity,
         item_pos: &Position,
         behavior: &Behavior,
+        interactive: Option<&Interactive>,
         room_state: &RoomStateDelta,
-    ) -> bool {
+    ) -> InteractionUpdateOutcome {
         let item_bpos = item_pos.to_board_position();
         let item_roombpos = BoardPosition {
             x: item_bpos.x + room_state.room_delta.x,
@@ -94,37 +121,40 @@ impl InteractiveStuff<'_, '_> {
             .unwrap_or_default();
 
         let Some(main_room_state) = self.roomstate.room_state.get(&room_name) else {
-            return false;
+            return InteractionUpdateOutcome::default();
         };
 
         if behavior.state().to_bool() == main_room_state.to_bool() {
-            return false;
+            return InteractionUpdateOutcome::default();
         }
 
         // We need to find the correct variant for this state.
         let cvo = behavior.key_cvo();
         let Some(bf) = self.bf.as_ref() else {
-            return false;
+            return InteractionUpdateOutcome::default();
         };
         let variants = bf.cvo_idx.get(&cvo).cloned().unwrap_or_default();
 
         for variant_tuid in variants.iter() {
-            let is_match = bf
-                .map_tile
-                .get(variant_tuid)
-                .map(|other| other.behavior.state().to_bool() == main_room_state.to_bool())
-                .unwrap_or(false);
+            let Some(other) = bf.map_tile.get(variant_tuid) else {
+                continue;
+            };
+            let is_match = other.behavior.state().to_bool() == main_room_state.to_bool();
 
             if is_match {
                 trace!(
                     "synchronize_entity: Syncing entity {:?} to state {:?} (tuid={:?})",
                     entity, main_room_state, variant_tuid
                 );
+                let audio = Self::build_audio_message(interactive, &other.behavior, item_pos);
                 self.apply_behavior_update(entity, variant_tuid, behavior);
-                return true;
+                return InteractionUpdateOutcome {
+                    changed: true,
+                    audio,
+                };
             }
         }
-        false
+        InteractionUpdateOutcome::default()
     }
 
     /// Executes an interaction with an interactive object.
@@ -157,10 +187,11 @@ impl InteractiveStuff<'_, '_> {
         entity: Entity,
         item_pos: &Position,
         behavior: &Behavior,
+        interactive: Option<&Interactive>,
         room_state: Option<&RoomStateDelta>,
         ietype: InteractionExecutionType,
         force_tuid: Option<u32>,
-    ) -> bool {
+    ) -> InteractionUpdateOutcome {
         if ietype == InteractionExecutionType::ReadRoomState {
             warn!(
                 "execute_interaction: ReadRoomState is deprecated, use RoomStateSyncEvent instead."
@@ -175,7 +206,7 @@ impl InteractiveStuff<'_, '_> {
         let cvo = behavior.key_cvo();
 
         let Some(bf) = self.bf.as_ref() else {
-            return false;
+            return InteractionUpdateOutcome::default();
         };
         let variants = bf.cvo_idx.get(&cvo).cloned().unwrap_or_default();
         for other_tuid in variants.iter() {
@@ -186,7 +217,7 @@ impl InteractiveStuff<'_, '_> {
             } else if *other_tuid == tuid {
                 continue;
             }
-            let (beh_state, _other_tileset, _other_tileuid, _other_behavior) = {
+            let (beh_state, _other_tileset, _other_tileuid, other_behavior) = {
                 let other = bf.map_tile.get(other_tuid).unwrap();
                 (
                     other.behavior.state(),
@@ -232,9 +263,13 @@ impl InteractiveStuff<'_, '_> {
                 entity, other_tuid
             );
 
+            let audio = Self::build_audio_message(interactive, &other_behavior, item_pos);
             self.apply_behavior_update(entity, other_tuid, behavior);
 
-            return true;
+            return InteractionUpdateOutcome {
+                changed: true,
+                audio,
+            };
         }
         if let Some(ftuid) = force_tuid {
             // This currently happens because the host seems to send an interaction per tile position.
@@ -243,6 +278,6 @@ impl InteractiveStuff<'_, '_> {
                 ftuid, cvo, entity
             );
         }
-        false
+        InteractionUpdateOutcome::default()
     }
 }

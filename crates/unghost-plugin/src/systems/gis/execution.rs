@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::prelude::*;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
@@ -7,8 +8,9 @@ use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use uncommon_app_core::random_seed;
 use unghost_core::components::logic::interaction::{InteractionMotion, Locked};
-use unghost_core::components::logic::interaction_sound::GhostInteractionSoundCue;
-use unghost_core::events::{GhostBreakerSparkRequest, GhostInteractionEvent, GhostInteractionType};
+use unghost_core::events::{
+    GhostAudioMessage, GhostBreakerSparkRequest, GhostInteractionEvent, GhostInteractionType,
+};
 use uninteraction_core::events::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interaction::ExecuteInteractionEvent;
 use unmetrics_core::metrics::SendMetric;
@@ -175,6 +177,7 @@ fn ghost_interaction_execution_system(
     mut commands: Commands,
     time: Res<Time>,
     mut ev_ghost_interaction: MessageReader<GhostInteractionEvent>,
+    mut ev_audio: MessageWriter<ToClients<GhostAudioMessage>>,
     mut ev_breaker_sparks: MessageWriter<GhostBreakerSparkRequest>,
     q_targets: Query<(
         &Behavior,
@@ -217,8 +220,7 @@ fn ghost_interaction_execution_system(
 
             GhostInteractionType::DoorSlam => {
                 execute_door_slam_interaction(
-                    &mut commands,
-                    current_secs,
+                    &mut ev_audio,
                     &mut ev_interaction_executor,
                     &mut ev_bdr,
                     &q_targets,
@@ -228,8 +230,7 @@ fn ghost_interaction_execution_system(
 
             GhostInteractionType::DoorCreak => {
                 execute_door_creak_interaction(
-                    &mut commands,
-                    current_secs,
+                    &mut ev_audio,
                     &mut ev_interaction_executor,
                     &mut ev_bdr,
                     &q_targets,
@@ -241,6 +242,7 @@ fn ghost_interaction_execution_system(
                 if let Some(destination) = event.destination {
                     execute_throw_interaction(
                         &mut commands,
+                        &mut ev_audio,
                         current_secs,
                         &q_targets,
                         &q_objects,
@@ -260,6 +262,7 @@ fn ghost_interaction_execution_system(
             GhostInteractionType::Nudge => {
                 execute_nudge_interaction(
                     &mut commands,
+                    &mut ev_audio,
                     current_secs,
                     &q_targets,
                     &q_objects,
@@ -274,6 +277,7 @@ fn ghost_interaction_execution_system(
                 if let Some(destination) = event.destination {
                     execute_haunted_move_interaction(
                         &mut commands,
+                        &mut ev_audio,
                         current_secs,
                         &q_targets,
                         &q_objects,
@@ -291,13 +295,18 @@ fn ghost_interaction_execution_system(
             }
 
             GhostInteractionType::Lock => {
-                execute_lock_interaction(&mut commands, current_secs, &q_targets, event.target);
+                execute_lock_interaction(
+                    &mut commands,
+                    &mut ev_audio,
+                    current_secs,
+                    &q_targets,
+                    event.target,
+                );
             }
 
             GhostInteractionType::TripBreaker => {
                 execute_trip_breaker_interaction(
-                    &mut commands,
-                    current_secs,
+                    &mut ev_audio,
                     &mut ev_breaker_sparks,
                     &mut ev_interaction_executor,
                     &mut ev_bdr,
@@ -309,6 +318,22 @@ fn ghost_interaction_execution_system(
     }
 
     measure.end_ms();
+}
+
+fn broadcast_ghost_audio(
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
+    sound_file: &str,
+    volume: f32,
+    position: Position,
+) {
+    ev_audio.write(ToClients {
+        mode: SendMode::Broadcast,
+        message: GhostAudioMessage {
+            sound_file: sound_file.to_string(),
+            volume,
+            position,
+        },
+    });
 }
 
 /// Execute toggle interaction (lights, switches)
@@ -340,8 +365,7 @@ fn execute_toggle_interaction(
 
 /// Execute door slam interaction (fast door closure)
 fn execute_door_slam_interaction(
-    commands: &mut Commands,
-    current_secs: f64,
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
@@ -358,12 +382,7 @@ fn execute_door_slam_interaction(
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });
-
-        commands.entity(target).insert(GhostInteractionSoundCue {
-            position: *position,
-            kind: GhostInteractionType::DoorSlam,
-            triggered_at: current_secs,
-        });
+        broadcast_ghost_audio(ev_audio, "sounds/door-close.ogg", 1.5, *position);
     } else {
         error!(
             "GIS execution -> DoorSlam interaction for {:?} FAILED: target entity not found or missing components",
@@ -374,8 +393,7 @@ fn execute_door_slam_interaction(
 
 /// Execute door creak interaction (slow door movement)
 fn execute_door_creak_interaction(
-    commands: &mut Commands,
-    current_secs: f64,
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
@@ -392,12 +410,7 @@ fn execute_door_creak_interaction(
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });
-
-        commands.entity(target).insert(GhostInteractionSoundCue {
-            position: *position,
-            kind: GhostInteractionType::DoorCreak,
-            triggered_at: current_secs,
-        });
+        broadcast_ghost_audio(ev_audio, "sounds/door_creak_slow.ogg", 0.7, *position);
     } else {
         error!(
             "GIS execution -> DoorCreak interaction for {:?} FAILED: target entity not found or missing components",
@@ -409,6 +422,7 @@ fn execute_door_creak_interaction(
 /// Execute throw interaction (object flies through air)
 fn execute_throw_interaction(
     commands: &mut Commands,
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     current_secs: f64,
     q_targets: &Query<(
         &Behavior,
@@ -443,12 +457,12 @@ fn execute_throw_interaction(
                 0.5,
             );
             commands.entity(target).insert(motion);
-
-            commands.entity(target).insert(GhostInteractionSoundCue {
-                position: *current_position,
-                kind: GhostInteractionType::Throw,
-                triggered_at: current_secs,
-            });
+            broadcast_ghost_audio(
+                ev_audio,
+                "sounds/object_throw_generic.ogg",
+                0.8,
+                *current_position,
+            );
         } else {
             warn!(
                 "GIS execution -> Throw interaction for {:?} FAILED: could not find valid destination after 30 attempts (blocked paths, objects too close, or no valid tiles near ({:.2}, {:.2}, {:.2}))",
@@ -466,6 +480,7 @@ fn execute_throw_interaction(
 /// Execute nudge interaction (small object movement)
 fn execute_nudge_interaction(
     commands: &mut Commands,
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     current_secs: f64,
     q_targets: &Query<(
         &Behavior,
@@ -513,12 +528,12 @@ fn execute_nudge_interaction(
         };
 
         commands.entity(target).insert(motion);
-
-        commands.entity(target).insert(GhostInteractionSoundCue {
-            position: *current_position,
-            kind: GhostInteractionType::Nudge,
-            triggered_at: current_secs,
-        });
+        broadcast_ghost_audio(
+            ev_audio,
+            "sounds/object_nudge_1.ogg",
+            0.6,
+            *current_position,
+        );
     } else {
         error!(
             "GIS execution -> Nudge interaction for {:?} FAILED: target entity not found or missing components",
@@ -530,6 +545,7 @@ fn execute_nudge_interaction(
 /// Execute haunted move interaction (slow object slide)
 fn execute_haunted_move_interaction(
     commands: &mut Commands,
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     current_secs: f64,
     q_targets: &Query<(
         &Behavior,
@@ -564,12 +580,12 @@ fn execute_haunted_move_interaction(
                 4.5,
             );
             commands.entity(target).insert(motion);
-
-            commands.entity(target).insert(GhostInteractionSoundCue {
-                position: *current_position,
-                kind: GhostInteractionType::HauntedMove,
-                triggered_at: current_secs,
-            });
+            broadcast_ghost_audio(
+                ev_audio,
+                "sounds/object_drag_wood.ogg",
+                0.9,
+                *current_position,
+            );
         } else {
             warn!(
                 "GIS execution -> HauntedMove interaction for {:?} FAILED: could not find valid destination after 30 attempts (blocked paths, objects too close, or no valid tiles near ({:.2}, {:.2}, {:.2}))",
@@ -587,6 +603,7 @@ fn execute_haunted_move_interaction(
 /// Execute lock interaction (temporarily lock a door)
 fn execute_lock_interaction(
     commands: &mut Commands,
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     current_secs: f64,
     q_targets: &Query<(
         &Behavior,
@@ -602,12 +619,7 @@ fn execute_lock_interaction(
         commands
             .entity(target)
             .insert(Locked::new(current_secs, 10.0));
-
-        commands.entity(target).insert(GhostInteractionSoundCue {
-            position: *position,
-            kind: GhostInteractionType::Lock,
-            triggered_at: current_secs,
-        });
+        broadcast_ghost_audio(ev_audio, "sounds/door_lock_heavy.ogg", 0.9, *position);
     } else {
         error!(
             "GIS execution -> Lock interaction for {:?} FAILED: target entity not found or missing components",
@@ -618,8 +630,7 @@ fn execute_lock_interaction(
 
 /// Execute trip breaker interaction (turn off main power)
 fn execute_trip_breaker_interaction(
-    commands: &mut Commands,
-    current_secs: f64,
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     ev_breaker_sparks: &mut MessageWriter<GhostBreakerSparkRequest>,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
@@ -637,13 +648,7 @@ fn execute_trip_breaker_interaction(
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });
-
-        // Play breaker trip sound effect
-        commands.entity(target).insert(GhostInteractionSoundCue {
-            position: *position,
-            kind: GhostInteractionType::TripBreaker,
-            triggered_at: current_secs,
-        });
+        broadcast_ghost_audio(ev_audio, "sounds/switch-on-2.ogg", 1.0, *position);
 
         ev_breaker_sparks.write(GhostBreakerSparkRequest {
             position: *position,

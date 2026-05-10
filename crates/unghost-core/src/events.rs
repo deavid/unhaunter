@@ -77,3 +77,11 @@ pub struct GhostInteractionEvent {
 pub struct GhostBreakerSparkRequest {
     pub position: Position,
 }
+
+/// Sent by authoritative ghost logic when a ghost-caused sound should play on all clients.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct GhostAudioMessage {
+    pub sound_file: String,
+    pub volume: f32,
+    pub position: Position,
+}

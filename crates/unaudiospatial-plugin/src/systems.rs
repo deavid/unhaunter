@@ -8,7 +8,7 @@ use bevy_seedling::prelude::*;
 use unaudiospatial_core::components::{
     AudioCategory, FlatAudio, SpatialAudioDelayedDespawn, SpatialAudioInstance,
 };
-use unaudiospatial_core::events::SoundEvent;
+use unaudiospatial_core::events::{LocalSoundEvent, SoundEvent};
 use unaudiospatial_core::listener::SpatialListener;
 use unmetrics_core::metrics::SendMetric;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
@@ -100,6 +100,197 @@ pub(crate) fn compute_spatial_params(
     }
 }
 
+fn play_sound_event(
+    sound_event: &SoundEvent,
+    player_position: &Position,
+    player_dir: &Direction,
+    audio_settings: &Persistent<AudioSettings>,
+    asset_server: &AssetServer,
+    commands: &mut Commands,
+    q_instances: &Query<(Entity, &SpatialAudioInstance), Without<SpatialAudioDelayedDespawn>>,
+    cur_frame: u32,
+    now: f32,
+) {
+    // Deduplication & Spam Detection
+    let mut is_spam = false;
+    let reverb_file = sound_event.sound_file.replace("sounds/", "reverbs/");
+
+    for (entity, instance) in q_instances.iter() {
+        if instance.sound_file == sound_event.sound_file || instance.sound_file == reverb_file {
+            let frame_diff = cur_frame.saturating_sub(instance.spawn_frame);
+            if !instance.is_reverb && frame_diff < AUDIO_SPAM_FRAME_THRESHOLD {
+                warn!(
+                    "AUDIO SPAM: Sound '{}' triggered too rapidly ({} frames). Skipping.",
+                    sound_event.sound_file, frame_diff
+                );
+                is_spam = true;
+                break;
+            } else {
+                commands
+                    .entity(entity)
+                    .insert(SpatialAudioDelayedDespawn::new(0.3));
+            }
+        }
+    }
+
+    if is_spam {
+        return;
+    }
+
+    let dist = sound_event
+        .position
+        .map(|pos| player_position.distance_zf(&pos, 12.5))
+        .unwrap_or(0.0);
+
+    let is_mono = audio_settings.sound_output == SoundOutput::Mono;
+    let params = compute_spatial_params(player_position, player_dir, sound_event.position, is_mono);
+
+    let base_vol = sound_event.volume
+        * audio_settings.volume_effects.as_f32()
+        * audio_settings.volume_master.as_f32();
+
+    let mut dry_vol = base_vol.clamp(0.0, 1.0);
+
+    let rev_max_ratio = 2.0;
+    let rev_ramp = (dist / 20.0).clamp(0.0, 1.0);
+    let mut rev_vol = (base_vol * rev_max_ratio * rev_ramp).clamp(0.0, 1.0);
+
+    if is_mono {
+        let mono_div = 1.0 + dist * 0.4;
+        dry_vol /= mono_div;
+        rev_vol /= mono_div;
+    }
+
+    let direction = params.direction;
+    let offset = params.offset;
+    let muffle_hz = params.muffle_cutoff_hz;
+    let panning_threshold = params.panning_threshold;
+
+    trace!("ITD direction: {direction:?}");
+
+    commands.spawn((
+        SpatialAudioInstance {
+            sound_file: sound_event.sound_file.clone(),
+            is_reverb: false,
+            initial_volume: dry_vol,
+            spawn_time: now,
+            spawn_frame: cur_frame,
+            position: sound_event.position,
+        },
+        SamplePlayer::new(asset_server.load(sound_event.sound_file.clone())),
+        sample_effects![
+            VolumeNode {
+                volume: Volume::Linear(dry_vol),
+                smooth_seconds: 0.0005,
+                ..default()
+            },
+            SpatialBasicNode {
+                offset,
+                muffle_cutoff_hz: muffle_hz,
+                smooth_seconds: 0.0005,
+                downmix: false,
+                panning_threshold,
+                ..default()
+            },
+            (
+                ItdNode { direction },
+                ItdConfig {
+                    inter_ear_distance: 0.11,
+                    ..default()
+                }
+            )
+        ],
+        UnSpatialPool,
+    ));
+
+    if rev_vol > 0.001 {
+        commands.spawn((
+            SpatialAudioInstance {
+                sound_file: reverb_file.clone(),
+                is_reverb: true,
+                initial_volume: rev_vol,
+                spawn_time: now,
+                spawn_frame: cur_frame,
+                position: sound_event.position,
+            },
+            SamplePlayer::new(asset_server.load(reverb_file)),
+            sample_effects![
+                VolumeNode {
+                    volume: Volume::Linear(rev_vol),
+                    smooth_seconds: 0.0005,
+                    ..default()
+                },
+                SpatialBasicNode {
+                    offset,
+                    muffle_cutoff_hz: muffle_hz,
+                    distance_attenuation: DistanceAttenuation {
+                        distance_gain_factor: 0.25,
+                        ..default()
+                    },
+                    smooth_seconds: 0.0005,
+                    downmix: false,
+                    panning_threshold,
+                    ..default()
+                },
+                (
+                    ItdNode { direction },
+                    ItdConfig {
+                        inter_ear_distance: 0.11,
+                        ..default()
+                    }
+                )
+            ],
+            UnSpatialPool,
+        ));
+    }
+}
+
+pub fn local_spatial_audio_playback(
+    mut sound_events: MessageReader<LocalSoundEvent>,
+    asset_server: Res<AssetServer>,
+    qp: Query<(&Position, &Direction), With<SpatialListener>>,
+    mut commands: Commands,
+    audio_settings: Res<Persistent<AudioSettings>>,
+    time: Res<Time>,
+    mut last_error_log: Local<f32>,
+    q_instances: Query<(Entity, &SpatialAudioInstance), Without<SpatialAudioDelayedDespawn>>,
+) {
+    let measure = metrics::SOUND_PLAYBACK.time_measure();
+    let now = time.elapsed_secs();
+    let cur_frame = (now * 60.0) as u32;
+    let mut can_log = now - *last_error_log > 1.0;
+    let Ok((player_position, player_dir)) = qp.single() else {
+        if can_log {
+            warn!("player not found!");
+            *last_error_log = now;
+        }
+        measure.end_ms();
+        return;
+    };
+
+    for sound_event in sound_events.read() {
+        if !player_position.is_finite() && can_log {
+            error!("Player position is not finite: {player_position:?}");
+            *last_error_log = now;
+            can_log = false;
+        }
+
+        let replicated_view = SoundEvent::from(sound_event);
+        play_sound_event(
+            &replicated_view,
+            player_position,
+            player_dir,
+            &audio_settings,
+            &asset_server,
+            &mut commands,
+            &q_instances,
+            cur_frame,
+            now,
+        );
+    }
+    measure.end_ms();
+}
+
 pub fn spatial_audio_playback(
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
@@ -130,147 +321,17 @@ pub fn spatial_audio_playback(
             can_log = false;
         }
 
-        // Deduplication & Spam Detection
-        let mut is_spam = false;
-        let reverb_file = sound_event.sound_file.replace("sounds/", "reverbs/");
-
-        for (entity, instance) in q_instances.iter() {
-            if instance.sound_file == sound_event.sound_file || instance.sound_file == reverb_file {
-                let frame_diff = cur_frame.saturating_sub(instance.spawn_frame);
-                if !instance.is_reverb && frame_diff < AUDIO_SPAM_FRAME_THRESHOLD {
-                    warn!(
-                        "AUDIO SPAM: Sound '{}' triggered too rapidly ({} frames). Skipping.",
-                        sound_event.sound_file, frame_diff
-                    );
-                    is_spam = true;
-                    break;
-                } else {
-                    // Not spam, but older instance: trigger fade out
-                    commands
-                        .entity(entity)
-                        .insert(SpatialAudioDelayedDespawn::new(0.3));
-                }
-            }
-        }
-
-        if is_spam {
-            continue;
-        }
-
-        let dist = sound_event
-            .position
-            .map(|pos| player_position.distance_zf(&pos, 12.5))
-            .unwrap_or(0.0);
-
-        let is_mono = audio_settings.sound_output == SoundOutput::Mono;
-        let params =
-            compute_spatial_params(player_position, player_dir, sound_event.position, is_mono);
-
-        let base_vol = sound_event.volume
-            * audio_settings.volume_effects.as_f32()
-            * audio_settings.volume_master.as_f32();
-
-        // Dry Volume: We let Firewheel's spatializer apply distance attenuation natively via offset.
-        let mut dry_vol = base_vol.clamp(0.0, 1.0);
-
-        // Reverb Volume: Ramps up to a maximum multiplier over 20 tiles (bloom),
-        // and relies on Firewheel's spatializer for the actual distance falloff.
-        let rev_max_ratio = 2.0; // Boosted so it can be heard
-        let rev_ramp = (dist / 20.0).clamp(0.0, 1.0);
-        let mut rev_vol = (base_vol * rev_max_ratio * rev_ramp).clamp(0.0, 1.0);
-
-        if is_mono {
-            let mono_div = 1.0 + dist * 0.4;
-            dry_vol /= mono_div;
-            rev_vol /= mono_div;
-        }
-
-        let direction = params.direction;
-        let offset = params.offset;
-        let muffle_hz = params.muffle_cutoff_hz;
-        let panning_threshold = params.panning_threshold;
-
-        trace!("ITD direction: {direction:?}");
-
-        // --- DRY LAYER ---
-        commands.spawn((
-            SpatialAudioInstance {
-                sound_file: sound_event.sound_file.clone(),
-                is_reverb: false,
-                initial_volume: dry_vol,
-                spawn_time: now,
-                spawn_frame: cur_frame,
-                position: sound_event.position,
-            },
-            SamplePlayer::new(asset_server.load(sound_event.sound_file.clone())),
-            sample_effects![
-                VolumeNode {
-                    volume: Volume::Linear(dry_vol),
-                    smooth_seconds: 0.0005,
-                    ..default()
-                },
-                SpatialBasicNode {
-                    offset,
-                    muffle_cutoff_hz: muffle_hz,
-                    smooth_seconds: 0.0005,
-                    downmix: false,
-                    panning_threshold,
-                    ..default()
-                },
-                (
-                    ItdNode { direction },
-                    ItdConfig {
-                        inter_ear_distance: 0.11,
-                        ..default()
-                    }
-                )
-            ],
-            UnSpatialPool,
-        ));
-
-        // --- REVERB LAYER ---
-
-        // Output nothing if quieter than -60dB (10^(-60/20) = 0.001)
-        if rev_vol > 0.001 {
-            commands.spawn((
-                SpatialAudioInstance {
-                    sound_file: reverb_file.clone(),
-                    is_reverb: true,
-                    initial_volume: rev_vol,
-                    spawn_time: now,
-                    spawn_frame: cur_frame,
-                    position: sound_event.position,
-                },
-                SamplePlayer::new(asset_server.load(reverb_file)),
-                sample_effects![
-                    VolumeNode {
-                        volume: Volume::Linear(rev_vol),
-                        smooth_seconds: 0.0005,
-                        ..default()
-                    },
-                    SpatialBasicNode {
-                        offset,
-                        muffle_cutoff_hz: muffle_hz,
-                        distance_attenuation: DistanceAttenuation {
-                            distance_gain_factor: 0.25,
-                            ..default()
-                        },
-                        smooth_seconds: 0.0005,
-                        downmix: false,
-                        panning_threshold,
-                        ..default()
-                    },
-                    (
-                        ItdNode { direction },
-                        ItdConfig {
-                            inter_ear_distance: 0.11,
-                            ..default()
-                        }
-                    )
-                ],
-                UnSpatialPool,
-            ));
-        }
+        play_sound_event(
+            sound_event,
+            player_position,
+            player_dir,
+            &audio_settings,
+            &asset_server,
+            &mut commands,
+            &q_instances,
+            cur_frame,
+            now,
+        );
     }
     measure.end_ms();
 }

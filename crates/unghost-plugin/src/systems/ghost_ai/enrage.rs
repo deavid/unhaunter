@@ -3,6 +3,7 @@ use super::roar::{RoarDecision, RoarReason, RoarType, execute_roar_decision};
 use crate::metrics::GHOST_ENRAGE;
 use crate::utils::{mean::MeanValue, time::PrintingTimer};
 use bevy::prelude::*;
+use bevy_replicon::prelude::ToClients;
 use rand::RngExt;
 use unaudiobg_core::events::AmbientSoundMuteEvent;
 use unboard_core::resources::board_topology::BoardCollisionField;
@@ -12,6 +13,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unghost_core::components::logic::ghost_death::GhostDeathSignal;
 use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
+use unghost_core::events::GhostAudioMessage;
 
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::{Hiding, PlayerDisconnected, PlayerInactive, PlayerSpectating};
@@ -59,6 +61,7 @@ pub(crate) fn ghost_enrage(
     difficulty: Res<CurrentDifficulty>,
     room_topology: Res<RoomTopology>,
     mut ev_ambient_mute: Option<MessageWriter<AmbientSoundMuteEvent>>,
+    mut ev_audio: MessageWriter<ToClients<GhostAudioMessage>>,
 ) {
     let measure = GHOST_ENRAGE.time_measure();
 
@@ -66,7 +69,7 @@ pub(crate) fn ghost_enrage(
     let dt = time.delta_secs();
     *last_roar += dt;
 
-    for (ghost_entity, mut ghost, ghost_position, dynamics) in qg.iter_mut() {
+    for (_ghost_entity, mut ghost, ghost_position, dynamics) in qg.iter_mut() {
         // 1. Update basic timers
         update_ghost_timers_simple(&mut ghost, dt, &time);
 
@@ -99,10 +102,8 @@ pub(crate) fn ghost_enrage(
                 execute_roar_decision(
                     &roar_decision,
                     &mut last_roar,
-                    ghost_entity,
                     ghost_position,
-                    time.elapsed_secs_f64(),
-                    &mut commands,
+                    &mut ev_audio,
                 );
             }
             continue;
@@ -142,10 +143,8 @@ pub(crate) fn ghost_enrage(
         execute_roar_decision(
             &roar_decision,
             &mut last_roar,
-            ghost_entity,
             ghost_position,
-            time.elapsed_secs_f64(),
-            &mut commands,
+            &mut ev_audio,
         );
 
         // 10. Debug logging

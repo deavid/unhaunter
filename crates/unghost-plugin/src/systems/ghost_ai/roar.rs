@@ -1,7 +1,8 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::RngExt;
 use uncommon_app_core::random_seed;
-use unghost_core::components::logic::vocalization::GhostVocalization;
+use unghost_core::events::GhostAudioMessage;
 use unspatial_core::position::Position;
 
 /// Enables/disables debug logs for hunting behavior.
@@ -77,21 +78,21 @@ pub(crate) enum RoarReason {
 pub(crate) fn execute_roar_decision(
     roar_decision: &RoarDecision,
     last_roar: &mut f32,
-    ghost_entity: Entity,
     ghost_position: &Position,
-    current_time: f64,
-    commands: &mut Commands,
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
 ) {
     if roar_decision.should_play_now {
         let roar_time_threshold = roar_decision.time_override.unwrap_or(3.0);
         if *last_roar > roar_time_threshold
             && let Some(roar_sound) = roar_decision.roar_type.get_sound()
         {
-            commands.entity(ghost_entity).insert(GhostVocalization {
-                sound_file: roar_sound,
-                volume: roar_decision.roar_type.get_volume(),
-                position: *ghost_position,
-                triggered_at: current_time,
+            ev_audio.write(ToClients {
+                mode: SendMode::Broadcast,
+                message: GhostAudioMessage {
+                    sound_file: roar_sound,
+                    volume: roar_decision.roar_type.get_volume(),
+                    position: *ghost_position,
+                },
             });
             *last_roar = 0.0;
 

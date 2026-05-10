@@ -1,46 +1,26 @@
 use bevy::prelude::*;
-use unaudiospatial_core::emitter::AudioEmitter;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use uncommon_states_core::UIContextState;
-use unghost_core::components::logic::interaction_sound::GhostInteractionSoundCue;
 use unghost_core::components::logic::vocalization::GhostVocalization;
-use unghost_core::events::GhostInteractionType;
+use unghost_core::events::GhostAudioMessage;
+use unreplicon_core::resources::LocalPlayerRole;
 
-/// Plays ghost interaction sounds locally when `GhostInteractionSoundCue` changes
-/// on an entity (via Replicon replication from the authority).
-fn play_interaction_sounds(
-    q: Query<&GhostInteractionSoundCue, Changed<GhostInteractionSoundCue>>,
-    mut audio: AudioEmitter,
-    time: Res<Time>,
+/// Plays authoritative ghost audio broadcasts locally.
+fn play_ghost_audio_messages(
+    mut reader: MessageReader<GhostAudioMessage>,
+    mut audio: LocalAudioEmitter,
 ) {
-    let current_time = time.elapsed_secs_f64();
-    for cue in q.iter() {
-        // Skip the default sentinel state (triggered_at == 0.0)
-        if cue.triggered_at == 0.0 {
-            continue;
-        }
-        // Skip stale cues to avoid replaying old sounds on late-join
-        if current_time - cue.triggered_at > 5.0 {
-            continue;
-        }
-        let (sound_file, volume) = match cue.kind {
-            GhostInteractionType::DoorSlam => ("sounds/door-close.ogg", 1.5_f32),
-            GhostInteractionType::DoorCreak => ("sounds/door_creak_slow.ogg", 0.7),
-            GhostInteractionType::Throw => ("sounds/object_throw_generic.ogg", 0.8),
-            GhostInteractionType::Nudge => ("sounds/object_nudge_1.ogg", 0.6),
-            GhostInteractionType::HauntedMove => ("sounds/object_drag_wood.ogg", 0.9),
-            GhostInteractionType::Lock => ("sounds/door_lock_heavy.ogg", 0.9),
-            GhostInteractionType::TripBreaker => ("sounds/switch-on-2.ogg", 1.0),
-            GhostInteractionType::Toggle => continue, // Toggle has no dedicated sound
-        };
-        audio.play_audio(sound_file.to_string(), volume, &cue.position);
+    for msg in reader.read() {
+        audio.play_audio(msg.sound_file.clone(), msg.volume, &msg.position);
     }
 }
 
-/// Plays ghost vocalization sounds locally when `GhostVocalization` changes
-/// (via Replicon replication from the authority).
+/// Plays the remaining replicated vocalization fallback locally when `GhostVocalization`
+/// changes. This currently only preserves the death vocalization chain until that
+/// sequence is moved to the authoritative broadcast path as well.
 fn play_vocalization_sounds(
     q: Query<&GhostVocalization, Changed<GhostVocalization>>,
-    mut audio: AudioEmitter,
+    mut audio: LocalAudioEmitter,
     time: Res<Time>,
 ) {
     let current_time = time.elapsed_secs_f64();
@@ -60,7 +40,8 @@ fn play_vocalization_sounds(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (play_interaction_sounds, play_vocalization_sounds)
+        (play_ghost_audio_messages, play_vocalization_sounds)
+            .run_if(resource_exists::<LocalPlayerRole>)
             .run_if(in_state(UIContextState::InGame)),
     );
 }

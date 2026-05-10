@@ -2,22 +2,27 @@ pub mod interactivestuff;
 
 use bevy::picking::events::{Out, Over, Pointer};
 use bevy::prelude::*;
-use bevy_replicon::prelude::{AppRuleExt, Channel, ClientMessageAppExt, FromClient};
-use interactivestuff::InteractiveStuff;
+use bevy_replicon::prelude::{
+    AppRuleExt, Channel, ClientMessageAppExt, FromClient, SendMode, ServerMessageAppExt, ToClients,
+};
+use interactivestuff::{InteractionUpdateOutcome, InteractiveStuff};
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::{FloorItemCollidable, RoomStateDelta, TmxEntityId};
 use unboard_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use uninteraction_core::events::InteractionRequestMessage;
+use uninteraction_core::events::PlayInteractionAudioMessage;
 use uninteraction_core::events::RoomStateSyncEvent;
 use uninteraction_core::hover::HoverState;
 use uninteraction_core::interaction::{ExecuteInteractionEvent, Toggleable};
 use unplayer_core::components::{MainPlayer, PlayerSpectating};
+use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole};
 use unspatial_core::boardposition::{BoardPosition, MapEntityFieldBPos};
 use unspatial_core::position::Position;
 
 pub(crate) fn app_setup_core(app: &mut App) {
     app.add_client_message::<InteractionRequestMessage>(Channel::Ordered);
+    app.add_server_message::<PlayInteractionAudioMessage>(Channel::Ordered);
     app.replicate::<TmxEntityId>();
     app.replicate::<Behavior>();
     app.replicate::<FloorItemCollidable>();
@@ -33,13 +38,16 @@ pub(crate) fn app_setup_core(app: &mut App) {
         )
             .chain()
             .run_if(in_state(unmission_core::types::SimulationState::Ready))
-            .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
+            .run_if(resource_exists::<AuthorityRole>),
     );
     // All nodes: rebuild board topology grids when any Behavior changes (including
     // changes arriving via bevy_replicon replication on pure clients).
     app.add_systems(
         Update,
-        (trigger_grid_rebuild_on_sync, trigger_interactive_sounds)
+        (
+            trigger_grid_rebuild_on_sync,
+            receive_interaction_audio_broadcast,
+        )
             .run_if(in_state(unmission_core::types::SimulationState::Ready)),
     );
 }
@@ -102,16 +110,33 @@ fn mouse_out_interactive_system(
 fn room_state_sync_system(
     mut ev_sync: MessageReader<RoomStateSyncEvent>,
     mut interactive_stuff: InteractiveStuff,
-    q_interactables: Query<(Entity, &Position, &Behavior, &RoomStateDelta)>,
+    q_interactables: Query<(
+        Entity,
+        &Position,
+        &Behavior,
+        Option<&Interactive>,
+        &RoomStateDelta,
+    )>,
+    mut local_audio: unaudiospatial_core::emitter::LocalAudioEmitter,
+    mut ev_audio: MessageWriter<ToClients<PlayInteractionAudioMessage>>,
+    local_player_role: Option<Res<LocalPlayerRole>>,
 ) {
     if ev_sync.read().next().is_none() {
         return;
     }
 
     let mut changed = false;
-    for (entity, pos, behavior, room_state) in q_interactables.iter() {
-        if interactive_stuff.synchronize_entity(entity, pos, behavior, room_state) {
+    for (entity, pos, behavior, interactive, room_state) in q_interactables.iter() {
+        let outcome =
+            interactive_stuff.synchronize_entity(entity, pos, behavior, interactive, room_state);
+        if outcome.changed {
             changed = true;
+            emit_authoritative_interaction_audio(
+                outcome,
+                &mut local_audio,
+                &mut ev_audio,
+                local_player_role.is_some(),
+            );
         }
     }
 
@@ -132,15 +157,38 @@ fn trigger_grid_rebuild_on_sync(
     }
 }
 
-fn trigger_interactive_sounds(
-    mut audio: unaudiospatial_core::emitter::AudioEmitter,
-    q_interactive: Query<(Ref<Behavior>, &Interactive, &Position)>,
+fn emit_authoritative_interaction_audio(
+    outcome: InteractionUpdateOutcome,
+    local_audio: &mut unaudiospatial_core::emitter::LocalAudioEmitter,
+    ev_audio: &mut MessageWriter<ToClients<PlayInteractionAudioMessage>>,
+    has_local_player: bool,
 ) {
-    for (behavior, interactive, pos) in q_interactive.iter() {
-        if behavior.is_changed() && !behavior.is_added() {
-            let sound_file = interactive.sound_for_moving_into_state(&behavior);
-            audio.play_audio(sound_file, 1.0, pos);
-        }
+    let Some(audio) = outcome.audio else {
+        return;
+    };
+
+    if has_local_player {
+        local_audio.play_audio(audio.sound_file.clone(), audio.volume, &audio.position);
+    }
+
+    ev_audio.write(ToClients {
+        mode: SendMode::Broadcast,
+        message: audio,
+    });
+}
+
+fn receive_interaction_audio_broadcast(
+    mut reader: MessageReader<PlayInteractionAudioMessage>,
+    mut audio: unaudiospatial_core::emitter::LocalAudioEmitter,
+    authority: Option<Res<AuthorityRole>>,
+) {
+    if authority.is_some() {
+        for _ in reader.read() {}
+        return;
+    }
+
+    for msg in reader.read() {
+        audio.play_audio(msg.sound_file.clone(), msg.volume, &msg.position);
     }
 }
 
@@ -187,20 +235,36 @@ fn handle_interaction_request(
 fn interaction_event_handler(
     mut ev_reader: MessageReader<ExecuteInteractionEvent>,
     mut interactive_stuff: InteractiveStuff,
-    q_interactive: Query<(&Behavior, Option<&RoomStateDelta>, &Position)>,
+    q_interactive: Query<(
+        &Behavior,
+        Option<&Interactive>,
+        Option<&RoomStateDelta>,
+        &Position,
+    )>,
     mut ev_room_sync: MessageWriter<RoomStateSyncEvent>,
+    mut local_audio: unaudiospatial_core::emitter::LocalAudioEmitter,
+    mut ev_audio: MessageWriter<ToClients<PlayInteractionAudioMessage>>,
+    local_player_role: Option<Res<LocalPlayerRole>>,
 ) {
     for ev in ev_reader.read() {
-        if let Ok((behavior, room_state, pos)) = q_interactive.get(ev.entity) {
-            if interactive_stuff.execute_interaction(
+        if let Ok((behavior, interactive, room_state, pos)) = q_interactive.get(ev.entity) {
+            let outcome = interactive_stuff.execute_interaction(
                 ev.entity,
                 pos,
                 behavior,
+                interactive,
                 room_state,
                 ev.ietype.clone(),
                 ev.force_tuid,
-            ) {
+            );
+            if outcome.changed {
                 debug!("Interaction successful, scheduling room sync");
+                emit_authoritative_interaction_audio(
+                    outcome,
+                    &mut local_audio,
+                    &mut ev_audio,
+                    local_player_role.is_some(),
+                );
                 ev_room_sync.write(RoomStateSyncEvent);
             }
         } else {
