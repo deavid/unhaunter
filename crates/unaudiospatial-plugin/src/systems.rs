@@ -16,7 +16,7 @@ use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
 /// Minimum frame gap between two plays of the same sound to not be considered spam.
-const AUDIO_SPAM_FRAME_THRESHOLD: u32 = 5;
+const AUDIO_SPAM_FRAME_THRESHOLD: u32 = 4;
 
 pub(crate) struct SpatialParams {
     pub offset: bevy_seedling::firewheel::vector::Vec3,
@@ -357,7 +357,7 @@ pub fn monitor_audio_pileup(
 ) {
     let count = q_audio_players.iter().count();
     let now = time.elapsed_secs();
-    if count > 20 && now - *last_warn > 1.0 {
+    if count > 30 && now - *last_warn > 1.0 {
         let mut counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
         for player in q_audio_players.iter() {
             let path = asset_server

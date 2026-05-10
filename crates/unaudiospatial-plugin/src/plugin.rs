@@ -26,6 +26,7 @@ fn setup_unspatial_pool(mut commands: Commands) {
                 SpatialBasicNode::default(),
                 ItdNode::default()
             ],
+            PoolSize(16..=64),
         ))
         .connect(SoundEffectsBus);
 }
