@@ -1,8 +1,13 @@
 use std::f64::consts::PI;
 
 use bevy::prelude::*;
-use unghost_core::components::logic::ghost_death::GhostDeathSignal;
+use bevy_replicon::prelude::ToClients;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
+use unghost_core::components::logic::ghost_death::{
+    GhostDeathSequenceState, GhostDeathSignal,
+};
 use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
+use unghost_core::events::GhostAudioMessage;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::signals::{GhostHuntPressure, GhostHuntSignals, PrimaryGhostSignal};
 use unspatial_core::position::Position;
@@ -15,8 +20,7 @@ pub(crate) mod roar;
 
 use enrage::ghost_enrage;
 use movement::ghost_movement;
-
-use unghost_core::components::logic::vocalization::GhostVocalization;
+use roar::emit_ghost_audio;
 
 /// Logic side of ghost entity dying.
 ///
@@ -25,17 +29,36 @@ use unghost_core::components::logic::vocalization::GhostVocalization;
 pub(crate) fn ghost_dying_logic_system(
     mut commands: Commands,
     time: Res<Time>,
-    mut query: Query<(Entity, &GhostDeathSignal, Option<&mut GhostVocalization>)>,
+    q_dying: Query<(Entity, &GhostDeathSignal)>,
+    mut q_sequence: Query<(&GhostDeathSignal, &Position, &mut GhostDeathSequenceState)>,
+    mut local_audio: LocalAudioEmitter,
+    mut ev_audio: MessageWriter<ToClients<GhostAudioMessage>>,
+    local_player_role: Option<Res<unreplicon_core::resources::LocalPlayerRole>>,
 ) {
     let current_secs = time.elapsed_secs_f64();
-    for (entity, dying, voc_opt) in query.iter_mut() {
+    let has_local_player = local_player_role.is_some();
+
+    for (dying, position, mut sequence) in q_sequence.iter_mut() {
+        if dying.is_finished(current_secs) || sequence.final_roar_sent {
+            continue;
+        }
+
+        if current_secs >= dying.started_at_secs + 3.0 {
+            emit_ghost_audio(
+                "sounds/ghost-roar-4.ogg".to_string(),
+                2.0,
+                *position,
+                &mut local_audio,
+                &mut ev_audio,
+                has_local_player,
+            );
+            sequence.final_roar_sent = true;
+        }
+    }
+
+    for (entity, dying) in q_dying.iter() {
         if dying.is_finished(current_secs) {
             commands.entity(entity).despawn();
-        } else if let Some(mut voc) = voc_opt.filter(|v| {
-            current_secs >= dying.started_at_secs + 3.0 && v.sound_file == "sounds/ghost-roar-1.ogg"
-        }) {
-            voc.sound_file = "sounds/ghost-roar-4.ogg".to_string();
-            voc.triggered_at = current_secs;
         }
     }
 }

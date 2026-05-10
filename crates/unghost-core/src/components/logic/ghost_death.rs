@@ -15,6 +15,16 @@ pub struct GhostDeathSignal {
     pub duration_secs: f32,
 }
 
+/// Authority-only progress state for the ghost death audio sequence.
+///
+/// Clients do not need this bookkeeping replicated. They only need the explicit
+/// `GhostAudioMessage` broadcasts and the replicated `GhostDeathSignal` duration.
+#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[reflect(Component)]
+pub struct GhostDeathSequenceState {
+    pub final_roar_sent: bool,
+}
+
 impl GhostDeathSignal {
     pub fn new(current_secs: f64, duration_secs: f32) -> Self {
         Self {

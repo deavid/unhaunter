@@ -33,6 +33,7 @@ unghost-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 untruck-core = { workspace = true }
 unreplicon-core = { workspace = true }
+unaudiospatial-core = { workspace = true }
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }
 rand = { workspace = true }

@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::ToClients;
 use rand::RngExt;
 use unaudiobg_core::events::AmbientSoundMuteEvent;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use unboard_core::resources::roomdb::RoomTopology;
 use uncommon_app_core::random_seed;
@@ -61,9 +62,12 @@ pub(crate) fn ghost_enrage(
     difficulty: Res<CurrentDifficulty>,
     room_topology: Res<RoomTopology>,
     mut ev_ambient_mute: Option<MessageWriter<AmbientSoundMuteEvent>>,
+    mut local_audio: LocalAudioEmitter,
     mut ev_audio: MessageWriter<ToClients<GhostAudioMessage>>,
+    local_player_role: Option<Res<unreplicon_core::resources::LocalPlayerRole>>,
 ) {
     let measure = GHOST_ENRAGE.time_measure();
+    let has_local_player = local_player_role.is_some();
 
     timer.tick(time.delta());
     let dt = time.delta_secs();
@@ -103,7 +107,9 @@ pub(crate) fn ghost_enrage(
                     &roar_decision,
                     &mut last_roar,
                     ghost_position,
+                    &mut local_audio,
                     &mut ev_audio,
+                    has_local_player,
                 );
             }
             continue;
@@ -144,7 +150,9 @@ pub(crate) fn ghost_enrage(
             &roar_decision,
             &mut last_roar,
             ghost_position,
+            &mut local_audio,
             &mut ev_audio,
+            has_local_player,
         );
 
         // 10. Debug logging

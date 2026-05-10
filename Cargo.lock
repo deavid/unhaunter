@@ -8340,6 +8340,7 @@ dependencies = [
  "bevy_replicon",
  "rand 0.10.1",
  "unaudiobg-core",
+ "unaudiospatial-core",
  "unbehavior-core",
  "unboard-core",
  "uncommon-app-core",

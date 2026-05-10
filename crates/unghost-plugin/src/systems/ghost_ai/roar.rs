@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{SendMode, ToClients};
 use rand::RngExt;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use uncommon_app_core::random_seed;
 use unghost_core::events::GhostAudioMessage;
 use unspatial_core::position::Position;
@@ -74,26 +75,50 @@ pub(crate) enum RoarReason {
     None,
 }
 
+pub(crate) fn emit_ghost_audio(
+    sound_file: String,
+    volume: f32,
+    position: Position,
+    local_audio: &mut LocalAudioEmitter,
+    ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
+    has_local_player: bool,
+) {
+    if has_local_player {
+        local_audio.play_audio(sound_file.clone(), volume, &position);
+    }
+
+    ev_audio.write(ToClients {
+        mode: SendMode::Broadcast,
+        message: GhostAudioMessage {
+            sound_file,
+            volume,
+            position,
+        },
+    });
+}
+
 /// Execute a roar decision
 pub(crate) fn execute_roar_decision(
     roar_decision: &RoarDecision,
     last_roar: &mut f32,
     ghost_position: &Position,
+    local_audio: &mut LocalAudioEmitter,
     ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
+    has_local_player: bool,
 ) {
     if roar_decision.should_play_now {
         let roar_time_threshold = roar_decision.time_override.unwrap_or(3.0);
         if *last_roar > roar_time_threshold
             && let Some(roar_sound) = roar_decision.roar_type.get_sound()
         {
-            ev_audio.write(ToClients {
-                mode: SendMode::Broadcast,
-                message: GhostAudioMessage {
-                    sound_file: roar_sound,
-                    volume: roar_decision.roar_type.get_volume(),
-                    position: *ghost_position,
-                },
-            });
+            emit_ghost_audio(
+                roar_sound,
+                roar_decision.roar_type.get_volume(),
+                *ghost_position,
+                local_audio,
+                ev_audio,
+                has_local_player,
+            );
             *last_roar = 0.0;
 
             if DEBUG_HUNTS {

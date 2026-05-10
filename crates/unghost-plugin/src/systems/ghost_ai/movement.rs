@@ -1,3 +1,4 @@
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
 use rand::prelude::*;
@@ -8,10 +9,14 @@ use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungearitems_core::components::salt::SaltyTrace;
-use unghost_core::components::logic::ghost_death::GhostDeathSignal;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
+use unghost_core::components::logic::ghost_death::{
+    GhostDeathSequenceState, GhostDeathSignal,
+};
 use unghost_core::components::logic::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::components::logic::red_light_charge::{GhostRedLightCharge, RedLightChargeMode};
+use unghost_core::events::GhostAudioMessage;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unlight_core::resources::light_grid::LightGrid;
 use unmetrics_core::metrics::SendMetric;
@@ -23,10 +28,10 @@ use untruck_core::components::in_truck::InTruck;
 use unvitals_core::components::PlayerVitals;
 
 use bevy_replicon::prelude::*;
-use unghost_core::components::logic::vocalization::GhostVocalization;
 use unreplicon_core::messages::SpawnParticleNetEvent;
 
 use crate::metrics::GHOST_MOVEMENT;
+use crate::systems::ghost_ai::roar::emit_ghost_audio;
 
 // Constants for movement penalties
 const WALL_AVOIDANCE_PENALTY: f32 = -100.0; // Negative because it's added to score
@@ -37,6 +42,13 @@ const DISCHARGE_WARP_TRIGGER_CHANCE: i32 = 250;
 const BASE_WARP_TRIGGER_CHANCE: i32 = 500;
 const HUNT_DRAIN_BONUS_IN_RED: f32 = 0.65;
 const RED_SEEK_RADIUS: i64 = 3;
+
+#[derive(SystemParam)]
+pub(crate) struct GhostDeathAudioParams<'w> {
+    local_audio: LocalAudioEmitter<'w>,
+    ev_audio: MessageWriter<'w, ToClients<GhostAudioMessage>>,
+    local_player_role: Option<Res<'w, unreplicon_core::resources::LocalPlayerRole>>,
+}
 
 /// Updates the ghost's position based on its target location, hunting state, and
 /// warping intensity.
@@ -77,10 +89,12 @@ pub(crate) fn ghost_movement(
     difficulty: Res<CurrentDifficulty>,
     light_grid: Option<Res<LightGrid>>,
     mut log_timer: Local<f32>,
+    mut death_audio: GhostDeathAudioParams,
     mut particle_net_writer: MessageWriter<ToClients<SpawnParticleNetEvent>>,
     qp_breach: Query<&Position, Without<GhostSprite>>,
 ) {
     let measure = GHOST_MOVEMENT.time_measure();
+    let has_local_player = death_audio.local_player_role.is_some();
 
     *log_timer -= time.delta_secs();
     if *log_timer <= 0.0 {
@@ -431,13 +445,15 @@ pub(crate) fn ghost_movement(
                 },
             });
 
-            // 2. Play the death cry/growl sound authoritative trigger
-            commands.entity(entity).insert(GhostVocalization {
-                sound_file: "sounds/ghost-roar-1.ogg".to_string(),
-                volume: 2.0,
-                position: *pos,
-                triggered_at: current_secs,
-            });
+            // 2. Play the opening death roar through the explicit ghost audio path.
+            emit_ghost_audio(
+                "sounds/ghost-roar-1.ogg".to_string(),
+                2.0,
+                *pos,
+                &mut death_audio.local_audio,
+                &mut death_audio.ev_audio,
+                has_local_player,
+            );
 
             if let Some(breach) = ghost.breach_id {
                 commands
@@ -454,9 +470,10 @@ pub(crate) fn ghost_movement(
                     });
                 }
             }
-            commands
-                .entity(entity)
-                .insert(GhostDeathSignal::new(current_secs, 5.0));
+            commands.entity(entity).insert((
+                GhostDeathSignal::new(current_secs, 5.0),
+                GhostDeathSequenceState::default(),
+            ));
         }
     }
     measure.end_ms();

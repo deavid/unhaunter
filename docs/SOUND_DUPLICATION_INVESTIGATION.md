@@ -22,7 +22,10 @@ and switches appear to duplicate or multiply exponentially on successive trigger
    `app.add_server_message::<T>(Channel::Ordered)` plus `MessageWriter<ToClients<T>>`.
 5. The real architectural problem was that audio was being derived reactively from replicated state/components instead
    of being emitted as an authoritative server decision and then played locally on receiving nodes.
-6. Implementation has now started on that standardized server-push design.
+6. A second multiplayer edge case was verified during implementation: writing `GhostAudioMessage` to
+   `MessageWriter<ToClients<GhostAudioMessage>>` did not make the host hear the sound locally, so the listen server was
+   deaf to ghost interaction sounds and roar broadcasts until explicit local loopback was added.
+7. Implementation has now started on that standardized server-push design.
 
 ## Revised Understanding
 
@@ -59,10 +62,12 @@ The redesign has started and the following pieces are now implemented:
    synchronization paths.
 4. Pure clients receive `PlayInteractionAudioMessage` and convert it into local playback.
 5. Ghost interaction sounds and standard ghost roars now use `GhostAudioMessage` as an authoritative server broadcast.
-6. Ghost presentation now plays `GhostAudioMessage` locally instead of deriving interaction audio from
-   `GhostInteractionSoundCue`.
-7. The old `GhostVocalization` component playback path remains temporarily as a fallback for the death-vocalization
-   sequence only.
+6. Pure clients play `GhostAudioMessage` from the replicated server-message path, and the host now explicitly plays the
+   same ghost sounds locally at the authority emit point so listen-server audio matches join clients.
+7. `GhostInteractionSoundCue` has now been removed entirely; ghost interaction audio no longer has a second
+   replicated-state carrier.
+8. The ghost death sequence now also uses explicit authoritative `GhostAudioMessage` broadcasts; `GhostVocalization` has
+   been removed entirely.
 
 ## The Standardized Design Fix (Centralized Push)
 
@@ -93,9 +98,6 @@ Make the Server the sole authority on when an audio effect should play, pushing 
 
 - Migrate the remaining legacy `AudioEmitter` and `SoundEvent` callers to either explicit authoritative server messages
   or explicitly local-only playback, depending on the feature.
-- Finish the ghost death-vocalization migration so `GhostVocalization` is no longer needed as an audio carrier.
-- Determine whether `GhostInteractionSoundCue` can now be deleted entirely, since interaction audio no longer consumes
-  it.
 - Re-test the original door/switch reproduction case after the new interaction path is in place and record the exact
   before/after behavior.
 
@@ -110,4 +112,8 @@ Make the Server the sole authority on when an audio effect should play, pushing 
 - Migrated interaction audio to an authoritative `PlayInteractionAudioMessage` broadcast instead of `Changed<Behavior>`
   synthesis.
 - Migrated ghost interaction audio and standard roars to authoritative `GhostAudioMessage` broadcasts.
-- Left the death-vocalization chain on a temporary fallback path pending follow-up migration.
+- Fixed the listen-server ghost-audio loopback bug by pairing authoritative `GhostAudioMessage` broadcasts with local
+  host playback at the ghost-domain emit points.
+- Deleted the now-unused `GhostInteractionSoundCue` definition after confirming there were no remaining references.
+- Migrated the death-vocalization chain to explicit authoritative `GhostAudioMessage` broadcasts and deleted
+  `GhostVocalization`.

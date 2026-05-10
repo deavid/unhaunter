@@ -9,7 +9,6 @@ use unghost_core::components::logic::ghost_breach::GhostBreach;
 use unghost_core::components::logic::ghost_influence::GhostInfluence;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::components::logic::red_light_charge::GhostRedLightCharge;
-use unghost_core::components::logic::vocalization::GhostVocalization;
 use unghost_core::requests::{GhostBreachSpawnRequest, GhostSpawnRequest};
 use unghost_core::tags::GhostTag;
 use uninvestigation_core::evidence::Evidence;
@@ -90,7 +89,6 @@ fn ghost_hydration_system(
             })
             .insert(FluidEmitter::default())
             .insert(SoundFieldSource::default())
-            .insert(GhostVocalization::default())
             .insert(Replicated)
             .insert(LerpPosition::new(*pos))
             .remove::<GhostSpawnRequest>();

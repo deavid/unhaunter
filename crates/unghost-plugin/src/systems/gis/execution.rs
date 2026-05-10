@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::{SendMode, ToClients};
+use bevy_replicon::prelude::ToClients;
 use rand::prelude::*;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::{InteractableByGhost, RoomStateDelta};
@@ -17,6 +18,7 @@ use unmetrics_core::metrics::SendMetric;
 use unspatial_core::position::Position;
 
 use crate::metrics;
+use crate::systems::ghost_ai::roar::emit_ghost_audio;
 
 /// Enhanced destination validation with collision avoidance and path checking
 fn validate_destination_enhanced(
@@ -177,6 +179,7 @@ fn ghost_interaction_execution_system(
     mut commands: Commands,
     time: Res<Time>,
     mut ev_ghost_interaction: MessageReader<GhostInteractionEvent>,
+    mut local_audio: LocalAudioEmitter,
     mut ev_audio: MessageWriter<ToClients<GhostAudioMessage>>,
     mut ev_breaker_sparks: MessageWriter<GhostBreakerSparkRequest>,
     q_targets: Query<(
@@ -191,8 +194,10 @@ fn ghost_interaction_execution_system(
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_topology: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
+    local_player_role: Option<Res<unreplicon_core::resources::LocalPlayerRole>>,
 ) {
     let measure = metrics::GIS_EXECUTION.time_measure();
+    let has_local_player = local_player_role.is_some();
     let current_secs = time.elapsed_secs_f64();
     for event in ev_ghost_interaction.read() {
         // Minimal one-line log for each received interaction event
@@ -220,21 +225,25 @@ fn ghost_interaction_execution_system(
 
             GhostInteractionType::DoorSlam => {
                 execute_door_slam_interaction(
+                    &mut local_audio,
                     &mut ev_audio,
                     &mut ev_interaction_executor,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
+                    has_local_player,
                 );
             }
 
             GhostInteractionType::DoorCreak => {
                 execute_door_creak_interaction(
+                    &mut local_audio,
                     &mut ev_audio,
                     &mut ev_interaction_executor,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
+                    has_local_player,
                 );
             }
 
@@ -242,6 +251,7 @@ fn ghost_interaction_execution_system(
                 if let Some(destination) = event.destination {
                     execute_throw_interaction(
                         &mut commands,
+                        &mut local_audio,
                         &mut ev_audio,
                         current_secs,
                         &q_targets,
@@ -250,6 +260,7 @@ fn ghost_interaction_execution_system(
                         destination,
                         &board_topology,
                         &board_collision,
+                        has_local_player,
                     );
                 } else {
                     error!(
@@ -262,6 +273,7 @@ fn ghost_interaction_execution_system(
             GhostInteractionType::Nudge => {
                 execute_nudge_interaction(
                     &mut commands,
+                    &mut local_audio,
                     &mut ev_audio,
                     current_secs,
                     &q_targets,
@@ -270,6 +282,7 @@ fn ghost_interaction_execution_system(
                     event.destination,
                     &board_topology,
                     &board_collision,
+                    has_local_player,
                 );
             }
 
@@ -277,6 +290,7 @@ fn ghost_interaction_execution_system(
                 if let Some(destination) = event.destination {
                     execute_haunted_move_interaction(
                         &mut commands,
+                        &mut local_audio,
                         &mut ev_audio,
                         current_secs,
                         &q_targets,
@@ -285,6 +299,7 @@ fn ghost_interaction_execution_system(
                         destination,
                         &board_topology,
                         &board_collision,
+                        has_local_player,
                     );
                 } else {
                     error!(
@@ -297,21 +312,25 @@ fn ghost_interaction_execution_system(
             GhostInteractionType::Lock => {
                 execute_lock_interaction(
                     &mut commands,
+                    &mut local_audio,
                     &mut ev_audio,
                     current_secs,
                     &q_targets,
                     event.target,
+                    has_local_player,
                 );
             }
 
             GhostInteractionType::TripBreaker => {
                 execute_trip_breaker_interaction(
+                    &mut local_audio,
                     &mut ev_audio,
                     &mut ev_breaker_sparks,
                     &mut ev_interaction_executor,
                     &mut ev_bdr,
                     &q_targets,
                     event.target,
+                    has_local_player,
                 );
             }
         }
@@ -321,19 +340,21 @@ fn ghost_interaction_execution_system(
 }
 
 fn broadcast_ghost_audio(
+    local_audio: &mut LocalAudioEmitter,
     ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
+    has_local_player: bool,
     sound_file: &str,
     volume: f32,
     position: Position,
 ) {
-    ev_audio.write(ToClients {
-        mode: SendMode::Broadcast,
-        message: GhostAudioMessage {
-            sound_file: sound_file.to_string(),
-            volume,
-            position,
-        },
-    });
+    emit_ghost_audio(
+        sound_file.to_string(),
+        volume,
+        position,
+        local_audio,
+        ev_audio,
+        has_local_player,
+    );
 }
 
 /// Execute toggle interaction (lights, switches)
@@ -365,6 +386,7 @@ fn execute_toggle_interaction(
 
 /// Execute door slam interaction (fast door closure)
 fn execute_door_slam_interaction(
+    local_audio: &mut LocalAudioEmitter,
     ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
@@ -375,6 +397,7 @@ fn execute_door_slam_interaction(
         Option<&RoomStateDelta>,
     )>,
     target: Entity,
+    has_local_player: bool,
 ) {
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
         ev_interaction_executor.write(ExecuteInteractionEvent {
@@ -382,7 +405,14 @@ fn execute_door_slam_interaction(
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });
-        broadcast_ghost_audio(ev_audio, "sounds/door-close.ogg", 1.5, *position);
+        broadcast_ghost_audio(
+            local_audio,
+            ev_audio,
+            has_local_player,
+            "sounds/door-close.ogg",
+            1.5,
+            *position,
+        );
     } else {
         error!(
             "GIS execution -> DoorSlam interaction for {:?} FAILED: target entity not found or missing components",
@@ -393,6 +423,7 @@ fn execute_door_slam_interaction(
 
 /// Execute door creak interaction (slow door movement)
 fn execute_door_creak_interaction(
+    local_audio: &mut LocalAudioEmitter,
     ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
     _ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
@@ -403,6 +434,7 @@ fn execute_door_creak_interaction(
         Option<&RoomStateDelta>,
     )>,
     target: Entity,
+    has_local_player: bool,
 ) {
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
         ev_interaction_executor.write(ExecuteInteractionEvent {
@@ -410,7 +442,14 @@ fn execute_door_creak_interaction(
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });
-        broadcast_ghost_audio(ev_audio, "sounds/door_creak_slow.ogg", 0.7, *position);
+        broadcast_ghost_audio(
+            local_audio,
+            ev_audio,
+            has_local_player,
+            "sounds/door_creak_slow.ogg",
+            0.7,
+            *position,
+        );
     } else {
         error!(
             "GIS execution -> DoorCreak interaction for {:?} FAILED: target entity not found or missing components",
@@ -422,6 +461,7 @@ fn execute_door_creak_interaction(
 /// Execute throw interaction (object flies through air)
 fn execute_throw_interaction(
     commands: &mut Commands,
+    local_audio: &mut LocalAudioEmitter,
     ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     current_secs: f64,
     q_targets: &Query<(
@@ -435,6 +475,7 @@ fn execute_throw_interaction(
     destination: Position,
     board_topology: &BoardTopology,
     board_collision: &BoardCollisionField,
+    has_local_player: bool,
 ) {
     if let Ok((_, current_position, _, _)) = q_targets.get(target) {
         let mut rng = random_seed::rng();
@@ -458,7 +499,9 @@ fn execute_throw_interaction(
             );
             commands.entity(target).insert(motion);
             broadcast_ghost_audio(
+                local_audio,
                 ev_audio,
+                has_local_player,
                 "sounds/object_throw_generic.ogg",
                 0.8,
                 *current_position,
@@ -480,6 +523,7 @@ fn execute_throw_interaction(
 /// Execute nudge interaction (small object movement)
 fn execute_nudge_interaction(
     commands: &mut Commands,
+    local_audio: &mut LocalAudioEmitter,
     ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     current_secs: f64,
     q_targets: &Query<(
@@ -493,6 +537,7 @@ fn execute_nudge_interaction(
     destination: Option<Position>,
     board_topology: &BoardTopology,
     board_collision: &BoardCollisionField,
+    has_local_player: bool,
 ) {
     if let Ok((_, current_position, _, _)) = q_targets.get(target) {
         // Handle destination validation if provided
@@ -529,7 +574,9 @@ fn execute_nudge_interaction(
 
         commands.entity(target).insert(motion);
         broadcast_ghost_audio(
+            local_audio,
             ev_audio,
+            has_local_player,
             "sounds/object_nudge_1.ogg",
             0.6,
             *current_position,
@@ -545,6 +592,7 @@ fn execute_nudge_interaction(
 /// Execute haunted move interaction (slow object slide)
 fn execute_haunted_move_interaction(
     commands: &mut Commands,
+    local_audio: &mut LocalAudioEmitter,
     ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     current_secs: f64,
     q_targets: &Query<(
@@ -558,6 +606,7 @@ fn execute_haunted_move_interaction(
     destination: Position,
     board_topology: &BoardTopology,
     board_collision: &BoardCollisionField,
+    has_local_player: bool,
 ) {
     if let Ok((_, current_position, _, _)) = q_targets.get(target) {
         let mut rng = random_seed::rng();
@@ -581,7 +630,9 @@ fn execute_haunted_move_interaction(
             );
             commands.entity(target).insert(motion);
             broadcast_ghost_audio(
+                local_audio,
                 ev_audio,
+                has_local_player,
                 "sounds/object_drag_wood.ogg",
                 0.9,
                 *current_position,
@@ -603,6 +654,7 @@ fn execute_haunted_move_interaction(
 /// Execute lock interaction (temporarily lock a door)
 fn execute_lock_interaction(
     commands: &mut Commands,
+    local_audio: &mut LocalAudioEmitter,
     ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     current_secs: f64,
     q_targets: &Query<(
@@ -612,6 +664,7 @@ fn execute_lock_interaction(
         Option<&RoomStateDelta>,
     )>,
     target: Entity,
+    has_local_player: bool,
 ) {
     // Check if the target entity exists and get its position for sound
     if let Ok((_, position, _, _)) = q_targets.get(target) {
@@ -619,7 +672,14 @@ fn execute_lock_interaction(
         commands
             .entity(target)
             .insert(Locked::new(current_secs, 10.0));
-        broadcast_ghost_audio(ev_audio, "sounds/door_lock_heavy.ogg", 0.9, *position);
+        broadcast_ghost_audio(
+            local_audio,
+            ev_audio,
+            has_local_player,
+            "sounds/door_lock_heavy.ogg",
+            0.9,
+            *position,
+        );
     } else {
         error!(
             "GIS execution -> Lock interaction for {:?} FAILED: target entity not found or missing components",
@@ -630,6 +690,7 @@ fn execute_lock_interaction(
 
 /// Execute trip breaker interaction (turn off main power)
 fn execute_trip_breaker_interaction(
+    local_audio: &mut LocalAudioEmitter,
     ev_audio: &mut MessageWriter<ToClients<GhostAudioMessage>>,
     ev_breaker_sparks: &mut MessageWriter<GhostBreakerSparkRequest>,
     ev_interaction_executor: &mut MessageWriter<ExecuteInteractionEvent>,
@@ -641,6 +702,7 @@ fn execute_trip_breaker_interaction(
         Option<&RoomStateDelta>,
     )>,
     target: Entity,
+    has_local_player: bool,
 ) {
     if let Ok((_behavior, position, _interactive, _room_state)) = q_targets.get(target) {
         ev_interaction_executor.write(ExecuteInteractionEvent {
@@ -648,7 +710,14 @@ fn execute_trip_breaker_interaction(
             ietype: InteractionExecutionType::ChangeState,
             force_tuid: None,
         });
-        broadcast_ghost_audio(ev_audio, "sounds/switch-on-2.ogg", 1.0, *position);
+        broadcast_ghost_audio(
+            local_audio,
+            ev_audio,
+            has_local_player,
+            "sounds/switch-on-2.ogg",
+            1.0,
+            *position,
+        );
 
         ev_breaker_sparks.write(GhostBreakerSparkRequest {
             position: *position,
