@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use uncommon_states_core::UIContextState;
-use unmapload_core::assets::{MapAssets, MissionAssets};
+use unmapload_core::assets::MapAssets;
 use unmapload_core::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent, MapEntitiesReadyEvent};
 use unmapload_core::resources::SpriteDB;
 use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
@@ -36,12 +36,8 @@ impl Plugin for UnhaunterMapLoadPlugin {
         app.add_loading_state(
             LoadingState::new(UIContextState::EngineBoot)
                 .continue_to_state(UIContextState::MainMenu)
-                .load_collection::<MapAssets>()
-                .load_collection::<MissionAssets>(),
+                .load_collection::<MapAssets>(),
         );
-
-        // Note: MissionAssets and MapAssets are loaded at EngineBoot above.
-        // No bevy_asset_loader loading state is used for MissionLoading — the
         // transition out of MissionLoading is driven by the mission lifecycle
         // after LevelReadyEvent. Map loading remains responsible only for
         // hydration and map-finalization side effects.

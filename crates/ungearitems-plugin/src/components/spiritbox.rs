@@ -77,84 +77,71 @@ pub(crate) fn update_spiritbox(
 
         let mut rng = random_seed::rng();
         let sec = gs_audio.time.elapsed_secs();
-        spiritbox.mode_frame = (sec * 4.0).round() as u32;
+        let is_glitching = electronic.glitch_timer > 0.0;
 
         // Update Battery Drain Rate
         battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
 
-        // Update Sprite
-        sprite.0 = if electronic.glitch_timer > 0.0 {
-            match rng.random_range(0..5) {
-                0 => GearSpriteID::SpiritBoxOff.to_visual_key(), // Blank/off
-                1 => GearSpriteID::SpiritBoxScan1.to_visual_key(), // Flickering
-                2 => GearSpriteID::SpiritBoxScan2.to_visual_key(),
-                3 => GearSpriteID::SpiritBoxScan3.to_visual_key(),
-                _ => GearSpriteID::SpiritBoxAns1.to_visual_key(), // Maybe show as if it answered
-            }
-        } else if toggle.is_on {
+        if !toggle.is_on {
+            spiritbox.blinking_hint_active = false;
+            sprite.0 = GearSpriteID::SpiritBoxOff.to_visual_key();
+            status.0 = format!("{}: {}", name.0, on_off(toggle.is_on));
+            continue;
+        }
+
+        let delta = sec - spiritbox.last_change_secs;
+
+        // Unified Tick Logic (4Hz or 0.25s)
+        if delta >= 0.25 {
+            spiritbox.last_change_secs = sec;
+
+            // Wait out the answer
             if spiritbox.ghost_answer {
-                match spiritbox.mode_frame % 2 {
-                    0 => GearSpriteID::SpiritBoxAns1.to_visual_key(),
-                    _ => GearSpriteID::SpiritBoxAns2.to_visual_key(),
-                }
-            } else {
-                match spiritbox.mode_frame % 3 {
-                    0 => GearSpriteID::SpiritBoxScan1.to_visual_key(),
-                    1 => GearSpriteID::SpiritBoxScan2.to_visual_key(),
-                    _ => GearSpriteID::SpiritBoxScan3.to_visual_key(),
-                }
-            }
-        } else {
-            GearSpriteID::SpiritBoxOff.to_visual_key()
-        };
-
-        // Update Logic
-        if toggle.is_on {
-            let bpos = pos.to_board_position();
-            let temperature = tg.temperature_field[bpos.ndidx()];
-            let temp_c = kelvin_to_celsius(temperature);
-            let light_lux = lg
-                .light_field
-                .get(bpos.ndidx())
-                .cloned()
-                .unwrap_or_default()
-                .lux;
-
-            let mut ghost_near = false;
-            let mut spiritbox_clarity = 0.0;
-            for (ghost, ghost_pos, dynamics) in q_ghost.iter() {
-                if ghost.hunting > 0.0 {
-                    continue;
-                }
-                let dist2 = pos.distance2(ghost_pos);
-                if dist2 < 3.0 * 3.0 && ghost.class.evidences().contains(&Evidence::SpiritBox) {
-                    ghost_near = true;
-                    spiritbox_clarity = dynamics.spirit_box_clarity;
-                    break;
-                }
-            }
-
-            let delta = sec - spiritbox.last_change_secs;
-
-            // Only charge up for a response if the ghost has the Spirit Box evidence.
-            if ghost_near {
-                let sound = sg.sound_field.get(&bpos).cloned().unwrap_or_default();
-                let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
-                let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
-                let temp_clamped = (temp_c - 3.0).clamp(0.5, 10.0);
-                spiritbox.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 5.5
-                    * spiritbox_clarity.max(0.0);
-            }
-
-            if spiritbox.ghost_answer {
-                if delta > 3.0 {
+                if delta >= 3.0 {
                     spiritbox.ghost_answer = false;
                     spiritbox.blinking_hint_active = false;
+                    // Reset timer so we immediately start scanning next frame
+                    spiritbox.last_change_secs = sec;
                 }
-            } else if delta > 0.3 && electronic.glitch_timer <= 0.0 {
-                spiritbox.last_change_secs = sec;
-                gs_audio.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
+            } else if !is_glitching {
+                // In Scanning Mode
+                spiritbox.mode_frame = spiritbox.mode_frame.wrapping_add(1);
 
+                let bpos = pos.to_board_position();
+                let temperature = tg.temperature_field[bpos.ndidx()];
+                let temp_c = kelvin_to_celsius(temperature);
+                let light_lux = lg
+                    .light_field
+                    .get(bpos.ndidx())
+                    .cloned()
+                    .unwrap_or_default()
+                    .lux;
+
+                let mut ghost_near = false;
+                let mut spiritbox_clarity = 0.0;
+                for (ghost, ghost_pos, dynamics) in q_ghost.iter() {
+                    if ghost.hunting > 0.0 {
+                        continue;
+                    }
+                    let dist2 = pos.distance2(ghost_pos);
+                    if dist2 < 3.0 * 3.0 && ghost.class.evidences().contains(&Evidence::SpiritBox) {
+                        ghost_near = true;
+                        spiritbox_clarity = dynamics.spirit_box_clarity;
+                        break;
+                    }
+                }
+
+                // Accumulate charge
+                if ghost_near {
+                    let sound = sg.sound_field.get(&bpos).cloned().unwrap_or_default();
+                    let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
+                    let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
+                    let temp_clamped = (temp_c - 3.0).clamp(0.5, 10.0);
+                    spiritbox.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 5.5
+                        * spiritbox_clarity.max(0.0);
+                }
+
+                // Check for generic scan tick or ghost answer
                 let r = if spiritbox.charge > 30.0 {
                     spiritbox.charge = 0.0;
                     rng.random_range(0..10)
@@ -178,7 +165,7 @@ pub(crate) fn update_spiritbox(
                         3 => {
                             gs_audio.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, pos)
                         }
-                        _ => spiritbox.ghost_answer = false, // Should not happen, but safeguard.
+                        _ => spiritbox.ghost_answer = false,
                     }
 
                     // Update blinking_hint_active
@@ -189,64 +176,64 @@ pub(crate) fn update_spiritbox(
                         .copied()
                         .unwrap_or(0);
                     spiritbox.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+                } else {
+                    // Play regular scan sound (every tick, 4 times per sec)
+                    gs_audio.play_audio("sounds/effects-radio-scan.ogg".into(), 0.2, pos);
                 }
-            } else if delta > 0.3 && electronic.glitch_timer > 0.0 {
-                spiritbox.last_change_secs = sec;
-                gs_audio.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
             }
+        }
 
-            // Play more static sounds when glitching
-            if electronic.glitch_timer > 0.0 && rng.random_range(0.0..1.0) < 0.6 {
-                gs_audio.play_audio("sounds/effects-chirp-click.ogg".into(), 0.5, pos);
-            }
+        // Handle Glitching audio overrides
+        if is_glitching && rng.random_range(0.0..1.0) < 0.05 {
+            gs_audio.play_audio("sounds/effects-chirp-click.ogg".into(), 0.5, pos);
+        }
 
-            // Play scanning sound
-            if !spiritbox.ghost_answer && spiritbox.mode_frame % 10 == 0 {
-                gs_audio.play_audio("sounds/effects-radio-scan.ogg".into(), 0.1, pos);
+        // Update Sprite
+        sprite.0 = if is_glitching {
+            match rng.random_range(0..5) {
+                0 => GearSpriteID::SpiritBoxOff.to_visual_key(),
+                1 => GearSpriteID::SpiritBoxScan1.to_visual_key(),
+                2 => GearSpriteID::SpiritBoxScan2.to_visual_key(),
+                3 => GearSpriteID::SpiritBoxScan3.to_visual_key(),
+                _ => GearSpriteID::SpiritBoxAns1.to_visual_key(),
             }
-            if spiritbox.ghost_answer && spiritbox.mode_frame % 20 == 0 {
-                gs_audio.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
+        } else if spiritbox.ghost_answer {
+            // Visual toggle based on time for Answer mode (blinking effect)
+            if ((sec * 4.0) as u32).is_multiple_of(2u32) {
+                GearSpriteID::SpiritBoxAns1.to_visual_key()
+            } else {
+                GearSpriteID::SpiritBoxAns2.to_visual_key()
             }
         } else {
-            // Ensure hint is off when disabled
-            spiritbox.blinking_hint_active = false;
-        }
+            // Visual scanning
+            match spiritbox.mode_frame % 3 {
+                0 => GearSpriteID::SpiritBoxScan1.to_visual_key(),
+                1 => GearSpriteID::SpiritBoxScan2.to_visual_key(),
+                _ => GearSpriteID::SpiritBoxScan3.to_visual_key(),
+            }
+        };
 
         // Update Status Text
         let on_s = on_off(toggle.is_on);
 
-        // Glitch text
-        if toggle.is_on && electronic.glitch_timer > 0.0 {
-            let garbled = match rng.random_range(0..5) {
+        let msg = if is_glitching {
+            match rng.random_range(0..5) {
                 0 => "Signal: --LOST--",
                 1 => "Static....",
                 2 => "....?--?---",
                 3 => "MESSAG? IMPOSSI-",
                 _ => "CHAOTIC SIGNALS",
-            };
-            status.0 = format!("{}: {}\n{}", name.0, on_s, garbled);
-            continue;
-        }
-
-        // Normal status
-        let msg = if toggle.is_on {
-            if spiritbox.ghost_answer {
-                if spiritbox.blinking_hint_active {
-                    if spiritbox.mode_frame % 20 < 10 {
-                        // Blinking effect
-                        "> EVP Detected! <".to_string()
-                    } else {
-                        "  EVP Detected!  ".to_string()
-                    }
-                } else {
-                    "EVP Detected!".to_string()
-                }
+            }
+        } else if spiritbox.ghost_answer {
+            if spiritbox.blinking_hint_active && ((sec * 4.0) as u32).is_multiple_of(2) {
+                "> EVP Detected! <"
             } else {
-                "Scanning..".to_string()
+                "  EVP Detected!  "
             }
         } else {
-            "".to_string()
+            "Scanning.."
         };
+
         status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
 
         if spiritbox.ghost_answer {
@@ -257,12 +244,11 @@ pub(crate) fn update_spiritbox(
             .last_response_time
             .is_some_and(|t| gs_audio.time.elapsed_secs_f64() - t < 10.0);
 
-        perceived_clarity.from_sound =
-            if toggle.is_on && is_recent_response && electronic.glitch_timer <= 0.0 {
-                1.0
-            } else {
-                0.0
-            };
+        perceived_clarity.from_sound = if is_recent_response && electronic.glitch_timer <= 0.0 {
+            1.0
+        } else {
+            0.0
+        };
     }
 
     measure.end_ms();

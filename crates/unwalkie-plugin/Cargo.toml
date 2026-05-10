@@ -23,7 +23,6 @@ uncommon-app-core = { workspace = true }
 unlight-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
-unsettings-core = { workspace = true }
 unwalkie-core = { workspace = true }
 unprofile-core = { workspace = true }
 unlocomotion-core = { workspace = true }
@@ -36,6 +35,7 @@ uninvestigation-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unmetrics-core = { workspace = true }
 unmission-core = { workspace = true }
+unaudiospatial-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }

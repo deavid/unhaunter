@@ -4,11 +4,14 @@ use uncommon_states_core::UIContextState;
 use unaudiobg_core::events::AmbientSoundMuteEvent;
 use unaudiobg_core::mute::AmbientMuteController;
 
-use crate::systems::{
-    menu_music::{despawn_sound, manage_title_song},
-    mute::process_ambient_mute_events,
-    spawn::{silence_background_tracks, spawn_background_tracks},
-    volume::update_ambient_sound_volumes,
+use crate::{
+    pools::create_pools,
+    systems::{
+        menu_music::{manage_title_song_volume, spawn_title_song},
+        mute::process_ambient_mute_events,
+        spawn::{silence_background_tracks, spawn_background_tracks},
+        volume::update_ambient_sound_volumes,
+    },
 };
 
 pub struct UnhaunterAudioBgPlugin;
@@ -37,6 +40,8 @@ impl Plugin for UnhaunterAudioBgPlugin {
         );
 
         // Menu music systems always run
-        app.add_systems(Update, (manage_title_song, despawn_sound));
+        app.add_systems(Update, (spawn_title_song, manage_title_song_volume));
+
+        app.add_systems(Startup, create_pools);
     }
 }

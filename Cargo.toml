@@ -219,21 +219,45 @@ csv = "1.4"
 dirs = "6.0"
 strum = { version = "0.28", features = ["derive"] }
 noise = { version = "0.9", features = ["std"] }
-bevy = { version = "0.18", features = ["jpeg", "serialize", "debug"] }
-# bevy = { version = "0.18", default-features = false, features = [
-#     "jpeg",
-#     "serialize",
-#     "debug",
-#     # 2D
-#     "2d_bevy_render",
-#     "audio",
-#     "default_app",
-#     "picking",
-#     "scene",
-#     # UI
-#     "ui_api",
-#     "ui_bevy_render",
-# ] }
+bevy = { version = "0.18", default-features = false, features = [
+    "jpeg",
+    "serialize",
+    "debug",
+    "default_app",
+    "bevy_winit",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_sprite_render",
+    "bevy_pbr",
+    "bevy_core_pipeline",
+    "bevy_ui",
+    "bevy_ui_render",
+    "bevy_text",
+    "bevy_asset",
+    "bevy_scene",
+    "bevy_gizmos",
+    "bevy_gizmos_render",
+    "bevy_post_process",
+    "bevy_anti_alias",
+    "bevy_animation",
+    "bevy_gilrs",
+    "bevy_gltf",
+    "multi_threaded",
+    "std",
+    "x11",
+    "wayland",
+    "webgl2",
+    "default_font",
+    "tonemapping_luts",
+    "bevy_state",
+    "bevy_color",
+    "bevy_window",
+    "bevy_picking",
+    "png",
+    "hdr",
+    "zstd_rust",
+] }
+bevy_seedling = { version = "0.7.2", features = ["ogg", "wav"] }
 bevy_asset_loader = { version = "0.26", features = ["2d"] }
 bevy_math = "0.18"
 bevy-persistent = { version = "0.10", features = ["all"] }
@@ -463,6 +487,7 @@ ignored = ["getrandom", "getrandom_02", "getrandom_03"]
 clap = { workspace = true }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
+bevy_seedling = { workspace = true }
 bevy_replicon = { workspace = true }
 serde_json = { workspace = true }
 

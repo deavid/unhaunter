@@ -21,11 +21,10 @@ unplayer-core = { workspace = true }
 unbehavior-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
-unsettings-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 unmapload-core = { workspace = true }
+unaudiospatial-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
-bevy-persistent = { workspace = true }
 bevy_replicon = { workspace = true }

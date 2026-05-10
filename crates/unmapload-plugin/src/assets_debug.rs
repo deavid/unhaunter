@@ -1,5 +1,4 @@
 use bevy::asset::AssetEvent;
-use bevy::audio::AudioSource;
 use bevy::prelude::*;
 use untmxmap_core::assets::index::AssetIdx;
 use untmxmap_core::assets::tmxmap::TmxMap;
@@ -44,7 +43,6 @@ pub(crate) fn app_setup(app: &mut App) {
         Update,
         (
             log_asset_events::<Image>,
-            log_asset_events::<AudioSource>,
             log_asset_events::<Font>,
             log_asset_events::<TextureAtlasLayout>,
             log_asset_events::<Mesh>,

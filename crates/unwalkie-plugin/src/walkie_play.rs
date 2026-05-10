@@ -1,9 +1,8 @@
-use bevy::{audio::Volume, prelude::*, time::Stopwatch};
-use bevy_persistent::Persistent;
+use bevy::{prelude::*, time::Stopwatch};
+use unaudiospatial_core::components::{AudioCategory, FlatAudio};
 use uncommon_app_core::random_seed;
 use unmission_core::events::LevelReadyEvent;
 use unplayer_core::components::MainPlayer;
-use unsettings_core::audio::AudioSettings;
 use untruck_core::components::in_truck::InTruck;
 use unwalkie_core::components::WalkieText;
 use unwalkie_core::events::hint::OnScreenHintEvent;
@@ -31,8 +30,6 @@ fn state_tracking(
 
 fn walkie_talk(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    audio_settings: Res<Persistent<AudioSettings>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut hint_event_writer: MessageWriter<OnScreenHintEvent>,
     mut walkie_talking_writer: MessageWriter<WalkieTalkingEvent>,
@@ -194,25 +191,14 @@ fn walkie_talk(
         WalkieSoundState::Outro => "sounds/radio-off-zzt.ogg".to_string(),
     };
 
-    // For Bevy 0.15, we need to use AudioPlayer with the audio source asset
-    let audio_source = asset_server.load(&sound_file);
-
-    commands
-        .spawn(AudioPlayer::new(audio_source)) // Use AudioPlayer constructor with Handle<AudioSource>
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Despawn,
-            volume: Volume::Linear(
-                walkie_volume
-                    * audio_settings.volume_voice_chat.as_f32()
-                    * audio_settings.volume_master.as_f32(),
-            ),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(new_state_unwrapped);
+    commands.spawn((
+        FlatAudio {
+            sound_file,
+            volume_multiplier: walkie_volume,
+            category: AudioCategory::VoiceChat,
+        },
+        new_state_unwrapped,
+    ));
 }
 
 pub(crate) fn app_setup(app: &mut App) {

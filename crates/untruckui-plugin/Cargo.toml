@@ -23,13 +23,13 @@ unrender-std = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
 uninput-core = { workspace = true }
-unsettings-core = { workspace = true }
 unprofile-core = { workspace = true }
 unreplicon-core = { workspace = true }
 unwalkie-core = { workspace = true }
 unghost-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 unmapload-core = { workspace = true }
+unaudiospatial-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

@@ -20,5 +20,6 @@ unspatial-core = { workspace = true }
 uncommon-states-core = { workspace = true }
 
 bevy = { workspace = true }
+bevy_seedling = { workspace = true }
 bevy-persistent = { workspace = true }
 ndarray = { workspace = true }
