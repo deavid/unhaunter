@@ -21,6 +21,7 @@ pub struct SpatialAudioInstance {
     pub initial_volume: f32,
     pub spawn_time: f32,
     pub spawn_frame: u32,
+    pub position: Option<unspatial_core::position::Position>,
 }
 
 #[derive(Component, Debug, Clone)]

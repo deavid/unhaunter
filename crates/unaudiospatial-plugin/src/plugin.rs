@@ -46,6 +46,7 @@ impl Plugin for UnhaunterSpatialAudioPlugin {
                 Update,
                 (
                     spatial_audio_playback,
+                    update_spatial_audio,
                     monitor_audio_pileup,
                     process_audio_fadeouts,
                 )

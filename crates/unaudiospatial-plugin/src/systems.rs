@@ -18,6 +18,88 @@ use unspatial_core::position::Position;
 /// Minimum frame gap between two plays of the same sound to not be considered spam.
 const AUDIO_SPAM_FRAME_THRESHOLD: u32 = 5;
 
+pub(crate) struct SpatialParams {
+    pub offset: bevy_seedling::firewheel::vector::Vec3,
+    pub direction: Vec3,
+    pub muffle_cutoff_hz: f32,
+    pub panning_threshold: f32,
+}
+
+pub(crate) fn compute_spatial_params(
+    player_position: &Position,
+    player_dir: &Direction,
+    sound_position: Option<Position>,
+    is_mono: bool,
+) -> SpatialParams {
+    let aim = Vec2::new(player_dir.dx, player_dir.dy);
+    let fwd = aim.normalize_or_zero();
+    let fwd = if fwd == Vec2::ZERO { Vec2::Y } else { fwd };
+    let right = Vec2::new(fwd.y, -fwd.x);
+
+    let dist = sound_position
+        .map(|pos| player_position.distance_zf(&pos, 12.5))
+        .unwrap_or(0.0);
+
+    let pos_val = sound_position.unwrap_or(*player_position);
+    let delta = pos_val.delta(*player_position);
+
+    let damp_lr = (dist / 2.0).clamp(0.0, 1.0);
+    let damp_fb = (dist / 0.25).clamp(0.0, 1.0);
+
+    let o_local_x = delta.dx * right.x + delta.dy * right.y;
+    let o_local_y = delta.dx * fwd.x + delta.dy * fwd.y;
+
+    let local_x = o_local_x * damp_lr;
+    let local_y = o_local_y * damp_fb;
+    let local_z = delta.dz * 12.5 * damp_lr + 0.5;
+
+    let length_2 = (local_x * local_x + local_y * local_y + local_z * local_z).max(0.0000001);
+    let length = length_2.sqrt();
+    let far_enough = (length_2 / 4.0).tanh();
+    let direction = Vec3::new(
+        (local_x / length * far_enough).powi(3),
+        local_y / length,
+        local_z / length,
+    )
+    .normalize();
+
+    let dist_ratio = (dist / 100.0).clamp(0.0, 1.0);
+    let base_muffle_hz = (9.9034f32 - (5.9914f32 * dist_ratio)).exp();
+
+    let inv_behind = if direction.y < 0.0 {
+        let behind_factor = -direction.y; // 0.0 at sides, 1.0 directly behind
+        let penalty_curve = behind_factor * behind_factor;
+        penalty_curve / 800.0 // At 180 degrees, pulls constraint down precisely towards ~800Hz
+    } else {
+        0.0
+    };
+
+    let inv_floor = if delta.dz.abs() > 0.8 {
+        let z_factor = ((delta.dz.abs() - 0.8) / 0.7).clamp(0.0, 1.0); // Full penalty by 1.5 tiles up/down
+        z_factor / 400.0 // Floors muffle extremely heavily (towards ~400Hz max)
+    } else {
+        0.0
+    };
+
+    let muffle_cutoff_hz =
+        (1.0 / ((1.0 / base_muffle_hz) + inv_behind + inv_floor)).clamp(20.0, 20_480.0);
+
+    let is_spatial = sound_position.is_some() && !is_mono;
+
+    let offset = if is_spatial {
+        bevy_seedling::firewheel::vector::Vec3::new(local_x, local_y, local_z)
+    } else {
+        bevy_seedling::firewheel::vector::Vec3::new(0.0, 0.0, 0.0)
+    };
+
+    SpatialParams {
+        offset,
+        direction,
+        muffle_cutoff_hz,
+        panning_threshold: 0.3 * far_enough,
+    }
+}
+
 pub fn spatial_audio_playback(
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
@@ -40,11 +122,6 @@ pub fn spatial_audio_playback(
         measure.end_ms();
         return;
     };
-
-    let aim = Vec2::new(player_dir.dx, player_dir.dy);
-    let fwd = aim.normalize_or_zero();
-    let fwd = if fwd == Vec2::ZERO { Vec2::Y } else { fwd };
-    let right = Vec2::new(fwd.y, -fwd.x);
 
     for sound_event in sound_events.read() {
         if !player_position.is_finite() && can_log {
@@ -85,31 +162,9 @@ pub fn spatial_audio_playback(
             .map(|pos| player_position.distance_zf(&pos, 12.5))
             .unwrap_or(0.0);
 
-        let pos_val = sound_event.position.unwrap_or(*player_position);
-        let delta = pos_val.delta(*player_position);
-
-        // Apply spatial dampening for close sounds so they don't pan extremely.
-        // Front-back needs ~0.25 units to be highly noticeable, left-right ~2.0 units.
-        let damp_lr = (dist / 2.0).clamp(0.0, 1.0);
-        let damp_fb = (dist / 0.25).clamp(0.0, 1.0);
-
-        let o_local_x = delta.dx * right.x + delta.dy * right.y;
-        let o_local_y = delta.dx * fwd.x + delta.dy * fwd.y;
-
-        let local_x = o_local_x * damp_lr;
-        let local_y = o_local_y * damp_fb;
-        let local_z = delta.dz * 12.5 * damp_lr + 0.5;
-
-        // normalize direction for ITD
-        let length_2 = (local_x * local_x + local_y * local_y + local_z * local_z).max(0.0000001);
-        let length = length_2.sqrt();
-        let far_enough = (length_2 / 4.0).tanh();
-        let direction = Vec3::new(
-            (local_x / length * far_enough).powi(3),
-            local_y / length,
-            local_z / length,
-        )
-        .normalize();
+        let is_mono = audio_settings.sound_output == SoundOutput::Mono;
+        let params =
+            compute_spatial_params(player_position, player_dir, sound_event.position, is_mono);
 
         let base_vol = sound_event.volume
             * audio_settings.volume_effects.as_f32()
@@ -124,50 +179,18 @@ pub fn spatial_audio_playback(
         let rev_ramp = (dist / 20.0).clamp(0.0, 1.0);
         let mut rev_vol = (base_vol * rev_max_ratio * rev_ramp).clamp(0.0, 1.0);
 
-        // --- MUFFLING CALCULATION (Parallel resistance formula) ---
-        // We use 1/M_total = 1/M_dist + 1/M_behind + 1/M_floor.
-        // This ensures the heaviest muffle always dominates, but they combined naturally.
-
-        // 1. Distance Muffle Component (Applies to both)
-        let dist_ratio = (dist / 100.0).clamp(0.0, 1.0);
-        let base_muffle_hz = (9.9034f32 - (5.9914f32 * dist_ratio)).exp();
-
-        // 2. Behind Player Component (Applies to both)
-        let inv_behind = if direction.y < 0.0 {
-            let behind_factor = -direction.y; // 0.0 at sides, 1.0 directly behind
-            let penalty_curve = behind_factor * behind_factor;
-            penalty_curve / 800.0 // At 180 degrees, pulls constraint down precisely towards ~800Hz
-        } else {
-            0.0
-        };
-
-        // 3. Different Floor Component (Applies to both Dry and Reverb)
-        let inv_floor = if delta.dz.abs() > 0.8 {
-            let z_factor = ((delta.dz.abs() - 0.8) / 0.7).clamp(0.0, 1.0); // Full penalty by 1.5 tiles up/down
-            z_factor / 400.0 // Floors muffle extremely heavily (towards ~400Hz max)
-        } else {
-            0.0
-        };
-
-        // Complete combinations!
-        let muffle_hz =
-            (1.0 / ((1.0 / base_muffle_hz) + inv_behind + inv_floor)).clamp(20.0, 20_480.0);
-
-        if audio_settings.sound_output == SoundOutput::Mono {
+        if is_mono {
             let mono_div = 1.0 + dist * 0.4;
             dry_vol /= mono_div;
             rev_vol /= mono_div;
         }
 
-        let is_spatial =
-            sound_event.position.is_some() && audio_settings.sound_output != SoundOutput::Mono;
+        let direction = params.direction;
+        let offset = params.offset;
+        let muffle_hz = params.muffle_cutoff_hz;
+        let panning_threshold = params.panning_threshold;
 
-        let offset = if is_spatial {
-            bevy_seedling::firewheel::vector::Vec3::new(local_x, local_y, local_z)
-        } else {
-            bevy_seedling::firewheel::vector::Vec3::new(0.0, 0.0, 0.0)
-        };
-        warn!("ITD direction: {direction:?}");
+        trace!("ITD direction: {direction:?}");
 
         // --- DRY LAYER ---
         commands.spawn((
@@ -177,11 +200,13 @@ pub fn spatial_audio_playback(
                 initial_volume: dry_vol,
                 spawn_time: now,
                 spawn_frame: cur_frame,
+                position: sound_event.position,
             },
             SamplePlayer::new(asset_server.load(sound_event.sound_file.clone())),
             sample_effects![
                 VolumeNode {
                     volume: Volume::Linear(dry_vol),
+                    smooth_seconds: 0.0005,
                     ..default()
                 },
                 SpatialBasicNode {
@@ -189,7 +214,7 @@ pub fn spatial_audio_playback(
                     muffle_cutoff_hz: muffle_hz,
                     smooth_seconds: 0.0005,
                     downmix: false,
-                    panning_threshold: 0.3 * far_enough,
+                    panning_threshold,
                     ..default()
                 },
                 (
@@ -214,11 +239,13 @@ pub fn spatial_audio_playback(
                     initial_volume: rev_vol,
                     spawn_time: now,
                     spawn_frame: cur_frame,
+                    position: sound_event.position,
                 },
                 SamplePlayer::new(asset_server.load(reverb_file)),
                 sample_effects![
                     VolumeNode {
                         volume: Volume::Linear(rev_vol),
+                        smooth_seconds: 0.0005,
                         ..default()
                     },
                     SpatialBasicNode {
@@ -230,7 +257,7 @@ pub fn spatial_audio_playback(
                         },
                         smooth_seconds: 0.0005,
                         downmix: false,
-                        panning_threshold: 0.3 * far_enough,
+                        panning_threshold,
                         ..default()
                     },
                     (
@@ -311,5 +338,35 @@ pub(crate) fn attach_flat_audio(
             }],
             DefaultPool,
         ));
+    }
+}
+
+pub fn update_spatial_audio(
+    qp: Query<(&Position, &Direction), With<SpatialListener>>,
+    audio_settings: Res<Persistent<AudioSettings>>,
+    q_audio: Query<(&SpatialAudioInstance, &SampleEffects)>,
+    mut q_basic: Query<&mut SpatialBasicNode>,
+    mut q_itd: Query<&mut ItdNode>,
+) {
+    let Ok((player_position, player_dir)) = qp.single() else {
+        return;
+    };
+
+    let is_mono = audio_settings.sound_output == SoundOutput::Mono;
+
+    for (instance, effects) in q_audio.iter() {
+        let params =
+            compute_spatial_params(player_position, player_dir, instance.position, is_mono);
+
+        if let Ok(mut basic_node) = q_basic.get_effect_mut(effects) {
+            basic_node.offset = params.offset;
+            basic_node.muffle_cutoff_hz = params.muffle_cutoff_hz;
+            basic_node.panning_threshold = params.panning_threshold;
+            basic_node.smooth_seconds = 0.02; // 20ms during updates
+        }
+
+        if let Ok(mut itd_node) = q_itd.get_effect_mut(effects) {
+            itd_node.direction = params.direction;
+        }
     }
 }
