@@ -2,7 +2,6 @@ pub(crate) mod net_state;
 pub(crate) mod spawn;
 
 use bevy::prelude::*;
-use unaudiospatial_core::events::SoundEvent;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::RoomStateDelta;
@@ -60,7 +59,6 @@ pub(crate) fn dispatch_interact_intent(
     >,
     mut ev_interaction: MessageWriter<ExecuteInteractionEvent>,
     mut ev_interaction_req: MessageWriter<InteractionRequestMessage>,
-    mut ev_sound: MessageWriter<SoundEvent>,
     mut ev_npc: Option<MessageWriter<NpcHelpEvent>>,
     authority: Option<Res<unreplicon_core::resources::AuthorityRole>>,
 ) {
@@ -90,7 +88,7 @@ pub(crate) fn dispatch_interact_intent(
                 }
             }
             if let Some(entity) = selected_entity {
-                for (entity, item_pos, interactive, behavior, _) in
+                for (entity, item_pos, _interactive, behavior, _) in
                     interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
                 {
                     if behavior.is_npc()
@@ -100,13 +98,6 @@ pub(crate) fn dispatch_interact_intent(
                     }
                     if behavior.is_van_entry() {
                         commands.entity(player_entity).insert(InTruck);
-                        if let Some(interactive) = interactive {
-                            ev_sound.write(SoundEvent {
-                                sound_file: interactive.sound_for_moving_into_state(behavior),
-                                volume: 1.0,
-                                position: Some(*item_pos),
-                            });
-                        }
                     } else {
                         let bpos = item_pos.to_board_position();
                         let bpos_arr = [bpos.x as i32, bpos.y as i32, bpos.z as i32];

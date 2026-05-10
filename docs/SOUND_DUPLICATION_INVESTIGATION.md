@@ -57,17 +57,25 @@ The corrected understanding is:
 The redesign has started and the following pieces are now implemented:
 
 1. `unaudiospatial` now has a separate local-only audio path via `LocalSoundEvent` and `LocalAudioEmitter`.
-2. Interaction audio no longer comes from `Changed<Behavior>`.
-3. The interaction domain now emits `PlayInteractionAudioMessage` from authoritative interaction execution and room
+2. The clearly local-only caller cluster now uses `LocalAudioEmitter` explicitly instead of the shared-world
+   `AudioEmitter` path. This includes handheld detector/device sounds, hide rustle, and handheld toggle clicks.
+3. Interaction audio no longer comes from `Changed<Behavior>`.
+4. The interaction domain now emits `PlayInteractionAudioMessage` from authoritative interaction execution and room
    synchronization paths.
-4. Pure clients receive `PlayInteractionAudioMessage` and convert it into local playback.
-5. Ghost interaction sounds and standard ghost roars now use `GhostAudioMessage` as an authoritative server broadcast.
-6. Pure clients play `GhostAudioMessage` from the replicated server-message path, and the host now explicitly plays the
+5. Pure clients receive `PlayInteractionAudioMessage` and convert it into local playback.
+6. Ghost interaction sounds, standard ghost roars, and the death-vocalization sequence now all use `GhostAudioMessage`
+   as an authoritative server broadcast.
+7. Pure clients play `GhostAudioMessage` from the replicated server-message path, and the host now explicitly plays the
    same ghost sounds locally at the authority emit point so listen-server audio matches join clients.
-7. `GhostInteractionSoundCue` has now been removed entirely; ghost interaction audio no longer has a second
-   replicated-state carrier.
-8. The ghost death sequence now also uses explicit authoritative `GhostAudioMessage` broadcasts; `GhostVocalization` has
-   been removed entirely.
+8. `GhostInteractionSoundCue` and `GhostVocalization` have both been removed; ghost presentation now plays only the
+   explicit authoritative broadcasts.
+9. Pickup/drop audio no longer fires optimistically in `uninventory-plugin`. The authoritative accept points in
+   `ungear-plugin` now emit `PlayerGearAudioMessage`, and local playback happens only after server acceptance.
+10. Van-entry audio no longer fires from the local locomotion intent path. The truck domain now emits
+    `TruckAudioMessage` from the authority-side `Added<InTruck>` transition and clients play that broadcast locally.
+11. The short authority audit found that `InTruck` itself is still client-authored today: the owning client inserts the
+    marker locally and the authority mirrors it via `ExportPlayerMarkersMessage`. The audio path is now authoritative
+    relative to that mirrored transition, but the truck-entry state transition itself is not yet server-validated.
 
 ## The Standardized Design Fix (Centralized Push)
 
@@ -98,6 +106,8 @@ Make the Server the sole authority on when an audio effect should play, pushing 
 
 - Migrate the remaining legacy `AudioEmitter` and `SoundEvent` callers to either explicit authoritative server messages
   or explicitly local-only playback, depending on the feature.
+- Decide whether truck entry/exit should remain client-authored marker state or be promoted to a proper validated server
+  intent path. The audio migration no longer depends on that decision, but the gameplay authority model still does.
 - Re-test the original door/switch reproduction case after the new interaction path is in place and record the exact
   before/after behavior.
 
@@ -109,6 +119,7 @@ Make the Server the sole authority on when an audio effect should play, pushing 
 - Confirmed during implementation that `app.add_message::<T>()` is local-only in this codebase; real network transport
   uses `add_server_message` with `ToClients<T>`.
 - Added a local-only audio emitter path in `unaudiospatial` for non-network playback.
+- Reclassified the clearly local-only caller cluster onto `LocalAudioEmitter`.
 - Migrated interaction audio to an authoritative `PlayInteractionAudioMessage` broadcast instead of `Changed<Behavior>`
   synthesis.
 - Migrated ghost interaction audio and standard roars to authoritative `GhostAudioMessage` broadcasts.
@@ -117,3 +128,9 @@ Make the Server the sole authority on when an audio effect should play, pushing 
 - Deleted the now-unused `GhostInteractionSoundCue` definition after confirming there were no remaining references.
 - Migrated the death-vocalization chain to explicit authoritative `GhostAudioMessage` broadcasts and deleted
   `GhostVocalization`.
+- Migrated pickup/drop audio to authoritative `PlayerGearAudioMessage` broadcasts emitted from the validated server
+  accept points.
+- Audited the `InTruck` ownership path and confirmed it is currently client-authored then mirrored by the authority via
+  `ExportPlayerMarkersMessage`.
+- Migrated van-entry audio to authoritative `TruckAudioMessage` broadcasts emitted from the authority-side
+  `Added<InTruck>` transition in the truck domain.

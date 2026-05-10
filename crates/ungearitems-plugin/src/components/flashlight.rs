@@ -1,4 +1,4 @@
-use unaudiospatial_core::emitter::AudioEmitter;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use uncommon_app_core::random_seed;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, StatusText, StatusTextRefreshTimer,
@@ -79,7 +79,7 @@ pub(crate) fn update_flashlight_skin(
         Option<&LocallyOwned>,
         Has<StatusTextRefreshTimer>,
     )>,
-    mut ga: AudioEmitter,
+    mut ga: LocalAudioEmitter,
 ) {
     let measure = metrics::FLASHLIGHT_UPDATE.time_measure();
     for (

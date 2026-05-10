@@ -15,10 +15,12 @@ pub struct GhostDeathSignal {
     pub duration_secs: f32,
 }
 
-/// Authority-only progress state for the ghost death audio sequence.
+/// Authority-only progress state for one-shot steps inside the ghost death sequence.
 ///
-/// Clients do not need this bookkeeping replicated. They only need the explicit
-/// `GhostAudioMessage` broadcasts and the replicated `GhostDeathSignal` duration.
+/// This is intentionally separate from `GhostDeathSignal`: clients do not need this
+/// bookkeeping replicated. They only need the explicit `GhostAudioMessage` broadcasts
+/// and the replicated `GhostDeathSignal` duration, while the authority needs private
+/// bookkeeping to emit sequence cues exactly once.
 #[derive(Component, Debug, Clone, Copy, Reflect, Default)]
 #[reflect(Component)]
 pub struct GhostDeathSequenceState {

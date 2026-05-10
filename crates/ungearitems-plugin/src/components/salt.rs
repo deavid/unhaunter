@@ -209,7 +209,7 @@ fn hydrate_salt_pile_consumed(
 fn play_salt_effects_audio(
     q_salt: Query<(Entity, &SaltData, &Position), Changed<SaltData>>,
     mut prev_charges: Local<std::collections::HashMap<Entity, u8>>,
-    mut gs_audio: unaudiospatial_core::emitter::AudioEmitter,
+    mut gs_audio: unaudiospatial_core::emitter::LocalAudioEmitter,
 ) {
     for (entity, salt, pos) in q_salt.iter() {
         let prev = prev_charges.get(&entity).copied().unwrap_or(salt.charges);

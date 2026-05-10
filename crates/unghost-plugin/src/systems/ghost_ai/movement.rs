@@ -2,6 +2,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_replicon::prelude::Replicated;
 use rand::prelude::*;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::resources::roomdb::RoomTopology;
@@ -9,10 +10,7 @@ use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungearitems_core::components::salt::SaltyTrace;
-use unaudiospatial_core::emitter::LocalAudioEmitter;
-use unghost_core::components::logic::ghost_death::{
-    GhostDeathSequenceState, GhostDeathSignal,
-};
+use unghost_core::components::logic::ghost_death::{GhostDeathSequenceState, GhostDeathSignal};
 use unghost_core::components::logic::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unghost_core::components::logic::red_light_charge::{GhostRedLightCharge, RedLightChargeMode};

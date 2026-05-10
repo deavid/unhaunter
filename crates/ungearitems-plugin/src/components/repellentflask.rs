@@ -1,5 +1,5 @@
 use ndarray::Array3;
-use unaudiospatial_core::emitter::AudioEmitter;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
@@ -365,7 +365,7 @@ pub(crate) fn app_setup(app: &mut App) {
 
 fn play_repellent_effects_audio(
     mut ev_repellent: MessageReader<ungearitems_core::events::RepellentUsedEvent>,
-    mut gs_audio: AudioEmitter,
+    mut gs_audio: LocalAudioEmitter,
 ) {
     for _ in ev_repellent.read() {
         gs_audio.play_audio_nopos("sounds/spray.ogg".into(), 0.8);

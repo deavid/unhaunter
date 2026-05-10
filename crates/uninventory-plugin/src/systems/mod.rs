@@ -1,11 +1,12 @@
 use bevy::prelude::*;
-use unaudiospatial_core::events::SoundEvent;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::components::FloorItemCollidable;
 use unboard_core::entity::GameSprite;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::messages::PlayerGearAudioMessage;
 use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
@@ -60,7 +61,6 @@ pub(crate) fn queue_pickup_request(
         (Without<PlayerSprite>, With<FloorItemCollidable>),
     >,
     mut writer_grab: MessageWriter<RequestGrab>,
-    mut ev_sound: MessageWriter<SoundEvent>,
 ) {
     for (player_gear, player_pos, mut player_input) in players.iter_mut() {
         if player_input.grab {
@@ -82,22 +82,12 @@ pub(crate) fn queue_pickup_request(
                         player_gear.right_hand.is_none() || player_gear.inventory.len() < 2;
                     if can_grab_gear {
                         writer_grab.write(RequestGrab { entity });
-                        ev_sound.write(SoundEvent {
-                            sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
-                            volume: 1.0,
-                            position: Some(*player_pos),
-                        });
                     }
                 } else if let Some(behavior) = behavior
                     && behavior.p.object.pickable
                     && player_gear.held_item.is_none()
                 {
                     writer_grab.write(RequestGrab { entity });
-                    ev_sound.write(SoundEvent {
-                        sound_file: "sounds/item-pickup-whoosh.ogg".to_string(),
-                        volume: 1.0,
-                        position: Some(*player_pos),
-                    });
                 }
             }
         }
@@ -115,7 +105,6 @@ pub(crate) fn queue_drop_request(
     board_collision: Res<BoardCollisionField>,
     pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,
     mut writer_drop: MessageWriter<RequestDrop>,
-    mut ev_sound: MessageWriter<SoundEvent>,
 ) {
     for (mut player_gear, player_pos, mut player_input, player_loco) in players.iter_mut() {
         if player_input.drop {
@@ -183,11 +172,6 @@ pub(crate) fn queue_drop_request(
                     player_loco.movement.dz,
                 ],
             });
-            ev_sound.write(SoundEvent {
-                sound_file: "sounds/item-drop-clunk.ogg".to_string(),
-                volume: 1.0,
-                position: Some(*player_pos),
-            });
 
             if dropped_gear && !player_gear.inventory.is_empty() {
                 let next_item = player_gear.inventory.remove(0);
@@ -197,6 +181,15 @@ pub(crate) fn queue_drop_request(
                     .insert(EquipmentPosition::Hand(Hand::Right));
             }
         }
+    }
+}
+
+fn play_player_gear_audio(
+    mut reader: MessageReader<PlayerGearAudioMessage>,
+    mut audio: LocalAudioEmitter,
+) {
+    for msg in reader.read() {
+        audio.play_audio(msg.sound_file.clone(), msg.volume, &msg.position);
     }
 }
 
@@ -400,6 +393,12 @@ pub(crate) fn app_setup(app: &mut App) {
         )
             .after(uninput_core::PlayerInputSet)
             .run_if(in_state(UIContextState::InGame)),
+    );
+    app.add_systems(
+        Update,
+        play_player_gear_audio
+            .run_if(in_state(UIContextState::InGame))
+            .run_if(resource_exists::<unreplicon_core::resources::LocalPlayerRole>),
     );
     app.add_systems(
         Update,

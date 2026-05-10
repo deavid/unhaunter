@@ -1,5 +1,5 @@
 use bevy_persistent::Persistent;
-use unaudiospatial_core::emitter::AudioEmitter;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
@@ -36,7 +36,7 @@ pub(crate) fn update_recorder(
         &mut PerceivedClarity,
         Has<StatusTextRefreshTimer>,
     )>,
-    gs_audio: AudioEmitter,
+    gs_audio: LocalAudioEmitter,
     sg: If<Res<SoundGrid>>,
     haunt_state: Res<HauntState>,
     difficulty: Res<CurrentDifficulty>,

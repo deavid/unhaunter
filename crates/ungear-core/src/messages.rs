@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use uninvestigation_core::ghost::GhostType;
+use unspatial_core::position::Position;
 
 use crate::components::playergear::HeldObject;
 use crate::types::gear::equipment::Hand;
@@ -56,4 +57,12 @@ pub enum TruckLoadoutAction {
 #[derive(Debug, Clone, Serialize, Deserialize, Message)]
 pub struct TruckLoadoutMessage {
     pub action: TruckLoadoutAction,
+}
+
+/// Authoritative pickup/drop audio decision emitted by the gear domain.
+#[derive(Debug, Clone, Serialize, Deserialize, Message, Reflect)]
+pub struct PlayerGearAudioMessage {
+    pub sound_file: String,
+    pub volume: f32,
+    pub position: Position,
 }

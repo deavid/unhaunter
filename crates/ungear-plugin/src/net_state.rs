@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::{Channel, ClientId, ClientMessageAppExt, FromClient, Replicated};
+use bevy_replicon::prelude::{
+    Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode,
+    ServerMessageAppExt, ToClients,
+};
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::components::FloorItemCollidable;
 use uncommon_app_core::random_seed;
@@ -11,7 +14,9 @@ use ungear_core::difficulty_ext::DifficultyGearExt;
 use ungear_core::events::{
     RequestEquipGearFromVan, RequestUnequipHand, RequestUnequipInventorySlot,
 };
-use ungear_core::messages::{ExportPlayerGearMessage, TruckLoadoutAction, TruckLoadoutMessage};
+use ungear_core::messages::{
+    ExportPlayerGearMessage, PlayerGearAudioMessage, TruckLoadoutAction, TruckLoadoutMessage,
+};
 use ungear_core::resources::spawner::{GearHydrated, GearMarker, GearSpawnerRegistry};
 use ungear_core::types::gear::equipment::{EquipmentPosition, Hand};
 use ungear_core::types::gear::kind::GearKind;
@@ -47,6 +52,31 @@ fn gear_snapshot(gear: &PlayerGear) -> String {
         "left={:?} right={:?} inv={:?} held={:?}",
         gear.left_hand, gear.right_hand, gear.inventory, gear.held_item
     )
+}
+
+fn emit_player_gear_audio(
+    sound_file: &str,
+    volume: f32,
+    position: Position,
+    client_id: ClientId,
+    has_local_player: bool,
+    local_audio: &mut MessageWriter<PlayerGearAudioMessage>,
+    remote_audio: &mut MessageWriter<ToClients<PlayerGearAudioMessage>>,
+) {
+    let message = PlayerGearAudioMessage {
+        sound_file: sound_file.to_string(),
+        volume,
+        position,
+    };
+
+    if client_id == ClientId::Server && has_local_player {
+        local_audio.write(message.clone());
+    }
+
+    remote_audio.write(ToClients {
+        mode: SendMode::Broadcast,
+        message,
+    });
 }
 
 fn send_export_player_gear(
@@ -139,68 +169,93 @@ fn handle_request_grab(
         (Entity, Option<&Owner>, Has<GearKind>, Has<Behavior>),
         With<FloorItemCollidable>,
     >,
-    mut q_players: Query<(&Owner, &mut PlayerGear)>,
+    mut q_players: Query<(&Owner, &mut PlayerGear, &Position)>,
+    local_player: Option<Res<LocalPlayerRole>>,
+    mut local_audio: MessageWriter<PlayerGearAudioMessage>,
+    mut remote_audio: MessageWriter<ToClients<PlayerGearAudioMessage>>,
 ) {
     for msg in reader.read() {
         let client_id = msg.client_id;
         let item_entity = msg.message.entity;
 
-        if let Ok((entity, old_owner, is_gear, is_furniture)) = q_items.get(item_entity) {
-            // Find the PlayerGear component belonging to the client who sent the request.
-            let Some((_owner, mut player_gear)) = q_players
-                .iter_mut()
-                .find(|(o, _)| from_owner_id(o.0) == client_id)
-            else {
-                warn!(
-                    "handle_request_grab: could not find PlayerGear for client {:?}",
-                    client_id
-                );
-                continue;
-            };
+        let Ok((entity, old_owner, is_gear, is_furniture)) = q_items.get(item_entity) else {
+            warn!(
+                "handle_request_grab: requested entity {:?} is not a valid floor item for client {:?}",
+                item_entity, client_id
+            );
+            continue;
+        };
 
-            // Revoke simulation authority from the old driver if different from the new grabber.
-            if let Some(old_owner) = old_owner {
-                let old_client_id = from_owner_id(old_owner.0);
-                if old_client_id != client_id && old_client_id == ClientId::Server {
-                    commands.entity(entity).remove::<LocallyOwned>();
-                }
-            }
+        // Find the PlayerGear component belonging to the client who sent the request.
+        let Some((_owner, mut player_gear, player_pos)) = q_players
+            .iter_mut()
+            .find(|(o, _, _)| from_owner_id(o.0) == client_id)
+        else {
+            warn!(
+                "handle_request_grab: could not find PlayerGear for client {:?}",
+                client_id
+            );
+            continue;
+        };
 
-            let owner_id = to_owner_id(client_id);
-            commands
-                .entity(entity)
-                .insert((Owner(owner_id), SimulationAuthorized));
-            commands.entity(entity).remove::<FloorItemCollidable>();
-            commands.entity(entity).remove::<DeployedGear>();
+        if is_gear
+            && player_gear.left_hand.is_some()
+            && player_gear.right_hand.is_some()
+            && player_gear.inventory.len() >= 2
+        {
+            warn!(
+                "handle_request_grab: gear {:?} grab failed; all slots full for {:?}",
+                entity, client_id
+            );
+            continue;
+        }
 
-            if is_gear {
-                if player_gear.left_hand.is_none() {
-                    player_gear.left_hand = Some(entity);
-                } else if player_gear.right_hand.is_none() {
-                    player_gear.right_hand = Some(entity);
-                } else if player_gear.inventory.len() < 2 {
-                    player_gear.inventory.push(entity);
-                } else {
-                    warn!(
-                        "handle_request_grab: gear {:?} grab failed; all slots full for {:?}",
-                        entity, client_id
-                    );
-                    continue;
-                }
-            }
+        if is_furniture && player_gear.held_item.is_some() {
+            warn!(
+                "handle_request_grab: furniture {:?} grab failed; held_item occupied for {:?}",
+                entity, client_id
+            );
+            continue;
+        }
 
-            if is_furniture {
-                if player_gear.held_item.is_none() {
-                    player_gear.held_item = Some(HeldObject { entity });
-                } else {
-                    warn!(
-                        "handle_request_grab: furniture {:?} grab failed; held_item occupied for {:?}",
-                        entity, client_id
-                    );
-                    continue;
-                }
+        // Revoke simulation authority from the old driver if different from the new grabber.
+        if let Some(old_owner) = old_owner {
+            let old_client_id = from_owner_id(old_owner.0);
+            if old_client_id != client_id && old_client_id == ClientId::Server {
+                commands.entity(entity).remove::<LocallyOwned>();
             }
         }
+
+        let owner_id = to_owner_id(client_id);
+        commands
+            .entity(entity)
+            .insert((Owner(owner_id), SimulationAuthorized));
+        commands.entity(entity).remove::<FloorItemCollidable>();
+        commands.entity(entity).remove::<DeployedGear>();
+
+        if is_gear {
+            if player_gear.left_hand.is_none() {
+                player_gear.left_hand = Some(entity);
+            } else if player_gear.right_hand.is_none() {
+                player_gear.right_hand = Some(entity);
+            } else {
+                player_gear.inventory.push(entity);
+            }
+        }
+
+        if is_furniture {
+            player_gear.held_item = Some(HeldObject { entity });
+        }
+
+        emit_player_gear_audio(
+            "sounds/item-pickup-whoosh.ogg",
+            1.0,
+            *player_pos,
+            client_id,
+            local_player.is_some(),
+            &mut local_audio,
+            &mut remote_audio,
+        );
     }
 }
 
@@ -208,61 +263,100 @@ fn handle_request_drop(
     mut reader: MessageReader<FromClient<RequestDrop>>,
     mut commands: Commands,
     q_items: Query<(Entity, &Owner, Has<GearKind>, Has<Behavior>)>,
-    mut q_players: Query<(&Owner, &mut PlayerGear)>,
+    mut q_players: Query<(&Owner, &mut PlayerGear, &Position)>,
+    local_player: Option<Res<LocalPlayerRole>>,
+    mut local_audio: MessageWriter<PlayerGearAudioMessage>,
+    mut remote_audio: MessageWriter<ToClients<PlayerGearAudioMessage>>,
 ) {
     for msg in reader.read() {
         let client_id = msg.client_id;
         let item_entity = msg.message.entity;
 
-        if let Ok((entity, owner, is_gear, is_furniture)) = q_items.get(item_entity)
-            && from_owner_id(owner.0) == client_id
-        {
-            // Ensure the item is removed from the dropping player's PlayerGear component on the server side.
-            if let Some((_owner, mut player_gear)) = q_players
-                .iter_mut()
-                .find(|(o, _)| from_owner_id(o.0) == client_id)
-            {
-                if player_gear.left_hand == Some(entity) {
-                    player_gear.left_hand = None;
-                } else if player_gear.right_hand == Some(entity) {
-                    player_gear.right_hand = None;
-                } else if let Some(pos) = player_gear.inventory.iter().position(|&e| e == entity) {
-                    player_gear.inventory.remove(pos);
-                } else if player_gear.held_item.as_ref().map(|h| h.entity) == Some(entity) {
-                    player_gear.held_item = None;
-                }
-            }
+        let Ok((entity, owner, is_gear, is_furniture)) = q_items.get(item_entity) else {
+            warn!(
+                "handle_request_drop: requested entity {:?} is not a valid owned item for client {:?}",
+                item_entity, client_id
+            );
+            continue;
+        };
 
-            // Owner is intentionally retained — the dropping player remains the Designated Driver
-            // and continues simulating the gear's internal state while it is on the floor.
-            commands.entity(entity).insert(FloorItemCollidable);
-            commands.entity(entity).insert(Position {
-                x: msg.message.position[0],
-                y: msg.message.position[1],
-                z: msg.message.position[2],
-                ..Default::default()
-            });
+        if from_owner_id(owner.0) != client_id {
+            warn!(
+                "handle_request_drop: client {:?} tried to drop entity {:?} owned by {:?}",
+                client_id,
+                entity,
+                from_owner_id(owner.0)
+            );
+            continue;
+        }
 
-            if is_gear {
-                commands.entity(entity).insert(DeployedGear {
-                    direction: Direction {
-                        dx: msg.message.direction[0],
-                        dy: msg.message.direction[1],
-                        dz: msg.message.direction[2],
-                    },
-                });
-                commands.entity(entity).insert(EquipmentPosition::Deployed);
-            }
+        // Ensure the item is removed from the dropping player's PlayerGear component on the server side.
+        let Some((_owner, mut player_gear, player_pos)) = q_players
+            .iter_mut()
+            .find(|(o, _, _)| from_owner_id(o.0) == client_id)
+        else {
+            warn!(
+                "handle_request_drop: could not find PlayerGear for client {:?}",
+                client_id
+            );
+            continue;
+        };
 
-            if is_furniture {
-                // Furniture visuals are preserved while carried; no extra components needed.
-                commands.entity(entity).insert(Direction {
+        if player_gear.left_hand == Some(entity) {
+            player_gear.left_hand = None;
+        } else if player_gear.right_hand == Some(entity) {
+            player_gear.right_hand = None;
+        } else if let Some(pos) = player_gear.inventory.iter().position(|&e| e == entity) {
+            player_gear.inventory.remove(pos);
+        } else if player_gear.held_item.as_ref().map(|h| h.entity) == Some(entity) {
+            player_gear.held_item = None;
+        } else {
+            warn!(
+                "handle_request_drop: entity {:?} was not present in PlayerGear for client {:?}",
+                entity, client_id
+            );
+            continue;
+        }
+
+        // Owner is intentionally retained — the dropping player remains the Designated Driver
+        // and continues simulating the gear's internal state while it is on the floor.
+        commands.entity(entity).insert(FloorItemCollidable);
+        commands.entity(entity).insert(Position {
+            x: msg.message.position[0],
+            y: msg.message.position[1],
+            z: msg.message.position[2],
+            ..Default::default()
+        });
+
+        if is_gear {
+            commands.entity(entity).insert(DeployedGear {
+                direction: Direction {
                     dx: msg.message.direction[0],
                     dy: msg.message.direction[1],
                     dz: msg.message.direction[2],
-                });
-            }
+                },
+            });
+            commands.entity(entity).insert(EquipmentPosition::Deployed);
         }
+
+        if is_furniture {
+            // Furniture visuals are preserved while carried; no extra components needed.
+            commands.entity(entity).insert(Direction {
+                dx: msg.message.direction[0],
+                dy: msg.message.direction[1],
+                dz: msg.message.direction[2],
+            });
+        }
+
+        emit_player_gear_audio(
+            "sounds/item-drop-clunk.ogg",
+            1.0,
+            *player_pos,
+            client_id,
+            local_player.is_some(),
+            &mut local_audio,
+            &mut remote_audio,
+        );
     }
 }
 
@@ -753,6 +847,7 @@ fn reconcile_gear_equipment_positions(
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_client_message::<TruckLoadoutMessage>(Channel::Ordered);
+    app.add_server_message::<PlayerGearAudioMessage>(Channel::Ordered);
     app.add_mapped_client_message::<RequestGrab>(Channel::Ordered);
     app.add_mapped_client_message::<RequestDrop>(Channel::Ordered);
     app.add_mapped_client_message::<ExportPlayerGearMessage>(Channel::Unreliable);

@@ -1,5 +1,5 @@
 use bevy_persistent::Persistent;
-use unaudiospatial_core::emitter::AudioEmitter;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use uncommon_app_core::random_seed;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
@@ -43,7 +43,7 @@ pub(crate) fn update_emfmeter(
         &mut PerceivedClarity,
         Has<StatusTextRefreshTimer>,
     )>,
-    mut gs_audio: AudioEmitter,
+    mut gs_audio: LocalAudioEmitter,
     miasma: If<Res<MiasmaGrid>>,
     tg: If<Res<ThermalGrid>>,
     sg: If<Res<SoundGrid>>,

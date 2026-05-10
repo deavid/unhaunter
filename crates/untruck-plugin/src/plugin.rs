@@ -1,15 +1,17 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use bevy_replicon::prelude::{Channel, ServerMessageAppExt};
 use uncommon_states_core::UIContextState;
 use unreplicon_core::resources::AuthorityRole;
 use untruck_core::assets::TruckAssets;
-use untruck_core::events::truck::TruckUIEvent;
+use untruck_core::events::truck::{TruckAudioMessage, TruckUIEvent};
 
 pub struct UnhaunterTruckCorePlugin;
 
 impl Plugin for UnhaunterTruckCorePlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<TruckUIEvent>();
+        app.add_server_message::<TruckAudioMessage>(Channel::Ordered);
         app.add_systems(
             Update,
             super::systems::truck_ui_systems::init_repellent_tracker

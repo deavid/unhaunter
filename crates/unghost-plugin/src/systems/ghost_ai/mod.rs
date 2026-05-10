@@ -3,9 +3,7 @@ use std::f64::consts::PI;
 use bevy::prelude::*;
 use bevy_replicon::prelude::ToClients;
 use unaudiospatial_core::emitter::LocalAudioEmitter;
-use unghost_core::components::logic::ghost_death::{
-    GhostDeathSequenceState, GhostDeathSignal,
-};
+use unghost_core::components::logic::ghost_death::{GhostDeathSequenceState, GhostDeathSignal};
 use unghost_core::components::logic::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::events::GhostAudioMessage;
 use unghost_core::resources::haunt_state::HauntState;

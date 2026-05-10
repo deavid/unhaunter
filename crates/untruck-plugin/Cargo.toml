@@ -24,6 +24,7 @@ ungearitems-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 unmapload-core = { workspace = true }
 unaudiospatial-core = { workspace = true }
+unspatial-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

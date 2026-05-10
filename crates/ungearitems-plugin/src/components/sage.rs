@@ -226,7 +226,7 @@ struct SageAudioPlayed;
 fn play_sage_effects_audio(
     mut commands: Commands,
     q_sage: Query<(Entity, &SageBundleData), Without<SageAudioPlayed>>,
-    mut gs_audio: unaudiospatial_core::emitter::AudioEmitter,
+    mut gs_audio: unaudiospatial_core::emitter::LocalAudioEmitter,
 ) {
     for (entity, sage) in q_sage.iter() {
         if sage.is_active && !sage.consumed {

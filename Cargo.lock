@@ -9384,6 +9384,7 @@ dependencies = [
  "bevy_asset_loader",
  "serde",
  "uninvestigation-core",
+ "unspatial-core",
 ]
 
 [[package]]
@@ -9405,6 +9406,7 @@ dependencies = [
  "unmission-core",
  "unplayer-core",
  "unreplicon-core",
+ "unspatial-core",
  "untruck-core",
 ]
 

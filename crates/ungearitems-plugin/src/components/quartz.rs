@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unaudiospatial_core::emitter::AudioEmitter;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::types::gear::sprite_id::GearSpriteID;
 use ungearitems_core::components::quartz::{QuartzStoneData, QuartzStoneSkin};
@@ -9,7 +9,7 @@ use unspatial_core::position::Position;
 
 pub(crate) fn play_quartz_crack_audio(
     mut ev_cracked: MessageReader<QuartzCrackedEvent>,
-    mut gs_audio: AudioEmitter,
+    mut gs_audio: LocalAudioEmitter,
 ) {
     for ev in ev_cracked.read() {
         let pos = Position {

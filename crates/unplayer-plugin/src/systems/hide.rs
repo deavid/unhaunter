@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unaudiospatial_core::emitter::AudioEmitter;
+use unaudiospatial_core::emitter::LocalAudioEmitter;
 use unbehavior_core::behavior::Behavior;
 use unboard_core::entity::ResolutionFactor;
 use ungear_core::components::playergear::PlayerGear;
@@ -32,7 +32,7 @@ fn enter_hidespot(
         (Entity, &Position, &Behavior, Option<&ResolutionFactor>),
         Without<PlayerSprite>,
     >,
-    mut ga: AudioEmitter,
+    mut ga: LocalAudioEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
     for (player_entity, mut player_input, mut player_pos, player_gear) in players.iter_mut() {
