@@ -1,6 +1,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use unaudiospatial_core::listener::SpatialListener;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::entity::{GameSprite, MapTileSprite, ResolutionFactor};
 use unboard_core::resources::visibility_data::VisibilityData;
@@ -159,10 +160,8 @@ pub(crate) fn hydrate_players_system(
                 });
             }
             ec.insert(VisibilityData::default());
-            if let Some(audio_settings) = &p.audio_settings {
-                ec.insert(SpatialListener::new(
-                    -audio_settings.sound_output.to_ear_offset(),
-                ));
+            if p.audio_settings.is_some() {
+                ec.insert(SpatialListener);
             }
         } else {
             // Remote player visible on this screen — no input mapping, use null keys.

@@ -59,6 +59,7 @@ pub struct EMFMeter {
     pub miasma_pressure: f32,
     pub miasma_pressure_2: f32,
     pub last_sound_secs: f32,
+    pub last_glitch_sound_secs: f32,
     pub last_meter_update_secs: f32,
     pub blinking_hint_active: bool,
     pub start_time_secs: Option<f32>,

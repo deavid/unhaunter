@@ -1,3 +1,4 @@
+pub mod assets;
 pub mod components;
 pub mod emitter;
 pub mod events;

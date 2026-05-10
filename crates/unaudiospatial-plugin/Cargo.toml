@@ -18,4 +18,6 @@ unspatial-core = { workspace = true }
 unsettings-core = { workspace = true }
 unmetrics-core = { workspace = true }
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
+bevy_seedling = { workspace = true }
 bevy-persistent = { workspace = true }

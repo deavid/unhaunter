@@ -1,7 +1,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_persistent::Persistent;
 use bevy_replicon::prelude::Remote;
+use unaudiospatial_core::components::{AudioCategory, FlatAudio};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
@@ -15,7 +15,6 @@ use unreplicon_core::components::MissionGoalEntity;
 use unreplicon_core::messages::{MissionEndReason, RequestEndMission};
 use unreplicon_core::repellent_tracker::RepellentCraftTracker;
 use unreplicon_core::resources::{AuthorityRole, LobbyPresenceRole, LocalPlayerRole};
-use unsettings_core::audio::AudioSettings;
 use untruck_core::components::in_truck::InTruck;
 use untruck_core::events::truck::TruckUIEvent;
 
@@ -44,10 +43,8 @@ struct TruckNetParams<'w> {
 
 fn truckui_event_handle(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut ev_truckui: MessageReader<TruckUIEvent>,
     q_gg: Query<&GhostGuess, With<MissionGoalEntity>>,
-    audio_settings: Res<Persistent<AudioSettings>>,
     mut ev_craft_req: MessageWriter<RequestCraftRepellent>,
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
     mut ev_end_mission: MessageWriter<RequestEndMission>,
@@ -126,22 +123,11 @@ fn truckui_event_handle(
                         );
                     }
 
-                    commands
-                        .spawn(AudioPlayer::new(
-                            asset_server.load("sounds/effects-dingdingding.ogg"),
-                        ))
-                        .insert(PlaybackSettings {
-                            mode: bevy::audio::PlaybackMode::Despawn,
-                            volume: bevy::audio::Volume::Linear(
-                                1.0 * audio_settings.volume_master.as_f32()
-                                    * audio_settings.volume_effects.as_f32(),
-                            ),
-                            speed: 1.0,
-                            paused: false,
-                            spatial: false,
-                            spatial_scale: None,
-                            ..Default::default()
-                        });
+                    commands.spawn((FlatAudio {
+                        sound_file: "sounds/effects-dingdingding.ogg".to_string(),
+                        volume_multiplier: 1.0,
+                        category: AudioCategory::Effects,
+                    },));
                 } else {
                     warn!(
                         "REPELLENT: CraftRepellent requested but no ghost type selected in journal"

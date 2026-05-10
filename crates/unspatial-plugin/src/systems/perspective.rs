@@ -25,6 +25,7 @@ fn apply_perspective(
             Changed<Position>,
             Changed<LerpPosition>,
             Changed<SpriteLayer>,
+            Added<Transform>,
         )>,
     >,
 ) {
