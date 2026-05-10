@@ -93,7 +93,7 @@ fn calculate_ambient_sound_volumes(
 /// 4. Applies dB-based smoothing for perceptual volume transitions
 /// 5. Applies audio settings (volume_ambient, volume_master)
 /// 6. Applies mute effects from the ambient mute controller
-/// 7. Updates the actual AudioSink volumes for GameSound entities
+/// 7. Updates the actual VolumeNode volumes for GameSound entities
 pub(crate) fn update_ambient_sound_volumes(
     game_sound_query: Query<(&GameSound, &SampleEffects)>,
     mut q_volume: Query<&mut VolumeNode>,
@@ -178,6 +178,12 @@ pub(crate) fn update_ambient_sound_volumes(
 
             // Apply to volume node
             volume_node.volume = Volume::Linear(new_volume.clamp(0.00001, 10.0));
+        } else {
+            warn!(
+                "GameSound {:?} has no VolumeNode in its SampleEffects chain; \
+                audio pool spawn/wiring may be broken",
+                game_sound.class
+            );
         }
     }
 }

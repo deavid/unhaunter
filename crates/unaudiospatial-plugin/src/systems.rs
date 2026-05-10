@@ -6,7 +6,7 @@ use bevy_seedling::firewheel::dsp::distance_attenuation::DistanceAttenuation;
 use bevy_seedling::nodes::itd::{ItdConfig, ItdNode};
 use bevy_seedling::prelude::*;
 use unaudiospatial_core::components::{
-    AudioCategory, FlatAudio, SpatialAudioFadeOut, SpatialAudioInstance,
+    AudioCategory, FlatAudio, SpatialAudioDelayedDespawn, SpatialAudioInstance,
 };
 use unaudiospatial_core::events::SoundEvent;
 use unaudiospatial_core::listener::SpatialListener;
@@ -108,7 +108,7 @@ pub fn spatial_audio_playback(
     audio_settings: Res<Persistent<AudioSettings>>,
     time: Res<Time>,
     mut last_error_log: Local<f32>,
-    q_instances: Query<(Entity, &SpatialAudioInstance), Without<SpatialAudioFadeOut>>,
+    q_instances: Query<(Entity, &SpatialAudioInstance), Without<SpatialAudioDelayedDespawn>>,
 ) {
     let measure = metrics::SOUND_PLAYBACK.time_measure();
     let now = time.elapsed_secs();
@@ -148,7 +148,7 @@ pub fn spatial_audio_playback(
                     // Not spam, but older instance: trigger fade out
                     commands
                         .entity(entity)
-                        .insert(SpatialAudioFadeOut::new(0.3));
+                        .insert(SpatialAudioDelayedDespawn::new(0.3));
                 }
             }
         }
@@ -275,10 +275,10 @@ pub fn spatial_audio_playback(
     measure.end_ms();
 }
 
-pub fn process_audio_fadeouts(
+pub fn process_audio_delayed_despawns(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_fadeouts: Query<(Entity, &mut SpatialAudioFadeOut)>,
+    mut q_fadeouts: Query<(Entity, &mut SpatialAudioDelayedDespawn)>,
 ) {
     for (entity, mut fadeout) in q_fadeouts.iter_mut() {
         fadeout.timer.tick(time.delta());

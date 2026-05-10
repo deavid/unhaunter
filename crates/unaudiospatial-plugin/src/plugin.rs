@@ -35,11 +35,10 @@ impl Plugin for UnhaunterSpatialAudioPlugin {
         app.register_type::<SpatialListener>();
         app.add_message::<SoundEvent>();
 
-        app.add_loading_state(
-            LoadingState::new(UIContextState::EngineBoot).load_collection::<MissionAssets>(),
-        );
-
         if self.enable {
+            app.add_loading_state(
+                LoadingState::new(UIContextState::EngineBoot).load_collection::<MissionAssets>(),
+            );
             app.add_systems(Startup, setup_unspatial_pool);
             app.add_systems(Update, attach_flat_audio);
             app.add_systems(
@@ -48,7 +47,7 @@ impl Plugin for UnhaunterSpatialAudioPlugin {
                     spatial_audio_playback,
                     update_spatial_audio,
                     monitor_audio_pileup,
-                    process_audio_fadeouts,
+                    process_audio_delayed_despawns,
                 )
                     .run_if(in_state(UIContextState::InGame)),
             );

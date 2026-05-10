@@ -25,11 +25,11 @@ pub struct SpatialAudioInstance {
 }
 
 #[derive(Component, Debug, Clone)]
-pub struct SpatialAudioFadeOut {
+pub struct SpatialAudioDelayedDespawn {
     pub timer: Timer,
 }
 
-impl SpatialAudioFadeOut {
+impl SpatialAudioDelayedDespawn {
     pub fn new(duration_secs: f32) -> Self {
         Self {
             timer: Timer::from_seconds(duration_secs, TimerMode::Once),
