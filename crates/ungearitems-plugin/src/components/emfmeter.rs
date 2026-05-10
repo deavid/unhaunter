@@ -194,26 +194,31 @@ pub(crate) fn update_emfmeter(
                     emf.blinking_hint_active = false;
                 }
             }
+            let volume = match ep {
+                EquipmentPosition::Hand(_) => 1.0,
+                EquipmentPosition::Stowed => 0.5,
+                EquipmentPosition::Deployed => 0.7,
+            };
 
-            let delta = 10.0 / (emf.emf + 0.5).powf(1.5);
-            if emf.last_sound_secs + delta < sec {
+            let delta = (10.0 / (emf.emf + 0.5).powf(1.5)).clamp(0.01, 2.0);
+            if emf.last_sound_secs + delta < sec && emf.last_glitch_sound_secs + 0.03 < sec {
                 emf.last_sound_secs = sec;
-                match ep {
-                    EquipmentPosition::Hand(_) => {
-                        gs_audio.play_audio("sounds/effects-chirp-shorter.ogg".into(), 1.0, pos)
-                    }
-                    EquipmentPosition::Stowed => {
-                        gs_audio.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.5, pos)
-                    }
-                    EquipmentPosition::Deployed => {
-                        gs_audio.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.7, pos)
-                    }
-                }
+                gs_audio.play_audio("sounds/effects-chirp-shorter.ogg".into(), volume, pos);
             }
 
             // Play static/interference sound when glitching
-            if electronic.glitch_timer > 0.0 && random_seed::rng().random_range(0.0..1.0) < 0.5 {
-                gs_audio.play_audio("sounds/effects-chirp-short.ogg".into(), 0.4, pos);
+            if electronic.glitch_timer > 0.0
+                && emf.last_glitch_sound_secs + 0.07 < sec
+                && random_seed::rng().random_range(0.0..1.0) < 0.5
+            {
+                emf.last_glitch_sound_secs = sec;
+                let sound = match random_seed::rng().random_range(0..4) {
+                    0 => "sounds/effects-chirp-short-a.ogg",
+                    1 => "sounds/effects-chirp-short-b.ogg",
+                    2 => "sounds/effects-chirp-short-c.ogg",
+                    _ => "sounds/effects-chirp-short-d.ogg",
+                };
+                gs_audio.play_audio(sound.into(), volume, pos);
             }
         }
 

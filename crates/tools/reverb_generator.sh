@@ -30,18 +30,22 @@ for f in "$SOUNDS_DIR"/*.ogg; do
     FILENAME=$(basename "$f")
     OUTPUT_PATH="$REVERBS_DIR/$FILENAME"
 
+    # Check if we should skip processing
+    if [ -f "$OUTPUT_PATH" ] && [ "$OUTPUT_PATH" -nt "$f" ] && [ "$OUTPUT_PATH" -nt "$IR_PATH" ]; then
+        continue
+    fi
+
     echo "Processing: $FILENAME"
 
     # Apply afir filter:
-    # [0:a]apad=pad_dur=4[padded]: Add 4 seconds of silence to the input to allow the reverb tail to ring out
-    # dry=-100dB: Remove the original sound entirely
-    # wet=0dB: Keep the full reverb tail
-    # volume=15dB: Boost the signal into the soft-clipper to drive the distortion
-    # asoftclip=type=tanh: Apply a smooth hyperbolic tangent (tanh) soft distortion
-    # lowpass=f=1000:poles=1: Apply a single-pole lowpass filter at 1kHz
-    # -ac 1: Convert to mono (required for spatial audio)
-    # -ar 44100: Ensure consistent sample rate
-    ffmpeg -y -i "$f" -i "$IR_PATH" -filter_complex "[0:a]apad=pad_dur=4[padded];[padded][1:a]afir=dry=0dB:wet=0dB,lowpass=f=100:poles=1,volume=30dB,asoftclip=type=tanh" -ac 1 -c:a libvorbis "$OUTPUT_PATH" > /dev/null 2>&1
+    # [0:a]apad=pad_dur=1[padded]: Add 1 second of silence to the input to allow the reverb tail to ring out
+    # afir=...: Apply the impulse response (100% wet)
+    # lowpass=...: Tone shaping
+    # volume=... / asoftclip=...: Boost and softly distort
+    # agate=threshold=0.000316:release=20: Noise gate to smoothly mute the tail below -70dB (0.000316 amplitude) with 20ms release
+    # silenceremove=...: Instantly trim the file once the gate drops it below -90dB
+    # -ac 1: Convert to mono
+    ffmpeg -y -i "$f" -i "$IR_PATH" -filter_complex "[0:a]apad=pad_dur=4[padded];[padded][1:a]afir=dry=0dB:wet=0dB,lowpass=f=100:poles=1,volume=50dB,asoftclip=type=tanh,agate=threshold=0.0316:release=100,silenceremove=stop_periods=1:stop_duration=0.1:stop_threshold=-60dB" -ac 1 -c:a libvorbis "$OUTPUT_PATH" > /dev/null 2>&1
 done
 
 echo "Success! Reverb layers generated in $REVERBS_DIR."

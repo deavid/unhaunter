@@ -98,13 +98,18 @@ pub fn spatial_audio_playback(
 
         let local_x = o_local_x * damp_lr;
         let local_y = o_local_y * damp_fb;
-        let local_z = delta.dz * 12.5 * damp_lr;
+        let local_z = delta.dz * 12.5 * damp_lr + 0.5;
 
         // normalize direction for ITD
-        let length = (local_x * local_x + local_y * local_y + local_z * local_z)
-            .sqrt()
-            .max(0.0001);
-        let direction = Vec3::new(local_x / length, local_y / length, local_z / length);
+        let length_2 = (local_x * local_x + local_y * local_y + local_z * local_z).max(0.0000001);
+        let length = length_2.sqrt();
+        let far_enough = (length_2 / 4.0).tanh();
+        let direction = Vec3::new(
+            (local_x / length * far_enough).powi(3),
+            local_y / length,
+            local_z / length,
+        )
+        .normalize();
 
         let base_vol = sound_event.volume
             * audio_settings.volume_effects.as_f32()
@@ -123,14 +128,11 @@ pub fn spatial_audio_playback(
         // We use 1/M_total = 1/M_dist + 1/M_behind + 1/M_floor.
         // This ensures the heaviest muffle always dominates, but they combined naturally.
 
-        // 1. Distance Muffle Component
-        let dist_ratio = (dist / 200.0).clamp(0.0, 1.0);
-        let base_rev_muffle_hz = (9.9034f32 - (5.9914f32 * dist_ratio)).exp();
+        // 1. Distance Muffle Component (Applies to both)
+        let dist_ratio = (dist / 100.0).clamp(0.0, 1.0);
+        let base_muffle_hz = (9.9034f32 - (5.9914f32 * dist_ratio)).exp();
 
-        let dry_dist_ratio = (dist / 100.0).clamp(0.0, 1.0); // Dry muffles twice as fast
-        let base_dry_muffle_hz = (9.9034f32 - (5.9914f32 * dry_dist_ratio)).exp();
-
-        // 2. Behind Player Component (Only applies to Dry signal, Reverb is ambient)
+        // 2. Behind Player Component (Applies to both)
         let inv_behind = if direction.y < 0.0 {
             let behind_factor = -direction.y; // 0.0 at sides, 1.0 directly behind
             let penalty_curve = behind_factor * behind_factor;
@@ -148,9 +150,8 @@ pub fn spatial_audio_playback(
         };
 
         // Complete combinations!
-        let rev_muffle_hz = (1.0 / ((1.0 / base_rev_muffle_hz) + inv_floor)).clamp(20.0, 20_480.0);
-        let dry_muffle_hz =
-            (1.0 / ((1.0 / base_dry_muffle_hz) + inv_behind + inv_floor)).clamp(20.0, 20_480.0);
+        let muffle_hz =
+            (1.0 / ((1.0 / base_muffle_hz) + inv_behind + inv_floor)).clamp(20.0, 20_480.0);
 
         if audio_settings.sound_output == SoundOutput::Mono {
             let mono_div = 1.0 + dist * 0.4;
@@ -166,6 +167,7 @@ pub fn spatial_audio_playback(
         } else {
             bevy_seedling::firewheel::vector::Vec3::new(0.0, 0.0, 0.0)
         };
+        warn!("ITD direction: {direction:?}");
 
         // --- DRY LAYER ---
         commands.spawn((
@@ -184,16 +186,16 @@ pub fn spatial_audio_playback(
                 },
                 SpatialBasicNode {
                     offset,
-                    muffle_cutoff_hz: dry_muffle_hz,
+                    muffle_cutoff_hz: muffle_hz,
                     smooth_seconds: 0.0005,
                     downmix: false,
-                    panning_threshold: 0.3,
+                    panning_threshold: 0.3 * far_enough,
                     ..default()
                 },
                 (
                     ItdNode { direction },
                     ItdConfig {
-                        inter_ear_distance: 0.1715,
+                        inter_ear_distance: 0.11,
                         ..default()
                     }
                 )
@@ -203,42 +205,45 @@ pub fn spatial_audio_playback(
 
         // --- REVERB LAYER ---
 
-        commands.spawn((
-            SpatialAudioInstance {
-                sound_file: reverb_file.clone(),
-                is_reverb: true,
-                initial_volume: rev_vol,
-                spawn_time: now,
-                spawn_frame: cur_frame,
-            },
-            SamplePlayer::new(asset_server.load(reverb_file)),
-            sample_effects![
-                VolumeNode {
-                    volume: Volume::Linear(rev_vol),
-                    ..default()
+        // Output nothing if quieter than -60dB (10^(-60/20) = 0.001)
+        if rev_vol > 0.001 {
+            commands.spawn((
+                SpatialAudioInstance {
+                    sound_file: reverb_file.clone(),
+                    is_reverb: true,
+                    initial_volume: rev_vol,
+                    spawn_time: now,
+                    spawn_frame: cur_frame,
                 },
-                SpatialBasicNode {
-                    offset,
-                    muffle_cutoff_hz: rev_muffle_hz,
-                    distance_attenuation: DistanceAttenuation {
-                        distance_gain_factor: 0.25,
+                SamplePlayer::new(asset_server.load(reverb_file)),
+                sample_effects![
+                    VolumeNode {
+                        volume: Volume::Linear(rev_vol),
                         ..default()
                     },
-                    smooth_seconds: 0.0005,
-                    downmix: false,
-                    panning_threshold: 0.3,
-                    ..default()
-                },
-                (
-                    ItdNode { direction },
-                    ItdConfig {
-                        inter_ear_distance: 0.1715,
+                    SpatialBasicNode {
+                        offset,
+                        muffle_cutoff_hz: muffle_hz,
+                        distance_attenuation: DistanceAttenuation {
+                            distance_gain_factor: 0.25,
+                            ..default()
+                        },
+                        smooth_seconds: 0.0005,
+                        downmix: false,
+                        panning_threshold: 0.3 * far_enough,
                         ..default()
-                    }
-                )
-            ],
-            UnSpatialPool,
-        ));
+                    },
+                    (
+                        ItdNode { direction },
+                        ItdConfig {
+                            inter_ear_distance: 0.11,
+                            ..default()
+                        }
+                    )
+                ],
+                UnSpatialPool,
+            ));
+        }
     }
     measure.end_ms();
 }
