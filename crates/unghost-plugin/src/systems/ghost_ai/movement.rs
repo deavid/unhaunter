@@ -112,6 +112,9 @@ pub(crate) fn ghost_movement(
         let mut can_accumulate_warp = true;
         let mut force_red_seek_target = None;
 
+        let old_z = pos.z.round();
+        ghost.floor_stay_timer += dt_secs;
+
         if let Some(charge) = red_charge.as_deref_mut() {
             let red_intensity = sample_red_intensity_at(&light_grid, *pos, &bf);
             let in_reactive_red = red_intensity > charge.red_react_threshold;
@@ -232,6 +235,9 @@ pub(crate) fn ghost_movement(
                 pos.z += delta.dz / 20.0 * dt * difficulty.0.ghost_speed() * speed_multiplier;
             }
             pos.z = pos.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
+            if pos.z.round() != old_z {
+                ghost.floor_stay_timer = 0.0;
+            }
             if dlen < 0.5 {
                 finalize = true;
             }
@@ -244,7 +250,7 @@ pub(crate) fn ghost_movement(
         }
         if ghost.target_point.is_none() || (ghost.hunt_target && rng.random_range(0..60) == 0) {
             let mut target_point = ghost.spawn_point.to_position();
-            let wander: f32 = rng.random_range(0.001..1.0_f32).powf(2.0) * 12.0 + 0.5;
+            let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
             let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
             let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
             // Initial Z wandering: prefer staying on the same floor.
@@ -343,7 +349,7 @@ pub(crate) fn ghost_movement(
 
                 for _ in 0..config.num_destination_points_to_sample {
                     let mut candidate_dest = ghost.spawn_point.to_position(); // Base for wandering
-                    let wander: f32 = rng.random_range(0.001..1.0_f32).powf(2.0) * 12.0 + 0.5;
+                    let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
                     let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
                     let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
                     let dz: f32 = (0..5).map(|_| rng.random_range(-0.5..0.5)).sum(); // Allow Z exploration for samples
@@ -368,11 +374,12 @@ pub(crate) fn ghost_movement(
                     let mut score = 1.0; // Base score
                     score +=
                         calculate_object_influence_score(candidate_dest, &object_query, &config)
-                            / difficulty.0.ghost_attraction_to_breach().max(0.1).min(1.0); // Scale object influence
+                            / difficulty.0.ghost_attraction_to_breach().max(0.1); // Scale object influence
                     let penalty = 1.0
                         + calculate_movement_penalties(
                             candidate_dest,
                             &pos,
+                            &ghost,
                             &bf,
                             &board_collision,
                             &difficulty,
@@ -563,20 +570,22 @@ fn calculate_object_influence_score(
     let mut score = 0.0;
     // Iterate through objects with GhostInfluence
     for (object_position, ghost_influence) in object_query.iter() {
-        let distance2 = potential_destination.distance2_zf(object_position, 4.0);
+        let distance2 = potential_destination.distance2_zf(object_position, 12.0);
+        let dist = distance2.sqrt();
 
         // Apply influence based on distance and charge value
         match ghost_influence.influence_type {
             InfluenceType::Attractive => {
                 // Add to score for Attractive objects, weighted by attractive_influence_multiplier
+                // Use 1/(d+5) for a slower falloff at distance
                 score += config.attractive_influence_multiplier * ghost_influence.charge_value
-                    / (distance2 + 1.0);
+                    / (dist + 5.0);
             }
             InfluenceType::Repulsive => {
                 // Subtract from score for Repulsive objects, weighted by
                 // repulsive_influence_multiplier
                 score -= config.repulsive_influence_multiplier * ghost_influence.charge_value
-                    / (distance2 + 1.0);
+                    / (dist + 5.0);
             }
         }
     }
@@ -587,6 +596,7 @@ fn calculate_object_influence_score(
 fn calculate_movement_penalties(
     potential_destination: Position,
     current_ghost_pos: &Position,
+    current_ghost_sprite: &GhostSprite,
     bf: &Res<BoardTopology>,
     board_collision: &Res<BoardCollisionField>,
     _difficulty: &Res<CurrentDifficulty>, // Available for future use if penalties scale with difficulty
@@ -608,7 +618,13 @@ fn calculate_movement_penalties(
     // Floor Change Penalty
     // Penalize if the destination is on a different floor (rounded Z)
     if potential_destination.z.round() != current_ghost_pos.z.round() {
-        penalty_score += FLOOR_CHANGE_PENALTY_BASE;
+        // Only allow floor change if we have been on this floor for at least 8 seconds.
+        // During a hunt, we allow floor changes regardless of time to prevent kiting.
+        let mut floor_change_penalty = FLOOR_CHANGE_PENALTY_BASE;
+        if current_ghost_sprite.floor_stay_timer < 8.0 && !current_ghost_sprite.hunt_target {
+            floor_change_penalty *= 20.0; // Extremely heavy penalty to prevent rapid floor switching
+        }
+        penalty_score += floor_change_penalty;
     }
 
     penalty_score
