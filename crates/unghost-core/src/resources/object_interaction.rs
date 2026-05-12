@@ -34,7 +34,7 @@ impl Default for ObjectInteractionConfig {
             object_discharge_radius: 3.0,
             attractive_influence_multiplier: 1.0,
             repulsive_influence_multiplier: 1.0,
-            num_destination_points_to_sample: 10,
+            num_destination_points_to_sample: 20,
         }
     }
 }

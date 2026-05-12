@@ -244,7 +244,7 @@ pub(crate) fn ghost_movement(
         }
         if ghost.target_point.is_none() || (ghost.hunt_target && rng.random_range(0..60) == 0) {
             let mut target_point = ghost.spawn_point.to_position();
-            let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
+            let wander: f32 = rng.random_range(0.001..1.0_f32).powf(2.0) * 12.0 + 0.5;
             let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
             let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
             // Initial Z wandering: prefer staying on the same floor.
@@ -343,7 +343,7 @@ pub(crate) fn ghost_movement(
 
                 for _ in 0..config.num_destination_points_to_sample {
                     let mut candidate_dest = ghost.spawn_point.to_position(); // Base for wandering
-                    let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
+                    let wander: f32 = rng.random_range(0.001..1.0_f32).powf(2.0) * 12.0 + 0.5;
                     let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
                     let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
                     let dz: f32 = (0..5).map(|_| rng.random_range(-0.5..0.5)).sum(); // Allow Z exploration for samples
@@ -368,7 +368,7 @@ pub(crate) fn ghost_movement(
                     let mut score = 1.0; // Base score
                     score +=
                         calculate_object_influence_score(candidate_dest, &object_query, &config)
-                            / difficulty.0.ghost_attraction_to_breach().max(0.1); // Scale object influence
+                            / difficulty.0.ghost_attraction_to_breach().max(0.1).min(1.0); // Scale object influence
                     let penalty = 1.0
                         + calculate_movement_penalties(
                             candidate_dest,
@@ -563,7 +563,7 @@ fn calculate_object_influence_score(
     let mut score = 0.0;
     // Iterate through objects with GhostInfluence
     for (object_position, ghost_influence) in object_query.iter() {
-        let distance2 = potential_destination.distance2_zf(object_position, 20.0);
+        let distance2 = potential_destination.distance2_zf(object_position, 4.0);
 
         // Apply influence based on distance and charge value
         match ghost_influence.influence_type {
