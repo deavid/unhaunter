@@ -651,6 +651,9 @@ pub(crate) fn update_miasma(
                 + ghost_force)
                 / (1.0 + miasma_config.inertia_factor + miasma_config.friction);
 
+            // Clamp velocity to a maximum of 1 tile per second to avoid "overflowing"
+            new_velocity = new_velocity.clamp_length_max(1.0);
+
             // Take walls into account.
             const WALL_REPEL_SPEED: f32 = 0.00;
             let old_speed = new_velocity.length();
