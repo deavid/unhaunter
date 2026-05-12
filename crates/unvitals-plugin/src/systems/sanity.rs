@@ -80,7 +80,7 @@ pub(crate) fn drain_sanity_from_environment(
             let p_val = miasma.pressure_field.get(p).copied().unwrap_or(0.0);
             // Linear addition to crazyness starting at 1000 and reaching full intensity at 10000.
             // Full intensity is roughly 2.0 extra crazyness units per second (at default rate).
-            ((p_val - 1000.0) / 4500.0).max(0.0)
+            ((p_val - 1000.0) / 4500.0).clamp(0.0, 2.0)
         } else {
             0.0
         };

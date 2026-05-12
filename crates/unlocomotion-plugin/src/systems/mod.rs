@@ -275,7 +275,7 @@ pub(crate) fn apply_movement_intent(
         };
 
         let miasma_factor = (miasma_pressure / 100.0).max(0.0).cbrt().clamp(0.0, 0.7);
-        let miasma_speed_penalty = ((miasma_pressure - 1000.0) / 9000.0).clamp(0.0, 0.6);
+        let miasma_speed_penalty = ((miasma_pressure - 1000.0) * (0.6 / 9000.0)).clamp(0.0, 0.6);
         let miasma_speed_mult = 1.0 - miasma_speed_penalty;
 
         stamina.depletion_rate = miasma_factor;
