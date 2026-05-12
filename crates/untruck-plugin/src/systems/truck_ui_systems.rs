@@ -1,11 +1,15 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_replicon::prelude::Remote;
+use bevy_replicon::prelude::*;
+use unaudiospatial_core::SOUND_DINGDINGDING;
 use unaudiospatial_core::components::{AudioCategory, FlatAudio};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use ungear_core::messages::{TruckLoadoutAction, TruckLoadoutMessage};
 use ungearitems_core::events::RequestCraftRepellent;
+use unreplicon_core::messages::ReplicatedSoundEvent;
+use unreplicon_core::ownership::OwnerId;
+use unspatial_core::position::Position;
 use uninput_core::states::InGameUiState;
 use uninvestigation_core::components::ghost_guess::GhostGuess;
 use unmission_core::resources::MissionEndRequested;
@@ -49,11 +53,12 @@ fn truckui_event_handle(
     mut ev_loadout: MessageWriter<TruckLoadoutMessage>,
     mut ev_end_mission: MessageWriter<RequestEndMission>,
     mut ev_mission: MessageWriter<MissionEvent>,
+    mut ev_replicated_sound: MessageWriter<ToClients<ReplicatedSoundEvent>>,
     net_params: TruckNetParams,
     authority: Option<Res<AuthorityRole>>,
     local_player_role: Option<Res<LocalPlayerRole>>,
     lobby_presence: Option<Res<LobbyPresenceRole>>,
-    q_player: Query<Entity, (With<MainPlayer>, With<InTruck>)>,
+    q_player: Query<(Entity, &Position), (With<MainPlayer>, With<InTruck>)>,
 ) {
     if ev_truckui.is_empty() {
         return;
@@ -69,6 +74,28 @@ fn truckui_event_handle(
                 if !net_params.mission_end_requested.0 {
                     continue;
                 }
+
+                if authority.is_some() {
+                    let triggerer = if let Some(role) = &local_player_role {
+                        OwnerId::Client(role.entity)
+                    } else {
+                        OwnerId::Server
+                    };
+
+                    let player_pos = q_player.iter().next().map(|(_, p)| [p.x, p.y, p.z]);
+
+                    ev_replicated_sound.write(ToClients {
+                        mode: SendMode::Broadcast,
+                        message: ReplicatedSoundEvent {
+                            sound_file: SOUND_DINGDINGDING.to_string(),
+                            volume: 1.0,
+                            position: player_pos,
+                            triggerer,
+                            is_inside_truck: true,
+                        },
+                    });
+                }
+
                 if lobby_presence.is_none() {
                     // TODO(multiplayer-first): remove once single-player uses a local in-memory transport.
                     // Offline single-player: no network transport exists, so RequestEndMission
@@ -84,13 +111,13 @@ fn truckui_event_handle(
                 }
             }
             TruckUIEvent::ExitTruck => {
-                for entity in q_player.iter() {
+                for (entity, _) in q_player.iter() {
                     commands.entity(entity).remove::<InTruck>();
                 }
             }
             TruckUIEvent::CraftRepellent => {
                 if let Some(ghost_type) = gg.ghost_type {
-                    let in_truck_main_players: Vec<Entity> = q_player.iter().collect();
+                    let in_truck_main_players: Vec<Entity> = q_player.iter().map(|(e, _)| e).collect();
 
                     debug!(
                         "REPELLENT: TruckUIEvent::CraftRepellent received authority={} local_player_role={} main_players_in_truck={:?} ghost_type={:?}",
@@ -113,6 +140,29 @@ fn truckui_event_handle(
                             "REPELLENT: Craft repellent requested on authority node; writing local RequestCraftRepellent for ghost_type={:?}",
                             ghost_type
                         );
+
+                        let triggerer = if let Some(role) = &local_player_role {
+                            OwnerId::Client(role.entity)
+                        } else {
+                            OwnerId::Server
+                        };
+
+                        let player_pos = q_player
+                            .iter()
+                            .find(|(e, _)| *e == player_entity)
+                            .map(|(_, p)| [p.x, p.y, p.z]);
+
+                        ev_replicated_sound.write(ToClients {
+                            mode: SendMode::Broadcast,
+                            message: ReplicatedSoundEvent {
+                                sound_file: SOUND_DINGDINGDING.to_string(),
+                                volume: 1.0,
+                                position: player_pos,
+                                triggerer,
+                                is_inside_truck: true,
+                            },
+                        });
+
                         ev_craft_req.write(RequestCraftRepellent {
                             ghost_type,
                             player_entity,
@@ -122,12 +172,6 @@ fn truckui_event_handle(
                             "REPELLENT: Craft repellent requested on authority node, but no MainPlayer found in truck!"
                         );
                     }
-
-                    commands.spawn((FlatAudio {
-                        sound_file: "sounds/effects-dingdingding.ogg".to_string(),
-                        volume_multiplier: 1.0,
-                        category: AudioCategory::Effects,
-                    },));
                 } else {
                     warn!(
                         "REPELLENT: CraftRepellent requested but no ghost type selected in journal"

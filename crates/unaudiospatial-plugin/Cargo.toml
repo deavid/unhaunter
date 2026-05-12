@@ -14,6 +14,8 @@ workspace = true
 uncommon-states-core = { workspace = true }
 
 unaudiospatial-core = { workspace = true }
+unreplicon-core = { workspace = true }
+untruck-core = { workspace = true }
 unspatial-core = { workspace = true }
 unsettings-core = { workspace = true }
 unmetrics-core = { workspace = true }

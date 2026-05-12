@@ -11,6 +11,9 @@ use unaudiospatial_core::components::{
 use unaudiospatial_core::events::{LocalSoundEvent, SoundEvent};
 use unaudiospatial_core::listener::SpatialListener;
 use unmetrics_core::metrics::SendMetric;
+use unreplicon_core::messages::ReplicatedSoundEvent;
+use unreplicon_core::ownership::{LocallyOwned, Owner};
+use untruck_core::components::in_truck::InTruck;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -400,6 +403,211 @@ pub(crate) fn attach_flat_audio(
             DefaultPool,
         ));
     }
+}
+
+pub fn replicated_spatial_audio_playback(
+    mut sound_events: MessageReader<ReplicatedSoundEvent>,
+    asset_server: Res<AssetServer>,
+    qp: Query<(&Position, &Direction, Has<InTruck>), With<SpatialListener>>,
+    mut commands: Commands,
+    audio_settings: Res<Persistent<AudioSettings>>,
+    time: Res<Time>,
+    mut last_error_log: Local<f32>,
+    q_instances: Query<(Entity, &SpatialAudioInstance), Without<SpatialAudioDelayedDespawn>>,
+    q_local_player: Query<&Owner, With<LocallyOwned>>,
+) {
+    let measure = metrics::SOUND_PLAYBACK.time_measure();
+    let now = time.elapsed_secs();
+    let cur_frame = (now * 60.0) as u32;
+    let mut can_log = now - *last_error_log > 1.0;
+
+    let Ok((player_position, player_dir, listener_in_truck)) = qp.single() else {
+        if can_log {
+            warn!("player not found!");
+            *last_error_log = now;
+        }
+        measure.end_ms();
+        return;
+    };
+
+    let local_owner_id = q_local_player.single().ok().map(|o| o.0);
+
+    for replicated_ev in sound_events.read() {
+        if !player_position.is_finite() && can_log {
+            error!("Player position is not finite: {player_position:?}");
+            *last_error_log = now;
+            can_log = false;
+        }
+
+        let mut volume = replicated_ev.volume;
+        let sound_pos = replicated_ev.position.map(|p| Position {
+            x: p[0],
+            y: p[1],
+            z: p[2],
+            ..Default::default()
+        });
+
+        // Triggerer Identification: Penalize those who are not the one who triggered it.
+        let is_triggerer = local_owner_id == Some(replicated_ev.triggerer);
+
+        if !is_triggerer {
+            // Penalization for those that are not the ones to trigger it.
+            // Penalization in the form of severe muffling and lower volume.
+            volume *= 0.4;
+        }
+
+        let mut sound_event = SoundEvent {
+            sound_file: replicated_ev.sound_file.clone(),
+            volume,
+            position: sound_pos,
+        };
+
+        // If the sound happens IN the van, for people OUT of the van should get even more penalty
+        if replicated_ev.is_inside_truck && !listener_in_truck {
+            sound_event.volume *= 0.2;
+        }
+
+        let is_mono = audio_settings.sound_output == SoundOutput::Mono;
+        let mut params =
+            compute_spatial_params(player_position, player_dir, sound_event.position, is_mono);
+
+        // Apply aggressive muffling if not triggerer or if sound is inside truck and listener is outside.
+        if !is_triggerer {
+            params.muffle_cutoff_hz = params.muffle_cutoff_hz.min(1200.0);
+        }
+        if replicated_ev.is_inside_truck && !listener_in_truck {
+            params.muffle_cutoff_hz = params.muffle_cutoff_hz.min(400.0);
+        }
+
+        // Deduplication & Spam Detection
+        let mut is_spam = false;
+        let reverb_file = sound_event.sound_file.replace("sounds/", "reverbs/");
+
+        for (entity, instance) in q_instances.iter() {
+            if instance.sound_file == sound_event.sound_file || instance.sound_file == reverb_file {
+                let frame_diff = cur_frame.saturating_sub(instance.spawn_frame);
+                if !instance.is_reverb && frame_diff < AUDIO_SPAM_FRAME_THRESHOLD {
+                    warn!(
+                        "AUDIO SPAM: Sound '{}' triggered too rapidly ({} frames). Skipping.",
+                        sound_event.sound_file, frame_diff
+                    );
+                    is_spam = true;
+                    break;
+                } else {
+                    commands
+                        .entity(entity)
+                        .insert(SpatialAudioDelayedDespawn::new(0.3));
+                }
+            }
+        }
+
+        if is_spam {
+            continue;
+        }
+
+        let dist = sound_event
+            .position
+            .map(|pos| player_position.distance_zf(&pos, 12.5))
+            .unwrap_or(0.0);
+
+        let base_vol = sound_event.volume
+            * audio_settings.volume_effects.as_f32()
+            * audio_settings.volume_master.as_f32();
+
+        let mut dry_vol = base_vol.clamp(0.0, 1.0);
+
+        let rev_max_ratio = 2.0;
+        let rev_ramp = (dist / 20.0).clamp(0.0, 1.0);
+        let mut rev_vol = (base_vol * rev_max_ratio * rev_ramp).clamp(0.0, 1.0);
+
+        if is_mono {
+            let mono_div = 1.0 + dist * 0.4;
+            dry_vol /= mono_div;
+            rev_vol /= mono_div;
+        }
+
+        let direction = params.direction;
+        let offset = params.offset;
+        let muffle_hz = params.muffle_cutoff_hz;
+        let panning_threshold = params.panning_threshold;
+
+        commands.spawn((
+            SpatialAudioInstance {
+                sound_file: sound_event.sound_file.clone(),
+                is_reverb: false,
+                initial_volume: dry_vol,
+                spawn_time: now,
+                spawn_frame: cur_frame,
+                position: sound_event.position,
+            },
+            SamplePlayer::new(asset_server.load(sound_event.sound_file.clone())),
+            sample_effects![
+                VolumeNode {
+                    volume: Volume::Linear(dry_vol),
+                    smooth_seconds: 0.0005,
+                    ..default()
+                },
+                SpatialBasicNode {
+                    offset,
+                    muffle_cutoff_hz: muffle_hz,
+                    smooth_seconds: 0.0005,
+                    downmix: false,
+                    panning_threshold,
+                    ..default()
+                },
+                (
+                    ItdNode { direction },
+                    ItdConfig {
+                        inter_ear_distance: 0.11,
+                        ..default()
+                    }
+                )
+            ],
+            UnSpatialPool,
+        ));
+
+        if rev_vol > 0.001 {
+            commands.spawn((
+                SpatialAudioInstance {
+                    sound_file: reverb_file.clone(),
+                    is_reverb: true,
+                    initial_volume: rev_vol,
+                    spawn_time: now,
+                    spawn_frame: cur_frame,
+                    position: sound_event.position,
+                },
+                SamplePlayer::new(asset_server.load(reverb_file)),
+                sample_effects![
+                    VolumeNode {
+                        volume: Volume::Linear(rev_vol),
+                        smooth_seconds: 0.0005,
+                        ..default()
+                    },
+                    SpatialBasicNode {
+                        offset,
+                        muffle_cutoff_hz: muffle_hz,
+                        distance_attenuation: DistanceAttenuation {
+                            distance_gain_factor: 0.25,
+                            ..default()
+                        },
+                        smooth_seconds: 0.0005,
+                        downmix: false,
+                        panning_threshold,
+                        ..default()
+                    },
+                    (
+                        ItdNode { direction },
+                        ItdConfig {
+                            inter_ear_distance: 0.11,
+                            ..default()
+                        }
+                    )
+                ],
+                UnSpatialPool,
+            ));
+        }
+    }
+    measure.end_ms();
 }
 
 pub fn update_spatial_audio(

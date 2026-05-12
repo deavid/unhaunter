@@ -14,7 +14,7 @@
 //! pattern stabilises. See `ExportClientComponent` docs for details.
 
 use bevy::prelude::*;
-use bevy_replicon::prelude::{Channel, ClientId, ClientMessageAppExt, FromClient, Replicated};
+use bevy_replicon::prelude::*;
 use uncommon_states_core::UIContextState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
@@ -29,8 +29,11 @@ use ungearitems_core::events::RepellentHitNetMessage;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Toggleable;
 use unreplicon_core::client_export::ExportClientComponent;
+use unreplicon_core::messages::ReplicatedSoundEvent;
 use unreplicon_core::ownership::{LocallyOwned, Owner, OwnerId};
 use unreplicon_core::resources::{AuthorityRole, LocalPlayerRole, is_pure_client};
+use unspatial_core::position::Position;
+use untruck_core::components::in_truck::InTruck;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_client_message::<RepellentHitNetMessage>(Channel::Unreliable);
@@ -104,6 +107,13 @@ fn from_owner_id(owner_id: OwnerId) -> ClientId {
     match owner_id {
         OwnerId::Server => ClientId::Server,
         OwnerId::Client(e) => ClientId::Client(e),
+    }
+}
+
+fn to_owner_id(client_id: ClientId) -> OwnerId {
+    match client_id {
+        ClientId::Server => OwnerId::Server,
+        ClientId::Client(e) => OwnerId::Client(e),
     }
 }
 
@@ -234,13 +244,21 @@ fn send_export_toggleable(
 fn handle_import_flashlight(
     mut reader: MessageReader<FromClient<ExportClientComponent<Flashlight>>>,
     mut q_gear: Query<
-        (&Owner, &mut Flashlight, Option<&mut Toggleable>),
+        (
+            &Owner,
+            &mut Flashlight,
+            Option<&mut Toggleable>,
+            Option<&Position>,
+            Has<InTruck>,
+        ),
         (Without<LocallyOwned>, With<Replicated>),
     >,
+    mut ev_replicated_sound: MessageWriter<ToClients<ReplicatedSoundEvent>>,
 ) {
     for msg in reader.read() {
         let entity = msg.message.entity;
-        let Ok((owner, mut flashlight, toggleable)) = q_gear.get_mut(entity) else {
+        let Ok((owner, mut flashlight, toggleable, pos, in_truck)) = q_gear.get_mut(entity)
+        else {
             warn!("handle_import_flashlight: entity {:?} not found", entity);
             continue;
         };
@@ -257,6 +275,17 @@ fn handle_import_flashlight(
                 "RECV: UPDATING FLASHLIGHT: Entity: {:?}, New Status: {:?}",
                 entity, msg.message.data.status
             );
+
+            ev_replicated_sound.write(ToClients {
+                mode: SendMode::Broadcast,
+                message: ReplicatedSoundEvent {
+                    sound_file: "sounds/switch-on-1.ogg".to_string(),
+                    volume: 1.0,
+                    position: pos.map(|p: &Position| [p.x, p.y, p.z]),
+                    triggerer: to_owner_id(msg.client_id),
+                    is_inside_truck: in_truck,
+                },
+            });
         }
         *flashlight = msg.message.data.clone();
         if let Some(mut t) = toggleable {
@@ -268,19 +297,39 @@ fn handle_import_flashlight(
 fn handle_import_uvtorch(
     mut reader: MessageReader<FromClient<ExportClientComponent<UVTorch>>>,
     mut q_gear: Query<
-        (&Owner, &mut UVTorch, Option<&mut Toggleable>),
+        (
+            &Owner,
+            &mut UVTorch,
+            Option<&mut Toggleable>,
+            Option<&Position>,
+            Has<InTruck>,
+        ),
         (Without<LocallyOwned>, With<Replicated>),
     >,
+    mut ev_replicated_sound: MessageWriter<ToClients<ReplicatedSoundEvent>>,
 ) {
     for msg in reader.read() {
         let entity = msg.message.entity;
-        let Ok((owner, mut uvtorch, toggleable)) = q_gear.get_mut(entity) else {
+        let Ok((owner, mut uvtorch, toggleable, pos, in_truck)) = q_gear.get_mut(entity)
+        else {
             warn!("handle_import_uvtorch: entity {:?} not found", entity);
             continue;
         };
         if from_owner_id(owner.0) != msg.client_id {
             warn!("handle_import_uvtorch: ownership mismatch for {:?}", entity);
             continue;
+        }
+        if uvtorch.enabled != msg.message.data.enabled {
+            ev_replicated_sound.write(ToClients {
+                mode: SendMode::Broadcast,
+                message: ReplicatedSoundEvent {
+                    sound_file: "sounds/switch-on-1.ogg".to_string(),
+                    volume: 1.0,
+                    position: pos.map(|p: &Position| [p.x, p.y, p.z]),
+                    triggerer: to_owner_id(msg.client_id),
+                    is_inside_truck: in_truck,
+                },
+            });
         }
         let enabled = msg.message.data.enabled;
         *uvtorch = msg.message.data.clone();
@@ -293,13 +342,21 @@ fn handle_import_uvtorch(
 fn handle_import_redtorch(
     mut reader: MessageReader<FromClient<ExportClientComponent<RedTorch>>>,
     mut q_gear: Query<
-        (&Owner, &mut RedTorch, Option<&mut Toggleable>),
+        (
+            &Owner,
+            &mut RedTorch,
+            Option<&mut Toggleable>,
+            Option<&Position>,
+            Has<InTruck>,
+        ),
         (Without<LocallyOwned>, With<Replicated>),
     >,
+    mut ev_replicated_sound: MessageWriter<ToClients<ReplicatedSoundEvent>>,
 ) {
     for msg in reader.read() {
         let entity = msg.message.entity;
-        let Ok((owner, mut redtorch, toggleable)) = q_gear.get_mut(entity) else {
+        let Ok((owner, mut redtorch, toggleable, pos, in_truck)) = q_gear.get_mut(entity)
+        else {
             warn!("handle_import_redtorch: entity {:?} not found", entity);
             continue;
         };
@@ -309,6 +366,18 @@ fn handle_import_redtorch(
                 entity
             );
             continue;
+        }
+        if redtorch.enabled != msg.message.data.enabled {
+            ev_replicated_sound.write(ToClients {
+                mode: SendMode::Broadcast,
+                message: ReplicatedSoundEvent {
+                    sound_file: "sounds/switch-on-1.ogg".to_string(),
+                    volume: 1.0,
+                    position: pos.map(|p: &Position| [p.x, p.y, p.z]),
+                    triggerer: to_owner_id(msg.client_id),
+                    is_inside_truck: in_truck,
+                },
+            });
         }
         let enabled = msg.message.data.enabled;
         *redtorch = msg.message.data.clone();
@@ -404,11 +473,15 @@ fn handle_import_quartz(
 /// on the send side and will not produce these messages.
 fn handle_import_toggleable(
     mut reader: MessageReader<FromClient<ExportClientComponent<Toggleable>>>,
-    mut q_gear: Query<(&Owner, &mut Toggleable), (Without<LocallyOwned>, With<Replicated>)>,
+    mut q_gear: Query<
+        (&Owner, &mut Toggleable, Option<&Position>, Has<InTruck>),
+        (Without<LocallyOwned>, With<Replicated>),
+    >,
+    mut ev_replicated_sound: MessageWriter<ToClients<ReplicatedSoundEvent>>,
 ) {
     for msg in reader.read() {
         let entity = msg.message.entity;
-        let Ok((owner, mut toggleable)) = q_gear.get_mut(entity) else {
+        let Ok((owner, mut toggleable, pos, in_truck)) = q_gear.get_mut(entity) else {
             warn!("handle_import_toggleable: entity {:?} not found", entity);
             continue;
         };
@@ -418,6 +491,18 @@ fn handle_import_toggleable(
                 entity
             );
             continue;
+        }
+        if toggleable.is_on != msg.message.data.is_on {
+            ev_replicated_sound.write(ToClients {
+                mode: SendMode::Broadcast,
+                message: ReplicatedSoundEvent {
+                    sound_file: "sounds/switch-on-1.ogg".to_string(),
+                    volume: 1.0,
+                    position: pos.map(|p: &Position| [p.x, p.y, p.z]),
+                    triggerer: to_owner_id(msg.client_id),
+                    is_inside_truck: in_truck,
+                },
+            });
         }
         *toggleable = msg.message.data;
     }
