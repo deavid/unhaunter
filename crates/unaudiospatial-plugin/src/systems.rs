@@ -248,7 +248,7 @@ fn play_sound_event(
     }
 }
 
-pub fn local_spatial_audio_playback(
+pub(crate) fn local_spatial_audio_playback(
     mut sound_events: MessageReader<LocalSoundEvent>,
     asset_server: Res<AssetServer>,
     qp: Query<(&Position, &Direction), With<SpatialListener>>,
@@ -294,7 +294,7 @@ pub fn local_spatial_audio_playback(
     measure.end_ms();
 }
 
-pub fn spatial_audio_playback(
+pub(crate) fn spatial_audio_playback(
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
     qp: Query<(&Position, &Direction), With<SpatialListener>>,
@@ -339,7 +339,7 @@ pub fn spatial_audio_playback(
     measure.end_ms();
 }
 
-pub fn process_audio_delayed_despawns(
+pub(crate) fn process_audio_delayed_despawns(
     mut commands: Commands,
     time: Res<Time>,
     mut q_fadeouts: Query<(Entity, &mut SpatialAudioDelayedDespawn)>,
@@ -352,7 +352,7 @@ pub fn process_audio_delayed_despawns(
     }
 }
 
-pub fn monitor_audio_pileup(
+pub(crate) fn monitor_audio_pileup(
     q_audio_players: Query<&SamplePlayer>,
     time: Res<Time>,
     asset_server: Res<AssetServer>,
@@ -405,7 +405,7 @@ pub(crate) fn attach_flat_audio(
     }
 }
 
-pub fn replicated_spatial_audio_playback(
+pub(crate) fn replicated_spatial_audio_playback(
     mut sound_events: MessageReader<ReplicatedSoundEvent>,
     asset_server: Res<AssetServer>,
     qp: Query<(&Position, &Direction, Has<InTruck>), With<SpatialListener>>,
@@ -610,7 +610,7 @@ pub fn replicated_spatial_audio_playback(
     measure.end_ms();
 }
 
-pub fn update_spatial_audio(
+pub(crate) fn update_spatial_audio(
     qp: Query<(&Position, &Direction), With<SpatialListener>>,
     audio_settings: Res<Persistent<AudioSettings>>,
     q_audio: Query<(&SpatialAudioInstance, &SampleEffects)>,
