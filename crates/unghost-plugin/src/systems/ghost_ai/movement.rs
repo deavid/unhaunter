@@ -33,7 +33,7 @@ use crate::systems::ghost_ai::roar::emit_ghost_audio;
 
 // Constants for movement penalties
 const WALL_AVOIDANCE_PENALTY: f32 = -100.0; // Negative because it's added to score
-const FLOOR_CHANGE_PENALTY_BASE: f32 = -50.0; // Negative, base penalty for changing floors
+const FLOOR_CHANGE_PENALTY_BASE: f32 = -10.0; // Negative, base penalty for changing floors
 const DISCHARGE_SPEED_MULTIPLIER: f32 = 1.45;
 const CHARGING_SPEED_MULTIPLIER_IN_RED: f32 = 0.45;
 const DISCHARGE_WARP_TRIGGER_CHANCE: i32 = 250;
