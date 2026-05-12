@@ -193,3 +193,4 @@ pub(crate) fn app_setup(app: &mut App) {
     crate::systems::dynamic_behavior_update::app_setup(app);
     crate::systems::sound_field_pulse::app_setup(app);
 }
+mod reproduction_test;

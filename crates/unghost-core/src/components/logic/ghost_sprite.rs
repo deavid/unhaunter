@@ -210,6 +210,8 @@ pub struct GhostSprite {
     pub hunt_warning_intensity: f32,
     /// Number of times the ghost has hunted in the current mission.
     pub times_hunted_this_mission: i64,
+    /// Timer in seconds tracking how long the ghost has been on its current floor.
+    pub floor_stay_timer: f32,
 }
 
 impl Default for GhostSprite {
@@ -240,6 +242,7 @@ impl Default for GhostSprite {
             hunt_warning_timer: 0.0,
             hunt_warning_intensity: 0.0,
             times_hunted_this_mission: 0,
+            floor_stay_timer: 0.0,
         }
     }
 }
