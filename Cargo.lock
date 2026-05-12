@@ -9464,6 +9464,7 @@ dependencies = [
  "unboard-core",
  "uncommon-states-core",
  "undifficulty-core",
+ "unfog-core",
  "unghost-core",
  "unlight-core",
  "unmission-core",

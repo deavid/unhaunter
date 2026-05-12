@@ -4,6 +4,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::{MainPlayer, PlayerSpectating};
+use unfog_core::miasma::MiasmaGrid;
 use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
@@ -29,6 +30,7 @@ pub(crate) fn drain_sanity_from_environment(
     thermal_grid: Option<Res<ThermalGrid>>,
     sound_grid: Option<Res<SoundGrid>>,
     lg: Option<Res<LightGrid>>,
+    miasma: Option<Res<MiasmaGrid>>,
     room_topology: Res<RoomTopology>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -73,9 +75,20 @@ pub(crate) fn drain_sanity_from_environment(
         } else {
             0.0
         };
+
+        let miasma_drain = if let Some(miasma) = miasma.as_ref() {
+            let p_val = miasma.pressure_field.get(p).copied().unwrap_or(0.0);
+            // Linear addition to crazyness starting at 1000 and reaching full intensity at 10000.
+            // Full intensity is roughly 2.0 extra crazyness units per second (at default rate).
+            ((p_val - 1000.0) / 4500.0).max(0.0)
+        } else {
+            0.0
+        };
+
         ps.crazyness +=
             (crazy.clamp(0.000000001, 10000000.0).sqrt() * 0.2 * difficulty.0.sanity_drain_rate()
-                - sanity_recover * ps.crazyness / (1.0 + ps.mean_sound * 10.0))
+                - sanity_recover * ps.crazyness / (1.0 + ps.mean_sound * 10.0)
+                + miasma_drain * difficulty.0.sanity_drain_rate())
                 * dt;
         if ps.crazyness < 0.0 {
             ps.crazyness = 0.0;

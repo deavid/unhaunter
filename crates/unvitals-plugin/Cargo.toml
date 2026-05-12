@@ -26,3 +26,4 @@ unlight-core = { workspace = true }
 unboard-core = { workspace = true }
 untruck-core = { workspace = true }
 unthermal-core = { workspace = true }
+unfog-core = { workspace = true }

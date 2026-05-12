@@ -6,13 +6,14 @@ use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
 use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
+use unfog_core::miasma::MiasmaGrid;
 use unvitals_core::components::{PlayerVitals, Stamina};
 use unvitals_core::events::PlayerDiedEvent;
 
 pub(crate) fn regenerate_health_over_time(
     time: Res<Time>,
     mut qp: Query<
-        &mut PlayerVitals,
+        (&mut PlayerVitals, &Position),
         (
             With<LocallyOwned>,
             Without<InTruck>,
@@ -20,12 +21,30 @@ pub(crate) fn regenerate_health_over_time(
         ),
     >,
     difficulty: Res<CurrentDifficulty>,
+    miasma: Option<Res<MiasmaGrid>>,
 ) {
     let dt = time.delta_secs();
-    for mut ps in &mut qp {
+    for (mut ps, pos) in &mut qp {
+        let miasma_pressure = if let Some(miasma) = miasma.as_ref() {
+            let bpos = pos.to_board_position();
+            miasma
+                .pressure_field
+                .get(bpos.ndidx())
+                .copied()
+                .unwrap_or(0.0)
+        } else {
+            0.0
+        };
+
+        // Prevent healing in very high miasma concentrations.
+        // Penalty starts at 1000 and completely stops healing at 10000.
+        let healing_penalty = ((miasma_pressure - 1000.0) / 9000.0).clamp(0.0, 1.0);
+        let healing_mult = 1.0 - healing_penalty;
+
         if ps.health < 100.0 && ps.health > 0.0 {
             ps.health += (0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0)
-                * difficulty.0.health_recovery_rate();
+                * difficulty.0.health_recovery_rate()
+                * healing_mult;
         }
         if ps.health > 100.0 {
             ps.health = 100.0;
