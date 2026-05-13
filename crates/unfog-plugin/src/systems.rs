@@ -387,7 +387,7 @@ pub(crate) fn update_miasma(
     // --- Ghost Influence: Source ---
     for (g_pos, g_sprite) in q_ghost.iter() {
         let g_bpos = g_pos.to_board_position();
-        let hunt_mult = if g_sprite.hunting > 0.0 { 25.0 } else { 1.0 };
+        let hunt_mult = if g_sprite.hunting > 0.0 { 100.0 } else { 1.0 };
         if let Some(pressure) = miasma.pressure_field.get_mut(g_bpos.ndidx()) {
             *pressure += 20.0 * dt * hunt_mult;
         }
@@ -651,8 +651,8 @@ pub(crate) fn update_miasma(
                 + ghost_force)
                 / (1.0 + miasma_config.inertia_factor + miasma_config.friction);
 
-            // Clamp velocity to a maximum of 1 tile per second to avoid "overflowing"
-            new_velocity = new_velocity.clamp_length_max(1.0);
+            // Clamp velocity to a maximum of 2 tiles per second to avoid "overflowing"
+            new_velocity = new_velocity.clamp_length_max(2.0);
 
             // Take walls into account.
             const WALL_REPEL_SPEED: f32 = 0.00;
