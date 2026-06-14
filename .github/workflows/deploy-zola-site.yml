@@ -96,7 +96,7 @@ jobs:
         run: |
           # Fetch the rolling alpha-latest release from the main repo
           gh release download "alpha-latest" --repo deavid/unhaunter --pattern "unhaunter-*wasm.zip" -O alpha-wasm-release.zip || echo "Alpha release not found, skipping."
-          
+
           if [ -f alpha-wasm-release.zip ]; then
             unzip alpha-wasm-release.zip -d wasm-alpha-temp
             GAME_DIR=$(find wasm-alpha-temp -name "index.html" | head -n 1)
