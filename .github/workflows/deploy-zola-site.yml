@@ -44,7 +44,13 @@ jobs:
         run: |
           gh release download "${{ steps.latest_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm.zip" -O latest-wasm-release.zip
           unzip latest-wasm-release.zip -d wasm-release-temp
-          cp -Rv wasm-release-temp/* static/wasm/main/
+          GAME_DIR=$(find wasm-release-temp -name "index.html" | head -n 1)
+          if [ -n "$GAME_DIR" ]; then
+            cp -Rv "$(dirname "$GAME_DIR")"/* static/wasm/main/
+          else
+            echo "Error: index.html not found in stable release zip"
+            exit 1
+          fi
           echo "Latest stable WASM game downloaded and extracted to static/wasm/main/"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -70,7 +76,13 @@ jobs:
         run: |
           gh release download "${{ steps.latest_beta_release.outputs.BETA_TAG }}" --pattern "unhaunter-*wasm.zip" -O beta-wasm-release.zip
           unzip beta-wasm-release.zip -d wasm-beta-temp
-          cp -Rv wasm-beta-temp/* static/wasm/beta/
+          GAME_DIR=$(find wasm-beta-temp -name "index.html" | head -n 1)
+          if [ -n "$GAME_DIR" ]; then
+            cp -Rv "$(dirname "$GAME_DIR")"/* static/wasm/beta/
+          else
+            echo "Error: index.html not found in beta release zip"
+            exit 1
+          fi
           echo "Latest beta WASM game downloaded and extracted to static/wasm/beta/"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -87,8 +99,14 @@ jobs:
           
           if [ -f alpha-wasm-release.zip ]; then
             unzip alpha-wasm-release.zip -d wasm-alpha-temp
-            mkdir -p static/wasm/alpha/
-            cp -Rv wasm-alpha-temp/* static/wasm/alpha/
+            GAME_DIR=$(find wasm-alpha-temp -name "index.html" | head -n 1)
+            if [ -n "$GAME_DIR" ]; then
+              mkdir -p static/wasm/alpha/
+              cp -Rv "$(dirname "$GAME_DIR")"/* static/wasm/alpha/
+            else
+              echo "Error: index.html not found in alpha release zip"
+              exit 1
+            fi
             rm -rf wasm-alpha-temp alpha-wasm-release.zip
             echo "Latest alpha WASM game downloaded and extracted to static/wasm/alpha/"
           else
