@@ -170,6 +170,7 @@
         remote_src: true
         owner: unhaunter
         group: unhaunter
+        extra_opts: ['--strip-components=1']
       when:
         - stable_asset.browser_download_url is defined
         - stable_version | length > 0
@@ -192,6 +193,7 @@
         remote_src: true
         owner: unhaunter
         group: unhaunter
+        extra_opts: ['--strip-components=1']
       when:
         - beta_asset.browser_download_url is defined
         - beta_version | length > 0
@@ -226,6 +228,7 @@
         remote_src: true
         owner: unhaunter
         group: unhaunter
+        extra_opts: ['--strip-components=1']
       when: alpha_asset.browser_download_url is defined
 
     - name: Ensure stable metadata files
