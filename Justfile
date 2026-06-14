@@ -130,12 +130,13 @@ package-linux: build-linux package-common
     echo "Packaging Linux artifact for {{_version}}..."
     step_start=$SECONDS
     rm -rf {{_dist_dir}}/linux/*
-    cp {{_dist_dir}}/common/* {{_dist_dir}}/linux/ -R
-    cp {{_target_dir}}/x86_64-unknown-linux-gnu/release/unhaunter_game {{_dist_dir}}/linux/unhaunter_game
+    mkdir -p {{_dist_dir}}/linux/unhaunter-{{_version}}
+    cp {{_dist_dir}}/common/* {{_dist_dir}}/linux/unhaunter-{{_version}}/ -R
+    cp {{_target_dir}}/x86_64-unknown-linux-gnu/release/unhaunter_game {{_dist_dir}}/linux/unhaunter-{{_version}}/unhaunter_game
     echo "[timing] package-linux:prepare-files=$((SECONDS - step_start))s"
     step_start=$SECONDS
     unlink {{_releases_dir}}/unhaunter-{{_version}}-linux-x86_64.tar.gz || true
-    tar -czf {{_releases_dir}}/unhaunter-{{_version}}-linux-x86_64.tar.gz -C {{_dist_dir}}/linux .
+    tar -czf {{_releases_dir}}/unhaunter-{{_version}}-linux-x86_64.tar.gz -C {{_dist_dir}}/linux unhaunter-{{_version}}
     echo "[timing] package-linux:create-tarball=$((SECONDS - step_start))s"
     echo "Linux package created: {{_releases_dir}}/unhaunter-{{_version}}-linux-x86_64.tar.gz"
     echo "[timing] package-linux:total=$((SECONDS - recipe_start))s"
@@ -150,12 +151,13 @@ package-windows: build-windows package-common
     echo "Packaging Windows artifact for {{_version}}..."
     step_start=$SECONDS
     rm -rf {{_dist_dir}}/windows/*
-    cp {{_dist_dir}}/common/* {{_dist_dir}}/windows/ -R
-    cp {{_target_dir}}/x86_64-pc-windows-gnu/release/unhaunter_game.exe {{_dist_dir}}/windows/unhaunter_game.exe
+    mkdir -p {{_dist_dir}}/windows/unhaunter-{{_version}}
+    cp {{_dist_dir}}/common/* {{_dist_dir}}/windows/unhaunter-{{_version}}/ -R
+    cp {{_target_dir}}/x86_64-pc-windows-gnu/release/unhaunter_game.exe {{_dist_dir}}/windows/unhaunter-{{_version}}/unhaunter_game.exe
     echo "[timing] package-windows:prepare-files=$((SECONDS - step_start))s"
     step_start=$SECONDS
     unlink {{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip || true
-    cd {{_dist_dir}}/windows && zip -rq ../../{{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip *
+    cd {{_dist_dir}}/windows && zip -rq ../../{{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip unhaunter-{{_version}}
     cd ../../
     echo "[timing] package-windows:create-zip=$((SECONDS - step_start))s"
     echo "Windows package created: {{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip"
@@ -193,13 +195,13 @@ package-server: ensure-dist-dir build-server
     echo "Packaging server artifact for {{_version}}..."
     step_start=$SECONDS
     rm -rf {{_dist_dir}}/server
-    mkdir -p {{_dist_dir}}/server
-    cp {{_target_dir}}/x86_64-unknown-linux-gnu/release/unhaunter_dedicated {{_dist_dir}}/server/unhaunter_dedicated
-    cp -r {{_assets_dir}} {{_dist_dir}}/server/assets
+    mkdir -p {{_dist_dir}}/server/unhaunter-{{_version}}
+    cp {{_target_dir}}/x86_64-unknown-linux-gnu/release/unhaunter_dedicated {{_dist_dir}}/server/unhaunter-{{_version}}/unhaunter_dedicated
+    cp -r {{_assets_dir}} {{_dist_dir}}/server/unhaunter-{{_version}}/assets
     echo "[timing] package-server:prepare-files=$((SECONDS - step_start))s"
     step_start=$SECONDS
     unlink {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz || true
-    tar -czf {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz -C {{_dist_dir}}/server .
+    tar -czf {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz -C {{_dist_dir}}/server unhaunter-{{_version}}
     echo "[timing] package-server:create-tarball=$((SECONDS - step_start))s"
     echo "Server package created: {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz"
     echo "[timing] package-server:total=$((SECONDS - recipe_start))s"

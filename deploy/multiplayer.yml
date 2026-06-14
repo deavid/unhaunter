@@ -163,6 +163,21 @@
         - stable_version | length > 0
         - not (stable_installed.stat.exists | default(false))
 
+    - name: Check stable archive structure
+      ansible.builtin.shell: |
+        set -euo pipefail
+        if tar -tf /tmp/unhaunter-stable-server.tar.gz | grep -v -E '^\./?$' | head -n 1 | grep -q -E '^(\./)?unhaunter-'; then
+          echo "nested"
+        else
+          echo "flat"
+        fi
+      register: stable_archive_structure
+      changed_when: false
+      when:
+        - stable_asset.browser_download_url is defined
+        - stable_version | length > 0
+        - not (stable_installed.stat.exists | default(false))
+
     - name: Extract latest stable server bundle
       ansible.builtin.unarchive:
         src: "/tmp/unhaunter-stable-server.tar.gz"
@@ -170,6 +185,7 @@
         remote_src: true
         owner: unhaunter
         group: unhaunter
+        extra_opts: "{{ ((stable_archive_structure.stdout | default('nested', true)) == 'nested') | ternary(['--strip-components=1'], []) }}"
       when:
         - stable_asset.browser_download_url is defined
         - stable_version | length > 0
@@ -185,6 +201,21 @@
         - beta_version | length > 0
         - not (beta_installed.stat.exists | default(false))
 
+    - name: Check beta archive structure
+      ansible.builtin.shell: |
+        set -euo pipefail
+        if tar -tf /tmp/unhaunter-beta-server.tar.gz | grep -v -E '^\./?$' | head -n 1 | grep -q -E '^(\./)?unhaunter-'; then
+          echo "nested"
+        else
+          echo "flat"
+        fi
+      register: beta_archive_structure
+      changed_when: false
+      when:
+        - beta_asset.browser_download_url is defined
+        - beta_version | length > 0
+        - not (beta_installed.stat.exists | default(false))
+
     - name: Extract latest beta server bundle
       ansible.builtin.unarchive:
         src: "/tmp/unhaunter-beta-server.tar.gz"
@@ -192,6 +223,7 @@
         remote_src: true
         owner: unhaunter
         group: unhaunter
+        extra_opts: "{{ ((beta_archive_structure.stdout | default('nested', true)) == 'nested') | ternary(['--strip-components=1'], []) }}"
       when:
         - beta_asset.browser_download_url is defined
         - beta_version | length > 0
@@ -219,6 +251,18 @@
         mode: "0644"
       when: alpha_asset.browser_download_url is defined
 
+    - name: Check alpha archive structure
+      ansible.builtin.shell: |
+        set -euo pipefail
+        if tar -tf /tmp/unhaunter-alpha-server.tar.gz | grep -v -E '^\./?$' | head -n 1 | grep -q -E '^(\./)?unhaunter-'; then
+          echo "nested"
+        else
+          echo "flat"
+        fi
+      register: alpha_archive_structure
+      changed_when: false
+      when: alpha_asset.browser_download_url is defined
+
     - name: Extract rolling alpha server bundle
       ansible.builtin.unarchive:
         src: "/tmp/unhaunter-alpha-server.tar.gz"
@@ -226,6 +270,7 @@
         remote_src: true
         owner: unhaunter
         group: unhaunter
+        extra_opts: "{{ ((alpha_archive_structure.stdout | default('nested', true)) == 'nested') | ternary(['--strip-components=1'], []) }}"
       when: alpha_asset.browser_download_url is defined
 
     - name: Ensure stable metadata files

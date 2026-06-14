@@ -615,13 +615,13 @@ build-server:
 package-server: ensure-dist-dir build-server
     echo "Packaging server artifact for {{_version}}..."
     rm -rf {{_dist_dir}}/server
-    mkdir -p {{_dist_dir}}/server
+    mkdir -p {{_dist_dir}}/server/unhaunter-{{_version}}
     cp {{_target_dir}}/x86_64-unknown-linux-gnu/release/unhaunter_dedicated \
-       {{_dist_dir}}/server/unhaunter_dedicated
-    cp -r {{_assets_dir}} {{_dist_dir}}/server/assets
+       {{_dist_dir}}/server/unhaunter-{{_version}}/unhaunter_dedicated
+    cp -r {{_assets_dir}} {{_dist_dir}}/server/unhaunter-{{_version}}/assets
     unlink {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz || true
     tar -czvf {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz \
-        -C {{_dist_dir}}/server .
+        -C {{_dist_dir}}/server unhaunter-{{_version}}
     echo "Server package created: {{_releases_dir}}/unhaunter-{{_version}}-server-linux-x86_64.tar.gz"
 ```
 
