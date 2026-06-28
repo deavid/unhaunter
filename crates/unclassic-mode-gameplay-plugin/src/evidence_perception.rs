@@ -198,9 +198,9 @@ fn update_current_evidence_readings_from_player_perception_system(
                             );
                         }
                     }
-                    LightType::Red => {
+                    LightType::Red
                         // RL Presence Evidence
-                        if ghost_evidences.contains(&Evidence::RLPresence) {
+                        if ghost_evidences.contains(&Evidence::RLPresence) => {
                             evidence_readings.report_clarity(
                                 Evidence::RLPresence,
                                 1.0,
@@ -208,7 +208,6 @@ fn update_current_evidence_readings_from_player_perception_system(
                                 delta_time,
                             );
                         }
-                    }
                     _ => {}
                 }
             }

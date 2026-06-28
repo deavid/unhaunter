@@ -98,13 +98,12 @@ fn detect_stair_direction(
                     return paired_bpos.y > stair_bpos.y;
                 }
             }
-            Orientation::YAxis => {
+            Orientation::YAxis
                 // For YAxis stairs, check if Y coordinates are close and X direction
-                if (paired_bpos.y - stair_bpos.y).abs() <= 2 {
+                if (paired_bpos.y - stair_bpos.y).abs() <= 2 => {
                     // If paired stair is at higher X, stairs go in positive X direction
                     return paired_bpos.x > stair_bpos.x;
                 }
-            }
             _ => {}
         }
     }

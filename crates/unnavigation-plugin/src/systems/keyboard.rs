@@ -40,21 +40,20 @@ pub(crate) fn adjust_elevation_on_stairs(
                         in_stairs = true;
                     }
                 }
-                Orientation::YAxis => {
+                Orientation::YAxis
                     if (stair_bpos.y == player_bpos.y || stair_bpos.y - 1 == player_bpos.y)
                         && (player_bpos.x - stair_bpos.x).abs() <= 1
-                        && stair_bpos.z == player_bpos.z
-                    {
-                        let dx = stair_pos.x - player_pos.x;
-                        player_pos.z = stair_pos.z + (stair.z as f32) / 4.1 + dx / 4.1;
-                        // FIXME: We need to support mirroring the sprite in X direction, meaning that the player would move in the Y direction instead of X.
-                        if stair.z > 0 {
-                            player_pos.z = player_pos.z.clamp(stair_pos.z, stair_pos.z + 1.0);
-                        } else {
-                            player_pos.z = player_pos.z.clamp(stair_pos.z - 1.0, stair_pos.z);
-                        }
-                        in_stairs = true;
+                        && stair_bpos.z == player_bpos.z =>
+                {
+                    let dx = stair_pos.x - player_pos.x;
+                    player_pos.z = stair_pos.z + (stair.z as f32) / 4.1 + dx / 4.1;
+                    // FIXME: We need to support mirroring the sprite in X direction, meaning that the player would move in the Y direction instead of X.
+                    if stair.z > 0 {
+                        player_pos.z = player_pos.z.clamp(stair_pos.z, stair_pos.z + 1.0);
+                    } else {
+                        player_pos.z = player_pos.z.clamp(stair_pos.z - 1.0, stair_pos.z);
                     }
+                    in_stairs = true;
                 }
                 _ => {}
             }

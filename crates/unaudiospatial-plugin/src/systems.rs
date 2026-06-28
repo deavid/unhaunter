@@ -367,7 +367,7 @@ pub fn monitor_audio_pileup(
             *counts.entry(path).or_insert(0) += 1;
         }
         let mut details: Vec<_> = counts.into_iter().filter(|(_, c)| *c > 1).collect();
-        details.sort_by(|a, b| b.1.cmp(&a.1));
+        details.sort_by_key(|b| std::cmp::Reverse(b.1));
 
         warn!(
             "AUDIO PILEUP: {} active SamplePlayer entities detected! Details: {:?}",

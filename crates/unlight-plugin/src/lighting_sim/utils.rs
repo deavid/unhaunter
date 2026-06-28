@@ -74,13 +74,7 @@ pub fn apply_ambient_light_to_walls(
                         1.0
                     }
                 }
-                Orientation::YAxis => {
-                    if dx != 0 {
-                        2.0
-                    } else {
-                        1.0
-                    }
-                }
+                Orientation::YAxis if dx != 0 => 2.0,
                 _ => 1.0,
             } * w_factor;
 
