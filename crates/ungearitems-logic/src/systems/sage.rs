@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use unfog_core::miasma::MiasmaGrid;
 use ungearitems_core::components::sage::SageBundleData;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unreplicon_core::resources::AuthorityRole;
@@ -27,10 +28,19 @@ pub(crate) fn sage_authority_system(
     mut q_ghost: Query<(&mut GhostSprite, &Position)>,
     _authority: Res<AuthorityRole>,
     time: Res<Time>,
+    mut miasma_grid: ResMut<MiasmaGrid>,
 ) {
     let dt = time.delta_secs();
     for (sage, sage_pos) in q_sage.iter() {
         if sage.is_active && !sage.consumed {
+            // Apply smoke to grid at sage location
+            let bpos = sage_pos.to_board_position();
+            let (width, height, depth) = miasma_grid.smoke_field.dim();
+            if bpos.is_valid((width, height, depth)) {
+                miasma_grid.smoke_field[bpos.ndidx()] += 0.03 * dt;
+                miasma_grid.pressure_field[bpos.ndidx()] *= 0.99;
+            }
+
             for (mut ghost, ghost_pos) in q_ghost.iter_mut() {
                 let dist2 = sage_pos.distance2(ghost_pos);
                 if dist2 < 6.0 * 6.0 {

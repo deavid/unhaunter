@@ -8474,6 +8474,7 @@ dependencies = [
  "uncommon-app-core",
  "uncommon-states-core",
  "undifficulty-core",
+ "unfog-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",

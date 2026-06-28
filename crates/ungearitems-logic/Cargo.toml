@@ -17,6 +17,7 @@ unboard-core = { workspace = true }
 uncommon-states-core = { workspace = true }
 undifficulty-core = { workspace = true }
 uncommon-app-core = { workspace = true }
+unfog-core = { workspace = true }
 ungear-core = { workspace = true }
 ungearitems-core = { workspace = true }
 unghost-core = { workspace = true }

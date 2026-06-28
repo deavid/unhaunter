@@ -19,6 +19,7 @@ use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unlight_core::components::LightSensitive;
+use unlight_core::flashlight::ActiveFlashlights;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unnoise_core::perlin::PerlinNoise;
@@ -40,6 +41,7 @@ pub(crate) fn init_miasma_grid(
         commands.insert_resource(MiasmaGrid {
             pressure_field: Array3::from_elem(ev.map_size, 0.0),
             velocity_field: Array3::from_elem(ev.map_size, Vec2::ZERO),
+            smoke_field: Array3::from_elem(ev.map_size, 0.0),
             room_modifiers: Default::default(),
         });
     }
@@ -297,7 +299,17 @@ pub(crate) fn animate_miasma_sprites(
             let mut total_vel = Vec2::ZERO;
             let mut total_w = 0.0001;
             for bpos in bpos.iter_xy_neighbors(1, board_data.map_size) {
-                if !bcf.0[bpos.ndidx()].player_free {
+                // Defensive check: iter_xy_neighbors should not return out-of-bounds coordinates
+                // FIXME: This needs to be optimized away! - we must not need bounds checking!
+                let ndidx = bpos.ndidx();
+                if ndidx.0 >= board_data.map_size.0
+                    || ndidx.1 >= board_data.map_size.1
+                    || ndidx.2 >= board_data.map_size.2
+                {
+                    warn!("Iterator returned out-of-bounds position: {:?}", bpos);
+                    continue;
+                }
+                if !bcf.0[ndidx].player_free {
                     continue;
                 }
                 let w = (bpos.to_position().distance2(&pos) + 0.1).recip();
@@ -736,4 +748,139 @@ pub(crate) fn update_miasma(
     miasma.velocity_field = new_velocities;
 
     measure.end_ms();
+}
+
+/// Diffuses smoke field to random neighbors and applies decay (~30 second lifetime).
+/// Smoke suppresses miasma pressure and spreads via cheap diffusion.
+pub(crate) fn diffuse_smoke_field(
+    bcf: If<Res<BoardCollisionField>>,
+    mut miasma: If<ResMut<MiasmaGrid>>,
+    _time: Res<Time>,
+) {
+    let mut rng = random_seed::rng();
+
+    const SMOKE_DECAY_PER_FRAME: f32 = 0.9999;
+
+    let mut new_smoke_field = miasma.smoke_field.clone();
+
+    // Apply decay to all smoke
+    for smoke_val in new_smoke_field.iter_mut() {
+        *smoke_val *= SMOKE_DECAY_PER_FRAME;
+        if *smoke_val < 0.0001 {
+            *smoke_val = 0.0;
+        }
+    }
+
+    // Diffuse smoke to random neighbors (cheap diffusion)
+    for (ndidx, current_smoke) in miasma.smoke_field.indexed_iter() {
+        if *current_smoke < 0.0001 {
+            continue;
+        }
+
+        let bpos = BoardPosition::from_ndidx(ndidx);
+        let collision = bcf.0.0.get(ndidx);
+
+        // Skip if this is a wall
+        if let Some(c) = collision {
+            if !c.player_free && !c.see_through {
+                continue;
+            }
+        } else {
+            continue;
+        }
+
+        // Pick 1 random neighbor
+        let neighbors = vec![bpos.left(), bpos.right(), bpos.top(), bpos.bottom()];
+        let valid_neighbors: Vec<_> = neighbors
+            .into_iter()
+            .filter(|nb| {
+                let nb_idx = nb.ndidx();
+                if let Some(c) = bcf.0.0.get(nb_idx) {
+                    c.player_free || c.see_through
+                } else {
+                    false
+                }
+            })
+            .collect();
+
+        if !valid_neighbors.is_empty() {
+            let neighbor = &valid_neighbors[rng.random_range(0..valid_neighbors.len())];
+            let neighbor_idx = neighbor.ndidx();
+
+            let spread_amount = current_smoke * 0.2;
+            new_smoke_field[neighbor_idx] =
+                (new_smoke_field[neighbor_idx] + spread_amount).min(1.0);
+            new_smoke_field[ndidx] = (new_smoke_field[ndidx] - spread_amount).max(0.0);
+        }
+    }
+
+    // Store the diffused smoke field back
+    miasma.smoke_field = new_smoke_field.clone();
+
+    // Apply smoke suppression to miasma pressure
+    // Smoke reduces pressure: pressure *= (1.0 - smoke_level)
+    for (pressure_idx, pressure) in miasma.pressure_field.indexed_iter_mut() {
+        let smoke = new_smoke_field[pressure_idx];
+        *pressure *= 1.0 - smoke.clamp(0.0, 0.01);
+    }
+}
+
+pub(crate) fn apply_flashlight_miasma_effects(
+    active_flashlights: Res<ActiveFlashlights>,
+    mut miasma: If<ResMut<MiasmaGrid>>,
+    time: Res<Time>,
+) {
+    use unlight_core::types::light_type::LightType;
+
+    let dt = time.delta_secs();
+
+    // Iterate through each active flashlight
+    for flashlight in &active_flashlights.list {
+        // Only apply effects to the regular visible (white) flashlight
+        // Not to night vision, red light, UV, or static lights
+        if flashlight.light_type != LightType::Visible {
+            continue;
+        }
+
+        let flashlight_pos = flashlight.pos;
+
+        // Iterate through the visibility field
+        for ((x, y, z), &visibility) in flashlight.vis_field.indexed_iter() {
+            // Only apply effects where the flashlight actually shines (high visibility)
+            // Use a visibility threshold to target illuminated areas
+            if visibility < 0.05 {
+                continue;
+            }
+
+            let idx = (x, y, z);
+
+            // Evaporate miasma (reduce pressure in illuminated areas)
+            if let Some(pressure) = miasma.pressure_field.get_mut(idx) {
+                // Reduce pressure based on visibility and power
+                // Visibility acts as an intensity multiplier (0..1 range)
+                // Power is already scaled, so use it directly
+                let evaporation_rate = visibility.clamp(0.0, 1.0) * flashlight.power * 0.002 * dt;
+                *pressure = (*pressure - evaporation_rate).max(0.0);
+            }
+
+            // Add outward velocity (push miasma away from flashlight source)
+            if let Some(velocity) = miasma.velocity_field.get_mut(idx) {
+                let cell_board_pos = BoardPosition {
+                    x: x as i64,
+                    y: y as i64,
+                    z: z as i64,
+                };
+                let cell_world_pos = cell_board_pos.to_position_center();
+                let to_cell = (cell_world_pos.to_vec3() - flashlight_pos.to_vec3()).truncate();
+
+                // Only apply push if there's a meaningful distance
+                if to_cell.length_squared() > 0.01 {
+                    let outward_dir = to_cell.normalize();
+                    // Push force scales with visibility and power
+                    let push_force = visibility.clamp(0.0, 1.0) * flashlight.power * 0.008 * dt;
+                    *velocity += outward_dir * push_force;
+                }
+            }
+        }
+    }
 }

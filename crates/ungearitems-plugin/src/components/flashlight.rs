@@ -101,7 +101,7 @@ pub(crate) fn update_flashlight_skin(
 
         if skin.frame_counter % 5 == 0 {
             skin.rand = random_seed::rng().random_range(0..12);
-            const HS_MASS: f32 = 2.0;
+            const HS_MASS: f32 = 200.0;
             skin.heatsink_temp = (skin.heatsink_temp * HS_MASS + skin.inner_temp) / (HS_MASS + 1.0);
         }
 
@@ -119,9 +119,9 @@ pub(crate) fn update_flashlight_skin(
             if battery.level <= 0.0 && locally_owned.is_some() {
                 flashlight.status = FlashlightStatus::Off;
             }
-            skin.inner_temp += skin.output_power / 50000.0;
-            skin.inner_temp /= 1.00032;
-            if skin.inner_temp > 1.0 && flashlight.status != FlashlightStatus::Off {
+            skin.inner_temp += skin.output_power / 90000.0;
+            skin.inner_temp /= 1.0004;
+            if skin.heatsink_temp > 1.0 && flashlight.status != FlashlightStatus::Off {
                 if locally_owned.is_some() {
                     flashlight.status = FlashlightStatus::Off;
                 }
@@ -130,7 +130,7 @@ pub(crate) fn update_flashlight_skin(
                     skin.overheat_sound_played = true;
                 }
             }
-            if skin.inner_temp < 0.95 || flashlight.status == FlashlightStatus::Off {
+            if skin.heatsink_temp < 0.95 || flashlight.status == FlashlightStatus::Off {
                 skin.overheat_sound_played = false;
             }
         }

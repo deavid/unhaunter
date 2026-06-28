@@ -23,6 +23,18 @@ impl Plugin for UnhaunterFogCorePlugin {
             crate::systems::update_miasma.run_if(in_state(SimulationState::Ready)),
         );
         app.add_systems(
+            Update,
+            crate::systems::diffuse_smoke_field
+                .run_if(in_state(SimulationState::Ready))
+                .after(crate::systems::update_miasma),
+        );
+        app.add_systems(
+            Update,
+            crate::systems::apply_flashlight_miasma_effects
+                .run_if(in_state(SimulationState::Ready))
+                .after(crate::systems::diffuse_smoke_field),
+        );
+        app.add_systems(
             OnExit(UIContextState::InGame),
             crate::systems::reset_miasma_grid,
         );
