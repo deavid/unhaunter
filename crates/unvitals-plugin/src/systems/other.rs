@@ -1,14 +1,102 @@
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
+use unfog_core::miasma::MiasmaGrid;
 use unghost_core::resources::signals::GhostHuntSignals;
 use unplayer_core::components::{MainPlayer, PlayerSpectating, PlayerSprite};
 use unreplicon_core::ownership::LocallyOwned;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
-use unfog_core::miasma::MiasmaGrid;
 use unvitals_core::components::{PlayerVitals, Stamina};
 use unvitals_core::events::PlayerDiedEvent;
+
+/// Update asphyxia levels based on miasma pressure with three cascading time constants.
+/// Applies cbrt curve first, then flows through: 2s immediate → 5s acute → 60s chronic.
+pub(crate) fn update_asphyxia_from_miasma(
+    time: Res<Time>,
+    mut qp: Query<
+        (&mut PlayerVitals, &Position),
+        (
+            With<LocallyOwned>,
+            Without<InTruck>,
+            Without<PlayerSpectating>,
+        ),
+    >,
+    miasma: Option<Res<MiasmaGrid>>,
+) {
+    let dt = time.delta_secs();
+
+    for (mut vitals, pos) in &mut qp {
+        let miasma_pressure = if let Some(miasma) = miasma.as_ref() {
+            let bpos = pos.to_board_position();
+            miasma
+                .pressure_field
+                .get(bpos.ndidx())
+                .copied()
+                .unwrap_or(0.0)
+        } else {
+            0.0
+        };
+
+        // Apply cbrt curve early to compress the scale
+        // This ensures 10k doesn't have outsized weight compared to small values
+        let cbrt_pressure = f32::cbrt(miasma_pressure);
+
+        // Tier 1: Immediate (symmetric).
+        // Always 2-second response time, both buildup and decay.
+        const IMMEDIATE_RATE: f32 = 0.5;
+        vitals.asphyxia_immediate = vitals.asphyxia_immediate * (1.0 - IMMEDIATE_RATE * dt)
+            + cbrt_pressure * (IMMEDIATE_RATE * dt);
+
+        // Tier 2: Acute (asymmetric: 5s attack / 2s decay).
+        let acute_rate = if vitals.asphyxia_immediate > vitals.asphyxia_acute {
+            0.2 // 5s attack (buildup)
+        } else {
+            0.5 // 2s decay (recovers faster in clean air)
+        };
+        vitals.asphyxia_acute = vitals.asphyxia_acute * (1.0 - acute_rate * dt)
+            + vitals.asphyxia_immediate * (acute_rate * dt);
+
+        // Tier 3: Chronic (highly asymmetric: 60s attack / 15s decay).
+        // Sustained exposure builds chronic fatigue over 60 seconds.
+        // But catching breath in clean air clears the fatigue in ~15 seconds.
+        let chronic_rate = if vitals.asphyxia_acute > vitals.asphyxia_chronic {
+            1.0 / 60.0 // 60s attack (slow buildup of fatigue)
+        } else {
+            1.0 / 10.0 // 10s decay (faster recovery from fatigue)
+        };
+        vitals.asphyxia_chronic = vitals.asphyxia_chronic * (1.0 - chronic_rate * dt)
+            + vitals.asphyxia_acute * (chronic_rate * dt);
+    }
+}
+
+pub(crate) fn debug_log_asphyxia(
+    mut interval: Local<f32>,
+    time: Res<Time>,
+    qp: Query<(&PlayerVitals, &PlayerSprite), (With<LocallyOwned>, With<MainPlayer>)>,
+) {
+    let dt = time.delta_secs();
+    *interval += dt;
+
+    if *interval >= 1.0 {
+        *interval = 0.0;
+        for (vitals, player) in &qp {
+            // Calculate movement penalty from asphyxia
+            let effective_asphyxia = (vitals.asphyxia_acute + vitals.asphyxia_chronic) / 2.0;
+            let asphyxia_speed_mult = 1.0 / (1.0 + effective_asphyxia / 10.0);
+            let movement_penalty_pct = (1.0 - asphyxia_speed_mult) * 100.0;
+
+            info!(
+                "Player {:?} asphyxia — immediate: {:.2}, acute: {:.2}, chronic: {:.2} | movement penalty: {:.1}%",
+                player.id,
+                vitals.asphyxia_immediate,
+                vitals.asphyxia_acute,
+                vitals.asphyxia_chronic,
+                movement_penalty_pct
+            );
+        }
+    }
+}
 
 pub(crate) fn regenerate_health_over_time(
     time: Res<Time>,

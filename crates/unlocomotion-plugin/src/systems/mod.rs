@@ -7,7 +7,6 @@ use unbehavior_core::behavior::Interactive;
 use unbehavior_core::components::RoomStateDelta;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
-use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
 use uninput_core::components::PlayerInput;
 use uninput_core::resources::MouseVisibility;
@@ -23,9 +22,9 @@ use unspatial_core::direction::Direction;
 use unspatial_core::perspective;
 use unspatial_core::position::Position;
 use untruck_core::components::in_truck::InTruck;
-use unvitals_core::components::Stamina;
+use unvitals_core::components::{PlayerVitals, Stamina};
 
-const PLAYER_SPEED: f32 = 0.04;
+const PLAYER_SPEED: f32 = 0.06;
 const RUN_ADD_MULTIPLIER: f32 = 1.3;
 const DIR_MIN: f32 = 5.0;
 const DIR_MAX: f32 = 40.0;
@@ -134,6 +133,7 @@ pub(crate) fn apply_movement_intent(
         Option<&Hiding>,
         Option<&InTruck>,
         &mut Stamina,
+        &PlayerVitals,
         Option<&MainPlayer>,
         Has<PlayerSpectating>,
     )>,
@@ -149,7 +149,6 @@ pub(crate) fn apply_movement_intent(
         Without<PlayerSprite>,
     >,
     difficulty: Res<CurrentDifficulty>,
-    miasma: Option<Res<MiasmaGrid>>,
     mut avg_running: Local<f32>,
     mut last_error_log: Local<f32>,
     mouse_visibility: Option<Res<MouseVisibility>>,
@@ -173,6 +172,7 @@ pub(crate) fn apply_movement_intent(
         hiding,
         in_truck,
         mut stamina,
+        player_vitals,
         main_player,
         is_spectating,
     ) in players.iter_mut()
@@ -263,23 +263,28 @@ pub(crate) fn apply_movement_intent(
 
         let wants_to_run = player_input.run;
 
-        let miasma_pressure = if let Some(miasma) = miasma.as_ref() {
-            let bpos = pos.to_board_position();
-            miasma
-                .pressure_field
-                .get(bpos.ndidx())
-                .copied()
-                .unwrap_or(0.0)
-        } else {
-            0.0
-        };
+        // Use smoothed asphyxia values (already cbrt'd and cascaded through 2s→5s→60s)
+        let miasma_factor = (player_vitals.asphyxia_acute / 100.0)
+            .max(0.0)
+            .clamp(0.0, 0.7);
 
-        let miasma_factor = (miasma_pressure / 100.0).max(0.0).cbrt().clamp(0.0, 0.7);
-        let miasma_speed_penalty = ((miasma_pressure - 1000.0) * (0.6 / 9000.0)).clamp(0.0, 0.6);
-        let miasma_speed_mult = 1.0 - miasma_speed_penalty;
+        // Blend acute and chronic asphyxia 50:50 for effective oxygen/vitality level
+        // (these are already smoothed through the 2-second immediate tier)
+        let effective_asphyxia =
+            (player_vitals.asphyxia_acute + player_vitals.asphyxia_chronic) / 2.0;
+
+        // Apply speed multiplier based on blended asphyxia
+        // Already cbrt'd, so just apply the divisor 10 formula
+        let mut asphyxia_speed_mult = 1.0 / (1.0 + effective_asphyxia / 10.0);
 
         stamina.depletion_rate = miasma_factor;
         let is_running = stamina.update(dt, wants_to_run).cbrt();
+
+        // Running bonus: reduce miasma penalty by 50% when running to allow escape velocity
+        if is_running > 0.3 {
+            asphyxia_speed_mult = asphyxia_speed_mult.lerp(1.0, 0.5);
+        }
+
         let run_multiplier = 1.0 + RUN_ADD_MULTIPLIER * is_running;
 
         player_loco.movement.dx += DIR_MAG2 * d.dx;
@@ -303,14 +308,14 @@ pub(crate) fn apply_movement_intent(
             * speed_penalty
             * difficulty.0.player_speed()
             * run_multiplier
-            * miasma_speed_mult;
+            * asphyxia_speed_mult;
         let pdy = PLAYER_SPEED
             * d.dy
             * dt
             * speed_penalty
             * difficulty.0.player_speed()
             * run_multiplier
-            * miasma_speed_mult;
+            * asphyxia_speed_mult;
 
         *avg_running = (*avg_running + is_running * dt) / (1.0 + dt);
 

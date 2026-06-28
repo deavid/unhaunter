@@ -106,14 +106,35 @@ fn update_damage_vignette_color(
         } else {
             let health = (player_vitals.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
             let crazyness = (1.0 - player_vitals.sanity / 100.0).clamp(0.0, 1.0);
+
+            // Blend acute and chronic asphyxia for visual feedback
+            let effective_asphyxia =
+                (player_vitals.asphyxia_acute + player_vitals.asphyxia_chronic) / 2.0;
+            // Map movement penalty directly to alpha: same formula as locomotion
+            let asphyxia_speed_mult = 1.0 / (1.0 + effective_asphyxia / 10.0);
+            let asphyxia_alpha = (1.0 - asphyxia_speed_mult).clamp(0.0, 1.0) * 0.2;
+
             for (mut o_uiimage, mut bgcolor, dmg) in &mut qb {
                 let rhealth = (1.0 - health).powf(dmg.exp);
                 let crazyness = crazyness.powf(dmg.exp);
+
+                // Base alpha from health and sanity
                 let alpha = ((rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7 + crazyness)
                     .clamp(0.0, 1.0);
                 let rhealth2 = (1.0 - alpha * 0.9).clamp(0.0001, 1.0);
+
+                // Red channel from health (primary)
                 let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
-                let dst_color = Color::srgba(red, 0.0, 0.0, alpha);
+
+                // Asphyxia: dark greyscale desaturation layer
+                let asphyxia_color = Color::srgba(0.3, 0.3, 0.3, asphyxia_alpha);
+
+                // Health: red vignette layer
+                let health_color = Color::srgba(red, 0.0, 0.0, alpha);
+
+                // Blend: health on top (priority), asphyxia underneath
+                let dst_color = lerp_color(asphyxia_color, health_color, alpha);
+
                 let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
                 let new_color = lerp_color(old_color, dst_color, 0.2);
                 if old_color != new_color {

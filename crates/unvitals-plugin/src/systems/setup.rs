@@ -14,6 +14,8 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_systems(
             Update,
             (
+                other::update_asphyxia_from_miasma.run_if(resource_exists::<LocalPlayerRole>),
+                other::debug_log_asphyxia.run_if(resource_exists::<LocalPlayerRole>),
                 sanity::drain_sanity_from_environment.run_if(resource_exists::<LocalPlayerRole>),
                 other::recover_sanity_in_truck,
                 other::regenerate_health_over_time,

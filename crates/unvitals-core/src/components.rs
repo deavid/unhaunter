@@ -15,6 +15,12 @@ pub struct PlayerVitals {
     pub mean_sound: f32,
     /// The player's current health. A value of 0 indicates the player is incapacitated.
     pub health: f32,
+    /// Immediate asphyxiation level (2-sec recovery). First-stage response to miasma.
+    pub asphyxia_immediate: f32,
+    /// Acute asphyxiation level (5-sec recovery). Responds to immediate exposure.
+    pub asphyxia_acute: f32,
+    /// Chronic asphyxiation level (60-sec recovery). Tracks accumulated miasma damage.
+    pub asphyxia_chronic: f32,
 }
 
 impl MapEntities for PlayerVitals {
@@ -28,6 +34,9 @@ impl Default for PlayerVitals {
             sanity: 100.0,
             mean_sound: 0.0,
             health: 100.0,
+            asphyxia_immediate: 0.0,
+            asphyxia_acute: 0.0,
+            asphyxia_chronic: 0.0,
         }
     }
 }
