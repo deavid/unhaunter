@@ -17,6 +17,7 @@ use uncommon_app_core::random_seed;
 use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
+use unghost_core::components::logic::ghost_sprite::GhostSprite;
 use unlight_core::components::LightSensitive;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
@@ -347,6 +348,7 @@ pub(crate) fn update_miasma(
     time: Res<Time>,
     room_topology: Res<RoomTopology>,
     q_player: Query<&Position, With<MainPlayer>>,
+    q_ghost: Query<(&Position, &GhostSprite)>,
     fluid_emitter_query: Query<&FluidEmitter>,
     mut room_present: Local<Array3<bool>>,
     video_settings: Res<Persistent<VideoSettings>>,
@@ -381,6 +383,15 @@ pub(crate) fn update_miasma(
     let Ok(player_pos) = q_player.single() else {
         return;
     };
+
+    // --- Ghost Influence: Source ---
+    for (g_pos, g_sprite) in q_ghost.iter() {
+        let g_bpos = g_pos.to_board_position();
+        let hunt_mult = if g_sprite.hunting > 0.0 { 100.0 } else { 1.0 };
+        if let Some(pressure) = miasma.pressure_field.get_mut(g_bpos.ndidx()) {
+            *pressure += 200.0 * dt * hunt_mult;
+        }
+    }
     let player_bpos = player_pos.to_board_position();
 
     // Iterate through chunks
@@ -596,12 +607,52 @@ pub(crate) fn update_miasma(
             let calc_vel_len = calculated_velocity.length() + 0.000001;
             let adjusted_vel = f32::cbrt(calc_vel_len).min(1.0);
             let calculated_velocity = calculated_velocity * (adjusted_vel / calc_vel_len); // .min(calculated_velocity);
+
+            let mut ghost_force = Vec2::ZERO;
+            for (g_pos, g_sprite) in q_ghost.iter() {
+                let pos_v = bpos.to_position_center();
+                let dist = pos_v.distance(g_pos);
+                let hunt_mult = if g_sprite.hunting > 0.0 { 25.0 } else { 1.0 };
+
+                // 2. Push away (~5 tiles)
+                if dist < 5.0 {
+                    let push_dir = (pos_v.to_vec3() - g_pos.to_vec3())
+                        .truncate()
+                        .normalize_or_zero();
+                    ghost_force += push_dir * (1.0 - dist / 5.0) * 0.5 * hunt_mult;
+                }
+
+                // 3. Movement/Warp push
+                if dist < 8.0 {
+                    let mut move_dir = Vec2::ZERO;
+                    if let Some(target) = g_sprite.target_point {
+                        move_dir = (target.to_vec3() - g_pos.to_vec3())
+                            .truncate()
+                            .normalize_or_zero();
+                    }
+                    let warp_mult = if g_sprite.warp > 0.0 { 10.0 } else { 2.0 };
+                    ghost_force += move_dir * (1.0 - dist / 8.0) * 0.5 * hunt_mult * warp_mult;
+                }
+
+                // 4. Attraction (>15 tiles)
+                if dist > 15.0 {
+                    let pull_dir = (g_pos.to_vec3() - pos_v.to_vec3())
+                        .truncate()
+                        .normalize_or_zero();
+                    ghost_force += pull_dir * 0.01 * hunt_mult;
+                }
+            }
+
             let previous_velocity = miasma.velocity_field[p];
 
             // FIXME: This should be proportional change of dt
             let mut new_velocity = (previous_velocity * miasma_config.inertia_factor
-                + calculated_velocity)
+                + calculated_velocity
+                + ghost_force)
                 / (1.0 + miasma_config.inertia_factor + miasma_config.friction);
+
+            // Clamp velocity to a maximum of 2 tiles per second to avoid "overflowing"
+            new_velocity = new_velocity.clamp_length_max(2.0);
 
             // Take walls into account.
             const WALL_REPEL_SPEED: f32 = 0.00;
