@@ -389,7 +389,7 @@ pub(crate) fn update_miasma(
         let g_bpos = g_pos.to_board_position();
         let hunt_mult = if g_sprite.hunting > 0.0 { 100.0 } else { 1.0 };
         if let Some(pressure) = miasma.pressure_field.get_mut(g_bpos.ndidx()) {
-            *pressure += 20.0 * dt * hunt_mult;
+            *pressure += 200.0 * dt * hunt_mult;
         }
     }
     let player_bpos = player_pos.to_board_position();
