@@ -643,12 +643,42 @@ pub(crate) fn update_miasma(
                 }
             }
 
+            // --- Stair Velocity Sink ---
+            // Miasma is pulled through stairs based on floor-to-floor pressure difference.
+            // Uses cube root curve to scale smoothly without overboard speeds.
+            let mut stair_sink = Vec2::ZERO;
+            let cp = &bcf.0.0[p];
+            if cp.stair_offset != 0 {
+                let stair_target_z = bpos.z + cp.stair_offset as i64;
+                if stair_target_z >= 0 && stair_target_z < board_data.map_size.2 as i64 {
+                    let stair_pos = BoardPosition {
+                        x: bpos.x,
+                        y: bpos.y,
+                        z: stair_target_z,
+                    };
+                    let stair_idx = stair_pos.ndidx();
+
+                    if let Some(stair_pressure) = miasma.pressure_field.get(stair_idx) {
+                        let pressure_delta = p_center - stair_pressure;
+
+                        // Cube root curve: fast ramp initially, then smooths out
+                        let sink_magnitude = f32::cbrt(pressure_delta.abs()) * 0.3;
+
+                        // Direction: toward lower pressure (positive delta means go down, negative means go up)
+                        let sink_direction = if pressure_delta > 0.0 { -1.0 } else { 1.0 };
+
+                        stair_sink = Vec2::new(0.0, sink_direction * sink_magnitude);
+                    }
+                }
+            }
+
             let previous_velocity = miasma.velocity_field[p];
 
             // FIXME: This should be proportional change of dt
             let mut new_velocity = (previous_velocity * miasma_config.inertia_factor
                 + calculated_velocity
-                + ghost_force)
+                + ghost_force
+                + stair_sink)
                 / (1.0 + miasma_config.inertia_factor + miasma_config.friction);
 
             // Clamp velocity to a maximum of 2 tiles per second to avoid "overflowing"
