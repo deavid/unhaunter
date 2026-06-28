@@ -21,6 +21,10 @@ pub struct ObjectInteractionConfig {
     /// A multiplier for the influence of Repulsive objects on the ghost's destination
     /// score.
     pub repulsive_influence_multiplier: f32,
+    /// A multiplier for player position influence on ghost's destination score.
+    /// Higher values mean ghosts are more naturally curious about players even when
+    /// not actively hunting.
+    pub player_curiosity_multiplier: f32,
     // When the ghost decides to move, sample N possible choices to get the best one.
     pub num_destination_points_to_sample: usize,
 }
@@ -34,6 +38,7 @@ impl Default for ObjectInteractionConfig {
             object_discharge_radius: 3.0,
             attractive_influence_multiplier: 1.0,
             repulsive_influence_multiplier: 1.0,
+            player_curiosity_multiplier: 0.5,
             num_destination_points_to_sample: 10,
         }
     }

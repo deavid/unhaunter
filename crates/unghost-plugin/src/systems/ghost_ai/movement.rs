@@ -369,6 +369,7 @@ pub(crate) fn ghost_movement(
                     score +=
                         calculate_object_influence_score(candidate_dest, &object_query, &config)
                             / difficulty.0.ghost_attraction_to_breach().max(0.1); // Scale object influence
+                    score += calculate_player_curiosity_score(candidate_dest, &qp, &config); // Add player curiosity attraction
                     let penalty = 1.0
                         + calculate_movement_penalties(
                             candidate_dest,
@@ -552,6 +553,34 @@ fn find_brightest_red_target(
     } else {
         Some(best.to_position())
     }
+}
+
+/// Calculates the score contribution from player positions (curiosity/natural attraction).
+fn calculate_player_curiosity_score(
+    potential_destination: Position,
+    player_query: &Query<
+        (&Position, &PlayerVitals, Option<&Hiding>),
+        (
+            With<PlayerTag>,
+            Without<PlayerSpectating>,
+            Without<PlayerDisconnected>,
+            Without<PlayerInactive>,
+            Without<InTruck>,
+        ),
+    >,
+    config: &Res<ObjectInteractionConfig>,
+) -> f32 {
+    let mut score = 0.0;
+    // Iterate through players and add attraction based on distance
+    for (player_position, _, hiding) in player_query.iter() {
+        // Give less attraction to hiding players (they're hidden from ghost senses)
+        let curiosity_modifier = if hiding.is_some() { 0.1 } else { 1.0 };
+
+        let distance = potential_destination.distance(player_position);
+        // Add player attraction to score, weighted by player_curiosity_multiplier
+        score += config.player_curiosity_multiplier * curiosity_modifier / (distance + 10.0);
+    }
+    score
 }
 
 /// Calculates the score contribution from object influences.

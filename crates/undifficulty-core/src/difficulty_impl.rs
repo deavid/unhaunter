@@ -82,15 +82,15 @@ impl DifficultySettings for Difficulty {
     /// A higher value results in longer hunts.
     fn ghost_hunt_duration(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 0.5,
-            Difficulty::TutorialChapter2 => 0.7,
-            Difficulty::TutorialChapter3 => 0.9,
-            Difficulty::TutorialChapter4 => 1.0,
-            Difficulty::TutorialChapter5 => 1.1,
-            Difficulty::StandardChallenge => 1.15, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.25,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 1.4,    // Was ExpertOccultist
-            Difficulty::MasterChallenge => 1.9,    // Was MasterGuardian
+            Difficulty::TutorialChapter1 => 0.75,
+            Difficulty::TutorialChapter2 => 1.05,
+            Difficulty::TutorialChapter3 => 1.35,
+            Difficulty::TutorialChapter4 => 1.5,
+            Difficulty::TutorialChapter5 => 1.65,
+            Difficulty::StandardChallenge => 1.73, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.88,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 2.1,    // Was ExpertOccultist
+            Difficulty::MasterChallenge => 2.85,   // Was MasterGuardian
         }
     }
 
