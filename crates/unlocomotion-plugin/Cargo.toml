@@ -22,9 +22,7 @@ unvitals-core = { workspace = true }
 unspatial-core = { workspace = true }
 unbehavior-core = { workspace = true }
 unnavigation-core = { workspace = true }
-unaudiospatial-core = { workspace = true }
 undifficulty-core = { workspace = true }
-unfog-core = { workspace = true }
 ungear-core = { workspace = true }
 uninteraction-core = { workspace = true }
 unnpc-core = { workspace = true }

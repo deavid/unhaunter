@@ -8785,11 +8785,9 @@ version = "0.4.0-dev"
 dependencies = [
  "bevy",
  "bevy_replicon",
- "unaudiospatial-core",
  "unbehavior-core",
  "uncommon-states-core",
  "undifficulty-core",
- "unfog-core",
  "ungear-core",
  "uninput-core",
  "uninteraction-core",
