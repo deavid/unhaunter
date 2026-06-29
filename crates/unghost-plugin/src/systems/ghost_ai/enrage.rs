@@ -42,6 +42,7 @@ pub(crate) struct RageUpdateResult {
 pub(crate) fn ghost_enrage(
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
+    mut last_debug_log: Local<f32>,
     mut qg: Query<
         (Entity, &mut GhostSprite, &Position, &GhostBehaviorDynamics),
         Without<GhostDeathSignal>,
@@ -73,6 +74,13 @@ pub(crate) fn ghost_enrage(
     let dt = time.delta_secs();
     *last_roar += dt;
 
+    // Track debug log time for throttling (5 second interval)
+    *last_debug_log += dt;
+    let should_debug_log = *last_debug_log >= 5.0;
+    if should_debug_log {
+        *last_debug_log = 0.0;
+    }
+
     for (_ghost_entity, mut ghost, ghost_position, dynamics) in qg.iter_mut() {
         // 1. Update basic timers
         update_ghost_timers_simple(&mut ghost, dt, &time);
@@ -93,7 +101,7 @@ pub(crate) fn ghost_enrage(
 
         // 5. Handle hunting phase
         if ghost.hunt_target {
-            let hunt_result = handle_hunting_phase(&mut ghost, dt);
+            let hunt_result = handle_hunting_phase(&mut ghost, dt, should_debug_log);
 
             if hunt_result.should_roar {
                 let roar_decision = RoarDecision {
@@ -116,7 +124,13 @@ pub(crate) fn ghost_enrage(
         }
 
         // 6. Handle pre-warning and warning phases
-        let warning_result = handle_warning_phases(&mut ghost, dt, &time, &mut ev_ambient_mute);
+        let warning_result = handle_warning_phases(
+            &mut ghost,
+            dt,
+            &time,
+            &mut ev_ambient_mute,
+            should_debug_log,
+        );
 
         // 7. Calculate rage
         let rage_result = calculate_rage_update(
@@ -128,11 +142,18 @@ pub(crate) fn ghost_enrage(
             &difficulty,
             &room_topology,
             dt,
+            should_debug_log,
         );
 
         // 8. Check for hunt trigger
         if should_trigger_hunt(&ghost, &rage_result) {
-            trigger_hunt_start(&mut ghost, &rage_result, &difficulty, &mut ev_ambient_mute);
+            trigger_hunt_start(
+                &mut ghost,
+                &rage_result,
+                &difficulty,
+                &mut ev_ambient_mute,
+                should_debug_log,
+            );
         }
 
         // 9. Determine roar behavior
@@ -253,11 +274,29 @@ pub(crate) struct HuntingResult {
 }
 
 /// Handle the hunting phase of ghost behavior
-pub(crate) fn handle_hunting_phase(ghost: &mut GhostSprite, dt: f32) -> HuntingResult {
+pub(crate) fn handle_hunting_phase(
+    ghost: &mut GhostSprite,
+    dt: f32,
+    should_debug_log: bool,
+) -> HuntingResult {
     // Reset warning states during hunting
     ghost.hunt_warning_active = false;
     ghost.hunt_warning_intensity = 1.0;
     ghost.hunt_warning_timer = 0.0;
+
+    // Reduce rage during hunting
+    let rage_before_hunt = ghost.rage;
+    ghost.rage -= dt * 20.0;
+    if ghost.rage < 0.0 {
+        ghost.rage = 0.0;
+    }
+
+    if DEBUG_HUNTS && should_debug_log {
+        debug!(
+            "[HUNTING] hunting duration: {:.2}s, rage reduced {:.2} -> {:.2}",
+            ghost.hunting, rage_before_hunt, ghost.rage
+        );
+    }
 
     // Determine roar during hunting
     let roar_type = if ghost.hunting > 4.0 {
@@ -265,12 +304,6 @@ pub(crate) fn handle_hunting_phase(ghost: &mut GhostSprite, dt: f32) -> HuntingR
     } else {
         RoarType::Dim
     };
-
-    // Reduce rage during hunting
-    ghost.rage -= dt * 20.0;
-    if ghost.rage < 0.0 {
-        ghost.rage = 0.0;
-    }
 
     HuntingResult {
         should_roar: true,
@@ -292,6 +325,7 @@ pub(crate) fn handle_warning_phases(
     dt: f32,
     time: &Res<Time>,
     o_ev_ambient_mute: &mut Option<MessageWriter<AmbientSoundMuteEvent>>,
+    should_debug_log: bool,
 ) -> WarningResult {
     let mut result = WarningResult {
         roar_triggered: false,
@@ -302,6 +336,9 @@ pub(crate) fn handle_warning_phases(
     // Pre-warning phase
     if ghost.pre_warning_timer > 0.0 {
         ghost.pre_warning_timer -= dt;
+        if DEBUG_HUNTS && should_debug_log && ghost.pre_warning_timer <= 0.0 {
+            debug!("[WARNING] Pre-warning phase ended, starting hunt warning");
+        }
         if ghost.pre_warning_timer <= 0.0 {
             // Pre-warning timer expired, start actual hunt warning with roar
             if !ghost.hunt_warning_active {
@@ -361,6 +398,7 @@ pub(crate) fn calculate_rage_update(
     difficulty: &Res<CurrentDifficulty>,
     room_topology: &Res<RoomTopology>,
     dt: f32,
+    should_debug_log: bool,
 ) -> RageUpdateResult {
     // Calculate player-induced rage
     let mut total_angry2 = 0.0;
@@ -397,30 +435,65 @@ pub(crate) fn calculate_rage_update(
     let angry = total_angry2.sqrt();
     let a_f = 1.0 + (avg_angry.avg() * 2.0).powi(2);
 
+    if DEBUG_HUNTS && should_debug_log {
+        debug!(
+            "[RAGE] angry={:.2}, a_f={:.2}, player_in_room={}, total_inv_sanity={:.2}, calm_time={:.2}",
+            angry, a_f, player_in_room, total_inv_sanity, ghost.calm_time_secs
+        );
+    }
+
+    let rage_before = ghost.rage;
+
     // Apply rage decay
     ghost.rage /= 1.01_f32.powf(dt / a_f);
-    ghost.rage -= dt * 2.0 / a_f;
+    ghost.rage -= dt * 0.5 / a_f; // Reduced decay to allow faster rage buildup
     if ghost.rage < 0.0 {
         ghost.rage = 0.0;
     }
 
+    if DEBUG_HUNTS && should_debug_log {
+        debug!(
+            "[RAGE] decay: {:.2} -> {:.2} (delta: {:.2})",
+            rage_before,
+            ghost.rage,
+            ghost.rage - rage_before
+        );
+    }
+
     // Apply rage increases
     if player_in_room {
-        ghost.rage += dt * difficulty.0.ghost_rage_likelihood() * 5.2 * total_inv_sanity;
+        let room_rage_increase = dt * difficulty.0.ghost_rage_likelihood() * 5.2 * total_inv_sanity;
+        ghost.rage += room_rage_increase;
+        if DEBUG_HUNTS && should_debug_log {
+            debug!(
+                "[RAGE] room_rage_increase: {:.2} (difficulty={:.2})",
+                room_rage_increase,
+                difficulty.0.ghost_rage_likelihood()
+            );
+        }
     }
-    ghost.rage +=
-        angry * dt / 10.0 / (1.0 + ghost.calm_time_secs) * difficulty.0.ghost_rage_likelihood();
+
+    let angry_rage_factor = difficulty.0.ghost_rage_likelihood();
+    let angry_increase = angry * dt / 10.0 / (1.0 + ghost.calm_time_secs) * angry_rage_factor;
+    ghost.rage += angry_increase;
+
+    if DEBUG_HUNTS && should_debug_log {
+        debug!(
+            "[RAGE] angry_increase: {:.2} (angry={:.2}, factor={:.2})",
+            angry_increase, angry, angry_rage_factor
+        );
+    }
 
     // Update hunting decay
-    ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration();
-    if ghost.hunting < 0.0 {
-        if ghost.hunt_target {
+    if ghost.hunt_target {
+        ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration();
+        if ghost.hunting < 0.0 {
             debug!(
                 "[HUNT ABORT] Passive hunting decay - hunt would drop below 0 (hunt_duration_factor={:.4})",
                 difficulty.0.ghost_hunt_duration()
             );
+            ghost.hunting = 0.0;
         }
-        ghost.hunting = 0.0;
     }
 
     avg_angry.push_len(angry, dt);
@@ -436,6 +509,18 @@ pub(crate) fn calculate_rage_update(
         && !ghost.hunt_warning_active
         && !ghost.hunt_target
         && ghost.pre_warning_timer <= 0.0;
+
+    if DEBUG_HUNTS && should_debug_log {
+        debug!(
+            "[HUNT] should_trigger={}, rage={:.2} > limit={:.2}, warn_active={}, hunt_target={}, pre_warning={:.2}",
+            should_trigger_hunt,
+            ghost.rage,
+            rage_limit,
+            ghost.hunt_warning_active,
+            ghost.hunt_target,
+            ghost.pre_warning_timer
+        );
+    }
 
     RageUpdateResult {
         rage_limit,
@@ -454,6 +539,7 @@ pub(crate) fn trigger_hunt_start(
     _rage_result: &RageUpdateResult,
     difficulty: &Res<CurrentDifficulty>,
     o_ev_ambient_mute: &mut Option<MessageWriter<AmbientSoundMuteEvent>>,
+    should_debug_log: bool,
 ) {
     // Start Pre-Warning Phase (anticipatory audio muting)
     ghost.pre_warning_timer = 3.0;
@@ -461,10 +547,20 @@ pub(crate) fn trigger_hunt_start(
 
     let prev_rage = ghost.rage;
     ghost.rage /= 1.0 + difficulty.0.ghost_hunt_cooldown();
-    ghost.hunting += prev_rage / 50.0 + 5.0;
+    let hunt_increment = prev_rage / 50.0 + 5.0;
+    ghost.hunting += hunt_increment;
 
     // Ensure hunts last at least 10 seconds
     ghost.hunting = ghost.hunting.max(10.0);
+
+    if DEBUG_HUNTS && should_debug_log {
+        debug!(
+            "[HUNT_START] prev_rage={:.2}, hunt_cooldown_factor={:.2}, hunting duration set to {:.2}s",
+            prev_rage,
+            difficulty.0.ghost_hunt_cooldown(),
+            ghost.hunting
+        );
+    }
 
     ghost.hunt_warning_active = false;
 

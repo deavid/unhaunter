@@ -34,7 +34,7 @@ fn debug_connection_status(
         } else {
             "NOT_FOUND"
         };
-        info!(
+        trace!(
             "SERVER DEBUG: transport={} | connected_clients={}",
             server_status, count
         );
@@ -52,6 +52,6 @@ fn debug_connection_status(
         } else {
             "NOT_FOUND".to_string()
         };
-        info!("CLIENT DEBUG: status={}", client_status);
+        trace!("CLIENT DEBUG: status={}", client_status);
     }
 }

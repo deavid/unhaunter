@@ -755,20 +755,18 @@ pub(crate) fn update_miasma(
 pub(crate) fn diffuse_smoke_field(
     bcf: If<Res<BoardCollisionField>>,
     mut miasma: If<ResMut<MiasmaGrid>>,
-    _time: Res<Time>,
+    time: Res<Time>,
 ) {
     let mut rng = random_seed::rng();
 
-    const SMOKE_DECAY_PER_FRAME: f32 = 0.9999;
+    const SMOKE_LINEAR_DECAY: f32 = 1.0 / 900.0;
 
+    let dt = time.delta_secs();
     let mut new_smoke_field = miasma.smoke_field.clone();
 
-    // Apply decay to all smoke
+    // Apply linear decay to all smoke
     for smoke_val in new_smoke_field.iter_mut() {
-        *smoke_val *= SMOKE_DECAY_PER_FRAME;
-        if *smoke_val < 0.0001 {
-            *smoke_val = 0.0;
-        }
+        *smoke_val = (*smoke_val - SMOKE_LINEAR_DECAY * dt).max(0.0);
     }
 
     // Diffuse smoke to random neighbors (cheap diffusion)
@@ -807,7 +805,7 @@ pub(crate) fn diffuse_smoke_field(
             let neighbor = &valid_neighbors[rng.random_range(0..valid_neighbors.len())];
             let neighbor_idx = neighbor.ndidx();
 
-            let spread_amount = current_smoke * 0.2;
+            let spread_amount = current_smoke * 0.05; // Much slower diffusion
             new_smoke_field[neighbor_idx] =
                 (new_smoke_field[neighbor_idx] + spread_amount).min(1.0);
             new_smoke_field[ndidx] = (new_smoke_field[ndidx] - spread_amount).max(0.0);

@@ -87,7 +87,7 @@ fn debug_gear_components(
             .map(|l| format!("pow={:.1}, type={:?}", l.power, l.light_type))
             .unwrap_or_else(|| "None".to_string());
 
-        info!(
+        trace!(
             "Entity[{:?}] Kind={:?} | {} | {} | {} | Owner={}\n  -> Flashlight={}  |  Pos={}  |  Dir={}  |  Light={}",
             entity,
             kind,

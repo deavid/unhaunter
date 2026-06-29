@@ -78,7 +78,7 @@ pub(crate) fn debug_log_asphyxia(
     let dt = time.delta_secs();
     *interval += dt;
 
-    if *interval >= 1.0 {
+    if *interval >= 30.0 {
         *interval = 0.0;
         for (vitals, player) in &qp {
             // Calculate movement penalty from asphyxia
@@ -86,7 +86,7 @@ pub(crate) fn debug_log_asphyxia(
             let asphyxia_speed_mult = 1.0 / (1.0 + effective_asphyxia / 10.0);
             let movement_penalty_pct = (1.0 - asphyxia_speed_mult) * 100.0;
 
-            info!(
+            debug!(
                 "Player {:?} asphyxia — immediate: {:.2}, acute: {:.2}, chronic: {:.2} | movement penalty: {:.1}%",
                 player.id,
                 vitals.asphyxia_immediate,

@@ -148,9 +148,9 @@ fn debug_tile_transforms(
 
         if active_count == 0 {
             if total_tiles == 0 {
-                info!("DEBUG tiles: no tiles found. Pending hydration: {pending_count}");
+                trace!("DEBUG tiles: no tiles found. Pending hydration: {pending_count}");
             } else {
-                info!(
+                trace!(
                     "DEBUG tiles: {total_tiles} total, 0 active (all hidden). Pending hydration: {pending_count}"
                 );
             }
@@ -163,7 +163,7 @@ fn debug_tile_transforms(
         let min = alphas.iter().copied().fold(f32::INFINITY, f32::min);
         let max = alphas.iter().copied().fold(f32::NEG_INFINITY, f32::max);
 
-        info!(
+        trace!(
             "DEBUG tiles: {active_count}/{total_tiles} active, alpha mean={mean:.3} ±{std_dev:.3} min={min:.3} max={max:.3}. Pending hydration: {pending_count}"
         );
     }

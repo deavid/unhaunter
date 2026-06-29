@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_replicon::prelude::{
-    Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode,
-    ServerMessageAppExt, ToClients,
+    Channel, ClientId, ClientMessageAppExt, FromClient, Replicated, SendMode, ServerMessageAppExt,
+    ToClients,
 };
 use unbehavior_core::behavior::Behavior;
 use unbehavior_core::components::FloorItemCollidable;
@@ -370,7 +370,7 @@ fn handle_truck_loadout_message(
 ) {
     for msg in reader.read() {
         let sender_id = msg.client_id;
-        info!(
+        trace!(
             "TRUCK_NET: Received action {:?} from client {:?}",
             msg.message.action, sender_id
         );
@@ -391,7 +391,7 @@ fn handle_truck_loadout_message(
             continue;
         };
 
-        info!(
+        trace!(
             "TRUCK_NET_STATE_BEFORE: client {:?} left={:?} right={:?} inv={:?}",
             sender_id, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
         );
@@ -426,17 +426,17 @@ fn handle_truck_loadout_message(
                 } else {
                     p_gear.inventory.push(entity);
                 }
-                info!(
+                trace!(
                     "TRUCK_NET: Spawned {:?} and added to PlayerGear for {:?}",
                     entity, sender_id
                 );
-                info!(
+                trace!(
                     "TRUCK_NET_STATE_AFTER: client {:?} left={:?} right={:?} inv={:?}",
                     sender_id, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
                 );
             }
             TruckLoadoutAction::CraftRepellent(ghost_type) => {
-                info!(
+                trace!(
                     "TRUCK_NET: Translating CraftRepellent intent to RequestCraftRepellent event"
                 );
                 ev_craft_req.write(RequestCraftRepellent {
@@ -450,9 +450,9 @@ fn handle_truck_loadout_message(
                     Hand::Right => p_gear.right_hand.take(),
                 };
                 if let Some(e) = entity {
-                    info!("TRUCK_NET: Despawning entity {:?} from hand {:?}", e, hand);
+                    trace!("TRUCK_NET: Despawning entity {:?} from hand {:?}", e, hand);
                     commands.entity(e).despawn();
-                    info!(
+                    trace!(
                         "TRUCK_NET_STATE_AFTER: client {:?} left={:?} right={:?} inv={:?}",
                         sender_id, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
                     );
@@ -470,12 +470,12 @@ fn handle_truck_loadout_message(
             TruckLoadoutAction::ClearInventorySlot(idx) => {
                 if idx < p_gear.inventory.len() {
                     let e = p_gear.inventory.remove(idx);
-                    info!(
+                    trace!(
                         "TRUCK_NET: Despawning entity {:?} from inventory slot {}",
                         e, idx
                     );
                     commands.entity(e).despawn();
-                    info!(
+                    trace!(
                         "TRUCK_NET_STATE_AFTER: client {:?} left={:?} right={:?} inv={:?}",
                         sender_id, p_gear.left_hand, p_gear.right_hand, p_gear.inventory
                     );

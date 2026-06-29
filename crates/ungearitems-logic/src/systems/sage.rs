@@ -37,7 +37,7 @@ pub(crate) fn sage_authority_system(
             let bpos = sage_pos.to_board_position();
             let (width, height, depth) = miasma_grid.smoke_field.dim();
             if bpos.is_valid((width, height, depth)) {
-                miasma_grid.smoke_field[bpos.ndidx()] += 0.03 * dt;
+                miasma_grid.smoke_field[bpos.ndidx()] += 0.06 * dt;
                 miasma_grid.pressure_field[bpos.ndidx()] *= 0.99;
             }
 
