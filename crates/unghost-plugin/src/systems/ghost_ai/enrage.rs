@@ -414,6 +414,12 @@ pub(crate) fn calculate_rage_update(
     // Update hunting decay
     ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration();
     if ghost.hunting < 0.0 {
+        if ghost.hunt_target {
+            debug!(
+                "[HUNT ABORT] Passive hunting decay - hunt would drop below 0 (hunt_duration_factor={:.4})",
+                difficulty.0.ghost_hunt_duration()
+            );
+        }
         ghost.hunting = 0.0;
     }
 
@@ -456,6 +462,10 @@ pub(crate) fn trigger_hunt_start(
     let prev_rage = ghost.rage;
     ghost.rage /= 1.0 + difficulty.0.ghost_hunt_cooldown();
     ghost.hunting += prev_rage / 50.0 + 5.0;
+
+    // Ensure hunts last at least 10 seconds
+    ghost.hunting = ghost.hunting.max(10.0);
+
     ghost.hunt_warning_active = false;
 
     // Send anticipatory mute event BEFORE the hunt warning begins
