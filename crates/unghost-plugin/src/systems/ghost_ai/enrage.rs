@@ -486,14 +486,14 @@ pub(crate) fn calculate_rage_update(
 
     // Update hunting decay
     if ghost.hunt_target {
-        ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration();
-        if ghost.hunting < 0.0 {
+    ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration();
+    if ghost.hunting < 0.0 {
             debug!(
                 "[HUNT ABORT] Passive hunting decay - hunt would drop below 0 (hunt_duration_factor={:.4})",
                 difficulty.0.ghost_hunt_duration()
             );
-            ghost.hunting = 0.0;
-        }
+        ghost.hunting = 0.0;
+    }
     }
 
     avg_angry.push_len(angry, dt);
