@@ -759,7 +759,7 @@ pub(crate) fn diffuse_smoke_field(
 ) {
     let mut rng = random_seed::rng();
 
-    const SMOKE_LINEAR_DECAY: f32 = 1.0 / 900.0;
+    const SMOKE_LINEAR_DECAY: f32 = 1.0 / 1900.0;
 
     let dt = time.delta_secs();
     let mut new_smoke_field = miasma.smoke_field.clone();
