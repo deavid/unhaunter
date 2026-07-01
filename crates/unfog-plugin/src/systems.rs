@@ -952,8 +952,11 @@ pub(crate) fn server_spawn_miasma_hazards(
 
 pub(crate) fn update_miasma_hazards(
     mut commands: Commands,
-    mut q_hazards: Query<(Entity, &mut Position, &mut MiasmaHazardParticle)>,
-    q_players: Query<&Position, With<PlayerSprite>>,
+    mut q_hazards: Query<
+        (Entity, &mut Position, &mut MiasmaHazardParticle),
+        Without<PlayerSprite>,
+    >,
+    q_players: Query<&Position, (With<PlayerSprite>, Without<MiasmaHazardParticle>)>,
     bcf: Res<BoardCollisionField>,
     time: Res<Time>,
 ) {
@@ -1049,7 +1052,7 @@ pub(crate) fn miasma_player_attraction(
     mut miasma: If<ResMut<MiasmaGrid>>,
     q_players: Query<&Position, With<MainPlayer>>,
     q_ghosts: Query<&GhostSprite>,
-    board_data: Res<BoardTopology>,
+    _board_data: Res<BoardTopology>,
 ) {
     let Ok(ghost) = q_ghosts.single() else {
         return;
