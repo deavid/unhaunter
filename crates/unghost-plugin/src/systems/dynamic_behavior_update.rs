@@ -12,24 +12,36 @@ use unsoundfield_core::components::SoundFieldSource;
 
 use crate::metrics;
 
+/// How much slower (relative to the other dynamics properties) the
+/// `rage_tendency_multiplier` noise should evolve. The raw noise time is divided
+/// by this factor before sampling, so the rage-limit modulation drifts much
+/// more gradually than clarity/visual dynamics.
+const RAGE_TENDENCY_TIME_SCALE: f32 = 1.0 / 50.0;
+
 /// Helper function to calculate a noise-based multiplier value
 ///
 /// This function combines short-term and long-term noise values with given offsets,
 /// normalizes them, combines them, applies power scaling, and clamps the result.
+///
+/// `time_scale` controls how fast this particular property evolves over time:
+/// a value of `1.0` uses the base noise speed, while smaller values (e.g. `1.0 /
+/// 50.0`) slow the evolution down proportionally.
 fn calculate_noise_multiplier(
     noise_table: &PerlinNoise,
     elapsed_seconds: f32,
     offset_x: f32,
     offset_y: f32,
     power_scale: f32,
+    time_scale: f32,
 ) -> f32 {
+    let scaled_seconds = elapsed_seconds * time_scale;
     let short_term_noise = noise_table.get(
-        elapsed_seconds * SHORT_TERM_NOISE_FREQ + offset_x,
-        elapsed_seconds * LONG_TERM_NOISE_FREQ + offset_y,
+        scaled_seconds * SHORT_TERM_NOISE_FREQ + offset_x,
+        scaled_seconds * LONG_TERM_NOISE_FREQ + offset_y,
     );
     let long_term_noise = noise_table.get(
-        elapsed_seconds * LONG_TERM_NOISE_FREQ + offset_x * -1.5,
-        elapsed_seconds * LONG_TERM_NOISE_FREQ * 0.1 + offset_y * 3.3,
+        scaled_seconds * LONG_TERM_NOISE_FREQ + offset_x * -1.5,
+        scaled_seconds * LONG_TERM_NOISE_FREQ * 0.1 + offset_y * 3.3,
     );
     let sum = (short_term_noise + long_term_noise) * 2.0;
 
@@ -71,6 +83,7 @@ fn update_ghost_behavior_dynamics_system(
                 offset_x,
                 offset_y,
                 evidence_visibility_recip * ev_diff_mult,
+                1.0,
             );
 
             let evidence_presence_max = if ghost_sprite.class.evidences().contains(&evidence_type) {
@@ -90,15 +103,18 @@ fn update_ghost_behavior_dynamics_system(
             dynamics.noise_offsets.visual_alpha_multiplier_x,
             dynamics.noise_offsets.visual_alpha_multiplier_y,
             evidence_visibility_recip,
+            1.0,
         );
 
-        // Update rage_tendency_multiplier
+        // Update rage_tendency_multiplier (moves much slower than the other
+        // dynamics properties so the rage-limit modulation drifts gradually).
         dynamics.rage_tendency_multiplier = calculate_noise_multiplier(
             &noise_table,
             elapsed_seconds,
             dynamics.noise_offsets.rage_tendency_multiplier_x,
             dynamics.noise_offsets.rage_tendency_multiplier_y,
             evidence_visibility_recip,
+            RAGE_TENDENCY_TIME_SCALE,
         );
         if *report_time > 10.0 {
             info!(
