@@ -13,14 +13,14 @@ impl DifficultySettings for Difficulty {
     /// A higher value indicates a faster ghost.
     fn ghost_speed(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 1.0,
-            Difficulty::TutorialChapter2 => 1.05,
-            Difficulty::TutorialChapter3 => 1.1,
-            Difficulty::TutorialChapter4 => 1.15,
-            Difficulty::TutorialChapter5 => 1.2,
-            Difficulty::StandardChallenge => 1.3, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.5,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 1.8,   // Was ExpertOccultist
+            Difficulty::TutorialChapter1 => 1.4,
+            Difficulty::TutorialChapter2 => 1.5,
+            Difficulty::TutorialChapter3 => 1.6,
+            Difficulty::TutorialChapter4 => 1.7,
+            Difficulty::TutorialChapter5 => 2.0,
+            Difficulty::StandardChallenge => 2.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 2.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 2.0,   // Was ExpertOccultist
             Difficulty::MasterChallenge => 2.5,   // Was MasterGuardian
         }
     }
@@ -30,15 +30,15 @@ impl DifficultySettings for Difficulty {
     /// A higher value means the ghost becomes enraged more quickly.
     fn ghost_rage_likelihood(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 1.0,
-            Difficulty::TutorialChapter2 => 1.0,
-            Difficulty::TutorialChapter3 => 1.0,
-            Difficulty::TutorialChapter4 => 1.0,
-            Difficulty::TutorialChapter5 => 1.0,
-            Difficulty::StandardChallenge => 1.0, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.0,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 1.0,   // Was ExpertOccultist
-            Difficulty::MasterChallenge => 1.0,   // Was MasterGuardian
+            Difficulty::TutorialChapter1 => 2.0,
+            Difficulty::TutorialChapter2 => 3.0,
+            Difficulty::TutorialChapter3 => 4.0,
+            Difficulty::TutorialChapter4 => 5.0,
+            Difficulty::TutorialChapter5 => 6.0,
+            Difficulty::StandardChallenge => 6.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 6.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 6.0,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 6.0,   // Was MasterGuardian
         }
     }
 
@@ -47,15 +47,15 @@ impl DifficultySettings for Difficulty {
     /// A higher value results in more aggressive pursuit of the player.
     fn ghost_hunting_aggression(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 1.1,
-            Difficulty::TutorialChapter2 => 1.1,
-            Difficulty::TutorialChapter3 => 1.1,
-            Difficulty::TutorialChapter4 => 1.1,
-            Difficulty::TutorialChapter5 => 1.1,
-            Difficulty::StandardChallenge => 1.1, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.1,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 1.1,   // Was ExpertOccultist
-            Difficulty::MasterChallenge => 1.1,   // Was MasterGuardian
+            Difficulty::TutorialChapter1 => 1.5,
+            Difficulty::TutorialChapter2 => 1.8,
+            Difficulty::TutorialChapter3 => 2.1,
+            Difficulty::TutorialChapter4 => 2.3,
+            Difficulty::TutorialChapter5 => 2.5,
+            Difficulty::StandardChallenge => 2.6, // Was LeadSpecialist
+            Difficulty::HardChallenge => 2.7,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 2.8,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 2.9,   // Was MasterGuardian
         }
     }
 
@@ -82,15 +82,15 @@ impl DifficultySettings for Difficulty {
     /// A higher value results in longer hunts.
     fn ghost_hunt_duration(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 0.75,
-            Difficulty::TutorialChapter2 => 1.05,
-            Difficulty::TutorialChapter3 => 1.35,
-            Difficulty::TutorialChapter4 => 1.5,
-            Difficulty::TutorialChapter5 => 1.65,
-            Difficulty::StandardChallenge => 1.73, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.88,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 2.1,    // Was ExpertOccultist
-            Difficulty::MasterChallenge => 2.85,   // Was MasterGuardian
+            Difficulty::TutorialChapter1 => 0.5,
+            Difficulty::TutorialChapter2 => 2.0,
+            Difficulty::TutorialChapter3 => 4.0,
+            Difficulty::TutorialChapter4 => 6.0,
+            Difficulty::TutorialChapter5 => 8.0,
+            Difficulty::StandardChallenge => 9.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 10.0,    // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 11.0,  // Was ExpertOccultist
+            Difficulty::MasterChallenge => 12.0,  // Was MasterGuardian
         }
     }
 
@@ -99,15 +99,15 @@ impl DifficultySettings for Difficulty {
     /// A higher value means longer periods of calm between hunts.
     fn ghost_hunt_cooldown(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 6.0,
-            Difficulty::TutorialChapter2 => 5.0,
-            Difficulty::TutorialChapter3 => 4.0,
+            Difficulty::TutorialChapter1 => 3.0,
+            Difficulty::TutorialChapter2 => 3.0,
+            Difficulty::TutorialChapter3 => 3.0,
             Difficulty::TutorialChapter4 => 3.0,
             Difficulty::TutorialChapter5 => 2.5,
             Difficulty::StandardChallenge => 2.2, // Was LeadSpecialist
             Difficulty::HardChallenge => 2.0,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 1.5,   // Was ExpertOccultist
-            Difficulty::MasterChallenge => 1.0,   // Was MasterGuardian
+            Difficulty::ExpertChallenge => 2.0,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 2.0,   // Was MasterGuardian
         }
     }
 

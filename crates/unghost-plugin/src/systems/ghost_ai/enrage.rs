@@ -260,8 +260,7 @@ fn calculate_min_player_distance(
 fn apply_distance_based_effects(ghost: &mut GhostSprite, min_player_dist: f32, dt: f32) {
     // Reduce ghost rage as player is further away
     ghost.rage -= dt * min_player_dist.sqrt() / 10.0;
-    if !ghost.hunt_target {
-        // Reduce ghost hunting when player is away
+    if !ghost.hunt_target && !ghost.hunt_warning_active && ghost.pre_warning_timer <= 0.0 {
         ghost.hunting -= dt * min_player_dist.sqrt() / 3.0;
     }
 }
@@ -486,22 +485,21 @@ pub(crate) fn calculate_rage_update(
 
     // Update hunting decay
     if ghost.hunt_target {
-    ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration();
-    if ghost.hunting < 0.0 {
+        ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration();
+        if ghost.hunting < 0.0 {
             debug!(
                 "[HUNT ABORT] Passive hunting decay - hunt would drop below 0 (hunt_duration_factor={:.4})",
                 difficulty.0.ghost_hunt_duration()
             );
-        ghost.hunting = 0.0;
-    }
+            ghost.hunting = 0.0;
+        }
     }
 
     avg_angry.push_len(angry, dt);
 
     // Calculate rage limit
     let rage_limit =
-        400.0 * difficulty.0.ghost_rage_likelihood().sqrt() * ghost.rage_limit_multiplier
-            / (dynamics.rage_tendency_multiplier + 1.01);
+        400.0 * ghost.rage_limit_multiplier / (dynamics.rage_tendency_multiplier + 1.01);
     ghost.rage_limit = rage_limit;
 
     // Determine if hunt should be triggered
