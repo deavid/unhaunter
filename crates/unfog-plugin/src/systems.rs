@@ -911,7 +911,7 @@ pub(crate) fn client_request_miasma_hazards(
                 if pressure > 100.0 {
                     // Spawning chance proportional to pressure
                     let chance = ((pressure - 100.0) / 1000.0 * dt).clamp(0.0, 1.0);
-                    if rng.gen_bool(chance as f64) {
+                    if rng.random_bool(chance as f64) {
                         miasma.pressure_field[idx] = (pressure - 100.0).max(0.0);
                         let spawn_pos = BoardPosition {
                             x: x as i64,
@@ -1051,7 +1051,7 @@ pub(crate) fn miasma_player_attraction(
     q_ghosts: Query<&GhostSprite>,
     board_data: Res<BoardTopology>,
 ) {
-    let Ok(ghost) = q_ghosts.get_single() else {
+    let Ok(ghost) = q_ghosts.single() else {
         return;
     };
     let hunt_likelihood = ghost.hunt_likelihood();
@@ -1100,11 +1100,11 @@ pub(crate) fn spawn_static_sparks(
     ghost_assets: Res<unghost_core::assets::GhostAssets>,
     time: Res<Time>,
 ) {
-    let Ok(ghost) = q_ghosts.get_single() else {
+    let Ok(ghost) = q_ghosts.single() else {
         return;
     };
     let hunt_likelihood = ghost.hunt_likelihood();
-    let Ok(player_pos) = q_players.get_single() else {
+    let Ok(player_pos) = q_players.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -1126,7 +1126,7 @@ pub(crate) fn spawn_static_sparks(
             if trigger > 0.0 {
                 // Cubic root tames the rate
                 let chance = (f32::cbrt(trigger) / 10.0 * dt).clamp(0.0, 1.0);
-                if rng.gen_bool(chance as f64) {
+                if rng.random_bool(chance as f64) {
                     for _ in 0..3 {
                         let spawn_pos = BoardPosition {
                             x: x as i64,
