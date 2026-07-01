@@ -1,5 +1,6 @@
 use crate::metrics;
 use bevy::prelude::*;
+use bevy_replicon::prelude::*;
 use bevy::sprite::Anchor;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
@@ -24,7 +25,7 @@ use unlight_core::flashlight::ActiveFlashlights;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unnoise_core::perlin::PerlinNoise;
-use unplayer_core::components::MainPlayer;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::BoardPosition;
@@ -919,7 +920,7 @@ pub(crate) fn client_request_miasma_hazards(
                         }
                         .to_position_center();
 
-                        spawn_ev.send(RequestSpawnHazardParticle {
+                        spawn_ev.write(RequestSpawnHazardParticle {
                             position: Vec3::new(spawn_pos.x, spawn_pos.y, spawn_pos.z + 0.5),
                         });
                     }
@@ -931,13 +932,19 @@ pub(crate) fn client_request_miasma_hazards(
 
 pub(crate) fn server_spawn_miasma_hazards(
     mut commands: Commands,
-    mut spawn_ev: MessageReader<RequestSpawnHazardParticle>,
+    mut spawn_ev: MessageReader<FromClient<RequestSpawnHazardParticle>>,
 ) {
     for ev in spawn_ev.read() {
+        let ev = &ev.message;
         // FIXME(multiplayer-first): Deduplicate near-simultaneous spawn requests from multiple clients to prevent N-factor spawning in multiplayer.
         commands.spawn((
             MiasmaHazardParticle::default(),
-            Position::from_vec3(ev.position),
+            Position {
+                x: ev.position.x,
+                y: ev.position.y,
+                z: ev.position.z,
+                ..default()
+            },
             bevy_replicon::prelude::Replicated,
         ));
     }
@@ -946,7 +953,7 @@ pub(crate) fn server_spawn_miasma_hazards(
 pub(crate) fn update_miasma_hazards(
     mut commands: Commands,
     mut q_hazards: Query<(Entity, &mut Position, &mut MiasmaHazardParticle)>,
-    q_players: Query<&Position, With<unplayer_core::components::PlayerSprite>>,
+    q_players: Query<&Position, With<PlayerSprite>>,
     bcf: Res<BoardCollisionField>,
     time: Res<Time>,
 ) {
@@ -988,6 +995,7 @@ pub(crate) fn update_miasma_hazards(
             x: next_x,
             y: next_y,
             z: pos.z,
+            ..default()
         }
         .to_board_position();
 
@@ -1014,11 +1022,9 @@ pub(crate) fn update_miasma_hazards(
 
 pub(crate) fn miasma_hazard_damage(
     q_hazards: Query<&Position, With<MiasmaHazardParticle>>,
-    q_players: Query<(Entity, &Position), With<unplayer_core::components::PlayerSprite>>,
+    q_players: Query<(Entity, &Position), With<PlayerSprite>>,
     mut damage_ev: MessageWriter<MiasmaTakeDamageMessage>,
-    time: Res<Time>,
 ) {
-    let dt = time.delta_secs();
     for h_pos in q_hazards.iter() {
         for (p_entity, p_pos) in q_players.iter() {
             let same_floor = p_pos.z.round() as i64 == h_pos.z.round() as i64;
@@ -1029,9 +1035,9 @@ pub(crate) fn miasma_hazard_damage(
 
                 if dist_xy_sq < 0.25 {
                     // 0.5^2
-                    damage_ev.send(MiasmaTakeDamageMessage {
+                    damage_ev.write(MiasmaTakeDamageMessage {
                         target_entity: p_entity,
-                        damage: 50.0 * dt,
+                        damage: 50.0,
                     });
                 }
             }
@@ -1041,7 +1047,7 @@ pub(crate) fn miasma_hazard_damage(
 
 pub(crate) fn miasma_player_attraction(
     mut miasma: If<ResMut<MiasmaGrid>>,
-    q_players: Query<&Position, With<unplayer_core::components::MainPlayer>>,
+    q_players: Query<&Position, With<MainPlayer>>,
     q_ghosts: Query<&GhostSprite>,
     board_data: Res<BoardTopology>,
 ) {
@@ -1147,6 +1153,7 @@ pub(crate) fn spawn_static_sparks(
                                 x: spawn_pos.x + rng.random_range(-0.5..0.5),
                                 y: spawn_pos.y + rng.random_range(-0.5..0.5),
                                 z: spawn_z,
+                                ..default()
                             },
                             StaticSpark {
                                 velocity: vel,
