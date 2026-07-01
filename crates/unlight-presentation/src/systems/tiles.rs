@@ -468,8 +468,8 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 .unwrap_or(Color::LinearRgba(LinearRgba::rgb(1.0, 1.0, 1.0)));
 
             if let Some(ethereal) = o_ethereal {
-                smooth_f = 299.0;
-                smooth_a = 199.0;
+                smooth_f = 299.0 / 3.0;
+                smooth_a = 199.0 / 3.0;
                 if ethereal.warning_active {
                     src_color_base = lerp_color(
                         css::RED.into(),
