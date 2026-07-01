@@ -13,6 +13,7 @@ workspace = true
 
 [dependencies]
 
+serde = { workspace = true }
 unspatial-core = { workspace = true }
 
 bevy = { workspace = true }

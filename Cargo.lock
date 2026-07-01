@@ -8195,6 +8195,7 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "ndarray",
+ "serde",
  "unspatial-core",
 ]
 

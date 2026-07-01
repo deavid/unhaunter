@@ -11,6 +11,8 @@ pub struct GhostAssets {
     pub focus_ring_vignette: Handle<Image>,
     #[asset(path = "img/miasma-base-01.png")]
     pub miasma: Handle<Image>,
+    #[asset(path = "img/particle_spark.png")]
+    pub spark: Handle<Image>,
 }
 
 pub const GHOST_BREACH_ANCHOR: Vec2 = Vec2::new(0.0, -0.3673469);
