@@ -952,16 +952,19 @@ pub(crate) fn server_spawn_miasma_hazards(
 
 pub(crate) fn update_miasma_hazards(
     mut commands: Commands,
-    mut q_hazards: Query<
-        (Entity, &mut Position, &mut MiasmaHazardParticle),
-        Without<PlayerSprite>,
-    >,
-    q_players: Query<&Position, (With<PlayerSprite>, Without<MiasmaHazardParticle>)>,
+    mut set: ParamSet<(
+        Query<(Entity, &mut Position, &mut MiasmaHazardParticle), Without<PlayerSprite>>,
+        Query<&Position, With<PlayerSprite>>,
+    )>,
     bcf: Res<BoardCollisionField>,
     time: Res<Time>,
 ) {
     let dt = time.delta_secs();
-    for (entity, mut pos, mut hazard) in q_hazards.iter_mut() {
+    // 1. Gather player positions to avoid double-borrows
+    let player_positions: Vec<Position> = set.p1().iter().copied().collect();
+
+    // 2. Update hazards
+    for (entity, mut pos, mut hazard) in set.p0().iter_mut() {
         hazard.time_alive += dt;
         if hazard.time_alive > 10.0 {
             commands.entity(entity).despawn();
@@ -972,7 +975,7 @@ pub(crate) fn update_miasma_hazards(
         let mut nearest_player: Option<Vec2> = None;
         let mut min_dist2 = f32::MAX;
 
-        for p_pos in q_players.iter() {
+        for p_pos in player_positions.iter() {
             // Use rounded Z for strict floor check
             if p_pos.z.round() as i64 != pos.z.round() as i64 {
                 continue;
@@ -1052,7 +1055,6 @@ pub(crate) fn miasma_player_attraction(
     mut miasma: If<ResMut<MiasmaGrid>>,
     q_players: Query<&Position, With<MainPlayer>>,
     q_ghosts: Query<&GhostSprite>,
-    _board_data: Res<BoardTopology>,
 ) {
     let Ok(ghost) = q_ghosts.single() else {
         return;
