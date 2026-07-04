@@ -25,8 +25,10 @@ use unlight_core::flashlight::ActiveFlashlights;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unnoise_core::perlin::PerlinNoise;
-use unplayer_core::components::{MainPlayer, PlayerSprite};
+use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
+use unrender_std::components::visuals::Emissive;
+use unboard_core::components::mapcolor::MapColor;
 use unsettings_core::video::VideoSettings;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
@@ -266,33 +268,47 @@ pub(crate) fn animate_miasma_sprites(
     miasma: If<Res<MiasmaGrid>>,
     noise_table: Res<PerlinNoise>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
+    q_ghosts: Query<&GhostSprite>,
     video_settings: Res<Persistent<VideoSettings>>,
 ) {
     let measure = metrics::ANIMATE_MIASMA.time_measure();
 
     let dt = time.delta_secs();
+    let hunt_likelihood = q_ghosts
+        .iter()
+        .next()
+        .map(|g| g.hunt_likelihood())
+        .unwrap_or(0.0);
+
     let quality_factor = video_settings.quality.to_quality_factor2();
     const MOVEMENT_FACTOR: f32 = 1.01;
     for (mut pos, mut miasma_sprite) in query.iter_mut() {
-        miasma_sprite.time_alive += dt;
+        // Increase apparent speed as hunt approaches (boiling effect)
+        let visual_dt = dt * (1.0 + hunt_likelihood * 2.5);
+        miasma_sprite.time_alive += visual_dt;
+
         // 1. Circular Motion:
         let angle = miasma_sprite.angular_speed * miasma_sprite.time_alive + miasma_sprite.phase;
         let circular_x = miasma_sprite.radius * angle.cos();
         let circular_y = miasma_sprite.radius * angle.sin();
 
         // 2. Perlin Noise Offset using precomputed values:
+        // Increase noise agitation as hunt approaches
+        let noise_scale = 0.6 * (1.0 + hunt_likelihood * 4.0);
+        let noise_speed = 0.2 * (1.0 + hunt_likelihood * 3.0);
+
         let noise_x = noise_table.get(
-            miasma_sprite.noise_offset_x + miasma_sprite.time_alive * 0.2,
+            miasma_sprite.noise_offset_x + miasma_sprite.time_alive * noise_speed,
             miasma_sprite.noise_offset_y,
         );
         let noise_y = noise_table.get(
             miasma_sprite.noise_offset_x,
-            miasma_sprite.noise_offset_y + miasma_sprite.time_alive * 0.2,
+            miasma_sprite.noise_offset_y + miasma_sprite.time_alive * noise_speed,
         );
 
         // 3. Combine and Update Position:
-        pos.x = miasma_sprite.base_position.x + (circular_x + noise_x * 0.6) * MOVEMENT_FACTOR; // Scale noise influence
-        pos.y = miasma_sprite.base_position.y + (circular_y + noise_y * 0.6) * MOVEMENT_FACTOR;
+        pos.x = miasma_sprite.base_position.x + (circular_x + noise_x * noise_scale) * MOVEMENT_FACTOR;
+        pos.y = miasma_sprite.base_position.y + (circular_y + noise_y * noise_scale) * MOVEMENT_FACTOR;
 
         // We do *not* modify pos.z or pos.visual_priority here.  The Z position is set
         // during initialization and should remain constant.
@@ -887,44 +903,52 @@ pub(crate) fn apply_flashlight_miasma_effects(
 
 pub(crate) fn client_request_miasma_hazards(
     mut miasma: If<ResMut<MiasmaGrid>>,
-    board_data: Res<BoardTopology>,
-    q_players: Query<&Position, With<unplayer_core::components::MainPlayer>>,
+    q_ghosts: Query<(&Position, &GhostSprite)>,
+    q_hazards: Query<&MiasmaHazardParticle>,
+    room_topology: Res<RoomTopology>,
     time: Res<Time>,
     mut spawn_ev: MessageWriter<RequestSpawnHazardParticle>,
 ) {
+    let Ok((ghost_pos, _)) = q_ghosts.single() else {
+        return;
+    };
+    let ghost_bpos = ghost_pos.to_board_position();
+    let Some(room_id) = room_topology.room_tiles.get(&ghost_bpos) else {
+        return;
+    };
+
+    let hazard_count = q_hazards.iter().count();
+    if hazard_count >= 10 {
+        return;
+    }
+
     let mut rng = random_seed::rng();
     let dt = time.delta_secs();
 
-    for player_pos in q_players.iter() {
-        let player_bpos = player_pos.to_board_position();
-        let radius = 7; // 15x15 radius
-        let min_x = (player_bpos.x - radius).max(0) as usize;
-        let max_x = (player_bpos.x + radius).min(board_data.map_size.0 as i64 - 1) as usize;
-        let min_y = (player_bpos.y - radius).max(0) as usize;
-        let max_y = (player_bpos.y + radius).min(board_data.map_size.1 as i64 - 1) as usize;
-        let z = player_bpos.z as usize;
+    // Iterate through tiles in the ghost's room
+    for (bpos, r_id) in room_topology.room_tiles.iter() {
+        if r_id != room_id {
+            continue;
+        }
 
-        for x in min_x..=max_x {
-            for y in min_y..=max_y {
-                let idx = (x, y, z);
-                let pressure = miasma.pressure_field[idx];
-                if pressure > 100.0 {
-                    // Spawning chance proportional to pressure
-                    let chance = ((pressure - 100.0) / 1000.0 * dt).clamp(0.0, 1.0);
-                    if rng.random_bool(chance as f64) {
-                        miasma.pressure_field[idx] = (pressure - 100.0).max(0.0);
-                        let spawn_pos = BoardPosition {
-                            x: x as i64,
-                            y: y as i64,
-                            z: z as i64,
-                        }
-                        .to_position_center();
+        let idx = bpos.ndidx();
+        let pressure = miasma.pressure_field[idx];
+        if pressure > 100.0 {
+            // Lower, saner probability.
+            // If pressure is 1000, chance is 0.05 per tile per second.
+            let chance = ((pressure - 100.0) / 20000.0 * dt).clamp(0.0, 0.05);
 
-                        spawn_ev.write(RequestSpawnHazardParticle {
-                            position: Vec3::new(spawn_pos.x, spawn_pos.y, spawn_pos.z + 0.5),
-                        });
-                    }
-                }
+            if rng.random_bool(chance as f64) {
+                miasma.pressure_field[idx] = (pressure - 100.0).max(0.0);
+                let spawn_pos = bpos.to_position_center();
+
+                spawn_ev.write(RequestSpawnHazardParticle {
+                    position: Vec3::new(
+                        spawn_pos.x + rng.random_range(-0.4..0.4),
+                        spawn_pos.y + rng.random_range(-0.4..0.4),
+                        spawn_pos.z.floor() + 0.45,
+                    ),
+                });
             }
         }
     }
@@ -954,14 +978,19 @@ pub(crate) fn update_miasma_hazards(
     mut commands: Commands,
     mut set: ParamSet<(
         Query<(Entity, &mut Position, &mut MiasmaHazardParticle), Without<PlayerSprite>>,
-        Query<&Position, With<PlayerSprite>>,
+        Query<(&Position, Option<&Hiding>), With<PlayerSprite>>,
     )>,
     bcf: Res<BoardCollisionField>,
     time: Res<Time>,
 ) {
     let dt = time.delta_secs();
-    // 1. Gather player positions to avoid double-borrows
-    let player_positions: Vec<Position> = set.p1().iter().copied().collect();
+    // 1. Gather non-hiding player positions to avoid double-borrows
+    let player_positions: Vec<Position> = set
+        .p1()
+        .iter()
+        .filter(|(_, hiding)| hiding.is_none())
+        .map(|(pos, _)| *pos)
+        .collect();
 
     // 2. Update hazards
     for (entity, mut pos, mut hazard) in set.p0().iter_mut() {
@@ -971,7 +1000,7 @@ pub(crate) fn update_miasma_hazards(
             continue;
         }
 
-        // Find nearest player on the same floor
+        // Find nearest non-hiding player on the same floor
         let mut nearest_player: Option<Vec2> = None;
         let mut min_dist2 = f32::MAX;
 
@@ -980,7 +1009,9 @@ pub(crate) fn update_miasma_hazards(
             if p_pos.z.round() as i64 != pos.z.round() as i64 {
                 continue;
             }
-            let dist2 = pos.distance2(p_pos);
+            let dx = p_pos.x - pos.x;
+            let dy = p_pos.y - pos.y;
+            let dist2 = dx * dx + dy * dy;
             if dist2 < min_dist2 {
                 min_dist2 = dist2;
                 nearest_player = Some(Vec2::new(p_pos.x, p_pos.y));
@@ -989,21 +1020,17 @@ pub(crate) fn update_miasma_hazards(
 
         if let Some(target) = nearest_player {
             let dir = (target - Vec2::new(pos.x, pos.y)).normalize_or_zero();
-            hazard.velocity += dir * 0.1 * dt;
+            // Heavy acceleration buff (1.0 instead of 0.1)
+            hazard.velocity += dir * 1.0 * dt;
         }
 
         hazard.velocity = hazard.velocity.clamp_length_max(1.0);
 
-        let next_x = pos.x + hazard.velocity.x * dt;
-        let next_y = pos.y + hazard.velocity.y * dt;
+        let mut next_pos = *pos;
+        next_pos.x += hazard.velocity.x * dt;
+        next_pos.y += hazard.velocity.y * dt;
 
-        let next_bpos = Position {
-            x: next_x,
-            y: next_y,
-            z: pos.z,
-            ..default()
-        }
-        .to_board_position();
+        let next_bpos = next_pos.to_board_position();
 
         if let Some(collision) = bcf.0.get(next_bpos.ndidx()) {
             if !collision.player_free {
@@ -1015,24 +1042,33 @@ pub(crate) fn update_miasma_hazards(
                 if next_bpos.y != cur_bpos.y {
                     hazard.velocity.y *= -1.0;
                 }
+                // Push out of collision
+                let push_dir = (pos.to_vec3() - next_pos.to_vec3())
+                    .truncate()
+                    .normalize_or_zero();
+                pos.x += push_dir.x * 0.1;
+                pos.y += push_dir.y * 0.1;
             } else {
-                pos.x = next_x;
-                pos.y = next_y;
+                pos.x = next_pos.x;
+                pos.y = next_pos.y;
             }
         } else {
-            pos.x = next_x;
-            pos.y = next_y;
+            pos.x = next_pos.x;
+            pos.y = next_pos.y;
         }
     }
 }
 
 pub(crate) fn miasma_hazard_damage(
     q_hazards: Query<&Position, With<MiasmaHazardParticle>>,
-    q_players: Query<(Entity, &Position), With<PlayerSprite>>,
+    q_players: Query<(Entity, &Position, Option<&Hiding>), With<PlayerSprite>>,
     mut damage_ev: MessageWriter<MiasmaTakeDamageMessage>,
 ) {
     for h_pos in q_hazards.iter() {
-        for (p_entity, p_pos) in q_players.iter() {
+        for (p_entity, p_pos, hiding) in q_players.iter() {
+            if hiding.is_some() {
+                continue;
+            }
             let same_floor = p_pos.z.round() as i64 == h_pos.z.round() as i64;
             if same_floor {
                 let dx = p_pos.x - h_pos.x;
@@ -1051,44 +1087,6 @@ pub(crate) fn miasma_hazard_damage(
     }
 }
 
-pub(crate) fn miasma_player_attraction(
-    mut miasma: If<ResMut<MiasmaGrid>>,
-    q_players: Query<&Position, With<MainPlayer>>,
-    q_ghosts: Query<&GhostSprite>,
-) {
-    let Ok(ghost) = q_ghosts.single() else {
-        return;
-    };
-    let hunt_likelihood = ghost.hunt_likelihood();
-
-    for player_pos in q_players.iter() {
-        let player_bpos = player_pos.to_board_position();
-
-        // 3x3 surrounding tiles
-        for dx in -1..=1 {
-            for dy in -1..=1 {
-                let bx = player_bpos.x + dx;
-                let by = player_bpos.y + dy;
-                let bpos = BoardPosition {
-                    x: bx,
-                    y: by,
-                    z: player_bpos.z,
-                };
-                let ndidx = bpos.ndidx();
-
-                if let Some(vel) = miasma.velocity_field.get_mut(ndidx) {
-                    let tile_center = bpos.to_position_center();
-                    let attraction_vec = (player_pos.to_vec3() - tile_center.to_vec3())
-                        .truncate()
-                        .normalize_or_zero();
-
-                    *vel = *vel * (1.0 - hunt_likelihood * 0.05)
-                        + attraction_vec * hunt_likelihood * 0.1;
-                }
-            }
-        }
-    }
-}
 
 #[derive(Component)]
 pub(crate) struct StaticSpark {
@@ -1127,11 +1125,11 @@ pub(crate) fn spawn_static_sparks(
         for y in min_y..=max_y {
             let idx = (x, y, z);
             let pressure = miasma.pressure_field[idx];
-            // Require 10x more pressure (divide pressure by 10)
-            let trigger = (pressure / 10.0) * hunt_likelihood;
+            // Require high pressure and proximity to hunt
+            let trigger = (pressure / 100.0) * hunt_likelihood;
             if trigger > 1.0 {
-                // 10x more infrequent (divide result by 10, so 100.0 instead of 10.0)
-                let chance = (f32::cbrt(trigger) / 100.0 * dt).clamp(0.0, 1.0);
+                // Strobe-flash effect probability
+                let chance = (f32::cbrt(trigger) / 50.0 * dt).clamp(0.0, 1.0);
                 if rng.random_bool(chance as f64) {
                     for _ in 0..3 {
                         let spawn_pos = BoardPosition {
@@ -1142,31 +1140,41 @@ pub(crate) fn spawn_static_sparks(
                         .to_position_center();
                         let spawn_z = player_bpos.z as f32 + rng.random_range(0.1..1.5);
 
-                        let vel = Vec3::new(
-                            rng.random_range(-3.0..3.0),
-                            rng.random_range(-3.0..3.0),
-                            rng.random_range(1.0..4.0),
-                        );
+                        let rotation = rng.random_range(0.0..std::f32::consts::TAU);
+                        let length = rng.random_range(1.0..4.0);
 
                         commands.spawn((
                             Sprite {
                                 image: ghost_assets.spark.clone(),
-                                color: Color::linear_rgba(0.7, 0.9, 1.0, 1.0),
+                                color: Color::linear_rgba(0.8, 1.0, 1.0, 1.0),
                                 ..default()
                             },
-                            Transform::from_scale(Vec3::new(0.4, 0.4, 1.0)),
+                            // Highly stretched pixel (jagged line)
+                            Transform {
+                                translation: Vec3::ZERO,
+                                rotation: Quat::from_rotation_z(rotation),
+                                scale: Vec3::new(length, 0.1, 1.0),
+                            },
                             Position {
-                                x: spawn_pos.x + rng.random_range(-0.2..0.2),
-                                y: spawn_pos.y + rng.random_range(-0.2..0.2),
+                                x: spawn_pos.x + rng.random_range(-0.4..0.4),
+                                y: spawn_pos.y + rng.random_range(-0.4..0.4),
                                 z: spawn_z,
                                 ..default()
                             },
                             StaticSpark {
-                                velocity: vel,
-                                lifetime: 0.4,
+                                velocity: Vec3::ZERO, // Statically snap, no movement
+                                lifetime: 0.1,
                             },
                             GameSprite,
                             SpriteLayer(0.2),
+                            MapColor {
+                                color: Color::linear_rgba(0.5, 1.0, 1.0, 1.0),
+                            },
+                            Emissive {
+                                color: Color::linear_rgba(0.5, 1.0, 1.0, 1.0),
+                                intensity: 5.0,
+                                ..default()
+                            },
                         ));
                     }
                 }
@@ -1177,26 +1185,20 @@ pub(crate) fn spawn_static_sparks(
 
 pub(crate) fn update_static_sparks(
     mut commands: Commands,
-    mut q_sparks: Query<(Entity, &mut Position, &mut Sprite, &mut StaticSpark)>,
+    mut q_sparks: Query<(Entity, &mut Sprite, &mut StaticSpark)>,
     time: Res<Time>,
 ) {
     let dt = time.delta_secs();
-    const GRAVITY: f32 = 4.0;
 
-    for (entity, mut pos, mut sprite, mut spark) in q_sparks.iter_mut() {
+    for (entity, mut sprite, mut spark) in q_sparks.iter_mut() {
         spark.lifetime -= dt;
         if spark.lifetime <= 0.0 {
             commands.entity(entity).despawn();
             continue;
         }
 
-        spark.velocity.z -= GRAVITY * dt;
-        pos.x += spark.velocity.x * dt;
-        pos.y += spark.velocity.y * dt;
-        pos.z += spark.velocity.z * dt;
-
-        // Fade out fast
-        sprite.color.set_alpha((spark.lifetime * 2.5).clamp(0.0, 1.0));
+        // Fade out fast for strobe effect
+        sprite.color.set_alpha((spark.lifetime * 10.0).clamp(0.0, 1.0));
     }
 }
 
@@ -1209,7 +1211,15 @@ pub(crate) fn hydrate_miasma_hazards(
         commands.entity(entity).insert((
             Sprite {
                 image: ghost_assets.miasma.clone(),
+                color: Color::linear_rgba(1.0, 0.1, 0.1, 1.0),
+                ..default()
+            },
+            MapColor {
                 color: Color::linear_rgba(1.0, 0.0, 0.0, 1.0),
+            },
+            Emissive {
+                color: Color::linear_rgba(1.0, 0.0, 0.0, 1.0),
+                intensity: 2.0,
                 ..default()
             },
             Transform::from_scale(Vec3::new(0.3, 0.3, 1.0)),
