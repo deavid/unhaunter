@@ -69,6 +69,7 @@ impl Plugin for UnhaunterFogPlugin {
                 crate::systems::spawn_miasma,
                 crate::systems::animate_miasma_sprites,
                 crate::systems::hydrate_miasma_hazards,
+                crate::systems::animate_miasma_hazards,
                 crate::systems::spawn_static_sparks,
                 crate::systems::update_static_sparks,
                 crate::systems::client_request_miasma_hazards,

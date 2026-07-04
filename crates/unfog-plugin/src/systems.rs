@@ -1020,11 +1020,11 @@ pub(crate) fn update_miasma_hazards(
 
         if let Some(target) = nearest_player {
             let dir = (target - Vec2::new(pos.x, pos.y)).normalize_or_zero();
-            // Heavy acceleration buff (1.0 instead of 0.1)
-            hazard.velocity += dir * 1.0 * dt;
+            // Heavy acceleration buff (10.0 instead of 1.0)
+            hazard.velocity += dir * 10.0 * dt;
         }
 
-        hazard.velocity = hazard.velocity.clamp_length_max(1.0);
+        hazard.velocity = hazard.velocity.clamp_length_max(2.0);
 
         let mut next_pos = *pos;
         next_pos.x += hazard.velocity.x * dt;
@@ -1046,8 +1046,8 @@ pub(crate) fn update_miasma_hazards(
                 let push_dir = (pos.to_vec3() - next_pos.to_vec3())
                     .truncate()
                     .normalize_or_zero();
-                pos.x += push_dir.x * 0.1;
-                pos.y += push_dir.y * 0.1;
+                pos.x += push_dir.x * 0.15;
+                pos.y += push_dir.y * 0.15;
             } else {
                 pos.x = next_pos.x;
                 pos.y = next_pos.y;
@@ -1202,6 +1202,18 @@ pub(crate) fn update_static_sparks(
     }
 }
 
+pub(crate) fn animate_miasma_hazards(
+    time: Res<Time>,
+    mut q_hazards: Query<(&mut Transform, &MiasmaHazardParticle)>,
+) {
+    let t = time.elapsed_secs();
+    for (mut transform, _) in q_hazards.iter_mut() {
+        // Paranormal pulsing scale
+        let pulse = (t * 8.0).sin() * 0.05 + 0.3;
+        transform.scale = Vec3::new(pulse, pulse, 1.0);
+    }
+}
+
 pub(crate) fn hydrate_miasma_hazards(
     mut commands: Commands,
     q_hazards: Query<Entity, Added<MiasmaHazardParticle>>,
@@ -1219,7 +1231,7 @@ pub(crate) fn hydrate_miasma_hazards(
             },
             Emissive {
                 color: Color::linear_rgba(1.0, 0.0, 0.0, 1.0),
-                intensity: 2.0,
+                intensity: 5.0,
                 ..default()
             },
             Transform::from_scale(Vec3::new(0.3, 0.3, 1.0)),
