@@ -989,7 +989,7 @@ pub(crate) fn update_miasma_hazards(
 
         if let Some(target) = nearest_player {
             let dir = (target - Vec2::new(pos.x, pos.y)).normalize_or_zero();
-            hazard.velocity += dir * 0.01 * dt;
+            hazard.velocity += dir * 0.1 * dt;
         }
 
         hazard.velocity = hazard.velocity.clamp_length_max(1.0);
@@ -1082,8 +1082,8 @@ pub(crate) fn miasma_player_attraction(
                         .truncate()
                         .normalize_or_zero();
 
-                    *vel = *vel * (1.0 - hunt_likelihood * 0.1)
-                        + attraction_vec * hunt_likelihood * 0.2;
+                    *vel = *vel * (1.0 - hunt_likelihood * 0.05)
+                        + attraction_vec * hunt_likelihood * 0.1;
                 }
             }
         }
@@ -1127,10 +1127,11 @@ pub(crate) fn spawn_static_sparks(
         for y in min_y..=max_y {
             let idx = (x, y, z);
             let pressure = miasma.pressure_field[idx];
-            let trigger = pressure * hunt_likelihood;
-            if trigger > 0.0 {
-                // Cubic root tames the rate
-                let chance = (f32::cbrt(trigger) / 10.0 * dt).clamp(0.0, 1.0);
+            // Require 10x more pressure (divide pressure by 10)
+            let trigger = (pressure / 10.0) * hunt_likelihood;
+            if trigger > 1.0 {
+                // 10x more infrequent (divide result by 10, so 100.0 instead of 10.0)
+                let chance = (f32::cbrt(trigger) / 100.0 * dt).clamp(0.0, 1.0);
                 if rng.random_bool(chance as f64) {
                     for _ in 0..3 {
                         let spawn_pos = BoardPosition {
@@ -1142,27 +1143,27 @@ pub(crate) fn spawn_static_sparks(
                         let spawn_z = player_bpos.z as f32 + rng.random_range(0.1..1.5);
 
                         let vel = Vec3::new(
-                            rng.random_range(-1.0..1.0),
-                            rng.random_range(-1.0..1.0),
-                            rng.random_range(0.5..2.0),
+                            rng.random_range(-3.0..3.0),
+                            rng.random_range(-3.0..3.0),
+                            rng.random_range(1.0..4.0),
                         );
 
                         commands.spawn((
                             Sprite {
                                 image: ghost_assets.spark.clone(),
-                                color: Color::linear_rgba(0.5, 0.8, 1.0, 1.0),
+                                color: Color::linear_rgba(0.7, 0.9, 1.0, 1.0),
                                 ..default()
                             },
-                            Transform::from_scale(Vec3::new(0.5, 0.5, 1.0)),
+                            Transform::from_scale(Vec3::new(0.4, 0.4, 1.0)),
                             Position {
-                                x: spawn_pos.x + rng.random_range(-0.5..0.5),
-                                y: spawn_pos.y + rng.random_range(-0.5..0.5),
+                                x: spawn_pos.x + rng.random_range(-0.2..0.2),
+                                y: spawn_pos.y + rng.random_range(-0.2..0.2),
                                 z: spawn_z,
                                 ..default()
                             },
                             StaticSpark {
                                 velocity: vel,
-                                lifetime: 1.0,
+                                lifetime: 0.4,
                             },
                             GameSprite,
                             SpriteLayer(0.2),
@@ -1194,7 +1195,8 @@ pub(crate) fn update_static_sparks(
         pos.y += spark.velocity.y * dt;
         pos.z += spark.velocity.z * dt;
 
-        sprite.color.set_alpha(spark.lifetime.clamp(0.0, 1.0));
+        // Fade out fast
+        sprite.color.set_alpha((spark.lifetime * 2.5).clamp(0.0, 1.0));
     }
 }
 
