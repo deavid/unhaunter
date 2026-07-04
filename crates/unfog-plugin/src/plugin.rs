@@ -72,7 +72,6 @@ impl Plugin for UnhaunterFogPlugin {
                 crate::systems::spawn_static_sparks,
                 crate::systems::update_static_sparks,
                 crate::systems::client_request_miasma_hazards,
-                crate::systems::miasma_player_attraction.after(crate::systems::update_miasma),
             )
                 .run_if(in_state(UIContextState::InGame)),
         );
