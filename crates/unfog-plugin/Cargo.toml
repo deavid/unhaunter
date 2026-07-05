@@ -27,6 +27,8 @@ unnoise-core = { workspace = true }
 unfog-core = { workspace = true }
 unsettings-core = { workspace = true }
 unreplicon-core = { workspace = true }
+unthermal-core = { workspace = true }
+unsoundfield-core = { workspace = true }
 
 bevy = { workspace = true }
 bevy_replicon = { workspace = true }

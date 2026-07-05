@@ -8223,7 +8223,9 @@ dependencies = [
  "unrender-std",
  "unreplicon-core",
  "unsettings-core",
+ "unsoundfield-core",
  "unspatial-core",
+ "unthermal-core",
 ]
 
 [[package]]

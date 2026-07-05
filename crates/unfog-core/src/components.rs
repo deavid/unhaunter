@@ -27,6 +27,8 @@ pub struct MiasmaSprite {
     pub vel_speed: f32,
     /// Speed of movement of the particle so it denoises the miasma velocity field.
     pub direction: Vec2,
+    /// Base visual scale of the sprite.
+    pub base_scale: f32,
 }
 
 /// A glowing red hazard that drifts toward players when miasma pressure is high.

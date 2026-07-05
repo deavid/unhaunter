@@ -30,8 +30,10 @@ use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::Emissive;
 use unboard_core::components::mapcolor::MapColor;
 use unsettings_core::video::VideoSettings;
+use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
+use unthermal_core::resources::ThermalGrid;
 
 // FIXME: Copied from unmapload-core::assets::GRID_1X1_ANCHOR to remove upward T3 dependency.
 // Fog sprite spawning via HydrationStage is being phased out; verify and remove when complete.
@@ -246,6 +248,7 @@ pub(crate) fn spawn_miasma(
                     life: 1.0 + rng.random_range(0.0..0.5),
                     vel_speed: rng.random_range(0.2..1.0_f32).powi(2),
                     direction: miasma.velocity_field[bpos.ndidx()],
+                    base_scale: scale,
                 })
                 .insert(Transform::from_scale(Vec3::new(scale, scale, 1.0)))
                 .insert(LightSensitive {
@@ -267,25 +270,31 @@ pub(crate) fn animate_miasma_sprites(
     bcf: Res<BoardCollisionField>,
     miasma: If<Res<MiasmaGrid>>,
     noise_table: Res<PerlinNoise>,
-    mut query: Query<(&mut Position, &mut MiasmaSprite)>,
+    mut query: Query<(&mut Position, &mut MiasmaSprite, &mut Transform)>,
     q_ghosts: Query<&GhostSprite>,
     video_settings: Res<Persistent<VideoSettings>>,
+    tg: If<Res<ThermalGrid>>,
+    sg: If<Res<SoundGrid>>,
+    mut last_tension: Local<f32>,
 ) {
     let measure = metrics::ANIMATE_MIASMA.time_measure();
 
     let dt = time.delta_secs();
-    let hunt_likelihood = q_ghosts
+    let target_tension = q_ghosts
         .iter()
         .next()
         .map(|g| g.hunt_likelihood())
         .unwrap_or(0.0);
 
+    // 0.1s IIR filter for visual tension
+    let tension_f = (dt / 0.1).clamp(0.0, 1.0);
+    *last_tension = *last_tension * (1.0 - tension_f) + target_tension * tension_f;
+    let visual_tension = *last_tension;
+
     let quality_factor = video_settings.quality.to_quality_factor2();
     const MOVEMENT_FACTOR: f32 = 1.01;
-    for (mut pos, mut miasma_sprite) in query.iter_mut() {
-        // Increase apparent speed as hunt approaches (boiling effect)
-        let visual_dt = dt * (1.0 + hunt_likelihood * 2.5);
-        miasma_sprite.time_alive += visual_dt;
+    for (mut pos, mut miasma_sprite, mut transform) in query.iter_mut() {
+        miasma_sprite.time_alive += dt;
 
         // 1. Circular Motion:
         let angle = miasma_sprite.angular_speed * miasma_sprite.time_alive + miasma_sprite.phase;
@@ -293,22 +302,59 @@ pub(crate) fn animate_miasma_sprites(
         let circular_y = miasma_sprite.radius * angle.sin();
 
         // 2. Perlin Noise Offset using precomputed values:
-        // Increase noise agitation as hunt approaches
-        let noise_scale = 0.6 * (1.0 + hunt_likelihood * 4.0);
-        let noise_speed = 0.2 * (1.0 + hunt_likelihood * 3.0);
-
         let noise_x = noise_table.get(
-            miasma_sprite.noise_offset_x + miasma_sprite.time_alive * noise_speed,
+            miasma_sprite.noise_offset_x + miasma_sprite.time_alive * 0.2,
             miasma_sprite.noise_offset_y,
         );
         let noise_y = noise_table.get(
             miasma_sprite.noise_offset_x,
-            miasma_sprite.noise_offset_y + miasma_sprite.time_alive * noise_speed,
+            miasma_sprite.noise_offset_y + miasma_sprite.time_alive * 0.2,
         );
 
         // 3. Combine and Update Position:
-        pos.x = miasma_sprite.base_position.x + (circular_x + noise_x * noise_scale) * MOVEMENT_FACTOR;
-        pos.y = miasma_sprite.base_position.y + (circular_y + noise_y * noise_scale) * MOVEMENT_FACTOR;
+        pos.x = miasma_sprite.base_position.x + (circular_x + noise_x * 0.6) * MOVEMENT_FACTOR;
+        pos.y = miasma_sprite.base_position.y + (circular_y + noise_y * 0.6) * MOVEMENT_FACTOR;
+
+        // --- NEW: Presentation-only "Boiling" Effect (localized EMF agitation) ---
+        let bpos = pos.to_board_position();
+        let p = bpos.ndidx();
+
+        let sound_agitation = sg
+            .sound_field
+            .get(&bpos)
+            .map(|s| s.iter().sum::<Vec2>().length() * 5.0)
+            .unwrap_or(0.0);
+        let temp_agitation = tg
+            .temperature_field
+            .get(p)
+            .map(|t| (tg.ambient_temp - *t).max(0.0) / 5.0)
+            .unwrap_or(0.0);
+
+        let local_agitation = (visual_tension + sound_agitation + temp_agitation).clamp(0.0, 5.0);
+
+        if local_agitation > 0.01 {
+            // High-frequency jitter
+            let jitter_speed = 10.0 * (1.0 + local_agitation * 2.0);
+            let jitter_noise_x = noise_table.get(
+                miasma_sprite.noise_offset_x * 2.0 + time.elapsed_secs() * jitter_speed,
+                miasma_sprite.noise_offset_y * 2.0,
+            );
+            let jitter_noise_y = noise_table.get(
+                miasma_sprite.noise_offset_x * 2.0,
+                miasma_sprite.noise_offset_y * 2.0 + time.elapsed_secs() * jitter_speed,
+            );
+
+            // Shiver: strictly clamped +/- 0.1 units (3cm)
+            pos.x += jitter_noise_x * 0.1 * local_agitation.min(1.0);
+            pos.y += jitter_noise_y * 0.1 * local_agitation.min(1.0);
+
+            // Scale agitation: +/- 5%
+            let scale_agitation = 1.0 + (jitter_noise_x * 0.05 * local_agitation.min(1.0));
+            let final_scale = miasma_sprite.base_scale * scale_agitation;
+            transform.scale = Vec3::new(final_scale, final_scale, 1.0);
+        } else {
+            transform.scale = Vec3::new(miasma_sprite.base_scale, miasma_sprite.base_scale, 1.0);
+        }
 
         // We do *not* modify pos.z or pos.visual_priority here.  The Z position is set
         // during initialization and should remain constant.
@@ -1102,6 +1148,8 @@ pub(crate) fn spawn_static_sparks(
     board_data: Res<BoardTopology>,
     ghost_assets: Res<unghost_core::assets::GhostAssets>,
     time: Res<Time>,
+    tg: If<Res<ThermalGrid>>,
+    sg: If<Res<SoundGrid>>,
 ) {
     let Ok(ghost) = q_ghosts.single() else {
         return;
@@ -1124,20 +1172,34 @@ pub(crate) fn spawn_static_sparks(
     for x in min_x..=max_x {
         for y in min_y..=max_y {
             let idx = (x, y, z);
+            let bpos = BoardPosition {
+                x: x as i64,
+                y: y as i64,
+                z: z as i64,
+            };
             let pressure = miasma.pressure_field[idx];
-            // Require high pressure and proximity to hunt
-            let trigger = (pressure / 100.0) * hunt_likelihood;
+
+            let sound_agitation = sg
+                .sound_field
+                .get(&bpos)
+                .map(|s| s.iter().sum::<Vec2>().length() * 5.0)
+                .unwrap_or(0.0);
+            let temp_agitation = tg
+                .temperature_field
+                .get(idx)
+                .map(|t| (tg.ambient_temp - *t).max(0.0) / 5.0)
+                .unwrap_or(0.0);
+
+            let localized_agitation = hunt_likelihood + sound_agitation + temp_agitation;
+
+            // Require high pressure and proximity to hunt/ghost activity
+            let trigger = (pressure / 100.0) * localized_agitation;
             if trigger > 1.0 {
                 // Strobe-flash effect probability
                 let chance = (f32::cbrt(trigger) / 50.0 * dt).clamp(0.0, 1.0);
                 if rng.random_bool(chance as f64) {
                     for _ in 0..3 {
-                        let spawn_pos = BoardPosition {
-                            x: x as i64,
-                            y: y as i64,
-                            z: z as i64,
-                        }
-                        .to_position_center();
+                        let spawn_pos = bpos.to_position_center();
                         let spawn_z = player_bpos.z as f32 + rng.random_range(0.1..1.5);
 
                         let rotation = rng.random_range(0.0..std::f32::consts::TAU);
