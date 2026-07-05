@@ -334,7 +334,7 @@ pub(crate) fn animate_miasma_sprites(
 
         if local_agitation > 0.01 {
             // High-frequency jitter
-            let jitter_speed = 10.0 * (1.0 + local_agitation * 2.0);
+            let jitter_speed = 1.0 * (1.0 + local_agitation * 2.0);
             let jitter_noise_x = noise_table.get(
                 miasma_sprite.noise_offset_x * 2.0 + time.elapsed_secs() * jitter_speed,
                 miasma_sprite.noise_offset_y * 2.0,
