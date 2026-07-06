@@ -21,6 +21,7 @@ pub(crate) fn app_setup(app: &mut App) {
                 other::regenerate_health_over_time,
                 other::scale_stamina_rates_by_health,
                 other::apply_ghost_proximity_damage.run_if(resource_exists::<LocalPlayerRole>),
+                other::apply_miasma_hazard_damage.run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
                 other::transition_to_spectator_on_death,
                 other::debug_kill_spectator,
             )

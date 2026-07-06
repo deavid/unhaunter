@@ -18,6 +18,12 @@ impl Default for AlphaModulator {
     }
 }
 
+/// Generic component for entities that should have an intrinsic ambient glow,
+/// bypassing standard light grid attenuation.
+#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[reflect(Component, Default)]
+pub struct AmbientColor(pub Color);
+
 /// Specialized component for ghosts/breaches that use complex logic.
 /// This acts as a transitional component to keep the complex math out of the main loop
 /// while still removing the hardcoded visual checks.

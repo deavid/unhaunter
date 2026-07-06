@@ -227,6 +227,19 @@ pub(crate) fn debug_kill_spectator(
     }
 }
 
+pub(crate) fn apply_miasma_hazard_damage(
+    mut damage_ev: MessageReader<unfog_core::messages::MiasmaTakeDamageMessage>,
+    mut q_vitals: Query<&mut PlayerVitals>,
+    time: Res<Time>,
+) {
+    let dt = time.delta_secs();
+    for ev in damage_ev.read() {
+        if let Ok(mut vitals) = q_vitals.get_mut(ev.target_entity) {
+            vitals.health -= ev.damage * dt;
+        }
+    }
+}
+
 pub(crate) fn apply_ghost_proximity_damage(
     mut q_local_player: Query<
         (&Position, &mut PlayerVitals),

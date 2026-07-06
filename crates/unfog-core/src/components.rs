@@ -27,4 +27,25 @@ pub struct MiasmaSprite {
     pub vel_speed: f32,
     /// Speed of movement of the particle so it denoises the miasma velocity field.
     pub direction: Vec2,
+    /// Base visual scale of the sprite.
+    pub base_scale: f32,
+}
+
+/// A glowing red hazard that drifts toward players when miasma pressure is high.
+#[derive(Component, Debug, Clone, Copy, serde::Serialize, serde::Deserialize, Reflect)]
+#[reflect(Component, Default)]
+pub struct MiasmaHazardParticle {
+    /// Velocity of the particle.
+    pub velocity: Vec2,
+    /// Time in seconds since the particle was spawned.
+    pub time_alive: f32,
+}
+
+impl Default for MiasmaHazardParticle {
+    fn default() -> Self {
+        Self {
+            velocity: Vec2::ZERO,
+            time_alive: 0.0,
+        }
+    }
 }

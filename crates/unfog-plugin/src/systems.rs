@@ -1,5 +1,6 @@
 use crate::metrics;
 use bevy::prelude::*;
+use bevy_replicon::prelude::*;
 use bevy::sprite::Anchor;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
@@ -14,7 +15,8 @@ use unboard_core::resources::roomdb::RoomTopology;
 use unboard_core::resources::visibility_data::VisibilityData;
 use unboard_core::utils::rebuild_collision_data;
 use uncommon_app_core::random_seed;
-use unfog_core::components::MiasmaSprite;
+use unfog_core::components::{MiasmaHazardParticle, MiasmaSprite};
+use unfog_core::messages::{MiasmaTakeDamageMessage, RequestSpawnHazardParticle};
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
 use unghost_core::components::logic::ghost_sprite::GhostSprite;
@@ -23,11 +25,15 @@ use unlight_core::flashlight::ActiveFlashlights;
 use unmetrics_core::metrics::SendMetric;
 use unmission_core::events::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unnoise_core::perlin::PerlinNoise;
-use unplayer_core::components::MainPlayer;
+use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
+use unrender_std::components::visuals::Emissive;
+use unboard_core::components::mapcolor::MapColor;
 use unsettings_core::video::VideoSettings;
+use unsoundfield_core::resources::SoundGrid;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
+use unthermal_core::resources::ThermalGrid;
 
 // FIXME: Copied from unmapload-core::assets::GRID_1X1_ANCHOR to remove upward T3 dependency.
 // Fog sprite spawning via HydrationStage is being phased out; verify and remove when complete.
@@ -242,6 +248,7 @@ pub(crate) fn spawn_miasma(
                     life: 1.0 + rng.random_range(0.0..0.5),
                     vel_speed: rng.random_range(0.2..1.0_f32).powi(2),
                     direction: miasma.velocity_field[bpos.ndidx()],
+                    base_scale: scale,
                 })
                 .insert(Transform::from_scale(Vec3::new(scale, scale, 1.0)))
                 .insert(LightSensitive {
@@ -263,16 +270,32 @@ pub(crate) fn animate_miasma_sprites(
     bcf: Res<BoardCollisionField>,
     miasma: If<Res<MiasmaGrid>>,
     noise_table: Res<PerlinNoise>,
-    mut query: Query<(&mut Position, &mut MiasmaSprite)>,
+    mut query: Query<(&mut Position, &mut MiasmaSprite, &mut Transform)>,
+    q_ghosts: Query<&GhostSprite>,
     video_settings: Res<Persistent<VideoSettings>>,
+    tg: If<Res<ThermalGrid>>,
+    sg: If<Res<SoundGrid>>,
+    mut last_tension: Local<f32>,
 ) {
     let measure = metrics::ANIMATE_MIASMA.time_measure();
 
     let dt = time.delta_secs();
+    let target_tension = q_ghosts
+        .iter()
+        .next()
+        .map(|g| g.hunt_likelihood())
+        .unwrap_or(0.0);
+
+    // 0.1s IIR filter for visual tension
+    let tension_f = (dt / 0.1).clamp(0.0, 1.0);
+    *last_tension = *last_tension * (1.0 - tension_f) + target_tension * tension_f;
+    let visual_tension = *last_tension;
+
     let quality_factor = video_settings.quality.to_quality_factor2();
     const MOVEMENT_FACTOR: f32 = 1.01;
-    for (mut pos, mut miasma_sprite) in query.iter_mut() {
+    for (mut pos, mut miasma_sprite, mut transform) in query.iter_mut() {
         miasma_sprite.time_alive += dt;
+
         // 1. Circular Motion:
         let angle = miasma_sprite.angular_speed * miasma_sprite.time_alive + miasma_sprite.phase;
         let circular_x = miasma_sprite.radius * angle.cos();
@@ -289,8 +312,49 @@ pub(crate) fn animate_miasma_sprites(
         );
 
         // 3. Combine and Update Position:
-        pos.x = miasma_sprite.base_position.x + (circular_x + noise_x * 0.6) * MOVEMENT_FACTOR; // Scale noise influence
+        pos.x = miasma_sprite.base_position.x + (circular_x + noise_x * 0.6) * MOVEMENT_FACTOR;
         pos.y = miasma_sprite.base_position.y + (circular_y + noise_y * 0.6) * MOVEMENT_FACTOR;
+
+        // --- NEW: Presentation-only "Boiling" Effect (localized EMF agitation) ---
+        let bpos = pos.to_board_position();
+        let p = bpos.ndidx();
+
+        let sound_agitation = sg
+            .sound_field
+            .get(&bpos)
+            .map(|s| s.iter().sum::<Vec2>().length() * 5.0)
+            .unwrap_or(0.0);
+        let temp_agitation = tg
+            .temperature_field
+            .get(p)
+            .map(|t| (tg.ambient_temp - *t).max(0.0) / 5.0)
+            .unwrap_or(0.0);
+
+        let local_agitation = (visual_tension + sound_agitation + temp_agitation).clamp(0.0, 5.0);
+
+        if local_agitation > 0.01 {
+            // High-frequency jitter
+            let jitter_speed = 1.0 * (1.0 + local_agitation * 2.0);
+            let jitter_noise_x = noise_table.get(
+                miasma_sprite.noise_offset_x * 2.0 + time.elapsed_secs() * jitter_speed,
+                miasma_sprite.noise_offset_y * 2.0,
+            );
+            let jitter_noise_y = noise_table.get(
+                miasma_sprite.noise_offset_x * 2.0,
+                miasma_sprite.noise_offset_y * 2.0 + time.elapsed_secs() * jitter_speed,
+            );
+
+            // Shiver: strictly clamped +/- 0.1 units (3cm)
+            pos.x += jitter_noise_x * 0.1 * local_agitation.min(1.0);
+            pos.y += jitter_noise_y * 0.1 * local_agitation.min(1.0);
+
+            // Scale agitation: +/- 5%
+            let scale_agitation = 1.0 + (jitter_noise_x * 0.05 * local_agitation.min(1.0));
+            let final_scale = miasma_sprite.base_scale * scale_agitation;
+            transform.scale = Vec3::new(final_scale, final_scale, 1.0);
+        } else {
+            transform.scale = Vec3::new(miasma_sprite.base_scale, miasma_sprite.base_scale, 1.0);
+        }
 
         // We do *not* modify pos.z or pos.visual_priority here.  The Z position is set
         // during initialization and should remain constant.
@@ -880,5 +944,358 @@ pub(crate) fn apply_flashlight_miasma_effects(
                 }
             }
         }
+    }
+}
+
+pub(crate) fn client_request_miasma_hazards(
+    mut miasma: If<ResMut<MiasmaGrid>>,
+    q_ghosts: Query<(&Position, &GhostSprite)>,
+    q_hazards: Query<&MiasmaHazardParticle>,
+    room_topology: Res<RoomTopology>,
+    time: Res<Time>,
+    mut spawn_ev: MessageWriter<RequestSpawnHazardParticle>,
+) {
+    let Ok((ghost_pos, _)) = q_ghosts.single() else {
+        return;
+    };
+    let ghost_bpos = ghost_pos.to_board_position();
+    let Some(room_id) = room_topology.room_tiles.get(&ghost_bpos) else {
+        return;
+    };
+
+    let hazard_count = q_hazards.iter().count();
+    if hazard_count >= 10 {
+        return;
+    }
+
+    let mut rng = random_seed::rng();
+    let dt = time.delta_secs();
+
+    // Iterate through tiles in the ghost's room
+    for (bpos, r_id) in room_topology.room_tiles.iter() {
+        if r_id != room_id {
+            continue;
+        }
+
+        let idx = bpos.ndidx();
+        let pressure = miasma.pressure_field[idx];
+        if pressure > 100.0 {
+            // Lower, saner probability.
+            // If pressure is 1000, chance is 0.05 per tile per second.
+            let chance = ((pressure - 100.0) / 20000.0 * dt).clamp(0.0, 0.05);
+
+            if rng.random_bool(chance as f64) {
+                miasma.pressure_field[idx] = (pressure - 100.0).max(0.0);
+                let spawn_pos = bpos.to_position_center();
+
+                spawn_ev.write(RequestSpawnHazardParticle {
+                    position: Vec3::new(
+                        spawn_pos.x + rng.random_range(-0.4..0.4),
+                        spawn_pos.y + rng.random_range(-0.4..0.4),
+                        spawn_pos.z.floor() + 0.45,
+                    ),
+                });
+            }
+        }
+    }
+}
+
+pub(crate) fn server_spawn_miasma_hazards(
+    mut commands: Commands,
+    mut spawn_ev: MessageReader<FromClient<RequestSpawnHazardParticle>>,
+) {
+    for ev in spawn_ev.read() {
+        let ev = &ev.message;
+        // FIXME(multiplayer-first): Deduplicate near-simultaneous spawn requests from multiple clients to prevent N-factor spawning in multiplayer.
+        commands.spawn((
+            MiasmaHazardParticle::default(),
+            Position {
+                x: ev.position.x,
+                y: ev.position.y,
+                z: ev.position.z,
+                ..default()
+            },
+            bevy_replicon::prelude::Replicated,
+        ));
+    }
+}
+
+pub(crate) fn update_miasma_hazards(
+    mut commands: Commands,
+    mut set: ParamSet<(
+        Query<(Entity, &mut Position, &mut MiasmaHazardParticle), Without<PlayerSprite>>,
+        Query<(&Position, Option<&Hiding>), With<PlayerSprite>>,
+    )>,
+    bcf: Res<BoardCollisionField>,
+    time: Res<Time>,
+) {
+    let dt = time.delta_secs();
+    // 1. Gather non-hiding player positions to avoid double-borrows
+    let player_positions: Vec<Position> = set
+        .p1()
+        .iter()
+        .filter(|(_, hiding)| hiding.is_none())
+        .map(|(pos, _)| *pos)
+        .collect();
+
+    // 2. Update hazards
+    for (entity, mut pos, mut hazard) in set.p0().iter_mut() {
+        hazard.time_alive += dt;
+        if hazard.time_alive > 10.0 {
+            commands.entity(entity).despawn();
+            continue;
+        }
+
+        // Find nearest non-hiding player on the same floor
+        let mut nearest_player: Option<Vec2> = None;
+        let mut min_dist2 = f32::MAX;
+
+        for p_pos in player_positions.iter() {
+            // Use rounded Z for strict floor check
+            if p_pos.z.round() as i64 != pos.z.round() as i64 {
+                continue;
+            }
+            let dx = p_pos.x - pos.x;
+            let dy = p_pos.y - pos.y;
+            let dist2 = dx * dx + dy * dy;
+            if dist2 < min_dist2 {
+                min_dist2 = dist2;
+                nearest_player = Some(Vec2::new(p_pos.x, p_pos.y));
+            }
+        }
+
+        if let Some(target) = nearest_player {
+            let dir = (target - Vec2::new(pos.x, pos.y)).normalize_or_zero();
+            // Heavy acceleration buff (10.0 instead of 1.0)
+            hazard.velocity += dir * 10.0 * dt;
+        }
+
+        hazard.velocity = hazard.velocity.clamp_length_max(2.0);
+
+        let mut next_pos = *pos;
+        next_pos.x += hazard.velocity.x * dt;
+        next_pos.y += hazard.velocity.y * dt;
+
+        let next_bpos = next_pos.to_board_position();
+
+        if let Some(collision) = bcf.0.get(next_bpos.ndidx()) {
+            if !collision.player_free {
+                // Bounce
+                let cur_bpos = pos.to_board_position();
+                if next_bpos.x != cur_bpos.x {
+                    hazard.velocity.x *= -1.0;
+                }
+                if next_bpos.y != cur_bpos.y {
+                    hazard.velocity.y *= -1.0;
+                }
+                // Push out of collision
+                let push_dir = (pos.to_vec3() - next_pos.to_vec3())
+                    .truncate()
+                    .normalize_or_zero();
+                pos.x += push_dir.x * 0.15;
+                pos.y += push_dir.y * 0.15;
+            } else {
+                pos.x = next_pos.x;
+                pos.y = next_pos.y;
+            }
+        } else {
+            pos.x = next_pos.x;
+            pos.y = next_pos.y;
+        }
+    }
+}
+
+pub(crate) fn miasma_hazard_damage(
+    q_hazards: Query<&Position, With<MiasmaHazardParticle>>,
+    q_players: Query<(Entity, &Position, Option<&Hiding>), With<PlayerSprite>>,
+    mut damage_ev: MessageWriter<MiasmaTakeDamageMessage>,
+) {
+    for h_pos in q_hazards.iter() {
+        for (p_entity, p_pos, hiding) in q_players.iter() {
+            if hiding.is_some() {
+                continue;
+            }
+            let same_floor = p_pos.z.round() as i64 == h_pos.z.round() as i64;
+            if same_floor {
+                let dx = p_pos.x - h_pos.x;
+                let dy = p_pos.y - h_pos.y;
+                let dist_xy_sq = dx * dx + dy * dy;
+
+                if dist_xy_sq < 0.25 {
+                    // 0.5^2
+                    damage_ev.write(MiasmaTakeDamageMessage {
+                        target_entity: p_entity,
+                        damage: 50.0,
+                    });
+                }
+            }
+        }
+    }
+}
+
+
+#[derive(Component)]
+pub(crate) struct StaticSpark {
+    pub lifetime: f32,
+}
+
+pub(crate) fn spawn_static_sparks(
+    mut commands: Commands,
+    miasma: If<Res<MiasmaGrid>>,
+    q_ghosts: Query<&GhostSprite>,
+    q_players: Query<&Position, With<MainPlayer>>,
+    board_data: Res<BoardTopology>,
+    ghost_assets: Res<unghost_core::assets::GhostAssets>,
+    time: Res<Time>,
+    tg: If<Res<ThermalGrid>>,
+    sg: If<Res<SoundGrid>>,
+) {
+    let Ok(ghost) = q_ghosts.single() else {
+        return;
+    };
+    let hunt_likelihood = ghost.hunt_likelihood();
+    let Ok(player_pos) = q_players.single() else {
+        return;
+    };
+    let player_bpos = player_pos.to_board_position();
+    let mut rng = random_seed::rng();
+    let dt = time.delta_secs();
+
+    let radius = 5;
+    let min_x = (player_bpos.x - radius).max(0) as usize;
+    let max_x = (player_bpos.x + radius).min(board_data.map_size.0 as i64 - 1) as usize;
+    let min_y = (player_bpos.y - radius).max(0) as usize;
+    let max_y = (player_bpos.y + radius).min(board_data.map_size.1 as i64 - 1) as usize;
+    let z = player_bpos.z as usize;
+
+    for x in min_x..=max_x {
+        for y in min_y..=max_y {
+            let idx = (x, y, z);
+            let bpos = BoardPosition {
+                x: x as i64,
+                y: y as i64,
+                z: z as i64,
+            };
+            let pressure = miasma.pressure_field[idx];
+
+            let sound_agitation = sg
+                .sound_field
+                .get(&bpos)
+                .map(|s| s.iter().sum::<Vec2>().length() * 5.0)
+                .unwrap_or(0.0);
+            let temp_agitation = tg
+                .temperature_field
+                .get(idx)
+                .map(|t| (tg.ambient_temp - *t).max(0.0) / 5.0)
+                .unwrap_or(0.0);
+
+            let localized_agitation = hunt_likelihood + sound_agitation + temp_agitation;
+
+            // Require high pressure and proximity to hunt/ghost activity
+            let trigger = (pressure / 100.0) * localized_agitation;
+            if trigger > 1.0 {
+                // Strobe-flash effect probability
+                let chance = (f32::cbrt(trigger) / 50.0 * dt).clamp(0.0, 1.0);
+                if rng.random_bool(chance as f64) {
+                    for _ in 0..3 {
+                        let spawn_pos = bpos.to_position_center();
+                        let spawn_z = player_bpos.z as f32 + rng.random_range(0.1..1.5);
+
+                        let rotation = rng.random_range(0.0..std::f32::consts::TAU);
+                        let length = rng.random_range(1.0..4.0);
+
+                        commands.spawn((
+                            Sprite {
+                                image: ghost_assets.spark.clone(),
+                                color: Color::linear_rgba(0.8, 1.0, 1.0, 1.0),
+                                ..default()
+                            },
+                            // Highly stretched pixel (jagged line)
+                            Transform {
+                                translation: Vec3::ZERO,
+                                rotation: Quat::from_rotation_z(rotation),
+                                scale: Vec3::new(length, 0.1, 1.0),
+                            },
+                            Position {
+                                x: spawn_pos.x + rng.random_range(-0.4..0.4),
+                                y: spawn_pos.y + rng.random_range(-0.4..0.4),
+                                z: spawn_z,
+                                ..default()
+                            },
+                            StaticSpark {
+                                lifetime: 0.1,
+                            },
+                            GameSprite,
+                            SpriteLayer(0.2),
+                            MapColor {
+                                color: Color::linear_rgba(0.5, 1.0, 1.0, 1.0),
+                            },
+                            Emissive {
+                                color: Color::linear_rgba(0.5, 1.0, 1.0, 1.0),
+                                intensity: 5.0,
+                                ..default()
+                            },
+                        ));
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub(crate) fn update_static_sparks(
+    mut commands: Commands,
+    mut q_sparks: Query<(Entity, &mut Sprite, &mut StaticSpark)>,
+    time: Res<Time>,
+) {
+    let dt = time.delta_secs();
+
+    for (entity, mut sprite, mut spark) in q_sparks.iter_mut() {
+        spark.lifetime -= dt;
+        if spark.lifetime <= 0.0 {
+            commands.entity(entity).despawn();
+            continue;
+        }
+
+        // Fade out fast for strobe effect
+        sprite.color.set_alpha((spark.lifetime * 10.0).clamp(0.0, 1.0));
+    }
+}
+
+pub(crate) fn animate_miasma_hazards(
+    time: Res<Time>,
+    mut q_hazards: Query<(&mut Transform, &MiasmaHazardParticle)>,
+) {
+    let t = time.elapsed_secs();
+    for (mut transform, _) in q_hazards.iter_mut() {
+        // Paranormal pulsing scale
+        let pulse = (t * 8.0).sin() * 0.05 + 0.3;
+        transform.scale = Vec3::new(pulse, pulse, 1.0);
+    }
+}
+
+pub(crate) fn hydrate_miasma_hazards(
+    mut commands: Commands,
+    q_hazards: Query<Entity, Added<MiasmaHazardParticle>>,
+    ghost_assets: Res<unghost_core::assets::GhostAssets>,
+) {
+    for entity in q_hazards.iter() {
+        commands.entity(entity).insert((
+            Sprite {
+                image: ghost_assets.miasma.clone(),
+                color: Color::linear_rgba(1.0, 0.1, 0.1, 1.0),
+                ..default()
+            },
+            MapColor {
+                color: Color::linear_rgba(1.0, 0.0, 0.0, 1.0),
+            },
+            Emissive {
+                color: Color::linear_rgba(1.0, 0.0, 0.0, 1.0),
+                intensity: 5.0,
+                ..default()
+            },
+            Transform::from_scale(Vec3::new(0.3, 0.3, 1.0)),
+            SpriteLayer(0.1), // Ensure it's visible
+        ));
     }
 }

@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_replicon::prelude::*;
 use uncommon_states_core::UIContextState;
 use unmission_core::types::SimulationState;
 
@@ -34,6 +35,21 @@ impl Plugin for UnhaunterFogCorePlugin {
                 .run_if(in_state(SimulationState::Ready))
                 .after(crate::systems::diffuse_smoke_field),
         );
+        app.replicate::<unfog_core::components::MiasmaHazardParticle>();
+        app.add_systems(
+            Update,
+            (
+                crate::systems::server_spawn_miasma_hazards,
+                crate::systems::update_miasma_hazards,
+                crate::systems::miasma_hazard_damage,
+            )
+                .run_if(in_state(SimulationState::Ready))
+                .run_if(resource_exists::<unreplicon_core::resources::AuthorityRole>),
+        );
+        app.add_message::<unfog_core::messages::MiasmaTakeDamageMessage>();
+        app.add_client_message::<unfog_core::messages::RequestSpawnHazardParticle>(
+            bevy_replicon::prelude::Channel::Ordered,
+        );
         app.add_systems(
             OnExit(UIContextState::InGame),
             crate::systems::reset_miasma_grid,
@@ -52,6 +68,11 @@ impl Plugin for UnhaunterFogPlugin {
             (
                 crate::systems::spawn_miasma,
                 crate::systems::animate_miasma_sprites,
+                crate::systems::hydrate_miasma_hazards,
+                crate::systems::animate_miasma_hazards,
+                crate::systems::spawn_static_sparks,
+                crate::systems::update_static_sparks,
+                crate::systems::client_request_miasma_hazards,
             )
                 .run_if(in_state(UIContextState::InGame)),
         );

@@ -8195,6 +8195,7 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "ndarray",
+ "serde",
  "unspatial-core",
 ]
 
@@ -8205,6 +8206,7 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_platform",
+ "bevy_replicon",
  "ndarray",
  "rand 0.10.1",
  "unbehavior-core",
@@ -8219,8 +8221,11 @@ dependencies = [
  "unnoise-core",
  "unplayer-core",
  "unrender-std",
+ "unreplicon-core",
  "unsettings-core",
+ "unsoundfield-core",
  "unspatial-core",
+ "unthermal-core",
 ]
 
 [[package]]

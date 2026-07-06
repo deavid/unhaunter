@@ -269,4 +269,9 @@ impl GhostSprite {
     pub fn get_health(&self) -> f32 {
         1.0 - (self.repellent_hits as f32 / 1000.0)
     }
+
+    /// Calculates a value from 0.0 to 1.0 representing how close the ghost is to hunting.
+    pub fn hunt_likelihood(&self) -> f32 {
+        10.0 / (self.rage_limit - self.rage).clamp(10.0, 10000.0)
+    }
 }
