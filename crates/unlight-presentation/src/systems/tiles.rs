@@ -286,7 +286,14 @@ pub(crate) fn apply_lighting_to_tiles_system(
             o_ethereal,
             o_ecto_vis,
             o_spectral_clarity,
-            (o_light_sens, o_map_color, o_miasma, o_alpha_mod, o_emissive),
+            (
+                o_light_sens,
+                o_map_color,
+                o_miasma,
+                o_alpha_mod,
+                o_emissive,
+                o_ambient,
+            ),
             is_locally_owned,
         )) = qt2.get_mut(*entity)
         {

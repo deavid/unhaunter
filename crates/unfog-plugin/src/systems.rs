@@ -1136,7 +1136,6 @@ pub(crate) fn miasma_hazard_damage(
 
 #[derive(Component)]
 pub(crate) struct StaticSpark {
-    pub velocity: Vec3,
     pub lifetime: f32,
 }
 
@@ -1224,7 +1223,6 @@ pub(crate) fn spawn_static_sparks(
                                 ..default()
                             },
                             StaticSpark {
-                                velocity: Vec3::ZERO, // Statically snap, no movement
                                 lifetime: 0.1,
                             },
                             GameSprite,
