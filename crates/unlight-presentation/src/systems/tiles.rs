@@ -22,7 +22,9 @@ use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::spectral::SpectralInfluence;
 use unlight_core::types::light::LightData;
 use unplayer_core::components::MainPlayer;
-use unrender_std::components::visuals::{AlphaModulator, EctoplasmVisuals, Emissive, Ethereal};
+use unrender_std::components::visuals::{
+    AlphaModulator, AmbientColor, EctoplasmVisuals, Emissive, Ethereal,
+};
 use unrender_std::custom_material1::CustomMaterial1;
 use unreplicon_core::ownership::LocallyOwned;
 use unsettings_core::video::VideoSettings;
@@ -93,6 +95,7 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 Option<&MiasmaSprite>,
                 Option<&AlphaModulator>,
                 Option<&Emissive>,
+                Option<&AmbientColor>,
             ),
             Has<LocallyOwned>,
         ),
@@ -580,7 +583,8 @@ pub(crate) fn apply_lighting_to_tiles_system(
                 map_color.alpha(),
             ));
 
-            new_mat.data.ambient_color = Color::NONE.into();
+            let ambient = o_ambient.map(|a| a.0).unwrap_or(Color::NONE);
+            new_mat.data.ambient_color = ambient.into();
 
             let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
             let smooth_f = prev_a + 0.3 + smooth_f;
