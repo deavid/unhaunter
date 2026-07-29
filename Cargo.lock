@@ -7960,8 +7960,10 @@ dependencies = [
  "unaudiospatial-core",
  "uncommon-states-core",
  "unmetrics-core",
+ "unreplicon-core",
  "unsettings-core",
  "unspatial-core",
+ "untruck-core",
 ]
 
 [[package]]
@@ -8313,6 +8315,7 @@ dependencies = [
  "unsoundfield-core",
  "unspatial-core",
  "unthermal-core",
+ "untruck-core",
 ]
 
 [[package]]

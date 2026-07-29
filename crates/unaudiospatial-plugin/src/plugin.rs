@@ -48,6 +48,7 @@ impl Plugin for UnhaunterSpatialAudioPlugin {
                 (
                     local_spatial_audio_playback,
                     spatial_audio_playback,
+                    replicated_spatial_audio_playback,
                     update_spatial_audio,
                     monitor_audio_pileup,
                     process_audio_delayed_despawns,

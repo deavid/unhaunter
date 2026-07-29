@@ -22,6 +22,7 @@ unrender-std = { workspace = true }
 uninteraction-core = { workspace = true }
 unmetrics-core = { workspace = true }
 ungear-core = { workspace = true }
+untruck-core = { workspace = true }
 unghost-core = { workspace = true }
 uninvestigation-core = { workspace = true }
 unfog-core = { workspace = true }

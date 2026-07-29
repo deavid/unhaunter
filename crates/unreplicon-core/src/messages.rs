@@ -224,6 +224,33 @@ pub struct FloorGearDespawnBroadcast {
 
 // ---------------------------------------------------------------------------
 // Phase 4: Ghost, Evidence, and Mission messages
+
+/// Broadcast by the server to all clients to play a sound effect.
+///
+/// This message is used for one-shot sound effects that should be heard by all
+/// players, such as gear interactions or truck UI sounds.
+#[derive(Debug, Clone, Serialize, Deserialize, Message)]
+pub struct ReplicatedSoundEvent {
+    pub sound_file: String,
+    pub volume: f32,
+    pub position: Option<[f32; 3]>,
+    /// The client or server that triggered this sound. Used to apply penalties
+    /// for other players (muffling/volume reduction).
+    pub triggerer: crate::ownership::OwnerId,
+    /// Indicates if the sound originated inside the truck.
+    /// This is used to apply extra muffling for players (e.g. if the sound happens
+    /// in the van and the listener is outside, we apply more penalty).
+    pub is_inside_truck: bool,
+}
+
+impl bevy::ecs::entity::MapEntities for ReplicatedSoundEvent {
+    fn map_entities<M: bevy::ecs::entity::EntityMapper>(&mut self, mapper: &mut M) {
+        if let crate::ownership::OwnerId::Client(entity) = &mut self.triggerer {
+            *entity = mapper.get_mapped(*entity);
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 
 /// Broadcast by the server to all clients to spawn a visual particle effect.

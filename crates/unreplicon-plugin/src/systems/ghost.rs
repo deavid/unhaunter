@@ -6,7 +6,9 @@ use unmission_core::types::SimulationState;
 use unreplicon_core::components::{
     MissionGoalEntity, RepliconGhostSpawningActive, ServerGamePhase,
 };
-use unreplicon_core::messages::{GhostSoundFieldBroadcast, SpawnParticleNetEvent};
+use unreplicon_core::messages::{
+    GhostSoundFieldBroadcast, ReplicatedSoundEvent, SpawnParticleNetEvent,
+};
 use unreplicon_core::repellent_tracker::RepellentCraftTracker;
 use unreplicon_core::resources::{AuthorityRole, is_pure_client};
 
@@ -19,6 +21,7 @@ pub(super) fn app_setup(app: &mut App) {
     // Register server → client messages.
     app.add_server_message::<SpawnParticleNetEvent>(Channel::Ordered);
     app.add_server_message::<GhostSoundFieldBroadcast>(Channel::Ordered);
+    app.add_mapped_server_message::<ReplicatedSoundEvent>(Channel::Ordered);
 
     app.add_systems(
         OnEnter(SimulationState::Spawning),
