@@ -14,6 +14,11 @@
 # HOW TO RUN:
 #   ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com"
 #
+# TO BOOTSTRAP THE MAIN CADDYFILE (once per machine — fresh VPS, or migrating
+#   from an old layout with the site block inside /etc/caddy/Caddyfile; backs
+#   up the existing file first):
+#   ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com bootstrap_caddy=true"
+#
 # TO ROTATE THE HMAC SECRET (after a security incident, invalidates all active connection tickets):
 #   ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian -e "domain=hub.unhaunter.com rotate_hmac_secret=true"
 #
@@ -37,6 +42,12 @@
     #   ansible-playbook deploy/multiplayer.yml ... -e rotate_hmac_secret=true
     # This will invalidate all active connection tickets and force a service restart.
     rotate_hmac_secret: false
+    # Set to true ONCE to (re)write the main /etc/caddy/Caddyfile as an
+    # import-only file (any existing file is backed up first):
+    #   ansible-playbook deploy/multiplayer.yml ... -e "domain=... bootstrap_caddy=true"
+    # Normal runs never touch the main Caddyfile — they only manage the
+    # /etc/caddy/conf.d/hub.caddy fragment.
+    bootstrap_caddy: false
 
     # Path to the locally compiled binaries and assets on your dev machine
     local_target: "../target/release"
@@ -524,6 +535,14 @@
       notify: Restart Services
 
     # --- Caddy & Security ---
+    - name: Ensure /etc/caddy/conf.d exists (empty imports are a Caddy error)
+      ansible.builtin.file:
+        path: /etc/caddy/conf.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
     - name: Install prerequisite packages for Caddy
       ansible.builtin.apt:
         name:
@@ -557,13 +576,31 @@
         state: present
         update_cache: true
 
-    - name: Configure Caddy (HTTPS & Reverse Proxy)
+    - name: Configure Caddy — hub site fragment (this playbook NEVER touches
+        #    /etc/caddy/Caddyfile; it is a citizen among other sites. The only
+        #    path to the main file is the explicit bootstrap_caddy=true below.)
       ansible.builtin.copy:
-        dest: /etc/caddy/Caddyfile
+        dest: /etc/caddy/conf.d/hub.caddy
         content: |
           {{ caddy_domain }} {
               reverse_proxy 127.0.0.1:3000
           }
+        mode: "0644"
+      notify: Reload Caddy
+
+    - name: Bootstrap main Caddyfile (SPECIAL ACTION — only with
+        #    bootstrap_caddy=true; backs up any existing file first. Writes an
+        #    import-only main file: Caddyfile belongs to the machine, sites
+        #    live in conf.d fragments)
+      when: bootstrap_caddy | bool
+      ansible.builtin.copy:
+        dest: /etc/caddy/Caddyfile
+        backup: true
+        content: |
+          # Main Caddyfile — deliberately minimal, bootstrapped by the
+          # unhaunter deploy playbook (bootstrap_caddy=true). It only imports
+          # per-site fragments from /etc/caddy/conf.d/; sites belong there.
+          import /etc/caddy/conf.d/*
         mode: "0644"
       notify: Reload Caddy
 

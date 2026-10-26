@@ -129,6 +129,35 @@ Notes:
 
 ---
 
+## Coexistence with Other Sites (Caddy)
+
+This playbook is a citizen among other sites: it manages ONLY
+`/etc/caddy/conf.d/hub.caddy` (templated with your hub domain) and reloads
+Caddy. It never touches the main `/etc/caddy/Caddyfile`.
+
+The main Caddyfile must exist and import the fragments:
+
+```text
+import /etc/caddy/conf.d/*
+```
+
+On a fresh VPS — or when migrating from the old layout where the hub block
+lived inside the main Caddyfile — run the bootstrap special action ONCE:
+
+```bash
+ansible-playbook deploy/multiplayer.yml -i "hub.unhaunter.com," -u debian \
+  -e "domain=hub.unhaunter.com bootstrap_caddy=true"
+```
+
+It writes an import-only main Caddyfile and backs up any existing one as
+`/etc/caddy/Caddyfile.<timestamp>~` first. That single run completes the
+migration: the old in-file hub block is retired with the replaced main file
+(it survives only in the timestamped backup), and the live definition moves
+to `conf.d/hub.caddy`. Without the flag, a first run after the old layout
+would leave the hub defined twice (main file + fragment) and Caddy would
+refuse to start until you bootstrap or hand-edit.
+This bootstrap flag is not needed on any later run.
+
 ## Config Reference
 
 hub_config.ron is templated with:
